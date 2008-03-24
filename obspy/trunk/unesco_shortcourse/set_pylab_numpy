@@ -1,5 +1,0 @@
-MORITZ=/home/beyreuth
-export MATPLOTLIBDATA=$MORITZ/local/install/matplotlib-0.90.1
-export PYTHONPATH=$PYTHONPATH:$MATPLOTLIBDATA/lib/python
-export PYTHONPATH=$PYTHONPATH:$MORITZ/local/install/numpy-1.0.3/lib/python
-export LD_LIBRARY_PATH=/home/beyreuth/local/install/tk8.4.15/unix/lib:/home/beyreuth/local/install/tcl8.4.15/unix/lib
