@@ -1,4 +1,12 @@
 # obspy module
+#---------------------------------------------------
+# Filename: obspy.py
+#  Purpose: Python module for gse conversion...
+#  Version: n.a.
+#   Author: Moritz Beyreuther
+#    Email: moritz.beyreuther@geophysik.uni-muenchen.de
+# Revision: 2008.03.23
+#---------------------------------------------------
 
 import os,sys
 from numpy import zeros,mean,concatenate,std,pi
