@@ -5,7 +5,7 @@
 #  Version: n.a.
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
-# Revision: 2008.03.23 mob
+# Revision: 2008/03/23 mob
 #---------------------------------------------------
 
 import os,sys
@@ -15,9 +15,7 @@ import ext_gse
 import ext_recstalta
 
 from ext_recstalta import rec_stalta
-
 from ext_pk_mbaer import baerPick
-
 from ext_arpicker import arPick
 
 def bandpass(data,freqmin,freqmax,df=200,corners=4):
@@ -54,21 +52,21 @@ def writegse(h,data,gsefile):
 	"""
 	# 
 	# function for testing correctness of header entries
-	def has_entry(header,key_,typ_,value,length=None):
+	def has_entry(header,key_,typ_,default,length=None):
 		"""function for verifying that header has key_ of cetain type and, if
-		given, certain length. If not, the header[key_] is set to value
+		given, certain length. If not, the header[key_] is set to default
 		"""
 		if not header.has_key(key_) or not isinstance (header[key_],typ_):
 			print "WARNING: %s entry of header missing or not of %s" % (key_,typ_)
-			print "forcing",key_,"=",value
-			header[key_]=value
+			print "forcing",key_,"=",default
+			header[key_]=default
 		if (length):
 			if (len(header[key_]) > length):
 				print "%s entry of header is > %i" % (key_,length)
-				print "forcing",key_,"=",value
-				header[key_]=value
+				print "forcing",key_,"=",default
+				header[key_]=default
 	#
-	# let's check if header has a the necessary tuples and if those are of
+	# check if header has the necessary tuples and if those are of
 	# correct type
 	has_entry(h,'d_year',int,2007)
 	has_entry(h,'d_mon',int,05)
