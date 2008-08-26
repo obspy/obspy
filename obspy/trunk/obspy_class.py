@@ -62,35 +62,45 @@ class Seismogram:
 		return 0
 	readgse.__doc__ = ext_gse.read.__doc__
 
-	def isattribute(self,attribute,typ,default,length=False,assertation=False):
+	def isattr(self,attr,typ,default,length=False,assertation=False):
 		"""function for verifying that Seismogram has attribute of cetain type
 		and, if given, certain length. If not, the instance is set to the given
 		default """
-		if not isinstance(attribute,typ):
+		if not attr in self.__dict__.keys():
 			if assertation:
-				assert False, "%s attribute of Seismogram required" % attribute
-			print "WARNING: %s attribute of Seismogram missing or not of %s" % (
-					attribute,typ)
-			print "forcing",attribute,"=",default
-			attribute=default
+				assert False,"%s attribute of Seismogram required" % attribute
+			print "WARNING: %s attribute of Seismogram missing",
+			print "forcing",attr,"=",default
+			setattr(self,attr,default)
+		if not isinstance(getattr(self,attr),typ):
+			print "WARNING: %s attribute of Seismogram not of type %s" % (attr,typ),
+			print "forcing",attr,"=",default
+			setattr(self,attr,default)
 		if (length):
-			if (len(attribute) > length):
+			if (len(getattr(self,attr)) > length):
 				print "%s attribute of Seismogram is > %i" % (attribute,length)
 				print "forcing",attribute,"=",default
 				attribute=default
 		return True
 
 	def plot(self):
-		self.isattribute(self.data,ndarray,None,assertation=True)
-		self.isattribute(self.n_samps,int,len(self.data))
-		self.isattribute(self.samp_rate,float,1)
-		self.isattribute(self.d_year,int,-1)
-		self.isattribute(self.d_mon,int,-1)
-		self.isattribute(self.d_day,int,-1)
-		self.isattribute(self.t_hour,int,-1)
-		self.isattribute(self.t_min,int,-1)
-		self.isattribute(self.t_sec,float,-1.0)
-		self.isattribute(self.station,str,'XXXXX',length=6)
+		self.isattr('data',ndarray,None,assertation=True)
+		self.isattr('n_samps',int,len(self.data))
+		self.isattr('samp_rate',float,1)
+		self.isattr('d_year',int,-1)
+		self.isattr('d_mon',int,-1)
+		self.isattr('d_day',int,-1)
+		self.isattr('t_hour',int,-1)
+		self.isattr('t_min',int,-1)
+		self.isattr('t_sec',float,-1.0)
+		self.isattr('station',str,'XXXXX',length=6)
+		#
+		if not 'time' in self.__dict__.keys():
+			self.time = arange(self.n_samps) / self.samp_rate
+		else: 
+			print "Using existing time attribute of Seismogram,\
+					if this is not wished first delete attribute (delattr) time"
+		#
 		def format(x,pos):
 			# x is of type numpy.float64, the string representation of that float
 			# strips of all tailing zeros pos returns the position of x on the
@@ -99,7 +109,7 @@ class Seismogram:
 				return "%s:%s" % (str(int(x)),str((x-int(x))*60))
 			else:
 				return str(int(x))
-		self.time = arange(self.n_samps) / self.samp_rate
+		#
 		pylab.figure()
 		formatter = FuncFormatter(format)
 		ax = pylab.axes()
@@ -114,8 +124,8 @@ class Seismogram:
 		pylab.show()
 
 	def bandpass(self,freqmin,freqmax,corners=4):
-		self.isattribute(self.data,ndarray,None,assertation=True)
-		self.isattribute(self.samp_rate,float,1.)
+		self.isattr('data',ndarray,None,assertation=True)
+		self.isattr('samp_rate',float,1.)
 		"""Butterworth-Bandpass: filter self.data from freqmin to freqmax using
 		corners corners"""
 		nyf=.5*self.samp_rate # Nyquist Frequencey
@@ -144,24 +154,24 @@ class Seismogram:
 		#
 		# check if header has the necessary tuples and if those are of
 		# correct type
-		self.isattribute(self.data,ndarray,None,assertation=True)
-		self.isattribute(self.d_year,int,2007)
-		self.isattribute(self.d_mon,int,05)
-		self.isattribute(self.d_day,int,27)
-		self.isattribute(self.t_hour,int,23)
-		self.isattribute(self.t_min,int,59)
-		self.isattribute(self.t_sec,float,24.123)
-		self.isattribute(self.station,str,'STAU ',length=6)
-		self.isattribute(self.channel,str,'SHZ',length=4)
-		self.isattribute(self.auxid,str,'VEL ',length=5)
-		self.isattribute(self.datatype,str,'CM6 ',length=4)
-		self.isattribute(self.n_samps,int,len(self.data))
-		self.isattribute(self.samp_rate,float,200.)
-		self.isattribute(self.calib,float,1./(2*pi)) #calper not correct in gse_driver!
-		self.isattribute(self.calper,float,1.)
-		self.isattribute(self.instype,str,'LE-3D ',length=7)
-		self.isattribute(self.hang,float,-1.0)
-		self.isattribute(self.vang,float,0.)
+		self.isattr('data',ndarray,None,assertation=True)
+		self.isattr('d_year',int,2007)
+		self.isattr('d_mon',int,05)
+		self.isattr('d_day',int,27)
+		self.isattr('t_hour',int,23)
+		self.isattr('t_min',int,59)
+		self.isattr('t_sec',float,24.123)
+		self.isattr('station',str,'STAU ',length=6)
+		self.isattr('channel',str,'SHZ',length=4)
+		self.isattr('auxid',str,'VEL ',length=5)
+		self.isattr('datatype',str,'CM6 ',length=4)
+		self.isattr('n_samps',int,len(self.data))
+		self.isattr('samp_rate',float,200.)
+		self.isattr('calib',float,1./(2*pi)) #calper not correct in gse_driver!
+		self.isattr('calper',float,1.)
+		self.isattr('instype',str,'LE-3D ',length=7)
+		self.isattr('hang',float,-1.0)
+		self.isattr('vang',float,0.)
 	
 		# I have errors with the data pointer, only solution seems to explicitly copy it
 		data2 = self.data.copy()
@@ -178,7 +188,7 @@ class Seismogram:
 		the STA is given by Nsta in samples, respectively is the length of the
 		LTA given by Nlta in samples.
 		"""
-		self.isattribute(self.data,ndarray,None,assertation=True)
+		self.isattr('data',ndarray,None,assertation=True)
 		m=len(self.data)
 		stalta=zeros(m,dtype=float)
 		start = 0
@@ -208,7 +218,7 @@ class Seismogram:
 		This functions returns the characteristic function of the delayes STA/LTA
 		trigger. Nsta/Nlta is the length of the STA/LTA window in points
 		respectively"""
-		self.isattribute(self.data,ndarray,None,assertation=True)
+		self.isattr('data',ndarray,None,assertation=True)
 		m=len(self.data)
 		stalta=zeros(m,dtype=float)
 		on = 0;
@@ -229,7 +239,7 @@ class Seismogram:
 		"""Recursive STA/LTA (see Withers et al. 1998 p. 98)
 		NOTE: There exists a version of this trigger wrapped in C called
 		rec_stalta in this module!"""
-		self.isattribute(self.data,ndarray,None,assertation=True)
+		self.isattr('data',ndarray,None,assertation=True)
 		m=len(self.data)
 		#
 		# compute the short time average (STA) and long time average (LTA)
@@ -249,7 +259,7 @@ class Seismogram:
 		"""Z-detector, (see Withers et al. 1998 p. 99)
 		This functions returns the characteristic function of the Z-detector.
 		Nsta gives the number of points for the sta window"""
-		self.isattribute(self.data,ndarray,None,assertation=True)
+		self.isattr('data',ndarray,None,assertation=True)
 		m=len(self.data)
 		#
 		# Z-detector given by Swindell and Snell (1977)
