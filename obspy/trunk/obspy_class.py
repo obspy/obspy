@@ -14,7 +14,8 @@ from copy import deepcopy
 
 #
 # Importing array and signal processing support
-from numpy import array,arange,zeros,concatenate,pi,ndarray,ones
+from numpy import array, arange, zeros, ones, concatenate
+from numpy import pi, ndarray, float64
 from scipy.signal import iirfilter,lfilter
 
 #
@@ -68,7 +69,7 @@ class Seismogram:
 		default """
 		if not attr in self.__dict__.keys():
 			if assertation:
-				assert False,"%s attribute of Seismogram required" % attribute
+				assert False,"%s attribute of Seismogram required" % attr
 			print "WARNING: %s attribute of Seismogram missing",
 			print "forcing",attr,"=",default
 			setattr(self,attr,default)
@@ -86,7 +87,7 @@ class Seismogram:
 	def plot(self):
 		self.isattr('data',ndarray,None,assertation=True)
 		self.isattr('n_samps',int,len(self.data))
-		self.isattr('samp_rate',float,1)
+		self.isattr('samp_rate',float,1.0)
 		self.isattr('d_year',int,-1)
 		self.isattr('d_mon',int,-1)
 		self.isattr('d_day',int,-1)
@@ -98,17 +99,19 @@ class Seismogram:
 		if not 'time' in self.__dict__.keys():
 			self.time = arange(self.n_samps) / self.samp_rate
 		else: 
-			print "Using existing time attribute of Seismogram,\
-					if this is not wished first delete attribute (delattr) time"
+			print """NOTE:    Using existing time attribute of Seismogram, if
+this is not wished first delete attribute (delattr) time"""
 		#
 		def format(x,pos):
 			# x is of type numpy.float64, the string representation of that float
 			# strips of all tailing zeros pos returns the position of x on the
 			# axis while zooming, None otherwise
-			if ( x-int(x) > 0.1 ):
-				return "%s:%s" % (str(int(x)),str((x-int(x))*60))
+			min = float64(x/60)
+			sec = float64((min - int(min)) * 60)
+			if ( min-int(min) > 0.1 ):
+				return "%02d:%05.2f" % (int(min),sec)
 			else:
-				return str(int(x))
+				return str(int(min))
 		#
 		pylab.figure()
 		formatter = FuncFormatter(format)
