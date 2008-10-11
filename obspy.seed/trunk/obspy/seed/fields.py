@@ -4,14 +4,23 @@
 class SEEDTypeException(Exception):
     pass
 
+class Field:
+    """General SEEF field."""
+    
+    def __str__(self):
+        if self.id:
+            return "F%02d" % self.id
 
-class IntegerSEEDField:
+
+class Integer(Field):
     
     value = None
     
-    def __init__(self, name, length):
+    def __init__(self, id, name, length, version=None):
+        self.id = id
         self.name = name
         self.length = length
+        self.version = version
     
     def __call__(self):
         return self
@@ -26,11 +35,13 @@ class IntegerSEEDField:
         return temp
 
 
-class FloatSEEDField:
+class Float(Field):
     
-    def __init__(self, name, length):
+    def __init__(self, id, name, length, version=None):
+        self.id = id
         self.name = name
         self.length = length
+        self.version = version
     
     def __call__(self):
         return self
@@ -48,26 +59,31 @@ class FloatSEEDField:
         return temp
 
 
-class StringSEEDField:
+class FixedString(Field):
     
-    def __init__(self, name, length, flags=''):
+    def __init__(self, id, name, length, flags='', version=None):
+        self.id = id
         self.name = name
         self.length = length
+        self.version = version
     
     def read(self, data):
         return data.read(self.length).strip()
 
 
-class VariableStringSEEDField:
+class VariableString(Field):
     """Variable length ASCII string, ending with a tilde: ~ (ASCII 126).
     
     Variable length fields cannot have leading or trailing spaces.
     """
-    def __init__(self, name, min_length=0, max_length=None, flags=None):
+    def __init__(self, id, name, min_length=0, max_length=None, flags=None, 
+                 version=None):
+        self.id = id
         self.name = name
         self.min_length = min_length
         self.max_length = max_length
         self.flags = flags
+        self.version = version
     
     def read(self, data):
         buffer = ''
@@ -88,39 +104,40 @@ class VariableStringSEEDField:
         return buffer
 
 
-class LoopingSEEDField:
+class MultipleLoop(Field):
     
-    def __init__(self, name, length_field, data_fields):
-        if not isinstance(length_field, IntegerSEEDField):
-            raise Exception('IntegerSEEDField expected for number of loops!')
+    def __init__(self, name, index_field, data_fields, version=None):
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
-        self.length_field = length_field
+        self.id = None
+        self.index_field = index_field
+        self.length = 0
         self.data_fields = data_fields
         self.name = name
+        self.version = version
     
     def read(self, data):
         temp = []
-        for i in range(0,self.length_field.value):
-            temp2={}
+        for _i in range(0,self.length):
+            temp2=[]
             for field in self.data_fields:
-                name = field.name.title().replace(' ','')
-                temp2[name] = field.read(data)
+                temp2.append(field)
             temp.append(temp2)
         return temp
 
 
-class SimpleLoopingSEEDField:
+class SimpleLoop(Field):
     
-    def __init__(self, length_field, data_field):
-        if not isinstance(length_field, IntegerSEEDField):
-            raise Exception('IntegerSEEDField expected for number of loops!')
-        self.length_field = length_field
+    def __init__(self, index_field, data_field, version=None):
+        self.id = None
+        self.index_field = index_field
+        self.length = 0
         self.data_field = data_field
         self.name = data_field.name
+        self.version = version
     
     def read(self, data):
         temp = []
-        for i in range(0,self.length_field.value):
-            temp.append(self.data_field.read(data))
+        for _i in range(0,self.length):
+            temp.append(self.data_field)
         return temp

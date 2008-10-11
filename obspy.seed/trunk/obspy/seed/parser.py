@@ -3,7 +3,7 @@
 from lxml.etree import Element, SubElement
 from StringIO import StringIO
 
-from obspy.seed.blockette import blockette
+from obspy.seed import blockette
 
 
 VOLUME_HEADER = 'V'
@@ -26,6 +26,7 @@ class SEEDParser:
     """ 
     record_length = 4096
     version = None
+    blockettes = {}
     
     def __init__(self, filename, verify=True, debug=False, strict=False):
         self.filename = filename
@@ -86,8 +87,8 @@ class SEEDParser:
         control_header_type_code = None
         # loop through file
         while record:
-            record_continuation_code = record[7]
-            if record_continuation_code == CONTINUE_FROM_LAST_RECORD:
+            record_continuation = record[7] == CONTINUE_FROM_LAST_RECORD
+            if record_continuation :
                 # continued record
                 data+=record[8:].strip()
             else:
@@ -101,6 +102,8 @@ class SEEDParser:
                     # skip non wanted records
                     control_header_type_code = None
             if self.debug:
+                if not record_continuation:
+                    print "========"
                 print record[0:8]
             record = self.fp.read(self.record_length)
         self.parseData(data, control_header_type_code)
@@ -113,8 +116,8 @@ class SEEDParser:
             self._parseVolumeIndexControlHeaders(data)
         elif control_header_type_code == DICTIONARY_HEADER:
             self._parseAbbreviationDictionaryControlHeaders(data)
-        elif control_header_type_code == STATION_HEADER:
-            self._parseStationControlHeaders(data)
+#        elif control_header_type_code == STATION_HEADER:
+#            self._parseStationControlHeaders(data)
     
     def _parseVolumeIndexControlHeaders(self, data):
         """Read and process the Volume Index Control Headers.
@@ -146,6 +149,7 @@ class SEEDParser:
                                                 strict = self.strict,
                                                 version = self.version)
                 root.append(blockette_obj.parse(data, blockette_length))
+                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %s " + \
                                           "found" % blockette_id)
@@ -188,6 +192,7 @@ class SEEDParser:
                                                 strict = self.strict,
                                                 version = self.version)
                 root.append(blockette_obj.parse(data, blockette_length))
+                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %s " + \
                                           "found" % blockette_id)
@@ -233,6 +238,7 @@ class SEEDParser:
                                                 strict = self.strict,
                                                 version = self.version)
                 root.append(blockette_obj.parse(data, blockette_length))
+                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %d found" %
                                           blockette_id)
