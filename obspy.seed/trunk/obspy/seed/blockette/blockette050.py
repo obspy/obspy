@@ -16,9 +16,9 @@ class Blockette050(Blockette):
     name = "Station Identifier Blockette"
     fields = [
         FixedString(3, "Station call letters", 5, 'UN'),
-        Float(4, "Latitude", 10),
-        Float(5, "Longitude", 11),
-        Float(6, "Elevation", 7),
+        Float(4, "Latitude", 10, mask='%+02.6f'),
+        Float(5, "Longitude", 11, mask='%+03.6f'),
+        Float(6, "Elevation", 7, mask='%+04.1f'),
         Integer(7, "Number of channels", 4),
         Integer(8, "Number of station comments", 3),
         VariableString(9, "Site name", 1, 60, 'UNLPS'),

@@ -13,3 +13,9 @@ from obspy.seed.blockette.blockette034 import Blockette034
 
 # Station Control Headers
 from obspy.seed.blockette.blockette050 import Blockette050
+from obspy.seed.blockette.blockette052 import Blockette052
+from obspy.seed.blockette.blockette053 import Blockette053
+from obspy.seed.blockette.blockette054 import Blockette054
+from obspy.seed.blockette.blockette057 import Blockette057
+from obspy.seed.blockette.blockette058 import Blockette058
+from obspy.seed.blockette.blockette061 import Blockette061

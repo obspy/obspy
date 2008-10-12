@@ -116,8 +116,8 @@ class SEEDParser:
             self._parseVolumeIndexControlHeaders(data)
         elif control_header_type_code == DICTIONARY_HEADER:
             self._parseAbbreviationDictionaryControlHeaders(data)
-#        elif control_header_type_code == STATION_HEADER:
-#            self._parseStationControlHeaders(data)
+        elif control_header_type_code == STATION_HEADER:
+            self._parseStationControlHeaders(data)
     
     def _parseVolumeIndexControlHeaders(self, data):
         """Read and process the Volume Index Control Headers.
@@ -148,7 +148,8 @@ class SEEDParser:
                                                 verify = self.verify,
                                                 strict = self.strict,
                                                 version = self.version)
-                root.append(blockette_obj.parse(data, blockette_length))
+                blockette_obj.parse(data, blockette_length)
+                root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %s " + \
@@ -191,7 +192,8 @@ class SEEDParser:
                                                 verify = self.verify,
                                                 strict = self.strict,
                                                 version = self.version)
-                root.append(blockette_obj.parse(data, blockette_length))
+                blockette_obj.parse(data, blockette_length)
+                root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %s " + \
@@ -237,7 +239,8 @@ class SEEDParser:
                                                 verify = self.verify,
                                                 strict = self.strict,
                                                 version = self.version)
-                root.append(blockette_obj.parse(data, blockette_length))
+                blockette_obj.parse(data, blockette_length)
+                root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
                 raise SEEDParserException("Unknown blockette type %d found" %

@@ -30,6 +30,6 @@ class Blockette030(Blockette):
         Integer(5, "Data family type", 3),
         Integer(6, "Number of decoder keys", 2),
         # REPEAT field 7 for the Number of decoder keys:
-        SimpleLoop('number_of_decoder_keys', 
-                   VariableString(7, "Decoder keys", flags='UNLPS')),
+        SimpleLoop("Number of decoder keys", 
+            VariableString(7, "Decoder keys", flags='UNLPS')),
     ]

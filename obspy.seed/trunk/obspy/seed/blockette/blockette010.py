@@ -19,8 +19,8 @@ class Blockette010(Blockette):
     id = 10
     name = "Volume Identifier Blockette"
     fields = [
-        Float(3, "Version of format", 4),
-        Integer(4, "Logical record length", 4),
+        Float(3, "Version of format", 4, mask='%2.1f'),
+        Integer(4, "Logical record length", 2),
         VariableString(5, "Beginning time", 1, 22, 'T'),
         VariableString(6, "End time", 1, 22, 'T'),
         VariableString(7, "Volume Time", 1, 22, 'T', version=2.3),

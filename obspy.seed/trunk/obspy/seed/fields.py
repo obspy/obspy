@@ -7,6 +7,20 @@ class SEEDTypeException(Exception):
 class Field:
     """General SEEF field."""
     
+    field_id = None
+    version = None
+    mask = None
+    
+    def __init__(self, id, name, *args, **kwargs):
+        self.id = id
+        self.name = name
+        self.version = kwargs.get('version', None)
+        self.mask = kwargs.get('mask', None)
+        if self.id:
+            self.field_id = "F%02d" % self.id
+        self.field_name = self.name.title().replace(' ','')
+        self.attribute_name = self.name.lower().replace(' ','_')
+    
     def __str__(self):
         if self.id:
             return "F%02d" % self.id
@@ -14,37 +28,44 @@ class Field:
 
 class Integer(Field):
     
-    value = None
-    
-    def __init__(self, id, name, length, version=None):
-        self.id = id
-        self.name = name
+    def __init__(self, id, name, length, **kwargs):
+        Field.__init__(self, id, name, **kwargs)
         self.length = length
-        self.version = version
-    
-    def __call__(self):
-        return self
+        self.default = 0
     
     def read(self, data):
         temp = data.read(self.length)
         try:
             temp = int(temp)
         except:
-            raise SEEDTypeException("No integer value found.")
-        self.value = temp
+            msg = "No integer value found for %s." % self.field_name
+            raise SEEDTypeException(msg)
         return temp
+    
+    def write(self, data):
+        format_str = "%%0%dd" % self.length
+        try:
+            temp = int(data)
+        except:
+            msg = "No integer value found for %s." % self.field_name
+            raise SEEDTypeException(msg)
+        result = format_str % temp
+        if len(result) != self.length:
+            msg = "Invalid field length %d of %d in %s." % \
+                  (len(result), self.length, self.field_name)
+            raise SEEDTypeException(msg)
+        return result
 
 
 class Float(Field):
     
-    def __init__(self, id, name, length, version=None):
-        self.id = id
-        self.name = name
+    def __init__(self, id, name, length, **kwargs):
+        Field.__init__(self, id, name, **kwargs)
         self.length = length
-        self.version = version
-    
-    def __call__(self):
-        return self
+        self.default = 0
+        if not self.mask:
+            msg = "Float field %s requires a data mask." % self.field_name
+            raise SEEDTypeException(msg)
     
     def read(self, data):
         temp = data.read(self.length)
@@ -55,20 +76,64 @@ class Float(Field):
         try:
             temp = float(temp)
         except:
-            raise SEEDTypeException("No float value found.")
+            msg = "No float value found for %s." % self.field_name
+            raise SEEDTypeException(msg)
         return temp
+    
+    def write(self, data):
+        format_str = "%%0%ds" % self.length
+        try:
+            temp = float(data)
+        except:
+            msg = "No float value found for %s." % self.field_name
+            raise SEEDTypeException(msg)
+        # special format for exponential output
+        result = format_str % (self.mask % temp)
+        if 'E' in self.mask or 'e' in self.mask:
+            result = self.formatExponential(result)
+        # replace spaces with zeros
+        if '+' not in self.mask:
+            result = result.replace(' ','0')
+        if len(result) != self.length:
+            msg = "Invalid field length %d of %d in %s." % \
+                  (len(result), self.length, self.field_name)
+            raise SEEDTypeException(msg)
+        return result
+
+    def formatExponential(self, data):
+        # XXX: very ugly
+        data = data.upper()
+        if data[-4] == 'E':
+            return data
+        if 'E+0' in data:
+            return data.replace('E+0', 'E+')
+        if 'E-0' in data:
+            return data.replace('E-0', 'E-')
+        msg = "Can't format float %s in field %s" % (data, self.field_name)
+        raise SEEDTypeException(msg)
 
 
 class FixedString(Field):
     
-    def __init__(self, id, name, length, flags='', version=None):
-        self.id = id
-        self.name = name
+    def __init__(self, id, name, length, flags='', **kwargs):
+        Field.__init__(self, id, name, **kwargs)
         self.length = length
-        self.version = version
+        self.flags = flags
+        self.default = ' ' * length
     
     def read(self, data):
         return data.read(self.length).strip()
+    
+    def write(self, data):
+        # Leave fixed length alphanumeric fields left justified (no leading 
+        # spaces), and pad them with spaces (after the field’s contents).
+        format_str = "%%-%ds" % self.length
+        result = format_str % data.strip()
+        if len(result) != self.length:
+            msg = "Invalid field length %d of %d in %s." % \
+                  (len(result), self.length, self.field_name)
+            raise SEEDTypeException(msg)
+        return result
 
 
 class VariableString(Field):
@@ -77,13 +142,12 @@ class VariableString(Field):
     Variable length fields cannot have leading or trailing spaces.
     """
     def __init__(self, id, name, min_length=0, max_length=None, flags=None, 
-                 version=None):
-        self.id = id
-        self.name = name
+                 **kwargs):
+        Field.__init__(self, id, name, **kwargs)
         self.min_length = min_length
         self.max_length = max_length
         self.flags = flags
-        self.version = version
+        self.default = ' ' * min_length
     
     def read(self, data):
         buffer = ''
@@ -102,21 +166,33 @@ class VariableString(Field):
             if self.max_length and i>self.max_length:
                 return buffer
         return buffer
+    
+    def write(self, data):
+        result = str(data)+'~'
+        # Character counts for variable length fields do not include the tilde 
+        # terminator. 
+        if self.max_length and len(result) > self.max_length+1:
+            msg = "Invalid field length %d of %d in %s." % \
+                  (len(result), self.length, self.field_name)
+            raise SEEDTypeException(msg)
+        if len(result) < self.min_length:
+            msg = "Invalid field length %d of %d in %s." % \
+                  (len(result), self.length, self.field_name)
+            raise SEEDTypeException(msg)
+        return result
 
 
 class MultipleLoop(Field):
     
-    def __init__(self, name, index_field, data_fields, version=None):
+    def __init__(self, name, index_field, data_fields, **kwargs):
+        Field.__init__(self, None, name, **kwargs)
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
-        self.id = None
-        self.index_field = index_field
+        self.index_field = index_field.lower().replace(' ','_')
         self.length = 0
         self.data_fields = data_fields
-        self.name = name
-        self.version = version
     
-    def read(self, data):
+    def getSubFields(self):
         temp = []
         for _i in range(0,self.length):
             temp2=[]
@@ -128,15 +204,13 @@ class MultipleLoop(Field):
 
 class SimpleLoop(Field):
     
-    def __init__(self, index_field, data_field, version=None):
-        self.id = None
-        self.index_field = index_field
+    def __init__(self, index_field, data_field, **kwargs):
+        Field.__init__(self, None, data_field.name, **kwargs)
+        self.index_field = index_field.lower().replace(' ','_')
         self.length = 0
         self.data_field = data_field
-        self.name = data_field.name
-        self.version = version
     
-    def read(self, data):
+    def getSubFields(self):
         temp = []
         for _i in range(0,self.length):
             temp.append(self.data_field)
