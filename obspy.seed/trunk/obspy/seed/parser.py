@@ -6,11 +6,16 @@ from StringIO import StringIO
 from obspy.seed import blockette
 
 
-VOLUME_HEADER = 'V'
-DICTIONARY_HEADER = 'A'
-STATION_HEADER = 'S'
-TIME_SPAN_HEADER = 'T'
 CONTINUE_FROM_LAST_RECORD = '*'
+
+HEADERS = {
+    'V': {'name': 'VolumeIndexControlHeader', 
+          'blockettes': range(10, 13)},
+    'A': {'name': 'AbbreviationDictionaryControlHeader', 
+          'blockettes': range(30, 36) + range(41, 49)},
+    'S': {'name': 'StationControlHeader', 
+          'blockettes': range(50, 63)}
+}
 
 
 class SEEDParserException(Exception):
@@ -58,25 +63,12 @@ class SEEDParser:
         self.version = float(self.fp.read(4))
         # F04
         length = pow(2,int(self.fp.read(2))) 
-        # FIX for some not standard conform SEED files which have an offset and
-        # don't include the 8 bytes of the record identification block - so we 
-        # just test
+        # test record length
         self.fp.seek(length)
         data = self.fp.read(6)
-        offset = 0
         if data!='000002':
-            # ok not what we expected - try to add bytes to the record length
-            length+=8
-            offset=4
-            self.fp.seek(length+offset)
-            data = self.fp.read(6)
-            if data!='000002':
-                raise SEEDParserException("Got an invalid logical record " + \
-                                          "length %d" % length)
-            if self.verify:
-                print "WARN: Not standard conform SEED volume - Volume " + \
-                      "logical record length must be expressed as a power " + \
-                      "of 2."
+            raise SEEDParserException("Got an invalid logical record " + \
+                                      "length %d" % length)
         self.record_length = length
         if self.debug:
             print "RECORD LENGTH:",self.record_length
@@ -84,7 +76,8 @@ class SEEDParser:
         self.fp.seek(0)
         record = self.fp.read(self.record_length)
         data = ''
-        control_header_type_code = None
+        record_type = None
+        record_id = None
         # loop through file
         while record:
             record_continuation = record[7] == CONTINUE_FROM_LAST_RECORD
@@ -92,75 +85,31 @@ class SEEDParser:
                 # continued record
                 data+=record[8:].strip()
             else:
-                self.parseData(data, control_header_type_code)
+                self._parseData(data, record_type, record_id)
                 # first or new type of record
-                control_header_type_code = record[6]
+                record_type = record[6]
+                record_id = int(record[0:6])
                 data=record[8:]
-                if control_header_type_code not in (VOLUME_HEADER, 
-                                                    DICTIONARY_HEADER, 
-                                                    STATION_HEADER):
-                    # skip non wanted records
-                    control_header_type_code = None
-                    # break if data fields start
+                if record_type not in HEADERS.keys():
+                    # only parse headers, no data
                     break
             if self.debug:
                 if not record_continuation:
                     print "========"
                 print record[0:8]
             record = self.fp.read(self.record_length)
-        self.parseData(data, control_header_type_code)
+        self._parseData(data, record_type, record_id)
+        # additional verification after parsing whole volume
+        if self.verify:
+            self._verifyData()
     
-    def parseData(self, text, control_header_type_code):
-        data = StringIO(text)
-        if not data:
-            return
-        if control_header_type_code == VOLUME_HEADER:
-            self._parseVolumeIndexControlHeaders(data)
-        elif control_header_type_code == DICTIONARY_HEADER:
-            self._parseAbbreviationDictionaryControlHeaders(data)
-        elif control_header_type_code == STATION_HEADER:
-            self._parseStationControlHeaders(data)
-    
-    def _parseVolumeIndexControlHeaders(self, data):
-        """Read and process the Volume Index Control Headers.
+    def _parseData(self, data, record_type, record_id):
+        """Read and process a record.
         
         Volume index control headers precede all data. Their primary purpose
         is to provide a directory to differentiate parts of the volume for 
         network and event distributions. Only field station volumes use Field 
         Volume Identifier Blockette [5].
-        """
-        root = SubElement(self.doc, "VolumeIndexControlHeaders")
-        blockette_length = 0
-        blockette_id = -1
-        
-        while blockette_id != 0:
-            try:
-                blockette_id = int(data.read(3))
-                blockette_length = int(data.read(4))
-            except:
-                break
-            data.seek(-7, 1)
-            if blockette_id >= 10 and blockette_id<=12:
-                class_name = 'Blockette%03d' % blockette_id
-                if not hasattr(blockette, class_name):
-                    raise SEEDParserException('Blockette %d not implemented!' %
-                                              blockette_id)
-                blockette_class = getattr(blockette, class_name)
-                blockette_obj = blockette_class(debug = self.debug,
-                                                verify = self.verify,
-                                                strict = self.strict,
-                                                version = self.version)
-                blockette_obj.parse(data, blockette_length)
-                root.append(blockette_obj.getXML())
-                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
-            elif blockette_id != 0:
-                raise SEEDParserException("Unknown blockette type %s " + \
-                                          "found" % blockette_id)
-    
-
-    
-    def _parseAbbreviationDictionaryControlHeaders(self, data):
-        """Read and process the Abbreviation Dictionary Control Header.
         
         Dictionary records let you use abbreviations to refer to lengthy 
         descriptions without having to create external tables. Blockettes [43] 
@@ -171,39 +120,6 @@ class SEEDParser:
         [53] through [58], but differ only in that they are set up for use as 
         response dictionary entries. Use them with the Response Reference 
         Blockette [60].
-        """
-        root = SubElement(self.doc, "AbbreviationDictionaryControlHeaders")
-        blockette_length = 0
-        blockette_id = -1
-        
-        while blockette_id != 0:
-            try:
-                blockette_id = int(data.read(3))
-                blockette_length = int(data.read(4))
-            except:
-                break
-            data.seek(-7, 1)
-            if (blockette_id >= 30 and blockette_id<=35) or \
-               (blockette_id >= 41 and blockette_id<=48):
-                class_name = 'Blockette%03d' % blockette_id
-                if not hasattr(blockette, class_name):
-                    raise SEEDParserException('Blockette %d not implemented!' %
-                                              blockette_id)
-                blockette_class = getattr(blockette, class_name)
-                blockette_obj = blockette_class(debug = self.debug,
-                                                verify = self.verify,
-                                                strict = self.strict,
-                                                version = self.version)
-                blockette_obj.parse(data, blockette_length)
-                root.append(blockette_obj.getXML())
-                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
-            elif blockette_id != 0:
-                raise SEEDParserException("Unknown blockette type %s " + \
-                                          "found" % blockette_id)
-    
-    
-    def _parseStationControlHeaders(self, data):
-        """Read and process the Station Control Headers.
         
         The station header records contain all the configuration and 
         identification information for the station and all its instruments.
@@ -212,7 +128,6 @@ class SEEDParser:
         different data formats dynamically. For each new station, start a new 
         logical record, set the remainder of any previous header records to 
         blanks, and write it out.
-        
         For analog cascading, use the Response (Poles & Zeros) Blockette [53], 
         and the Channel Sensitivity/Gain Blockette [58] if needed. For digital 
         cascading, use the Response (Coefficients) Blockette [54], and the 
@@ -220,9 +135,15 @@ class SEEDParser:
         if needed. For additional documentation, you may also use the Response 
         List Blockette [55] or the Generic Response Blockette [56].
         """
-        root = SubElement(self.doc, "StationControlHeaders")
+        data = StringIO(data)
+        if not data:
+            return
+        if record_type not in HEADERS.keys():
+            return
         blockette_length = 0
         blockette_id = -1
+        
+        root = SubElement(self.doc, HEADERS[record_type].get('name'))
         
         while blockette_id != 0:
             try:
@@ -231,7 +152,7 @@ class SEEDParser:
             except:
                 break
             data.seek(-7, 1)
-            if blockette_id >= 50 and blockette_id<=62:
+            if blockette_id in HEADERS[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
                 if not hasattr(blockette, class_name):
                     raise SEEDParserException('Blockette %d not implemented!' %
@@ -240,10 +161,20 @@ class SEEDParser:
                 blockette_obj = blockette_class(debug = self.debug,
                                                 verify = self.verify,
                                                 strict = self.strict,
-                                                version = self.version)
+                                                version = self.version,
+                                                record_type = record_type,
+                                                record_id = record_id)
                 blockette_obj.parse(data, blockette_length)
                 root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
-                raise SEEDParserException("Unknown blockette type %d found" %
-                                          blockette_id)
+                raise SEEDParserException("Unknown blockette type %s " + \
+                                          "found" % blockette_id)
+    
+    def _verifyData(self):
+        # parse through all blockettes verfication methods
+        for (id, blockette_objs) in self.blockettes.iteritems():
+            for blockette_obj in blockette_objs:
+                if hasattr(blockette_obj, 'verifyData'):
+                    blockette_obj.verifyData(self)
+            

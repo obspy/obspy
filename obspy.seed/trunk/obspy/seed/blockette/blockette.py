@@ -15,10 +15,12 @@ class Blockette:
     """General blockette handling."""
     
     def __init__(self, *args, **kwargs):
-        self.debug = kwargs.get('debug', False)
         self.verify = kwargs.get('verify', True)
+        self.debug = kwargs.get('debug', False)
         self.strict = kwargs.get('strict', False)
         self.version = kwargs.get('version', 2.4)
+        self.record_type = kwargs.get('record_type', None)
+        self.record_id = kwargs.get('record_id', None)
         self.parsed = False
         self.blockette_id = "B%03d" % self.id
         self.blockette_name = self.name.title().replace(' ','')

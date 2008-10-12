@@ -26,5 +26,27 @@ class Blockette011(Blockette):
         ])
     ]
     
-    def verify(self, parser):
-        pass
+    def verifyData(self, volume):
+        # there should be only one blockette 011
+        if len(volume.blockettes.get(11))!=1:
+            msg = "INVALID: Volume Station Header Index Blockette [11] " + \
+                  "should be defined only once." 
+            print(msg)
+        # check if all blockette 50 are indexed in blockette 11
+        for b50 in volume.blockettes.get(50):
+            if b50.record_id in self.sequence_number_of_station_header:
+                continue
+            msg = "INVALID: All Station Identifier Blockettes [50] " + \
+                  "must be indexed in the Volume Station Header Index " + \
+                  "Blockette [11]. Index for station %s missing in [11]." 
+            print(msg % b50.station_call_letters)
+        # check if all indexed stations have actually defined a blockette 50
+        for record_id in self.sequence_number_of_station_header:
+            record_ids = [b50.record_id for b50 in volume.blockettes.get(50)]
+            if record_id in record_ids:
+                continue
+            msg = "INVALID: All Station indexed in the Volume " + \
+                  "Station Header Index must be defined in a own " + \
+                  "Station Identifier Blockette [50]. Blockette [50] at " + \
+                  "sequence number %s is not indexed." 
+            print(msg % record_id)
