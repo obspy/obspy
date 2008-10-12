@@ -101,6 +101,8 @@ class SEEDParser:
                                                     STATION_HEADER):
                     # skip non wanted records
                     control_header_type_code = None
+                    # break if data fields start
+                    break
             if self.debug:
                 if not record_continuation:
                     print "========"
