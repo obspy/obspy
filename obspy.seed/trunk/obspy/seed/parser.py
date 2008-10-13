@@ -8,12 +8,13 @@ from obspy.seed import blockette
 
 CONTINUE_FROM_LAST_RECORD = '*'
 
-HEADERS = {
-    'V': {'name': 'VolumeIndexControlHeader', 
+HEADERS = ['V', 'A', 'S']
+HEADER_INFO = {
+    'V': {'name': 'VolumeIndexControlHeaders', 
           'blockettes': range(10, 13)},
-    'A': {'name': 'AbbreviationDictionaryControlHeader', 
+    'A': {'name': 'AbbreviationDictionaryControlHeaders', 
           'blockettes': range(30, 36) + range(41, 49)},
-    'S': {'name': 'StationControlHeader', 
+    'S': {'name': 'StationControlHeaders', 
           'blockettes': range(50, 63)}
 }
 
@@ -48,6 +49,7 @@ class SEEDParser:
         self.fp.close()
     
     def parse(self):
+        """Parses thhrough a whole SEED volume."""
         self.fp.seek(0)
         # retrieve some basic date, like version and record_length
         data = self.fp.read(8)
@@ -90,7 +92,7 @@ class SEEDParser:
                 record_type = record[6]
                 record_id = int(record[0:6])
                 data=record[8:]
-                if record_type not in HEADERS.keys():
+                if record_type not in HEADERS:
                     # only parse headers, no data
                     break
             if self.debug:
@@ -138,12 +140,12 @@ class SEEDParser:
         data = StringIO(data)
         if not data:
             return
-        if record_type not in HEADERS.keys():
+        if record_type not in HEADERS:
             return
         blockette_length = 0
         blockette_id = -1
         
-        root = SubElement(self.doc, HEADERS[record_type].get('name'))
+        root = SubElement(self.doc, HEADER_INFO[record_type].get('name'))
         
         while blockette_id != 0:
             try:
@@ -152,7 +154,7 @@ class SEEDParser:
             except:
                 break
             data.seek(-7, 1)
-            if blockette_id in HEADERS[record_type].get('blockettes', []):
+            if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
                 if not hasattr(blockette, class_name):
                     raise SEEDParserException('Blockette %d not implemented!' %
@@ -172,9 +174,12 @@ class SEEDParser:
                                           "found" % blockette_id)
     
     def _verifyData(self):
-        # parse through all blockettes verfication methods
+        """Parses through all defined blockettes verfication methods."""
         for (id, blockette_objs) in self.blockettes.iteritems():
             for blockette_obj in blockette_objs:
                 if hasattr(blockette_obj, 'verifyData'):
                     blockette_obj.verifyData(self)
-            
+    
+    def getXML(self):
+        """Returns a XML representation of all headers of a SEED volume."""
+        return self.doc
