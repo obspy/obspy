@@ -3,19 +3,20 @@
 from lxml.etree import Element, SubElement
 from StringIO import StringIO
 
-from obspy.seed import blockette
+from obspy.seed import blockette, utils
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
 
 HEADERS = ['V', 'A', 'S']
+# @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
 HEADER_INFO = {
-    'V': {'name': 'VolumeIndexControlHeaders', 
-          'blockettes': range(10, 13)},
-    'A': {'name': 'AbbreviationDictionaryControlHeaders', 
-          'blockettes': range(30, 36) + range(41, 49)},
-    'S': {'name': 'StationControlHeaders', 
-          'blockettes': range(50, 63)}
+    'V': {'name': 'Volume Index Control Headers', 
+          'blockettes': [10, 11, 12]},
+    'A': {'name': 'Abbreviation Dictionary Control Headers', 
+          'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
+    'S': {'name': 'Station Control Headers', 
+          'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61]}
 }
 
 
@@ -145,7 +146,8 @@ class SEEDParser:
         blockette_length = 0
         blockette_id = -1
         
-        root = SubElement(self.doc, HEADER_INFO[record_type].get('name'))
+        root = SubElement(self.doc, 
+                          utils.toXMLTag(HEADER_INFO[record_type].get('name')))
         
         while blockette_id != 0:
             try:

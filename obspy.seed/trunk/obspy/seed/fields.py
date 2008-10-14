@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
+from obspy.seed import utils
+
+
 class SEEDTypeException(Exception):
     pass
 
@@ -16,10 +19,11 @@ class Field:
         self.name = name
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
+        self.optional = kwargs.get('optional', False)
         if self.id:
             self.field_id = "F%02d" % self.id
-        self.field_name = self.name.title().replace(' ','')
-        self.attribute_name = self.name.lower().replace(' ','_')
+        self.field_name = utils.toXMLTag(self.name)
+        self.attribute_name = utils.toAttribute(self.name)
     
     def __str__(self):
         if self.id:
@@ -185,7 +189,7 @@ class MultipleLoop(Field):
         Field.__init__(self, None, name, **kwargs)
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
-        self.index_field = index_field.lower().replace(' ','_')
+        self.index_field = utils.toAttribute(index_field)
         self.length = 0
         self.data_fields = data_fields
     
@@ -203,7 +207,7 @@ class SimpleLoop(Field):
     
     def __init__(self, index_field, data_field, **kwargs):
         Field.__init__(self, None, data_field.name, **kwargs)
-        self.index_field = index_field.lower().replace(' ','_')
+        self.index_field = utils.toAttribute(index_field)
         self.length = 0
         self.data_field = data_field
     

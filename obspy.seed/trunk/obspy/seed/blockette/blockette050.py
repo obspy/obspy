@@ -19,8 +19,8 @@ class Blockette050(Blockette):
         Float(4, "Latitude", 10, mask='%+02.6f'),
         Float(5, "Longitude", 11, mask='%+03.6f'),
         Float(6, "Elevation", 7, mask='%+04.1f'),
-        Integer(7, "Number of channels", 4),
-        Integer(8, "Number of station comments", 3),
+        Integer(7, "Number of channels", 4, optional=True),
+        Integer(8, "Number of station comments", 3, optional=True),
         VariableString(9, "Site name", 1, 60, 'UNLPS'),
         Integer(10, "Network identifier code", 3),
         Integer(11, "word order 32 bit", 4),
@@ -29,4 +29,7 @@ class Blockette050(Blockette):
         VariableString(14, "End effective date", 0, 22, 'T'),
         FixedString(15, "Update flag", 1),
         FixedString(16, "Network Code", 2, 'ULN', version=2.3)
+    ]
+    lockup = [
+        ("Network identifier", 10, 33, 3, 4),
     ]

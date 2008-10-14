@@ -4,7 +4,7 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement
 
 from obspy.seed.fields import Integer, MultipleLoop, SimpleLoop, Float
-
+from obspy.seed import utils
 
 class BlocketteLengthException(Exception):
     """Wrong blockette length detected."""
@@ -23,7 +23,7 @@ class Blockette:
         self.record_id = kwargs.get('record_id', None)
         self.parsed = False
         self.blockette_id = "B%03d" % self.id
-        self.blockette_name = self.name.title().replace(' ','')
+        self.blockette_name = utils.toXMLTag(self.name)
         if self.debug:
             print "----"
             print str(self)
