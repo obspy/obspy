@@ -91,9 +91,6 @@ class Float(Field):
         result = format_str % (self.mask % temp)
         if 'E' in self.mask or 'e' in self.mask:
             result = self.formatExponential(result)
-        # replace spaces with zeros
-        if '+' not in self.mask:
-            result = result.replace(' ','0')
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)

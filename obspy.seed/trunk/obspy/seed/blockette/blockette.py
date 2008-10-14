@@ -3,7 +3,7 @@
 from StringIO import StringIO
 from lxml.etree import Element, SubElement
 
-from obspy.seed.fields import Integer, MultipleLoop, SimpleLoop
+from obspy.seed.fields import Integer, MultipleLoop, SimpleLoop, Float
 
 
 class BlocketteLengthException(Exception):
@@ -160,6 +160,8 @@ class Blockette:
                     # cycle through fields
                     for subfield in field.data_fields:
                         result = getattr(self, subfield.attribute_name)[i]
+                        if isinstance(subfield, Float):
+                            result = subfield.write(result)
                         SubElement(item, 
                                    subfield.field_name, 
                                    id=subfield.field_id).text = unicode(result)
@@ -172,7 +174,10 @@ class Blockette:
                 results = getattr(self, field.attribute_name)
                 # root of looping element
                 root = SubElement(doc, field.field_name)
+                subfield = field.data_field
                 for subresult in results:
+                    if isinstance(subfield, Float):
+                        subresult = subfield.write(subresult)
                     # set XML string
                     text = unicode(subresult)
                     SubElement(root, 'item').text = text
@@ -186,6 +191,8 @@ class Blockette:
                     result = field.default
                 else:
                     result = getattr(self, field.attribute_name)
+                if isinstance(field, Float):
+                    result = field.write(result)
                 # set XML string
                 SubElement(doc, 
                            field.field_name, 
