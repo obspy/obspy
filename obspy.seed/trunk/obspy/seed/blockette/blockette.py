@@ -173,8 +173,8 @@ class Blockette:
                     raise Exception(msg)
                 results = getattr(self, field.attribute_name)
                 # root of looping element
-                root = SubElement(doc, field.field_name)
                 subfield = field.data_field
+                root = SubElement(doc, field.field_name, id=subfield.field_id)
                 for subresult in results:
                     if isinstance(subfield, Float):
                         subresult = subfield.write(subresult)
