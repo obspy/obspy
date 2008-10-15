@@ -27,11 +27,27 @@ def bandpass(data,freqmin,freqmax,df=200,corners=4):
   return lfilter(b, a, data)
 
 def bandstop(data,freqmin,freqmax,df=200,corners=4):
-  """Butterworth-Bandstop: defilter data from freqmin to freqmax using
-  corners corners
+  """Butterworth-Bandstop: filter data removing data between frequencies
+  freqmin and freqmax using corners corners
   """
   fe=.5*df
   [b,a]=iirfilter(corners, [freqmin/fe, freqmax/fe], btype='bandstop',ftype='butter',output='ba')
+  return lfilter(b, a, data)
+
+def lowpass(data,freq,df=200,corners=4):
+  """Butterworth-Lowpass: filter data removing data over certain frequency freq
+  using corners corners
+  """
+  fe=.5*df
+  [b,a]=iirfilter(corners, freq/fe, btype='lowpass',ftype='butter',output='ba')
+  return lfilter(b, a, data)
+
+def highpass(data,freq,df=200,corners=4):
+  """Butterworth-Highpass: filter data removing data below certain frequency freq
+  using corners corners
+  """
+  fe=.5*df
+  [b,a]=iirfilter(corners, freq/fe, btype='highpass',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
 def readgse(gsefile):
