@@ -8,11 +8,12 @@ class SEEDTypeException(Exception):
     pass
 
 class Field:
-    """General SEEF field."""
+    """General SEED field."""
     
     field_id = None
     version = None
     mask = None
+    optional = False
     
     def __init__(self, id, name, *args, **kwargs):
         self.id = id

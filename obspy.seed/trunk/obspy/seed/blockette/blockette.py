@@ -14,6 +14,12 @@ class BlocketteLengthException(Exception):
 class Blockette:
     """General blockette handling."""
     
+    # default field for each blockette
+    default_fields = [
+        Integer(1, "Blockette type", 3),
+        Integer(2, "Length of blockette", 4, optional=True)
+    ]
+    
     def __init__(self, *args, **kwargs):
         self.verify = kwargs.get('verify', True)
         self.debug = kwargs.get('debug', False)
@@ -47,10 +53,7 @@ class Blockette:
             temp=data.read(expected_length)
             print '  DATA:', temp
             data.seek(-expected_length,1)
-        # default field for each blockette
-        blockette_fields = [Integer(1, "Blockette type", 3),
-                            Integer(2, "Length of blockette", 4)]
-        blockette_fields.extend(self.fields)
+        blockette_fields = self.default_fields + self.fields
         for field in blockette_fields:
             # blockette length reached -> break with warning, because fields 
             # still exist
@@ -129,12 +132,13 @@ class Blockette:
         # root element
         doc = Element(self.blockette_name, id=self.blockette_id)
         # default field for each blockette
-        blockette_fields = [Integer(1, "Blockette type", 3),
-                            Integer(2, "Length of blockette", 4)]
-        blockette_fields.extend(self.fields)
+        blockette_fields = self.default_fields + self.fields
         for field in blockette_fields:
             # check version
             if field.version and field.version>self.version:
+                continue
+            # skip if optional
+            if field.optional:
                 continue
             if isinstance(field, MultipleLoop):
                 # test if index attribute is set

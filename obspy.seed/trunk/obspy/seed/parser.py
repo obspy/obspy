@@ -25,10 +25,9 @@ class SEEDParserException(Exception):
 
 
 class SEEDParser:
-    """The SEED parser class generates a XML data format from a dataless or 
-    full SEED file.
+    """The SEED parser class parses dataless or full SEED volumes.
     
-    The SEED file format description kann be found at
+    The SEED file format description can be found at
     @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
     """ 
     record_length = 4096
@@ -50,7 +49,7 @@ class SEEDParser:
         self.fp.close()
     
     def parse(self):
-        """Parses thhrough a whole SEED volume."""
+        """Parses through a whole SEED volume."""
         self.fp.seek(0)
         # retrieve some basic date, like version and record_length
         data = self.fp.read(8)
@@ -107,7 +106,7 @@ class SEEDParser:
             self._verifyData()
     
     def _parseData(self, data, record_type, record_id):
-        """Read and process a record.
+        """Read and process data of combined records.
         
         Volume index control headers precede all data. Their primary purpose
         is to provide a directory to differentiate parts of the volume for 

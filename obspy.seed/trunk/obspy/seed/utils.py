@@ -7,5 +7,5 @@ def toAttribute(name):
 
 
 def toXMLTag(name):
-    """Creates a valid CamelCase XML tag grom a given string."""
+    """Creates a valid CamelCase XML tag from a given string."""
     return name.title().replace(' ','')

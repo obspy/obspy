@@ -3,6 +3,9 @@
 import doctest
 import unittest
 
+import test_utils
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(doctest.DocFileSuite('test_blockette010.txt'))
@@ -20,6 +23,7 @@ def suite():
     suite.addTest(doctest.DocFileSuite('test_blockette057.txt'))
     suite.addTest(doctest.DocFileSuite('test_blockette058.txt'))
     suite.addTest(doctest.DocFileSuite('test_blockette061.txt'))
+    suite.addTest(test_utils.suite())
     return suite
 
 
