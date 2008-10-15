@@ -63,6 +63,7 @@ class Integer(Field):
 
 
 class Float(Field):
+    """A float number with a fixed length and output mask."""
     
     def __init__(self, id, name, length, **kwargs):
         Field.__init__(self, id, name, **kwargs)
@@ -74,8 +75,8 @@ class Float(Field):
     
     def read(self, data):
         temp = data.read(self.length)
-        # XXX: some SEED writer are screwing up
-        if temp[-1] in [' ', '-']:
+        # some SEED writer screw up by generating list of floats 
+        if temp[-1] in [' ', '-', '+']:
             data.seek(-1,1)
             temp = temp[:-1]
         try:
@@ -103,6 +104,24 @@ class Float(Field):
         return result
 
     def formatExponential(self, data):
+        """Formats floats in a fixed exponential format.
+        
+        Different operation systems are delivering different output for the
+        exponential format of floats. Here we ensure to deliver in a for SEED
+        valid format independent of the OS. For speed issues we simple cut any 
+        number ending with E+0XX or E-0XX down to E+XX or E-XX. This fails for 
+        numbers XX>99, but should not occur, because the SEED standard does 
+        not allow this values either.
+        
+        Windows Vista:
+        >>> '%E' % 2.5
+        '2.300000E+000'
+        
+        Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
+        [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
+        >>> '%E' % 2.3
+        '2.300000E+00'
+        """
         # XXX: very ugly
         data = data.upper()
         if data[-4] == 'E':

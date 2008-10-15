@@ -21,8 +21,10 @@ class UtilsTestSuite(unittest.TestCase):
         name = "Hallo Welt"
         self.assertEquals("HalloWelt", utils.toXMLTag(name))
 
+
 def suite():
     return unittest.makeSuite(UtilsTestSuite, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

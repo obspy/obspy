@@ -4,6 +4,7 @@ import doctest
 import unittest
 
 import test_utils
+import test_fields
 
 
 def suite():
@@ -24,6 +25,7 @@ def suite():
     suite.addTest(doctest.DocFileSuite('test_blockette058.txt'))
     suite.addTest(doctest.DocFileSuite('test_blockette061.txt'))
     suite.addTest(test_utils.suite())
+    suite.addTest(test_fields.suite())
     return suite
 
 

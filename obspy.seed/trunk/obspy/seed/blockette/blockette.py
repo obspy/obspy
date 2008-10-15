@@ -127,8 +127,11 @@ class Blockette:
                 else:
                     print('WARN: ' + msg)
     
-    def getXML(self):
-        """Returns a XML document representing this blockette."""
+    def getXML(self, show_optional=False):
+        """Returns a XML document representing this blockette.
+        
+        The enabled flag optional will return optional elements too.
+        """
         # root element
         doc = Element(self.blockette_name, id=self.blockette_id)
         # default field for each blockette
@@ -138,7 +141,7 @@ class Blockette:
             if field.version and field.version>self.version:
                 continue
             # skip if optional
-            if field.optional:
+            if not show_optional and field.optional:
                 continue
             if isinstance(field, MultipleLoop):
                 # test if index attribute is set
