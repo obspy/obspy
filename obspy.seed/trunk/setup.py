@@ -43,7 +43,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.seed.tests.test",
+    test_suite = "obspy.seed.tests",
     install_requires=[
         'setuptools',
         'lxml',

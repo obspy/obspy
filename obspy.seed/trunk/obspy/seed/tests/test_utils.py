@@ -5,7 +5,7 @@ import unittest
 from obspy.seed import utils
 
 
-class UtilsTestSuite(unittest.TestCase):
+class UtilsTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -23,7 +23,7 @@ class UtilsTestSuite(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(UtilsTestSuite, 'test')
+    return unittest.makeSuite(UtilsTestCase, 'test')
 
 
 if __name__ == '__main__':

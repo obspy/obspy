@@ -5,7 +5,7 @@ import unittest
 from obspy.seed.fields import Float
 
 
-class FieldsTestSuite(unittest.TestCase):
+class FieldsTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -19,7 +19,7 @@ class FieldsTestSuite(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(FieldsTestSuite, 'test')
+    return unittest.makeSuite(FieldsTestCase, 'test')
 
 
 if __name__ == '__main__':
