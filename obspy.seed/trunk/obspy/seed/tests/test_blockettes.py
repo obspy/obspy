@@ -3,30 +3,28 @@
 import unittest
 import doctest
 
-
-class BlocketteTestSuite(unittest.TestSuite):
-    
-    def __init__(self, *args, **kwargs):
-        unittest.TestSuite.__init__(self, *args, **kwargs)
-        self.addTest(doctest.DocFileSuite('blockette010.txt'))
-        self.addTest(doctest.DocFileSuite('blockette011.txt'))
-        self.addTest(doctest.DocFileSuite('blockette012.txt'))
-        self.addTest(doctest.DocFileSuite('blockette030.txt'))
-        self.addTest(doctest.DocFileSuite('blockette031.txt'))
-        self.addTest(doctest.DocFileSuite('blockette033.txt'))
-        self.addTest(doctest.DocFileSuite('blockette034.txt'))
-        self.addTest(doctest.DocFileSuite('blockette050.txt'))
-        self.addTest(doctest.DocFileSuite('blockette051.txt'))
-        self.addTest(doctest.DocFileSuite('blockette052.txt'))
-        self.addTest(doctest.DocFileSuite('blockette053.txt'))
-        self.addTest(doctest.DocFileSuite('blockette054.txt'))
-        self.addTest(doctest.DocFileSuite('blockette057.txt'))
-        self.addTest(doctest.DocFileSuite('blockette058.txt'))
-        self.addTest(doctest.DocFileSuite('blockette061.txt'))
+def additional_tests():
+    suite = unittest.TestSuite()
+    suite.addTest(doctest.DocFileSuite('blockette010.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette011.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette012.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette030.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette031.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette033.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette034.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette050.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette051.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette052.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette053.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette054.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette057.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette058.txt'))
+    suite.addTest(doctest.DocFileSuite('blockette061.txt'))
+    return suite
 
 
 def suite():
-    return BlocketteTestSuite()
+    return additional_tests()
 
 
 if __name__ == '__main__':
