@@ -20,6 +20,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+"""Tools to parse, verify and convert dataless SEED volumes."""
+
 __author__ = """Robert Barsch <barsch@lmu.de>"""
 __docformat__ = 'plaintext'
 
