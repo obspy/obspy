@@ -120,8 +120,9 @@ class Blockette:
         if self.verify or self.strict:
             blockette_length = end_pos-start_pos
             if expected_length != blockette_length:
-                msg = 'Wrong size of Blockette %s (%d of %d)' % \
-                      (self.blockette_id, blockette_length, expected_length)
+                msg = 'Wrong size of Blockette %s (%d of %d) in sequence %06d' % \
+                      (self.blockette_id, blockette_length, expected_length,
+                       self.record_id)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:

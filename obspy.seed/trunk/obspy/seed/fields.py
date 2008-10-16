@@ -10,19 +10,17 @@ class SEEDTypeException(Exception):
 class Field:
     """General SEED field."""
     
-    field_id = None
-    version = None
-    mask = None
-    optional = False
-    
     def __init__(self, id, name, *args, **kwargs):
         self.id = id
+        
         self.name = name
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
         self.optional = kwargs.get('optional', False)
         if self.id:
             self.field_id = "F%02d" % self.id
+        else:
+            self.field_id = None
         self.field_name = utils.toXMLTag(self.name)
         self.attribute_name = utils.toAttribute(self.name)
     
@@ -75,10 +73,6 @@ class Float(Field):
     
     def read(self, data):
         temp = data.read(self.length)
-        # some SEED writer screw up by generating list of floats 
-        if temp[-1] in [' ', '-', '+']:
-            data.seek(-1,1)
-            temp = temp[:-1]
         try:
             temp = float(temp)
         except:
@@ -113,16 +107,16 @@ class Float(Field):
         numbers XX>99, but should not occur, because the SEED standard does 
         not allow this values either.
         
-        Windows Vista:
+        Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45) 
+        [MSC v.1310 32 bit (Intel)] on win32
         >>> '%E' % 2.5
-        '2.300000E+000'
+        '2.500000E+000'
         
         Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
         [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
-        >>> '%E' % 2.3
-        '2.300000E+00'
+        >>> '%E' % 2.5
+        '2.500000E+00'
         """
-        # XXX: very ugly
         data = data.upper()
         if data[-4] == 'E':
             return data
@@ -160,7 +154,8 @@ class FixedString(Field):
 class VariableString(Field):
     """Variable length ASCII string, ending with a tilde: ~ (ASCII 126).
     
-    Variable length fields cannot have leading or trailing spaces.
+    Variable length fields cannot have leading or trailing spaces. Character 
+    counts for variable length fields do not include the tilde terminator. 
     """
     def __init__(self, id, name, min_length=0, max_length=None, flags=None, 
                  **kwargs):
@@ -190,8 +185,6 @@ class VariableString(Field):
     
     def write(self, data):
         result = str(data)+'~'
-        # Character counts for variable length fields do not include the tilde 
-        # terminator. 
         if self.max_length and len(result) > self.max_length+1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)

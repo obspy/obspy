@@ -30,12 +30,12 @@ class SEEDParser:
     The SEED file format description can be found at
     @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
     """ 
-    record_length = 4096
-    version = None
-    blockettes = {}
     
     def __init__(self, filename, verify=True, debug=False, strict=False):
+        self.record_length = 4096
+        self.version = None
         self.filename = filename
+        self.blockettes = {}
         self.debug = debug
         self.verify = verify
         self.strict = strict
@@ -85,7 +85,7 @@ class SEEDParser:
             record_continuation = record[7] == CONTINUE_FROM_LAST_RECORD
             if record_continuation :
                 # continued record
-                data+=record[8:].strip()
+                data+=record[8:]
             else:
                 self._parseData(data, record_type, record_id)
                 # first or new type of record
@@ -154,6 +154,10 @@ class SEEDParser:
                 blockette_length = int(data.read(4))
             except:
                 break
+            if blockette_id==32:
+                print self.filename
+                import pdb;pdb.set_trace()
+                pass
             data.seek(-7, 1)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
@@ -171,7 +175,7 @@ class SEEDParser:
                 root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
-                raise SEEDParserException("Unknown blockette type %s " + \
+                raise SEEDParserException("Unknown blockette type %d " + \
                                           "found" % blockette_id)
     
     def _verifyData(self):

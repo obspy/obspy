@@ -27,6 +27,7 @@ class Blockette011(Blockette):
     ]
     
     def verifyData(self, volume):
+        # XXX: error yet!
         # there should be only one blockette 011
         if len(volume.blockettes.get(11))!=1:
             msg = "INVALID: Volume Station Header Index Blockette [11] " + \
