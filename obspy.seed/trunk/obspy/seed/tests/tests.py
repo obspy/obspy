@@ -3,8 +3,8 @@
 import doctest
 import unittest
 
-import test_utils
-import test_fields
+from obspy.seed.tests import test_utils
+from obspy.seed.tests import test_fields
 
 
 def suite():

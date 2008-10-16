@@ -34,7 +34,7 @@ setup(
     description="Tools to parse, verify and convert dataless SEED volumes.",
     long_description="""""",
     classifiers=[],
-    keywords='seed xml',
+    keywords='seismology seed xml convert parse',
     author='Robert Barsch',
     author_email='barsch@lmu.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.seed',
@@ -42,7 +42,8 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
+    test_suite = "obspy.seed.tests.test",
     install_requires=[
         'setuptools',
         'lxml',
