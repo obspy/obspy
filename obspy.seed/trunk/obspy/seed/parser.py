@@ -86,7 +86,9 @@ class SEEDParser:
                 # continued record
                 merged_data+=record[8:]
             else:
-                self._parseMergedData(merged_data, record_type, record_id)
+                self._parseMergedData(merged_data.strip(), 
+                                      record_type, 
+                                      record_id)
                 # first or new type of record
                 record_type = record[6]
                 record_id = int(record[0:6])
@@ -99,7 +101,9 @@ class SEEDParser:
                     print "========"
                 print record[0:8]
             record = data.read(self.record_length)
-        self._parseMergedData(merged_data, record_type, record_id)
+        self._parseMergedData(merged_data.strip(), 
+                              record_type, 
+                              record_id)
         # additional verification after parsing whole volume
         if self.verify:
             self._verifyData()
