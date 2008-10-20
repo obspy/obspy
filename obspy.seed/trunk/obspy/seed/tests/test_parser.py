@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from StringIO import StringIO
 
 from obspy.seed.parser import SEEDParser
 from obspy.seed.blockette import Blockette054, Blockette010
@@ -10,8 +11,8 @@ class ParserTestCase(unittest.TestCase):
 
     def test_blocketteStartsAfterRecord(self):
         """
-        '... 000006S*0543864...'
-        '  *0543864'
+        '... 058003504 1.00000E+00 0.00000E+0000 000006S*0543864 ... '
+        ' 0543864' -> results in Blockette 005
         """
         # create a valid blockette 010 with record length 256
         b010 = "0100018 2.408~~~~~"
@@ -32,7 +33,7 @@ class ParserTestCase(unittest.TestCase):
         
         # read records
         parser = SEEDParser()
-        parser.parse(data)
+        parser.parse(StringIO(data))
 
 
 def suite():

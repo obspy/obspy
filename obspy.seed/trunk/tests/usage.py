@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from lxml.etree import tostring
-
 from obspy.seed import SEEDParser
 
 
-sp = SEEDParser('data/dataless.seed.BW_ZUGS', verify=True)
+sp = SEEDParser(verify=True)
+sp.parseSEEDFile('data/dataless.seed.BW_ZUGS')
 fp = open('output/dataless.seed.BW_ZUGS.xml','w')
-fp.write(tostring(sp.getXML(), pretty_print=True))
+fp.write(sp.getXML())
 fp.close()
 
-sp = SEEDParser('data/dataless.seed')
+sp = SEEDParser()
+sp.parseSEEDFile('data/dataless.seed')
 fp = open('output/dataless.seed.xml','w')
-fp.write(tostring(sp.getXML(), pretty_print=True))
+fp.write(sp.getXML())
 fp.close()

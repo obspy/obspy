@@ -6,6 +6,7 @@ from lxml.etree import Element, SubElement
 from obspy.seed.fields import Integer, MultipleLoop, SimpleLoop, Float
 from obspy.seed import utils
 
+
 class BlocketteLengthException(Exception):
     """Wrong blockette length detected."""
     pass
@@ -174,6 +175,15 @@ class Blockette:
                                    subfield.field_name, 
                                    id=subfield.field_id).text = unicode(result)
             elif isinstance(field, SimpleLoop):
+                # test if index attribute is set
+                if not hasattr(self, field.index_field):
+                    msg = "Attribute %s in Blockette %s does not exist!" %\
+                          (field.index_field, self.blockette_id)
+                    raise Exception(msg)
+                # get number of entries
+                number_of_elements = int(getattr(self, field.index_field))
+                if number_of_elements == 0:
+                    continue
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
                     msg = "Attribute %s in Blockette %s does not exist!" % \
@@ -237,6 +247,15 @@ class Blockette:
                         result = getattr(self, subfield.attribute_name)[i]
                         data = data + subfield.write(result)
             elif isinstance(field, SimpleLoop):
+                # test if index attribute is set
+                if not hasattr(self, field.index_field):
+                    msg = "Attribute %s in Blockette %s does not exist!" %\
+                          (field.index_field, self.blockette_id)
+                    raise Exception(msg)
+                # get number of entries
+                number_of_elements = int(getattr(self, field.index_field))
+                if number_of_elements == 0:
+                    continue
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
                     msg = "Attribute %s in Blockette %s does not exist!" % \

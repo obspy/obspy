@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from lxml.etree import Element, SubElement
+from lxml.etree import Element, SubElement, tostring
 from StringIO import StringIO
 
 from obspy.seed import blockette, utils
@@ -31,53 +31,52 @@ class SEEDParser:
     @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
     """ 
     
-    def __init__(self, filename, verify=True, debug=False, strict=False):
+    def __init__(self, verify=True, debug=False, strict=False):
         self.record_length = 4096
         self.version = None
-        self.filename = filename
         self.blockettes = {}
         self.debug = debug
         self.verify = verify
         self.strict = strict
-        self.fp = open(filename)
         self.doc = Element("DatalessSEEDXML")
+    
+    def parseSEEDFile(self, filename):
         if self.debug:
             print 'FILENAME:', filename
-        self.parse()
+        fp = open(filename)
+        self.parse(fp)
+        fp.close()
     
-    def __del__(self):
-        self.fp.close()
-    
-    def parse(self):
+    def parse(self, data):
         """Parses through a whole SEED volume."""
-        self.fp.seek(0)
+        data.seek(0)
         # retrieve some basic date, like version and record_length
-        data = self.fp.read(8)
-        if data!='000001V ':
+        temp = data.read(8)
+        if temp!='000001V ':
             raise SEEDParserException("Expecting 000001V ")
         # B010 F01
-        data = self.fp.read(3)
-        if data!='010':
+        temp = data.read(3)
+        if temp!='010':
             raise SEEDParserException("Expecting blockette 010")
         # F02
-        data = self.fp.read(4)
+        temp = data.read(4)
         # F03
-        self.version = float(self.fp.read(4))
+        self.version = float(data.read(4))
         # F04
-        length = pow(2,int(self.fp.read(2))) 
+        length = pow(2, int(data.read(2))) 
         # test record length
-        self.fp.seek(length)
-        data = self.fp.read(6)
-        if data!='000002':
-            raise SEEDParserException("Got an invalid logical record " + \
-                                      "length %d" % length)
+        data.seek(length)
+        temp = data.read(6)
+        if temp!='000002':
+            msg = "Got an invalid logical record length %d" % length
+            raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print "RECORD LENGTH:",self.record_length
+            print "RECORD LENGTH:", self.record_length
         # jump back to beginning
-        self.fp.seek(0)
-        record = self.fp.read(self.record_length)
-        data = ''
+        data.seek(0)
+        record = data.read(self.record_length)
+        merged_data = ''
         record_type = None
         record_id = None
         # loop through file
@@ -85,13 +84,13 @@ class SEEDParser:
             record_continuation = record[7] == CONTINUE_FROM_LAST_RECORD
             if record_continuation :
                 # continued record
-                data+=record[8:]
+                merged_data+=record[8:]
             else:
-                self._parseData(data, record_type, record_id)
+                self._parseMergedData(merged_data, record_type, record_id)
                 # first or new type of record
                 record_type = record[6]
                 record_id = int(record[0:6])
-                data=record[8:]
+                merged_data = record[8:]
                 if record_type not in HEADERS:
                     # only parse headers, no data
                     break
@@ -99,13 +98,13 @@ class SEEDParser:
                 if not record_continuation:
                     print "========"
                 print record[0:8]
-            record = self.fp.read(self.record_length)
-        self._parseData(data, record_type, record_id)
+            record = data.read(self.record_length)
+        self._parseMergedData(merged_data, record_type, record_id)
         # additional verification after parsing whole volume
         if self.verify:
             self._verifyData()
     
-    def _parseData(self, data, record_type, record_id):
+    def _parseMergedData(self, data, record_type, record_id):
         """Read and process data of combined records.
         
         Volume index control headers precede all data. Their primary purpose
@@ -149,15 +148,15 @@ class SEEDParser:
                           utils.toXMLTag(HEADER_INFO[record_type].get('name')))
         
         while blockette_id != 0:
+            # remove spaces between blockettes 
+            while data.read(1)==' ':
+                continue
+            data.seek(-1, 1)
             try:
                 blockette_id = int(data.read(3))
                 blockette_length = int(data.read(4))
             except:
                 break
-            if blockette_id==32:
-                print self.filename
-                import pdb;pdb.set_trace()
-                pass
             data.seek(-7, 1)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
@@ -175,8 +174,9 @@ class SEEDParser:
                 root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
-                raise SEEDParserException("Unknown blockette type %d " + \
-                                          "found" % blockette_id)
+                print blockette_id
+                msg = "Unknown blockette type %d found" % blockette_id
+                raise SEEDParserException(msg)
     
     def _verifyData(self):
         """Parses through all defined blockettes verfication methods."""
@@ -187,4 +187,4 @@ class SEEDParser:
     
     def getXML(self):
         """Returns a XML representation of all headers of a SEED volume."""
-        return self.doc
+        return tostring(self.doc, pretty_print=True)
