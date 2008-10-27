@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import re
 
 from obspy.seed import utils
 
 
 class SEEDTypeException(Exception):
     pass
+
 
 class Field:
     """General SEED field."""
@@ -27,6 +29,46 @@ class Field:
     def __str__(self):
         if self.id:
             return "F%02d" % self.id
+    
+    def _formatString(self, s, flags):
+        """Using SEED specific flags to format strings.
+        
+        This method is partly adopted from fseed.py, the SEED builder for 
+        SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
+        """
+        sn = str(s).strip()
+        if not flags:
+            return sn
+        if 'T' in flags:
+            # XXX: ignoring time flags for now - depending on the final format
+            return sn
+        rx_list = []
+        if 'U' in flags:
+            rx_list.append("[A-Z]")
+        if 'L' in flags:
+            rx_list.append("[a-z]")
+        if 'N' in flags:
+            rx_list.append("[0-9]")
+        if 'P' in flags:
+            rx_list.append("[^A-Za-z0-9 ]")
+        if 'S' in flags:
+            rx_list.append(" ")
+        if '_' in flags:
+            rx_list.append("_")
+        if 'U' in flags and 'L' not in flags:
+            sn = sn.upper()
+        elif 'L' in flags and 'U' not in flags:
+            sn = sn.lower()
+        if 'S' in flags and 'X' not in flags:
+            sn = sn.replace("_", " ")
+        elif 'X' in flags and 'S' not in flags:
+            sn = sn.replace(" ", "_")
+        rx = "|".join(rx_list)
+        sn = "".join(re.findall(rx, sn))
+        if re.match("(" + rx + ")*$", sn) == None:
+            msg = "Can't convert string %s with flags %s" % (s, flags)
+            raise SEEDTypeException(msg) 
+        return sn
 
 
 class Integer(Field):
@@ -143,7 +185,7 @@ class FixedString(Field):
         # Leave fixed length alphanumeric fields left justified (no leading 
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
-        result = format_str % data.strip()
+        result = format_str % self._formatString(data, self.flags)
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)
@@ -184,7 +226,7 @@ class VariableString(Field):
         return buffer
     
     def write(self, data):
-        result = str(data)+'~'
+        result = self._formatString(data, self.flags)+'~'
         if self.max_length and len(result) > self.max_length+1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)

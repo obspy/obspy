@@ -178,7 +178,6 @@ class SEEDParser:
                 root.append(blockette_obj.getXML())
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
-                print blockette_id
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
     

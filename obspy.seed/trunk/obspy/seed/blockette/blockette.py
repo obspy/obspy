@@ -16,10 +16,13 @@ class Blockette:
     """General blockette handling."""
     
     # default field for each blockette
+    fields = []
     default_fields = [
         Integer(1, "Blockette type", 3),
         Integer(2, "Length of blockette", 4, optional=True)
     ]
+    dictionary = {}
+    lookup = {}
     
     def __init__(self, *args, **kwargs):
         self.verify = kwargs.get('verify', True)
@@ -117,22 +120,23 @@ class Blockette:
                 # debug
                 if self.debug:
                     print('  ' + str(field) + ': '  + str(text))
-        end_pos = data.tell()
+        # verify or strict tests
         if self.verify or self.strict:
+            end_pos = data.tell()
             blockette_length = end_pos-start_pos
             if expected_length != blockette_length:
-                msg = 'Wrong size of Blockette %s (%d of %d) in sequence %06d' % \
-                      (self.blockette_id, blockette_length, expected_length,
-                       self.record_id)
+                msg = 'Wrong size of Blockette %s (%d of %d) in sequence %06d'
+                msg = msg  % (self.blockette_id, blockette_length, 
+                              expected_length, self.record_id)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:
                     print('WARN: ' + msg)
     
-    def getXML(self, show_optional=False):
+    def getXML(self, abbrev_dict={}, show_optional=False):
         """Returns a XML document representing this blockette.
         
-        The enabled flag optional will return optional elements too.
+        The 'optional' flag will return optional elements too.
         """
         # root element
         doc = Element(self.blockette_name, id=self.blockette_id)
@@ -148,8 +152,8 @@ class Blockette:
             if isinstance(field, MultipleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!" %\
-                          (field.index_field, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.index_field, self.blockette_id)
                     raise Exception(msg)
                 # get number of entries
                 number_of_elements = int(getattr(self, field.index_field))
@@ -158,8 +162,8 @@ class Blockette:
                 # test if attributes of subfields are set
                 for subfield in field.data_fields:
                     if not hasattr(self, subfield.attribute_name):
-                        msg = "Attribute %s in Blockette %s does not exist!" %\
-                              (subfield.name, self.blockette_id)
+                        msg = "Attribute %s in Blockette %s does not exist!"
+                        msg = msg % (subfield.name, self.blockette_id)
                         raise Exception(msg)
                 # XML looping element 
                 root = SubElement(doc, field.field_name)
@@ -177,8 +181,8 @@ class Blockette:
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!" %\
-                          (field.index_field, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.index_field, self.blockette_id)
                     raise Exception(msg)
                 # get number of entries
                 number_of_elements = int(getattr(self, field.index_field))
@@ -186,8 +190,8 @@ class Blockette:
                     continue
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
-                    msg = "Attribute %s in Blockette %s does not exist!" % \
-                          (field.attribute_name, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.attribute_name, self.blockette_id)
                     raise Exception(msg)
                 results = getattr(self, field.attribute_name)
                 # root of looping element
@@ -212,9 +216,15 @@ class Blockette:
                 if isinstance(field, Float):
                     result = field.write(result)
                 # set XML string
-                SubElement(doc, 
-                           field.field_name, 
-                           id=field.field_id).text = unicode(result)
+                se = SubElement(doc, field.field_name, id=field.field_id)
+                # check for dictionary or lookups
+                if self.dictionary.get(field.id, False):
+                    temp = self.dictionary.get(field.id, {})
+                    se.set("dictionary", temp.get(result, ''))
+                if abbrev_dict and self.lookup.get(field.id, False):
+                    temp = self.lookup.get(field.id)
+                    se.set("lookup", unicode(temp))
+                se.text = unicode(result)
         return doc
     
     def getSEEDString(self):
@@ -227,8 +237,8 @@ class Blockette:
             if isinstance(field, MultipleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!" %\
-                          (field.index_field, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.index_field, self.blockette_id)
                     raise Exception(msg)
                 # get number of entries
                 number_of_elements = int(getattr(self, field.index_field))
@@ -237,8 +247,8 @@ class Blockette:
                 # test if attributes of subfields are set
                 for subfield in field.data_fields:
                     if not hasattr(self, subfield.attribute_name):
-                        msg = "Attribute %s in Blockette %s does not exist!" %\
-                              (subfield.name, self.blockette_id)
+                        msg = "Attribute %s in Blockette %s does not exist!"
+                        msg = msg % (subfield.name, self.blockette_id)
                         raise Exception(msg)
                 # cycle through all fields
                 for i in range(0, number_of_elements):
@@ -249,8 +259,8 @@ class Blockette:
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!" %\
-                          (field.index_field, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.index_field, self.blockette_id)
                     raise Exception(msg)
                 # get number of entries
                 number_of_elements = int(getattr(self, field.index_field))
@@ -258,8 +268,8 @@ class Blockette:
                     continue
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
-                    msg = "Attribute %s in Blockette %s does not exist!" % \
-                          (field.attribute_name, self.blockette_id)
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.attribute_name, self.blockette_id)
                     raise Exception(msg)
                 results = getattr(self, field.attribute_name)
                 subfield = field.data_field
@@ -270,8 +280,8 @@ class Blockette:
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
                     if self.strict:
-                        msg = "Missing attribute %s in Blockette %s" % \
-                              (field.attribute_name, self.blockette_id)
+                        msg = "Missing attribute %s in Blockette %s"
+                        msg = msg % (field.attribute_name, self.blockette_id)
                         raise Exception(msg)
                     result = field.default
                 else:

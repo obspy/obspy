@@ -30,6 +30,14 @@ class Blockette050(Blockette):
         FixedString(15, "Update flag", 1),
         FixedString(16, "Network Code", 2, 'ULN', version=2.3)
     ]
-    lockup = [
-        ("Network identifier", 10, 33, 3, 4),
-    ]
+    lookup = {
+        10: (33, 3, 4),
+    }
+    dictionary = {
+        11: { 123: 'Little Endian (Intel, etc.)',
+             3210: 'Big Endian (Motorola, etc.)'},
+        12: {   1: 'Little Endian (Intel, etc.)',
+               10: 'Big Endian (Motorola, etc.)'},
+        15: { 'N': 'Effective dates pertain to these data',
+              'U': 'Control header updates information previously sent'}
+    }
