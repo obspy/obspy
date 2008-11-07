@@ -42,6 +42,15 @@ def lowpass(data,freq,df=200,corners=4):
   [b,a]=iirfilter(corners, freq/fe, btype='lowpass',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
+def lowpassZPHSH(data,freq,df=200,corners=4):
+  """Zero-Phase_shift Butterworth-Lowpass: filter data removing data over
+  certain frequency freq using corners corners and doing 2 runs over the data,
+  one from left to right and one from right to left.
+  """
+  x=lowpass(data, freq, df, corners)
+  x=lowpass(x[::-1], freq, df, corners)
+  return x  
+
 def highpass(data,freq,df=200,corners=4):
   """Butterworth-Highpass: filter data removing data below certain frequency freq
   using corners corners
