@@ -49,7 +49,7 @@ def lowpassZPHSH(data,freq,df=200,corners=4):
   """
   x=lowpass(data, freq, df, corners)
   x=lowpass(x[::-1], freq, df, corners)
-  return x  
+  return x[::-1]
 
 def highpass(data,freq,df=200,corners=4):
   """Butterworth-Highpass: filter data removing data below certain frequency freq
