@@ -5,7 +5,7 @@
 #  Version: n.a.
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
-# Revision: 2008/03/23 mob
+# Revision: 2008/03/23 Moritz
 #---------------------------------------------------
 
 import os,sys
