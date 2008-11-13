@@ -17,7 +17,7 @@ class Blockette010(Blockette):
     """
     
     id = 10
-    name = "Volume Identifier Blockette"
+    name = "Volume Identifier"
     fields = [
         Float(3, "Version of format", 4, mask='%2.1f'),
         Integer(4, "Logical record length", 2),

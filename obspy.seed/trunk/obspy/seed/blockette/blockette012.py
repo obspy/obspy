@@ -18,7 +18,7 @@ class Blockette012(Blockette):
     """
     
     id = 12
-    name = "Volume Time Span Index Blockette"
+    name = "Volume Time Span Index"
     fields = [
         Integer(3, "Number of spans", 4),
         # REPEAT fields 4 — 6 for the Number of spans in table:

@@ -1,0 +1,806 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <!-- XML-SEED Version 0.0 -->
+
+  <!-- Root node -->
+
+  <xsd:element name="xseed" type="XSEED_type"/>
+
+  <!-- Root element type -->
+
+  <xsd:complexType name="XSEED_type">
+    <xsd:sequence>
+      <xsd:element name="volume_index_control_header" type="volumeindexheader_type"/>
+      <xsd:element name="abbreviation_dictionary_control_header" type="abbreviationdictionarycontrolheader_type"/>
+      <xsd:group ref="station_control_headers_model_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="timespan_control_header" type="timespancontrolheader_type"/>
+      <xsd:element name="data_records" type="data_records_type"/>
+    </xsd:sequence>
+    <xsd:attribute name="version" type="xsd:string"/>
+  </xsd:complexType>
+
+  <!-- SimpleTypes -->
+
+  <xsd:simpleType name="dateUnionType">
+      <xsd:union memberTypes="xsd:dateTime xsd:date"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="sequence_number">
+         <xsd:restriction base="xsd:string">
+       <xsd:pattern value="\d{8}"/>
+     </xsd:restriction>
+
+  </xsd:simpleType>
+
+  <xsd:simpleType name="array_of_double">
+        <xsd:list itemType="xsd:double"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="reference_id_type">
+      <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="xpathreference_type">
+      <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+
+  <!-- Shared Types -->
+
+
+  <!-- Shared by blockette 43 and blockette 53 -->
+
+  <xsd:complexType name="Zero_type">
+    <xsd:group ref="Zero_model_type" minOccurs="0" maxOccurs="unbounded"/>
+  </xsd:complexType>
+
+  <xsd:group name="Zero_model_type">
+    <xsd:sequence>
+      <xsd:element name="real_zero" type="xsd:double"/>
+      <xsd:element name="imaginary_zero" type="xsd:double"/>
+      <xsd:element name="real_zero_error" type="xsd:double"/>
+      <xsd:element name="imaginary_zero_error" type="xsd:double"/>
+    </xsd:sequence>
+  </xsd:group>
+
+
+  <xsd:complexType name="Pole_type">
+    <xsd:group ref="Pole_model_type" minOccurs="0" maxOccurs="unbounded"/>
+  </xsd:complexType>
+
+  <xsd:group name="Pole_model_type">
+    <xsd:sequence>
+      <xsd:element name="real_pole" type="xsd:double"/>
+      <xsd:element name="imaginary_pole" type="xsd:double"/>
+      <xsd:element name="real_pole_error" type="xsd:double"/>
+      <xsd:element name="imaginary_pole_error" type="xsd:double"/>
+    </xsd:sequence>
+  </xsd:group>
+
+
+  <!-- Shared by blockette 45 and blockette 55 -->
+
+  <xsd:complexType name="response_type">
+    <xsd:sequence>
+      <xsd:element name="frequency" type="xsd:double"/>
+      <xsd:element name="amplitude" type="xsd:double"/>
+      <xsd:element name="amplitude_error" type="xsd:double"/>
+      <xsd:element name="phase_angle" type="xsd:double"/>
+      <xsd:element name="phase_error" type="xsd:double"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="corner_type">
+    <xsd:sequence>
+      <xsd:element name="corner_frequency" type="xsd:double"/>
+      <xsd:element name="corner_slope" type="xsd:double"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+
+  <!-- Shared by blockette 48 and blockette 58 -->
+
+  <xsd:complexType name="history_type">
+    <xsd:group ref="history_model_type" minOccurs="0" maxOccurs="unbounded"/>
+  </xsd:complexType>
+
+  <xsd:group name="history_model_type">
+    <xsd:sequence>
+      <xsd:element name="sensitivity_for_calibration" type="xsd:double"/>
+      <xsd:element name="frequency_of_calibration_sensitivity" type="xsd:double"/>
+      <xsd:element name="time_of_above_calibration" type="dateUnionType"/>
+    </xsd:sequence>
+  </xsd:group>
+
+
+  <!-- Blockette 10 -->
+
+  <xsd:complexType name="blockette10_type">
+    <xsd:sequence>
+      <xsd:element name="version_of_format" type="xsd:string"/>
+      <xsd:element name="logical_record_length" type="xsd:long"/>
+      <xsd:element name="beginning_time" type="dateUnionType"/>
+      <xsd:element name="end_time" type="dateUnionType"/>
+      <xsd:element name="volume_time" type="dateUnionType"/>
+      <xsd:element name="originating_organization" type="xsd:string"/>
+      <xsd:element name="label" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="010"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 11 -->
+
+  <xsd:complexType name="blockette11sub_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier_code" type="xsd:string"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette11_type">
+    <xsd:sequence>
+      <xsd:element name="number_of_stations" type="xsd:long"/>
+      <xsd:element name="station_identifier" type="blockette11sub_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="011"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 12 -->
+
+  <xsd:complexType name="blockette12sub_type">
+    <xsd:sequence>
+      <xsd:element name="beginning_of_span" type="dateUnionType"/>
+      <xsd:element name="end_of_span" type="dateUnionType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette12_type">
+    <xsd:sequence>
+      <xsd:element name="number_of_spans_in_table" type="xsd:long"/>
+      <xsd:element name="timespan" type="blockette12sub_type" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="012"/>
+  </xsd:complexType>
+
+
+  <!-- volume_index_header type-->
+
+  <xsd:complexType name="volumeindexheader_type">
+    <xsd:sequence>
+      <xsd:element name="volume_identifier" type="blockette10_type"/>
+      <xsd:element name="volume_station_header_index" type="blockette11_type"/>
+      <xsd:element name="volume_timespan_index" type="blockette12_type"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+
+  <!-- Abbreviation dictionary control header -->
+  <!-- Blockette 30 -->
+
+  <xsd:simpleType name="decoder_keys_type">
+    <xsd:list itemType="xsd:string"/>
+  </xsd:simpleType>
+
+  <xsd:complexType name="blockette30_type">
+    <xsd:sequence>
+      <xsd:element name="short_descriptive_name" type="xsd:string"/>
+      <xsd:element name="data_format_identifier_code" type="reference_id_type"/>
+      <xsd:element name="data_family_type" type="xsd:string"/>
+      <xsd:element name="number_of_decoder_keys" type="xsd:long"/>
+      <xsd:element name="decoder_keys" type="decoder_keys_type" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="030"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 31 -->
+
+  <xsd:complexType name="blockette31_type">
+    <xsd:sequence>
+      <xsd:element name="comment_code_key" type="reference_id_type"/>
+      <xsd:element name="comment_class_code" type="xsd:string"/>
+      <xsd:element name="description_of_comment" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="031"/>
+  </xsd:complexType>
+
+  <!-- Blockette 32 -->
+
+  <xsd:complexType name="blockette32_type">
+    <xsd:sequence>
+      <xsd:element name="source_lookup_code" type="reference_id_type"/>
+      <xsd:element name="name_of_publication_author" type="xsd:string"/>
+      <xsd:element name="date_published_catalog" type="xsd:string"/>
+      <xsd:element name="publisher_name" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="032"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 33 -->
+
+  <xsd:complexType name="blockette33_type">
+    <xsd:sequence>
+      <xsd:element name="abbreviation_lookup_code" type="reference_id_type"/>
+      <xsd:element name="abbreviation_description" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="033"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 34 -->
+
+  <xsd:complexType name="blockette34_type">
+    <xsd:sequence>
+      <xsd:element name="unit_lookup_code" type="reference_id_type"/>
+      <xsd:element name="unit_name" type="xsd:string"/>
+      <xsd:element name="unit_description" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="034"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 35 -->
+
+  <xsd:complexType name="blockette35sub_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier" type="xsd:string"/>
+      <xsd:element name="location_identifier" type="xsd:string"/>
+      <xsd:element name="channel_identifier" type="xsd:string"/>
+      <xsd:element name="subchannel_identifier" type="xsd:long"/>
+      <xsd:element name="component_weight" type="xsd:double"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette35_type">
+    <xsd:sequence>
+      <xsd:element name="beam_lookup_code" type="reference_id_type"/>
+      <xsd:element name="number_of_components" type="xsd:long"/>
+      <xsd:element name="component" type="blockette35sub_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="035"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 41 -->
+
+  <xsd:complexType name="blockette41_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="symmetry_code" type="xsd:string"/>
+      <xsd:element name="signal_in_units" type="xpathreference_type"/>
+      <xsd:element name="signal_out_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_factors" type="xsd:long"/>
+      <xsd:element name="fir_coefficient" type="array_of_double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="041"/>
+  </xsd:complexType>
+
+  <!-- Blockette 43 -->
+
+  <xsd:complexType name="blockette43_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="response_type" type="xsd:string"/>
+      <xsd:element name="stage_signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="stage_signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="A0_normalization_factor" type="xsd:double"/>
+      <xsd:element name="normalization_frequency" type="xsd:double"/>
+      <xsd:element name="number_of_complex_zeros" type="xsd:long"/>
+      <xsd:element name="complex_zero" type="Zero_type" minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="number_of_complex_poles" type="xsd:long"/>
+      <xsd:element name="complex_pole" type="Pole_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="043"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 44 -->
+
+  <xsd:complexType name="blockette44_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="response_type" type="xsd:string"/>
+      <xsd:element name="signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_numerators" type="xsd:long"/>
+      <xsd:element name="numerators" type="array_of_double"/>
+      <xsd:element name="number_of_denominators" type="xsd:long"/>
+      <xsd:element name="denominators" type="array_of_double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="044"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 45 -->
+
+  <xsd:complexType name="blockette45_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_responses_listed" type="xsd:long"/>
+      <xsd:element name="response" type="response_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="045"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 46 -->
+
+  <xsd:complexType name="blockette46_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="reponse_name" type="xsd:string"/>
+      <xsd:element name="signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_corners_listed" type="xsd:long"/>
+      <xsd:element name="corner" type="corner_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="046"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 47 -->
+
+  <xsd:complexType name="bllockette47_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="input_sample_rate" type="xsd:double"/>
+      <xsd:element name="decimiation_factor" type="xsd:long"/>
+      <xsd:element name="decimation_offset" type="xsd:long"/>
+      <xsd:element name="estimated_delay" type="xsd:double"/>
+      <xsd:element name="correction_applied" type="xsd:double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="047"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 48 -->
+
+  <xsd:complexType name="blockette48_type">
+    <xsd:sequence>
+      <xsd:element name="response_lookup_key" type="reference_id_type"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="sensitivity_gain" type="xsd:double"/>
+      <xsd:element name="frequency" type="xsd:double"/>
+      <xsd:element name="number_of_history_values" type="xsd:long"/>
+      <xsd:element name="history" type="history_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="048"/>
+  </xsd:complexType>
+
+
+  <!-- Particle for abbreviationdictionarycontrolheader -->
+
+  <xsd:complexType name="abbreviationdictionarycontrolheader_type">
+    <xsd:sequence>
+      <xsd:element name="data_format_dictionary" type="blockette30_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="comment_description" type="blockette31_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="cited_source_dictionary" type="blockette32_type"  minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="generic_abbreviation" type="blockette33_type"  minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="units_abbreviations" type="blockette34_type"  minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="beam_configuration" type="blockette35_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="FIR_dictionary" type="blockette41_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="response_poles_and_zeros" type="blockette43_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="response_coefficients" type="blockette44_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="response_list_dictionary" type="blockette45_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="generic_response_dictionary" type="blockette46_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="decimation_dictionary" type="bllockette47_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="channel_sensivitity_gain_dictionary" type="blockette48_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+  <!-- Blockette 50 -->
+
+  <xsd:complexType name="blockette50_type">
+    <xsd:sequence>
+      <xsd:element name="station_call_letters" type="xsd:string"/>
+      <xsd:element name="latitude" type="xsd:double"/>
+      <xsd:element name="longitude" type="xsd:double"/>
+      <xsd:element name="elevation" type="xsd:double"/>
+      <xsd:element name="number_of_channels" type="xsd:long"/>
+      <xsd:element name="number_of_station_comments" type="xsd:long"/>
+      <xsd:element name="site_name" type="xsd:string"/>
+      <xsd:element name="network_identifier_code" type="xpathreference_type"/>
+      <xsd:element name="word_order_32bit" type="xsd:string"/>
+      <xsd:element name="word_order_16bit" type="xsd:string"/>
+      <xsd:element name="start_effective_date" type="dateUnionType"/>
+      <xsd:element name="end_effective_date" type="dateUnionType" minOccurs="0" maxOccurs="1" />
+      <xsd:element name="update_flag" type="xsd:string"/>
+      <xsd:element name="network_code" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="050"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 51 -->
+
+  <xsd:complexType name="blockette51_type">
+    <xsd:sequence>
+      <xsd:element name="beginning_effective_time" type="dateUnionType"/>
+      <xsd:element name="end_effective_time" type="dateUnionType" minOccurs="0" maxOccurs="1" />
+      <xsd:element name="comment_code_key" type="xpathreference_type"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="051"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 52 -->
+
+  <xsd:complexType name="blockette52_type">
+    <xsd:sequence>
+      <xsd:element name="location_identifier" type="xsd:string"/>
+      <xsd:element name="channel_identifier" type="xsd:string"/>
+      <xsd:element name="subchannel_identifier" type="xsd:long"/>
+      <xsd:element name="instrument_identifier" type="xpathreference_type"/>
+      <xsd:element name="optional_comment" type="xsd:string"/>
+      <xsd:element name="units_of_signal_response" type="xpathreference_type"/>
+      <xsd:element name="units_of_calibration_input" type="xpathreference_type"/>
+      <xsd:element name="latitude" type="xsd:double"/>
+      <xsd:element name="longitude" type="xsd:double"/>
+      <xsd:element name="elevation" type="xsd:double"/>
+      <xsd:element name="local_depth" type="xsd:double"/>
+      <xsd:element name="azimuth" type="xsd:double"/>
+      <xsd:element name="dip" type="xsd:double"/>
+      <xsd:element name="data_format_identifier_code" type="xpathreference_type"/>
+      <xsd:element name="data_recored_length" type="xsd:long"/>
+      <xsd:element name="sample_rate" type="xsd:double"/>
+      <xsd:element name="max_clock_drift" type="xsd:double"/>
+      <xsd:element name="number_of_comments" type="xsd:long"/>
+      <xsd:element name="channel_flags" type="xsd:string"/>
+      <xsd:element name="start_date" type="dateUnionType"/>
+      <xsd:element name="end_date" minOccurs="0" maxOccurs="1" type="dateUnionType"/>
+      <xsd:element name="update_flag" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="052"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 53 -->
+
+  <xsd:complexType name="blockette53_type">
+    <xsd:sequence>
+      <xsd:element name="transfer_function_types" type="xsd:string"/>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="stage_signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="stage_signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="A0_normalization_factor" type="xsd:double"/>
+      <xsd:element name="normalization_frequency" type="xsd:double"/>
+      <xsd:element name="number_of_complex_zeros" type="xsd:long"/>
+      <xsd:element name="complex_zero" type="Zero_type" minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="number_of_complex_poles" type="xsd:long"/>
+      <xsd:element name="complex_pole" type="Pole_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="053"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 54 -->
+
+  <xsd:complexType name="blockette54_type">
+    <xsd:sequence>
+      <xsd:element name="response_type" type="xsd:string"/>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="signal_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_numerators" type="xsd:long"/>
+      <xsd:element name="numerators" type="array_of_double"/>
+      <xsd:element name="number_of_denominators" type="xsd:long"/>
+      <xsd:element name="denominators" type="array_of_double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="054"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 55 -->
+
+  <xsd:complexType name="blockette55_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="stage_input_units" type="xpathreference_type"/>
+      <xsd:element name="stage_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_responses_listed" type="xsd:long"/>
+      <xsd:element name="response" type="response_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="055"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 56 -->
+
+  <xsd:complexType name="blockette56_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="signal_input_units" type="xpathreference_type"/>
+      <xsd:element name="singal_output_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_corners_listed" type="xsd:long"/>
+      <xsd:element name="corner" type="corner_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="056"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 57 -->
+
+  <xsd:complexType name="blockette57_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="input_sample_rate" type="xsd:double"/>
+      <xsd:element name="decimation_factor" type="xsd:long"/>
+      <xsd:element name="decimation_offset" type="xsd:long"/>
+      <xsd:element name="estimated_delay" type="xsd:double"/>
+      <xsd:element name="correction_applied" type="xsd:double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="057"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 58 -->
+
+  <xsd:complexType name="blockette58_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="sensitivity_gain" type="xsd:double"/>
+      <xsd:element name="frequency" type="xsd:double"/>
+      <xsd:element name="number_of_history_values" type="xsd:long"/>
+      <xsd:element name="history" type="history_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="058"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 59 -->
+
+  <xsd:complexType name="blockette59_type">
+    <xsd:sequence>
+      <xsd:element name="beginning_of_effective_time" type="dateUnionType"/>
+      <xsd:element name="end_effective_time" type="dateUnionType" minOccurs="0" maxOccurs="1" />
+      <xsd:element name="comment_code_key" type="xpathreference_type"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="059"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 60 -->
+
+  <xsd:complexType name="stage_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="number_of_responses" type="xsd:long"/>
+      <xsd:element name="response_lookup_key" type="xpathreference_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette60_type">
+    <xsd:sequence>
+      <xsd:element name="number_of_stages" type="xsd:long"/>
+      <xsd:element name="stage" type="stage_type" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="060"/>
+  </xsd:complexType>
+
+  <!-- Blockette 61 -->
+
+  <xsd:complexType name="blockette61_type">
+    <xsd:sequence>
+      <xsd:element name="stage_sequence_number" type="xsd:long"/>
+      <xsd:element name="response_name" type="xsd:string"/>
+      <xsd:element name="symmetry_code" type="xsd:string"/>
+      <xsd:element name="signal_in_units" type="xpathreference_type"/>
+      <xsd:element name="signal_out_units" type="xpathreference_type"/>
+      <xsd:element name="number_of_coefficients" type="xsd:long"/>
+      <xsd:element name="FIR_coefficient" type="array_of_double"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="061"/>
+  </xsd:complexType>
+
+
+  <!-- Particles for station control headers -->
+
+  <xsd:complexType name="station_control_header_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier" type="blockette50_type"/>
+      <xsd:element name="station_comment" type="blockette51_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="channel_identifier" type="blockette52_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="response_poles_and_zeros" type="blockette53_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="response_coefficients" type="blockette54_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="reponse_list" type="blockette55_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="generic_response" type="blockette56_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="decimation" type="blockette57_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="channel_sensitivity_gain" type="blockette58_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="channel_comment" type="blockette59_type" minOccurs="0" maxOccurs="unbounded"/>
+        <xsd:element name="FIR_response" type="blockette61_type" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:group name="station_control_headers_model_type">
+    <xsd:sequence>
+      <xsd:element name="station_control_header" type="station_control_header_type" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+  </xsd:group>
+
+
+  <!-- Blockette 70 -->
+
+  <xsd:complexType name="blockette70_type">
+    <xsd:sequence>
+      <xsd:element name="time_span_flag" type="xsd:string"/>
+      <xsd:element name="beginning_time_of_data_span" type="dateUnionType"/>
+      <xsd:element name="end_time_of_data_span" type="dateUnionType"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="070"/>
+  </xsd:complexType>
+
+  <!-- Blockette 71 -->
+
+  <xsd:complexType name="blockette71sub_type">
+    <xsd:sequence>
+      <xsd:element name="magnitude" type="xsd:double"/>
+      <xsd:element name="magnitude_type" type="xsd:string"/>
+      <xsd:element name="magnitude_source" type="xpathreference_type"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette71_type">
+    <xsd:sequence>
+      <xsd:element name="origin_time_of_event" type="dateUnionType"/>
+      <xsd:element name="hypocenter_source_identifier" type="xpathreference_type"/>
+      <xsd:element name="latitude_of_event" type="xsd:double"/>
+      <xsd:element name="longitude_of_event" type="xsd:double"/>
+      <xsd:element name="depth" type="xsd:double"/>
+      <xsd:element name="number_of_magnitudes" type="xsd:long"/>
+      <xsd:element name="magnitude" type="blockette71sub_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="sesmic_region" type="xsd:long"/>
+      <xsd:element name="seismic_location" type="xsd:long"/>
+      <xsd:element name="region_name" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="071"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 72 -->
+
+  <xsd:complexType name="blockette72_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier" type="xsd:string"/>
+      <xsd:element name="location_identifier" type="xsd:string"/>
+      <xsd:element name="channel_identifier" type="xsd:string"/>
+      <xsd:element name="arrival_time_of_phase" type="dateUnionType"/>
+      <xsd:element name="amplitude_of_signal" type="xsd:double"/>
+      <xsd:element name="period_of_signal" type="xsd:double"/>
+      <xsd:element name="signal_to_noise_ratio" type="xsd:double"/>
+      <xsd:element name="name_of_phase" type="xsd:string"/>
+      <xsd:element name="source" type="xpathreference_type"/>
+      <xsd:element name="network_code" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="072"/>
+  </xsd:complexType>
+
+
+
+  <!-- Blockette 73 -->
+
+  <xsd:complexType name="blockette73sub_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier_of_data_piece" type="xsd:string"/>
+      <xsd:element name="location_identifier" type="xsd:string"/>
+      <xsd:element name="channel_identifier" type="xsd:string"/>
+      <xsd:element name="time_of_record" type="dateUnionType"/>
+      <xsd:element name="sequence_number_of_first_record" type="sequence_number"/>
+      <xsd:element name="subsequence_number" type="xsd:long"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette73_type">
+    <xsd:sequence>
+      <xsd:element name="number_of_data_pieces" type="xsd:long"/>
+      <xsd:element name="data_piece" type="blockette73sub_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string"/>
+  </xsd:complexType>
+
+
+  <!-- Blockette 74 -->
+
+  <xsd:complexType name="blockette74sub_type">
+    <xsd:sequence>
+      <xsd:element name="record_start_time" type="dateUnionType"/>
+      <xsd:element name="sequence_number_of_record" type="sequence_number"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="blockette74_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier" type="xsd:string"/>
+      <xsd:element name="location_identifier" type="xsd:string"/>
+      <xsd:element name="channel_identifier" type="xsd:string"/>
+      <xsd:element name="series_start_time" type="dateUnionType"/>
+      <xsd:element name="sequence_number_of_first_data" type="sequence_number"/>
+      <xsd:element name="series_end_time" type="dateUnionType"/>
+      <xsd:element name="sequence_number_of_last_record" type="sequence_number"/>
+      <xsd:element name="number_of_accelerator_repeats" type="xsd:long"/>
+      <xsd:element name="accelerator" type="blockette74sub_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="network_code" type="xsd:string"/>
+    </xsd:sequence>
+    <xsd:attribute name="blockette" type="xsd:string" fixed="074"/>
+  </xsd:complexType>
+
+
+
+  <!-- particle for timespan control header. -->
+
+  <xsd:complexType name="timespancontrolheader_type">
+    <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+      <xsd:element name="time_span_identifier" type="blockette70_type"/>
+      <xsd:element name="hypocenter_information" type="blockette71_type" minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="event_phases" type="blockette72_type" minOccurs="0" maxOccurs="unbounded"/>
+      <!-- <xsd:element name="time_span_data_start_index" type="blockette73_type" minOccurs="0" maxOccurs="0"/> -->
+      <xsd:element name="time_series_index" type="blockette74_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+
+  <xsd:complexType name="chunk_type">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+        <xsd:attribute name="data_record_length" type="xsd:long"/>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="data_records_type">
+    <xsd:sequence>
+      <xsd:element name="data_record" type="data_record_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="data_record_type">
+    <xsd:sequence>
+      <xsd:element name="data_header" type="data_header_type"/>
+      <xsd:element name="chunk" type="chunk_type"/>
+    </xsd:sequence>
+    <xsd:attribute name="sequence_number" type="xsd:token"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="data_header_type">
+    <xsd:sequence>
+      <xsd:element name="station_identifier" type="xsd:token"/>
+      <xsd:element name="location_identifier" type="xsd:token"/>
+      <xsd:element name="channel_identifier" type="xsd:token"/>
+      <xsd:element name="network_code" type="xsd:token"/>
+      <xsd:element name="record_start_time" type="dateUnionType"/>
+      <xsd:element name="number_of_samples" type="xsd:long"/>
+      <xsd:element name="sample_rate_factor" type="xsd:long"/>
+      <xsd:element name="sample_rate_multiplier" type="xsd:long"/>
+      <xsd:element name="activity_flags" type="xsd:byte"/>
+      <xsd:element name="IO_and_clock_flags" type="xsd:byte"/>
+      <xsd:element name="data_quality_flags" type="xsd:byte"/>
+      <xsd:element name="number_of_blockettes_that_follow" type="xsd:long"/>
+      <xsd:element name="time_correction" type="xsd:short"/>
+      <xsd:element name="beginning_of_data" type="xsd:short"/>
+      <xsd:element name="first_blockette" type="xsd:short"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+</xsd:schema>

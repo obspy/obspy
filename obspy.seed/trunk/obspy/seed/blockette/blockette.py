@@ -21,8 +21,6 @@ class Blockette:
         Integer(1, "Blockette type", 3),
         Integer(2, "Length of blockette", 4, optional=True)
     ]
-    dictionary = {}
-    lookup = {}
     
     def __init__(self, *args, **kwargs):
         self.verify = kwargs.get('verify', True)
@@ -32,7 +30,7 @@ class Blockette:
         self.record_type = kwargs.get('record_type', None)
         self.record_id = kwargs.get('record_id', None)
         self.parsed = False
-        self.blockette_id = "B%03d" % self.id
+        self.blockette_id = "%03d" % self.id
         self.blockette_name = utils.toXMLTag(self.name)
         if self.debug:
             print "----"
@@ -139,9 +137,9 @@ class Blockette:
         The 'optional' flag will return optional elements too.
         """
         # root element
-        doc = Element(self.blockette_name, id=self.blockette_id)
+        doc = Element(self.blockette_name, blockette=self.blockette_id)
         # default field for each blockette
-        blockette_fields = self.default_fields + self.fields
+        blockette_fields = self.fields
         for field in blockette_fields:
             # check version
             if field.version and field.version>self.version:
@@ -176,8 +174,7 @@ class Blockette:
                         if isinstance(subfield, Float):
                             result = subfield.write(result)
                         SubElement(item, 
-                                   subfield.field_name, 
-                                   id=subfield.field_id).text = unicode(result)
+                                   subfield.field_name).text = unicode(result)
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
@@ -196,13 +193,12 @@ class Blockette:
                 results = getattr(self, field.attribute_name)
                 # root of looping element
                 subfield = field.data_field
-                root = SubElement(doc, field.field_name, id=subfield.field_id)
+                elements = []
                 for subresult in results:
                     if isinstance(subfield, Float):
                         subresult = subfield.write(subresult)
-                    # set XML string
-                    text = unicode(subresult)
-                    SubElement(root, 'item').text = text
+                    elements.append(unicode(subresult))
+                SubElement(doc, field.field_name).text = ' '.join(elements)
             else:
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
@@ -216,14 +212,7 @@ class Blockette:
                 if isinstance(field, Float):
                     result = field.write(result)
                 # set XML string
-                se = SubElement(doc, field.field_name, id=field.field_id)
-                # check for dictionary or lookups
-                if self.dictionary.get(field.id, False):
-                    temp = self.dictionary.get(field.id, {})
-                    se.set("dictionary", temp.get(result, ''))
-                if abbrev_dict and self.lookup.get(field.id, False):
-                    temp = self.lookup.get(field.id)
-                    se.set("lookup", unicode(temp))
+                se = SubElement(doc, field.field_name)
                 se.text = unicode(result)
         return doc
     

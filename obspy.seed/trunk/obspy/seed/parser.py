@@ -11,11 +11,11 @@ CONTINUE_FROM_LAST_RECORD = '*'
 HEADERS = ['V', 'A', 'S']
 # @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf, p. 22-24
 HEADER_INFO = {
-    'V': {'name': 'Volume Index Control Headers', 
+    'V': {'name': 'Volume Index Control Header', 
           'blockettes': [10, 11, 12]},
-    'A': {'name': 'Abbreviation Dictionary Control Headers', 
+    'A': {'name': 'Abbreviation Dictionary Control Header', 
           'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
-    'S': {'name': 'Station Control Headers', 
+    'S': {'name': 'Station Control Header Model Type', 
           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61]}
 }
 
@@ -38,7 +38,7 @@ class SEEDParser:
         self.debug = debug
         self.verify = verify
         self.strict = strict
-        self.doc = Element("DatalessSEEDXML")
+        self.doc = Element("xseed", version='1.0')
     
     def parseSEEDFile(self, filename):
         if self.debug:
@@ -104,9 +104,6 @@ class SEEDParser:
         self._parseMergedData(merged_data.strip(), 
                               record_type, 
                               record_id)
-        # additional verification after parsing whole volume
-        if self.verify:
-            self._verifyData()
     
     def _parseMergedData(self, data, record_type, record_id):
         """Read and process data of combined records.
@@ -180,14 +177,7 @@ class SEEDParser:
             elif blockette_id != 0:
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
-    
-    def _verifyData(self):
-        """Parses through all defined blockettes verfication methods."""
-        for (id, blockette_objs) in self.blockettes.iteritems():
-            for blockette_obj in blockette_objs:
-                if hasattr(blockette_obj, 'verifyData'):
-                    blockette_obj.verifyData(self)
-    
+   
     def getXML(self):
         """Returns a XML representation of all headers of a SEED volume."""
         return tostring(self.doc, pretty_print=True)

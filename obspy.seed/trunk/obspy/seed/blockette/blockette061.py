@@ -19,7 +19,7 @@ class Blockette061(Blockette):
     """
     
     id = 61
-    name = "FIR Response Blockette"
+    name = "FIR Response"
     fields = [
         Integer(3, "Stage sequence number", 2),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
