@@ -36,8 +36,8 @@ import pylab
 from matplotlib.ticker import FuncFormatter
 
 #
-# Importing wraped C libaries/functions
-import gse.ext_gse
+# Importing wrapped C libaries/functions
+import gse.ext_gse as ext_gse
 from picker.ext_recstalta import rec_stalta
 from non_free.ext_pk_mbaer import baerPick
 from non_free.ext_arpicker import arPick
