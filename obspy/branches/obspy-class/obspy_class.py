@@ -1,13 +1,25 @@
-# obspy_class module
-#---------------------------------------------------
-# Filename: obspy_class.py
-#  Purpose: Python module for gse conversion...
-#  Version: n.a.
-#   Author: Moritz Beyreuther
-#    Email: moritz.beyreuther@geophysik.uni-muenchen.de
-# Revision: 2008/03/23 Moritz
-#           2008/08/15 Moritz starting OOP Design
-#---------------------------------------------------
+#---------------------------------------------------------------------
+#  Filename: obspy.py
+#   Purpose: Python Seismogram class
+#   Version: n.a.
+# Copyright: Moritz Beyreuther
+#     Email: moritz.beyreuther@geophysik.uni-muenchen.de
+#  Revision: 2008/08/15 Moritz starting OOP Design
+#
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#---------------------------------------------------------------------
 
 import os, sys
 from copy import deepcopy
@@ -25,10 +37,10 @@ from matplotlib.ticker import FuncFormatter
 
 #
 # Importing wraped C libaries/functions
-import ext_gse
-from ext_recstalta import rec_stalta
-from ext_pk_mbaer import baerPick
-from ext_arpicker import arPick
+import gse.ext_gse
+from picker.ext_recstalta import rec_stalta
+from non_free.ext_pk_mbaer import baerPick
+from non_free.ext_arpicker import arPick
 
 class Seismogram:
 
@@ -103,9 +115,9 @@ class Seismogram:
 this is not wished first delete attribute (delattr) time"""
     #
     def format(x,pos):
-      # x is of type numpy.float64, the string representation of that float
-      # strips of all tailing zeros pos returns the position of x on the
-      # axis while zooming, None otherwise
+      """x is of type numpy.float64, the string representation of that float
+      strips of all tailing zeros pos returns the position of x on the
+      axis while zooming, None otherwise"""
       min = float64(x/60)
       sec = float64((min - int(min)) * 60)
       if ( min-int(min) > 0.1 ):
@@ -127,10 +139,10 @@ this is not wished first delete attribute (delattr) time"""
     pylab.show()
 
   def bandpass(self,freqmin,freqmax,corners=4):
-    self.isattr('data',ndarray,None,assertation=True)
-    self.isattr('samp_rate',float,1.)
     """Butterworth-Bandpass: filter self.data from freqmin to freqmax using
     corners corners"""
+    self.isattr('data',ndarray,None,assertation=True)
+    self.isattr('samp_rate',float,1.)
     nyf=.5*self.samp_rate # Nyquist Frequencey
     if freqmax > nyf:
       print 'Warning freqmax greater than Nyquist frequency. Forcing\
@@ -153,8 +165,6 @@ this is not wished first delete attribute (delattr) time"""
     ----------------------------------------------------------------------
     """
     # 
-    # function for testing correctness of header entries
-    #
     # check if header has the necessary tuples and if those are of
     # correct type
     self.isattr('data',ndarray,None,assertation=True)
@@ -175,7 +185,7 @@ this is not wished first delete attribute (delattr) time"""
     self.isattr('instype',str,'LE-3D ',length=7)
     self.isattr('hang',float,-1.0)
     self.isattr('vang',float,0.)
-  
+    #
     # I have errors with the data pointer, only solution seems to explicitly copy it
     data2 = self.data.copy()
     err = ext_gse.write((self.d_year, self.d_mon, self.d_day, self.t_hour,
