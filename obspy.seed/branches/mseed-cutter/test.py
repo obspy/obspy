@@ -148,23 +148,45 @@ MSTrace_s._fields_ = [
 ]
 MSTrace = MSTrace_s
 
-
 class MSTraceGroup_s(C.Structure):
-    pass
+  pass
 
 MSTraceGroup_s._fields_ = [
     ('numtraces', C.c_long),                # Number of MSTraces in the trace chain
     ('traces', C.POINTER(MSTrace_s)),       # Root of the trace chain
 ]
+
 MSTraceGroup = MSTraceGroup_s
 
+mstg = C.pointer(MSTraceGroup())
+netstat=lib.ms_readtraces(C.pointer(mstg), 'test.mseed', -1, -1, -1, 1, 1, 1, 0)
 
-msr = MSRecord()
-while True:
-   netstat=lib.ms_readmsr(C.pointer(msr), 'BW.BGLD..EHE.D.2008.001', 0, None, None, 1, 0, False)
-   if netstat!=0:
-       break
-   lib.msr_print(msr, 0)
-   import pdb
-   pdb.set_trace()
-print "here"
+def printmst(x):
+  print "--------------------"
+  print x.contents.channel
+  print x.contents.dataquality
+  print x.contents.datasamples
+  print x.contents.endtime
+  print x.contents.location
+  print x.contents.network
+  print x.contents.next
+  print x.contents.numsamples
+  print x.contents.prvtptr
+  print x.contents.samplecnt
+  print x.contents.sampletype
+  print x.contents.samprate
+  print x.contents.starttime
+  print x.contents.station
+  print x.contents.ststate
+  print x.contents.type
+  print "---------------------"
+
+N = mstg.contents.numtraces
+print "mstg.contents.numtraces",N
+mst = mstg.contents.traces
+printmst(mst)
+mst1 = mst.contents.next
+printmst(mst1)
+
+import pdb
+pdb.set_trace()
