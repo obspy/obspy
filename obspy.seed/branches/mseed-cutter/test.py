@@ -139,7 +139,7 @@ MSTrace_s._fields_ = [
     ('endtime', C.c_longlong),              # Time of last sample
     ('samprate', C.c_double),               # Nominal sample rate (Hz
     ('samplecnt', C.c_long),                # Number of samples in trace coverage
-    ('datasamples', C.c_void_p),            # Data samples, 'numsamples' of type 'sampletype'
+    ('datasamples', C.POINTER(C.c_void_p)), # Data samples, 'numsamples' of type 'sampletype'
     ('numsamples', C.c_long),               # Number of data samples in datasamples
     ('sampletype', C.c_char),               # Sample type code: a, i, f, d 
     ('prvtptr', C.c_void_p),                # Private pointer for general use
@@ -158,35 +158,84 @@ MSTraceGroup_s._fields_ = [
 
 MSTraceGroup = MSTraceGroup_s
 
-mstg = C.pointer(MSTraceGroup())
-netstat=lib.ms_readtraces(C.pointer(mstg), 'test.mseed', -1, -1, -1, 1, 1, 1, 0)
+def mst2dict(m):
+  """Return dictionary from MSTrace Object m, leaving the attributes
+  datasamples, ststate and next out"""
+  h = {}
+  h["network"] = m.contents.network      
+  h["station"] = m.contents.station
+  h["location"] = m.contents.location
+  h["channel"] = m.contents.channel
+  h["dataquality"] = m.contents.dataquality
+  h["type"] = m.contents.type
+  h["starttime"] = m.contents.starttime
+  h["endtime"] = m.contents.endtime
+  h["samprate"] = m.contents.samprate
+  h["samplecnt"] = m.contents.samplecnt
+  h["numsamples"] = m.contents.numsamples
+  h["sampletype"] = m.contents.sampletype
+  return h
 
-def printmst(x):
+def printmst(m):
   print "--------------------"
-  print x.contents.channel
-  print x.contents.dataquality
-  print x.contents.datasamples
-  print x.contents.endtime
-  print x.contents.location
-  print x.contents.network
-  print x.contents.next
-  print x.contents.numsamples
-  print x.contents.prvtptr
-  print x.contents.samplecnt
-  print x.contents.sampletype
-  print x.contents.samprate
-  print x.contents.starttime
-  print x.contents.station
-  print x.contents.ststate
-  print x.contents.type
+  print "    network:",m.contents.network      
+  print "    station:",m.contents.station
+  print "   location:",m.contents.location
+  print "    channel:",m.contents.channel
+  print "dataquality:",m.contents.dataquality
+  print "       type:",m.contents.type
+  print "  starttime:",m.contents.starttime
+  print "    endtime:",m.contents.endtime
+  print "   samprate:",m.contents.samprate
+  print "  samplecnt:",m.contents.samplecnt
+  print "datasamples:",m.contents.datasamples
+  print " numsamples:",m.contents.numsamples
+  print " sampletype:",m.contents.sampletype
+  print "    prvtptr:",m.contents.prvtptr
+  print "    ststate:",m.contents.ststate
+  print "       next:",m.contents.next
   print "---------------------"
 
-N = mstg.contents.numtraces
-print "mstg.contents.numtraces",N
-mst = mstg.contents.traces
-printmst(mst)
-mst1 = mst.contents.next
-printmst(mst1)
+def ms_read_traces(filename,timetol=-1,sampratetol=-1,verbose=0):
+  """Read miniseed file. Header and Data are returned
 
-import pdb
-pdb.set_trace()
+  filename    - Name of file to read Mini-SEED data from
+  timetol     - Time tolerance, default is 1/2 sample period (-1)
+  sampratetol - Sample rate tolerance, default is rate depdendent (-1)
+  verbosity   - Level of diagnostic messages, default 0
+  """
+  mstg = C.pointer(MSTraceGroup())
+  netstat=lib.ms_readtraces(C.pointer(mstg), filename, C.c_int(-1),
+                            C.c_double(timetol), C.c_double(sampratetol),
+                            C.c_short(1), C.c_short(1), C.c_short(1),
+                            C.c_short(verbose))
+  if netstat != 0:
+    assert 0, "\n\nError while reading mseed file %s" % file
+  
+  print lib.mst_printtracelist(mstg,0,verbose,1)
+  N = mstg.contents.numtraces
+  print "Numtraces",N
+  
+  data=[]
+  header=[]
+  mst = mstg.contents.traces
+  for i in range(N):
+    printmst(mst)
+    numsamples = mst.contents.numsamples
+    data.extend(mst.contents.datasamples[0:numsamples])
+    header.append(mst2dict(mst))
+    mst = mst.contents.next
+  return header,data
+
+try:
+  import sys
+  file = sys.argv[1]
+except:
+  file = "BW.BGLD..EHE.D.2008.001"
+
+header,data=ms_read_traces(file)
+print "\n     Header:",header
+print "\nData Length:", data.__len__()
+print "  Data Type: %s\n" % data.__class__
+#import pdb
+#pdb.set_trace()
