@@ -180,4 +180,7 @@ class SEEDParser:
    
     def getXML(self):
         """Returns a XML representation of all headers of a SEED volume."""
-        return tostring(self.doc, pretty_print=True)
+        return tostring(self.doc, 
+                        pretty_print=True, 
+                        xml_declaration=True,
+                        encoding='utf-8')
