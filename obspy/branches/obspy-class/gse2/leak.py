@@ -1,24 +1,22 @@
 #!/usr/bin/python
+"""Small script to test wheather memory leakage occurs during reading of
+gse data or not"""
 
-import obspy
-import ext_gse
+import __init__ as gse2
 from numpy import *
 
 rand = array(1000*random.random(1e7),dtype='l')
 
 file = "leak.gse"
 
-obspy.writegse({}, rand, file)
 print rand[0:10]
-print rand[-11:-1]
-
-del rand
+gse2.write({}, rand, file)
 
 while True:
-	(header,data) = obspy.readgse(file)
-	print len(data)
-	print data[0:10]
-	print data[-11:-1]
-	del header, data
+  (header,data) = gse2.read(file)
+  print len(data), len(rand)
+  print rand[0:10]
+  print data[0:10]
+  del header, data
 
 os.remove(file)
