@@ -2,7 +2,7 @@
 
 import re
 
-from obspy.seed import utils
+from obspy.xseed import utils
 
 
 class SEEDTypeException(Exception):
@@ -19,6 +19,7 @@ class Field:
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
         self.optional = kwargs.get('optional', False)
+        self.ignore = kwargs.get('ignore', False)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
@@ -30,17 +31,17 @@ class Field:
         if self.id:
             return "F%02d" % self.id
     
-    def _formatString(self, s, flags):
+    def _formatString(self, s, flags=None):
         """Using SEED specific flags to format strings.
         
         This method is partly adopted from fseed.py, the SEED builder for 
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
+        if flags and 'T' in flags:
+            dt = utils.Iso2DateTime(s)
+            return utils.DateTime2String(dt)
         sn = str(s).strip()
         if not flags:
-            return sn
-        if 'T' in flags:
-            # XXX: ignoring time flags for now - depending on the final format
             return sn
         rx_list = []
         if 'U' in flags:
@@ -208,6 +209,16 @@ class VariableString(Field):
         self.default = ' ' * min_length
     
     def read(self, data):
+        data = self._read(data)
+        # datetime ?
+        if self.flags and 'T' in self.flags:
+            # convert to ISO 8601 time strings
+            dt = utils.String2DateTime(data)
+            return utils.DateTime2Iso(dt)
+        else:
+            return data
+    
+    def _read(self, data):
         buffer = ''
         if self.min_length:
             buffer = data.read(self.min_length)

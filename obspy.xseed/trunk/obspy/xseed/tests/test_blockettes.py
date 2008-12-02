@@ -10,8 +10,8 @@ def additional_tests():
     docpath = 'doctests' + os.path.sep
     suite.addTest(doctest.DocFileSuite(docpath + 'blockette010.txt'))
     suite.addTest(doctest.DocFileSuite(docpath + 'blockette011.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette012.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette030.txt'))
+    suite.addTest(doctest.DocFileSuite(docpath + 'blockette012.txt'))
+    suite.addTest(doctest.DocFileSuite(docpath + 'blockette030.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette031.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette032.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette033.txt'))

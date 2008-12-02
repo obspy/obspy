@@ -32,7 +32,7 @@ class Blockette054(Blockette):
     """
     
     id = 54
-    name = "Response Coefficients Blockette"
+    name = "Response Coefficients"
     fields = [
         FixedString(3, "Response type", 1, 'U'),
         Integer(4, "Stage sequence number", 2),
@@ -40,13 +40,13 @@ class Blockette054(Blockette):
         Integer(6, "Signal output units", 3),
         Integer(7, "Number of numerators", 4),
         # REPEAT fields 8 — 9 for the Number of numerators:
-        MultipleLoop('Numerator', "Number of numerators", [
+        MultipleLoop('Numerators', "Number of numerators", [
             Float(8, "Numerator coefficient", 12, mask='%+1.5e'),
             Float(9, "Numerator error", 12, mask='%+1.5e')
         ]),
         Integer(10, "Number of denominators", 4),
         # REPEAT fields 11 — 12 for the Number of denominators:
-        MultipleLoop('Denominator', "Number of denominators", [
+        MultipleLoop('Denominators', "Number of denominators", [
             Float(11, "Denominator coefficient", 12, mask='%+1.5e'),
             Float(12, "Denominator error", 12, mask='%+1.5e')
         ])

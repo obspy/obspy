@@ -13,7 +13,7 @@ class Blockette032(Blockette):
     """
     
     id= 32
-    name = "Cited Source Dictionary Blockette"
+    name = "Cited Source Dictionary"
     fields = [
         Integer(3, "Source lookup code", 2),
         VariableString(4, "Name of publication or author", 1, 70, 'UNLPS'),

@@ -12,7 +12,7 @@ class Blockette033(Blockette):
     """
     
     id= 33
-    name = "Generic Abbreviation Blockette"
+    name = "Generic Abbreviation"
     fields = [
         Integer(3, "Abbreviation lookup code", 3),
         VariableString(4, "Abbreviation description", 1, 50, 'UNLPS')

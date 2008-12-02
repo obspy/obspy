@@ -12,7 +12,7 @@ class Blockette051(Blockette):
     """
     
     id= 51
-    name = "Station Comment Blockette"
+    name = "Station Comment"
     fields = [
         VariableString(3, "Beginning effective time", 1, 22, 'T'),
         VariableString(4, "End effective time", 1, 22, 'T'),

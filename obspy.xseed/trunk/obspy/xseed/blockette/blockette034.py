@@ -15,7 +15,7 @@ class Blockette034(Blockette):
     """
     
     id = 34
-    name = "Units Abbreviations Blockette"
+    name = "Units Abbreviations"
     fields = [
         Integer(3, "Unit lookup code", 3),
         VariableString(4, "Unit name", 1, 20, 'UNP'),

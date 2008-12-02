@@ -13,7 +13,9 @@ class BlocketteLengthException(Exception):
 
 
 class Blockette:
-    """General blockette handling."""
+    """
+    General blockette handling.
+    """
     
     # default field for each blockette
     fields = []
@@ -37,11 +39,15 @@ class Blockette:
             print str(self)
     
     def __str__(self):
-        """String representation of this blockette."""
+        """
+        String representation of this blockette.
+        """
         return self.blockette_id
     
     def parse(self, data, expected_length=0):
-        """Parse given data for blockette fields and create attributes."""
+        """
+        Parse given data for blockette fields and create attributes.
+        """
         # parse only once per Blockette
         if self.parsed:
             raise Exception('Blockette should be parsed only once.')
@@ -132,7 +138,8 @@ class Blockette:
                     print('WARN: ' + msg)
     
     def getXML(self, abbrev_dict={}, show_optional=False):
-        """Returns a XML document representing this blockette.
+        """
+        Returns a XML document representing this blockette.
         
         The 'optional' flag will return optional elements too.
         """
@@ -159,6 +166,8 @@ class Blockette:
                     continue
                 # test if attributes of subfields are set
                 for subfield in field.data_fields:
+                    if subfield.ignore:
+                        continue
                     if not hasattr(self, subfield.attribute_name):
                         msg = "Attribute %s in Blockette %s does not exist!"
                         msg = msg % (subfield.name, self.blockette_id)
@@ -167,13 +176,15 @@ class Blockette:
                 root = SubElement(doc, field.field_name)
                 # cycle through all fields
                 for i in range(0, number_of_elements):
-                    item = SubElement(root, 'item')
                     # cycle through fields
                     for subfield in field.data_fields:
+                        if subfield.ignore:
+                            continue
                         result = getattr(self, subfield.attribute_name)[i]
                         if isinstance(subfield, Float):
                             result = subfield.write(result)
-                        SubElement(item, 
+                        #SubElement(item, 
+                        SubElement(root,
                                    subfield.field_name).text = unicode(result)
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set
@@ -197,6 +208,7 @@ class Blockette:
                 for subresult in results:
                     if isinstance(subfield, Float):
                         subresult = subfield.write(subresult)
+                    #SubElement(doc, field.field_name).text = unicode(subresult)
                     elements.append(unicode(subresult))
                 SubElement(doc, field.field_name).text = ' '.join(elements)
             else:

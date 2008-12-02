@@ -21,7 +21,7 @@ class Blockette057(Blockette):
     """
     
     id = 57
-    name = "Decimation Blockette"
+    name = "Decimation"
     fields = [
         Integer(3, "Stage sequence number", 2),
         Float(4, "Input sample rate", 10, mask='%1.4e'),

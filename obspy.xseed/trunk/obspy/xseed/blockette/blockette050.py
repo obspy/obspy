@@ -13,7 +13,7 @@ class Blockette050(Blockette):
     """
     
     id = 50
-    name = "Station Identifier Blockette"
+    name = "Station Identifier"
     fields = [
         FixedString(3, "Station call letters", 5, 'UN'),
         Float(4, "Latitude", 10, mask='%+02.6f'),
@@ -23,10 +23,10 @@ class Blockette050(Blockette):
         Integer(8, "Number of station comments", 3, optional=True),
         VariableString(9, "Site name", 1, 60, 'UNLPS'),
         Integer(10, "Network identifier code", 3),
-        Integer(11, "word order 32 bit", 4),
-        Integer(12, "word order 16 bit", 2),
+        Integer(11, "word order 32bit", 4),
+        Integer(12, "word order 16bit", 2),
         VariableString(13, "Start effective date", 1, 22, 'T'),
-        VariableString(14, "End effective date", 0, 22, 'T'),
+        VariableString(14, "End effective date", 0, 22, 'T', optional=True),
         FixedString(15, "Update flag", 1),
         FixedString(16, "Network Code", 2, 'ULN', version=2.3)
     ]

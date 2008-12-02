@@ -20,8 +20,8 @@ class Blockette011(Blockette):
     fields = [
         Integer(3, "Number of stations", 3),
         # REPEAT fields 4 — 5 for the Number of stations:
-        MultipleLoop("Stations", "Number of stations", [
+        MultipleLoop("Station identifier", "Number of stations", [
             FixedString(4, "Station identifier code", 5),
-            Integer(5, "Sequence number of station header", 6)
+            Integer(5, "Sequence number of station header", 6, ignore=True)
         ])
     ]

@@ -16,7 +16,7 @@ class Blockette031(Blockette):
     """
     
     id= 31
-    name = "Comment Description Blockette"
+    name = "Comment Description"
     fields = [
         Integer(3, "Comment code key", 4),
         FixedString(4, "Comment class code", 1),

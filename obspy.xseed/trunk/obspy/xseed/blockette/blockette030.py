@@ -23,7 +23,7 @@ class Blockette030(Blockette):
     """
     
     id = 30
-    name = "Data Format Dictionary Blockette"
+    name = "Data Format Dictionary"
     fields = [
         VariableString(3, "Short descriptive name", 1, 50, 'UNLPS'),
         Integer(4, "Data format identifier code", 4),

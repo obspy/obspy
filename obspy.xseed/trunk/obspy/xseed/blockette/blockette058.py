@@ -25,11 +25,11 @@ class Blockette058(Blockette):
     """
     
     id = 58
-    name = "Channel Sensitivity or Gain Blockette"
+    name = "Channel Sensitivity Gain"
     fields = [
         Integer(3, "Stage sequence number", 2),
-        Float(4, "Sensitivity or gain", 12, mask='%+1.5e'),
-        Float(5, "Frequency ", 12, mask='%+1.5e'),
+        Float(4, "Sensitivity gain", 12, mask='%+1.5e'),
+        Float(5, "Frequency", 12, mask='%+1.5e'),
         Integer(6, "Number of history values", 2),
         # REPEAT fields 7 — 9 for the Number of history values:
         MultipleLoop('History values', "Number of history values", [ 

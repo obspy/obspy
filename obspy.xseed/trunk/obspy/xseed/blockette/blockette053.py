@@ -19,17 +19,17 @@ class Blockette053(Blockette):
     """
     
     id = 53
-    name = "Response Poles and Zeros Blockette"
+    name = "Response Poles and Zeros"
     fields = [
-        FixedString(3, "Transfer function type", 1, 'U'),
+        FixedString(3, "Transfer function types", 1, 'U'),
         Integer(4, "Stage sequence number", 2),
         Integer(5, "Stage signal input units", 3),
         Integer(6, "Stage signal output units", 3),
-        Float(7, "AO normalization factor", 12, mask='%+1.5e'),
-        Float(8, "Normalization frequency fn", 12, mask='%+1.5e'),
+        Float(7, "A0 normalization factor", 12, mask='%+1.5e'),
+        Float(8, "Normalization frequency", 12, mask='%+1.5e'),
         Integer(9, "Number of complex zeros", 3),
         # REPEAT fields 10 — 13 for the Number of complex zeros:
-        MultipleLoop('Complex zeros', "Number of complex zeros", [
+        MultipleLoop('Complex zero', "Number of complex zeros", [
             Float(10, "Real zero", 12, mask='%+1.5e'),
             Float(11, "Imaginary zero", 12, mask='%+1.5e'),
             Float(12, "Real zero error", 12, mask='%+1.5e'),
@@ -37,7 +37,7 @@ class Blockette053(Blockette):
         ]),
         Integer(14, "Number of complex poles", 3),
         # REPEAT fields 15 — 18 for the Number of complex poles:
-        MultipleLoop('Complex poles', "Number of complex poles", [
+        MultipleLoop('Complex pole', "Number of complex poles", [
             Float(15, "Real pole", 12, mask='%+1.5e'),
             Float(16, "Imaginary pole", 12, mask='%+1.5e'),
             Float(17, "Real pole error", 12, mask='%+1.5e'),

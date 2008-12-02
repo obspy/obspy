@@ -3,7 +3,7 @@
 from lxml.etree import Element, SubElement, tostring
 from StringIO import StringIO
 
-from obspy.seed import blockette, utils
+from obspy.xseed import blockette, utils
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -15,7 +15,7 @@ HEADER_INFO = {
           'blockettes': [10, 11, 12]},
     'A': {'name': 'Abbreviation Dictionary Control Header', 
           'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
-    'S': {'name': 'Station Control Header Model Type', 
+    'S': {'name': 'Station Control Header', 
           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61]}
 }
 

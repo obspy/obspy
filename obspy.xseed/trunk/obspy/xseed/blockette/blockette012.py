@@ -18,13 +18,13 @@ class Blockette012(Blockette):
     """
     
     id = 12
-    name = "Volume Time Span Index"
+    name = "Volume Timespan Index"
     fields = [
-        Integer(3, "Number of spans", 4),
+        Integer(3, "Number of spans in table", 4),
         # REPEAT fields 4 — 6 for the Number of spans in table:
-        MultipleLoop("Spans", "Number of spans", [
+        MultipleLoop("Timespan", "Number of spans in table", [
             VariableString(4, "Beginning of span", 1, 22, 'T'),
             VariableString(5, "End of span", 1, 22, 'T'),
-            Integer(6, "Sequence number of time span header", 6)
+            Integer(6, "Sequence number of time span header", 6, ignore=True)
         ])
     ]

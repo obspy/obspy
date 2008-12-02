@@ -13,7 +13,7 @@ class Blockette052(Blockette):
     """
     
     id = 52
-    name = "Channel Identifier Blockette"
+    name = "Channel Identifier"
     fields = [
         FixedString(3, "Location identifier", 2, 'UN'),
         FixedString(4, "Channel identifier", 3, 'UN'),
@@ -35,6 +35,6 @@ class Blockette052(Blockette):
         Integer(20, "Number of comments", 4),
         VariableString(21, "Channel flags", 0, 26, 'U'),
         VariableString(22, "Start date", 1, 22, 'T'),
-        VariableString(23, "End date", 0, 22, 'T'),
+        VariableString(23, "End date", 0, 22, 'T', optional=True),
         FixedString(24, "Update flag", 1)
     ]
