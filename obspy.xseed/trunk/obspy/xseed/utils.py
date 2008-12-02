@@ -47,17 +47,24 @@ def String2DateTime(s):
     s = s.strip()
     if not s:
         return None
-    if ':' in s:
+    if s.count(':')==2 and s.count(',')==2:
         m = '0000'
         if '.' in s:
             s, m = s.split('.')
         dt = datetime.datetime.strptime(s, "%Y,%j,%H:%M:%S")
         if len(m)==4:
             dt = dt.replace(microsecond = int(m)*100)
-        else:
-            raise Exception("Invalid SEED date object: " + str(s))
-    else:
+    elif s.count(':')==1 and s.count(',')==2:
+        # seconds are missing!!!!
+        dt = datetime.datetime.strptime(s, "%Y,%j,%H:%M")
+    elif s.count(',')==2:
+        # minutes are missing
+        dt = datetime.datetime.strptime(s, "%Y,%j,%H")
+    elif s.count(',')==1:
+        # only date
         dt = datetime.datetime.strptime(s, "%Y,%j").date()
+    else:
+        raise Exception("Invalid SEED date object: " + str(s))
     return dt
 
 

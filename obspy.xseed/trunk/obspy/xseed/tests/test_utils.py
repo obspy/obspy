@@ -34,6 +34,8 @@ class UtilsTestCase(unittest.TestCase):
         self.assertEquals(utils.DateTime2String(dt), "2008,358,01:30:22.0000")
         dt = datetime.datetime(2008, 12, 23, 01, 30, 21)
         self.assertEquals(utils.DateTime2String(dt), "2008,358,01:30:21.0000")
+        dt = datetime.datetime(2008, 12, 23, 01, 0, 0, 0)
+        self.assertEquals(utils.DateTime2String(dt), "2008,358,01:00:00.0000")
         dt = datetime.date(2008, 12, 23)
         self.assertEquals(utils.DateTime2String(dt), "2008,358")
     
@@ -56,6 +58,12 @@ class UtilsTestCase(unittest.TestCase):
         st = "2008,358,01:30:22"
         self.assertEquals(utils.String2DateTime(st), 
                           datetime.datetime(2008, 12, 23, 01, 30, 22, 0))
+        st = "2008,358,01:30"
+        self.assertEquals(utils.String2DateTime(st), 
+                          datetime.datetime(2008, 12, 23, 01, 30, 0, 0))
+        st = "2008,358,01"
+        self.assertEquals(utils.String2DateTime(st), 
+                          datetime.datetime(2008, 12, 23, 01, 0, 0, 0))
         st = "2008,358"
         self.assertEquals(utils.String2DateTime(st), 
                           datetime.date(2008, 12, 23))
