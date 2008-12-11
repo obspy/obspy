@@ -1,8 +1,12 @@
 #!/usr/bin/python
 
 import ctypes as C
+import sys
 
-lib = C.CDLL('./libmseed.so')
+if sys.platform=='win32':
+    lib = C.CDLL('./libmseed.dll')
+else:
+    lib = C.CDLL('./libmseed.so')
 
 # SEED binary time
 class BTime(C.Structure):
