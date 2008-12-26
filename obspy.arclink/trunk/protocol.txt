@@ -1,0 +1,242 @@
+$Id: protocol.txt,v 1.4 2006/07/17 16:34:58 andres Exp $
+
+1. ArcLink request format
+-------------------------
+
+The generic request format is following:
+
+REQUEST <request_type> <optional_attributes>
+<start_time> <end_time> <net> <station> <stream> <loc_id> <optional_constraints>
+[more request lines...]
+END
+
+
+1.1. WAVEFORM request
+---------------------
+
+If request_type==WAVEFORM, attributes "format" and "compression" are
+defined. The value of "format" can be "MSEED" for Mini-SEED or "FSEED"
+(default) for full SEED; "compression" can be "bzip2" or "none" (default).
+Wildcards are allowed only in <stream> and <loc_id>. Constraints are not
+allowed. <loc_id> is optional. If <loc_id> is missing or ".", only streams
+with empty location ID are requested. Sample waveform request:
+
+REQUEST WAVEFORM format=MSEED
+2005,09,01,00,05,00 2005,09,01,00,10,00 IA PPI BHZ .
+END
+
+
+1.2. RESPONSE request
+---------------------
+
+If request_type==RESPONSE, attribute "compression" is defined, which can be
+"bzip2" or "none" (default). Constraints are not allowed. Wildcard "*" is
+allowed in <station> <stream> and <loc_id>, so it is possible to request a
+dataless volume of a whole network. If <loc_id> is missing or ".", only
+streams with empty location ID are included in the dataless volume. The
+word "RESPONSE" is ambiguous; possibly we should find a better one.
+
+
+1.3. INVENTORY request
+----------------------
+
+If request_type==INVENTORY, attributes "instruments", "compression" and
+"modified_after" are defined. The value of "instruments" can be "true" or
+"false", "compression" can be "bzip2" or "none" (default), and
+"modified_after", if present, must contain an ISO time string.
+
+instruments (default "false"): whether instrument data is added to XML
+compression (default "none"): compress XML data
+modified_after: if set, only entries modified after given time will be
+    returned. Can be used for DB synchronization.
+
+Wildcard "*" is allowed in all fields, except <start_time> and <end_time>.
+<station>, <stream> and <loc_id> are optional. If <station> or <stream> is
+not specified, the respective elements are not added to the XML tree; if
+<loc_id> is missing or ".", only streams with empty location ID are
+included. For example, to request a just a list of GEOFON stations (but not
+stream information), one would use:
+
+REQUEST INVENTORY
+1990,1,1,0,0,0 2030,12,31,0,0,0 GE *
+END
+
+Following constraints are defined:
+
+sensortype: limit streams to those using specific sensor types: "VBB", 
+    "BB", "SM", "OBS", etc. Can be also a combination like "VBB+BB+SM".
+latmin: minimum latitude
+latmax: maximum latitude
+lonmin: minimum longitude
+lonmax: maximum longitude
+permanent: "true" or "false", requesting only permanent or temporary
+    networks respectively
+restricted: "true" or "false", requesting only networks/stations/streams
+    that have restricted or open data respectively.
+
+If any of <station>, <stream> or <loc_id> is missing, one or more dots
+should be used before constraints. For example, to request the list of
+networks with open data, one would use:
+
+REQUEST INVENTORY
+1990,1,1,0,0,0 2030,12,31,0,0,0 * . restricted=false
+END
+
+
+1.4. ROUTING request
+----------------------
+
+If request_type==ROUTING, attributes "compression" and "modified_after" are
+defined. The value of "compression" can be "bzip2" or "none" (default);
+"modified_after", if present, must contain an ISO time string.
+
+compression (default "none"): compress XML data
+modified_after: if set, only entries modified after given time will be
+    returned. Can be used for DB synchronization.
+
+Wildcard "*" is allowed in all fields, except <start_time> and <end_time>.
+Constraints are not allowed. All fields except <start_time>, <end_time> and
+<net> are optional; missing <station> stands for "default route" of a given
+network. <stream> and <loc_id> are ignored.
+
+
+2. ArcLink client protocol
+--------------------------
+
+The client protocol is handled by Python module seiscomp.arclink.client.
+It is necessary to know the protocol details only for debugging purposes or
+if clients are implemented in other languages than Python.
+
+ArcLink commands are ASCII strings, terminated with <lf> or <cr><lf>.
+Except STATUS, the command response is one or more lines terminated with
+<cr><lf>. Unless noted otherwise, the response is OK<cr><lf> or
+ERROR<cr><lf>, depending if the command was successful or not. After
+getting the ERROR response, it is possible to retrieve the error message
+with SHOWERR.
+
+The following ArcLink commands are defined:
+
+HELLO - returns 2 <cr><lf>-terminated lines: software version and data
+    centre name.
+
+BYE - closes connection (useful for testing the server with telnet, 
+    otherwise it is enough to close the client-side socket).
+
+USER <username> <password> - authenticates user, required before any of 
+    the following commands.
+
+INSTITUTION <any_string> - optionally specifies institution name.
+
+SHOWERR - returns 1 <cr><lf>-terminated line, containing the error message 
+    (to be used after getting the ERROR response).
+
+REQUEST <request_type> <optional_attributes> - start of request
+
+END - end of request; if successful, returns request ID, otherwise 
+    ERROR<cr><lf>
+
+STATUS <req_id> - send status of request <req_id>. if <req_id>==ALL, sends 
+    status of all requests of the user. Response is either ERROR<cr><lf> 
+    or an XML document, followed by END<cr><lf>.
+
+DOWNLOAD <req_id>[.<vol_id>] [<pos>] - download the result of request. 
+    Response is ERROR<cr><lf> or size, followed by the data and 
+    END<cr><lf>. Optional argument <pos> makes possible to resume broken 
+    download (not yet implemented).
+
+BDOWNLOAD <req_id>[.<vol_id>] [<pos>] - like DOWNLOAD, but will block until
+    the request is finished.
+
+PURGE <req_id> - delete the result of a request from the server.
+
+
+2.1. User profiles
+------------------
+
+The protocol does not allow to specify full name of the user--that should
+be a part of user profile. There should be commands to create/edit user
+profile without the intervention of server administrator. That makes the
+INSTITUTION command obsolete.
+
+
+3. ArcLink request_handler protocol
+___________________________________
+
+Python module seiscomp.arclink.handler takes care of the details of
+request_handler protocol. It is necessary to know the protocol details only
+for debugging purposes or if request handlers are implemented in other
+languages than Python.
+
+The ArcLink server sends a request to request_handler in the following
+format:
+
+USER <username> <password>
+INSTITUTION <any_string>
+REQUEST <request_type> <req_id> <optional_attributes>
+[one or more request lines...]
+END
+
+Note that <password> and the INSTITUTION line will be probably removed in
+future versions (it is not necessary to send password to request_handler,
+since the user is already authenticated by the server; institution will be
+a part of user profile). However, it is necessary to send <username> to the
+request_handler, because request_handler will check if the user has access
+to given data.
+
+After receiving the request, the request_handler can send responses to the
+server. Following responses are defined:
+
+STATUS LINE <n> PROCESSING <vol_id> - add request line number <n>
+    (0-based) to volume <vol_id>. The volume is created if it already does 
+    not exist.
+
+STATUS <ref> <status> - set line or volume status, where
+    <ref> = LINE <n>
+          = VOLUME <vol_id>
+    <status> = OK - request sucessfully processed, data available
+             = NODATA - no processing errors, but data not available
+             = WARN - processing errors, some downloadable data available
+             = ERROR - processing errors, no downloadable data available
+             = RETRY - temporarily no data available
+             = DENIED - access to data denied for the user
+             = CANCEL - processing cancelled (eg., by operator)
+             = MESSAGE <any_string> - error message in case of WARN or
+                   ERROR, but can be used regardless of status (the last 
+                   message is shown in STATUS response)
+             = SIZE <n> - data size. In case of volume, it must be the 
+                   exact size of downloadable product.
+
+MESSAGE <any_string> - send general processing (error) message. The last 
+    message is shown in STATUS response.
+
+ERROR - request_handler could not process the request due to error (eg., 
+    got an unhandled Python exception). This ends the request and normally 
+    the request handler quits. If not, it should be ready to handle the 
+    next request. Note that if request_handler quits (crashes) without 
+    sending ERROR, then the request will be repeated (sent to another 
+    request_handler instance) by the server. This behaviour might be 
+    changed in future server versions to avoid loops, eg., if 
+    request_handler quits, ERROR would be implied.
+
+CANCEL - request cancelled (eg., by operator). Works like ERROR, except 
+    that completed volumes will be deleted. That does not make much sense, 
+    so it might be changed in the future.
+
+END - request processing finished normally. The request_handler is ready 
+    for the next request.
+
+
+4. Planned server improvements
+------------------------------
+
+* User profile management: implement additional commands in the ArcLink 
+  client protocol, so users can create/modify an account for accessing open
+  data without manual intervention of administrator.
+
+* Dump status of completed requests to harddisk.
+
+* State save/restore mechanism: when the server is shut down, it forgets 
+  all the requests. Instead of that, it should dump the state of running
+  requests to harddisk, so it can restart these requests later.
+
+
