@@ -1,0 +1,1 @@
+../../../../obspy/trunk/obspy/parser.py
