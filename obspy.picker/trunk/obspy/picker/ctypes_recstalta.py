@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import os
+import ctypes as C
+
 def recstalta(a,nsta,nlta):
   """Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
@@ -9,11 +12,11 @@ def recstalta(a,nsta,nlta):
   This version directly uses a C version via CTypes"""
 
   ndat = len(a)
-  import ctypes as C
-  lib = C.CDLL('./recstalta.so')
+  lib = C.CDLL(os.path.join(os.path.dirname(__file__),'recstalta.so'))
 
   lib.recstalta.restype=C.POINTER(C.c_double)
 
+  #import numpy; a = array(a)
   #charfct = C.pointer(lib.recstalta(a.ctypes.data_as(C.c_void_p),ndat,nsta,nlta))
   c_a = (C.c_double*ndat)()
   c_a[0:ndat] = a
