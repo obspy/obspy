@@ -241,5 +241,5 @@ header,data=ms_read_traces(file)
 print "\n     Header:",header
 print "\nData Length:", data.__len__()
 print "  Data Type: %s\n" % data.__class__
-#import pdb
-#pdb.set_trace()
+import pdb
+pdb.set_trace()
