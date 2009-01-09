@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette 
-from obspy.xseed.fields import Float, Integer, FixedString, MultipleLoop
+from obspy.xseed.fields import Float, Integer, FixedString, MultipleFlatLoop
 
 
 class Blockette054(Blockette):
-    """Blockette 054: Response (Coefficients) Blockette.
+    """
+    Blockette 054: Response (Coefficients) Blockette.
     
-    This blockette is usually used only for fi nite impulse response (FIR) 
+    This blockette is usually used only for finite impulse response (FIR) 
     filter stages. You can express Laplace transforms this way, but you should 
     use the Response (Poles & Zeros) Blockettes [53] for this. You can express 
     IIR filters this way, but you should use the Response (Poles & Zeros) 
@@ -28,7 +29,7 @@ class Blockette054(Blockette):
     July 2007, the FDSN adopted a convention that requires the coefficients to 
     be listed in forward time order. As a reference, minimum-phase filters 
     (which are asymmetric) should be written with the largest values near the 
-    beginning of the coeffi cient list.
+    beginning of the coefficient list.
     """
     
     id = 54
@@ -40,13 +41,13 @@ class Blockette054(Blockette):
         Integer(6, "Signal output units", 3),
         Integer(7, "Number of numerators", 4),
         # REPEAT fields 8 — 9 for the Number of numerators:
-        MultipleLoop('Numerators', "Number of numerators", [
+        MultipleFlatLoop('Numerators', "Number of numerators", [
             Float(8, "Numerator coefficient", 12, mask='%+1.5e'),
             Float(9, "Numerator error", 12, mask='%+1.5e')
         ]),
         Integer(10, "Number of denominators", 4),
         # REPEAT fields 11 — 12 for the Number of denominators:
-        MultipleLoop('Denominators', "Number of denominators", [
+        MultipleFlatLoop('Denominators', "Number of denominators", [
             Float(11, "Denominator coefficient", 12, mask='%+1.5e'),
             Float(12, "Denominator error", 12, mask='%+1.5e')
         ])

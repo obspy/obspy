@@ -2,13 +2,15 @@
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement
-
-from obspy.xseed.fields import Integer, MultipleLoop, SimpleLoop, Float
 from obspy.xseed import utils
+from obspy.xseed.fields import Integer, MultipleLoop, SimpleLoop, Float, \
+    MultipleFlatLoop
 
 
 class BlocketteLengthException(Exception):
-    """Wrong blockette length detected."""
+    """
+    Wrong blockette length detected.
+    """
     pass
 
 
@@ -81,7 +83,8 @@ class Blockette:
             # check version
             if field.version and field.version>self.version:
                 continue
-            if isinstance(field, MultipleLoop):
+            if isinstance(field, MultipleLoop) or \
+               isinstance(field, MultipleFlatLoop):
                 index_field = field.index_field
                 # test if index attribute is set
                 if not hasattr(self, index_field):
@@ -131,7 +134,7 @@ class Blockette:
             if expected_length != blockette_length:
                 msg = 'Wrong size of Blockette %s (%d of %d) in sequence %06d'
                 msg = msg  % (self.blockette_id, blockette_length, 
-                              expected_length, self.record_id)
+                              expected_length, self.record_id or 0)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:
@@ -154,7 +157,38 @@ class Blockette:
             # skip if optional
             if not show_optional and field.optional:
                 continue
-            if isinstance(field, MultipleLoop):
+            if isinstance(field, MultipleFlatLoop):
+                # test if index attribute is set
+                if not hasattr(self, field.index_field):
+                    msg = "Attribute %s in Blockette %s does not exist!"
+                    msg = msg % (field.index_field, self.blockette_id)
+                    raise Exception(msg)
+                # get number of entries
+                number_of_elements = int(getattr(self, field.index_field))
+                if number_of_elements == 0:
+                    continue
+                # test if attributes of subfields are set
+                for subfield in field.data_fields:
+                    if subfield.ignore:
+                        continue
+                    if not hasattr(self, subfield.attribute_name):
+                        msg = "Attribute %s in Blockette %s does not exist!"
+                        msg = msg % (subfield.name, self.blockette_id)
+                        raise Exception(msg)
+                # XML looping element 
+                elements = []
+                # cycle through all fields
+                for i in range(0, number_of_elements):
+                    # cycle through fields
+                    for subfield in field.data_fields:
+                        if subfield.ignore:
+                            continue
+                        result = getattr(self, subfield.attribute_name)[i]
+                        if isinstance(subfield, Float):
+                            result = subfield.write(result)
+                        elements.append(unicode(result))
+                SubElement(doc, field.field_name).text = ' '.join(elements)
+            elif isinstance(field, MultipleLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
                     msg = "Attribute %s in Blockette %s does not exist!"
@@ -183,7 +217,6 @@ class Blockette:
                         result = getattr(self, subfield.attribute_name)[i]
                         if isinstance(subfield, Float):
                             result = subfield.write(result)
-                        #SubElement(item, 
                         SubElement(root,
                                    subfield.field_name).text = unicode(result)
             elif isinstance(field, SimpleLoop):
@@ -212,6 +245,9 @@ class Blockette:
                     elements.append(unicode(subresult))
                 SubElement(doc, field.field_name).text = ' '.join(elements)
             else:
+                # check if ignored
+                if field.ignore:
+                    continue
                 # check if attribute exists
                 if not hasattr(self, field.attribute_name):
                     if self.strict:
@@ -225,7 +261,7 @@ class Blockette:
                     result = field.write(result)
                 # set XML string
                 se = SubElement(doc, field.field_name)
-                se.text = unicode(result)
+                se.text = unicode(result).strip()
         return doc
     
     def getSEEDString(self):
@@ -235,7 +271,8 @@ class Blockette:
             # check version
             if field.version and field.version>self.version:
                 continue
-            if isinstance(field, MultipleLoop):
+            if isinstance(field, MultipleLoop) or \
+               isinstance(field, MultipleFlatLoop):
                 # test if index attribute is set
                 if not hasattr(self, field.index_field):
                     msg = "Attribute %s in Blockette %s does not exist!"

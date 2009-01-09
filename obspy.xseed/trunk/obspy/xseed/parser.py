@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from lxml.etree import Element, SubElement, tostring
 from StringIO import StringIO
-
+from lxml.etree import Element, SubElement, tostring
 from obspy.xseed import blockette, utils
 
 
@@ -25,7 +24,8 @@ class SEEDParserException(Exception):
 
 
 class SEEDParser:
-    """The SEED parser class parses dataless or full SEED volumes.
+    """
+    The SEED parser class parses dataless or full SEED volumes.
     
     The SEED file format description can be found at
     @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
@@ -48,7 +48,9 @@ class SEEDParser:
         fp.close()
     
     def parse(self, data):
-        """Parses through a whole SEED volume."""
+        """
+        Parses through a whole SEED volume.
+        """
         data.seek(0)
         # retrieve some basic date, like version and record_length
         temp = data.read(8)
@@ -81,8 +83,9 @@ class SEEDParser:
         record_id = None
         # loop through file
         while record:
-            record_continuation = record[7] == CONTINUE_FROM_LAST_RECORD
-            if record_continuation :
+            record_continuation = (record[7] == CONTINUE_FROM_LAST_RECORD)
+            same_record_type= (record[6] == record_type)
+            if record_continuation  or same_record_type:
                 # continued record
                 merged_data+=record[8:]
             else:
@@ -95,6 +98,9 @@ class SEEDParser:
                 merged_data = record[8:]
                 if record_type not in HEADERS:
                     # only parse headers, no data
+                    merged_data = ''
+                    record_type = None
+                    record_id = None
                     break
             if self.debug:
                 if not record_continuation:
@@ -106,7 +112,8 @@ class SEEDParser:
                               record_id)
     
     def _parseMergedData(self, data, record_type, record_id):
-        """Read and process data of combined records.
+        """
+        Read and process data of combined records.
         
         Volume index control headers precede all data. Their primary purpose
         is to provide a directory to differentiate parts of the volume for 
@@ -145,8 +152,12 @@ class SEEDParser:
         blockette_length = 0
         blockette_id = -1
         
-        root = SubElement(self.doc, 
-                          utils.toXMLTag(HEADER_INFO[record_type].get('name')))
+        # error
+        header_tag = HEADER_INFO[record_type].get('name')
+        if record_type in ['A', 'V']:
+            root = SubElement(self.doc, utils.toXMLTag(header_tag))
+        else:
+            root = self.doc
         
         while blockette_id != 0:
             # remove spaces between blockettes 
@@ -158,6 +169,9 @@ class SEEDParser:
                 blockette_length = int(data.read(4))
             except:
                 break
+            if record_type=='S' and blockette_id==50:
+                root = SubElement(self.doc, utils.toXMLTag(header_tag))
+            
             data.seek(-7, 1)
             if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
                 class_name = 'Blockette%03d' % blockette_id
@@ -179,7 +193,9 @@ class SEEDParser:
                 raise SEEDParserException(msg)
    
     def getXML(self):
-        """Returns a XML representation of all headers of a SEED volume."""
+        """
+        Returns a XML representation of all headers of a SEED volume.
+        """
         return tostring(self.doc, 
                         pretty_print=True, 
                         xml_declaration=True,

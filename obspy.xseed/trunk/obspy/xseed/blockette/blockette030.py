@@ -5,7 +5,8 @@ from obspy.xseed.fields import Integer, VariableString, SimpleLoop
 
 
 class Blockette030(Blockette):
-    """Blockette 030: Data Format Dictionary Blockette.
+    """
+    Blockette 030: Data Format Dictionary Blockette.
     
     All volumes, with the exception of miniSEED data records, must have a Data 
     Format Dictionary Blockette [30]. Each Channel Identifier Blockette [52] 

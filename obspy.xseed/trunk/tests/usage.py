@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
+"""
+Simple usage example.
+"""
 
-from obspy.xseed import SEEDParser
 from lxml import etree
+from obspy.xseed import SEEDParser
 import StringIO
 
-sp = SEEDParser(verify=True)
-sp.parseSEEDFile('data/dataless.seed.BW_ZUGS')
-fp = open('output/dataless.seed.BW_ZUGS.xml','w')
-fp.write(sp.getXML())
-fp.close()
 
-#sp = SEEDParser()
-#sp.parseSEEDFile('data/dataless.seed')
-#fp = open('output/dataless.seed.xml','w')
-#fp.write(sp.getXML())
-#fp.close()
-
+# parse SEED file
+parser = SEEDParser(verify=True, strict=False, debug=False)
+parser.parseSEEDFile('data/bw/dataless.seed.BW_ZUGS')
+xml_doc = parser.getXML()
 
 # read schema
-
 xmlschema_doc = etree.parse('xml-seed.modified.xsd')
 xmlschema = etree.XMLSchema(xmlschema_doc)
 
-doc = etree.parse(StringIO.StringIO(sp.getXML()))
-xmlschema.assertValid(doc)
+# validate XML document with schema
+parsed_xml_doc = etree.parse(StringIO.StringIO(xml_doc))
+xmlschema.assertValid(parsed_xml_doc)
+
+# write XML results to file system
+fp = open('output/result.xml','w')
+fp.write(xml_doc)
+fp.close()

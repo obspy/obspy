@@ -5,7 +5,8 @@ from obspy.xseed.fields import Float, Integer, VariableString
 
 
 class Blockette010(Blockette):
-    """Blockette 010: Volume Identifier Blockette.
+    """
+    Blockette 010: Volume Identifier Blockette.
         
     This is the normal header blockette for station or event oriented network 
     volumes. Include it once at the beginning of each logical volume or sub-

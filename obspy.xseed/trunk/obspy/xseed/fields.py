@@ -10,7 +10,9 @@ class SEEDTypeException(Exception):
 
 
 class Field:
-    """General SEED field."""
+    """
+    General SEED field.
+    """
     
     def __init__(self, id, name, *args, **kwargs):
         self.id = id
@@ -20,6 +22,7 @@ class Field:
         self.mask = kwargs.get('mask', None)
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
+        self.strict = kwargs.get('strict', False)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
@@ -32,7 +35,8 @@ class Field:
             return "F%02d" % self.id
     
     def _formatString(self, s, flags=None):
-        """Using SEED specific flags to format strings.
+        """
+        Using SEED specific flags to format strings.
         
         This method is partly adopted from fseed.py, the SEED builder for 
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
@@ -104,7 +108,9 @@ class Integer(Field):
 
 
 class Float(Field):
-    """A float number with a fixed length and output mask."""
+    """
+    A float number with a fixed length and output mask.
+    """
     
     def __init__(self, id, name, length, **kwargs):
         Field.__init__(self, id, name, **kwargs)
@@ -141,7 +147,8 @@ class Float(Field):
         return result
 
     def formatExponential(self, data):
-        """Formats floats in a fixed exponential format.
+        """
+        Formats floats in a fixed exponential format.
         
         Different operation systems are delivering different output for the
         exponential format of floats. Here we ensure to deliver in a for SEED
@@ -195,7 +202,8 @@ class FixedString(Field):
 
 
 class VariableString(Field):
-    """Variable length ASCII string, ending with a tilde: ~ (ASCII 126).
+    """
+    Variable length ASCII string, ending with a tilde: ~ (ASCII 126).
     
     Variable length fields cannot have leading or trailing spaces. Character 
     counts for variable length fields do not include the tilde terminator. 
@@ -267,6 +275,10 @@ class MultipleLoop(Field):
                 temp2.append(field)
             temp.append(temp2)
         return temp
+
+
+class MultipleFlatLoop(MultipleLoop):
+    pass
 
 
 class SimpleLoop(Field):

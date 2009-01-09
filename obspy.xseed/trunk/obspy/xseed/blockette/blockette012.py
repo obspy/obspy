@@ -5,7 +5,8 @@ from obspy.xseed.fields import Integer, VariableString, MultipleLoop
 
 
 class Blockette012(Blockette):
-    """Blockette 012: Volume Time Span Index Blockette.
+    """
+    Blockette 012: Volume Time Span Index Blockette.
     
     This blockette forms an index to the time spans that encompass the actual 
     data. One index entry exists for each time span recorded later in the 

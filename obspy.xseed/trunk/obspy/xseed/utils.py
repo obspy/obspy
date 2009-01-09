@@ -48,17 +48,19 @@ def String2DateTime(s):
     if not s:
         return None
     if s.count(':')==2 and s.count(',')==2:
+        # w/ seconds
         m = '0000'
         if '.' in s:
             s, m = s.split('.')
         dt = datetime.datetime.strptime(s, "%Y,%j,%H:%M:%S")
-        if len(m)==4:
-            dt = dt.replace(microsecond = int(m)*100)
+        lenm = len(m)
+        if lenm>0 and lenm<=6:
+            dt = dt.replace(microsecond = int(m)*pow(10, 6-lenm))
     elif s.count(':')==1 and s.count(',')==2:
-        # seconds are missing!!!!
+        # w/o seconds
         dt = datetime.datetime.strptime(s, "%Y,%j,%H:%M")
     elif s.count(',')==2:
-        # minutes are missing
+        # w/o minutes
         dt = datetime.datetime.strptime(s, "%Y,%j,%H")
     elif s.count(',')==1:
         # only date
