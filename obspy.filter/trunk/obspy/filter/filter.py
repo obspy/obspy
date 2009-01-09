@@ -2,17 +2,20 @@ from scipy.signal import iirfilter,lfilter
 
 
 def bandpass(data,freqmin,freqmax,df=200,corners=4):
-  """Butterworth-Bandpass: filter data from freqmin to freqmax using
-  corners corners
+  """Butterworth-Bandpass Filter
+  
+  Filter data from freqmin to freqmax using
+  corners corners.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, [freqmin/fe, freqmax/fe], btype='band',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
 def bandpassZPHSH(data,freqmin,freqmax,df=200,corners=2):
-  """Zero-Phase-Shift Butterworth-Bandpass: filter data from freqmin to freqmax
-  using corners corners and doing 2 runs over the data, one from left to right
-  and one from right to left.
+  """Zero-Phase-Shift Butterworth-Bandpass Filter
+  
+  Filter data from freqmin to freqmax using corners corners and doing 2 runs
+  over the data, one from left to right and one from right to left.
   Note that the default corners is 2, because of the two runs involved.
   """
   x=bandpass(data, freqmin, freqmax, df, corners)
@@ -20,17 +23,21 @@ def bandpassZPHSH(data,freqmin,freqmax,df=200,corners=2):
   return x[::-1]
 
 def bandstop(data,freqmin,freqmax,df=200,corners=4):
-  """Butterworth-Bandstop: filter data removing data between frequencies
-  freqmin and freqmax using corners corners
+  """Butterworth-Bandstop Filter
+  
+  Filter data removing data between frequencies freqmin and freqmax using
+  corners corners.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, [freqmin/fe, freqmax/fe], btype='bandstop',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
 def bandstopZPHSH(data,freqmin,freqmax,df=200,corners=2):
-  """Zero-Phase-Shift Butterworth-Bandstop: filter data removing data between
-  frequencies freqmin and freqmax using corners corners and doing 2 runs over
-  the data, one from left to right and one from right to left.
+  """Zero-Phase-Shift Butterworth-Bandstop Filter
+  
+  Filter data removing data between frequencies freqmin and freqmax using
+  corners corners and doing 2 runs over the data, one from left to right and
+  one from right to left.
   Note that the default corners is 2, because of the two runs involved.
   """
   x=bandstop(data, freqmin, freqmax, df, corners)
@@ -38,17 +45,20 @@ def bandstopZPHSH(data,freqmin,freqmax,df=200,corners=2):
   return x[::-1]
 
 def lowpass(data,freq,df=200,corners=4):
-  """Butterworth-Lowpass: filter data removing data over certain frequency freq
-  using corners corners
+  """Butterworth-Lowpass Filter
+  
+  Filter data removing data over certain frequency freq using corners corners.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, freq/fe, btype='lowpass',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
 def lowpassZPHSH(data,freq,df=200,corners=2):
-  """Zero-Phase-Shift Butterworth-Lowpass: filter data removing data over
-  certain frequency freq using corners corners and doing 2 runs over the data,
-  one from left to right and one from right to left.
+  """Zero-Phase-Shift Butterworth-Lowpass Filter
+  
+  Filter data removing data over certain frequency freq using corners corners
+  and doing 2 runs over the data, one from left to right and one from right
+  to left.
   Note that the default corners is 2, because of the two runs involved.
   """
   x=lowpass(data, freq, df, corners)
@@ -56,17 +66,20 @@ def lowpassZPHSH(data,freq,df=200,corners=2):
   return x[::-1]
 
 def highpass(data,freq,df=200,corners=4):
-  """Butterworth-Highpass: filter data removing data below certain frequency freq
-  using corners corners
+  """Butterworth-Highpass Filter:
+  
+  Filter data removing data below certain frequency freq using corners corners.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, freq/fe, btype='highpass',ftype='butter',output='ba')
   return lfilter(b, a, data)
 
 def highpassZPHSH(data,freq,df=200,corners=2):
-  """Zero-Phase-Shift Butterworth-Highpass: filter data removing data below
-  certain frequency freq using corners corners and doing 2 runs over the data,
-  one from left to right and one from right to left.
+  """Zero-Phase-Shift Butterworth-Highpass Filter:
+  
+  Filter data removing data below certain frequency freq using corners corners
+  and doing 2 runs over the data, one from left to right and one from right
+  to left.
   Note that the default corners is 2, because of the two runs involved.
   """
   x=highpass(data, freq, df, corners)
