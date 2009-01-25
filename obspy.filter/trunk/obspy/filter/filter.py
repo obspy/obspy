@@ -1,5 +1,30 @@
+#!/usr/bin/env python
+#-------------------------------------------------------------------
+# Filename: filter.py
+#  Purpose: Various Seismogram Filtering Functions
+#   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr
+#    Email: tobias.megies@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2009 Tobias Megia, Moritz Beyreuther, Yannik Behr
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#---------------------------------------------------------------------
+
 from scipy.signal import iirfilter,lfilter
 
+# NOTE: Data need to be a instance of the numpy array class
 
 def bandpass(data,freqmin,freqmax,df=200,corners=4):
   """Butterworth-Bandpass Filter

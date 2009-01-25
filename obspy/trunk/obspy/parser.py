@@ -1,4 +1,26 @@
 #!/usr/bin/env python
+#-------------------------------------------------------------------
+# Filename: parser.py
+#  Purpose: Base Seismogram Parser Class
+#   Author: Moritz Beyreuther
+#    Email: moritz.beyreuther@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2009 Moritz Beyreuther
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#---------------------------------------------------------------------
 """General parser class for uniform seismogram reading in different
 formats. Classes for special type format seismogram reading inherit from
 this general class.
@@ -6,13 +28,14 @@ this general class.
 It is assumed that the class, inherting from this class provides the following
 attributes:
 
+    station           - station name (string)
     julsec            - start time of seismogram in seconds since 1970 (float)
     trace             - the actual seismogram data (list of floats)
-    dt                - sampling rate in seconds (float)
+    df                - sampling rate in Hz (float)
+    npts              - number of samples/data points (int)
 
 The Parser Class provides the following attributes and methods():
 
-    npts              - number of data points
     date_time()       - pretty UTC date string computed from julsec
     date_to_julsec()  - convert arbitrary formated UTC date string to julsec
 
@@ -23,6 +46,18 @@ import os,time
 class Parser(object):
     """General Seismogram Parser Class"""
     
+    def __str__(self):
+        """Overload to string method to pretty print attributes of class"""
+        output = ''
+        for attr,val in sorted(self.__dict__.iteritems()):
+            if attr == 'trace':
+                if len(val) > 9:
+                    output += "%20s [%d,%d,%d,%d,...,%d,%d,%d,%d]\n" % tuple([attr]+val[0:4]+val[-5:-1])
+                    continue
+            output += "%20s %s\n"%(attr,str(val))
+        return output
+
+
     def date_time(self):
         """Return pretty date string computed from julsec
         
@@ -88,7 +123,7 @@ class Parser(object):
                 returnflag = False
         return returnflag
 
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-    doctest.master.summarize(True) # summary even if all tests passed correctly

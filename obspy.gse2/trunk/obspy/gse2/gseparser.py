@@ -101,4 +101,3 @@ class GseParser(parser.Parser):
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-    doctest.master.summarize(True) # summary even if all tests passed correctly
