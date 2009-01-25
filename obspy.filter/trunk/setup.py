@@ -33,7 +33,7 @@ version = '0.0.1'
 setup(
     name='obspy.filter',
     version=version,
-    description="Basic filtering routines for seismograms."
+    description="Basic filtering routines for seismograms.",
     long_description="""""",
     classifiers=[],
     keywords='Seismology Filter',
