@@ -40,6 +40,11 @@ setup(
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
     license='GPL',
+    package_data = {
+                # If any package contains *.txt or *.rst files, include
+                # them:
+                '': ['*.txt', '*.rst'],
+    }
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
