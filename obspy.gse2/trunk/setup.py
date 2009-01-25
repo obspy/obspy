@@ -47,7 +47,7 @@ setup(
     # test_suite = "obspy.gse2.tests",
     install_requires=[
         'setuptools',
-        'numpy',
+        'NumPy',
         # -*- Extra requirements: -*
     ],        
 )
