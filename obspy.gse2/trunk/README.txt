@@ -1,4 +1,4 @@
-package obspy.xseed
+package obspy.gse2
 ==================
 
 Copyright
