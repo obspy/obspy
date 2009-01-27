@@ -11,7 +11,7 @@ import os
 #else:
 #Directory where the test files are located
 lib_path = os.path.dirname(__file__)
-lib_path = os.path.join(lib_path, 'libmseed.so')
+lib_path = os.path.join(lib_path, 'libmseed', 'libmseed.so')
 clibmseed = C.CDLL(lib_path)
 clib = C.CDLL('libc.so.6')
 
