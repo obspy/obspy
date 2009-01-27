@@ -28,15 +28,9 @@ setup.py bdist_egg
 from setuptools import setup, find_packages
 
 version = '0.0.1'
-from setuptools.dist import Distribution
-
-class MyDist(Distribution):
-     def has_ext_modules(self):
-         return True
 
 
 setup(
-    distclass = MyDist,
     name='obspy.gse2',
     version=version,
     description="Read and write support for GSE2 files (seismograms).",
@@ -47,19 +41,15 @@ setup(
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
     license='GPL',
-    #package_data = {
-    #            # If any package contains *.so or *.txt files, include them:
-    #            '': ['*.so', '*.txt'],
-    #},
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=True,
+    zip_safe=False,
     # test_suite = "obspy.gse2.tests",
     install_requires=[
         'obspy',
         'setuptools',
-        'numpy',
+        #'numpy',
         # -*- Extra requirements: -*
     ],
     dependency_links = [
