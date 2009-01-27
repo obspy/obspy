@@ -291,7 +291,7 @@ MSTrace_s._fields_ = [
 MSTrace = MSTrace_s
 
 class MSTraceGroup_s(C.Structure):
-  pass
+    pass
 
 MSTraceGroup_s._fields_ = [
     ('numtraces', C.c_long),                # Number of MSTraces in the trace chain

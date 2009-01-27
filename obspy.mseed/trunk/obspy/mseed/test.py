@@ -4,9 +4,9 @@ import ctypes as C
 import sys
 
 if sys.platform=='win32':
-    lib = C.CDLL('./libmseed.dll')
+    lib = C.CDLL('./libmseed/libmseed.dll')
 else:
-    lib = C.CDLL('./libmseed.so')
+    lib = C.CDLL('./libmseed/libmseed.so')
 
 # SEED binary time
 class BTime(C.Structure):
@@ -241,5 +241,5 @@ header,data=ms_read_traces(file)
 print "\n     Header:",header
 print "\nData Length:", data.__len__()
 print "  Data Type: %s\n" % data.__class__
-import pdb
-pdb.set_trace()
+import pdb;pdb.set_trace()
+
