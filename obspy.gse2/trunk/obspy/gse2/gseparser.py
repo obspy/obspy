@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import parser, ext_gse, numpy, os, time, sys
+from obspy import parser
+from obspy.gse2 import ext_gse
+import numpy, os, time, sys
 
 class GseParser(parser.Parser):
     
