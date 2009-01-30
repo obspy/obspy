@@ -1,16 +1,16 @@
 """ An object-oriented version of C. J. Ammon's SAC I/O module.
-\nHere is C. J. Ammon's his introductory comment:
+Here is C. J. Ammon's his introductory comment:
 
->>>Version 2.0.3, by C.J. Ammon, Penn State
->>>This software is free and is distributed with no guarantees.
->>>For a more complete description, start python and enter,
->>>Suspected limitations: I don't used XY files much - I am
->>>not sure that those access routines are bug free.
->>>
->>>Send bug reports (not enhancement/feature requests) to: 
->>>cja12@psu.edu [with PySAC in the subject field]
->>>I don't support this software so don't wait for an answer.
->>>I may not have time...
+Version 2.0.3, by C.J. Ammon, Penn State
+This software is free and is distributed with no guarantees.
+For a more complete description, start python and enter,
+Suspected limitations: I don't used XY files much - I am
+not sure that those access routines are bug free.
+
+Send bug reports (not enhancement/feature requests) to: 
+cja12@psu.edu [with PySAC in the subject field]
+I don't support this software so don't wait for an answer.
+I may not have time...
 
 
 
@@ -49,7 +49,33 @@ date handling:
     monthday          - calculate day of month
     yd2seconds        - calculate number of seconds since 1970
     dt2seconds        - calculate number of seconds since 1970
+
+#################### TESTS ########################################
     
+>>> t=ReadSac()
+>>> t.ReadSacFile('test.sac')
+1
+>>> t.GetHvalue('npts')
+100
+>>> t.SetHvalue("kstnm","spiff")
+1
+>>> t.WriteSacBinary('test2.sac')
+1
+>>> t.ReadSacHeader('test2.sac')
+1
+>>> t.SetHvalue("kstnm","spoff")
+1
+>>> t.WriteSacHeader('test2.sac')
+1
+>>> t.SetHvalueInFile('test2.sac',"kcmpnm",'Z')
+1
+>>> t.GetHvalueFromFile('test2.sac',"kcmpnm")
+'Z       '
+>>> t.IsValidSacFile('test2.sac')
+1
+
+
+
 """    
 
 import array,os,string
@@ -57,8 +83,8 @@ from sacutil import *
 
 
 class ReadSac(PyTutil):
-    """ Class for SAC file IO\n
-    \t initialise with: t=ReadSac()"""
+    """ Class for SAC file IO
+    initialise with: t=ReadSac()"""
 
 
     def __init__(self):
@@ -89,7 +115,6 @@ class ReadSac(PyTutil):
                       'kdatrd':21,'kinst':22}
 
 
-
     def GetHvalue(self,item):
         """Get a header value using the header arrays: GetHvalue("npts")
         Return value is 1 if no problems occurred, zero otherwise."""
@@ -117,10 +142,62 @@ class ReadSac(PyTutil):
         else:
             return('NULL')
 
+    def SetHvalue(self,item,value):
+	"""Set a header value using the header arrays: SetHvalue("npts",2048)
+	Return value is 1 if no problems occurred, zero otherwise."""
+	#
+	# it's trivial to search each dictionary with the key and return
+	#   the value that matches the key
+	#
+	key = string.lower(item) # convert the item to lower case
+	#
+	ok = 0
+	if self.fdict.has_key(key):
+		index = self.fdict[key]
+		self.hf[index] = float(value)
+		ok = 1
+	elif self.idict.has_key(key):
+		index = self.idict[key]
+		self.hi[index] = int(value)
+		ok = 1
+	elif self.sdict.has_key(key):
+		index = self.sdict[key]
+		vlen = len(value)
+		if index == 0:
+			if vlen > 8:
+				vlen = 8
+			for i in range(0,8):
+				self.hs[i] = ' '
+			for i in range(0,vlen):
+				self.hs[i] = value[i]
+		elif index == 1:
+			start = 8
+			if vlen > 16:
+				vlen =16 
+			for i in range(0,16):
+				self.hs[i+start] = ' '
+			for i in range(0,vlen):
+				self.hs[i+start] = value[i]
+		else:
+			#
+			# if you are here, then the index > 2
+			#
+			if vlen > 8:
+				vlen = 8
+			start  = 8 + index*8 
+			for i in range(0,8):
+				self.hs[i+start] = ' '
+			for i in range(0,vlen):
+				self.hs[i+start] = value[i]
+		ok = 1
+	
+	return(ok)
+
 
     def IsSACfile(self,name):
         """Test for a valid SAC file using arrays: IsSACfile(path)
-        Return value is a one if valid, zero if not."""
+        Return value is a one if valid, zero if not.
+        """
         #
         ok = 1
         #
@@ -211,31 +288,32 @@ class ReadSac(PyTutil):
         return(ok)
 
 
-        def WriteSacHeader(self,fname):
-            """\nWrite a header value to the disk 
-            \tok = WriteSacHeader(thePath)
-            The header is split into three arrays - floats, ints, and strings
-            The "ok" value is one if no problems occurred, zero otherwise.\n"""
-	    #--------------------------------------------------------------
-            # open the file
+    def WriteSacHeader(self,fname):
+        """\nWrite a header value to the disk 
+        \tok = WriteSacHeader(thePath)
+        The header is split into three arrays - floats, ints, and strings
+        The "ok" value is one if no problems occurred, zero otherwise.\n
+        """
+        #--------------------------------------------------------------
+        # open the file
+        #
+        ok = 1
+        try:
+            f = open(fname,'r+') # open file for modification
+            f.seek(0,0) # set pointer to the file beginning
+            # write the header
+            self.hf.tofile(f)
+            self.hi.tofile(f)
+            self.hs.tofile(f)
+            f.close()
             #
-            ok = 1
-            try:
-		f = open(fname,'r+') # open file for modification
-		f.seek(0,0) # set pointer to the file beginning
-		# write the header
-		self.hf.tofile(f)
-		self.hi.tofile(f)
-		self.hs.tofile(f)
-		f.close()
-		#
-		#--------------------------------------------------------------
-            except:
-		# make sure we close the file
-		#if f.closed == 0: # zero means the file is open
-		#	f.close()
-		ok = 0
-            return(ok)
+            #--------------------------------------------------------------
+        except:
+            # make sure we close the file
+            #if f.closed == 0: # zero means the file is open
+            #	f.close()
+            ok = 0
+        return(ok)
 
 
     def ReadSacFile(self,fname):
@@ -271,7 +349,7 @@ class ReadSac(PyTutil):
                 #--------------------------------------------------------------
                 # read in the seismogram points
                 #--------------------------------------------------------------
-                npts = hi[9]  # you just have to know it's in the 10th place
+                npts = self.hi[9]  # you just have to know it's in the 10th place
                 #             # actually, it's in the SAC manual
                 #
                 mBytes = npts * 4
@@ -280,10 +358,10 @@ class ReadSac(PyTutil):
                 self.seis.fromfile(f,npts) # the data are now in s
                 f.close()
         except:
+            ok = 0
             # make sure we close the file
     	    #if f.closed == 0: # zero means the file is open
             #	f.close()
-            ok = 0
         return ok
 
 
@@ -357,7 +435,8 @@ class ReadSac(PyTutil):
         except:
             print 'Error writing file ', ofname
             ok = 0
-            return(ok)
+        return(ok)
+
         
     def PrintIValue(self, label='=', value=-12345):
         """Convenience function for printing undefined integer header values"""
@@ -434,10 +513,10 @@ class ReadSac(PyTutil):
         #
         #  Read in the Header
         #
-        ok = ReadSacHeader(thePath)
+        ok = self.ReadSacHeader(thePath)
         #
         if ok:
-            return(GetHvalue(theItem))
+            return(self.GetHvalue(theItem))
         else:
             print "Problem in GetHvalueFromFile."
             return(-12345)
@@ -452,39 +531,41 @@ class ReadSac(PyTutil):
         #
         #  Read in the Header
         #
-        r_ok = ReadSacHeader(thePath)
+        r_ok = self.ReadSacHeader(thePath)
         #
         if r_ok:
-            before = GetHvalue(theItem)
+            before = self.GetHvalue(theItem)
             if before != 'NULL':
-                c_ok = SetHvalue(theItem,theValue)
+                c_ok = self.SetHvalue(theItem,theValue)
                 if c_ok:
-                    after = GetHvalue(theItem)
-                    ok = WriteSacHeader(thePath)	
+                    after = self.GetHvalue(theItem)
+                    ok = self.WriteSacHeader(thePath)	
                     #
                     #print 'Changed ',before,' to ',after,' in ',thePath
-        else:
-            print "Problem in SetHvalueInFile."
+                else:
+                    print "Problem in SetHvalueInFile."
         return(ok)
 
 
-    def IsValidSacFile(thePath):
+    def IsValidSacFile(self, thePath):
         """\nQuick test for a valid SAC binary file file.
         IsValidSACFile(thePath)
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         #
         #  Read in the Header
         #
-        ok = ReadSacHeader(thePath)
+        ok = self.ReadSacHeader(thePath)
         #
         if ok:
-            ok = IsSACfile(thePath)
+            ok = self.IsSACfile(thePath)
         else:
             ok = 0
         return(ok)
 
 
 if __name__ == "__main__":
-    import pysacio_class
-    help(pysacio_class)
-
+    import doctest
+    doctest.testmod()
+    import os.path
+    if os.path.isfile('test2.sac'):
+        os.remove('test2.sac')
