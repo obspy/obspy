@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2008 by:
-#     * Tobias Megies
-#     * Moritz Beyreuther
 #     * Yannik Behr
 #
 # GNU General Public License (GPL)
@@ -30,26 +28,29 @@ from setuptools import setup, find_packages
 
 version = '0.0.1'
 
+
 setup(
-    name='obspy.filter',
+    name='obspy.gse2',
     version=version,
-    description="Basic filtering routines for seismograms.",
+    description="Read and write support for SAC files (seismograms).",
     long_description="""""",
     classifiers=[],
-    keywords='Seismology Filter',
-    author='Tobias Megies, Moritz Beyreuther, Yannik Behr',
-    author_email='megies@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.filter',
+    keywords='Seismology SAC',
+    author='Yannik Behr',
+    author_email='yannik.behr@vuw.ac.nz',
+    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    # test_suite = "obspy.gse2.tests",
+    # test_suite = "obspy.sac.tests",
     install_requires=[
-        'https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy',
+        'obspy',
         'setuptools',
-        'scipy',
         # -*- Extra requirements: -*
-    ],        
+    ],
+    dependency_links = [
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy"
+    ],
 )

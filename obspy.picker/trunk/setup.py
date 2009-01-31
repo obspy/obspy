@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2008 by:
-#     * Tobias Megies
 #     * Moritz Beyreuther
-#     * Yannik Behr
 #
 # GNU General Public License (GPL)
 #
@@ -30,26 +28,27 @@ from setuptools import setup, find_packages
 
 version = '0.0.1'
 
+
 setup(
-    name='obspy.filter',
+    name='obspy.picker',
     version=version,
-    description="Basic filtering routines for seismograms.",
+    description="seismograms pickers.",
     long_description="""""",
     classifiers=[],
-    keywords='Seismology Filter',
-    author='Tobias Megies, Moritz Beyreuther, Yannik Behr',
-    author_email='megies@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.filter',
+    keywords='Seismology pickers',
+    author='Moritz Beyreuther',
+    author_email='beyreuth@geophysik.uni-muenchen.de',
+    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.picker',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=True,
+    zip_safe=False,
     # test_suite = "obspy.gse2.tests",
     install_requires=[
-        'https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy',
         'setuptools',
-        'scipy',
         # -*- Extra requirements: -*
-    ],        
+    ],
+    dependency_links = [
+    ],
 )

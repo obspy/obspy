@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ An object-oriented version of C. J. Ammon's SAC I/O module.
 Here is C. J. Ammon's his introductory comment:
 
