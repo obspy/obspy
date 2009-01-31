@@ -22,8 +22,9 @@
 # 02110-1301, USA.
 
 """
-setup.py bdist_egg
+setup.py sdist
 """
+#setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
@@ -53,6 +54,6 @@ setup(
         # -*- Extra requirements: -*
     ],
     dependency_links = [
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/trunk"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk"
     ],
 )
