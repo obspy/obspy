@@ -3,13 +3,13 @@
 import unittest
 
 from obspy.mseed.tests import test_libmseed
-from obspy.mseed.tests import test_doctests
+#from obspy.mseed.tests import test_doctests
 
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_libmseed.suite())
-    suite.addTest(test_doctests.suite())
+#    suite.addTest(test_doctests.suite())
     return suite
 
 

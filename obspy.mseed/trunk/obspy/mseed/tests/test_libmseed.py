@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.mseed.libmseedclass import libmseed
+from obspy.mseed.libmseed import libmseed
 import hashlib
 import inspect
 import os
@@ -59,8 +59,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         file = os.path.join(self.path, "test.mseed")
         mseed=libmseed(file)
         self.assertEqual(mseed.samprate, 40.0)
-        self.assertEqual(mseed.reclen, 4096)
-        self.assertEqual(mseed.reclen, 4096)
 
 
 def suite():

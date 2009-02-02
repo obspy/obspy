@@ -1,4 +1,4 @@
-#Defines the libmseed structures and blockettes
+    #Defines the libmseed structures and blockettes
 
 import ctypes as C
 
