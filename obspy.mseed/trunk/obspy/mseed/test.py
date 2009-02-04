@@ -2,11 +2,12 @@
 
 import ctypes as C
 import sys
+import os
 
 if sys.platform=='win32':
     lib = C.CDLL('./libmseed/libmseed.dll')
 else:
-    lib = C.CDLL('./libmseed/libmseed.so')
+    lib = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed/libmseed.so'))
 
 # SEED binary time
 class BTime(C.Structure):
@@ -231,15 +232,16 @@ def ms_read_traces(filename,timetol=-1,sampratetol=-1,verbose=0):
     mst = mst.contents.next
   return header,data
 
-try:
-  import sys
-  file = sys.argv[1]
-except:
-  file = "BW.BGLD..EHE.D.2008.001"
-
-header,data=ms_read_traces(file)
-print "\n     Header:",header
-print "\nData Length:", data.__len__()
-print "  Data Type: %s\n" % data.__class__
-import pdb;pdb.set_trace()
-
+if __name__=="__main__":
+  try:
+    import sys
+    file = sys.argv[1]
+  except:
+    file = "BW.BGLD..EHE.D.2008.001"
+  
+  header,data=ms_read_traces(file)
+  print "\n     Header:",header
+  print "\nData Length:", data.__len__()
+  print "  Data Type: %s\n" % data.__class__
+  import pdb;pdb.set_trace()
+  
