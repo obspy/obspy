@@ -196,7 +196,7 @@ class libmseed(object):
         datasamples, ststate and next out
         """
         h = {}
-        h["network"] = m.contents.network      
+        h["network"] = m.contents.network
         h["station"] = m.contents.station
         h["location"] = m.contents.location
         h["channel"] = m.contents.channel
@@ -256,22 +256,21 @@ class libmseed(object):
             mst = mst.contents.next
         return header[0],data, numtraces
 
-    def populate_MSTG(self,header, data, numtraces=1):
+    def populate_MSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
         """
+        numsamples = header['numsamples']
         #Init MSTraceGroup
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
         mstg = clibmseed.mst_initgroup(None)
         #Init MSTrace object
         clibmseed.mst_init.restype = C.POINTER(MSTrace)
-        mst = clibmseed.mst_init(None)
         #Connect Group with Traces
-        mstg.contents.traces=mst
-        mst=mstg.contents.traces
+        mstg.contents.traces=clibmseed.mst_init(None)
         #Write header in MSTrace structure
-        self.dict2mst(mst,header)
+        self.dict2mst(mstg.contents.traces, header)
         #Needs to be redone, dynamic??
         mstg.contents.numtraces=numtraces
         #Create void pointer and allocates more memory to it
@@ -280,10 +279,10 @@ class libmseed(object):
                  clibmseed.ms_samplesize(C.c_char(header['sampletype']))*
                  header['numsamples'])
         #Set pointer to tempdatpoint
-        mst.contents.datasamples=C.pointer(tempdatpoint)
+        mstg.contents.traces.contents.datasamples=C.pointer(tempdatpoint)
         #Write data in MSTrace structure
         for i in range(header['numsamples']):
-            mst.contents.datasamples[i]=C.c_void_p(data[i])
+            mstg.contents.traces.contents.datasamples[i]=C.c_void_p(data[i])
         return mstg
 
     def write_ms(self,header,data, outfile='out.mseed', numtraces=1):
@@ -301,18 +300,37 @@ class libmseed(object):
         mstg=self.populate_MSTG(header, data, numtraces)
         mst=mstg.contents.traces
         
+        fh=open(outfile, 'wb')
+        
         #WRITE MINISEED FILE FROM MS TRACE STRUCTURE
         def record_handler(record, reclen, stream):
-#            import pdb;pdb.set_trace()
-            out=open(outfile,'ab')
-            out.write(record)
-            out.close()
-
+            print "here"
+            fh.write(record[0:reclen])
+            print reclen
+        
         #Define Python callback function for use in C function
-        charp=C.c_char_p
-        C.resize(charp(), 4096)
-        RECHANDLER = C.CFUNCTYPE(None, charp, C.c_int, C.c_void_p)
+        #charp = C.c_char_p
+        #C.resize(charp(), 4096)
+        #charp = C.create_string_buffer(4096)
+        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int, C.c_void_p)
         rec_handler = RECHANDLER(record_handler)
         
-        packedrecords = clibmseed.mst_pack(mst,rec_handler,None,-1,-1,-1,None,1,0,None)
-        print "Packed ", packedrecords, " records"
+        
+        packedrecords = clibmseed.mst_pack(
+            mst, 
+            rec_handler, 
+            None,        # handlerdata
+            -1,          # reclen, -1 defaults to 4096 (12)
+            -1,          # encoding, -1 defaults to STEIM-2 (11)
+            -1,          # byteorder -1 defaults to big-endian (1)
+            None,        # packedsamples
+            -1,          # flush
+            2,           # verbose
+            None         # mstemplates
+        )
+        import pdb;pdb.set_trace()
+        a=1
+        fh.close()
+        
+        #print "Packed ", packedrecords, " records"
+        

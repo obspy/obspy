@@ -5,7 +5,7 @@ Copyright
 ---------
 
 Copyright (c) 2009 by:
-    * Uwe Kirscher
+    * Lion Krischer
     * Robert Barsch
     * Moritz Beyreuther
 

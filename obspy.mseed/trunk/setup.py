@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2008 by:
-#     * Uwe Kirscher
+#     * Lion Krischer
 #     * Robert Barsch
 #     * Moritz Beyreuther
 #
@@ -38,8 +38,8 @@ setup(
     long_description="""""",
     classifiers=[],
     keywords='Seismology mseed',
-    author='Uwe Kirscher, Robert Barsch, Moritz Beyreuther',
-    author_email='kirscher@geophysik.uni-muenchen.de',
+    author='Lion Krischer, Robert Barsch, Moritz Beyreuther',
+    author_email='krischer@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
