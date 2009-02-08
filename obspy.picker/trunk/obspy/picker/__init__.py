@@ -1,1 +1,1 @@
-form ctypes_recstalta import *
+from ctypes_recstalta import *

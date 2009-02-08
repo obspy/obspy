@@ -5,6 +5,9 @@ from obspy.gse2 import ext_gse
 import numpy, os, time, sys
 
 class GseParser(parser.Parser):
+    """
+    %s
+    """ % (parser.__doc__)
     
     def __init__(self,file=False):
         if file:
@@ -42,7 +45,7 @@ class GseParser(parser.Parser):
         self.trace = data.tolist()
     
     def write(self,gsefile):
-        """Write seismogram to GSE2.0 file.
+        """Write seismogram to GSE2.0 file
         
         Necessary attribute for this operation is self.trace. Probably it's
         usefull to also fill self.df and self.julsec but anyway the
@@ -65,7 +68,7 @@ class GseParser(parser.Parser):
         >>> i.trace = [2**26+1]
         >>> i.write("test.gse")
         Traceback (most recent call last):
-            ...
+        ...
         Exception: Compression Error, data must be less equal 2^26
         """
         # General attributes

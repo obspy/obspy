@@ -21,30 +21,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #---------------------------------------------------------------------
-"""General parser class for uniform seismogram reading in different
-formats. Classes for special type format seismogram reading inherit from
-this general class.
-
-It is assumed that the class, inherting from this class provides the following
-attributes:
-
-    station           - station name (string)
-    julsec            - start time of seismogram in seconds since 1970 (float)
-    trace             - the actual seismogram data (list of floats)
-    df                - sampling rate in Hz (float)
-    npts              - number of samples/data points (int)
-
-The Parser Class provides the following attributes and methods():
-
-    date_time()       - pretty UTC date string computed from julsec
-    date_to_julsec()  - convert arbitrary formated UTC date string to julsec
-
-"""
 
 import os,time
 
 class Parser(object):
-    """General Seismogram Parser Class"""
+    """General parser class for uniform seismogram reading
+
+    in different formats. Classes for special type format seismogram reading
+    inherit from this general class.
+
+    It is assumed that the class, inherting from this class provides the following
+    attributes:
+
+        station           - station name (string)
+        julsec            - start time of seismogram in seconds since 1970 (float)
+        trace             - the actual seismogram data (list of floats)
+        df                - sampling rate in Hz (float)
+        npts              - number of samples/data points (int)
+
+    The Parser Class provides the following attributes and methods():
+
+        date_time()       - pretty UTC date string computed from julsec
+        date_to_julsec()  - convert arbitrary formated UTC date string to julsec
+
+    """
     
     def __str__(self):
         """Overload to string method to pretty print attributes of class"""
@@ -90,6 +90,7 @@ class Parser(object):
         
         Function is probably most useful for checking if necessary
         attributes are provided, e.g. when writing seismograms to file
+
         >>> p=Parser()
         >>> p.julsec = 0.0
         >>> p.is_attr('julsec',float,1.0)
@@ -109,6 +110,8 @@ class Parser(object):
             setattr(self,attr,default)
             returnflag = False
         if not isinstance(getattr(self,attr),typ):
+            if assertation:
+                assert False,"%s attribute of Seismogram not of type %s" % (attr,typ)
             if verbose:
                 print "WARNING: %s attribute of Seismogram not of type %s" % (attr,typ),
                 print "forcing",attr,"=",default
@@ -116,6 +119,8 @@ class Parser(object):
             returnflag = False
         if (length):
             if (len(getattr(self,attr)) > length):
+                if assertation:
+                    assert False, "%s attribute of Seismogram is > %i" % (attribute,length)
                 if verbose:
                     print "%s attribute of Seismogram is > %i" % (attribute,length)
                     print "forcing",attribute,"=",default
