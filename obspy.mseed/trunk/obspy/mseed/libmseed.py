@@ -255,12 +255,14 @@ class libmseed(object):
             header.append(self.mst2dict(mst))
             mst = mst.contents.next
         return header[0],data, numtraces
+        #return header,data, numtraces
 
     def populate_MSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
         """
+        #numsamples = header[0]['numsamples']
         numsamples = header['numsamples']
         #Init MSTraceGroup
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
@@ -323,12 +325,12 @@ class libmseed(object):
             -1,          # reclen, -1 defaults to 4096 (12)
             -1,          # encoding, -1 defaults to STEIM-2 (11)
             -1,          # byteorder -1 defaults to big-endian (1)
-            None,        # packedsamples
+            C.pointer(C.c_int(0)), # packedsamples
             -1,          # flush
             2,           # verbose
             None         # mstemplates
         )
-        import pdb;pdb.set_trace()
+        #import pdb;pdb.set_trace()
         a=1
         fh.close()
         
