@@ -302,3 +302,23 @@ class libmseed(object):
         #Write File from MS-Trace structure
         self.mst2file(mstg.contents.traces, outfile, reclen, encoding, byteorder,
                       flush, verbose)
+        
+    def cut_ms(self, data, header, stime, cutsamplecount, outfile='cut.mseed'):
+        """
+        Takes a data file list, a header dictionary, a starttime, the number of 
+        samples to cut and writes it in outfile.
+        stime             - The time in microseconds with the origin set to the
+                                      beginning of the file
+        cutsamplecount  - The number of samples to cut
+        outfile                  - filename of the Record to write
+        """
+        samprate_in_microsecs = header['samprate']/1e6
+        #Modifiy the header
+        header['starttime'] = header['starttime'] + stime
+        header['endtime'] = int(header['starttime'] + cutsamplecount/samprate_in_microsecs)
+        header['numsamples'] = cutsamplecount
+        header['samplecnt'] = cutsamplecount
+        #Make new data list, some rounding issues need to be solved
+        cutdata=data[int(stime/samprate_in_microsecs):cutsamplecount+1]
+        #Write cutted file
+        self.write_ms(header, cutdata, outfile)

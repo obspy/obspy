@@ -11,5 +11,5 @@ outfile='out.mseed'
 mseed=libmseed()
 
 header, data, numtraces=mseed.read_ms(file)
+mseed.cut_ms(data, header, 0, 5000)
 import pdb;pdb.set_trace()
-mseed.write_ms(header, data, outfile, numtraces)
