@@ -40,26 +40,36 @@ class LibMSEEDTestCase(unittest.TestCase):
         for (filename, md5sum) in files_and_checksums:
             file = os.path.join(self.path, filename)
             self.assertEqual(self.mkmd5sum(file), md5sum)
-    
-    def test_printMSR(self):
-        """
-        Tests the msr_print function provided by libmseed
-        """
-        #HOW TO TEST THE OUTPUT??
-        #expoutput = "NL_HGN_00_BHZ, 000001, R, 4096, 5980 samples, 40 Hz, 2003,149,02:13:22.043400" +"\n"+"NL_HGN_00_BHZ, 000002, R, 4096, 5967 samples, 40 Hz, 2003,149,02:15:51.54340"
-        #mseed=libmseed()
-        #self.assertEqual(mseed.msr_print('test.mseed'), print self.expoutput)
-        pass
 
-    def test_variousAttributes(self):
+    def test_writeMS(self):
         """
-        Tests various attributes extracted from the miniseed files.
+        A reencoded file should still have the same values regardless of the
+        used record length, encoding and byteorder
         """
-        #Fails sometimes to due memory/pointer issues
-        file = os.path.join(self.path, "test.mseed")
-        mseed=libmseed(file)
-        self.assertEqual(mseed.samprate, 40.0)
-
+        #Define tested values
+        record_length_values=[]
+        for _i in range(8,21):
+            record_length_values.append(2**_i)
+        encoding_values=[1,3,10,11] #Offered integer encodings
+        byteorder_values=[0,1]
+        mseed=libmseed()
+        header, data, numtraces=mseed.read_ms(os.path.join(self.path,'test.mseed'))
+        #Deletes the dataquality indicators
+        testheader=header.copy()
+        #Loops over the tested values
+        del testheader['dataquality']
+        for recvals in record_length_values:
+            for bytevals in byteorder_values:
+                for encvals in encoding_values:
+                    mseed.write_ms(header, data, os.path.join(self.path,'temp.mseed'),
+                                   numtraces, encoding=encvals, 
+                                   byteorder = bytevals, reclen=recvals)
+                    newheader, newdata, newnumtraces=mseed.read_ms(os.path.join(self.path,'temp.mseed'))
+                    del newheader['dataquality']
+                    self.assertEqual(testheader, newheader)
+                    self.assertEqual(data, newdata)
+                    self.assertEqual(numtraces, newnumtraces)
+                    os.remove(os.path.join(self.path,'temp.mseed'))
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')

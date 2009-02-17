@@ -2,6 +2,7 @@
 
 from obspy.mseed.libmseed_header import MSRecord, MSTraceGroup, MSTrace
 import ctypes as C
+from pdb import Pdb
 import os
 #if sys.platform=='win32':
 #    clibmseed = C.cdll.libmseed
@@ -142,9 +143,7 @@ class libmseed(object):
         self.msr = C.pointer(MSRecord())
         #Checks whether the returned msr is the last record. If it is the last record it will be 1.
         self.islast = C.pointer(C.c_int(0))
-        
-        
-        #loops over the MS records
+        #loop over the MS records
         if recnum == 0:
             while clibmseed.ms_readmsr(C.pointer(self.msr), filename, 0, None, self.islast,0, 1, 0)==0:
                 clibmseed.msr_print(self.msr,details)
@@ -160,35 +159,6 @@ class libmseed(object):
                 clibmseed.msr_print(self.msr,details)
                 if self.islast.contents.value == 1:
                     break
-    
-    def cut(self,filename):
-        """
-        WORK IN PROGRESS
-        """
-        #Defines return type of ms_readmsr
-        clibmseed.ms_readmsr.restype = C.c_int
-        #needed to write the MSRecord
-        #MSRec=MSRecord()
-        msr = C.pointer(MSRecord())
-        #opens output file
-        outdat = clib.fopen("out.mseed","wb")
-        #outdat = open('out.mseed', 'wb')
-        def record_handler(record, recleng, stream):
-            clib.fwrite(msr.contents.record, msr.contents.reclen, 1, outdat)
-        #outdat.write(msr.contents.record)
-        #Defines Python callback function for use in C function
-        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char_p), C.c_int, C.c_void_p)
-        rec_handler = RECHANDLER(record_handler)
-        
-        for _i in range(1):
-            clibmseed.ms_readmsr(C.pointer(msr), filename, 0, None, None,1, 1, 0)
-            #packedrecords = clibmseed.msr_pack(msr, rec_handler, None, None, 1, 3)
-            #print "Packed ", packedrecords, " records"
-        
-        #closes output file   
-        clib.close(outdat)
-        #outdat.close()
-        clibmseed.msr_free(C.pointer(msr))
 
     def mst2dict(self, m):
         """
@@ -255,15 +225,12 @@ class libmseed(object):
             header.append(self.mst2dict(mst))
             mst = mst.contents.next
         return header[0],data, numtraces
-        #return header,data, numtraces
 
     def populate_MSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
         """
-        #numsamples = header[0]['numsamples']
-        numsamples = header['numsamples']
         #Init MSTraceGroup
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
         mstg = clibmseed.mst_initgroup(None)
@@ -287,52 +254,51 @@ class libmseed(object):
             mstg.contents.traces.contents.datasamples[i]=C.c_void_p(data[i])
         return mstg
 
-    def write_ms(self,header,data, outfile='out.mseed', numtraces=1):
+    def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush, verbose):
+        """
+        Takes MS Trace object and writes it to a file
+        """
+        mseedfile=open(outfile, 'wb')
+        #Initialize packedsamples pointer for the mst_pack function
+        self.packedsamples = C.pointer(C.c_int(0))
+        #Callback function for mst_pack to actually write the file
+        def record_handler(record, reclen, _stream):
+            mseedfile.write(record[0:reclen])
+        #Define Python callback function for use in C function
+        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int, C.c_void_p)
+        rec_handler = RECHANDLER(record_handler)
+        #Pack the file into a MiniSEED file
+        clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
+                           self.packedsamples, flush, verbose, None)
+        mseedfile.close()
+
+    def write_ms(self,header,data, outfile, numtraces=1, reclen= -1,
+                 encoding=-1, byteorder=-1, flush=-1, verbose=0):
         """
         Write Miniseed file from header, data and numtraces
         
         header    - Dictionary containing the header files
         data      - List of the datasamples
         outfile   - Name of the output file
-        
-        Does not work completely. Has some memory issues in the record_handler
-        callback function.
+        numtraces - Number of traces in trace chain (Use??)
+        reclen    - should be set to the desired data record length in bytes
+                    which must be expressible as 2 raised to the power of X 
+                    where X is between (and including) 8 to 20. -1 defaults to
+                    4096
+        encoding  - should be set to one of the following supported Mini-SEED
+                    data encoding formats: DE_ASCII (0), DE_INT16 (1), 
+                    DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
+                    and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
+        byteorder - must be either 0 (LSBF or little-endian) or 1 (MBF or 
+                    big-endian). -1 defaults to big-endian (1)
+        flush     - if it is not zero all of the data will be packed into 
+                    records, otherwise records will only be packed while there
+                    are enough data samples to completely fill a record.
+        verbose   - controls verbosity, a value of zero will result in no 
+                    diagnostic output.
         """
         #Populate MSTG Structure
         mstg=self.populate_MSTG(header, data, numtraces)
-        mst=mstg.contents.traces
-        
-        fh=open(outfile, 'wb')
-        
-        #WRITE MINISEED FILE FROM MS TRACE STRUCTURE
-        def record_handler(record, reclen, stream):
-            print "here"
-            fh.write(record[0:reclen])
-            print reclen
-        
-        #Define Python callback function for use in C function
-        #charp = C.c_char_p
-        #C.resize(charp(), 4096)
-        #charp = C.create_string_buffer(4096)
-        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int, C.c_void_p)
-        rec_handler = RECHANDLER(record_handler)
-        
-        
-        packedrecords = clibmseed.mst_pack(
-            mst, 
-            rec_handler, 
-            None,        # handlerdata
-            -1,          # reclen, -1 defaults to 4096 (12)
-            -1,          # encoding, -1 defaults to STEIM-2 (11)
-            -1,          # byteorder -1 defaults to big-endian (1)
-            C.pointer(C.c_int(0)), # packedsamples
-            -1,          # flush
-            2,           # verbose
-            None         # mstemplates
-        )
-        #import pdb;pdb.set_trace()
-        a=1
-        fh.close()
-        
-        #print "Packed ", packedrecords, " records"
-        
+        #Write File from MS-Trace structure
+        self.mst2file(mstg.contents.traces, outfile, reclen, encoding, byteorder,
+                      flush, verbose)

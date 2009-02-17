@@ -10,6 +10,6 @@ except:
 outfile='out.mseed'
 mseed=libmseed()
 
-
 header, data, numtraces=mseed.read_ms(file)
+import pdb;pdb.set_trace()
 mseed.write_ms(header, data, outfile, numtraces)
