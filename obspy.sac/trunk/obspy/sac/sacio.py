@@ -56,6 +56,8 @@ date handling:
 >>> t=ReadSac()
 >>> t.ReadSacFile('test.sac')
 1
+>>> t.get_attr()
+1
 >>> t.GetHvalue('npts')
 100
 >>> t.SetHvalue("kstnm","spiff")
@@ -75,15 +77,14 @@ date handling:
 >>> t.IsValidSacFile('test2.sac')
 1
 
-
-
 """    
 
 import array,os,string
 from sacutil import *
+from obspy import parser
 
 
-class ReadSac(PyTutil):
+class ReadSac(PyTutil,parser.Parser):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
 
@@ -130,7 +131,6 @@ class ReadSac(PyTutil):
         elif self.sdict.has_key(key):
             index = self.sdict[key]
             length = 8
-
             if index == 0:
                 myarray = self.hs[0:8]
             elif index == 1:
@@ -139,9 +139,10 @@ class ReadSac(PyTutil):
                 start = 8 + index*8  # the extra 8 is from item #2
                 end   = start + 8
                 myarray = self.hs[start:end]
-                return(myarray.tostring())
+            return(myarray.tostring())
         else:
             return('NULL')
+
 
     def SetHvalue(self,item,value):
 	"""Set a header value using the header arrays: SetHvalue("npts",2048)
@@ -279,6 +280,8 @@ class ReadSac(PyTutil):
             f.close()
             #
             ok = self.IsSACfile(fname)
+            if not self.get_attr():
+                raise Exception
             #
             #--------------------------------------------------------------
 	except:
@@ -300,6 +303,8 @@ class ReadSac(PyTutil):
         #
         ok = 1
         try:
+            if not self.get_attr():
+                raise Exception
             f = open(fname,'r+') # open file for modification
             f.seek(0,0) # set pointer to the file beginning
             # write the header
@@ -358,6 +363,8 @@ class ReadSac(PyTutil):
                 self.seis = array.array('f')
                 self.seis.fromfile(f,npts) # the data are now in s
                 f.close()
+                if not self.get_attr():
+                    raise Exception
         except:
             ok = 0
             # make sure we close the file
@@ -426,6 +433,8 @@ class ReadSac(PyTutil):
         \tok = WriteSacBinary(thePath)
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         try:
+            if not self.get_attr():
+                raise Exception
             f = open(ofname,'wb+')
             self.hf.tofile(f)
             self.hi.tofile(f)
@@ -562,6 +571,45 @@ class ReadSac(PyTutil):
         else:
             ok = 0
         return(ok)
+
+
+    def get_attr(self):
+        """added for compatibility reasons with other obspy
+        modules (e.g. gseparser)
+        
+        """
+        # check if important header-values are defined
+        try:
+            self.channel = self.GetHvalue('kcmpnm')
+            self.npts = self.GetHvalue('npts')
+            self.df = 1./self.GetHvalue('delta')
+            self.station = self.GetHvalue('kstnm')
+            year = self.GetHvalue('nzyear')
+            yday = self.GetHvalue('nzjday')
+            hour = self.GetHvalue('nzhour')
+            mint = self.GetHvalue('nzmin')
+            sec  = self.GetHvalue('nzsec')
+            msec = self.GetHvalue('nzmsec')
+            sec = sec + 0.001*msec
+        except:
+            print "One of the following header values is not set:"
+            print "kcmpnm, npts, delta, kstnm, nzyear, nzjday, nzhour"
+            print "nzmin, nzsec, nzmsec"
+            print "Please check your SAC-data and try again"
+            return 0
+        mon, day, ok=self.monthdate(year,yday)
+        date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
+        self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date)
+        self.trace = self.seis.tolist()
+        # consistency check
+        if not self.is_attr('trace',list,None,assertation=True): return 0
+        if not self.is_attr('df',float,200.): return 0
+        if not self.is_attr('station',str,'FUR     ',length=8): return 0
+        if not self.is_attr('channel',str,'SHZ     ',length=8): return 0
+        if not self.is_attr('julsec',float,0.0): return 0
+        if not self.is_attr('npts',int,len(self.trace),assertation=True): return 0
+        return 1
+
 
 
 if __name__ == "__main__":
