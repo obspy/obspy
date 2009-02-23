@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2008 by:
+# Copyright (c) 2008-2009 by:
 #     * Lion Krischer
 #     * Robert Barsch
 #     * Moritz Beyreuther
@@ -34,10 +34,10 @@ version = '0.0.1'
 setup(
     name='obspy.mseed',
     version=version,
-    description="Read and write support for mseed files (seismograms).",
+    description="Read and write support for MiniSEED files (seismograms).",
     long_description="""""",
     classifiers=[],
-    keywords='Seismology mseed',
+    keywords='Seismology MiniSEED',
     author='Lion Krischer, Robert Barsch, Moritz Beyreuther',
     author_email='krischer@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed',
@@ -46,11 +46,10 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=False,
-    # test_suite = "obspy.gse2.tests",
+    # test_suite = "obspy.mseed.tests",
     install_requires=[
         'obspy',
         'setuptools',
-        # -*- Extra requirements: -*
     ],
     dependency_links = [
         "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy"
