@@ -256,10 +256,10 @@ class MSRecord(C.Structure):
         ('starttime', C.c_longlong),            # Record start time, corrected (first sample)
         ('samprate', C.c_double),               # Nominal sample rate (Hz)
         ('samplecnt', C.c_long),                # Number of samples in record
-        ('encoding', C.c_short),                # Data encoding format
+        ('encoding', C.c_int),                # Data encoding format
         ('byteorder', C.c_short),               # Byte order of record
         # Data sample fields
-        ('datasamples', C.c_void_p),            # Data samples, 'numsamples' of type 'sampletype'
+        ('datasamples', C.POINTER(C.c_void_p)),            # Data samples, 'numsamples' of type 'sampletype'
         ('numsamples', C.c_long),               # Number of data samples in datasamples
         ('sampletype', C.c_char),               # Sample type code: a, i, f, d
         # Stream oriented state information
@@ -279,7 +279,7 @@ MSTrace_s._fields_ = [
     ('type', C.c_char),                     # MSTrace type code
     ('starttime', C.c_longlong),            # Time of first sample
     ('endtime', C.c_longlong),              # Time of last sample
-    ('samprate', C.c_double),               # Nominal sample rate (Hz
+    ('samprate', C.c_double),               # Nominal sample rate (Hz)
     ('samplecnt', C.c_long),                # Number of samples in trace coverage
     ('datasamples', C.POINTER(C.c_void_p)), # Data samples, 'numsamples' of type 'sampletype'
     ('numsamples', C.c_long),               # Number of data samples in datasamples

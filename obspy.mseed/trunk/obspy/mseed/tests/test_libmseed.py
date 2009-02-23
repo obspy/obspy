@@ -18,8 +18,34 @@ class LibMSEEDTestCase(unittest.TestCase):
     
     def tearDown(self):
         pass
-    
-    def test_writeMS(self):
+
+    def test_read_using_Traces(self):
+        """
+        Checks about the first 5000 datasamples when reading BW.BGLD..EHE.D.2008.001
+        using traces. The values in BW.BGLD..EHE.D.2008.001_first5000lines.ASCII
+        are assumed to be correct.
+        Only checks relative values.
+        """
+        mseed=libmseed()
+        f=open(os.path.join(self.path,'BW.BGLD..EHE.D.2008.001_first5000lines.ASCII'),'r')
+        datalist=f.readlines()
+        station='BGLD'
+        channel='EHE'
+        frequency=200
+        starttime=1199145599915000
+        datalist[0:7]=[]
+        for i in range(len(datalist)):
+            datalist[i]=int(datalist[i])
+        header, data, numtraces=mseed.read_ms_using_traces(os.path.join(self.path,'BW.BGLD..EHE.D.2008.001'))
+        self.assertEqual(station, header['station'])
+        self.assertEqual(channel, header['channel'])
+        self.assertEqual(frequency, header['samprate'])
+        self.assertEqual(starttime, header['starttime'])
+        self.assertEqual(numtraces, 1)
+        for i in range(len(datalist)-1):
+            self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
+
+    def test_read_an_write_MS_using_Traces(self):
         """
         A reencoded SEED file should still have the same values regardless of 
         the used record length, encoding and byteorder.
@@ -30,7 +56,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         byteorder_values = [0, 1]
         
         mseed=libmseed() 
-        header, data, numtraces=mseed.read_ms(os.path.join(self.path,
+        header, data, numtraces=mseed.read_ms_using_traces(os.path.join(self.path,
                                                            'test.mseed'))
         # Deletes the dataquality indicators
         testheader=header.copy()
@@ -45,13 +71,12 @@ class LibMSEEDTestCase(unittest.TestCase):
                     mseed.write_ms(header, data, temp_file,
                                    numtraces, encoding=encoding, 
                                    byteorder=byteorder, reclen=reclen)
-                    newheader, newdata, newnumtraces=mseed.read_ms(temp_file)
+                    newheader, newdata, newnumtraces=mseed.read_ms_using_traces(temp_file)
                     del newheader['dataquality']
                     self.assertEqual(testheader, newheader)
                     self.assertEqual(data, newdata)
                     self.assertEqual(numtraces, newnumtraces)
                     os.remove(temp_file)
-
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')

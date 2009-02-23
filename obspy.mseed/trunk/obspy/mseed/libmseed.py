@@ -13,7 +13,6 @@ else:
 clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed', lib_name))
 
 
-#Some methods are not needed anymore and will be removed for the final version
 class libmseed(object):
     
     def __init__(self, file="test.mseed"):
@@ -70,7 +69,7 @@ class libmseed(object):
             #does what??
             self.__dict__[name] = val
     
-    def ms_printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
+    def printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
         """
         Mst_printtracelist prints a formated list of the MSTrace segments 
         in the given MSTraceGroup. All output is printed using ms_log(3)
@@ -87,76 +86,47 @@ class libmseed(object):
                         previous MSTrace (if the source name matches) is printed, 
                         default = 0
         """
-        mstg = C.pointer(MSTraceGroup())
-        #needed to write the MSTraceGroup
-        clibmseed.ms_readtraces(C.pointer(mstg), filename, C.c_int(-1),
-                                C.c_double(1), C.c_double(1),
-                                C.c_short(1), C.c_short(1), C.c_short(1),
-                                C.c_short(0))
+        mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
         clibmseed.mst_printtracelist(mstg,timeformat,details,gaps)
     
-    def ms_printgaplist(self,filename,timeformat= 0,mingap = 0, maxgap=0):
+    def printgaplist(self,filename,timeformat= 0,mingap = 0, maxgap=0):
         """
-        mst_printgaplist prints a formatted list of the gaps between MSTrace
-        segments in the given MSTraceGroup to stdout. If mingap or maxgap is
-        not NULL their values will be enforced and only gaps/overlaps matching
-        their implied criteria will be printed.
+        Prints a formatted list of the gaps between MSTrace segments in the
+        given MSTraceGroup to stdout. If mingap or maxgap is not NULL their 
+        values will be enforced and only gaps/overlaps matching their implied
+        criteria will be printed.
         
         filename      - Name of file to read Mini-SEED data from
-        timeformat    - Controls the format of the resulting time string, default = 0
+        timeformat    - Controls the format of the resulting time string, defaults to 0
                             0 : SEED time format (2005,146,00:00:00.000000)
                             1 : ISO time format (2005-05-26T00:00:00.000000)
                             2 : Epoch time, seconds since the epoch (1117065600.00000000)
-        mingap        - default = 0
-        maxgap        - default = 0
+        mingap        - defaults to 0
+        maxgap        - defaults to 0
         """
-        mstg = C.pointer(MSTraceGroup())
-        #needed to write the MSTraceGroup
-        clibmseed.ms_readtraces(C.pointer(mstg), filename, C.c_int(-1),
-                                C.c_double(1), C.c_double(1),
-                                C.c_short(1), C.c_short(1), C.c_short(1),
-                                C.c_short(0))
+        mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
-    
-    def msr_print(self,filename,details = 0,recnum = 0):
+        
+    def findgapsandoverlaps(self, filename):
         """
-        msr_print prints formatted details from the given MSRecord struct (parsed
-        record header), i.e. fixed section and blockettes. All output is printed using
-        ms_log at level 0.
-        
-        filename      - Name of file to read Mini-SEED data from
-        details       - Controls how much information is printed, default = 0
-                            0  : a single line summarizing the record
-                            1  : most commonly desired header details
-                            2+ : all header details
-        recnum        - Number of records parsed. If it is bigger than the total number
-                        details of all records will be printed.
-                        default = 0 - all records will be parsed
-        
-        If no fixed section header information is available at MSRecord then a single line 
-        is printed from the other information in the MSRecord structure.
+        Finds gaps and overlaps and returns a list for each found gap/overlaps.
+        Each item has a starttime and a duration value. The starttime is the last
+        correct data sample plus one step. If the duration value is positive there
+        is a gap and if it is negative there is an overlap. If no gaps/overlaps are
+        found it will return an empty list.
+        All time and duration values are in microseconds.
         """
-        
-        #needed to write the MSRecord
-        self.msr = C.pointer(MSRecord())
-        #Checks whether the returned msr is the last record. If it is the last record it will be 1.
-        self.islast = C.pointer(C.c_int(0))
-        #loop over the MS records
-        if recnum == 0:
-            while clibmseed.ms_readmsr(C.pointer(self.msr), filename, 0, None, self.islast,0, 1, 0)==0:
-                clibmseed.msr_print(self.msr,details)
-                #print "Samplerate: ",self.msr.contents.samprate
-                #print "Number of Datasamples: ", self.msr.contents.numsamples
-                #print "Sampletyp: ", self.msr.contents.sampletype
-                #self.msr.contents.datasamples
-                if self.islast.contents.value == 1:
-                    break
-        else:
-            for _i in range(recnum):
-                clibmseed.ms_readmsr(C.pointer(self.msr), filename, 0, None, self.islast,0, 1, 0)
-                clibmseed.msr_print(self.msr,details)
-                if self.islast.contents.value == 1:
-                    break
+        gaplist=[]
+        retcode=0
+        oldstarttime=0
+        while retcode == 0:
+            msr, retcode=self.read_MSRec(filename, dataflag=0, skipnotdata=0)
+            if retcode == 0:
+                if oldstarttime!=0:
+                    if msr.contents.starttime-oldstarttime != 0:
+                        gaplist.append([oldstarttime , msr.contents.starttime-oldstarttime])
+                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
+        return gaplist
 
     def mst2dict(self, m):
         """
@@ -196,7 +166,38 @@ class libmseed(object):
         m.contents.numsamples = h["numsamples"]
         m.contents.sampletype = h["sampletype"]
 
-    def read_ms(self, filename, timetol=-1,sampratetol=-1,verbose=0):
+    def readtraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
+                   dataflag = 1, skipnotdata = 1, verbose = 0):
+        """
+        Reads Mini-SEED data from file. Returns MSTraceGroup structure.
+        
+        filename        - Mini-SEED file to be read
+        reclen          - If reclen is 0 the length of the first record is auto-
+                          detected. All subsequent records are then expected to
+                          have the same record length.
+                          If reclen is negative the length of every record is
+                          automatically detected.
+                          Defaults to -1.
+        timetol         - Time tolerance, default to -1 (1/2 sample period)
+        sampratetol     - Sample rate tolerance, defaults to -1 (rate dependent)
+        dataflag        - Controls whether data samples are unpacked, defaults to 1
+        skipnotdata     - If true (not zero) any data chunks read that to do not
+                          have valid data record indicators will be skipped.
+                          Defaults to true (1).
+        verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
+        """
+        #Creates MSTraceGroup Structure
+        mstg = C.pointer(MSTraceGroup())
+        #Uses libmseed to read the file and populate the MSTraceGroup structure
+        errcode=clibmseed.ms_readtraces(C.pointer(mstg), filename, C.c_int(reclen),
+                            C.c_double(timetol), C.c_double(sampratetol),
+                            C.c_short(dataflag), C.c_short(skipnotdata), C.c_short(dataflag),
+                            C.c_short(verbose))
+        if errcode != 0:
+            assert 0, "\n\nError while reading Mini-SEED file: "+filename
+        return mstg
+
+    def read_ms_using_traces(self, filename):
         """
         Read Mini-SEED file. Header, Data and numtraces are returned
 
@@ -206,14 +207,7 @@ class libmseed(object):
         verbosity   - Level of diagnostic messages, default 0
         """
         #Creates MSTraceGroup Structure
-        mstg = C.pointer(MSTraceGroup())
-        #Uses libmseed to read the file and returns a MSTraceGroup structure
-        netstat=clibmseed.ms_readtraces(C.pointer(mstg), filename, C.c_int(-1),
-                            C.c_double(timetol), C.c_double(sampratetol),
-                            C.c_short(1), C.c_short(1), C.c_short(1),
-                            C.c_short(verbose))
-        if netstat != 0:
-            assert 0, "\n\nError while reading mseed file %s" % file
+        mstg = self.readtraces(filename)
         data=[]
         header=[]
         mst = mstg.contents.traces
@@ -223,6 +217,37 @@ class libmseed(object):
             header.append(self.mst2dict(mst))
             mst = mst.contents.next
         return header[0],data, numtraces
+
+    def read_MSRec(self, filename, reclen = -1, dataflag = 1, 
+                   skipnotdata = 1, verbose = 0):
+        """
+        Reads Mini-SEED file and populates MS Record data structure with subsequent
+        calls.
+        
+        For subsequent calls, call the function with an MSRecord structure.
+        ilename        - Mini-SEED file to be read
+        reclen          - If reclen is 0 the length of the first record is auto-
+                          detected. All subsequent records are then expected to
+                          have the same record length.
+                          If reclen is negative the length of every record is
+                          automatically detected.
+                          Defaults to -1.
+        dataflag        - Controls whether data samples are unpacked, defaults to 1
+        skipnotdata     - If true (not zero) any data chunks read that to do not
+                          have valid data record indicators will be skipped.
+                          Defaults to true (1).
+        verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
+        """
+        #Init MSRecord structure
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr=clibmseed.msr_init(None)
+
+        islast=C.c_int(1)
+        retcode=clibmseed.ms_readmsr(C.pointer(msr), filename, C.c_int(reclen),
+                             None, C.pointer(islast),
+                             C.c_short(skipnotdata), C.c_short(dataflag),
+                             C.c_short(verbose))
+        return msr,retcode
 
     def populate_MSTG(self, header, data, numtraces=1):
         """
@@ -320,3 +345,29 @@ class libmseed(object):
         cutdata=data[int(stime/samprate_in_microsecs):cutsamplecount+1]
         #Write cutted file
         self.write_ms(header, cutdata, outfile)
+        
+    def printrecordinfo(self, file):
+        """
+        Reads Mini-SEED file using subsequent calls to read_MSRec and prints
+        general information about all records in the file and any gaps/overlaps
+        present in the file
+        """
+        print "Records in",file,":"
+        print "---------------------------------------------------"
+        retcode=0
+        oldstarttime=0
+        while retcode == 0:
+            msr, retcode=self.read_MSRec(file, dataflag=0, skipnotdata=0)
+            if retcode == 0:
+                if oldstarttime!=0:
+                    if msr.contents.starttime-oldstarttime==0:
+                        print "NO GAPS/OVERLAPS"
+                    elif msr.contents.starttime-oldstarttime<0:
+                        print "OVERLAP"
+                    else:
+                        print "GAP"
+                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
+                print "Sequence number:",msr.contents.sequence_number,"--",
+                print "starttime:",msr.contents.starttime,", # of samples:",
+                print msr.contents.samplecnt,"=> endtime :",
+                print oldstarttime

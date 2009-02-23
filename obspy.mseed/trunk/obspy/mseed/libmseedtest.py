@@ -6,10 +6,8 @@ import sys
 try:
     file = sys.argv[1]
 except:
-    file = "test.mseed"
+    file = "BW.BGLD..EHE.D.2008.001"
 outfile='out.mseed'
 mseed=libmseed()
-
-header, data, numtraces=mseed.read_ms(file)
-mseed.cut_ms(data, header, 0, 5000)
+gapslist=mseed.findgapsandoverlaps(file)
 import pdb;pdb.set_trace()
