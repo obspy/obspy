@@ -1,4 +1,7 @@
-    #Defines the libmseed structures and blockettes
+# -*- coding: utf-8 -*-
+"""
+Defines the libmseed structures and blockettes.
+"""
 
 import ctypes as C
 

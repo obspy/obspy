@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from obspy.mseed.tests import test_libmseed
+from obspy.mseed.tests import test_libmseed, test_core
 import unittest
 
 
 def suite():
     suite = unittest.TestSuite()
+    suite.addTest(test_core.suite())
     suite.addTest(test_libmseed.suite())
     return suite
 

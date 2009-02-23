@@ -1,6 +1,9 @@
-#Wrapper class for libmseed
+# -*- coding: utf-8 -*-
+"""
+Wrapper class for libmseed.
+"""
 
-from obspy.mseed.libmseed_header import MSRecord, MSTraceGroup, MSTrace
+from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace
 import ctypes as C
 import os
 import sys

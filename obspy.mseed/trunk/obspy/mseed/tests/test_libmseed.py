@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.mseed.libmseed import libmseed
+from obspy.mseed import libmseed
 import inspect
 import os
 import unittest
@@ -44,7 +44,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(numtraces, 1)
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
-
+    
     def test_read_an_write_MS_using_Traces(self):
         """
         A reencoded SEED file should still have the same values regardless of 
@@ -77,6 +77,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                     self.assertEqual(data, newdata)
                     self.assertEqual(numtraces, newnumtraces)
                     os.remove(temp_file)
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
