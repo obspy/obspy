@@ -2,18 +2,16 @@
 
 from obspy.mseed.libmseed_header import MSRecord, MSTraceGroup, MSTrace
 import ctypes as C
-from pdb import Pdb
 import os
-#if sys.platform=='win32':
-#    clibmseed = C.cdll.libmseed
-#    clib = C.cdll.msvcrt
-#    #Windows DLL not tested
-#else:
-#Directory where the test files are located
-lib_path = os.path.dirname(__file__)
-lib_path = os.path.join(lib_path, 'libmseed', 'libmseed.so')
-clibmseed = C.CDLL(lib_path)
-clib = C.CDLL('libc.so.6')
+import sys
+
+# import libmseed library
+if sys.platform=='win32':
+    lib_name = 'libmseed.win32.dll'
+else:
+    lib_name = 'libmseed.so'
+clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed', lib_name))
+
 
 #Some methods are not needed anymore and will be removed for the final version
 class libmseed(object):
