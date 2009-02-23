@@ -5,9 +5,11 @@ import sys
 import os
 
 if sys.platform=='win32':
-    lib = C.CDLL('./libmseed/libmseed.dll')
+    lib_name = 'libmseed.dll'
 else:
-    lib = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed/libmseed.so'))
+    lib_name = 'libmseed.so'
+
+lib = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed', lib_name))
 
 # SEED binary time
 class BTime(C.Structure):
