@@ -5,7 +5,7 @@
 #   Author: Tobias Megies, Moritz Beyreuther, Yannik Behr
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2009 Tobias Megia, Moritz Beyreuther, Yannik Behr
+# Copyright (C) 2009 Tobias Megies, Moritz Beyreuther, Yannik Behr
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
