@@ -23,6 +23,7 @@
 #---------------------------------------------------------------------
 
 from scipy.signal import iirfilter,lfilter
+from scipy.fftpack import hilbert
 
 # NOTE: Data need to be a instance of the numpy array class
 
@@ -110,3 +111,16 @@ def highpassZPHSH(data,freq,df=200,corners=2):
   x=highpass(data, freq, df, corners)
   x=highpass(x[::-1], freq, df, corners)
   return x[::-1]
+
+def envelope(data):
+  """Envelope of a function:
+
+  Computes the envelope of the given function. The envelope is determined by
+  adding the squared amplitudes of the function and it's Hilbert-Transform and
+  then taking the squareroot.
+  (See Kanasewich: Time Sequence Analysis in Geophysics)
+  The envelope at the start/end should not be taken too seriously.
+  """
+  hilb=hilbert(data)
+  data=pow(pow(data,2)+pow(hilb,2),0.5)
+  return data
