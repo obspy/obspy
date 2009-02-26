@@ -110,12 +110,12 @@ class libmseed(object):
         mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
         
-    def findgapsandoverlaps(self, filename):
+    def findgaps(self, filename):
         """
-        Finds gaps and overlaps and returns a list for each found gap/overlaps.
+        Finds gaps and returns a list for each found gap
+        .
         Each item has a starttime and a duration value. The starttime is the last
-        correct data sample plus one step. If the duration value is positive there
-        is a gap and if it is negative there is an overlap. If no gaps/overlaps are
+        correct data sample plus one step. If no gaps are
         found it will return an empty list.
         All time and duration values are in microseconds.
         """
@@ -127,9 +127,19 @@ class libmseed(object):
             if retcode == 0:
                 if oldstarttime!=0:
                     if msr.contents.starttime-oldstarttime != 0:
-                        gaplist.append([oldstarttime , msr.contents.starttime-oldstarttime])
-                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
+                        gaplist.append([oldstarttime , msr.contents.starttime-oldstarttime+(1/msr.contents.samprate)*1e6])
+                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6-(1/msr.contents.samprate)*1e6)
         return gaplist
+    
+    def fastfindgaps(self, filename):
+        """
+        Find gaps using Traces
+        Not done yet!
+        """
+        mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
+        gapslist=[]
+        for i in range(2,mstg.contents.numtraces+1)
+            pass
 
     def mst2dict(self, m):
         """
@@ -245,11 +255,19 @@ class libmseed(object):
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
         msr=clibmseed.msr_init(None)
 
+        #Creates MSTraceGroup Structure
+#        msr = C.pointer(MSRecord(None))
+
         islast=C.c_int(1)
+        fpos=C.c_longlong()
+        clibmseed.ms_readmsr.restype = C.c_int
         retcode=clibmseed.ms_readmsr(C.pointer(msr), filename, C.c_int(reclen),
-                             None, C.pointer(islast),
-                             C.c_short(skipnotdata), C.c_short(dataflag),
+                             None, None,
+                             C.c_short(1), C.c_short(1),
                              C.c_short(verbose))
+#        int ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos,
+#            int *last, flag skipnotdata, flag dataflag, flag verbose)
+
         return msr,retcode
 
     def populate_MSTG(self, header, data, numtraces=1):
@@ -257,7 +275,7 @@ class libmseed(object):
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
         """
-        #Init MSTraceGroup
+        #Init MSTraceGroupint
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
         mstg = clibmseed.mst_initgroup(None)
         #Init MSTrace object
@@ -362,15 +380,15 @@ class libmseed(object):
         while retcode == 0:
             msr, retcode=self.read_MSRec(file, dataflag=0, skipnotdata=0)
             if retcode == 0:
-                if oldstarttime!=0:
-                    if msr.contents.starttime-oldstarttime==0:
-                        print "NO GAPS/OVERLAPS"
-                    elif msr.contents.starttime-oldstarttime<0:
-                        print "OVERLAP"
-                    else:
-                        print "GAP"
-                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
-                print "Sequence number:",msr.contents.sequence_number,"--",
-                print "starttime:",msr.contents.starttime,", # of samples:",
-                print msr.contents.samplecnt,"=> endtime :",
-                print oldstarttime
+                    if oldstarttime!=0:
+                        if msr.contents.starttime-oldstarttime==0:
+                            print "NO GAPS/OVERLAPS"
+                        elif msr.contents.starttime-oldstarttime<0:
+                            print "OVERLAP"
+                        else:
+                            print "GAP"
+                    oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
+                    print "Sequence number:",msr.contents.sequence_number,"--",
+                    print "starttime:",msr.contents.starttime,", # of samples:",
+                    print msr.contents.samplecnt,"=> endtime :",
+                    print oldstarttime
