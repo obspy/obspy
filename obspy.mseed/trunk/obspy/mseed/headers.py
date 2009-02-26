@@ -10,10 +10,10 @@ class BTime(C.Structure):
     _fields_ = [
         ('year', C.c_uint),
         ('day', C.c_uint),
-        ('hour', C.c_ushort),
-        ('min', C.c_ushort),
-        ('sec', C.c_ushort),
-        ('unused', C.c_ushort),
+        ('hour', C.c_ubyte),
+        ('min', C.c_ubyte),
+        ('sec', C.c_ubyte),
+        ('unused', C.c_ubyte),
         ('fract', C.c_uint),
     ]
 
@@ -32,10 +32,10 @@ class fsdh_s(C.Structure):
         ('numsamples', C.c_uint), 
         ('samprate_fact', C.c_int), 
         ('samprate_mult', C.c_int), 
-        ('act_flags', C.c_ushort), 
-        ('io_flags', C.c_ushort), 
-        ('dq_flags', C.c_ushort), 
-        ('numblockettes', C.c_ushort), 
+        ('act_flags', C.c_ubyte), 
+        ('io_flags', C.c_ubyte), 
+        ('dq_flags', C.c_ubyte), 
+        ('numblockettes', C.c_ubyte), 
         ('time_correct', C.c_long), 
         ('data_offset', C.c_uint), 
         ('blockette_offset', C.c_uint), 
@@ -46,8 +46,8 @@ class fsdh_s(C.Structure):
 class blkt_100_s(C.Structure):
     _fields_ = [
         ('samprate', C.c_float), 
-        ('flags', C.c_short), 
-        ('reserved', C.c_ushort*3), 
+        ('flags', C.c_byte), 
+        ('reserved', C.c_ubyte*3), 
     ]
     
 
@@ -57,8 +57,8 @@ class blkt_200_s(C.Structure):
         ('amplitude', C.c_float),
         ('period', C.c_float),
         ('background_estimate', C.c_float),
-        ('flags', C.c_ushort),
-        ('reserved', C.c_ushort),
+        ('flags', C.c_ubyte),
+        ('reserved', C.c_ubyte),
         ('time', BTime),
         ('detector', C.c_char*24),
     ]
@@ -70,12 +70,12 @@ class blkt_201_s(C.Structure):
         ('amplitude', C.c_float),
         ('period', C.c_float),
         ('background_estimate', C.c_float),
-        ('flags', C.c_ushort),
-        ('reserved', C.c_ushort),
+        ('flags', C.c_ubyte),
+        ('reserved', C.c_ubyte),
         ('time', BTime),
-        ('snr_values', C.c_ushort*6),
-        ('loopback', C.c_ushort),
-        ('pick_algorithm', C.c_ushort),
+        ('snr_values', C.c_ubyte*6),
+        ('loopback', C.c_ubyte),
+        ('pick_algorithm', C.c_ubyte),
         ('detector', C.c_char*24),
     ]
 
@@ -84,13 +84,13 @@ class blkt_201_s(C.Structure):
 class blkt_300_s(C.Structure):
     _fields_ = [
         ('time', BTime),
-        ('numcalibrations', C.c_ushort),
-        ('flags', C.c_ushort),
+        ('numcalibrations', C.c_ubyte),
+        ('flags', C.c_ubyte),
         ('step_duration', C.c_long),
         ('interval_duration', C.c_long),
         ('amplitude', C.c_float),
         ('input_channel', C.c_char*3),
-        ('reserved', C.c_ushort),
+        ('reserved', C.c_ubyte),
         ('reference_amplitude', C.c_long),
         ('coupling', C.c_char*12),
         ('rolloff', C.c_char*12),
@@ -101,13 +101,13 @@ class blkt_300_s(C.Structure):
 class blkt_310_s(C.Structure):
     _fields_ = [
         ('time', BTime),
-        ('reserved1', C.c_ushort),
-        ('flags', C.c_ushort),
+        ('reserved1', C.c_ubyte),
+        ('flags', C.c_ubyte),
         ('duration', C.c_long),
         ('period', C.c_float),
         ('amplitude', C.c_float),
         ('input_channel', C.c_char*3),
-        ('reserved2', C.c_ushort),
+        ('reserved2', C.c_ubyte),
         ('reference_amplitude', C.c_long),
         ('coupling', C.c_char*12),
         ('rolloff', C.c_char*12),
@@ -118,12 +118,12 @@ class blkt_310_s(C.Structure):
 class blkt_320_s(C.Structure):
     _fields_ = [
         ('time', BTime),
-        ('reserved1', C.c_ushort),
-        ('flags', C.c_ushort),
+        ('reserved1', C.c_ubyte),
+        ('flags', C.c_ubyte),
         ('duration', C.c_long),
         ('ptp_amplitude', C.c_float),
         ('input_channel', C.c_char*3),
-        ('reserved2', C.c_ushort),
+        ('reserved2', C.c_ubyte),
         ('reference_amplitude', C.c_long),
         ('coupling', C.c_char*12),
         ('rolloff', C.c_char*12),
@@ -135,12 +135,12 @@ class blkt_320_s(C.Structure):
 class blkt_390_s(C.Structure):
     _fields_ = [
         ('time', BTime),
-        ('reserved1', C.c_ushort),
-        ('flags', C.c_ushort),
+        ('reserved1', C.c_ubyte),
+        ('flags', C.c_ubyte),
         ('duration', C.c_long),
         ('amplitude', C.c_float),
         ('input_channel', C.c_char*3),
-        ('reserved2', C.c_ushort),
+        ('reserved2', C.c_ubyte),
     ]
 
 
@@ -148,7 +148,7 @@ class blkt_390_s(C.Structure):
 class blkt_395_s(C.Structure):
     _fields_ = [
         ('time', BTime),
-        ('reserved', C.c_ushort*2),
+        ('reserved', C.c_ubyte*2),
     ]
 
 
@@ -158,7 +158,7 @@ class blkt_400_s(C.Structure):
         ('azimuth', C.c_float),
         ('slowness', C.c_float),
         ('configuration', C.c_uint),
-        ('reserved', C.c_ushort*2),
+        ('reserved', C.c_ubyte*2),
     ]
 
  
@@ -174,8 +174,8 @@ class blkt_500_s(C.Structure):
     _fields_ = [
         ('vco_correction', C.c_float),
         ('time', BTime),
-        ('usec', C.c_short),
-        ('reception_qual', C.c_ushort),
+        ('usec', C.c_byte),
+        ('reception_qual', C.c_ubyte),
         ('exception_count', C.c_long),
         ('exception_type', C.c_char*16),
         ('clock_model', C.c_char*32),
@@ -186,19 +186,19 @@ class blkt_500_s(C.Structure):
 # Blockette 1000, Data Only SEED (without header)
 class blkt_1000_s(C.Structure):
     _fields_ = [
-        ('encoding', C.c_ushort), 
-        ('byteorder', C.c_ushort), 
-        ('reclen', C.c_ushort), 
-        ('reserved', C.c_ushort),
+        ('encoding', C.c_ubyte), 
+        ('byteorder', C.c_ubyte), 
+        ('reclen', C.c_ubyte), 
+        ('reserved', C.c_ubyte),
     ]
 
 # Blockette 1001, Data Extension (without header)
 class blkt_1001_s(C.Structure):
     _fields_ = [
-        ('timing_qual', C.c_ushort), 
-        ('usec', C.c_short), 
-        ('reserved', C.c_ushort), 
-        ('framecnt', C.c_ushort),
+        ('timing_qual', C.c_ubyte), 
+        ('usec', C.c_byte), 
+        ('reserved', C.c_ubyte), 
+        ('framecnt', C.c_ubyte),
     ]
 
 
@@ -208,9 +208,9 @@ class blkt_2000_s(C.Structure):
         ('length', C.c_uint),
         ('data_offset', C.c_uint),
         ('recnum', C.c_long),
-        ('byteorder', C.c_ushort),
-        ('flags', C.c_ushort),
-        ('numheaders', C.c_ushort),
+        ('byteorder', C.c_ubyte),
+        ('flags', C.c_ubyte),
+        ('numheaders', C.c_ubyte),
         ('payload', C.c_char*1),
     ]
 
@@ -239,36 +239,39 @@ class StreamState_s(C.Structure):
 StreamState = StreamState_s
 
 
-class MSRecord(C.Structure):
-    _fields_ = [
-        ('record', C.c_char_p),                 # Mini-SEED record
-        ('reclen', C.c_int),                    # Length of Mini-SEED record in bytes
-        # Pointers to SEED data record structures
-        ('fsdh', C.POINTER(fsdh_s)),            # Fixed Section of Data Header
-        ('blkts', C.POINTER(BlktLink)),         # Root of blockette chain
-        ('Blkt100', C.POINTER(blkt_100_s)),     # Blockette 100, if present 
-        ('Blkt1000', C.POINTER(blkt_1000_s)),   # Blockette 1000, if present
-        ('Blkt1001', C.POINTER(blkt_1001_s)),   # Blockette 1001, if present
-        # Common header fields in accessible form
-        ('sequence_number', C.c_long),          # SEED record sequence number
-        ('dataquality', C.c_char),              # Data quality indicator
-        ('network', C.c_char*11),               # Network designation, NULL terminated
-        ('station', C.c_char*11),               # Station designation, NULL terminated
-        ('location', C.c_char*11),              # Location designation, NULL terminated
-        ('channel', C.c_char*11),               # Channel designation, NULL terminated
-        ('starttime', C.c_longlong),            # Record start time, corrected (first sample)
-        ('samprate', C.c_double),               # Nominal sample rate (Hz)
-        ('samplecnt', C.c_long),                # Number of samples in record
-        ('encoding', C.c_int),                # Data encoding format
-        ('byteorder', C.c_short),               # Byte order of record
-        # Data sample fields
-        ('datasamples', C.POINTER(C.c_void_p)),            # Data samples, 'numsamples' of type 'sampletype'
-        ('numsamples', C.c_long),               # Number of data samples in datasamples
-        ('sampletype', C.c_char),               # Sample type code: a, i, f, d
-        # Stream oriented state information
-        ('ststate', C.POINTER(StreamState)),    # Stream processing state information
-    ]
+class MSRecord_s(C.Structure):
+    pass
 
+MSRecord_s._fields_ = [
+    ('record', C.POINTER(C.c_char)),                  # Mini-SEED record
+    ('reclen', C.c_long),                    # Length of Mini-SEED record in bytes
+    # Pointers to SEED data record structures
+    ('fsdh', C.POINTER(fsdh_s)),            # Fixed Section of Data Header
+    ('blkts', C.POINTER(BlktLink)),         # Root of blockette chain
+    ('Blkt100', C.POINTER(blkt_100_s)),     # Blockette 100, if present 
+    ('Blkt1000', C.POINTER(blkt_1000_s)),   # Blockette 1000, if present
+    ('Blkt1001', C.POINTER(blkt_1001_s)),   # Blockette 1001, if present
+    # Common header fields in accessible form
+    ('sequence_number', C.c_long),          # SEED record sequence number
+    ('network', C.c_char*11),               # Network designation, NULL terminated
+    ('station', C.c_char*11),               # Station designation, NULL terminated
+    ('location', C.c_char*11),              # Location designation, NULL terminated
+    ('channel', C.c_char*11),               # Channel designation, NULL terminated
+    ('dataquality', C.c_char),              # Data quality indicator
+    ('starttime', C.c_longlong),            # Record start time, corrected (first sample)
+    ('samprate', C.c_double),               # Nominal sample rate (Hz)
+    ('samplecnt', C.c_long),                # Number of samples in record
+    ('encoding', C.c_byte),                # Data encoding format
+    ('byteorder', C.c_byte),               # Byte order of record
+    # Data sample fields
+    ('datasamples', C.POINTER(C.c_void_p)), # Data samples, 'numsamples' of type 'sampletype'
+    ('numsamples', C.c_long),               # Number of data samples in datasamples
+    ('sampletype', C.c_char),               # Sample type code: a, i, f, d
+    # Stream oriented state information
+    ('ststate', C.POINTER(StreamState)),    # Stream processing state information
+]
+
+MSRecord = MSRecord_s
 
 class MSTrace_s(C.Structure):
     pass
