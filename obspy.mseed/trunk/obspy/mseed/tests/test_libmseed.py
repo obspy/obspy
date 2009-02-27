@@ -78,6 +78,7 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_findgaps(self):
         mseed = libmseed()
         gapslist = mseed.findgaps(os.path.join(self.path,'gaps.mseed'))
+        print gapslist
         starttime = 1199145599915000
         self.assertEqual(gapslist[0][0], starttime+1970000)
         self.assertEqual(gapslist[1][0], starttime+8150000)

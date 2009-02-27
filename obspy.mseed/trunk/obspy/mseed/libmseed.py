@@ -138,7 +138,7 @@ class libmseed(object):
         """
         mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
         gapslist=[]
-        for i in range(2,mstg.contents.numtraces+1)
+        for i in range(2,mstg.contents.numtraces+1):
             pass
 
     def mst2dict(self, m):
