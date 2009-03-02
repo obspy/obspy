@@ -109,37 +109,22 @@ class libmseed(object):
         """
         mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
-        
+    
     def findgaps(self, filename):
         """
-        Finds gaps and returns a list for each found gap
+        Finds gaps and returns a list for each found gap.
         .
         Each item has a starttime and a duration value. The starttime is the last
-        correct data sample plus one step. If no gaps are
-        found it will return an empty list.
+        correct data sample. If no gaps are found it will return an empty list.
         All time and duration values are in microseconds.
-        """
-        gaplist=[]
-        retcode=0
-        oldstarttime=0
-        while retcode == 0:
-            msr, retcode=self.read_MSRec(filename, dataflag=0, skipnotdata=0)
-            if retcode == 0:
-                if oldstarttime!=0:
-                    if msr.contents.starttime-oldstarttime != 0:
-                        gaplist.append([oldstarttime , msr.contents.starttime-oldstarttime+(1/msr.contents.samprate)*1e6])
-                oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6-(1/msr.contents.samprate)*1e6)
-        return gaplist
-    
-    def fastfindgaps(self, filename):
-        """
-        Find gaps using Traces
-        Not done yet!
         """
         mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
         gapslist=[]
-        for i in range(2,mstg.contents.numtraces+1):
-            pass
+        curpath=mstg.contents.traces.contents
+        for _i in range(mstg.contents.numtraces-1):
+            gapslist.append([curpath.endtime , curpath.next.contents.starttime-curpath.endtime])
+            curpath=curpath.next.contents
+        return gapslist
 
     def mst2dict(self, m):
         """
@@ -263,11 +248,8 @@ class libmseed(object):
         clibmseed.ms_readmsr.restype = C.c_int
         retcode=clibmseed.ms_readmsr(C.pointer(msr), filename, C.c_int(reclen),
                              None, None,
-                             C.c_short(1), C.c_short(1),
+                             C.c_short(skipnotdata), C.c_short(dataflag),
                              C.c_short(verbose))
-#        int ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *fpos,
-#            int *last, flag skipnotdata, flag dataflag, flag verbose)
-
         return msr,retcode
 
     def populate_MSTG(self, header, data, numtraces=1):
