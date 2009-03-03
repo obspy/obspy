@@ -25,20 +25,16 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Compares waveform data read by libmseed with an ASCII dump.
         
-        Checks the first 13 datasamples when reading BW.BGLD..EHE.D.2008.001
-        using traces. The values in BW.BGLD..EHE.D.2008.001_first20lines.ASCII
-        are assumed to be correct. The file was created using Pitsa.
+        Checks the first 13 datasamples when reading the first record of 
+        BW.BGLD..EHE.D.2008.001 using traces. The values are assumed to
+        be correct. The values were created using Pitsa.
         Only checks relative values.
         """
-        mseed_file = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-        ascii_file = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001_first20lines.ASCII')
+        mseed_file = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001_first record')
         mseed=libmseed()
-        f=open(ascii_file,'r')
-        datalist=f.readlines()
-        datalist[0:7]=[]
-        for i in range(len(datalist)):
-            datalist[i]=int(datalist[i])
+
+        datalist=[-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
+                        -367, -414, -427]
         header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
         self.assertEqual('BGLD', header['station'])
         self.assertEqual('EHE', header['channel'])

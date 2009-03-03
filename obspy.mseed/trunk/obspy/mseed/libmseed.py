@@ -74,20 +74,21 @@ class libmseed(object):
     
     def printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
         """
-        Mst_printtracelist prints a formated list of the MSTrace segments 
-        in the given MSTraceGroup. All output is printed using ms_log(3)
-        at level 0.
+        Prints information about the traces in a Mini-SEED file using the libmseed
+        method printtracelist.
         
-        filename      - Name of file to read Mini-SEED data from
-        timeformat    - Controls the format of the resulting time string, default = 0
-                            0 : SEED time format (2005,146,00:00:00.000000)
-                            1 : ISO time format (2005-05-26T00:00:00.000000)
-                            2 : Epoch time, seconds since the epoch (1117065600.00000000)
-        details       - If the details flag is greater than 0 the sample rate and 
-                        sample count are printed for each trace, default = 0
-        gaps          - If the gaps flag is greater than zero the time gap from the 
-                        previous MSTrace (if the source name matches) is printed, 
-                        default = 0
+        Prints all informations to stdout.
+        
+        filename          - Name of file to read Mini-SEED data from
+        timeformat      - Controls the format of the resulting time string, default = 0
+                                    0 : SEED time format (2005,146,00:00:00.000000)
+                                    1 : ISO time format (2005-05-26T00:00:00.000000)
+                                    2 : Epoch time, seconds since the epoch (1117065600.00000000)
+        details             - If the details flag is greater than 0 the sample rate and 
+                                  sample count are printed for each trace, default = 0
+        gaps                - If the gaps flag is greater than zero the time gap from the 
+                                  previous MSTrace (if the source name matches) is printed, 
+                                  default = 0
         """
         mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
         clibmseed.mst_printtracelist(mstg,timeformat,details,gaps)
@@ -99,32 +100,62 @@ class libmseed(object):
         values will be enforced and only gaps/overlaps matching their implied
         criteria will be printed.
         
-        filename      - Name of file to read Mini-SEED data from
-        timeformat    - Controls the format of the resulting time string, defaults to 0
-                            0 : SEED time format (2005,146,00:00:00.000000)
-                            1 : ISO time format (2005-05-26T00:00:00.000000)
-                            2 : Epoch time, seconds since the epoch (1117065600.00000000)
-        mingap        - defaults to 0
-        maxgap        - defaults to 0
+        Uses the libmseed function printgapslist.
+        
+        filename          - Name of file to read Mini-SEED data from
+        timeformat      - Controls the format of the resulting time string, defaults to 0
+                                    0 : SEED time format (2005,146,00:00:00.000000)
+                                    1 : ISO time format (2005-05-26T00:00:00.000000)
+                                    2 : Epoch time, seconds since the epoch (1117065600.00000000)
+        mingap            - defaults to 0
+        maxgap           - defaults to 0
         """
         mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
     
-    def findgaps(self, filename):
+    def findgaps(self, filename, timetolerance = -1, sampratetolerance = -1):
         """
         Finds gaps and returns a list for each found gap.
         .
-        Each item has a starttime and a duration value. The starttime is the last
-        correct data sample. If no gaps are found it will return an empty list.
+        Each item has a starttime and a duration value to characterize the gap.
+        The starttime is the last correct data sample. If no gaps are found it
+        will return an empty list.
         All time and duration values are in microseconds.
+        
+        timetolerance           - Time tolerance while reading the traces,
+                                           default to -1 (1/2 sample period)
+        sampratetolerance   - Sample rate tolerance while reading the traces,
+                                            defaults to -1 (rate dependent)
         """
-        mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0)
+        mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0,
+                                                timetol = timetolerance,
+                                                sampratetol=sampratetolerance)
         gapslist=[]
         curpath=mstg.contents.traces.contents
         for _i in range(mstg.contents.numtraces-1):
             gapslist.append([curpath.endtime , curpath.next.contents.starttime-curpath.endtime])
             curpath=curpath.next.contents
         return gapslist
+    
+    def msr2dict(self, m):
+        """
+        """
+        h = {}
+        h['reclen'] = m.contents.reclen
+        h['sequence_number'] = m.contents.sequence_number
+        h['network'] = m.contents.network
+        h['station'] = m.contents.station
+        h['location'] = m.contents.location
+        h['channel'] = m.contents.channel
+        h['dataquality'] = m.contents.dataquality
+        h['starttime'] = m.contents.starttime
+        h['samprate'] = m.contents.samprate
+        h['samplecnt'] = m.contents.samplecnt
+        h['encoding'] = m.contents.encoding
+        h['byteorder'] = m.contents.byteorder
+        h['encoding'] = m.contents.encoding
+        h['sampletype'] = m.contents.sampletype
+        return h
 
     def mst2dict(self, m):
         """
@@ -163,6 +194,14 @@ class libmseed(object):
         m.contents.samplecnt = h["samplecnt"]
         m.contents.numsamples = h["numsamples"]
         m.contents.sampletype = h["sampletype"]
+        
+    def compareHeaders(self, header1, msrecord):
+        if len(msrecord) == 0:
+            return True
+        #msrecord[len(msrecord)-1][0]
+        else:
+            return False
+    
 
     def readtraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
                    dataflag = 1, skipnotdata = 1, verbose = 0):
@@ -170,18 +209,18 @@ class libmseed(object):
         Reads Mini-SEED data from file. Returns MSTraceGroup structure.
         
         filename        - Mini-SEED file to be read
-        reclen          - If reclen is 0 the length of the first record is auto-
-                          detected. All subsequent records are then expected to
-                          have the same record length.
-                          If reclen is negative the length of every record is
-                          automatically detected.
-                          Defaults to -1.
-        timetol         - Time tolerance, default to -1 (1/2 sample period)
-        sampratetol     - Sample rate tolerance, defaults to -1 (rate dependent)
-        dataflag        - Controls whether data samples are unpacked, defaults to 1
-        skipnotdata     - If true (not zero) any data chunks read that to do not
-                          have valid data record indicators will be skipped.
-                          Defaults to true (1).
+        reclen            - If reclen is 0 the length of the first record is auto-
+                                detected. All subsequent records are then expected to
+                                have the same record length.
+                                If reclen is negative the length of every record is
+                                automatically detected.
+                                Defaults to -1.
+        timetol           - Time tolerance, default to -1 (1/2 sample period)
+        sampratetol   - Sample rate tolerance, defaults to -1 (rate dependent)
+        dataflag         - Controls whether data samples are unpacked, defaults to 1
+        skipnotdata    - If true (not zero) any data chunks read that to do not
+                                 have valid data record indicators will be skipped.
+                                 Defaults to true (1).
         verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
         """
         #Creates MSTraceGroup Structure
@@ -195,14 +234,14 @@ class libmseed(object):
             assert 0, "\n\nError while reading Mini-SEED file: "+filename
         return mstg
 
-    def read_ms_using_traces(self, filename):
+    def read_ms_using_traces(self, filename, dataflag = 1):
         """
         Read Mini-SEED file. Header, Data and numtraces are returned
 
-        filename    - Name of file to read Mini-SEED data from
-        timetol     - Time tolerance, default is 1/2 sample period (-1)
-        sampratetol - Sample rate tolerance, default is rate dependent (-1)
-        verbosity   - Level of diagnostic messages, default 0
+        filename        - Name of file to read Mini-SEED data from
+        timetol           - Time tolerance, default is 1/2 sample period (-1)
+        sampratetol   - Sample rate tolerance, default is rate dependent (-1)
+        verbosity       - Level of diagnostic messages, default 0
         """
         #Creates MSTraceGroup Structure
         mstg = self.readtraces(filename)
@@ -215,6 +254,31 @@ class libmseed(object):
             header.append(self.mst2dict(mst))
             mst = mst.contents.next
         return header[0],data, numtraces
+    
+    def readMSusingRecords(self, filename):
+        """
+        Reads a given Mini-SEED file and parses all information.
+        
+        Structure of the returned list:
+        [[header for trace 1, data] , [header for trace 2, data], ...]
+        """
+        msrecord=[]
+        retcode=0
+        while retcode == 0:
+            msr, retcode = self.read_MSRec(filename)
+            if retcode == 0:
+                header=self.msr2dict(msr)
+                #Sanity check
+                if header['samplecnt'] != msr.contents.numsamples:
+                    print "Warning: The number of samples unpacked does not"
+                    print "correspond with the number of samples specified in the header."
+#                if len(msrecord) == 0:
+#                data=msr.contents.datasamples[0:msr.contents.numsamples]
+                if self.compareHeaders(header, msrecord):
+                    print "Same Trace"
+                else:
+                    msrecord.append([header, 0])
+        return msrecord
 
     def read_MSRec(self, filename, reclen = -1, dataflag = 1, 
                    skipnotdata = 1, verbose = 0):
@@ -222,30 +286,25 @@ class libmseed(object):
         Reads Mini-SEED file and populates MS Record data structure with subsequent
         calls.
         
-        For subsequent calls, call the function with an MSRecord structure.
-        ilename        - Mini-SEED file to be read
-        reclen          - If reclen is 0 the length of the first record is auto-
-                          detected. All subsequent records are then expected to
-                          have the same record length.
-                          If reclen is negative the length of every record is
-                          automatically detected.
-                          Defaults to -1.
+        filename        - Mini-SEED file to be read
+        reclen            - If reclen is 0 the length of the first record is auto-
+                                detected. All subsequent records are then expected to
+                                have the same record length.
+                                If reclen is negative the length of every record is
+                                automatically detected.
+                                Defaults to -1.
         dataflag        - Controls whether data samples are unpacked, defaults to 1
-        skipnotdata     - If true (not zero) any data chunks read that to do not
-                          have valid data record indicators will be skipped.
-                          Defaults to true (1).
+        skipnotdata   - If true (not zero) any data chunks read that to do not
+                                have valid data record indicators will be skipped.
+                                Defaults to true (1).
         verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
         """
         #Init MSRecord structure
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
         msr=clibmseed.msr_init(None)
-
-        #Creates MSTraceGroup Structure
-#        msr = C.pointer(MSRecord(None))
-
-        islast=C.c_int(1)
-        fpos=C.c_longlong()
+        #Defines return type
         clibmseed.ms_readmsr.restype = C.c_int
+        #Read the file and write the relevant information to msr
         retcode=clibmseed.ms_readmsr(C.pointer(msr), filename, C.c_int(reclen),
                              None, None,
                              C.c_short(skipnotdata), C.c_short(dataflag),
