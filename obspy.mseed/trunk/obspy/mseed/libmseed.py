@@ -356,7 +356,7 @@ class libmseed(object):
         clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
                            self.packedsamples, flush, verbose, None)
         mseedfile.close()
-
+    
     def write_ms(self,header,data, outfile, numtraces=1, reclen= -1,
                  encoding=-1, byteorder=-1, flush=-1, verbose=0):
         """
@@ -387,7 +387,7 @@ class libmseed(object):
         #Write File from MS-Trace structure
         self.mst2file(mstg.contents.traces, outfile, reclen, encoding, byteorder,
                       flush, verbose)
-        
+    
     def cut_ms(self, data, header, stime, cutsamplecount, outfile='cut.mseed'):
         """
         Takes a data file list, a header dictionary, a starttime, the number of 

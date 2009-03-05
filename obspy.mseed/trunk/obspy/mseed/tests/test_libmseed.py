@@ -20,7 +20,7 @@ class LibMSEEDTestCase(unittest.TestCase):
     
     def tearDown(self):
         pass
-
+    
     def test_readTraces(self):
         """
         Compares waveform data read by libmseed with an ASCII dump.
@@ -30,7 +30,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         be correct. The values were created using Pitsa.
         Only checks relative values.
         """
-        mseed_file = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001_first record')
+        mseed_file = os.path.join(self.path, 
+                                  'BW.BGLD..EHE.D.2008.001.first_record')
         mseed=libmseed()
 
         datalist=[-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
@@ -96,6 +97,12 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(gapslist[0][1], 2065000)
         self.assertEqual(gapslist[1][1], 2065000)
         self.assertEqual(gapslist[2][1], 4125000)
+        mseed_file = os.path.join(self.path, 
+                                  'BW.BGLD..EHE.D.2008.001')
+        mseed=libmseed()
+        import pdb;pdb.set_trace()
+        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
+        
 
 
 def suite():
