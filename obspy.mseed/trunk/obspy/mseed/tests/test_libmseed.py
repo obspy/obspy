@@ -33,7 +33,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed_file = os.path.join(self.path, 
                                   'BW.BGLD..EHE.D.2008.001.first_record')
         mseed=libmseed()
-
+        
         datalist=[-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
                         -367, -414, -427]
         header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
@@ -90,19 +90,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         library and visually compared with the SeisGram2K viewer.
         """
         mseed = libmseed()
-        gapslist = mseed.findgaps(os.path.join(self.path,'gaps.mseed'))
+        gapslist = mseed.findGaps(os.path.join(self.path,'gaps.mseed'))
         self.assertEqual(gapslist[0][0], long(1199145601970000 ))
         self.assertEqual(gapslist[1][0], long(1199145608150000))
         self.assertEqual(gapslist[2][0], long(1199145614330000))
         self.assertEqual(gapslist[0][1], 2065000)
         self.assertEqual(gapslist[1][1], 2065000)
         self.assertEqual(gapslist[2][1], 4125000)
-        mseed_file = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001')
-        mseed=libmseed()
-        import pdb;pdb.set_trace()
-        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
-        
 
 
 def suite():

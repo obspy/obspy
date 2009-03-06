@@ -17,7 +17,8 @@ clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed', lib_name))
 
 
 class libmseed(object):
-    
+    """
+    """
     def __init__(self, file="test.mseed"):
         """
         Inits the class and writes all attributes of the MSRecord structure in
@@ -113,27 +114,28 @@ class libmseed(object):
         mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
     
-    def findgaps(self, filename, timetolerance = -1, sampratetolerance = -1):
+    def findGaps(self, filename, timetolerance = -1, sampratetolerance = -1):
         """
         Finds gaps and returns a list for each found gap.
-        .
+        
         Each item has a starttime and a duration value to characterize the gap.
         The starttime is the last correct data sample. If no gaps are found it
         will return an empty list.
         All time and duration values are in microseconds.
         
-        timetolerance           - Time tolerance while reading the traces,
-                                           default to -1 (1/2 sample period)
-        sampratetolerance   - Sample rate tolerance while reading the traces,
-                                            defaults to -1 (rate dependent)
+        @param time_tolerance: Time tolerance while reading the traces, default 
+            to -1 (1/2 sample period)
+        @param samprate_tolerance: Sample rate tolerance while reading the 
+            traces, defaults to -1 (rate dependent)
         """
         mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0,
-                                                timetol = timetolerance,
-                                                sampratetol=sampratetolerance)
+                               timetol = timetolerance,
+                               sampratetol=sampratetolerance)
         gapslist=[]
         curpath=mstg.contents.traces.contents
         for _i in range(mstg.contents.numtraces-1):
-            gapslist.append([curpath.endtime , curpath.next.contents.starttime-curpath.endtime])
+            gapslist.append([curpath.endtime, 
+                             curpath.next.contents.starttime-curpath.endtime])
             curpath=curpath.next.contents
         return gapslist
     
