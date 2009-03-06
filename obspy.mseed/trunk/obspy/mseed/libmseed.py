@@ -128,7 +128,7 @@ class libmseed(object):
         @param samprate_tolerance: Sample rate tolerance while reading the 
             traces, defaults to -1 (rate dependent)
         """
-        mstg = self.readtraces(filename, dataflag = 0,skipnotdata = 0,
+        mstg = self.readtraces(str(filename), dataflag = 0,skipnotdata = 0,
                                timetol = timetolerance,
                                sampratetol=sampratetolerance)
         gapslist=[]
