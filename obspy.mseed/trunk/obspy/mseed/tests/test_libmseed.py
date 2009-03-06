@@ -3,6 +3,7 @@
 The libmseed test suite.
 """
 
+from datetime import datetime
 from obspy.mseed import libmseed
 import inspect
 import os
@@ -82,21 +83,28 @@ class LibMSEEDTestCase(unittest.TestCase):
                     self.assertEqual(numtraces, newnumtraces)
                     os.remove(temp_file)
     
-    def test_findGaps(self):
+    def test_getGapList(self):
         """
-        Compares calculated gaps in a MiniSEED file with known values.
+        Searches gaps via libmseed and compares the result with known values.
         
-        The values are compared with the printgaplist method of the libmseed 
-        library and visually compared with the SeisGram2K viewer.
+        The values are compared with the original printgaplist method of the 
+        libmseed library and manually with the SeisGram2K viewer.
         """
         mseed = libmseed()
-        gapslist = mseed.findGaps(os.path.join(self.path,'gaps.mseed'))
-        self.assertEqual(gapslist[0][0], long(1199145601970000 ))
-        self.assertEqual(gapslist[1][0], long(1199145608150000))
-        self.assertEqual(gapslist[2][0], long(1199145614330000))
-        self.assertEqual(gapslist[0][1], 2065000)
-        self.assertEqual(gapslist[1][1], 2065000)
-        self.assertEqual(gapslist[2][1], 4125000)
+        filename = os.path.join(self.path, 'gaps.mseed')
+        gap_list = mseed.getGapList(filename)
+        self.assertEqual(gap_list[0][0], 'BW')
+        self.assertEqual(gap_list[0][1], 'BGLD')
+        self.assertEqual(gap_list[0][2], '')
+        self.assertEqual(gap_list[0][3], 'EHE')
+        self.assertEqual(gap_list[0][4], datetime(2008, 1, 1, 0, 0, 1, 970000))
+        self.assertEqual(gap_list[0][5], datetime(2008, 1, 1, 0, 0, 4, 35000))
+        self.assertEqual(gap_list[0][6], 2.065)
+        self.assertEqual(gap_list[0][7], 412)
+        self.assertEqual(gap_list[1][6], 2.065)
+        self.assertEqual(gap_list[1][7], 412)
+        self.assertEqual(gap_list[2][6], 4.125)
+        self.assertEqual(gap_list[2][7], 824)
 
 
 def suite():

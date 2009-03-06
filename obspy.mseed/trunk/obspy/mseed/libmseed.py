@@ -1,10 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Wrapper class for libmseed.
+Wrapper class for libmseed - The Mini-SEED library.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Library General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License (GNU-LGPL) for more details.  The
+GNU-LGPL and further information can be found here:
+http://www.gnu.org/
 """
 
-from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace
+from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
 import ctypes as C
+from datetime import datetime
+import math
 import os
 import sys
 
@@ -13,65 +27,14 @@ if sys.platform=='win32':
     lib_name = 'libmseed.win32.dll'
 else:
     lib_name = 'libmseed.so'
-clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__),'libmseed', lib_name))
+clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed', 
+                                lib_name))
 
 
 class libmseed(object):
     """
+    Wrapper class for libmseed.
     """
-    def __init__(self, file="test.mseed"):
-        """
-        Inits the class and writes all attributes of the MSRecord structure in
-        self.attrs
-        """
-        self.attrs = []
-        for (name,type) in MSRecord._fields_:
-            self.attrs.append(name)
-        self.defaultfile=file
-
-    def __getattr__(self, name):
-        """
-        Fetches C-Attributes from the MSRecord Structure.
-        
-        Currently only works with the first record of the Mseedfile and the 
-        test.mseed file.
-        """
-       
-        if name in self.attrs:
-            clibmseed.ms_readmsr.restype = C.c_int
-            #needed to write the MSRecord
-            msr = C.pointer(MSRecord())
-            #Checks whether the returned msr is the last record. If it is the last record it will be 1.
-            islast = C.pointer(C.c_int(0))
-            for _i in range(1):
-                clibmseed.ms_readmsr(C.pointer(msr), self.defaultfile, 0, None, islast,1, 1, 0)
-                if islast.contents.value == 1:
-                    break
-            return getattr(msr.contents, name)
-        else:
-            return self.__dict__[name] 
-    
-    def __setattr__(self, name, val):
-        """
-        Set C-Attributes in the MSRecord Structure.
-        
-        Currently only works with the first record of the Mseedfile.
-        NOT TESTED!
-        """
-        if self.__dict__.has_key("attrs") and name in self.attrs:
-            clibmseed.ms_readmsr.restype = C.c_int
-            #needed to write the MSRecord
-            msr = C.pointer(MSRecord())
-            #Checks whether the returned msr is the last record. If it is the last record it will be 1.
-            islast = C.pointer(C.c_int(0))
-            for _i in range(1):
-                clibmseed.ms_readmsr(C.pointer(msr), file, 0, None, islast,1, 1, 0)
-                if islast.contents.value == 1:
-                    break
-                    setattr(msr.contents, name, val)
-        else:
-            #does what??
-            self.__dict__[name] = val
     
     def printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
         """
@@ -113,31 +76,6 @@ class libmseed(object):
         """
         mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
         clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
-    
-    def findGaps(self, filename, timetolerance = -1, sampratetolerance = -1):
-        """
-        Finds gaps and returns a list for each found gap.
-        
-        Each item has a starttime and a duration value to characterize the gap.
-        The starttime is the last correct data sample. If no gaps are found it
-        will return an empty list.
-        All time and duration values are in microseconds.
-        
-        @param time_tolerance: Time tolerance while reading the traces, default 
-            to -1 (1/2 sample period)
-        @param samprate_tolerance: Sample rate tolerance while reading the 
-            traces, defaults to -1 (rate dependent)
-        """
-        mstg = self.readtraces(str(filename), dataflag = 0,skipnotdata = 0,
-                               timetol = timetolerance,
-                               sampratetol=sampratetolerance)
-        gapslist=[]
-        curpath=mstg.contents.traces.contents
-        for _i in range(mstg.contents.numtraces-1):
-            gapslist.append([curpath.endtime, 
-                             curpath.next.contents.starttime-curpath.endtime])
-            curpath=curpath.next.contents
-        return gapslist
     
     def msr2dict(self, m):
         """
@@ -204,38 +142,6 @@ class libmseed(object):
         else:
             return False
     
-
-    def readtraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
-                   dataflag = 1, skipnotdata = 1, verbose = 0):
-        """
-        Reads Mini-SEED data from file. Returns MSTraceGroup structure.
-        
-        filename        - Mini-SEED file to be read
-        reclen            - If reclen is 0 the length of the first record is auto-
-                                detected. All subsequent records are then expected to
-                                have the same record length.
-                                If reclen is negative the length of every record is
-                                automatically detected.
-                                Defaults to -1.
-        timetol           - Time tolerance, default to -1 (1/2 sample period)
-        sampratetol   - Sample rate tolerance, defaults to -1 (rate dependent)
-        dataflag         - Controls whether data samples are unpacked, defaults to 1
-        skipnotdata    - If true (not zero) any data chunks read that to do not
-                                 have valid data record indicators will be skipped.
-                                 Defaults to true (1).
-        verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
-        """
-        #Creates MSTraceGroup Structure
-        mstg = C.pointer(MSTraceGroup())
-        #Uses libmseed to read the file and populate the MSTraceGroup structure
-        errcode=clibmseed.ms_readtraces(C.pointer(mstg), filename, C.c_int(reclen),
-                            C.c_double(timetol), C.c_double(sampratetol),
-                            C.c_short(dataflag), C.c_short(skipnotdata), C.c_short(dataflag),
-                            C.c_short(verbose))
-        if errcode != 0:
-            assert 0, "\n\nError while reading Mini-SEED file: "+filename
-        return mstg
-
     def read_ms_using_traces(self, filename, dataflag = 1):
         """
         Read Mini-SEED file. Header, Data and numtraces are returned
@@ -246,7 +152,7 @@ class libmseed(object):
         verbosity       - Level of diagnostic messages, default 0
         """
         #Creates MSTraceGroup Structure
-        mstg = self.readtraces(filename)
+        mstg = self.readTraces(filename)
         data=[]
         header=[]
         mst = mstg.contents.traces
@@ -409,7 +315,7 @@ class libmseed(object):
         cutdata=data[int(stime/samprate_in_microsecs):cutsamplecount+1]
         #Write cutted file
         self.write_ms(header, cutdata, outfile)
-        
+    
     def printrecordinfo(self, file):
         """
         Reads Mini-SEED file using subsequent calls to read_MSRec and prints
@@ -435,3 +341,123 @@ class libmseed(object):
                     print "starttime:",msr.contents.starttime,", # of samples:",
                     print msr.contents.samplecnt,"=> endtime :",
                     print oldstarttime
+    
+    def readTraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
+                   dataflag = 1, skipnotdata = 1, verbose = 0):
+        """
+        Reads MiniSEED data from file. Returns MSTraceGroup structure.
+        
+        @param filename: Mini-SEED file to be read.
+        @param reclen: If reclen is 0 the length of the first record is auto- 
+            detected. All subsequent records are then expected to have the 
+            same record length. If reclen is negative the length of every 
+            record is automatically detected. Defaults to -1.
+        @param timetol: Time tolerance, default to -1 (1/2 sample period).
+        @param sampratetol: Sample rate tolerance, defaults to -1 (rate 
+            dependent)
+        @param dataflag: Controls whether data samples are unpacked, defaults 
+            to 1
+        @param skipnotdata: If true (not zero) any data chunks read that to do 
+            not have valid data record indicators will be skipped. Defaults to 
+            true (1).
+        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        """
+        # Creates MSTraceGroup Structure
+        mstg = C.pointer(MSTraceGroup())
+        # Uses libmseed to read the file and populate the MSTraceGroup structure
+        errcode = clibmseed.ms_readtraces(
+            C.pointer(mstg), filename, C.c_int(reclen), 
+            C.c_double(timetol), C.c_double(sampratetol),
+            C.c_short(dataflag), C.c_short(skipnotdata), 
+            C.c_short(dataflag), C.c_short(verbose))
+        if errcode != 0:
+            assert 0, "\n\nError while reading Mini-SEED file: "+filename
+        return mstg
+    
+    def isRateTolerable(self, sr1, sr2):
+        """
+        Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
+        """
+        return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
+    
+    def printGapList(self, filename, time_tolerance = -1, 
+                     samprate_tolerance = -1, min_gap = None, max_gap = None):
+        """
+        Print gap/overlap list summary information for the given filename.
+        """
+        result = self.getGapList(filename, time_tolerance, samprate_tolerance, 
+                                 min_gap, max_gap)
+        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample', 
+                                               'Next Sample', 'Gap', 'Samples')
+        for r in result:
+            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]), 
+                                                    r[4].isoformat(), 
+                                                    r[5].isoformat(), 
+                                                    r[6], r[7])
+        print "Total: %d gap(s)" % len(result)
+    
+    def getGapList(self, filename, time_tolerance = -1, 
+                   samprate_tolerance = -1, min_gap = None, max_gap = None):
+        """
+        Returns gaps, overlaps and trace header information of a given file.
+        
+        Each item has a starttime and a duration value to characterize the gap.
+        The starttime is the last correct data sample. If no gaps are found it
+        will return an empty list.
+        
+        @param time_tolerance: Time tolerance while reading the traces, default 
+            to -1 (1/2 sample period).
+        @param samprate_tolerance: Sample rate tolerance while reading the 
+            traces, defaults to -1 (rate dependent).
+        @param min_gap: Omit gaps with less than this value if not None. 
+        @param max_gap: Omit gaps with greater than this value if not None.
+        @return: List of tuples in form of (network, station, location, 
+            channel, starttime, endtime, gap, samples) 
+        """
+        # read file
+        mstg = self.readTraces(str(filename), dataflag = 0, skipnotdata = 0,
+                               timetol = time_tolerance,
+                               sampratetol = samprate_tolerance)
+        gap_list = []
+        # iterate through traces
+        cur = mstg.contents.traces.contents
+        for _ in xrange(mstg.contents.numtraces-1):
+            next = cur.next.contents
+            # Skip MSTraces with 0 sample rate, usually from SOH records
+            if cur.samprate == 0:
+                cur = next
+                continue
+            # Check that sample rates match using default tolerance
+            if not self.isRateTolerable(cur.samprate, next.samprate):
+                msg = "%s Sample rate changed! %.10g -> %.10g\n"
+                print msg % (cur.samprate, next.samprate)
+            gap = (next.starttime - cur.endtime) / HPTMODULUS
+            # Check that any overlap is not larger than the trace coverage
+            if gap < 0:
+                if next.samprate:
+                    delta =  1 / float(next.samprate)
+                else:
+                    delta = 0
+                temp = (next.endtime - next.starttime) / HPTMODULUS + delta
+                if (gap * -1) > temp:
+                    gap = -1 * temp
+            # Check gap/overlap criteria
+            if min_gap and gap < min_gap:
+                cur = next
+                continue
+            if max_gap and gap > max_gap:
+                cur = next
+                continue
+            # Number of missing samples
+            nsamples = math.fabs(gap) * cur.samprate
+            if gap > 0:
+                nsamples-=1
+            else:
+                nsamples+=1
+            # Convert to python datetime objects
+            time1 = datetime.utcfromtimestamp(cur.endtime / HPTMODULUS)
+            time2 = datetime.utcfromtimestamp(next.starttime / HPTMODULUS)
+            gap_list.append((cur.network, cur.station, cur.location, 
+                             cur.channel, time1, time2, gap, nsamples))
+            cur = next
+        return gap_list

@@ -305,3 +305,7 @@ MSTraceGroup_s._fields_ = [
 ]
 
 MSTraceGroup = MSTraceGroup_s
+
+# Define the high precision time tick interval as 1/modulus seconds */
+# Default modulus of 1000000 defines tick interval as a microsecond */
+HPTMODULUS = 1000000.0
