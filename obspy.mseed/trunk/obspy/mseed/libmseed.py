@@ -461,3 +461,23 @@ class libmseed(object):
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
         return gap_list
+    def graph_createMinMaxList(self, file, width):
+        """
+        Returns a list that consists of pairs of minimum and maxiumum data
+        values.
+        
+        file  -    Mini-SEED file
+        width -    desired width in pixel of the data graph/Number of pairs of
+                   mimima and maxima.
+        """
+        minmaxlist=[]
+        #Read traces using readTraces
+        mstg = self.readTraces(file, skipnotdata = 0)
+        chain = mstg.contents.traces.contents
+        #Number of datasamples in one pixel
+        stepsize = chain.numsamples/width
+        #Loop over datasamples and append minmaxlist
+        for _i in range(width):
+            tempdatlist = chain.datasamples[_i*stepsize: (_i+1)*stepsize]
+            minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+        return minmaxlist
