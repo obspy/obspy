@@ -481,3 +481,28 @@ class libmseed(object):
             tempdatlist = chain.datasamples[_i*stepsize: (_i+1)*stepsize]
             minmaxlist.append([min(tempdatlist),max(tempdatlist)])
         return minmaxlist
+    
+    def getMinMaxList(self, file, width):
+        """
+        Returns a list that consists of minimum and maximum data values.
+        
+        @param file: Mini-SEED file string.
+        @param width: Desired width in pixel of the data graph/number of 
+            values of returned data list.
+        """
+        # Read traces
+        mstg = self.readTraces(file, skipnotdata = 0)
+        chain = mstg.contents.traces.contents
+        # Number of datasamples in one pixel
+        if width >= chain.numsamples:
+            width = chain.numsamples
+        stepsize = int(chain.numsamples/width)
+        # Loop over datasamples and append to minmaxlist
+        data=[]
+        for x in xrange(0, width):
+            temp = chain.datasamples[x*stepsize:(x+1)*stepsize]
+            if x%2:
+                data.append(min(temp))
+            else:
+                data.append(max(temp))
+        return data
