@@ -1,19 +1,30 @@
-# do this before importing pylab or pyplot
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# -*- coding: utf-8 -*-
+"""
+obspy.imaging.beachball 
 
-from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, sin, \
-    pi, cos, arctan2, power, abs, sum 
-from pylab import plot, axis, getp, setp, gca
+This is an adopted matlab script written from Oliver Boyd. You can find the 
+latest Version of his Script at his homepage.
+
+@see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+"""
+
+from matplotlib import pyplot as plt, patches, lines
+from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, \
+    concatenate, pi, cos, power, abs, sum, fliplr, isnan, arange, sin, ones, \
+    arctan2, arctan, tan
+from pylab import figure, getp, setp, gca, show
 
 
-def Beachball(fm, centerX=0, centerY=0, diam=0, ta=0, color='b'):
+EPSIL=0.0001
+d2r = pi/180
+
+
+def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None):
     """
     Draws beachball diagram of earthquake double-couple focal mechanism(s). S1, D1, and
         R1, the strike, dip and rake of one of the focal planes, can be vectors of
         multiple focal mechanisms.
-    fm - focal mechanism that is either number of mechnisms (NM) by 3 (strike, dip, and rake)
+    fm - focal mechanism that is either number of mechanisms (NM) by 3 (strike, dip, and rake)
         or NM x 6 (mxx, myy, mzz, mxy, mxz, myz - the six independent components of
         the moment tensor). The strike is of the first plane, clockwise relative to north.
         The dip is of the first plane, defined clockwise and perpedicular to strike, 
@@ -23,200 +34,113 @@ def Beachball(fm, centerX=0, centerY=0, diam=0, ta=0, color='b'):
         (normal), and 180 moves it opposite to strike (right-lateral).
     centerX - place beachball(s) at position centerX
     centerY - place beachball(s) at position centerY
-    diam - draw with this diameter.  If diam is zero, beachball
-        is drawn on stereonet.
-    ta - type of axis. If 0, this is a normal axis, if 1 it is a map axis. In case
-        of the latter, centerX and centerY are Lons and Lats, respectively.
+    diam - draw with this diameter
     color - color to use for quadrants of tension; can be a string, e.g. 'r'
         'b' or three component color vector, [R G B].
     """
     n = len(fm)
-    
+    special = False
     if n == 6:
-        (s1, d1, r1) = Mij2SDR(fm[0], fm[1], fm[2], fm[3], fm[4], fm[5])
+        (S1, D1, R1) = Mij2SDR(fm[0], fm[1], fm[2], fm[3], fm[4], fm[5])
+        # catch explosion
+        if (fm[0]+fm[1]+fm[2])/3. > 0:
+            special = True
     elif n == 3:
-        s1 = fm[0]
-        d1 = fm[1]
-        r1 = fm[2]
+        S1 = fm[0]
+        D1 = fm[1]
+        R1 = fm[2]
     else:
         raise TypeError("Wrong input value for 'fm'.")
     
-    r2d = 180/pi
-    d2r = pi/180
-    ampy = cos(mean(centerY)*d2r)
-    
-    mech = 0
-    if r1 > 180:
-        r1 = r1 - 180
-        mech = 1
-    if r1 < 0:
-        r1 = r1 + 180
-        mech = 1
+    M = 0
+    if R1 > 180:
+        R1 -= 180
+        M = 1
+    if R1 < 0:
+        R1 += 180
+        M = 1
     
     # Get azimuth and dip of second plane
-    (s2, d2, r2) = AuxPlane(s1, d1, r1)
+    (S2, D2, _R2) = AuxPlane(S1, D1, R1)
     
-    S1 = s1
-    D1 = d1
-    S2 = s2
-    D2 = d2
-    P = r1
-    CX = centerX
-    CY = centerY
-    D = diam
-    M = mech
-    
-    if M > 0:
-        P = 2
-    else:
-        P = 1
+    # Diam must be at least 100
+    if diam<100:
+        diam=100
+    # actual painting diam is only 95% due to an axis display glitch
+    D = diam*0.95
     
     if D1 >= 90:
-       D1 = 89.9999
+        D1 = 89.9999
     if D2 >= 90:
-       D2 = 89.9999
-       
-    pi_315 = pi/315.
+        D2 = 89.9999
     
-    phi = array([pi_315*i for i in xrange(316)])
-    d = 90 - D1
-    m = 90
+    phi = arange(0, pi, .01)
+    l1 = sqrt(power(90 - D1, 2)/(power(sin(phi), 2) + power(cos(phi), 2) * \
+                                 power(90 - D1, 2) / power(90, 2)))
+    l2 = sqrt(power(90 - D2, 2)/(power(sin(phi), 2) + power(cos(phi), 2) * \
+                                 power(90 - D2, 2) / power(90, 2)))
     
-    l1 = sqrt(power(d,2)/(power(sin(phi),2) + power(cos(phi),2) * power(d,2)/power(m,2)))
+    inc = 1
+    (X1, Y1) = Pol2Cart(phi+S1*d2r, l1)
     
-    d = 90 - D2
-    m = 90
-    l2 = sqrt(power(d,2)/(power(sin(phi),2) + power(cos(phi),2) * power(d,2)/power(m,2)))
+    if M == 1:
+        lo = S1 - 180
+        hi = S2
+        if lo > hi:
+            inc = -inc
+        th1 = arange(S1-180, S2, inc)
+        (Xs1, Ys1) = Pol2Cart(th1*d2r, 90*ones((1, len(th1))))
+        (X2, Y2) = Pol2Cart(phi+S2*d2r, l2)
+        th2 = arange(S2+180, S1, -inc)
+    else:
+        hi = S1 - 180
+        lo = S2 - 180
+        if lo > hi:
+            inc = -inc
+        th1 = arange(hi, lo, -inc)
+        (Xs1, Ys1) = Pol2Cart(th1*d2r, 90*ones((1, len(th1))))
+        (X2, Y2) = Pol2Cart(phi+S2*d2r, l2)
+        X2 = X2[::-1]
+        Y2 = Y2[::-1]
+        th2 = arange(S2, S1, inc)
+    (Xs2, Ys2) = Pol2Cart(th2*d2r, 90*ones((1, len(th2))))
+    X = concatenate((X1,Xs1[0],X2,Xs2[0]),1)
+    Y = concatenate((Y1,Ys1[0],Y2,Ys2[0]),1)
     
-    if D == 0:
-       Stereo(phi+S1*d2r, l1, 'k')
-#       hold on
-       Stereo(phi+S2*d2r, l2, 'k')
-#    
-#    inc = 1;
-#    [X1,Y1] = pol2cart(phi+S1*d2r,l1);
-#    if P == 1
-#       lo = S1 - 180;
-#       hi = S2;
-#       if lo > hi
-#          inc = -inc;
-#       end
-#       th1 = S1-180:inc:S2;
-#       [Xs1,Ys1] = pol2cart(th1*d2r,90*ones(1,length(th1)));
-#       [X2,Y2] = pol2cart(phi+S2*d2r,l2);
-#       th2 = S2+180:-inc:S1;
-#    else
-#       hi = S1 - 180;
-#       lo = S2 - 180;
-#       if lo > hi
-#          inc = -inc;
-#       end
-#       th1 = hi:-inc:lo;
-#       [Xs1,Ys1] = pol2cart(th1*d2r,90*ones(1,length(th1)));
-#       [X2,Y2] = pol2cart(phi+S2*d2r,l2);
-#       X2 = fliplr(X2);
-#       Y2 = fliplr(Y2);
-#       th2 = S2:inc:S1;
-#    end
-#    [Xs2,Ys2] = pol2cart(th2*d2r,90*ones(1,length(th2)));
-#    
-#    X = cat(2,X1,Xs1,X2,Xs2);
-#    Y = cat(2,Y1,Ys1,Y2,Ys2);
-#    
-#    if ta == 0
-#       fill(X,Y,color)
-#    else
-#       fillm(Y,X,color)
-#    end
-#    view(90,-90)
+    X = X * D/90
+    Y = Y * D/90
+    phid = arange(0,2*pi,.01)
+    (x,y) = Pol2Cart(phid, 90)
+    xx = x*D/90
+    yy = y*D/90
+    
+    # plot the figure
+    fig = plt.figure(figsize=(3,3), dpi=100)
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
+    fig.set_figheight(diam/100)
+    fig.set_figwidth(diam/100)
+    ax = fig.add_subplot(111, aspect='equal')
+    ax.fill(xx, yy, 'w', alpha=alpha, linewidth=linewidth)
+    if special:
+        # explosion = fill all
+        ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
+    else:
+        ax.fill(Y, X, color, alpha=alpha, linewidth=linewidth)
+    lines.Line2D(xx, yy, color='k', 
+                 linewidth=linewidth, zorder=10, alpha=alpha)
+    # hide axes + ticks
+    ax.axison = False
+    # export
+    if file:
+        fig.savefig(file, dpi=100, transparent=True)
+    else:
+        show()
 
 
-def Stereo(theta, rho, line_style):
-    """
-    """
-    fig = plt.figure()
-    cax = fig.add_subplot(111, aspect='equal')
-    # make a radial grid
-    maxrho = max(abs(rho))
-    hhh=cax.plot([-maxrho,-maxrho,maxrho,maxrho],[-maxrho,maxrho,maxrho,-maxrho])
-    setp(gca(),'xlim',[-90, 90])
-    setp(gca(),'ylim',[-90, 90])
-    v = [-90,90,-90,90]
-    #ticks = sum([v for v in getp(cax, 'ytick') if v>=0])
-    del(hhh)
-    
-    # check radial limits and ticks
-    rmin = 0
-    rmax = v[3]
-    #rticks = max(ticks-1, 2)
-#    %    if rticks > 5   % see if we can reduce the number
-#    %        if rem(rticks,2) == 0
-#    %            rticks = rticks/2;
-#    %        elseif rem(rticks,3) == 0
-#    %            rticks = rticks/3;
-#    %        end
-#    %    end
-    rticks = 5
-#    
-    # define a circle
-    step = pi/50.0
-    th = array([i*step for i in xrange(50)])
-    xunit = cos(th)
-    yunit = sin(th)
-    # now really force points on x/y axes to lie on them exactly
-    step = (len(th)-1)/4
-    inds = array([i*step for i in xrange(len(th))])
-    xunit[inds[1:1:3]] = zeros((2,1))
-    yunit[inds[0:1:4]] = zeros((3,1))
-    # plot background if necessary
-    cax.Patch('xdata',xunit*rmax,'ydata',yunit*rmax, 
-          edgecolor=[0,0,0],facecolor='b');
-    # draw radial circles
-    c82 = cos(82*pi/180)
-    s82 = sin(82*pi/180)
-    rinc = (rmax-rmin)/rticks
-#        for i=(rmin+rinc):rinc:rmax
-#            hhh = plot(xunit*i,yunit*i,ls,'color',tc,'linewidth',1,...
-#                       'handlevisibility','off');
-#        end
-#        set(hhh,'linestyle','-') % Make outer circle solid
-#    
-#    % plot spokes
-#        th = (1:6)*2*pi/12;
-#        cst = cos(th); snt = sin(th);
-#    
-    # set view to 2-D
-    #view(2)
-    # set axis limits
-    #axis(rmax*[-1, 1, -1.15, 1.15])
-#    end
-#    
-#    % Reset defaults.
-#    set(cax, 'DefaultTextFontAngle', fAngle , ...
-#        'DefaultTextFontName',   fName , ...
-#        'DefaultTextFontSize',   fSize, ...
-#        'DefaultTextFontWeight', fWeight, ...
-#        'DefaultTextUnits',fUnits );
-#    
-#    % transform data to Cartesian coordinates.
-#    xx = rho.*cos(theta);
-#    yy = rho.*sin(theta);
-#    
-#    % plot data on top of grid
-#    if strcmp(line_style,'auto')
-#        q = plot(xx,yy);
-#    else
-#        q = plot(xx,yy,line_style);
-#    end
-#    if nargout > 0
-#        hpol = q;
-#    end
-#    if ~hold_state
-#        set(gca,'dataaspectratio',[1 1 1]), axis off; set(cax,'NextPlot',next);
-#    end
-#    set(get(gca,'xlabel'),'visible','on')
-#    set(get(gca,'ylabel'),'visible','on')
-    fig.savefig('test.png')
+def Pol2Cart(th, r):
+    x = r*cos(th)
+    y = r*sin(th)
+    return (x, y)
 
 
 def StrikeDip(n, e, u):
@@ -241,6 +165,7 @@ def StrikeDip(n, e, u):
     x = sqrt(power(n, 2) + power(e, 2))
     dip = arctan2(x, u)*r2d
     return (strike, dip)
+
 
 def AuxPlane(s1, d1, r1):
     """
@@ -279,7 +204,7 @@ def AuxPlane(s1, d1, r1):
 
 def Mij2SDR(mxx, myy, mzz, mxy, mxz, myz):
     """
-    @param mij: - siz independent components of the moment tensor
+    @param mij: - six independent components of the moment tensor
     @return (strike, dip, rake): 
         strike - strike of first focal plane (degrees)
         dip - dip of first focal plane (degrees)
@@ -330,7 +255,7 @@ def TDL(AN, BN):
         AXN=fabs(XN)
         if AXN > 1.0:
             AXN=1.0
-        FT=asin(AXN)*CON
+        FT=arcsin(AXN)*CON
         ST=-XN
         CT=YN
         if ST >= 0. and CT < 0:
@@ -339,7 +264,7 @@ def TDL(AN, BN):
             FT=180.+FT
         if ST < 0. and CT > 0:
             FT=360.-FT
-        FL=asin(abs(ZE))*CON
+        FL=arcsin(abs(ZE))*CON
         SL=-ZE
         if fabs(XN) < AAA:
             CL=XE/YN
