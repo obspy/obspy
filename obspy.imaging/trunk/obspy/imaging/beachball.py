@@ -13,13 +13,14 @@ from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, \
     concatenate, pi, cos, power, abs, sum, fliplr, isnan, arange, sin, ones, \
     arctan2, arctan, tan
 from pylab import figure, getp, setp, gca, show
+import StringIO
 
 
-EPSIL=0.0001
 d2r = pi/180
 
 
-def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None):
+def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None, 
+              format=None):
     """
     Draws beachball diagram of earthquake double-couple focal mechanism(s). S1, D1, and
         R1, the strike, dip and rake of one of the focal planes, can be vectors of
@@ -132,7 +133,15 @@ def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None):
     ax.axison = False
     # export
     if file:
-        fig.savefig(file, dpi=100, transparent=True)
+        if format:
+            fig.savefig(file, dpi=100, transparent=True, format=format)
+        else:
+            fig.savefig(file, dpi=100, transparent=True)
+    elif format and not file:
+        imgdata = StringIO.StringIO()
+        fig.savefig(imgdata, format=format, dpi=100, transparent=True)
+        imgdata.seek(0)
+        return imgdata.read()
     else:
         show()
 

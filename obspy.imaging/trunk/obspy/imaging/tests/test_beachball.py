@@ -23,6 +23,7 @@ class BeachballTestCase(unittest.TestCase):
     
     def test_Beachball(self):
         """
+        Creates beachball examples in tests/ouput directory.
         """
         # Moment Tensor
         # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
@@ -68,8 +69,27 @@ class BeachballTestCase(unittest.TestCase):
         fm = [1,-1,0,0,0,-1]
         Beachball(fm, file=os.path.join(self.path, 'lars-not-working.png'))
     
+    def test_BeachBallOutputFormats(self):
+        """
+        Tests various output formats.
+        """
+        fm = [115, 35, 50]
+        # PDF
+        data = Beachball(fm, format='pdf')
+        self.assertEquals(data[0:4], "%PDF")
+        # PS
+        data = Beachball(fm, format='ps')
+        self.assertEquals(data[0:4], "%!PS")
+        # PNG
+        data = Beachball(fm, format='png')
+        self.assertEquals(data[1:4], "PNG")
+        # SVG
+        data = Beachball(fm, format='svg')
+        self.assertEquals(data[0:5], "<?xml")
+    
     def test_StrikeDip(self):
         """
+        Test StrikeDip function - all values are taken from MatLab.
         """
         sl1 = -0.048901208623019
         sl2 = 0.178067035725425
@@ -80,6 +100,7 @@ class BeachballTestCase(unittest.TestCase):
     
     def test_AuxPlane(self):
         """
+        Test AuxPlane function - all values are taken from MatLab.
         """
         # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         s1 = 132.18005257215460
@@ -100,6 +121,7 @@ class BeachballTestCase(unittest.TestCase):
     
     def test_Mij2SDR(self):
         """
+        Test Mij2SDR function - all values are taken from MatLab.
         """
         [s1, d1, r1] = Mij2SDR(0.01, -0.89, -0.02, 1.78, -1.55, 0.47)
         self.assertAlmostEqual(s1, 132.18005257215460)
@@ -108,6 +130,7 @@ class BeachballTestCase(unittest.TestCase):
     
     def test_TDL(self):
         """
+        Test TDL function - all values are taken from MatLab.
         """
         AN = [0.737298200871146,-0.668073596186761,-0.100344571703004]
         BN = [-0.178067035261159,-0.048901208638715,-0.982802524796805]
