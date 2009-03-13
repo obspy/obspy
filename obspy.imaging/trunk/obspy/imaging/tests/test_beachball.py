@@ -4,7 +4,7 @@ The obspy.imaging.beachball test suite.
 """
 
 from obspy.imaging.beachball import Mij2SDR, Beachball, AuxPlane, StrikeDip, \
-    TDL
+    TDL, Mij2Axes
 import inspect
 import os
 import unittest
@@ -25,49 +25,50 @@ class BeachballTestCase(unittest.TestCase):
         """
         Creates beachball examples in tests/ouput directory.
         """
-        # Moment Tensor
         # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
-        fm = [0.01, -0.89, -0.02, 1.78, -1.55, 0.47]
-        Beachball(fm, file=os.path.join(self.path, 'sumatra.png'))
+        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
+        Beachball(mt, file=os.path.join(self.path, 'sumatra-fm.png'))
+        np1 = [274, 13, 55]
+        Beachball(np1, file=os.path.join(self.path, 'sumatra-np1.png'))
+        np2 = [130, 79, 98]
+        Beachball(np2, file=os.path.join(self.path, 'sumatra-np2.png'))
         
-        # Plane: [Strike, Dip, Rake] 
         # @see: http://serc.carleton.edu/files/NAGTWorkshops/structure04/Focal_mechanism_primer.pdf
-        fm = [115, 35, 50]
-        Beachball(fm, file=os.path.join(self.path, 'primer.png'))
+        np = [115, 35, 50]
+        Beachball(np, file=os.path.join(self.path, 'primer.png'))
         
         # Explosion
-        fm = [1, 1, 1, 0, 0, 0]
-        Beachball(fm, file=os.path.join(self.path, 'explosion.png'))
+        mt = [1, 1, 1, 0, 0, 0]
+        Beachball(mt, file=os.path.join(self.path, 'explosion.png'))
         # Implosion
-        fm = [-1, -1, -1, 0, 0, 0]
-        Beachball(fm, file=os.path.join(self.path, 'implosion.png'))
+        mt = [-1, -1, -1, 0, 0, 0]
+        Beachball(mt, file=os.path.join(self.path, 'implosion.png'))
         # Double Couple
-        fm = [-1, -1, 0, 0, 0, 0]
-        Beachball(fm, file=os.path.join(self.path, 'double-couple.png'))
+        mt = [-1, -1, 0, 0, 0, 0]
+        Beachball(mt, file=os.path.join(self.path, 'double-couple.png'))
         # CLVD - Compensate Linear Vector Dipole
         # XXX: not working
-        fm = [1, -2, 1, 0, 0, 0]
-        Beachball(fm, file=os.path.join(self.path, 'clvd-not-working.png'))
+        mt = [1, -2, 1, 0, 0, 0]
+        Beachball(mt, file=os.path.join(self.path, 'clvd-not-working.png'))
         
-        # Plane: [Strike, Dip, Rake] 
         # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/19950128062621/index.html
         np1 = [264.98, 45.00, -159.99]
         Beachball(np1, file=os.path.join(self.path, '19950128062621-np1.png'))
         np2 = [160.55, 76.00, -46.78]
         Beachball(np2, file=os.path.join(self.path, '19950128062621-np2.png'))
         
-        # Moment Tensor + Plane
         # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/20090102141713/index.html
-        fm = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
-        Beachball(fm, file=os.path.join(self.path, '20090102141713-mt.png'))
+        mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
+        Beachball(mt, file=os.path.join(self.path, '20090102141713-mt.png'))
         np1 = [235, 80, 35]
         Beachball(np1, file=os.path.join(self.path, '20090102141713-np1.png'))
         np2 = [138, 56, 168]
         Beachball(np2, file=os.path.join(self.path, '20090102141713-np2.png'))
         
+        # Lars
         # XXX: not working
-        fm = [1,-1,0,0,0,-1]
-        Beachball(fm, file=os.path.join(self.path, 'lars-not-working.png'))
+        mt = [1, -1, 0, 0, 0, -1]
+        Beachball(mt, file=os.path.join(self.path, 'lars-not-working.png'))
     
     def test_BeachBallOutputFormats(self):
         """
@@ -123,10 +124,26 @@ class BeachballTestCase(unittest.TestCase):
         """
         Test Mij2SDR function - all values are taken from MatLab.
         """
-        [s1, d1, r1] = Mij2SDR(0.01, -0.89, -0.02, 1.78, -1.55, 0.47)
-        self.assertAlmostEqual(s1, 132.18005257215460)
-        self.assertAlmostEqual(d1, 84.240987194376590)
-        self.assertAlmostEqual(r1, 98.963372641038790)
+        (s1, d1, r1) = Mij2SDR(0.91, -0.89, -0.02, 1.78, -1.55, 0.47)
+        self.assertAlmostEqual(s1, 129.86262672080011)
+        self.assertAlmostEqual(d1, 79.022700906654734)
+        self.assertAlmostEqual(r1, 97.769255185515192)
+    
+    def test_Mij2Axes(self):
+        """
+        Test Mij2Axes function.
+        """
+        # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        (T, N, P) = Mij2Axes(0.91, -0.89, -0.02, 1.78, -1.55, 0.47)
+        self.assertAlmostEqual(T.val, 2.52461359)
+        self.assertAlmostEqual(T.dip, 55.33018576)
+        self.assertAlmostEqual(T.strike, 49.53656116)
+        self.assertAlmostEqual(N.val, 0.08745048)
+        self.assertAlmostEqual(N.dip, 7.62624529)
+        self.assertAlmostEqual(N.strike, 308.37440488)
+        self.assertAlmostEqual(P.val, -2.61206406)
+        self.assertAlmostEqual(P.dip, 33.5833323)
+        self.assertAlmostEqual(P.strike, 213.273886)
     
     def test_TDL(self):
         """
