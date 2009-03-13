@@ -4,12 +4,12 @@ package obspy.imaging
 Copyright
 ---------
 
- * Robert Barsch (barsch@lmu.de)
+ * Robert Barsch (barsch@geophysik.uni-muenchen.de)
 
 Overview
 --------
 
-This package provides tools for displaying features used in seismology.
+Provides tools for displaying features used in seismology.
 
 Dependencies
 ------------
