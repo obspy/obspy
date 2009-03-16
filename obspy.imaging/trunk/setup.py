@@ -26,14 +26,21 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.3'
+version = '0.0.4'
 
 
 setup(
     name='obspy.imaging',
     version=version,
     description="Provides tools for displaying features used in seismology.",
-    long_description="""""",
+    long_description="""
+    obspy.imaging
+    =============
+    Provides tools for displaying features used in seismology.
+    
+    Latest developer version:
+    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev
+    """,
     classifiers=[],
     keywords='obspy imaging beachball focal mechanism',
     author='Robert Barsch',

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from obspy.imaging import beachball
 from obspy.imaging.tests import test_beachball
 import unittest
+import doctest
 
 
 def suite():
@@ -11,4 +13,5 @@ def suite():
 
 
 if __name__ == '__main__':
+    doctest.testmod(beachball)
     unittest.main(defaultTest='suite')

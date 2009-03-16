@@ -10,9 +10,10 @@ latest version of his Script at his home page:
 from matplotlib import pyplot as plt, patches, lines
 from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, \
     concatenate, pi, cos, power, abs, sum, fliplr, isnan, arange, sin, ones, \
-    arctan2, arctan, tan
+    arctan2, arctan, tan, ndarray
 from pylab import figure, getp, setp, gca, show
 import StringIO
+import doctest
 
 
 D2R = pi/180
@@ -20,10 +21,10 @@ R2D = 180/pi
 EPSILON = 0.00001
 
 
-def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None, 
+def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None, 
               format=None):
     """
-    Draws beachball diagram of earthquake double-couple focal mechanism(s). 
+    Draws beachball diagram of an earthquake focal mechanism. 
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
@@ -38,23 +39,373 @@ def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None,
         hanging wall up-dip (thrust), 0 moves it in the strike direction 
         (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
         opposite to strike (right-lateral). 
-    @param diam: Draw with this diameter.
+    @param size: Draw with this diameter.
     @param color: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
     """
-    n = len(fm)
-    special = False
-    if n == 6:
-        (S1, D1, R1) = Mij2SDR(fm[0], fm[1], fm[2], fm[3], fm[4], fm[5])
-        # catch explosion
-        if (fm[0]+fm[1]+fm[2])/3. > EPSILON:
-            special = True
-    elif n == 3:
-        S1 = fm[0]
-        D1 = fm[1]
-        R1 = fm[2]
+    mt = None
+    np1 = None
+    if isinstance(fm, MomentTensor):
+        mt = fm
+        np1 = MT2Plane(mt)
+    elif isinstance(fm, NodalPlane):
+        np1 = fm
+    elif len(fm) == 6:
+        mt = MomentTensor(fm[0], fm[1], fm[2], fm[3], fm[4], fm[5], 0)
+        np1 = MT2Plane(mt)
+    elif len(fm) == 3:
+        np1 = NodalPlane(fm[0], fm[1], fm[2])
     else:
         raise TypeError("Wrong input value for 'fm'.")
+    
+    # size must be at least 100
+    if size<100:
+        size=100
+    # actual painting diam is only 95% due to an axis display glitch
+    plot_size = size*0.95
+    
+    # plot the figure
+    fig = plt.figure(figsize=(3,3), dpi=100)
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
+    fig.set_figheight(size/100)
+    fig.set_figwidth(size/100)
+    ax = fig.add_subplot(111, aspect='equal')
+    
+    # hide axes + ticks
+    ax.axison = False
+    
+    # plot
+    if mt:
+        (T, N, P) = MT2Axes(mt)
+        if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
+            plotDC(ax, np1, plot_size, linewidth, color, alpha)
+        else:
+            plotMT(ax, T, N, P, plot_size, color, outline=True, 
+                   plot_zerotrace=True, alpha=alpha, linewidth=linewidth)
+    else:
+        plotDC(ax, np1, plot_size, linewidth, color, alpha)
+    
+    ax.autoscale_view(tight=False, scalex=True, scaley=True)
+    # export
+    if file:
+        if format:
+            fig.savefig(file, dpi=100, transparent=True, format=format)
+        else:
+            fig.savefig(file, dpi=100, transparent=True)
+    elif format and not file:
+        imgdata = StringIO.StringIO()
+        fig.savefig(imgdata, format=format, dpi=100, transparent=True)
+        imgdata.seek(0)
+        return imgdata.read()
+    else:
+        show()
+
+
+def plotMT(ax, T, N, P, size=200, color='b', outline=True, 
+           plot_zerotrace=True, alpha=1.0, linewidth=2, x0=0, y0=0):
+    """
+    """
+    b=1
+    big_iso = 0
+    j = 1
+    j2 = 0
+    j3 = 0
+    n=0
+    azi = zeros((3, 2))
+    x = zeros(400)
+    y = zeros(400)
+    x2 = zeros(400)
+    y2 = zeros(400)
+    x3 = zeros(400)
+    y3 = zeros(400)
+    xp1 = zeros(800)
+    yp1 = zeros(800)
+    xp2 = zeros(400)
+    yp2 = zeros(400)
+    
+    a = zeros(3)
+    p = zeros(3)
+    v = zeros(3)
+    a[0] = T.strike
+    a[1] = N.strike
+    a[2] = P.strike
+    p[0] = T.dip
+    p[1] = N.dip
+    p[2] = P.dip
+    v[0] = T.val
+    v[1] = N.val
+    v[2] = P.val
+    
+    vi = (v[0] + v[1] + v[2]) / 3.
+    for i in range(0, 3):
+        v[i] = v[i] - vi
+    
+    radius_size = size * 0.5
+    
+    if fabs(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]) < EPSILON:
+        # pure implosion-explosion
+        if vi > 0.:
+            cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+                                 alpha=alpha, linewidth=linewidth, ec='k',
+                                 fc=color)
+            ax.add_patch(cir)
+        if vi < 0.:
+            cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+                                 alpha=alpha, linewidth=linewidth, ec='k',
+                                 fc='w')
+            ax.add_patch(cir)
+        return
+    
+    if fabs(v[0]) >= fabs(v[2]):
+        d = 0
+        m = 2
+    else:
+        d = 2
+        m = 0
+    
+    if (plot_zerotrace):
+        vi = 0.
+    
+    f = - v[1] / float(v[d])
+    iso = vi / float(v[d])
+    
+    # Cliff Frohlich, Seismological Research letters,
+    # Vol 7, Number 1, January-February, 1996
+    # Unless the isotropic parameter lies in the range
+    # between -1 and 1 - f there will be no nodes whatsoever
+    
+    if iso < -1:
+        cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+                             alpha=alpha, linewidth=linewidth, ec='k',
+                             fc='w')
+        ax.add_patch(cir)
+        return
+    elif iso > 1-f:
+        cir = patches.Circle((x0, y0), radius=radius_size, fill=False, 
+                             alpha=alpha, linewidth=linewidth, ec='k',
+                             fc=color)
+        ax.add_patch(cir)
+        return
+    
+    spd = sin(p[d]*D2R)
+    cpd = cos(p[d]*D2R)
+    spb = sin(p[b]*D2R)
+    cpb = cos(p[b]*D2R)
+    spm = sin(p[m]*D2R)
+    cpm = cos(p[m]*D2R)
+    sad = sin(a[d]*D2R)
+    cad = cos(a[d]*D2R)
+    sab = sin(a[b]*D2R)
+    cab = cos(a[b]*D2R)
+    sam = sin(a[m]*D2R)
+    cam = cos(a[m]*D2R)
+    
+    for i in range(0, 360):
+        fir = i * D2R
+        s2alphan = (2. + 2. * iso) / float(3. + (1. - 2. * f) * cos(2. * fir))
+        if s2alphan > 1.:
+            big_iso+=1
+        else:
+            alphan = arcsin(sqrt(s2alphan))
+            sfi = sin(fir)
+            cfi = cos(fir)
+            san = sin(alphan)
+            can = cos(alphan)
+            
+            xz = can * spd + san * sfi * spb + san * cfi * spm
+            xn = can * cpd * cad + san * sfi * cpb * cab + san * cfi * cpm * cam
+            xe = can * cpd * sad + san * sfi * cpb * sab + san * cfi * cpm * sam
+            
+            if fabs(xn) < EPSILON and fabs(xe) < EPSILON:
+                takeoff = 0.
+                az = 0.
+            else:
+                az = arctan2(xe, xn)
+                if az < 0.:
+                    az += pi * 2.
+                takeoff = arccos(xz / float(sqrt(xz * xz + xn * xn + xe * xe)))
+            if takeoff > pi / 2.:
+                takeoff = pi - takeoff
+                az += pi
+                if az > pi * 2.:
+                    az -= pi * 2.
+            r = sqrt(2) * sin(takeoff / 2.)
+            si = sin(az)
+            co = cos(az)
+            if i == 0:
+                azi[i][0] = az
+                x[i] = x0 + radius_size * r * si
+                y[i] = y0 + radius_size * r * co
+                azp = az
+            else:
+                if fabs(fabs(az - azp) - pi) < D2R * 10.:
+                        azi[n][1] = azp
+                        n+=1
+                        azi[n][0] = az
+                if fabs(fabs(az -azp) - pi * 2.) < D2R * 2.:
+                        if azp < az:
+                            azi[n][0] += pi * 2.
+                        else:
+                            azi[n][0] -= pi * 2.
+                if n==0:
+                    x[j] = x0 + radius_size * r * si
+                    y[j] = y0 + radius_size * r * co
+                    j+=1
+                elif n==1:
+                    x2[j2] = x0 + radius_size * r * si
+                    y2[j2] = y0 + radius_size * r * co
+                    j2+=1
+                elif n==2:
+                    x3[j3] = x0 + radius_size * r * si
+                    y3[j3] = y0 + radius_size * r * co
+                    j3+=1
+                azp = az
+    azi[n][1] = az
+    
+    if v[1] < 0.:
+        rgb1 = color
+        rgb2 = 'w'
+    else:
+        rgb1 = 'w'
+        rgb2 = color
+    
+    cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+                         alpha=alpha, linewidth=linewidth, ec='k',
+                         fc=rgb2)
+    ax.add_patch(cir)
+    if n==0:
+        ax.fill(x[0:360], y[0:360], rgb1, alpha=alpha, linewidth=linewidth)
+        return
+    elif n==1:
+        for i in range(0, j):
+            xp1[i] = x[i]
+            yp1[i] = y[i]
+#        if azi[0][0] - azi[0][1] > pi:
+#            azi[0][0] -= pi * 2.;
+#        elif azi[0][1] - azi[0][0] > pi:
+#            azi[0][0] += pi * 2.
+        if azi[0][0] < azi[0][1]:
+            az = azi[0][1] - D2R
+            while az > azi[0][0]:
+                si = sin(az)
+                co = cos(az)
+                xp1[i] = x0 + radius_size * si
+                i+=1
+                yp1[i] = y0 + radius_size * co
+                az -= D2R
+        else:
+            az = azi[0][1] + D2R
+            while az < azi[0][0]:
+                si = sin(az)
+                co = cos(az)
+                xp1[i] = x0 + radius_size * si
+                i+=1
+                yp1[i] = y0 + radius_size * co
+                az += D2R
+        ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        for i in range(0, j2):
+            xp2[i] = x2[i]
+            yp2[i] = y2[i]
+#        if azi[1][0] - azi[1][1] > pi:
+#            azi[1][0] -= pi * 2.
+#        elif azi[1][1] - azi[1][0] > pi:
+#            azi[1][0] += pi * 2.
+        if azi[1][0] < azi[1][1]:
+            az = azi[1][1] - D2R
+            while az > azi[1][0]:
+                si = sin(az)
+                co = cos(az)
+                xp2[i] = x0 + radius_size * si;
+                i+=1
+                yp2[i] = y0 + radius_size * co;
+                az -= D2R
+        else:
+            az = azi[1][1] + D2R
+            while az < azi[1][0]:
+                si = sin(az)
+                co = cos(az)
+                xp2[i] = x0 + radius_size * si
+                i+=1
+                yp2[i] = y0 + radius_size * co
+                az += D2R
+        ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        return
+    elif n==2:
+        for i in range(0, j3):
+            xp1[i] = x3[i]
+            yp1[i] = y3[i]
+        for ii in range(0, j):
+            xp1[i] = x[ii]
+            i+=1
+            yp1[i] = y[ii]
+        if big_iso:
+            ii=j2-1
+            while ii>=0:
+                xp1[i] = x2[ii]
+                i+=1
+                yp1[i] = y2[ii]
+                ii-=1
+            ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+            return
+        
+#        if azi[2][0] - azi[0][1] > pi:
+#            azi[2][0] -= pi * 2.
+#        elif azi[0][1] - azi[2][0] < pi:
+#            azi[2][0] += pi * 2.
+        if azi[2][0] < azi[0][1]:
+            az = azi[0][1] - D2R
+            while az > azi[2][0]:
+                si = sin(az)
+                co = cos(az)
+                xp1[i] = x0 + radius_size * si
+                i+=1
+                yp1[i] = y0 + radius_size * co
+                az -= D2R
+        else:
+            az = azi[0][1] + D2R
+            while az < azi[2][0]:
+                si = sin(az)
+                co = cos(az)
+                xp1[i] = x0+ radius_size * si
+                i+=1
+                yp1[i] = y0+ radius_size * co
+                az += D2R
+        ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        
+        for i in range(0, j2):
+            xp2[i] = x2[i]
+            yp2[i] = y2[i]
+#        if azi[1][0] - azi[1][1] > pi:
+#            azi[1][0] -= pi * 2.
+#        elif azi[1][1] - azi[1][0] > pi:
+#            azi[1][0] += pi * 2.
+        if azi[1][0] < azi[1][1]:
+            az = azi[1][1] - D2R
+            while az > azi[1][0]:
+                si = sin(az)
+                co = cos(az)
+                xp2[i] = x0+ radius_size * si
+                i+=1
+                yp2[i] = y0+ radius_size * co
+                az -= D2R
+        else:
+            az = azi[1][1] + D2R
+            while az < azi[1][0]:
+                si = sin(az)
+                co = cos(az)
+                xp2[i] = x0 + radius_size * si
+                i+=1
+                yp2[i] = y0 + radius_size * co
+                az += D2R
+        ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+
+
+def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
+    """
+    """
+    S1 = np1.strike
+    D1 = np1.dip
+    R1 = np1.rake
     
     M = 0
     if R1 > 180:
@@ -67,11 +418,7 @@ def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None,
     # Get azimuth and dip of second plane
     (S2, D2, _R2) = AuxPlane(S1, D1, R1)
     
-    # Diam must be at least 100
-    if diam<100:
-        diam=100
-    # actual painting diam is only 95% due to an axis display glitch
-    D = diam*0.95
+    D = size/2
     
     if D1 >= 90:
         D1 = 89.9999
@@ -117,36 +464,11 @@ def Beachball(fm, diam=200, linewidth=2, color='b', alpha=1.0, file=None,
     (x,y) = Pol2Cart(phid, 90)
     xx = x*D/90
     yy = y*D/90
-    
-    # plot the figure
-    fig = plt.figure(figsize=(3,3), dpi=100)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    fig.set_figheight(diam/100)
-    fig.set_figwidth(diam/100)
-    ax = fig.add_subplot(111, aspect='equal')
-    ax.fill(xx, yy, 'w', alpha=alpha, linewidth=linewidth)
-    if special:
-        # explosion = fill all
-        ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
-    else:
-        ax.fill(Y, X, color, alpha=alpha, linewidth=linewidth)
-    lines.Line2D(xx, yy, color='k', 
-                 linewidth=linewidth, zorder=10, alpha=alpha)
-    # hide axes + ticks
-    ax.axison = False
-    # export
-    if file:
-        if format:
-            fig.savefig(file, dpi=100, transparent=True, format=format)
-        else:
-            fig.savefig(file, dpi=100, transparent=True)
-    elif format and not file:
-        imgdata = StringIO.StringIO()
-        fig.savefig(imgdata, format=format, dpi=100, transparent=True)
-        imgdata.seek(0)
-        return imgdata.read()
-    else:
-        show()
+    ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
+    ax.fill(Y, X, 'w', alpha=alpha, linewidth=linewidth)
+    l = lines.Line2D(xx, yy, color='k', 
+                     linewidth=linewidth, zorder=10, alpha=alpha)
+    ax.add_line(l)
 
 
 def Pol2Cart(th, r):
@@ -214,20 +536,17 @@ def AuxPlane(s1, d1, r1):
     return (strike, dip, rake)
 
 
-def Mij2SDR(mxx, myy, mzz, mxy, mxz, myz):
+def MT2Plane(mt):
     """
-    @param mij: - six independent components of the moment tensor
-    @return (strike, dip, rake): 
-        strike - strike of first focal plane (degrees)
-        dip - dip of first focal plane (degrees)
-        rake - rake of first focal plane (degrees)
+    Calculates a nodal plane of a given moment tensor.
+     
+    @param mt: L{MomentTensor}
+    @return: L{NodalPlane}
     
-    Adapted from code from Chen Ji, Gaven Hayes and Oliver Boyd.
+    Adapted from bb.m written by Oliver S. Boyd.
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    A = array([[mxx, mxy, mxz], 
-               [mxy, myy, myz], 
-               [mxz, myz, mzz]])
-    (d, v) = linalg.eig(A)
+    (d, v) = linalg.eig(mt.mt)
     D = array([d[1], d[0], d[2]])
     V = array([[v[1, 1], -v[1, 0], -v[1, 2]],
                [v[2, 1], -v[2, 0], -v[2, 2]],
@@ -247,10 +566,7 @@ def Mij2SDR(mxx, myy, mzz, mxy, mxz, myz):
         AN1 = -AN
         AE1 = -AE
     (ft, fd, fl) = TDL(AN1, AE1)
-    strike = 360 - ft
-    dip = fd
-    rake = 180 - fl
-    return (strike, dip, rake)
+    return NodalPlane(360 - ft, fd, 180 - fl)
 
 
 def TDL(AN, BN):
@@ -329,25 +645,17 @@ def TDL(AN, BN):
     return (FT, FD, FL)
 
 
-class Axis(object):
+def MT2Axes(mt):
     """
-    A principal axis object.
+    Calculates the principal axes of a given moment tensor.
+     
+    @param mt: L{MomentTensor}
+    @return: tuple of L{PrincipalAxis} T, N and P
+    
+    Adapted from GMT_momten2axe / utilmeca.c / Generic Mapping Tools (GMT).
+    @see: http://gmt.soest.hawaii.edu
     """
-    def __init__(self, val=0, strike=0, dip=0):
-        self.val = val
-        self.strike = strike
-        self.dip = dip
-
-
-def Mij2Axes(mxx, myy, mzz, mxy, mxz, myz):
-    """
-    Returns the principal axes (T, N, P) of a the given six independent 
-    components of a moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
-    """
-    A = array([[mxx, mxy, mxz], 
-               [mxy, myy, myz], 
-               [mxz, myz, mzz]])
-    (D, V) = linalg.eigh(A)
+    (D, V) = linalg.eigh(mt.mt)
     pl = arcsin(-V[0])
     az = arctan2(V[2], -V[1])
     for i in range(0, 3):
@@ -361,7 +669,179 @@ def Mij2Axes(mxx, myy, mzz, mxy, mxz, myz):
     pl *= R2D
     az *= R2D
     
-    T = Axis(D[2], az[2], pl[2])
-    N = Axis(D[1], az[1], pl[1])
-    P = Axis(D[0], az[0], pl[0])
+    T = PrincipalAxis(D[2], az[2], pl[2])
+    N = PrincipalAxis(D[1], az[1], pl[1])
+    P = PrincipalAxis(D[0], az[0], pl[0])
     return (T, N, P)
+
+
+def Axis2DC(T, P):
+    """
+    Calculate double couple from principal axes.
+     
+    @param T: L{PrincipalAxis}
+    @param P: L{PrincipalAxis}
+    @return: tuple of L{NodalPlane} NP1 and NP2
+    
+    Adapted from axe2dc / utilmeca.c / Generic Mapping Tools (GMT) written by
+    Genevieve Patau.
+    @see: http://gmt.soest.hawaii.edu
+    """
+    raise NotImplementedError
+#     double pp, dp, pt, dt;
+#     double p1, d1, p2, d2;
+#     double PII = M_PI * 2.;
+#     double cdp, sdp, cdt, sdt;
+#     double cpt, spt, cpp, spp;
+#     double amz, amy, amx;
+#     double im;
+#
+#     pp = P.str * D2R; dp = P.dip * D2R;
+#     pt = T.str * D2R; dt = T.dip * D2R;
+#
+#     sincos (dp, &sdp, &cdp);
+#     sincos (dt, &sdt, &cdt);
+#     sincos (pt, &spt, &cpt);
+#     sincos (pp, &spp, &cpp);
+#
+#     cpt *= cdt; spt *= cdt;
+#     cpp *= cdp; spp *= cdp;
+#
+#     amz = sdt + sdp; amx = spt + spp; amy = cpt + cpp;
+#     d1 = atan2(sqrt(amx*amx + amy*amy), amz);
+#     p1 = atan2(amy, -amx);
+#     if (d1 > M_PI_2) {
+#          d1 = M_PI - d1;
+#          p1 += M_PI;
+#          if (p1 > PII) p1 -= PII;
+#     }
+#     if (p1 < 0.) p1 += PII;
+#
+#     amz = sdt - sdp; amx = spt - spp; amy = cpt - cpp;
+#     d2 = atan2(sqrt(amx*amx + amy*amy), amz);
+#     p2 = atan2(amy, -amx);
+#     if (d2 > M_PI_2) {
+#          d2 = M_PI - d2;
+#          p2 += M_PI;
+#          if (p2 > PII) p2 -= PII;
+#     }
+#     if (p2 < 0.) p2 += PII;
+#
+#     NP1->dip = d1 / D2R; NP1->str = p1 / D2R;
+#     NP2->dip = d2 / D2R; NP2->str = p2 / D2R;
+#
+#     im = 1;
+#     if (dp > dt) im = -1;
+#     NP1->rake = computed_rake2(NP2->str,NP2->dip,NP1->str,NP1->dip,im);
+#     NP2->rake = computed_rake2(NP1->str,NP1->dip,NP2->str,NP2->dip,im);
+
+
+class PrincipalAxis(object):
+    """
+    A principal axis.
+    
+    Strike and dip values are in degrees.
+    
+    Usage:
+      >>> a = PrincipalAxis(1.3, 20, 50)
+      >>> a.dip
+      50
+      >>> a.strike
+      20
+      >>> a.val
+      1.3
+    """
+    def __init__(self, val=0, strike=0, dip=0):
+        self.val = val
+        self.strike = strike
+        self.dip = dip
+
+
+class NodalPlane(object):
+    """
+    A nodal plane.
+    
+    All values are in degrees.
+    
+    Usage:
+      >>> a = NodalPlane(13, 20, 50)
+      >>> a.strike
+      13
+      >>> a.dip
+      20
+      >>> a.rake
+      50
+    """
+    def __init__(self, strike=0, dip=0, rake=0):
+        self.strike = strike
+        self.dip = dip
+        self.rake = rake
+
+
+class MomentTensor(object):
+    """
+    A moment tensor.
+    
+    Usage:
+      >>> a = MomentTensor(1, 1, 0, 0, 0, -1, 26)
+      >>> b = MomentTensor(array([1, 1, 0, 0, 0, -1]), 26)
+      >>> c = MomentTensor(array([[1, 0, 0], [0, 1, -1], [0, -1, 0]]), 26)
+      >>> a.mt
+      array([[ 1,  0,  0],
+             [ 0,  1, -1],
+             [ 0, -1,  0]])
+      >>> b.yz
+      -1
+      >>> a.expo
+      26
+    """
+    def __init__(self, *args):
+        if len(args)==2:
+            A = args[0]
+            self.expo = args[1]
+            if len(A)==6:
+                # six independent components
+                self.mt = array([[A[0], A[3], A[4]], 
+                                 [A[3], A[1], A[5]], 
+                                 [A[4], A[5], A[2]]])
+            elif isinstance(A, ndarray) and A.shape==(3, 3):
+                # full matrix
+                self.mt = A
+            else:
+                raise TypeError("Wrong size of input parameter.")
+        elif len(args)==7:
+            # six independent components
+            self.mt = array([[args[0], args[3], args[4]], 
+                             [args[3], args[1], args[5]], 
+                             [args[4], args[5], args[2]]])
+            self.expo = args[6]
+        else:
+            raise TypeError("Wrong size of input parameter.")
+    
+    @property
+    def xx(self):
+        return self.mt[0][0]
+    
+    @property
+    def xy(self):
+        return self.mt[0][1]
+    
+    @property
+    def xz(self):
+        return self.mt[0][2]
+    
+    @property
+    def yz(self):
+        return self.mt[1][2]
+    
+    @property
+    def yy(self):
+        return self.mt[1][1]
+    
+    @property
+    def zz(self):
+        return self.mt[2][2]
+
+
+if __name__ == '__main__':
+    doctest.testmod()
