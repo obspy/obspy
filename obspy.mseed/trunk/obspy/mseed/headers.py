@@ -264,7 +264,7 @@ MSRecord_s._fields_ = [
     ('encoding', C.c_byte),                # Data encoding format
     ('byteorder', C.c_byte),               # Byte order of record
     # Data sample fields
-    ('datasamples', C.POINTER(C.c_void_p)), # Data samples, 'numsamples' of type 'sampletype'
+    ('datasamples', C.POINTER(C.c_int32)), # Data samples, 'numsamples' of type 'sampletype'
     ('numsamples', C.c_int),               # Number of data samples in datasamples
     ('sampletype', C.c_char),               # Sample type code: a, i, f, d
     # Stream oriented state information
@@ -287,7 +287,7 @@ MSTrace_s._fields_ = [
     ('endtime', C.c_longlong),              # Time of last sample
     ('samprate', C.c_double),               # Nominal sample rate (Hz)
     ('samplecnt', C.c_int),                # Number of samples in trace coverage
-    ('datasamples', C.POINTER(C.c_void_p)), # Data samples, 'numsamples' of type 'sampletype'
+    ('datasamples', C.POINTER(C.c_int32)), # Data samples, 'numsamples' of type 'sampletype'
     ('numsamples', C.c_int),               # Number of data samples in datasamples
     ('sampletype', C.c_char),               # Sample type code: a, i, f, d 
     ('prvtptr', C.c_void_p),                # Private pointer for general use

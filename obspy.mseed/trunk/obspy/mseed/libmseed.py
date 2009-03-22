@@ -2,6 +2,8 @@
 """
 Wrapper class for libmseed - The Mini-SEED library.
 
+Currently only supports MiniSEED files with integer data values.
+
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Library General Public License as
 published by the Free Software Foundation; either version 2 of the
@@ -461,26 +463,83 @@ class libmseed(object):
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
         return gap_list
-    def graph_createMinMaxList(self, file, width):
+    
+    def graph_create_min_max_list(self, file, width):
         """
         Returns a list that consists of pairs of minimum and maxiumum data
         values.
         
-        file  -    Mini-SEED file
-        width -    desired width in pixel of the data graph/Number of pairs of
-                   mimima and maxima.
+        Currently only supports files with one continuous trace.
+        
+        @param file: Mini-SEED file string
+        @param width: desired width in pixel of the data graph/Number of pairs
+                      of mimima and maxima.
         """
         minmaxlist=[]
-        #Read traces using readTraces
+        #Read traces using readTraces.
         mstg = self.readTraces(file, skipnotdata = 0)
-        chain = mstg.contents.traces.contents
-        #Number of datasamples in one pixel
-        stepsize = chain.numsamples/width
-        #Loop over datasamples and append minmaxlist
-        for _i in range(width):
-            tempdatlist = chain.datasamples[_i*stepsize: (_i+1)*stepsize]
-            minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-        return minmaxlist
+        if mstg.contents.numtraces == 1:
+            chain = mstg.contents.traces.contents
+            #Number of datasamples in one pixel.
+            stepsize = chain.numsamples/width
+            #Loop over datasamples and append to minmaxlist.
+            for _i in range(width):
+                tempdatlist = chain.datasamples[_i*stepsize: (_i+1)*stepsize]
+                minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+            return minmaxlist
+        else:
+            raise ValueError('Currently plotting is only supported for files '+
+                             'containing one continuous trace.')
+    
+    def graph_create_graph(self, file, outfile, width, color = 'red'):
+        """
+        Creates graph
+        
+        Currently only supports files with one continuous trace. Still needs
+        some work.
+        
+        @param file: Mini-SEED file string
+        @param outfile: Output file string. Also used to automatically
+                        determine the output format. Currently supported is emf,
+                        eps, pdf, png, ps, raw, rgba, svg and svgz output.If no
+                        file type is given it defaults to png output.
+        @param width: Width in pixel for the output file. This corresponds to
+                      the resolution of the graph for vector formats.
+        @param color: Color of the graph. You can use legit html names for
+                      colors, html hex strings (e.g. '#eeefff') or you can pass
+                      an R , G , B tuple, where each of R , G , B are in the
+                      range [0,1].
+                      Defaults to 'red'.
+        """
+        minmaxlist = self.graph_create_min_max_list(file = file, width = width)
+        length = len(minmaxlist)
+        #Needs to be done before importing pylab or pyplot.
+        import matplotlib
+        #Use AGG backend.
+        matplotlib.use('AGG')
+        #Importing pyplot and numpy.
+        import matplotlib.pyplot as plt
+        import numpy as np
+        #Determine range for the y axis. This may not be the smartest way to
+        #do it.
+        miny = 99999999999999999
+        maxy = -9999999999999999
+        for _i in range(length):
+            if minmaxlist[_i][0] < miny:
+                miny = minmaxlist[_i][0]
+            if minmaxlist[_i][1] > maxy:
+                maxy = minmaxlist[_i][1]
+        #Draw horizontal lines.
+        for _i in range(length):
+            #Calculate relative values needed for drawing the lines.
+            yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
+            xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
+            plt.axvline(x = _i, ymin = yy, ymax = xx, color = color)
+        #Set axes
+        plt.ylim(miny, maxy)
+        plt.xlim(0,length)
+        #Save file
+        plt.savefig(outfile, dpi = 100)
     
     def getMinMaxList(self, file, width):
         """
