@@ -24,12 +24,16 @@ from time import mktime
 import math
 import os
 import sys
+import platform
 
 # import libmseed library
 if sys.platform=='win32':
     lib_name = 'libmseed.win32.dll'
 else:
-    lib_name = 'libmseed.so'
+    if platform.architecture()[0] == '64bit':
+        lib_name = 'libmseed.lin64.so'
+    else:
+        lib_name = 'libmseed.so'
 clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed', 
                                 lib_name))
 
