@@ -491,27 +491,46 @@ class libmseed(object):
             raise ValueError('Currently plotting is only supported for files '+
                              'containing one continuous trace.')
     
-    def graph_create_graph(self, file, outfile, width, color = 'red'):
+    def graph_create_graph(self, file, outfile, size = (1024, 768),
+                           dpi = 100, color = 'red', gbgcolor = 'white', 
+                           showaxes = True, bgcolor = 'white',
+                           transparent = False):
         """
-        Creates graph
+        Creates a graph of any given Mini-SEED file. It either saves the image
+        directly to the file system or returns an binary image string.
         
-        Currently only supports files with one continuous trace. Still needs
-        some work.
+        Currently only supports files with one continuous trace. I still have
+        to figure out how to remove the frame around the graph and create the
+        option to set a start and end time of the graph.
+        
+        For all color values you can use legit html names, html hex strings
+        (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
+        R , G , B are in the range [0,1]. You can also use single letters for
+        basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
+        'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
+        can be given as a string encoding a float in the 0-1 range.
         
         @param file: Mini-SEED file string
         @param outfile: Output file string. Also used to automatically
-                        determine the output format. Currently supported is emf,
-                        eps, pdf, png, ps, raw, rgba, svg and svgz output.If no
-                        file type is given it defaults to png output.
-        @param width: Width in pixel for the output file. This corresponds to
-                      the resolution of the graph for vector formats.
-        @param color: Color of the graph. You can use legit html names for
-                      colors, html hex strings (e.g. '#eeefff') or you can pass
-                      an R , G , B tuple, where each of R , G , B are in the
-                      range [0,1].
-                      Defaults to 'red'.
+            determine the output format. Currently supported is emf, eps, pdf,
+            png, ps, raw, rgba, svg and svgz output.If no file type is given it
+            defaults to png output.
+            The function will return an binary imagestring in png format if 
+            outfile is set to 'False'.
+        @param size: Size tupel in pixel for the output file. This corresponds to
+            the resolution of the graph for vector formats.
+            Defaults to 1024x768 px.
+        @param dpi: Dots per inch of the output file. This also affects the
+            size of most elements in the graph (text, linewidth, ...).
+            Defaults to 100.
+        @param color: Color of the graph. Defaults to 'red'.
+        @param gbgcolor: Background color of the graph. Defaults to 'white'.
+        @param showaxes: Plot axes (True/False). Defaults to True.
+        @param bgcolor: Background color of the canvas
+        @param transparent: Make all backgrounds transparent (True/False).
+            Defaults to False.
         """
-        minmaxlist = self.graph_create_min_max_list(file = file, width = width)
+        minmaxlist = self.graph_create_min_max_list(file = file, width = size[0])
         length = len(minmaxlist)
         #Needs to be done before importing pylab or pyplot.
         import matplotlib
@@ -519,7 +538,10 @@ class libmseed(object):
         matplotlib.use('AGG')
         #Importing pyplot and numpy.
         import matplotlib.pyplot as plt
-        import numpy as np
+        #Setup figure and axes
+        plt.figure(num = None, figsize = (float(size[0])/dpi,
+                   float(size[1])/dpi))
+        plt.axes(axisbg=gbgcolor, frameon = showaxes)
         #Determine range for the y axis. This may not be the smartest way to
         #do it.
         miny = 99999999999999999
@@ -535,11 +557,21 @@ class libmseed(object):
             yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
             xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
             plt.axvline(x = _i, ymin = yy, ymax = xx, color = color)
-        #Set axes
+        #Set axes and disable ticks
         plt.ylim(miny, maxy)
         plt.xlim(0,length)
+        plt.yticks([])
+        plt.xticks([])
         #Save file
-        plt.savefig(outfile, dpi = 100)
+        plt.savefig(outfile, dpi = dpi, transparent = transparent,
+                    facecolor = bgcolor)
+        #Return an binary imagestring if outfile is 'File'
+        if outfile == 'False':
+            imagefile=open('False.png', 'rb')
+            imagestring=imagefile.read()
+            imagefile.close()
+            os.remove('False.png')
+            return imagestring
     
     def getMinMaxList(self, file, width):
         """
