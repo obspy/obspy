@@ -20,13 +20,17 @@ http://www.gnu.org/
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
 import ctypes as C
 from datetime import datetime
-from time import mktime
+from time import mktime, tzset
 import math
 import os
 import sys
 import platform
 
-# import libmseed library
+#Set global timezone to UTC.
+os.environ['TZ'] = 'UTC'
+tzset()
+
+#Import libmseed library.
 if sys.platform=='win32':
     lib_name = 'libmseed.win32.dll'
 else:
@@ -42,7 +46,7 @@ class libmseed(object):
     """
     Wrapper class for libmseed.
     """
-    
+
     def printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
         """
         Prints information about the traces in a Mini-SEED file using the libmseed
@@ -315,7 +319,8 @@ class libmseed(object):
         samprate_in_microsecs = header['samprate']/1e6
         #Modifiy the header
         header['starttime'] = header['starttime'] + stime
-        header['endtime'] = int(header['starttime'] + cutsamplecount/samprate_in_microsecs)
+        header['endtime'] = int(header['starttime'] + cutsamplecount/\
+                                samprate_in_microsecs)
         header['numsamples'] = cutsamplecount
         header['samplecnt'] = cutsamplecount
         #Make new data list, some rounding issues need to be solved
@@ -343,7 +348,9 @@ class libmseed(object):
                             print "OVERLAP"
                         else:
                             print "GAP"
-                    oldstarttime=long(msr.contents.starttime+msr.contents.samplecnt*(1/msr.contents.samprate)*1e6)
+                    oldstarttime=long(msr.contents.starttime+\
+                                      msr.contents.samplecnt*\
+                                      (1/msr.contents.samprate)*1e6)
                     print "Sequence number:",msr.contents.sequence_number,"--",
                     print "starttime:",msr.contents.starttime,", # of samples:",
                     print msr.contents.samplecnt,"=> endtime :",
@@ -381,13 +388,92 @@ class libmseed(object):
             assert 0, "\n\nError while reading Mini-SEED file: "+filename
         return mstg
     
-    def datetime_to_mseedtimestring(self, dtobj):
+    def resetMs_readmsr(self):
+        """
+        Cleans memory and resets the clibmseed.ms_readmsr() function.
+        
+        This function needs to be called after reading a Mini-SEED file with
+        any of the provided methods if you want to read another Mini-SEED file
+        without restarting Python. If this is not done it will probably still
+        work but raise a warning.
+        """
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr=clibmseed.msr_init(None)
+        clibmseed.ms_readmsr(msr, None, 0, None, None, 0, 0, 0)
+        
+    def getFirstRecordHeaderInfo(self, file):
+        """
+        Takes Mini-SEED file string and returns some information from the
+        header of the first record.
+        
+        Returns a dictionary containing some header information from the first
+        record of the Mini-SEED file only. It returns the location, network,
+        station and channel information.
+        
+        @param file: Mini-SEED file string.
+        
+        """
+        #Read first header only.
+        msr = self.read_MSRec(file, dataflag = 0)
+        header = {}
+        chain = msr[0].contents
+        #Header attributes to be read.
+        attributes = ('location', 'network', 'station', 'channel')
+        #Loop over attributes.
+        for _i in attributes:
+            header[_i] = getattr(chain, _i)
+        return header
+    
+    def getStartAndEndTime(self, file):
+        """
+        Returns the start- and endtime of a Mini-SEED file as a tuple of two
+        Python datetime objects.
+        
+        This method only reads the first and the last record. Thus it will work
+        only work correctly for files containing only one trace.
+        
+        @param file: Mini-SEED file string.
+        """
+        #Read starttime and record length from first header.
+        msr = self.read_MSRec(file, dataflag = 0)
+        chain = msr[0].contents
+        starttime = chain.starttime
+        record_length = chain.reclen
+        #Cleanup memory and close old msr file.
+        self.resetMs_readmsr()
+        #Open Mini-SEED file and write last record into temporary file.
+        mseed_file = open(file, 'rb')
+        mseed_file.seek(-record_length, 2)
+        temp_record = open('temp', 'wb')
+        temp_record.write(mseed_file.read(record_length))
+        mseed_file.close()
+        temp_record.close()
+        #Read last record.
+        msr = self.read_MSRec('temp', dataflag = 0)
+        chain = msr[0].contents
+        #Calculate endtime.
+        endtime = chain.starttime + (chain.samplecnt -1) / chain.samprate *\
+                                                                    HPTMODULUS
+        #Remove temporary file
+        os.remove('temp')
+        return (self.mseedtimestringToDatetime(starttime),
+                self.mseedtimestringToDatetime(endtime))
+        
+    def datetimeToMseedtimestring(self, dtobj):
         """
         Takes datetime object and returns an epoch time in ms.
         
         @param dtobj: Datetime object.
         """
-        return long(mktime(dtobj.timetuple()) * HPTMODULUS)
+        return long((mktime(dtobj.timetuple()) * HPTMODULUS)+dtobj.microsecond)
+    
+    def mseedtimestringToDatetime(self, timestring):
+        """
+        Takes Mini-SEED timestring and returns a Python datetime object.
+        
+        @param timestring: Mini-SEED timestring (Epoch time string in ms).
+        """
+        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
     
     def isRateTolerable(self, sr1, sr2):
         """

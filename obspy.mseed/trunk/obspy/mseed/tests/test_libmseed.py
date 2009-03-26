@@ -7,6 +7,7 @@ from datetime import datetime
 from obspy.mseed import libmseed
 import inspect
 import os
+import random
 import unittest
 
 
@@ -21,6 +22,22 @@ class LibMSEEDTestCase(unittest.TestCase):
     
     def tearDown(self):
         pass
+    
+    def test_TimeConversionUtilities(self):
+        """
+        Tests the two time conversion methods to convert to and from Mini-SEED
+        timestring and Python datetime objects.
+        
+        This is a sanity test. A conversion to a format and back should not
+        change the value
+        """
+        mseed = libmseed()
+        now = datetime.now()
+        timestring = random.randint(0, 2000000) * 1e6
+        self.assertEqual(now, mseed.mseedtimestringToDatetime(
+                              mseed.datetimeToMseedtimestring(now)))
+        self.assertEqual(timestring, mseed.datetimeToMseedtimestring(
+                                  mseed.mseedtimestringToDatetime(timestring)))
     
     def test_readTraces(self):
         """
@@ -115,7 +132,44 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
-
+        
+    def test_readFirstHeaderInfo(self):
+        """
+        Reads header info from the first record and compares it with known
+        header values.
+        
+        The values can be read from the filename.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        header = mseed.getFirstRecordHeaderInfo(filename)
+        self.assertEqual(header['location'], '')
+        self.assertEqual(header['network'], 'BW')
+        self.assertEqual(header['station'], 'BGLD')
+        self.assertEqual(header['channel'], 'EHE')
+        
+    def test_getStartAndEndTime(self):
+        """
+        Tests getting the start- and end time of a file by reading the first and
+        last record only.
+        
+        The values are compared with the readTraces() method which parses the
+        whole file. This will only work for files with only one trace and with-
+        out any gaps or overlaps.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        #Getting the start- and end time.
+        times = mseed.getStartAndEndTime(filename)
+        #Reseting the ms_readmsr() method of libmseed.
+        mseed.resetMs_readmsr()
+        #Parsing the whole file.
+        mstg = mseed.readTraces(filename, dataflag = 0)
+        chain = mstg.contents.traces.contents
+        self.assertEqual(times[0], 
+                         mseed.mseedtimestringToDatetime(chain.starttime))
+        self.assertEqual(times[1], 
+                         mseed.mseedtimestringToDatetime(chain.endtime))
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
