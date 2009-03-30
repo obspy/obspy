@@ -594,59 +594,60 @@ class libmseed(object):
                     minmaxlist.append([min(tempdatlist),max(tempdatlist)])
                 return minmaxlist
             else:
-                #Set and convert start- and endtimes.
-                if timespan[0] == 0:
-                    starttime = chain.starttime
-                    endtime = self.datetime_to_mseedtimestring(timespan[1])
-                elif timespan[1] == 0:
-                    starttime = self.datetime_to_mseedtimestring(timespan[0])
-                    endtime= chain.endtime
+                #Catch currently not supported times.
+                if timespan[0] == 0 or timespan[1] == 0 or \
+                self.datetimeToMseedtimestring(timespan[0]) >= chain.starttime\
+                or self.datetimeToMseedtimestring(timespan[1]) <= \
+                chain.endtime:
+                    raise ValueError('Sorry. Times currently not supported')
+                #Convert start and endtime.
+                starttime = self.datetimeToMseedtimestring(timespan[0])
+                endtime = self.datetimeToMseedtimestring(timespan[1])
+                file_starttime = chain.starttime
+                file_endtime = chain.endtime
+                #Number of datasamples in one pixel.
+                stepsize = (chain.numsamples / width) * (endtime - starttime)/\
+                                                (file_endtime - file_starttime)
+                #Number of empty pixels at the beginning.
+                if starttime < file_starttime:
+                    empty_pixels_at_start = int(((file_starttime - starttime)/\
+                        1e6 * chain.samprate) / stepsize)
                 else:
-                    starttime = self.datetime_to_mseedtimestring(timespan[0])
-                    endtime = self.datetime_to_mseedtimestring(timespan[1])
-                #Number of samples in one pixel.
-                stepsize = ((endtime - starttime) / (chain.endtime - 
-                            chain.starttime)) * (chain.numsamples / width)
-                frequency = chain.samprate
-                #Data offset for the list indices.
-                dataoffset = int((chain.starttime - starttime) * frequency *\
-                             HPTMODULUS)
-                #Loop over datasamples and append to minmaxlist. Append empty
-                #list if no data is found in the interval.
-                for _i in range(width):
-                    print _i
-                    #Check whether there is data in the current timespan
-                    #Out of data.
-                    if (starttime + (_i+1) * stepsize / frequency * HPTMODULUS\
-                        <= chain.starttime) or (starttime + (_i) * stepsize / \
-                        frequency * HPTMODULUS >= chain.endtime):
-                        minmaxlist.append([])
-                    #On the left border.
-                    elif (starttime + (_i) * stepsize / frequency * HPTMODULUS\
-                        <= chain.starttime) or (starttime + (_i+1) * \
-                        stepsize / frequency * HPTMODULUS >= chain.starttime):
-                        tempdatlist = chain.datasamples[ : (_i+1)*stepsize - \
-                                      dataoffset]
-                        minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                    #On the right border.
-                    elif (starttime + (_i) * stepsize / frequency * HPTMODULUS\
-                        <= chain.endtime) or (starttime + (_i+1) * stepsize / \
-                        frequency * HPTMODULUS >= chain.endtime):
-                        tempdatlist = chain.datasamples[ (_i+1)*stepsize - \
-                                      dataoffset: ]
-                        minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                    else:
-                        tempdatlist = chain.datasamples[_i*stepsize - \
-                                      dataoffset: (_i+1)*stepsize - dataoffset]
-                        minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+                    empty_pixels_at_start = 0
+                #Number of empty pixels at the end.
+                if endtime > file_endtime:
+                    empty_pixels_at_end = int(((endtime - file_endtime)/\
+                        1e6 * chain.samprate) / stepsize)
+                else:
+                    empty_pixels_at_end = 0
+                #Loop over pixels.
+                for _i in range(empty_pixels_at_start):
+                    minmaxlist.append([])
+                #Offset for list indices.
+                offset = (file_starttime - starttime) % stepsize
+                #First drawn pixel
+                tempdatlist = chain.datasamples[0 : stepsize - offset]
+                minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+                #Loop over middle pixels.
+                for _i in range(width - empty_pixels_at_end - 
+                                empty_pixels_at_start - 2):
+                    tempdatlist = chain.datasamples[(_i+1)*stepsize - offset:
+                                                    (_i+2)*stepsize - offset]
+                    minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+                #Last drawn pixel
+                tempdatlist = chain.datasamples[chain.samplecnt - offset : \
+                                                chain.samplecnt]
+                minmaxlist.append([min(tempdatlist),max(tempdatlist)])
+                for _i in range(empty_pixels_at_end):
+                    minmaxlist.append([])
                 return minmaxlist
         else:
             raise ValueError('Currently plotting is only supported for files '+
                              'containing one continuous trace.')
     
-    def graph_create_graph(self, file, outfile, size = (1024, 768),
-                           timespan = (), dpi = 100, color = 'red',
-                           gbgcolor = 'white', showaxes = True,
+    def graph_create_graph(self, file, outfile = None, format = None,
+                           size = (1024, 768), timespan = (), dpi = 100,
+                           color = 'red', bgcolor = 'white',
                            transparent = False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
@@ -656,7 +657,8 @@ class libmseed(object):
         to figure out how to remove the frame around the graph and create the
         option to set a start and end time of the graph.
         
-        The option to set a start- and endtime to plot does not work yet.
+        The option to set a start- and endtime to plot currently only works
+        for starttime smaller and endtime greater than the file's times.
         
         For all color values you can use legit html names, html hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
@@ -668,10 +670,14 @@ class libmseed(object):
         @param file: Mini-SEED file string
         @param outfile: Output file string. Also used to automatically
             determine the output format. Currently supported is emf, eps, pdf,
-            png, ps, raw, rgba, svg and svgz output.If no file type is given it
-            defaults to png output.
-            The function will return an binary imagestring in png format if 
-            outfile is set to 'False'.
+            png, ps, raw, rgba, svg and svgz output.
+            Defaults to None.
+        @param format: Format of the graph picture. If no format is given the
+            outfile parameter will be used to try to automatically determine
+            the output format. If no format is found it defaults to png output.
+            If no outfile is specified but a format is than a binary
+            imagestring will be returned.
+            Defaults to None.
         @param size: Size tupel in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
             Defaults to 1024x768 px.
@@ -683,16 +689,19 @@ class libmseed(object):
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
         @param color: Color of the graph. Defaults to 'red'.
-        @param gbgcolor: Background color of the graph. Defaults to 'white'.
-        @param showaxes: Plot axes (True/False). Defaults to True.
-        @param transparent: Make all backgrounds transparent (True/False).
+        @param bgcolor: Background color of the graph. Defaults to 'white'.
+        @param transparent: Make all backgrounds transparent (True/False). This
+            will overwrite the bgcolor param.
             Defaults to False.
         """
+        #Either outfile or format needs to be set.
+        if not outfile and not format:
+            raise ValueError('Either outfile or format needs to be set.')
+        #Get a list with minimum and maximum values.
         minmaxlist = self.graph_create_min_max_list(file = file,
                                                     width = size[0],
                                                     timespan = timespan)
         length = len(minmaxlist)
-        print minmaxlist
         #Needs to be done before importing pylab or pyplot.
         import matplotlib
         #Use AGG backend.
@@ -702,18 +711,26 @@ class libmseed(object):
         #Setup figure and axes
         fig = plt.figure(num = None, figsize = (float(size[0])/dpi,
                          float(size[1])/dpi))
-        plt.axes(axisbg=gbgcolor, frameon = showaxes)
-        #Make the space around the graph transparent.
-        fig.set_frameon(False)
+        ax = fig.add_subplot(111)
+        # hide axes + ticks
+        ax.axison = False
+        #Make the graph fill the whole image.
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
         #Determine range for the y axis. This may not be the smartest way to
         #do it.
         miny = 99999999999999999
         maxy = -9999999999999999
         for _i in range(length):
-            if minmaxlist[_i][0] < miny:
-                miny = minmaxlist[_i][0]
-            if minmaxlist[_i][1] > maxy:
-                maxy = minmaxlist[_i][1]
+            try:
+                if minmaxlist[_i][0] < miny:
+                    miny = minmaxlist[_i][0]
+            except:
+                pass
+            try:
+                if minmaxlist[_i][1] > maxy:
+                    maxy = minmaxlist[_i][1]
+            except:
+                pass
         #Set axes and disable ticks
         plt.ylim(miny, maxy)
         plt.xlim(0,length)
@@ -728,15 +745,24 @@ class libmseed(object):
                 yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
                 xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
                 plt.axvline(x = _i, ymin = yy, ymax = xx, color = color)
-        #Save file
-        plt.savefig(outfile, dpi = dpi, transparent = transparent)
-        #Return an binary imagestring if outfile is 'File'
-        if outfile == 'False':
-            imagefile=open('False.png', 'rb')
-            imagestring=imagefile.read()
-            imagefile.close()
-            os.remove('False.png')
-            return imagestring
+        #Save file.
+        if outfile:
+            #If format is set use it.
+            if format:
+                plt.savefig(outfile, dpi = dpi, transparent = transparent,
+                    facecolor = bgcolor, edgecolor = bgcolor, format = format)
+            #Otherwise try to get the format from outfile or default to png.
+            else:
+                plt.savefig(outfile, dpi = dpi, transparent = transparent,
+                    facecolor = bgcolor, edgecolor = bgcolor)
+        #Return an binary imagestring if outfile is not set but format is.
+        if not outfile:
+            import StringIO
+            imgdata = StringIO.StringIO()
+            plt.savefig(imgdata, dpi = dpi, transparent = transparent,
+                    facecolor = bgcolor, edgecolor = bgcolor, format = format)
+            imgdata.seek(0)
+            return imgdata.read()
     
     def getMinMaxList(self, file, width):
         """

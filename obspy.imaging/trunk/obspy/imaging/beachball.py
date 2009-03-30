@@ -7,6 +7,10 @@ latest version of his Script at his home page:
 @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
 
+#Needs to be done before importing pyplot and the like.
+from matplotlib import use as matplotlibuse
+#Use AGG backend. Overrides systems default setting.
+matplotlibuse('AGG')
 from matplotlib import pyplot as plt, patches, lines
 from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, \
     concatenate, pi, cos, power, abs, sum, fliplr, isnan, arange, sin, ones, \
