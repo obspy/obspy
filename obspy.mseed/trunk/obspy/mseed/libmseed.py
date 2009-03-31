@@ -386,6 +386,8 @@ class libmseed(object):
             C.c_short(dataflag), C.c_short(verbose))
         if errcode != 0:
             assert 0, "\n\nError while reading Mini-SEED file: "+filename
+        #Reset memory
+        self.resetMs_readmsr()
         return mstg
     
     def resetMs_readmsr(self):
@@ -640,15 +642,19 @@ class libmseed(object):
                 minmaxlist.append([min(tempdatlist),max(tempdatlist)])
                 for _i in range(empty_pixels_at_end):
                     minmaxlist.append([])
+                    #Reset memory
+                    self.resetMs_readmsr()
                 return minmaxlist
         else:
             raise ValueError('Currently plotting is only supported for files '+
                              'containing one continuous trace.')
+        #Reset memory
+        self.resetMs_readmsr()
     
     def graph_create_graph(self, file, outfile = None, format = None,
                            size = (1024, 768), timespan = (), dpi = 100,
                            color = 'red', bgcolor = 'white',
-                           transparent = False):
+                           transparent = False, minmaxlist = False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
         directly to the file system or returns an binary image string.
@@ -693,12 +699,17 @@ class libmseed(object):
         @param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
             Defaults to False.
+        @param minmaxlist: A list containing minimum and maximum values. If
+            none is supplied it will be created automatically. Useful for
+            caching.
+            Defaults to False.
         """
         #Either outfile or format needs to be set.
         if not outfile and not format:
             raise ValueError('Either outfile or format needs to be set.')
         #Get a list with minimum and maximum values.
-        minmaxlist = self.graph_create_min_max_list(file = file,
+        if not minmaxlist:
+            minmaxlist = self.graph_create_min_max_list(file = file,
                                                     width = size[0],
                                                     timespan = timespan)
         length = len(minmaxlist)
