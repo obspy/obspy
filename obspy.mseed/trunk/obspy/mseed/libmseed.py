@@ -247,7 +247,8 @@ class libmseed(object):
         #Needs to be redone, dynamic??
         mstg.contents.numtraces=numtraces
         #Create void pointer and allocates more memory to it
-        tempdatpoint=C.c_void_p()
+        #tempdatpoint=C.c_void_p()
+        tempdatpoint=C.c_int()
         C.resize(tempdatpoint,
                  clibmseed.ms_samplesize(C.c_char(header['sampletype']))*
                  header['numsamples'])
@@ -255,7 +256,8 @@ class libmseed(object):
         mstg.contents.traces.contents.datasamples=C.pointer(tempdatpoint)
         #Write data in MSTrace structure
         for i in range(header['numsamples']):
-            mstg.contents.traces.contents.datasamples[i]=C.c_void_p(data[i])
+            #mstg.contents.traces.contents.datasamples[i]=C.c_void_p(data[i])
+            mstg.contents.traces.contents.datasamples[i]=C.c_int(data[i])
         return mstg
 
     def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush, verbose):
