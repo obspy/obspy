@@ -26,7 +26,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.4'
+version = '0.0.5'
 
 
 setup(

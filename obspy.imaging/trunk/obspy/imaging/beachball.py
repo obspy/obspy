@@ -2,20 +2,20 @@
 """
 obspy.imaging.beachball 
 
-This is an ported MatLab script written by Oliver Boyd. You can find the 
-latest version of his Script at his home page:
-@see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+Draws a beach ball diagram of an earthquake focal mechanism.
+
+Most source code provided here are adopted from
+(1) MatLab script written by Oliver Boyd 
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+(2) ps_meca program from the Generic Mapping Tools (GMT)
+    @see: http://gmt.soest.hawaii.edu
 """
 
 #Needs to be done before importing pyplot and the like.
-from matplotlib import use as matplotlibuse
-#Use AGG backend. Overrides systems default setting.
-matplotlibuse('AGG')
 from matplotlib import pyplot as plt, patches, lines
-from numpy import array, linalg, zeros, mean, sqrt, fabs, arcsin, arccos, \
-    concatenate, pi, cos, power, abs, sum, fliplr, isnan, arange, sin, ones, \
-    arctan2, arctan, tan, ndarray
-from pylab import figure, getp, setp, gca, show
+from numpy import array, linalg, zeros, sqrt, fabs, arcsin, arccos, pi, cos, \
+    power, abs, arange, sin, ones, arctan2, ndarray, concatenate
+from pylab import show
 import StringIO
 import doctest
 
@@ -28,7 +28,7 @@ EPSILON = 0.00001
 def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None, 
               format=None):
     """
-    Draws beachball diagram of an earthquake focal mechanism. 
+    Draws a beach ball diagram of an earthquake focal mechanism. 
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
@@ -108,6 +108,15 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
 def plotMT(ax, T, N, P, size=200, color='b', outline=True, 
            plot_zerotrace=True, alpha=1.0, linewidth=2, x0=0, y0=0):
     """
+    Uses a principal axis T, N and P to draw a beach ball plot.
+    
+    @param ax: axis object of a matplotlib figure
+    @param T: L{PrincipalAxis}
+    @param N: L{PrincipalAxis}
+    @param P: L{PrincipalAxis}
+    
+    Adapted from ps_tensor / utilmeca.c / Generic Mapping Tools (GMT).
+    @see: http://gmt.soest.hawaii.edu
     """
     b=1
     big_iso = 0
@@ -406,6 +415,13 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
 
 def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
     """
+    Uses one nodal plane of a double couple to draw a beach ball plot.
+    
+    @param ax: axis object of a matplotlib figure
+    @param np1: L{NodalPlane}
+    
+    Adapted from bb.m written by Oliver S. Boyd.
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
     S1 = np1.strike
     D1 = np1.dip
@@ -476,6 +492,8 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
 
 
 def Pol2Cart(th, r):
+    """
+    """
     x = r*cos(th)
     y = r*sin(th)
     return (x, y)
@@ -486,7 +504,8 @@ def StrikeDip(n, e, u):
     Finds strike and dip of plane given normal vector having components n, e, 
     and u.
    
-    Adapted from Andy Michaels and Oliver Boyd.
+    Adapted from bb.m written by Andy Michaels and Oliver Boyd.
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
     r2d = 180/pi
     if u < 0:
@@ -509,7 +528,8 @@ def AuxPlane(s1, d1, r1):
     """
     Get Strike and dip of second plane.
     
-    Adapted from Andy Michael and Oliver Boyd.
+    Adapted from bb.m written by Andy Michael and Oliver Boyd.
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
     r2d = 180/pi
     
@@ -574,6 +594,12 @@ def MT2Plane(mt):
 
 
 def TDL(AN, BN):
+    """
+    Helper function for MT2Plane.
+    
+    Adapted from bb.m written by Oliver S. Boyd.
+    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    """
     XN=AN[0]
     YN=AN[1]
     ZN=AN[2]
@@ -677,67 +703,6 @@ def MT2Axes(mt):
     N = PrincipalAxis(D[1], az[1], pl[1])
     P = PrincipalAxis(D[0], az[0], pl[0])
     return (T, N, P)
-
-
-def Axis2DC(T, P):
-    """
-    Calculate double couple from principal axes.
-     
-    @param T: L{PrincipalAxis}
-    @param P: L{PrincipalAxis}
-    @return: tuple of L{NodalPlane} NP1 and NP2
-    
-    Adapted from axe2dc / utilmeca.c / Generic Mapping Tools (GMT) written by
-    Genevieve Patau.
-    @see: http://gmt.soest.hawaii.edu
-    """
-    raise NotImplementedError
-#     double pp, dp, pt, dt;
-#     double p1, d1, p2, d2;
-#     double PII = M_PI * 2.;
-#     double cdp, sdp, cdt, sdt;
-#     double cpt, spt, cpp, spp;
-#     double amz, amy, amx;
-#     double im;
-#
-#     pp = P.str * D2R; dp = P.dip * D2R;
-#     pt = T.str * D2R; dt = T.dip * D2R;
-#
-#     sincos (dp, &sdp, &cdp);
-#     sincos (dt, &sdt, &cdt);
-#     sincos (pt, &spt, &cpt);
-#     sincos (pp, &spp, &cpp);
-#
-#     cpt *= cdt; spt *= cdt;
-#     cpp *= cdp; spp *= cdp;
-#
-#     amz = sdt + sdp; amx = spt + spp; amy = cpt + cpp;
-#     d1 = atan2(sqrt(amx*amx + amy*amy), amz);
-#     p1 = atan2(amy, -amx);
-#     if (d1 > M_PI_2) {
-#          d1 = M_PI - d1;
-#          p1 += M_PI;
-#          if (p1 > PII) p1 -= PII;
-#     }
-#     if (p1 < 0.) p1 += PII;
-#
-#     amz = sdt - sdp; amx = spt - spp; amy = cpt - cpp;
-#     d2 = atan2(sqrt(amx*amx + amy*amy), amz);
-#     p2 = atan2(amy, -amx);
-#     if (d2 > M_PI_2) {
-#          d2 = M_PI - d2;
-#          p2 += M_PI;
-#          if (p2 > PII) p2 -= PII;
-#     }
-#     if (p2 < 0.) p2 += PII;
-#
-#     NP1->dip = d1 / D2R; NP1->str = p1 / D2R;
-#     NP2->dip = d2 / D2R; NP2->str = p2 / D2R;
-#
-#     im = 1;
-#     if (dp > dt) im = -1;
-#     NP1->rake = computed_rake2(NP2->str,NP2->dip,NP1->str,NP1->dip,im);
-#     NP2->rake = computed_rake2(NP1->str,NP1->dip,NP2->str,NP2->dip,im);
 
 
 class PrincipalAxis(object):
