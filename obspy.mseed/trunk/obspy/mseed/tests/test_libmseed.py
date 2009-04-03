@@ -63,42 +63,42 @@ class LibMSEEDTestCase(unittest.TestCase):
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
     
-#    def test_readAnWriteTraces(self):
-#        """
-#        Writes, reads and compares files created via libmseed.
-#        
-#        This uses all possible encodings, record lengths and the byte order 
-#        options. A reencoded SEED file should still have the same values 
-#        regardless of write options.
-#        """
-#        # define test ranges
-#        record_length_values = [2**i for i in range(8, 21)]
-#        encoding_values = [1, 3, 10, 11]
-#        byteorder_values = [0, 1]
-#        
-#        mseed=libmseed() 
-#        mseed_file = os.path.join(self.path, 'test.mseed')
-#        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
-#        # Deletes the dataquality indicators
-#        testheader=header.copy()
-#        del testheader['dataquality']
-#        # loops over all combinations of test values
-#        for reclen in record_length_values:
-#            for byteorder in byteorder_values:
-#                for encoding in encoding_values:
-#                    filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
-#                                                        encoding)
-#                    temp_file = os.path.join(self.path, filename)
-#                    mseed.write_ms(header, data, temp_file,
-#                                   numtraces, encoding=encoding, 
-#                                   byteorder=byteorder, reclen=reclen)
-#                    result = mseed.read_ms_using_traces(temp_file)
-#                    newheader, newdata, newnumtraces = result
-#                    del newheader['dataquality']
-#                    self.assertEqual(testheader, newheader)
-#                    self.assertEqual(data, newdata)
-#                    self.assertEqual(numtraces, newnumtraces)
-#                    os.remove(temp_file)
+    def test_readAnWriteTraces(self):
+        """
+        Writes, reads and compares files created via libmseed.
+        
+        This uses all possible encodings, record lengths and the byte order 
+        options. A reencoded SEED file should still have the same values 
+        regardless of write options.
+        """
+        # define test ranges
+        record_length_values = [2**i for i in range(8, 21)]
+        encoding_values = [1, 3, 10, 11]
+        byteorder_values = [0, 1]
+        
+        mseed=libmseed() 
+        mseed_file = os.path.join(self.path, 'test.mseed')
+        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
+        # Deletes the dataquality indicators
+        testheader=header.copy()
+        del testheader['dataquality']
+        # loops over all combinations of test values
+        for reclen in record_length_values:
+            for byteorder in byteorder_values:
+                for encoding in encoding_values:
+                    filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
+                                                        encoding)
+                    temp_file = os.path.join(self.path, filename)
+                    mseed.write_ms(header, data, temp_file,
+                                   numtraces, encoding=encoding, 
+                                   byteorder=byteorder, reclen=reclen)
+                    result = mseed.read_ms_using_traces(temp_file)
+                    newheader, newdata, newnumtraces = result
+                    del newheader['dataquality']
+                    self.assertEqual(testheader, newheader)
+                    self.assertEqual(data, newdata)
+                    self.assertEqual(numtraces, newnumtraces)
+                    os.remove(temp_file)
     
     def test_getGapList(self):
         """

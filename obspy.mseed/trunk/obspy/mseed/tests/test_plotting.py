@@ -26,32 +26,36 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
     
     def test_LibMSEEDPlotting(self):
         """
-        Creates plotted examples in test/output directory
+        Creates plotted examples in tests/output directory
         """
         mseed = libmseed()
         mseed_file = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        gap_file = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
+        small_file = os.path.join(self.path, 'test.mseed')
+        small_gap_file = os.path.join(self.path, 'gaps.mseed')
+        
         #Calculate full minmaxlist once and use it for caching.
-        minmaxlist = mseed.graph_create_min_max_list(mseed_file, 777)
+        minmaxlist = mseed.graphCreateMinMaxTimestampList(mseed_file, 777)
         
         #Full graph with user defined colors and size.
-        mseed.graph_create_graph(mseed_file, os.path.join(self.outpath,
-            'full_graph_777x222px_purple_and_lightgreen'), size = (777, 222),
-            color = 'purple', bgcolor = 'lightgreen', minmaxlist = minmaxlist)
+        mseed.graph_create_graph(mseed_file, outfile = os.path.join(
+            self.outpath, 'full_graph_777x222px_orange_and_turquoise'),
+            size = (777, 222), color = '#ffcc66', bgcolor = '#99ffff',
+            minmaxlist = minmaxlist)
         
-        #Same graph as before but returned as a binary imagestring.
-        imgstring = mseed.graph_create_graph(mseed_file, format = 'png',
-            size = (777, 222), color = 'purple', bgcolor = 'lightgreen',
+        #Same graph as before but returned as a binary string.
+        imgstring = mseed.graph_create_graph(mseed_file, size = (777, 222),
+            format = 'png', color = '#ffcc66', bgcolor = '#99ffff',
             minmaxlist = minmaxlist)
         imgfile = open(os.path.join(self.outpath,
-                       'full_graph_777x222px_purple_and_lightgreen_imagestr'),
-                       'wb')
-        imgfile.write(imgstring)
+            'full_graph_777x222px_orange_and_turquoise.png'))
+        self.assertEqual(imgstring, imgfile.read())
         imgfile.close()
         
-        #Same graph as above but red with transparent background
+        #Same graph as above but green with transparent background
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath,
-            'full_graph_777x222px_red_and_transparent'), size = (777, 222),
-            transparent = True, minmaxlist = minmaxlist)
+            'full_graph_777x222px_green_and_transparent'), size = (777, 222),
+            transparent = True, minmaxlist = minmaxlist, color = '#99ff99')
         
         #Graph with user defined start and endtime both outside the graph.
         mstg = mseed.readTraces(mseed_file, dataflag = 0)
@@ -62,8 +66,36 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         etime = mseed.mseedtimestringToDatetime(endtime + 86400 * 1e6)
         #Create graph
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
-            'graph_1024x768px_with_one_empty_day_before_and_after_graph'),\
-                         timespan = (stime, etime))
+            'graph_800x200px_with_one_empty_day_before_and_after_graph'),\
+            starttime = stime, endtime = etime)
+        
+        #Graph that plots the last six hours of the Mini-SEED file.
+        mstg = mseed.readTraces(mseed_file, dataflag = 0)
+        endtime = mstg.contents.traces.contents.endtime
+        starttime = mseed.mseedtimestringToDatetime(endtime - 21600 * 1e6)
+        #Create graph
+        mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
+            'graph_800x200px_last_six_hours_two_gray_shades'),\
+            starttime = starttime, color = '0.7',
+            bgcolor = '0.2')
+        
+        #Graph with a large gap inbetween
+        mseed.graph_create_graph(file = gap_file,
+            outfile = os.path.join(self.outpath, 
+            'graph_888x222px_with_gap_two_blue_shades'), size = (888, 222),
+            color = 'royalblue', bgcolor = 'lightsteelblue')
+        
+        #Small graph with only 11947 datasamples. It works reasonably well but
+        #the plotting method is designed to plot files with several million
+        #datasamples.
+        mseed.graph_create_graph(file = small_file, outfile = 
+            os.path.join(self.outpath,
+            'small_graph_with_very_few_datasamples'))
+        
+        #Small graph with several small gaps
+        mseed.graph_create_graph(file = small_gap_file, outfile =
+            os.path.join(self.outpath,
+            'small_graph_with_small_gaps_yellow'), color = 'y')
         
     def test_PlottingOutputFormats(self):
         """
@@ -73,7 +105,7 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         mseed_file = os.path.join(self.path,
                                   'BW.BGLD..EHE.D.2008.001.first_record')
         #Calculate full minmaxlist once and use it for caching.
-        minmaxlist = mseed.graph_create_min_max_list(mseed_file, 50)
+        minmaxlist = mseed.graphCreateMinMaxTimestampList(mseed_file, 50)
         # PDF
         data = mseed.graph_create_graph(mseed_file, format = 'pdf',\
                                         size = (50, 50),\

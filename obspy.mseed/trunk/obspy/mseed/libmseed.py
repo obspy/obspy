@@ -567,96 +567,122 @@ class libmseed(object):
             cur = next
         return gap_list
     
-    def graph_create_min_max_list(self, file, width, timespan = ()):
+    def graphCreateMinMaxTimestampList(self, file, width, starttime = None, 
+                                       endtime = None):
         """
-        Returns a list that consists of pairs of minimum and maxiumum data
-        values.
+        Creates a list with tuples containing a minimum value, a maximum value
+        and a timestamp in microseconds.
         
-        Currently only supports files with one continuous trace.
+        Only values between the start- and the endtime will be calculated. The
+        first two items of the returned list are the actual start- and endtimes
+        of the returned list. This is needed to cope with many different
+        Mini-SEED files.
+        The returned timestamps are the mean times of the minmax value pair.
         
-        @param file: Mini-SEED file string
-        @param width: desired width in pixel of the data graph/Number of pairs
-            of mimima and maxima.
-        @param timespan: Tuple of two datetime objects. The first is the
-            starttime and the second the endtime. Use 0 for either of the two
-            times and the start- or endtime will be set to the correponding
-            time in the file.
+        @requires: The Mini-SEED file has to contain only one trace. It may
+            contain gaps and overlaps and it may be arranged in any order but
+            the first and last records must be in chronological order as they
+            are used to determine the start- and endtime.
+        
+        @param file: Mini-SEED file string.
+        @param width: Number of tuples in the list. Corresponds to the width
+            in pixel of the graph.
+        @param starttime: Starttime of the List/Graph as a Datetime object. If
+            none is supplied the starttime of the file will be used.
+            Defaults to None.
+        @param endtime: Endtime of the List/Graph as a Datetime object. If none
+            is supplied the endtime of the file will be used.
+            Defaults to None.
         """
-        minmaxlist=[]
-        #Read traces using readTraces.
+        #Read traces using the readTraces method.
         mstg = self.readTraces(file, skipnotdata = 0)
-        if mstg.contents.numtraces == 1:
-            chain = mstg.contents.traces.contents
-            #Check whether the whole graph should be processed.
-            if timespan == () or timespan == (0,0):
-                #Number of datasamples in one pixel.
-                stepsize = chain.numsamples/width
-                #Loop over datasamples and append to minmaxlist.
-                for _i in range(width):
-                    tempdatlist = chain.datasamples[_i*stepsize:
-                                                    (_i+1)*stepsize]
-                    minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                return minmaxlist
-            else:
-                #Catch currently not supported times.
-                if timespan[0] == 0 or timespan[1] == 0 or \
-                self.datetimeToMseedtimestring(timespan[0]) >= chain.starttime\
-                or self.datetimeToMseedtimestring(timespan[1]) <= \
-                chain.endtime:
-                    raise ValueError('Sorry. Times currently not supported')
-                #Convert start and endtime.
-                starttime = self.datetimeToMseedtimestring(timespan[0])
-                endtime = self.datetimeToMseedtimestring(timespan[1])
-                file_starttime = chain.starttime
-                file_endtime = chain.endtime
-                #Number of datasamples in one pixel.
-                stepsize = (chain.numsamples / width) * (endtime - starttime)/\
-                                                (file_endtime - file_starttime)
-                #Number of empty pixels at the beginning.
-                if starttime < file_starttime:
-                    empty_pixels_at_start = int(((file_starttime - starttime)/\
-                        1e6 * chain.samprate) / stepsize)
-                else:
-                    empty_pixels_at_start = 0
-                #Number of empty pixels at the end.
-                if endtime > file_endtime:
-                    empty_pixels_at_end = int(((endtime - file_endtime)/\
-                        1e6 * chain.samprate) / stepsize)
-                else:
-                    empty_pixels_at_end = 0
-                #Loop over pixels.
-                for _i in range(empty_pixels_at_start):
-                    minmaxlist.append([])
-                #Offset for list indices.
-                offset = (file_starttime - starttime) % stepsize
-                #First drawn pixel
-                tempdatlist = chain.datasamples[0 : stepsize - offset]
-                minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                #Loop over middle pixels.
-                for _i in range(width - empty_pixels_at_end - 
-                                empty_pixels_at_start - 2):
-                    tempdatlist = chain.datasamples[(_i+1)*stepsize - offset:
-                                                    (_i+2)*stepsize - offset]
-                    minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                #Last drawn pixel
-                tempdatlist = chain.datasamples[chain.samplecnt - offset : \
-                                                chain.samplecnt]
-                minmaxlist.append([min(tempdatlist),max(tempdatlist)])
-                for _i in range(empty_pixels_at_end):
-                    minmaxlist.append([])
-                    #Reset memory
-                    self.resetMs_readmsr()
-                return minmaxlist
+        #Create list with start-, endtime and number in chain.
+        timeslist = []
+        cur = mstg.contents.traces.contents
+        for _i in range(mstg.contents.numtraces):
+            timeslist.append((cur.starttime, cur.endtime, _i + 1))
+            if _i + 1 < mstg.contents.numtraces:
+                cur = cur.next.contents
+        #Sort list according to starttime.
+        timeslist.sort()
+        #Get start- and endtime and convert them too microsecond timestamp.
+        start_and_end_time = self.getStartAndEndTime(file)
+        if not starttime:
+            starttime = self.datetimeToMseedtimestring(start_and_end_time[0])
         else:
-            raise ValueError('Currently plotting is only supported for files '+
-                             'containing one continuous trace.')
+            starttime = self.datetimeToMseedtimestring(starttime)
+        if not endtime:
+            endtime = self.datetimeToMseedtimestring(start_and_end_time[1])
+        else:
+            endtime = self.datetimeToMseedtimestring(endtime)
+        #Calculate time for one pixel.
+        stepsize = (endtime - starttime) / width
+        #First two items are start- and endtime.
+        minmaxlist=[starttime, endtime]
+        #While loop over the plotting duration.
+        while starttime < endtime:
+            pixel_endtime = starttime + stepsize
+            tempdatlist = []
+            #Inner Loop over all times.
+            for _i in timeslist:
+                #Calculate current chain in the MSTraceGroup Structure.
+                chain = mstg.contents.traces.contents
+                for _ in xrange(_i[2] - 1):
+                    chain = chain.next.contents
+                #If the starttime is bigger than the endtime of the current
+                #trace delete the item from the list.
+                if starttime > _i[1]:
+                    #Still need to figure out how to delete the item from the
+                    #list.
+                    pass
+                elif starttime < _i[0]:
+                    #If starttime and endtime of the current pixel are too
+                    #small than leave the list.
+                    if pixel_endtime < _i[0]:
+                        #Leave the loop.
+                        pass
+                    #Otherwise append the border to tempdatlist.
+                    else:
+                        end = float((pixel_endtime - _i[0])) / \
+                              (_i[1] - _i[0]) * chain.samplecnt
+                        if end > _i[1]:
+                            end = _i[1]
+                        tempdatlist.extend(chain.datasamples[0 : int(end)])
+                #Starttime is right in the current trace.
+                else:
+                    #Endtime also is in the trace. Append to tempdatlist.
+                    if pixel_endtime < _i[1]:
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                              chain.samplecnt
+                        end = float((pixel_endtime - _i[0])) / \
+                              (_i[1] - _i[0]) * chain.samplecnt
+                        tempdatlist.extend(chain.datasamples[int(start) : \
+                                                             int(end)])
+                    #Endtime is not in the trace. Append to tempdatlist.
+                    else:
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                              chain.samplecnt
+                        tempdatlist.extend(chain.datasamples[int(start) : \
+                                                             chain.samplecnt])
+            #If empty list do nothing.
+            if tempdatlist == []:
+                pass
+            #If not empty append min, max and timestamp values to list.
+            else:
+                minmaxlist.append((min(tempdatlist), max(tempdatlist), 
+                                   starttime + 0.5 * stepsize))
+            #New starttime for while loop.
+            starttime = pixel_endtime
         #Reset memory
         self.resetMs_readmsr()
+        return minmaxlist
+
     
     def graph_create_graph(self, file, outfile = None, format = None,
-                           size = (1024, 768), timespan = (), dpi = 100,
-                           color = 'red', bgcolor = 'white',
-                           transparent = False, minmaxlist = False):
+                           size = (800, 200), starttime = False,
+                           endtime = False, dpi = 100, color = 'red',
+                           bgcolor = 'white', transparent = False,
+                           minmaxlist = False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
         directly to the file system or returns an binary image string.
@@ -688,11 +714,13 @@ class libmseed(object):
             Defaults to None.
         @param size: Size tupel in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
-            Defaults to 1024x768 px.
-        @param timespan: Tuple of two datetime objects. The graph will be
-            plotted between the two times. Use 0 for either of the two times
-            and it will be set to start- or endtime of the file.
-            Defaults to () (All datasamples will be plotted).
+            Defaults to 800x200 px.
+        @param starttime: Starttime of the graph as a datetime object. If not
+            set the graph will be plotted from the beginning.
+            Defaults to False.
+        @param endtime: Endtime of the graph as a datetime object. If not set
+            the graph will be plotted until the end.
+            Defaults to False.
         @param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
@@ -701,9 +729,9 @@ class libmseed(object):
         @param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
             Defaults to False.
-        @param minmaxlist: A list containing minimum and maximum values. If
-            none is supplied it will be created automatically. Useful for
-            caching.
+        @param minmaxlist: A list containing minimum, maximum and timestamp
+            values. If none is supplied it will be created automatically.
+            Useful for caching.
             Defaults to False.
         """
         #Either outfile or format needs to be set.
@@ -711,14 +739,14 @@ class libmseed(object):
             raise ValueError('Either outfile or format needs to be set.')
         #Get a list with minimum and maximum values.
         if not minmaxlist:
-            minmaxlist = self.graph_create_min_max_list(file = file,
+            minmaxlist = self.graphCreateMinMaxTimestampList(file = file,
                                                     width = size[0],
-                                                    timespan = timespan)
+                                                    starttime = starttime,
+                                                    endtime = endtime)
+        starttime = minmaxlist[0]
+        endtime = minmaxlist[1]
+        minmaxlist = minmaxlist[2:]
         length = len(minmaxlist)
-        #Needs to be done before importing pylab or pyplot.
-        import matplotlib
-        #Use AGG backend.
-        matplotlib.use('AGG')
         #Importing pyplot and numpy.
         import matplotlib.pyplot as plt
         #Setup figure and axes
@@ -746,18 +774,16 @@ class libmseed(object):
                 pass
         #Set axes and disable ticks
         plt.ylim(miny, maxy)
-        plt.xlim(0,length)
+        plt.xlim(starttime, endtime)
         plt.yticks([])
         plt.xticks([])
         #Draw horizontal lines.
         for _i in range(length):
-            if minmaxlist[_i] == []:
-                pass
-            else:
-                #Calculate relative values needed for drawing the lines.
-                yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
-                xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
-                plt.axvline(x = _i, ymin = yy, ymax = xx, color = color)
+            #Calculate relative values needed for drawing the lines.
+            yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
+            xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
+            plt.axvline(x = minmaxlist[_i][2], ymin = yy, ymax = xx,
+                        color = color)
         #Save file.
         if outfile:
             #If format is set use it.
@@ -776,28 +802,3 @@ class libmseed(object):
                     facecolor = bgcolor, edgecolor = bgcolor, format = format)
             imgdata.seek(0)
             return imgdata.read()
-    
-    def getMinMaxList(self, file, width):
-        """
-        Returns a list that consists of minimum and maximum data values.
-        
-        @param file: Mini-SEED file string.
-        @param width: Desired width in pixel of the data graph/number of 
-            values of returned data list.
-        """
-        # Read traces
-        mstg = self.readTraces(file, skipnotdata = 0)
-        chain = mstg.contents.traces.contents
-        # Number of datasamples in one pixel
-        if width >= chain.numsamples:
-            width = chain.numsamples
-        stepsize = int(chain.numsamples/width)
-        # Loop over datasamples and append to minmaxlist
-        data=[]
-        for x in xrange(0, width):
-            temp = chain.datasamples[x*stepsize:(x+1)*stepsize]
-            if x%2:
-                data.append(min(temp))
-            else:
-                data.append(max(temp))
-        return data
