@@ -17,18 +17,16 @@ GNU-LGPL and further information can be found here:
 http://www.gnu.org/
 """
 
-from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
-import ctypes as C
 from datetime import datetime
-from time import mktime, tzset
+from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
+from time import mktime
+import StringIO
+import ctypes as C
 import math
 import os
-import sys
 import platform
+import sys
 
-#Set global timezone to UTC.
-os.environ['TZ'] = 'UTC'
-tzset()
 
 #Import libmseed library.
 if sys.platform=='win32':
@@ -46,48 +44,6 @@ class libmseed(object):
     """
     Wrapper class for libmseed.
     """
-
-    def printtracelist(self,filename,timeformat= 0,details = 0, gaps=0):
-        """
-        Prints information about the traces in a Mini-SEED file using the libmseed
-        method printtracelist.
-        
-        Prints all informations to stdout.
-        
-        filename          - Name of file to read Mini-SEED data from
-        timeformat      - Controls the format of the resulting time string, default = 0
-                                    0 : SEED time format (2005,146,00:00:00.000000)
-                                    1 : ISO time format (2005-05-26T00:00:00.000000)
-                                    2 : Epoch time, seconds since the epoch (1117065600.00000000)
-        details             - If the details flag is greater than 0 the sample rate and 
-                                  sample count are printed for each trace, default = 0
-        gaps                - If the gaps flag is greater than zero the time gap from the 
-                                  previous MSTrace (if the source name matches) is printed, 
-                                  default = 0
-        """
-        mstg = self.readTraces(filename, dataflag = 0,skipnotdata = 0)
-        clibmseed.mst_printtracelist(mstg,timeformat,details,gaps)
-    
-    def printgaplist(self,filename,timeformat= 0,mingap = 0, maxgap=0):
-        """
-        Prints a formatted list of the gaps between MSTrace segments in the
-        given MSTraceGroup to stdout. If mingap or maxgap is not NULL their 
-        values will be enforced and only gaps/overlaps matching their implied
-        criteria will be printed.
-        
-        Uses the libmseed function printgapslist.
-        
-        filename          - Name of file to read Mini-SEED data from
-        timeformat      - Controls the format of the resulting time string, defaults to 0
-                                    0 : SEED time format (2005,146,00:00:00.000000)
-                                    1 : ISO time format (2005-05-26T00:00:00.000000)
-                                    2 : Epoch time, seconds since the epoch (1117065600.00000000)
-        mingap            - defaults to 0
-        maxgap           - defaults to 0
-        """
-        mstg = self.readtraces(filename, dataflag = 0, skipnotdata = 0)
-        clibmseed.mst_printgaplist(mstg,timeformat,mingap,maxgap)
-    
     def msr2dict(self, m):
         """
         """
@@ -107,7 +63,7 @@ class libmseed(object):
         h['encoding'] = m.contents.encoding
         h['sampletype'] = m.contents.sampletype
         return h
-
+    
     def mst2dict(self, m):
         """
         Return dictionary from MSTrace Object m, leaving the attributes
@@ -198,38 +154,36 @@ class libmseed(object):
                 else:
                     msrecord.append([header, 0])
         return msrecord
-
-    def read_MSRec(self, filename, reclen = -1, dataflag = 1, 
-                   skipnotdata = 1, verbose = 0):
+    
+    def read_MSRec(self, filename, reclen = -1, dataflag = 1, skipnotdata = 1, 
+                   verbose = 0):
         """
-        Reads Mini-SEED file and populates MS Record data structure with subsequent
-        calls.
+        Reads Mini-SEED file and populates MS Record data structure.
         
-        filename        - Mini-SEED file to be read
-        reclen            - If reclen is 0 the length of the first record is auto-
-                                detected. All subsequent records are then expected to
-                                have the same record length.
-                                If reclen is negative the length of every record is
-                                automatically detected.
-                                Defaults to -1.
-        dataflag        - Controls whether data samples are unpacked, defaults to 1
-        skipnotdata   - If true (not zero) any data chunks read that to do not
-                                have valid data record indicators will be skipped.
-                                Defaults to true (1).
-        verbose         - Controls verbosity from 0 to 2. Defaults to None (0).
+        @param filename: Mini-SEED file to be read.
+        @param reclen: If reclen is 0 the length of the first record is auto-
+            detected. All subsequent records are then expected to have the 
+            same record length. If reclen is negative the length of every 
+            record is automatically detected. Defaults to -1.
+        @param dataflag: Controls whether data samples are unpacked, defaults 
+            to 1.
+        @param skipnotdata: If true (not zero) any data chunks read that to do 
+            not have valid data record indicators will be skipped. Defaults to 
+            True (1).
+        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
         """
-        #Init MSRecord structure
+        # init MSRecord structure
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        msr=clibmseed.msr_init(None)
-        #Defines return type
+        msr = clibmseed.msr_init(None)
+        # defines return type
         clibmseed.ms_readmsr.restype = C.c_int
-        #Read the file and write the relevant information to msr
-        retcode=clibmseed.ms_readmsr(C.pointer(msr), filename, C.c_int(reclen),
-                             None, None,
-                             C.c_short(skipnotdata), C.c_short(dataflag),
-                             C.c_short(verbose))
-        return msr,retcode
-
+        # read the file and write the relevant information to msr
+        retcode = clibmseed.ms_readmsr(C.pointer(msr), filename, 
+                                       C.c_int(reclen), None, None,
+                                       C.c_short(skipnotdata), 
+                                       C.c_short(dataflag), C.c_short(verbose))
+        return msr, retcode
+    
     def populate_MSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
@@ -330,34 +284,6 @@ class libmseed(object):
         #Write cutted file
         self.write_ms(header, cutdata, outfile)
     
-    def printrecordinfo(self, file):
-        """
-        Reads Mini-SEED file using subsequent calls to read_MSRec and prints
-        general information about all records in the file and any gaps/overlaps
-        present in the file
-        """
-        print "Records in",file,":"
-        print "---------------------------------------------------"
-        retcode=0
-        oldstarttime=0
-        while retcode == 0:
-            msr, retcode=self.read_MSRec(file, dataflag=0, skipnotdata=0)
-            if retcode == 0:
-                    if oldstarttime!=0:
-                        if msr.contents.starttime-oldstarttime==0:
-                            print "NO GAPS/OVERLAPS"
-                        elif msr.contents.starttime-oldstarttime<0:
-                            print "OVERLAP"
-                        else:
-                            print "GAP"
-                    oldstarttime=long(msr.contents.starttime+\
-                                      msr.contents.samplecnt*\
-                                      (1/msr.contents.samprate)*1e6)
-                    print "Sequence number:",msr.contents.sequence_number,"--",
-                    print "starttime:",msr.contents.starttime,", # of samples:",
-                    print msr.contents.samplecnt,"=> endtime :",
-                    print oldstarttime
-    
     def readTraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
                    dataflag = 1, skipnotdata = 1, verbose = 0):
         """
@@ -404,86 +330,76 @@ class libmseed(object):
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
         msr=clibmseed.msr_init(None)
         clibmseed.ms_readmsr(msr, None, 0, None, None, 0, 0, 0)
-        
+    
     def getFirstRecordHeaderInfo(self, file):
         """
-        Takes Mini-SEED file string and returns some information from the
-        header of the first record.
+        Takes a Mini-SEED file and returns header of the first record.
         
         Returns a dictionary containing some header information from the first
         record of the Mini-SEED file only. It returns the location, network,
         station and channel information.
         
         @param file: Mini-SEED file string.
-        
         """
-        #Read first header only.
+        # read first header only
         msr = self.read_MSRec(file, dataflag = 0)
         header = {}
         chain = msr[0].contents
-        #Header attributes to be read.
+        # header attributes to be read
         attributes = ('location', 'network', 'station', 'channel')
-        #Loop over attributes.
+        # loop over attributes
         for _i in attributes:
             header[_i] = getattr(chain, _i)
         return header
     
     def getStartAndEndTime(self, file):
         """
-        Returns the start- and endtime of a Mini-SEED file as a tuple of two
-        Python datetime objects.
+        Returns the start- and endtime of a Mini-SEED file.
         
         This method only reads the first and the last record. Thus it will work
         only work correctly for files containing only one trace.
         
         @param file: Mini-SEED file string.
         """
-        #Read starttime and record length from first header.
+        # read starttime and record length from first header
         msr = self.read_MSRec(file, dataflag = 0)
         chain = msr[0].contents
         starttime = chain.starttime
         record_length = chain.reclen
-        #Cleanup memory and close old msr file.
+        # cleanup memory and close old msr file
         self.resetMs_readmsr()
-        #Open Mini-SEED file and write last record into temporary file.
+        # open Mini-SEED file and write last record into temporary file
         mseed_file = open(file, 'rb')
         mseed_file.seek(-record_length, 2)
         temp_record = open('temp', 'wb')
         temp_record.write(mseed_file.read(record_length))
         mseed_file.close()
         temp_record.close()
-        #Read last record.
+        # read last record
         msr = self.read_MSRec('temp', dataflag = 0)
         chain = msr[0].contents
-        #Calculate endtime.
+        # calculate endtime
         endtime = chain.starttime + (chain.samplecnt -1) / chain.samprate *\
-                                                                    HPTMODULUS
-        #Remove temporary file
-        os.remove('temp')
-        return (self.mseedtimestringToDatetime(starttime),
-                self.mseedtimestringToDatetime(endtime))
+                  HPTMODULUS
+        # remove temporary file
+        #os.remove('temp')
+        return (self.MSTime2Datetime(starttime), self.MSTime2Datetime(endtime))
         
-    def datetimeToMseedtimestring(self, dtobj):
+    def Datetime2MSTime(self, dt):
         """
         Takes datetime object and returns an epoch time in ms.
         
-        @param dtobj: Datetime object.
+        @param dt: Datetime object.
         """
-        return long((mktime(dtobj.timetuple()) * HPTMODULUS)+dtobj.microsecond)
+        return long((mktime(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
     
-    def mseedtimestringToDatetime(self, timestring):
+    def MSTime2Datetime(self, timestring):
         """
         Takes Mini-SEED timestring and returns a Python datetime object.
         
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
-        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
-    
-    def isRateTolerable(self, sr1, sr2):
-        """
-        Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
-        """
-        return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
+        return datetime.fromtimestamp(timestring / HPTMODULUS)
     
     def printGapList(self, filename, time_tolerance = -1, 
                      samprate_tolerance = -1, min_gap = None, max_gap = None):
@@ -533,7 +449,7 @@ class libmseed(object):
                 cur = next
                 continue
             # Check that sample rates match using default tolerance
-            if not self.isRateTolerable(cur.samprate, next.samprate):
+            if not self._isRateTolerable(cur.samprate, next.samprate):
                 msg = "%s Sample rate changed! %.10g -> %.10g\n"
                 print msg % (cur.samprate, next.samprate)
             gap = (next.starttime - cur.endtime) / HPTMODULUS
@@ -566,6 +482,12 @@ class libmseed(object):
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
         return gap_list
+    
+    def _isRateTolerable(self, sr1, sr2):
+        """
+        Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
+        """
+        return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
     
     def graphCreateMinMaxTimestampList(self, file, width, starttime = None, 
                                        endtime = None):
@@ -608,13 +530,13 @@ class libmseed(object):
         #Get start- and endtime and convert them too microsecond timestamp.
         start_and_end_time = self.getStartAndEndTime(file)
         if not starttime:
-            starttime = self.datetimeToMseedtimestring(start_and_end_time[0])
+            starttime = self.Datetime2MSTime(start_and_end_time[0])
         else:
-            starttime = self.datetimeToMseedtimestring(starttime)
+            starttime = self.Datetime2MSTime(starttime)
         if not endtime:
-            endtime = self.datetimeToMseedtimestring(start_and_end_time[1])
+            endtime = self.Datetime2MSTime(start_and_end_time[1])
         else:
-            endtime = self.datetimeToMseedtimestring(endtime)
+            endtime = self.Datetime2MSTime(endtime)
         #Calculate time for one pixel.
         stepsize = (endtime - starttime) / width
         #First two items are start- and endtime.
@@ -653,7 +575,7 @@ class libmseed(object):
                     #Endtime also is in the trace. Append to tempdatlist.
                     if pixel_endtime < _i[1]:
                         start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
-                              chain.samplecnt
+                                chain.samplecnt
                         end = float((pixel_endtime - _i[0])) / \
                               (_i[1] - _i[0]) * chain.samplecnt
                         tempdatlist.extend(chain.datasamples[int(start) : \
@@ -661,7 +583,7 @@ class libmseed(object):
                     #Endtime is not in the trace. Append to tempdatlist.
                     else:
                         start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
-                              chain.samplecnt
+                                chain.samplecnt
                         tempdatlist.extend(chain.datasamples[int(start) : \
                                                              chain.samplecnt])
             #If empty list do nothing.
@@ -676,7 +598,6 @@ class libmseed(object):
         #Reset memory
         self.resetMs_readmsr()
         return minmaxlist
-
     
     def graph_create_graph(self, file, outfile = None, format = None,
                            size = (800, 200), starttime = False,
@@ -796,7 +717,6 @@ class libmseed(object):
                     facecolor = bgcolor, edgecolor = bgcolor)
         #Return an binary imagestring if outfile is not set but format is.
         if not outfile:
-            import StringIO
             imgdata = StringIO.StringIO()
             plt.savefig(imgdata, dpi = dpi, transparent = transparent,
                     facecolor = bgcolor, edgecolor = bgcolor, format = format)

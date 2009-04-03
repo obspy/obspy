@@ -16,28 +16,29 @@ class LibMSEEDTestCase(unittest.TestCase):
     Test cases for libmseed.
     """
     def setUp(self):
-        # Directory where the test files are located
+        # directory where the test files are located
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(path, 'data')
     
     def tearDown(self):
         pass
     
-    def test_TimeConversionUtilities(self):
+    def test_convertDatetimes(self):
         """
-        Tests the two time conversion methods to convert to and from Mini-SEED
-        timestring and Python datetime objects.
+        Tests all time conversion methods.
         
         This is a sanity test. A conversion to a format and back should not
         change the value
         """
         mseed = libmseed()
+        # today
         now = datetime.now()
+        self.assertEqual(now, mseed.MSTime2Datetime(
+                              mseed.Datetime2MSTime(now)))
+        # some random date
         timestring = random.randint(0, 2000000) * 1e6
-        self.assertEqual(now, mseed.mseedtimestringToDatetime(
-                              mseed.datetimeToMseedtimestring(now)))
-        self.assertEqual(timestring, mseed.datetimeToMseedtimestring(
-                                  mseed.mseedtimestringToDatetime(timestring)))
+        self.assertEqual(timestring, mseed.Datetime2MSTime(
+                                     mseed.MSTime2Datetime(timestring)))
     
     def test_readTraces(self):
         """
@@ -50,11 +51,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed_file = os.path.join(self.path, 
                                   'BW.BGLD..EHE.D.2008.001.first_record')
-        mseed=libmseed()
-        
-        datalist=[-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
-                        -367, -414, -427]
-        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
+        mseed = libmseed()
+        # list of known data samples
+        datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
+                    -367, -414, -427]
+        header, data, numtraces = mseed.read_ms_using_traces(mseed_file)
         self.assertEqual('BGLD', header['station'])
         self.assertEqual('EHE', header['channel'])
         self.assertEqual(200, header['samprate'])
@@ -71,16 +72,15 @@ class LibMSEEDTestCase(unittest.TestCase):
         options. A reencoded SEED file should still have the same values 
         regardless of write options.
         """
+        mseed = libmseed() 
+        mseed_file = os.path.join(self.path, 'test.mseed')
+        header, data, numtraces = mseed.read_ms_using_traces(mseed_file)
         # define test ranges
         record_length_values = [2**i for i in range(8, 21)]
         encoding_values = [1, 3, 10, 11]
         byteorder_values = [0, 1]
-        
-        mseed=libmseed() 
-        mseed_file = os.path.join(self.path, 'test.mseed')
-        header, data, numtraces=mseed.read_ms_using_traces(mseed_file)
-        # Deletes the dataquality indicators
-        testheader=header.copy()
+        # deletes the data quality indicators
+        testheader = header.copy()
         del testheader['dataquality']
         # loops over all combinations of test values
         for reclen in record_length_values:
@@ -132,11 +132,10 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
-        
+    
     def test_readFirstHeaderInfo(self):
         """
-        Reads header info from the first record and compares it with known
-        header values.
+        Reads and compares header info from the first record.
         
         The values can be read from the filename.
         """
@@ -147,11 +146,10 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         self.assertEqual(header['channel'], 'EHE')
-        
+    
     def test_getStartAndEndTime(self):
         """
-        Tests getting the start- and end time of a file by reading the first and
-        last record only.
+        Tests getting the start- and end time of a file.
         
         The values are compared with the readTraces() method which parses the
         whole file. This will only work for files with only one trace and with-
@@ -159,17 +157,18 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-        #Getting the start- and end time.
+        #mseed.getEndtime(filename)
+        
+        # get the start- and end time
         times = mseed.getStartAndEndTime(filename)
-        #Reseting the ms_readmsr() method of libmseed.
+        # reseting the ms_readmsr() method of libmseed
         mseed.resetMs_readmsr()
-        #Parsing the whole file.
+        # parse the whole file
         mstg = mseed.readTraces(filename, dataflag = 0)
         chain = mstg.contents.traces.contents
-        self.assertEqual(times[0], 
-                         mseed.mseedtimestringToDatetime(chain.starttime))
-        self.assertEqual(times[1], 
-                         mseed.mseedtimestringToDatetime(chain.endtime))
+        self.assertEqual(times[0], mseed.MSTime2Datetime(chain.starttime))
+        self.assertEqual(times[1], mseed.MSTime2Datetime(chain.endtime))
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
