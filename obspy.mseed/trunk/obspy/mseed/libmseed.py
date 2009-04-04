@@ -25,6 +25,7 @@ import ctypes as C
 import math
 import os
 import platform
+import random
 import sys
 
 
@@ -102,13 +103,6 @@ class libmseed(object):
         m.contents.numsamples = h["numsamples"]
         m.contents.sampletype = h["sampletype"]
         
-    def compareHeaders(self, header1, msrecord):
-        if len(msrecord) == 0:
-            return True
-        #msrecord[len(msrecord)-1][0]
-        else:
-            return False
-    
     def read_ms_using_traces(self, filename, dataflag = 1):
         """
         Read Mini-SEED file. Header, Data and numtraces are returned
@@ -119,7 +113,7 @@ class libmseed(object):
         verbosity       - Level of diagnostic messages, default 0
         """
         #Creates MSTraceGroup Structure
-        mstg = self.readTraces(filename)
+        mstg = self.readTraces(filename, dataflag = dataflag)
         data=[]
         header=[]
         mst = mstg.contents.traces
@@ -356,33 +350,41 @@ class libmseed(object):
         """
         Returns the start- and endtime of a Mini-SEED file.
         
-        This method only reads the first and the last record. Thus it will work
-        only work correctly for files containing only one trace.
+        This method only reads the first and the last record. Thus it will only
+        work correctly for files containing only one trace with all records
+        in the correct order.
+        
+        The returned endtime is the time of the last datasample and not the
+        time that the last sample covers.
         
         @param file: Mini-SEED file string.
         """
         # read starttime and record length from first header
         msr = self.read_MSRec(file, dataflag = 0)
         chain = msr[0].contents
-        starttime = chain.starttime
+        clibmseed.msr_starttime.restype = C.c_int64
+        starttime = clibmseed.msr_starttime(msr[0])
         record_length = chain.reclen
-        # cleanup memory and close old msr file
+        # cleanup memory
         self.resetMs_readmsr()
         # open Mini-SEED file and write last record into temporary file
         mseed_file = open(file, 'rb')
         mseed_file.seek(-record_length, 2)
-        temp_record = open('temp', 'wb')
+        randtempname = str(random.random())
+        temp_record = open(randtempname, 'wb')
         temp_record.write(mseed_file.read(record_length))
         mseed_file.close()
         temp_record.close()
         # read last record
-        msr = self.read_MSRec('temp', dataflag = 0)
+        msr = self.read_MSRec(randtempname, dataflag = 0)
         chain = msr[0].contents
         # calculate endtime
-        endtime = chain.starttime + (chain.samplecnt -1) / chain.samprate *\
-                  HPTMODULUS
+        endtime = clibmseed.msr_starttime(msr[0]) + \
+            (chain.samplecnt -1) / chain.samprate * HPTMODULUS
         # remove temporary file
-        #os.remove('temp')
+        os.remove(randtempname)
+        # clean memory
+        self.resetMs_readmsr()
         return (self.MSTime2Datetime(starttime), self.MSTime2Datetime(endtime))
         
     def Datetime2MSTime(self, dt):

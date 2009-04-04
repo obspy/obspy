@@ -29,7 +29,8 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         Plots examples in tests/output directory
         """
         mseed = libmseed()
-        mseed_file = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        mseed_file = os.path.join(self.path,
+                    'BW.BGLD..EHE.D.2008.001_first_10_percent')
         gap_file = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         small_file = os.path.join(self.path, 'test.mseed')
         small_gap_file = os.path.join(self.path, 'gaps.mseed')
@@ -63,13 +64,13 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
             'graph_800x200px_with_one_empty_day_before_and_after_graph'),\
             starttime = stime, endtime = etime)
-        # graph that plots the last six hours of the MiniSEED file
+        # graph that plots the hour of the MiniSEED file
         mstg = mseed.readTraces(mseed_file, dataflag = 0)
         endtime = mstg.contents.traces.contents.endtime
-        starttime = mseed.MSTime2Datetime(endtime - 21600 * 1e6)
+        starttime = mseed.MSTime2Datetime(endtime - 3600 * 1e6)
         # create graph
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
-            'graph_800x200px_last_six_hours_two_gray_shades'),\
+            'graph_800x200px_last_hour_two_gray_shades'),\
             starttime = starttime, color = '0.7',
             bgcolor = '0.2')
         # graph with a large gap in between
