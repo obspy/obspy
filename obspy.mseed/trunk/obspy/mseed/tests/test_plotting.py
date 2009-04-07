@@ -49,10 +49,11 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
             'full_graph_777x222px_orange_and_turquoise.png'))
         self.assertEqual(imgstring, imgfile.read())
         imgfile.close()
-        # same graph as above but green with transparent background
+        # same graph as above but with a transparent background and a green/
+        # orange gradient applied to the graph.
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath,
-            'full_graph_777x222px_green_and_transparent'), size = (777, 222),
-            transparent = True, minmaxlist = minmaxlist, color = '#99ff99')
+            'full_graph_777x222px_green-orange-gradient_and_transparent'), size = (777, 222),
+            transparent = True, minmaxlist = minmaxlist, color = ('#99ff99', '#ffcc66'))
         # graph with user defined start and endtime both outside the graph
         mstg = mseed.readTraces(mseed_file, dataflag = 0)
         starttime = mstg.contents.traces.contents.starttime
@@ -73,11 +74,13 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
             'graph_800x200px_last_hour_two_gray_shades'),\
             starttime = starttime, color = '0.7',
             bgcolor = '0.2')
-        # graph with a large gap in between
+        # graph with a large gap in between and a gradient in the graph and the
+        # background and basic shadow effect applied to the graph.
         mseed.graph_create_graph(file = gap_file,
             outfile = os.path.join(self.outpath, 
-            'graph_888x222px_with_gap_two_blue_shades'), size = (888, 222),
-            color = 'royalblue', bgcolor = 'lightsteelblue')
+            'graph_888x222px_with_gap_two_gradients_and_shadows'),
+            size = (888, 222), color = ('#ffff00', '#ff6633'),
+            bgcolor = ('#111111','#ccccff'), shadows = True)
         # small graph with only 11947 samples. It works reasonably well but
         # the plotting method is designed to plot files with several million
         # datasamples.

@@ -605,7 +605,7 @@ class libmseed(object):
                            size = (800, 200), starttime = False,
                            endtime = False, dpi = 100, color = 'red',
                            bgcolor = 'white', transparent = False,
-                           minmaxlist = False):
+                           shadows = False, minmaxlist = False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
         directly to the file system or returns an binary image string.
@@ -647,10 +647,18 @@ class libmseed(object):
         @param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
-        @param color: Color of the graph. Defaults to 'red'.
-        @param bgcolor: Background color of the graph. Defaults to 'white'.
+        @param color: Color of the graph. If the supplied parameter is a
+            2-tupel containing two html hex string colors a gradient between
+            the two colors will be applied to the graph.
+            Defaults to 'red'.
+        @param bgcolor: Background color of the graph. If the supplied 
+            parameter is a 2-tupel containing two html hex string colors a 
+            gradient between the two colors will be applied to the background.
+            Defaults to 'white'.
         @param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
+            Defaults to False.
+        @param shadows: Adds a very basic drop shadow effect to the graph.
             Defaults to False.
         @param minmaxlist: A list containing minimum, maximum and timestamp
             values. If none is supplied it will be created automatically.
@@ -668,6 +676,7 @@ class libmseed(object):
                                                     endtime = endtime)
         starttime = minmaxlist[0]
         endtime = minmaxlist[1]
+        stepsize = (endtime - starttime)/size[0]
         minmaxlist = minmaxlist[2:]
         length = len(minmaxlist)
         #Importing pyplot and numpy.
@@ -700,11 +709,70 @@ class libmseed(object):
         plt.xlim(starttime, endtime)
         plt.yticks([])
         plt.xticks([])
+        #Overwrite the background gradient if transparent is set.
+        if transparent:
+            bgcolor = None
+        #Draw gradient background if needed.
+        if type(bgcolor) == type((1,2)):
+            for _i in xrange(size[0]+1):
+                #Convert hex values to integers
+                r1 = int(bgcolor[0][1:3], 16)
+                r2 = int(bgcolor[1][1:3], 16)
+                delta_r = (float(r2) - float(r1))/size[0]
+                g1 = int(bgcolor[0][3:5], 16)
+                g2 = int(bgcolor[1][3:5], 16)
+                delta_g = (float(g2) - float(g1))/size[0]
+                b1 = int(bgcolor[0][5:], 16)
+                b2 = int(bgcolor[1][5:], 16)
+                delta_b = (float(b2) - float(b1))/size[0]
+                new_r = hex(int(r1 + delta_r * _i))[2:]
+                new_g = hex(int(g1 + delta_g * _i))[2:]
+                new_b = hex(int(b1 + delta_b * _i))[2:]
+                if len(new_r) == 1:
+                    new_r = '0'+new_r
+                if len(new_g) == 1:
+                    new_g = '0'+new_g
+                if len(new_b) == 1:
+                    new_b = '0'+new_b
+                #Create color string
+                bglinecolor = '#'+new_r+new_g+new_b
+                plt.axvline(x = starttime + _i*stepsize, color = bglinecolor)
+            bgcolor = 'white'
+        #Clone color for looping.
+        loop_color = color
         #Draw horizontal lines.
         for _i in range(length):
+            #Make gradient if color is a 2-tupel.
+            if type(loop_color) == type((1,2)):
+                #Convert hex values to integers
+                r1 = int(loop_color[0][1:3], 16)
+                r2 = int(loop_color[1][1:3], 16)
+                delta_r = (float(r2) - float(r1))/length
+                g1 = int(loop_color[0][3:5], 16)
+                g2 = int(loop_color[1][3:5], 16)
+                delta_g = (float(g2) - float(g1))/length
+                b1 = int(loop_color[0][5:], 16)
+                b2 = int(loop_color[1][5:], 16)
+                delta_b = (float(b2) - float(b1))/length
+                new_r = hex(int(r1 + delta_r * _i))[2:]
+                new_g = hex(int(g1 + delta_g * _i))[2:]
+                new_b = hex(int(b1 + delta_b * _i))[2:]
+                if len(new_r) == 1:
+                    new_r = '0'+new_r
+                if len(new_g) == 1:
+                    new_g = '0'+new_g
+                if len(new_b) == 1:
+                    new_b = '0'+new_b
+                #Create color string
+                color = '#'+new_r+new_g+new_b
             #Calculate relative values needed for drawing the lines.
             yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
             xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
+            #Draw shadows if desired.
+            if shadows:
+                plt.axvline(x = minmaxlist[_i][2] + stepsize, ymin = yy - 0.01,
+                            ymax = xx - 0.01, color = 'k', alpha = 0.4)
+            #Draw actual data lines.
             plt.axvline(x = minmaxlist[_i][2], ymin = yy, ymax = xx,
                         color = color)
         #Save file.
