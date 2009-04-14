@@ -212,7 +212,12 @@ class libmseed(object):
         """
         Takes MS Trace object and writes it to a file
         """
-        mseedfile=open(outfile, 'wb')
+        #Allow direclty passing of file pointers, usefull for appending
+        #mseed records on existing mseed files
+        if type(outfile) == file:
+            mseedfile = outfile
+        else:
+            mseedfile=open(outfile, 'wb')
         #Initialize packedsamples pointer for the mst_pack function
         self.packedsamples = C.pointer(C.c_int(0))
         #Callback function for mst_pack to actually write the file
@@ -224,7 +229,8 @@ class libmseed(object):
         #Pack the file into a MiniSEED file
         clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
                            self.packedsamples, flush, verbose, None)
-        mseedfile.close()
+        if not type(outfile) == file:
+            mseedfile.close()
     
     def write_ms(self,header,data, outfile, numtraces=1, reclen= -1,
                  encoding=-1, byteorder=-1, flush=-1, verbose=0):
