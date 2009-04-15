@@ -23,6 +23,29 @@ class LibMSEEDTestCase(unittest.TestCase):
     def tearDown(self):
         pass
     
+    def test_resetMemory(self):
+        """
+        Tests to reset the memory. Needed to read two files in one python
+        session.
+        """
+        filename = os.path.join(self.path, 
+                                  'BW.BGLD..EHE.D.2008.001')
+        mseed = libmseed()
+        msr = mseed.read_MSRec(filename, dataflag = 0)
+        first_record = msr[0].contents.sequence_number
+        msr = mseed.read_MSRec(filename, dataflag = 0)
+        second_record = msr[0].contents.sequence_number
+        #Reset Memory and read the same file again
+        mseed.resetMemory()
+        msr = mseed.read_MSRec(filename, dataflag = 0)
+        new_first_record = msr[0].contents.sequence_number
+        msr = mseed.read_MSRec(filename, dataflag = 0)
+        new_second_record = msr[0].contents.sequence_number
+        self.assertEqual(first_record, new_first_record)
+        self.assertEqual(second_record, new_second_record)
+        #Reset Memory.
+        mseed.resetMemory()
+    
     def test_convertDatetimes(self):
         """
         Tests all time conversion methods.
@@ -33,12 +56,38 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = libmseed()
         # today
         now = datetime.now()
-        self.assertEqual(now, mseed.MSTime2Datetime(
-                              mseed.Datetime2MSTime(now)))
+        self.assertEqual(now, mseed.convertMSTimeToDatetime(
+                              mseed.convertDatetimeToMSTime(now)))
         # some random date
         timestring = random.randint(0, 2000000) * 1e6
-        self.assertEqual(timestring, mseed.Datetime2MSTime(
-                                     mseed.MSTime2Datetime(timestring)))
+        self.assertEqual(timestring, mseed.convertDatetimeToMSTime(
+                        mseed.convertMSTimeToDatetime(timestring)))
+        
+    def test_readMSRec(self):
+        """
+        Compares waveform data read by libmseed with an ASCII dump.
+        
+        Checks the first 13 datasamples when reading the first record of 
+        BW.BGLD..EHE.D.2008.001 using traces. The values are assumed to
+        be correct. The values were created using Pitsa.
+        Only checks relative values.
+        """
+        filename = os.path.join(self.path, 
+                                  'BW.BGLD..EHE.D.2008.001.first_record')
+        mseed = libmseed()
+        # list of known data samples
+        datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
+                    -367, -414, -427]
+        msr = mseed.read_MSRec(filename)
+        chain = msr[0].contents
+        self.assertEqual('BGLD', chain.station)
+        self.assertEqual('EHE', chain.channel)
+        self.assertEqual(200, chain.samprate)
+        data = chain.datasamples[0:13]
+        for i in range(len(datalist)-1):
+            self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
+        #Reset Memory.
+        mseed.resetMemory()
     
     def test_readTraces(self):
         """
@@ -63,6 +112,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(numtraces, 1)
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
+        #Reset Memory.
+        mseed.resetMemory()
     
     def test_readAnWriteTraces(self):
         """
@@ -99,6 +150,8 @@ class LibMSEEDTestCase(unittest.TestCase):
                     self.assertEqual(data, newdata)
                     self.assertEqual(numtraces, newnumtraces)
                     os.remove(temp_file)
+    #Reset Memory.
+        mseed.resetMemory()
     
     def test_getGapList(self):
         """
@@ -132,6 +185,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
+        #Reset Memory.
+        mseed.resetMemory()
     
     def test_readFirstHeaderInfo(self):
         """
@@ -146,6 +201,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         self.assertEqual(header['channel'], 'EHE')
+        #Reset Memory.
+        mseed.resetMemory()
     
     def test_getStartAndEndTime(self):
         """
@@ -162,12 +219,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         # get the start- and end time
         times = mseed.getStartAndEndTime(filename)
         # reseting the ms_readmsr() method of libmseed
-        mseed.resetMs_readmsr()
+        mseed.resetMemory()
         # parse the whole file
         mstg = mseed.readTraces(filename, dataflag = 0)
         chain = mstg.contents.traces.contents
-        self.assertEqual(times[0], mseed.MSTime2Datetime(chain.starttime))
-        self.assertEqual(times[1], mseed.MSTime2Datetime(chain.endtime))
+        self.assertEqual(times[0], mseed.convertMSTimeToDatetime(chain.starttime))
+        self.assertEqual(times[1], mseed.convertMSTimeToDatetime(chain.endtime))
+        #Reset Memory.
+        mseed.resetMemory()
 
 
 def suite():

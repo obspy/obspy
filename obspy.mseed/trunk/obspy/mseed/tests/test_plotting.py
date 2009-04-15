@@ -59,8 +59,8 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         starttime = mstg.contents.traces.contents.starttime
         endtime = mstg.contents.traces.contents.endtime
         # graph begins one day before the file and ends one day after the file
-        stime = mseed.MSTime2Datetime(starttime - 86400 * 1e6)
-        etime = mseed.MSTime2Datetime(endtime + 86400 * 1e6)
+        stime = mseed.convertMSTimeToDatetime(starttime - 86400 * 1e6)
+        etime = mseed.convertMSTimeToDatetime(endtime + 86400 * 1e6)
         # create graph
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
             'graph_800x200px_with_one_empty_day_before_and_after_graph'),\
@@ -68,7 +68,7 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         # graph that plots the hour of the MiniSEED file
         mstg = mseed.readTraces(mseed_file, dataflag = 0)
         endtime = mstg.contents.traces.contents.endtime
-        starttime = mseed.MSTime2Datetime(endtime - 3600 * 1e6)
+        starttime = mseed.convertMSTimeToDatetime(endtime - 3600 * 1e6)
         # create graph
         mseed.graph_create_graph(mseed_file, os.path.join(self.outpath, 
             'graph_800x200px_last_hour_two_gray_shades'),\

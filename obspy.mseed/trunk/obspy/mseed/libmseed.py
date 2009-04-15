@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Wrapper class for libmseed - The Mini-SEED library.
+Class for handling Mini-SEED files.
 
-Currently only supports MiniSEED files with integer data values.
+Contains wrappers for libmseed - The Mini-SEED library.
+
+Currently only supports Mini-SEED files with integer data values.
 
 This library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Library General Public License as
@@ -17,15 +19,15 @@ GNU-LGPL and further information can be found here:
 http://www.gnu.org/
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
+from struct import unpack
 from time import mktime
 import StringIO
 import ctypes as C
 import math
 import os
 import platform
-import random
 import sys
 
 
@@ -43,29 +45,38 @@ clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
 
 class libmseed(object):
     """
-    Wrapper class for libmseed.
+    Class for handling Mini-SEED files.
     """
-    def msr2dict(self, m):
+    def resetMemory(self):
         """
+        Cleans memory and resets the clibmseed.ms_readmsr() function.
+        
+        This function needs to be called after reading a Mini-SEED file with
+        any of the provided methods if you want to read another Mini-SEED file
+        without restarting Python. If this is not done it will probably still
+        work but raise a warning.
         """
-        h = {}
-        h['reclen'] = m.contents.reclen
-        h['sequence_number'] = m.contents.sequence_number
-        h['network'] = m.contents.network
-        h['station'] = m.contents.station
-        h['location'] = m.contents.location
-        h['channel'] = m.contents.channel
-        h['dataquality'] = m.contents.dataquality
-        h['starttime'] = m.contents.starttime
-        h['samprate'] = m.contents.samprate
-        h['samplecnt'] = m.contents.samplecnt
-        h['encoding'] = m.contents.encoding
-        h['byteorder'] = m.contents.byteorder
-        h['encoding'] = m.contents.encoding
-        h['sampletype'] = m.contents.sampletype
-        return h
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr=clibmseed.msr_init(None)
+        clibmseed.ms_readmsr(msr, None, 0, None, None, 0, 0, 0)
     
-    def mst2dict(self, m):
+    def convertDatetimeToMSTime(self, dt):
+        """
+        Takes datetime object and returns an epoch time in ms.
+        
+        @param dt: Datetime object.
+        """
+        return long((mktime(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
+    
+    def convertMSTimeToDatetime(self, timestring):
+        """
+        Takes Mini-SEED timestring and returns a Python datetime object.
+        
+        @param timestring: Mini-SEED timestring (Epoch time string in ms).
+        """
+        return datetime.fromtimestamp(timestring / HPTMODULUS)
+    
+    def _convertMSTToDict(self, m):
         """
         Return dictionary from MSTrace Object m, leaving the attributes
         datasamples, ststate and next out
@@ -85,7 +96,7 @@ class libmseed(object):
         h["sampletype"] = m.contents.sampletype
         return h
 
-    def dict2mst(self, m, h):
+    def _convertDictToMST(self, m, h):
         """
         Takes dictionary containing MSTrace header data and writes them to the
         MSTrace Group
@@ -120,34 +131,9 @@ class libmseed(object):
         numtraces = mstg.contents.numtraces
         for _i in range(numtraces):
             data.extend(mst.contents.datasamples[0:mst.contents.numsamples])
-            header.append(self.mst2dict(mst))
+            header.append(self._convertMSTToDict(mst))
             mst = mst.contents.next
         return header[0],data, numtraces
-    
-    def readMSusingRecords(self, filename):
-        """
-        Reads a given Mini-SEED file and parses all information.
-        
-        Structure of the returned list:
-        [[header for trace 1, data] , [header for trace 2, data], ...]
-        """
-        msrecord=[]
-        retcode=0
-        while retcode == 0:
-            msr, retcode = self.read_MSRec(filename)
-            if retcode == 0:
-                header=self.msr2dict(msr)
-                #Sanity check
-                if header['samplecnt'] != msr.contents.numsamples:
-                    print "Warning: The number of samples unpacked does not"
-                    print "correspond with the number of samples specified in the header."
-#                if len(msrecord) == 0:
-#                data=msr.contents.datasamples[0:msr.contents.numsamples]
-                if self.compareHeaders(header, msrecord):
-                    print "Same Trace"
-                else:
-                    msrecord.append([header, 0])
-        return msrecord
     
     def read_MSRec(self, filename, reclen = -1, dataflag = 1, skipnotdata = 1, 
                    verbose = 0):
@@ -178,7 +164,7 @@ class libmseed(object):
                                        C.c_short(dataflag), C.c_short(verbose))
         return msr, retcode
     
-    def populate_MSTG(self, header, data, numtraces=1):
+    def _populate_MSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
@@ -191,7 +177,7 @@ class libmseed(object):
         #Connect Group with Traces
         mstg.contents.traces=clibmseed.mst_init(None)
         #Write header in MSTrace structure
-        self.dict2mst(mstg.contents.traces, header)
+        self._convertDictToMST(mstg.contents.traces, header)
         #Needs to be redone, dynamic??
         mstg.contents.numtraces=numtraces
         #Create void pointer and allocates more memory to it
@@ -258,31 +244,10 @@ class libmseed(object):
                     diagnostic output.
         """
         #Populate MSTG Structure
-        mstg=self.populate_MSTG(header, data, numtraces)
+        mstg=self._populate_MSTG(header, data, numtraces)
         #Write File from MS-Trace structure
         self.mst2file(mstg.contents.traces, outfile, reclen, encoding, byteorder,
                       flush, verbose)
-    
-    def cut_ms(self, data, header, stime, cutsamplecount, outfile='cut.mseed'):
-        """
-        Takes a data file list, a header dictionary, a starttime, the number of 
-        samples to cut and writes it in outfile.
-        stime             - The time in microseconds with the origin set to the
-                                      beginning of the file
-        cutsamplecount  - The number of samples to cut
-        outfile                  - filename of the Record to write
-        """
-        samprate_in_microsecs = header['samprate']/1e6
-        #Modifiy the header
-        header['starttime'] = header['starttime'] + stime
-        header['endtime'] = int(header['starttime'] + cutsamplecount/\
-                                samprate_in_microsecs)
-        header['numsamples'] = cutsamplecount
-        header['samplecnt'] = cutsamplecount
-        #Make new data list, some rounding issues need to be solved
-        cutdata=data[int(stime/samprate_in_microsecs):cutsamplecount+1]
-        #Write cutted file
-        self.write_ms(header, cutdata, outfile)
     
     def readTraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
                    dataflag = 1, skipnotdata = 1, verbose = 0):
@@ -315,21 +280,8 @@ class libmseed(object):
         if errcode != 0:
             assert 0, "\n\nError while reading Mini-SEED file: "+filename
         #Reset memory
-        self.resetMs_readmsr()
+        self.resetMemory()
         return mstg
-    
-    def resetMs_readmsr(self):
-        """
-        Cleans memory and resets the clibmseed.ms_readmsr() function.
-        
-        This function needs to be called after reading a Mini-SEED file with
-        any of the provided methods if you want to read another Mini-SEED file
-        without restarting Python. If this is not done it will probably still
-        work but raise a warning.
-        """
-        clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        msr=clibmseed.msr_init(None)
-        clibmseed.ms_readmsr(msr, None, 0, None, None, 0, 0, 0)
     
     def getFirstRecordHeaderInfo(self, file):
         """
@@ -351,10 +303,11 @@ class libmseed(object):
         for _i in attributes:
             header[_i] = getattr(chain, _i)
         return header
-    
-    def getStartAndEndTime(self, file):
+
+    def getStartAndEndTime(self, filename):
         """
-        Returns the start- and endtime of a Mini-SEED file.
+        Returns the start- and endtime of a Mini-SEED file as a tuple
+        containing two datetime objects.
         
         This method only reads the first and the last record. Thus it will only
         work correctly for files containing only one trace with all records
@@ -362,52 +315,121 @@ class libmseed(object):
         
         The returned endtime is the time of the last datasample and not the
         time that the last sample covers.
+        The method used relies on the asumptions that any offset specified in
+        Blockette 1001 or an offset that results from UTC time conversions
+        is the same in the first and the last record.
         
-        @param file: Mini-SEED file string.
+        @param filename: Mini-SEED file string.
         """
-        # read starttime and record length from first header
-        msr = self.read_MSRec(file, dataflag = 0)
-        chain = msr[0].contents
+        # Read the first record to get a starttime that will be used to
+        # determine any offset that may be specified in Blockette 1001. This
+        # time is also used to indirectly handle UTC time conversions.
+        # Therefore all time conversions are done by the two time conversion
+        # methods of this class.
+        # The first record is also used to determine whether the Mini-SEED file
+        # has a little or a big endian byte order.
+        msr = self.read_MSRec(filename, dataflag = 0)
+        # Get the starttime using the libmseed method msr_starttime
         clibmseed.msr_starttime.restype = C.c_int64
-        starttime = clibmseed.msr_starttime(msr[0])
-        record_length = chain.reclen
-        # cleanup memory
-        self.resetMs_readmsr()
-        # open Mini-SEED file and write last record into temporary file
-        mseed_file = open(file, 'rb')
-        mseed_file.seek(-record_length, 2)
-        randtempname = str(random.random())
-        temp_record = open(randtempname, 'wb')
-        temp_record.write(mseed_file.read(record_length))
-        mseed_file.close()
-        temp_record.close()
-        # read last record
-        msr = self.read_MSRec(randtempname, dataflag = 0)
-        chain = msr[0].contents
-        # calculate endtime
-        endtime = clibmseed.msr_starttime(msr[0]) + \
-            (chain.samplecnt -1) / chain.samprate * HPTMODULUS
-        # remove temporary file
-        os.remove(randtempname)
-        # clean memory
-        self.resetMs_readmsr()
-        return (self.MSTime2Datetime(starttime), self.MSTime2Datetime(endtime))
-        
-    def Datetime2MSTime(self, dt):
-        """
-        Takes datetime object and returns an epoch time in ms.
-        
-        @param dt: Datetime object.
-        """
-        return long((mktime(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
-    
-    def MSTime2Datetime(self, timestring):
-        """
-        Takes Mini-SEED timestring and returns a Python datetime object.
-        
-        @param timestring: Mini-SEED timestring (Epoch time string in ms).
-        """
-        return datetime.fromtimestamp(timestring / HPTMODULUS)
+        corrected_starttime = clibmseed.msr_starttime(msr[0])
+        corrected_starttime = self.convertMSTimeToDatetime(corrected_starttime)
+        byte_order = msr[0].contents.byteorder
+        record_length = msr[0].contents.reclen
+        # Reset the msr structre.
+        self.resetMemory()
+        # Determine byte_order.
+        # Big endian byteorder.
+        if byte_order == 1:
+            b_o = '>'
+        # Little endian byteorder.
+        elif byte_order == 0:
+            b_o = '<'
+        else:
+            raise Exception, ('The byte order could not be determined.')
+        # Open file.
+        file = open(filename, 'rb')
+        # Calculate the starttime of the first record.
+        # Go to start of the time string.
+        file.seek(20, 0)
+        starttime = file.read(10)
+        # Use struct module to unpack the time.
+        starttime = unpack(b_o+'HHBBBBH', starttime)
+        # Structure of starttime:
+        # (YEAR, DAY_OF_YEAR, HOURS_OF_DAY, MINUTES_OF_DAY, SECONDS_OF_DAY,
+        #  UNUSED, .0001 seconds)
+        # Convert to datetime object.
+        st_dt_obj = datetime(starttime[0], 1, 1, starttime[2], starttime[3],
+                     starttime[4], starttime[6]*100) + \
+                     timedelta(starttime[1] - 1)
+        # Go to offset from fixed section of header
+        file.seek(40, 0)
+        offset = file.read(4)
+        # Read and apply offset but only when the time correction bit in the
+        # activity flag is not set.
+        file.seek(36, 0)
+        bit = file.read(1)
+        bit = unpack(b_o + 'B', bit)
+        time_correction_applied = (bit[0] and (1 * (2 ** 1))) != 0
+        if not time_correction_applied:
+            offset_in_msecs = unpack(b_o+'l', offset)[0] * 100
+            st_dt_obj = st_dt_obj + timedelta(microseconds = offset_in_msecs)
+        # UTC and other possible offsets.
+        utc_offset = corrected_starttime - st_dt_obj
+        # Apply utc_offset.
+        st_dt_obj = st_dt_obj + utc_offset
+        # Calculate the size of the last record. Works with incomplete records.
+        filesize = os.path.getsize(filename)
+        if filesize % record_length == 0:
+            last_record_length = record_length
+        else:
+            last_record_length = filesize % record_length
+        # Calculate the starttime of the last record.
+        # Go to start of the time string. Use relative seeking only after the
+        # first seek.
+        file.seek(-last_record_length + 20, 2)
+        starttime = file.read(10)
+        # Use struct module to unpack the time
+        starttime = unpack(b_o+'HHBBBBH', starttime)
+        et_dt_obj = datetime(starttime[0], 1, 1, starttime[2], starttime[3],\
+                             starttime[4], starttime[6]*100) + \
+                             timedelta(starttime[1] - 1)
+        # Go to offset from fixed section of header
+        file.seek(10, 1)
+        offset = file.read(4)
+        # Read and apply offset but only when the time correction bit in the
+        # activity flag is not set.
+        file.seek(-8, 1)
+        bit = file.read(1)
+        bit = unpack(b_o + 'B', bit)
+        time_correction_applied = (bit[0] and (1 * (2 ** 1))) != 0
+        if not time_correction_applied:
+            offset_in_msecs = unpack(b_o+'l', offset)[0] * 100
+            et_dt_obj = et_dt_obj + timedelta(microseconds = offset_in_msecs)
+        # Calculate endtime of last record
+        file.seek(-last_record_length + 30, 2)
+        numsamples = file.read(2)
+        numsamples = unpack(b_o+'H', numsamples)[0]
+        # Calculate sample rate
+        samp_rate_factor = file.read(2)
+        samp_rate_factor = unpack(b_o+'h', samp_rate_factor)[0]
+        samp_rate_multiplier = file.read(2)
+        samp_rate_multiplier = unpack(b_o+'h', samp_rate_multiplier)[0]
+        # See the SEED manuals for details.
+        if samp_rate_factor > 0 and samp_rate_multiplier > 0:
+            sample_rate = samp_rate_factor * samp_rate_multiplier
+        elif samp_rate_factor > 0 and samp_rate_multiplier < 0:
+            sample_rate = -1 * samp_rate_factor / samp_rate_multiplier
+        elif samp_rate_factor < 0 and samp_rate_multiplier > 0:
+            sample_rate = -1 * samp_rate_multiplier / samp_rate_factor
+        elif samp_rate_factor < 0 and samp_rate_multiplier < 0:
+            sample_rate = 1 / (samp_rate_factor * samp_rate_multiplier)
+        else:
+            raise Exception, ('The sample rate could not be calculated.')
+        # Get endtime of the last record
+        et_dt_obj = et_dt_obj + timedelta(microseconds = (numsamples -1) / \
+                                          float(sample_rate) * HPTMODULUS)
+        et_dt_obj = et_dt_obj + utc_offset
+        return(st_dt_obj, et_dt_obj)
     
     def printGapList(self, filename, time_tolerance = -1, 
                      samprate_tolerance = -1, min_gap = None, max_gap = None):
@@ -538,13 +560,13 @@ class libmseed(object):
         #Get start- and endtime and convert them too microsecond timestamp.
         start_and_end_time = self.getStartAndEndTime(file)
         if not starttime:
-            starttime = self.Datetime2MSTime(start_and_end_time[0])
+            starttime = self.convertDatetimeToMSTime(start_and_end_time[0])
         else:
-            starttime = self.Datetime2MSTime(starttime)
+            starttime = self.convertDatetimeToMSTime(starttime)
         if not endtime:
-            endtime = self.Datetime2MSTime(start_and_end_time[1])
+            endtime = self.convertDatetimeToMSTime(start_and_end_time[1])
         else:
-            endtime = self.Datetime2MSTime(endtime)
+            endtime = self.convertDatetimeToMSTime(endtime)
         #Calculate time for one pixel.
         stepsize = (endtime - starttime) / width
         #First two items are start- and endtime.
@@ -604,7 +626,7 @@ class libmseed(object):
             #New starttime for while loop.
             starttime = pixel_endtime
         #Reset memory
-        self.resetMs_readmsr()
+        self.resetMemory()
         return minmaxlist
     
     def graph_create_graph(self, file, outfile = None, format = None,
