@@ -1,0 +1,178 @@
+#!/usr/bin/python
+
+import sys, os, ctypes as C
+
+if sys.platform=='win32':
+    lib = C.cdll.gse_functions
+    libc = C.cdll.msvcrt
+else:
+    lib = C.CDLL(os.path.join(os.path.dirname(__file__),'gse_functions.so'))
+    #lib = C.CDLL('./gse_functions.so') #Uncomment for tests using IPython
+    libc = C.CDLL("libc.so.6")
+
+# Exception type for mismatching checksums
+class ChksumError(StandardError):
+    pass
+
+# C file pointer class
+class FILE(C.Structure): # Never directly used
+    """C file pointer class for type checking with argtypes"""
+    pass
+c_file_p = C.POINTER(FILE)
+
+# libc fopen
+libc.fopen.argtypes = [C.c_char_p,C.c_char_p]
+libc.fopen.restype = c_file_p
+
+# libc fclose
+libc.fclose.argtypes = [c_file_p]
+libc.fclose.restype = C.c_int
+
+# libc fgets
+libc.fgets.argtypes = [C.c_char_p,C.c_int,c_file_p]
+libc.fgets.argtype = C.c_int
+
+# libc fprintf
+libc.fprintf.argtypes = [c_file_p, C.c_char_p, C.c_int]
+libc.fprintf.restype = C.c_void_p
+
+# gse_functions read_header
+lib.read_header.argtypes = [c_file_p,C.c_void_p]
+lib.read_header.restype = C.c_int
+
+# gse_functions decomp_6b
+lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
+lib.decomp_6b.restype = C.c_int
+
+# gse_functions rem_2nd_diff
+lib.rem_2nd_diff.argtypes = [C.c_void_p, C.c_int]
+lib.rem_2nd_diff.restype = C.c_int
+
+# gse_functions check_sum
+lib.check_sum.argtypes = [C.c_void_p, C.c_int, C.c_longlong]
+lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
+
+# gse_functions buf_init
+lib.buf_init.argtypes = [C.c_void_p]
+lib.buf_init.restype = C.c_void_p
+
+# gse_functions labs
+lib.labs.argtypes = [C.c_int]
+lib.labs.restype = C.c_int
+
+# gse_functions diff_2nd
+lib.diff_2nd.argtypes = [C.c_void_p,C.c_int,C.c_int]
+lib.diff_2nd.restype = C.c_void_p
+
+# gse_functions compress_6b
+lib.compress_6b.argyptes = [C.c_void_p,C.c_int]
+lib.compress_6b.restype = C.c_int
+
+# gse_functions write_header
+lib.write_header.argtypes = [c_file_p, C.c_void_p]
+lib.write_header.restype = C.c_void_p
+
+# gse_functions buf_dump
+lib.buf_dump.argtypes = [c_file_p]
+lib.buf_dump.restype = C.c_void_p
+
+# gse_functions buf_free
+lib.buf_free.argtypes = [C.c_void_p]
+lib.buf_free.restype = C.c_void_p
+
+# gse2 header struct
+class HEADER(C.Structure):
+    _fields_ = [
+        ('d_year', C.c_int),
+        ('d_mon', C.c_int),
+        ('d_day', C.c_int),
+        ('t_hour', C.c_int),
+        ('t_min', C.c_int),
+        ('t_sec', C.c_float),
+        ('station', C.c_char*6),
+        ('channel', C.c_char*4),
+        ('auxid', C.c_char*5),
+        ('datatype', C.c_char*4),
+        ('n_samps', C.c_int),
+        ('samp_rate', C.c_float),
+        ('calib', C.c_float),
+        ('calper', C.c_float),
+        ('instype', C.c_char*7),
+        ('hang', C.c_float),
+        ('vang', C.c_float),
+    ]
+
+
+
+def read(file):
+    # Opening the pointer from python does not work ;(, tried the following:
+    # f = open(file,'rb');fp = f.fileno()
+    # fp = os.open(file, os.O_RDONLY)
+    fp = libc.fopen(file,"rb")
+    head = HEADER()
+    lib.read_header(fp,C.pointer(head))
+    data = (C.c_long * head.n_samps)()
+    n = lib.decomp_6b(fp, head.n_samps, data)
+    assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
+    lib.rem_2nd_diff(data, head.n_samps)
+    chksum = C.c_longlong()
+    chksum = lib.check_sum(data, head.n_samps, chksum)
+    # mutable memory buffer
+    tline = C.create_string_buffer(82)
+    libc.fgets(tline,82,fp)
+    chksum2 = int(tline.value.strip().split()[1])
+    if chksum != chksum2:
+        raise ChksumError("Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d" % (chksum,chksum2,chksum,chksum2))
+    libc.close(fp)
+    headdict = {}
+    for i in head._fields_:
+        headdict[i[0]] = getattr(head,i[0])
+    #
+    #print "CHK1 %d\nCHK2 %d" % (chksum,chksum2)
+    #print n
+    #print "Actual number of data read: %d" % head.n_samps
+    #print data[0:head.n_samps]
+    del fp, head
+    return headdict , data[0:n]
+
+def write(headdict,data,file):
+    n = len(data)
+    tr = (C.c_long * n)()
+    tr[0:n] = data
+    lib.buf_init(None)
+    fp = libc.fopen(file,"wb")
+    chksum = C.c_longlong()
+    chksum = lib.labs(lib.check_sum(tr,n,chksum))
+    lib.diff_2nd(tr,n,0)
+    ierr = lib.compress_6b(tr,n)
+    assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
+    #
+    #print "error status after compression: %d\n" % ierr
+    #print "actual number of data written: %d\n" % n
+    #print "chksum written:    %8ld\n" % chksum
+    head = HEADER()
+    for i in headdict.keys():
+        setattr(head,i,headdict[i])
+    lib.write_header(fp,C.pointer(head))
+    lib.buf_dump(fp)
+    libc.fprintf(fp,"CHK2 %8ld\n\n",chksum)
+    libc.fclose(fp)
+    lib.buf_free(None)
+    #del fp, head
+    return 0
+
+#import pdb;pdb.set_trace()
+
+del c_file_p
+
+if __name__ == '__main__':
+    #import doctest
+    #doctest.testmod(exclude_empty=True)
+    #h,d = read("test.gse")
+    #print "READ",h,d
+    #err = write(h,d,"test.gse.2")
+    #print "WROTE","test.gse.2",err
+    import numpy
+    numpy.random.seed(815)
+    data = numpy.random.random_integers(0,2**26,1000).tolist()
+    write({'n_samps':len(data)},data,"test.gse.1")

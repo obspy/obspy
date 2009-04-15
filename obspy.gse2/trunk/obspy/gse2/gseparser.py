@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from obspy import parser
-from obspy.gse2 import ext_gse
+from obspy.gse2 import libgse2
 import numpy, os, time, sys
 
 class GseParser(parser.Parser):
@@ -22,7 +22,9 @@ class GseParser(parser.Parser):
         """
         try:
             os.path.exists(gsefile)
-            (h,data) = ext_gse.read(gsefile)
+            # Old C wraped version:
+            #(h,data) = ext_gse.read(gsefile)
+            (h,data) = libgse2.read(gsefile)
         except IOError:
             assert 1, "No such file to write: " + gsefile
         #
@@ -42,7 +44,10 @@ class GseParser(parser.Parser):
         date = "%04d%02d%02d%02d%02d%02d" % (h['d_year'],h['d_mon'],h['d_day'],h['t_hour'],h['t_min'],intsec)
         self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date) + h['t_sec']-intsec
         #
-        self.trace = data.tolist()
+        if not type(data) == list:
+            self.trace = list(data)
+        else:
+            self.trace = data
     
     def write(self,gsefile):
         """Write seismogram to GSE2.0 file
@@ -53,7 +58,7 @@ class GseParser(parser.Parser):
         
         >>> g = GseParser()
         >>> numpy.random.seed(815)
-        >>> g.trace = numpy.random.random_integers(0,2**26,10000).tolist()
+        >>> g.trace = numpy.random.random_integers(0,2**26,1000).tolist()
         >>> g.write("test.gse")
         0
         >>> h = GseParser("test.gse")
@@ -66,7 +71,7 @@ class GseParser(parser.Parser):
         maximim value 2^26
         >>> i = GseParser()
         >>> i.trace = [2**26+1]
-        >>> i.write("test.gse")
+        >>> i.write("testexcept.gse")
         Traceback (most recent call last):
         ...
         Exception: Compression Error, data must be less equal 2^26
@@ -96,10 +101,32 @@ class GseParser(parser.Parser):
         if data.max() > 2**26:
             raise Exception ,"Compression Error, data must be less equal 2^26"
         
-        err = ext_gse.write((d_year, d_mon, d_day, t_hour, t_min, t_sec,
-            self.station, self.channel, self.auxid, self.datatype, self.npts,
-            self.df, self.calib, self.calper, self.instype, self.hang,
-            self.vang), data, gsefile)
+        err = libgse2.write(
+            {
+            'd_year':d_year,
+            'd_mon':d_mon,
+            'd_day':d_day,
+            't_hour':t_hour,
+            't_min':t_min,
+            't_sec':t_sec,
+            'station':self.station,
+            'channel':self.channel,
+            'auxid':self.auxid,
+            'datatype':self.datatype,
+            'n_samps':self.npts,
+            'samp_rate':self.df,
+            'calib':self.calib,
+            'calper':self.calper,
+            'instype':self.instype,
+            'hang':self.hang,
+            'vang':self.vang
+            }
+            ,data,gsefile)
+        # Old C wraped version
+        #err = ext_gse.write((d_year, d_mon, d_day, t_hour, t_min, t_sec,
+        #    self.station, self.channel, self.auxid, self.datatype, self.npts,
+        #    self.df, self.calib, self.calper, self.instype, self.hang,
+        #    self.vang), data, gsefile)
         return err
 
 
