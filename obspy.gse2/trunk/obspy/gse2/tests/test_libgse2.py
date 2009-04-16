@@ -28,10 +28,10 @@ class LibGSE2TestCase(unittest.TestCase):
         The values are assumed to be correct. The values were created using
         getevents. Only checks relative values.
         """
-        gse2_file = os.path.join(self.path, 'loc_RJOB20050831023349.z')
+        gse2file = os.path.join(self.path, 'loc_RJOB20050831023349.z')
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        header, data = libgse2.read(gse2_file)
+        header, data = libgse2.read(gse2file)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -41,8 +41,8 @@ class LibGSE2TestCase(unittest.TestCase):
             header['d_day'],
             header['t_hour'],
             header['t_min'],
-            header['t_sec']
-            ))
+            header['t_sec'])
+        )
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
         #from pylab import plot,array,show;plot(array(data));show()
@@ -51,8 +51,8 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         Writes, reads and compares files created via libgse2.
         """
-        gse2_file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header, data = libgse2.read(gse2_file)
+        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        header, data = libgse2.read(gse2file)
         # define test ranges
         filename = 'temp.mseed'
         temp_file = os.path.join(self.path, filename)
@@ -62,41 +62,37 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(data, newdata)
         os.remove(temp_file)
     
-    #def test_readFirstHeaderInfo(self):
-    #    """
-    #    Reads and compares header info from the first record.
-    #    
-    #    The values can be read from the filename.
-    #    """
-    #    mseed = libmseed()
-    #    filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-    #    header = mseed.getFirstRecordHeaderInfo(filename)
-    #    self.assertEqual(header['location'], '')
-    #    self.assertEqual(header['network'], 'BW')
-    #    self.assertEqual(header['station'], 'BGLD')
-    #    self.assertEqual(header['channel'], 'EHE')
-    #
-    #def test_getStartAndEndTime(self):
-    #    """
-    #    Tests getting the start- and end time of a file.
-    #    
-    #    The values are compared with the readTraces() method which parses the
-    #    whole file. This will only work for files with only one trace and with-
-    #    out any gaps or overlaps.
-    #    """
-    #    mseed = libmseed()
-    #    filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-    #    #mseed.getEndtime(filename)
-    #    
-    #    # get the start- and end time
-    #    times = mseed.getStartAndEndTime(filename)
-    #    # reseting the ms_readmsr() method of libmseed
-    #    mseed.resetMs_readmsr()
-    #    # parse the whole file
-    #    mstg = mseed.readTraces(filename, dataflag = 0)
-    #    chain = mstg.contents.traces.contents
-    #    self.assertEqual(times[0], mseed.MSTime2Datetime(chain.starttime))
-    #    self.assertEqual(times[1], mseed.MSTime2Datetime(chain.endtime))
+    def test_readHeaderInfo(self):
+        """
+        Reads and compares header info from the first record.
+        
+        The values can be read from the filename.
+        """
+        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        header = libgse2.read_head(gse2file)
+        self.assertEqual('RNON ', header['station'])
+        self.assertEqual('  Z', header['channel'])
+        self.assertEqual(200, header['samp_rate'])
+        self.assertEqual('20040609200559.850', "%04d%02d%02d%02d%02d%06.3f" % (
+            header['d_year'],
+            header['d_mon'],
+            header['d_day'],
+            header['t_hour'],
+            header['t_min'],
+            header['t_sec'])
+        )
+    
+    def test_getStartAndEndTime(self):
+        """
+        Tests getting the start- and end time of a file.
+        """
+        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        # get the start- and end time
+        times = libgse2.getstartandendtime(gse2file)
+        self.assertEqual('2004-06-09T20:05:59.850',times[0])
+        self.assertEqual('2004-06-09T20:06:59.850',times[1])
+        self.assertEqual(1086811559.8499985,times[2])
+        self.assertEqual(1086811619.8499985,times[3])
 
 
 def suite():

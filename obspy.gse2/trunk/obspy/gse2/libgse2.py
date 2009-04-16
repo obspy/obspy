@@ -1,6 +1,28 @@
 #!/usr/bin/python
+#-------------------------------------------------------------------
+# Filename: libgse2.py
+#  Purpose: Python wrapper for gse_functions of Stefan Stange
+#   Author: Moritz Beyreuther
+#    Email: moritz.beyreuther@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2008 Moritz Beyreuther, Stefan Stange
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#---------------------------------------------------------------------
 
-import sys, os, ctypes as C
+import sys, os, time, ctypes as C
 
 if sys.platform=='win32':
     lib = C.cdll.gse_functions
@@ -105,6 +127,7 @@ class HEADER(C.Structure):
 
 
 def read(file):
+    """Read gse2 file and return header as dictionary and data as list"""
     # Opening the pointer from python does not work ;(, tried the following:
     # f = open(file,'rb');fp = f.fileno()
     # fp = os.open(file, os.O_RDONLY)
@@ -136,6 +159,30 @@ def read(file):
     return headdict , data[0:n]
 
 def write(headdict,data,file):
+    """Write gse2 file, given the header as dict and data as list of long integers
+
+    The header dictionary contains:
+    {
+        'd_year': int,
+        'd_mon': int,
+        'd_day': int,
+        't_hour': int,
+        't_min': int,
+        't_sec': float,
+        'station': char*6,
+        'channel': char*4,
+        'auxid': char*5,
+        'datatype': char*4,
+        'n_samps': int,
+        'samp_rate': float,
+        'calib': float,
+        'calper': float,
+        'instype': char*7,
+        'hang': float,
+        'vang': float,
+    }
+    NOTE: datatype, n_samps and samp_rate are absolutely necessary!
+    """
     n = len(data)
     tr = (C.c_long * n)()
     tr[0:n] = data
@@ -160,6 +207,38 @@ def write(headdict,data,file):
     lib.buf_free(None)
     #del fp, head
     return 0
+
+def read_head(file):
+    """Return (and read) only the header of gse2 file as dictionary."""
+    fp = libc.fopen(file,"rb")
+    head = HEADER()
+    lib.read_header(fp,C.pointer(head))
+    libc.close(fp)
+    headdict = {}
+    for i in head._fields_:
+        headdict[i[0]] = getattr(head,i[0])
+    del fp, head
+    return headdict
+
+def getstartandendtime(file):
+    """Return start and endtime of gse2 file"""
+    fp = libc.fopen(file,"rb")
+    head = HEADER()
+    lib.read_header(fp,C.pointer(head))
+    libc.close(fp)
+    os.environ['TZ'] = 'UTC'
+    time.tzset()
+    dmsec = head.t_sec - int(head.t_sec)
+    datestr = "%04d%02d%02d%02d%02d%02d" % (head.d_year,head.d_mon,head.d_day,
+                                       head.t_hour,head.t_min,head.t_sec)
+    startime = float(time.mktime(time.strptime(datestr,'%Y%m%d%H%M%S')) + dmsec)
+    stoptime = startime + head.n_samps/float(head.samp_rate)
+    startdate = "%s.%s" % (time.strftime('%Y-%m-%dT%H:%M:%S',time.gmtime(startime)),
+                           ("%.3f" % startime).split('.')[1])
+    stopdate = "%s.%s" % (time.strftime('%Y-%m-%dT%H:%M:%S',time.gmtime(stoptime)),
+                           ("%.3f" % stoptime).split('.')[1])
+    del fp, head
+    return [startdate,stopdate,startime,stoptime]
 
 #import pdb;pdb.set_trace()
 
