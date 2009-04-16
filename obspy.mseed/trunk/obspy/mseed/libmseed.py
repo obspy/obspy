@@ -80,60 +80,57 @@ class libmseed(object):
         """
         Return dictionary from MSTrace Object m, leaving the attributes
         datasamples, ststate and next out
+        
+        @param m: MST structure to be read.
         """
         h = {}
-        h["network"] = m.contents.network
-        h["station"] = m.contents.station
-        h["location"] = m.contents.location
-        h["channel"] = m.contents.channel
-        h["dataquality"] = m.contents.dataquality
-        h["type"] = m.contents.type
-        h["starttime"] = m.contents.starttime
-        h["endtime"] = m.contents.endtime
-        h["samprate"] = m.contents.samprate
-        h["samplecnt"] = m.contents.samplecnt
-        h["numsamples"] = m.contents.numsamples
-        h["sampletype"] = m.contents.sampletype
+        chain = m.contents
+        # header attributes to be converted
+        attributes = ('network', 'station', 'location', 'channel', 
+                      'dataquality', 'type', 'starttime', 'endtime',
+                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
+        # loop over attributes
+        for _i in attributes:
+            h[_i] = getattr(chain, _i)
         return h
 
     def _convertDictToMST(self, m, h):
         """
         Takes dictionary containing MSTrace header data and writes them to the
         MSTrace Group
-        """
-        m.contents.network =h["network"]
-        m.contents.station = h["station"] 
-        m.contents.location = h["location"]
-        m.contents.channel = h["channel"]
-        m.contents.dataquality = h["dataquality"]
-        m.contents.type = h["type"]
-        m.contents.starttime = h["starttime"]
-        m.contents.endtime = h["endtime"]
-        m.contents.samprate = h["samprate"]
-        m.contents.samplecnt = h["samplecnt"]
-        m.contents.numsamples = h["numsamples"]
-        m.contents.sampletype = h["sampletype"]
         
+        @param m: MST structure to be modified.
+        @param h: Dictionary containing all necessary information.
+        """
+        chain = m.contents
+        # header attributes to be converted
+        attributes = ('network', 'station', 'location', 'channel', 
+                      'dataquality', 'type', 'starttime', 'endtime',
+                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
+        # loop over attributes
+        for _i in attributes:
+            setattr(chain, _i, h[_i])
+
     def read_ms_using_traces(self, filename, dataflag = 1):
         """
         Read Mini-SEED file. Header, Data and numtraces are returned
 
-        filename        - Name of file to read Mini-SEED data from
-        timetol           - Time tolerance, default is 1/2 sample period (-1)
-        sampratetol   - Sample rate tolerance, default is rate dependent (-1)
-        verbosity       - Level of diagnostic messages, default 0
+        @param filename: Name of file to read Mini-SEED data from
+        @param timetol: Time tolerance, default is 1/2 sample period (-1)
+        @sampratetol: Sample rate tolerance, default is rate dependent (-1)
+        @verbosity: Level of diagnostic messages, default 0
         """
         #Creates MSTraceGroup Structure
         mstg = self.readTraces(filename, dataflag = dataflag)
-        data=[]
-        header=[]
+        data = []
+        header = []
         mst = mstg.contents.traces
         numtraces = mstg.contents.numtraces
         for _i in range(numtraces):
             data.extend(mst.contents.datasamples[0:mst.contents.numsamples])
             header.append(self._convertMSTToDict(mst))
             mst = mst.contents.next
-        return header[0],data, numtraces
+        return header[0], data, numtraces
     
     def read_MSRec(self, filename, reclen = -1, dataflag = 1, skipnotdata = 1, 
                    verbose = 0):
@@ -164,34 +161,40 @@ class libmseed(object):
                                        C.c_short(dataflag), C.c_short(verbose))
         return msr, retcode
     
-    def _populate_MSTG(self, header, data, numtraces=1):
+    def _populateMSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
+        
+        Currently only works with one continuous trace.
+        
+        @param header: Dictionary with the header values to be written to the
+            structure.
+        @param data: List containing the data values.
+        @param numtraces: Number of traces in the structure. No function so
+            far.
         """
-        #Init MSTraceGroupint
+        # Init MSTraceGroupint
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
         mstg = clibmseed.mst_initgroup(None)
-        #Init MSTrace object
+        # Init MSTrace object and connect with group
         clibmseed.mst_init.restype = C.POINTER(MSTrace)
-        #Connect Group with Traces
-        mstg.contents.traces=clibmseed.mst_init(None)
-        #Write header in MSTrace structure
+        mstg.contents.traces = clibmseed.mst_init(None)
+        # Write header in MSTrace structure
         self._convertDictToMST(mstg.contents.traces, header)
-        #Needs to be redone, dynamic??
-        mstg.contents.numtraces=numtraces
-        #Create void pointer and allocates more memory to it
-        #tempdatpoint=C.c_void_p()
-        tempdatpoint=C.c_int()
+        # Needs to be redone, dynamic??
+        mstg.contents.numtraces = numtraces
+        # Create void pointer and allocates more memory to it
+        chain = mstg.contents.traces.contents.datasamples
+        tempdatpoint = C.c_int32()
         C.resize(tempdatpoint,
-                 clibmseed.ms_samplesize(C.c_char(header['sampletype']))*
+                 clibmseed.ms_samplesize(C.c_char(header['sampletype'])) *
                  header['numsamples'])
-        #Set pointer to tempdatpoint
-        mstg.contents.traces.contents.datasamples=C.pointer(tempdatpoint)
-        #Write data in MSTrace structure
-        for i in range(header['numsamples']):
-            #mstg.contents.traces.contents.datasamples[i]=C.c_void_p(data[i])
-            mstg.contents.traces.contents.datasamples[i]=C.c_int(data[i])
+        # Set pointer to tempdatpoint
+        mstg.contents.traces.contents.datasamples = C.pointer(tempdatpoint)
+        # Write data in MSTrace structure
+        for _i in xrange(header['numsamples']):
+            chain[_i] = C.c_int32(data[_i])
         return mstg
 
     def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush, verbose):
@@ -203,7 +206,7 @@ class libmseed(object):
         if type(outfile) == file:
             mseedfile = outfile
         else:
-            mseedfile=open(outfile, 'wb')
+            mseedfile = open(outfile, 'wb')
         #Initialize packedsamples pointer for the mst_pack function
         self.packedsamples = C.pointer(C.c_int(0))
         #Callback function for mst_pack to actually write the file
@@ -223,31 +226,30 @@ class libmseed(object):
         """
         Write Miniseed file from header, data and numtraces
         
-        header    - Dictionary containing the header files
-        data      - List of the datasamples
-        outfile   - Name of the output file
-        numtraces - Number of traces in trace chain (Use??)
-        reclen    - should be set to the desired data record length in bytes
-                    which must be expressible as 2 raised to the power of X 
-                    where X is between (and including) 8 to 20. -1 defaults to
-                    4096
-        encoding  - should be set to one of the following supported Mini-SEED
-                    data encoding formats: DE_ASCII (0), DE_INT16 (1), 
-                    DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
-                    and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
-        byteorder - must be either 0 (LSBF or little-endian) or 1 (MBF or 
-                    big-endian). -1 defaults to big-endian (1)
-        flush     - if it is not zero all of the data will be packed into 
-                    records, otherwise records will only be packed while there
-                    are enough data samples to completely fill a record.
-        verbose   - controls verbosity, a value of zero will result in no 
-                    diagnostic output.
+        @param header: Dictionary containing the header files
+        @param data: List of the datasamples
+        @param outfile: Name of the output file
+        @param numtraces: Number of traces in trace chain (Use??)
+        @param reclen: should be set to the desired data record length in bytes
+            which must be expressible as 2 raised to the power of X where X is
+            between (and including) 8 to 20. -1 defaults to 4096
+        @param encoding: should be set to one of the following supported
+            Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
+            DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
+            and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
+        @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
+            big-endian). -1 defaults to big-endian (1)
+        @param flush: if it is not zero all of the data will be packed into 
+            records, otherwise records will only be packed while there are
+            enough data samples to completely fill a record.
+        @param verbose: controls verbosity, a value of zero will result in no 
+            diagnostic output.
         """
-        #Populate MSTG Structure
-        mstg=self._populate_MSTG(header, data, numtraces)
-        #Write File from MS-Trace structure
-        self.mst2file(mstg.contents.traces, outfile, reclen, encoding, byteorder,
-                      flush, verbose)
+        # Populate MSTG Structure
+        mstg=self._populateMSTG(header, data, numtraces)
+        # Write File from MS-Trace structure
+        self.mst2file(mstg.contents.traces, outfile, reclen, encoding,
+                      byteorder, flush, verbose)
     
     def readTraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
                    dataflag = 1, skipnotdata = 1, verbose = 0):
@@ -271,7 +273,7 @@ class libmseed(object):
         """
         # Creates MSTraceGroup Structure
         mstg = C.pointer(MSTraceGroup())
-        # Uses libmseed to read the file and populate the MSTraceGroup structure
+        # Uses libmseed to read the file and populate the MSTraceGroup
         errcode = clibmseed.ms_readtraces(
             C.pointer(mstg), filename, C.c_int(reclen), 
             C.c_double(timetol), C.c_double(sampratetol),
