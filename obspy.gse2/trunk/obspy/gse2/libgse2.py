@@ -26,11 +26,8 @@ import sys, os, time, ctypes as C
 
 if sys.platform=='win32':
     lib = C.cdll.gse_functions
-    libc = C.cdll.msvcrt
 else:
     lib = C.CDLL(os.path.join(os.path.dirname(__file__),'gse_functions.so'))
-    #lib = C.CDLL('./gse_functions.so') #Uncomment for tests using IPython
-    libc = C.CDLL("libc.so.6")
 
 # Exception type for mismatching checksums
 class ChksumError(StandardError):
@@ -42,21 +39,9 @@ class FILE(C.Structure): # Never directly used
     pass
 c_file_p = C.POINTER(FILE)
 
-# libc fopen
-libc.fopen.argtypes = [C.c_char_p,C.c_char_p]
-libc.fopen.restype = c_file_p
-
-# libc fclose
-libc.fclose.argtypes = [c_file_p]
-libc.fclose.restype = C.c_int
-
-# libc fgets
-libc.fgets.argtypes = [C.c_char_p,C.c_int,c_file_p]
-libc.fgets.argtype = C.c_int
-
-# libc fprintf
-libc.fprintf.argtypes = [c_file_p, C.c_char_p, C.c_int]
-libc.fprintf.restype = C.c_void_p
+# ctypes, PyFile_AsFile, convert python file pointer to C file pointer
+C.pythonapi.PyFile_AsFile.argtypes= [C.py_object]
+C.pythonapi.PyFile_AsFile.restype= c_file_p
 
 # gse_functions read_header
 lib.read_header.argtypes = [c_file_p,C.c_void_p]
@@ -124,14 +109,10 @@ class HEADER(C.Structure):
         ('vang', C.c_float),
     ]
 
-
-
 def read(file):
     """Read gse2 file and return header as dictionary and data as list"""
-    # Opening the pointer from python does not work ;(, tried the following:
-    # f = open(file,'rb');fp = f.fileno()
-    # fp = os.open(file, os.O_RDONLY)
-    fp = libc.fopen(file,"rb")
+    f = open(file, "rb")
+    fp = C.pythonapi.PyFile_AsFile(f) 
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
     data = (C.c_long * head.n_samps)()
@@ -140,13 +121,10 @@ def read(file):
     lib.rem_2nd_diff(data, head.n_samps)
     chksum = C.c_longlong()
     chksum = lib.check_sum(data, head.n_samps, chksum)
-    # mutable memory buffer
-    tline = C.create_string_buffer(82)
-    libc.fgets(tline,82,fp)
-    chksum2 = int(tline.value.strip().split()[1])
+    chksum2 = int(f.readline().strip().split()[1])
     if chksum != chksum2:
         raise ChksumError("Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d" % (chksum,chksum2,chksum,chksum2))
-    libc.close(fp)
+    f.close()
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head,i[0])
@@ -187,7 +165,8 @@ def write(headdict,data,file):
     tr = (C.c_long * n)()
     tr[0:n] = data
     lib.buf_init(None)
-    fp = libc.fopen(file,"wb")
+    f = open(file,"wb")
+    fp = C.pythonapi.PyFile_AsFile(f)
     chksum = C.c_longlong()
     chksum = lib.labs(lib.check_sum(tr,n,chksum))
     lib.diff_2nd(tr,n,0)
@@ -202,18 +181,19 @@ def write(headdict,data,file):
         setattr(head,i,headdict[i])
     lib.write_header(fp,C.pointer(head))
     lib.buf_dump(fp)
-    libc.fprintf(fp,"CHK2 %8ld\n\n",chksum)
-    libc.fclose(fp)
+    f.write("CHK2 %8ld\n\n" % chksum)
+    f.close()
     lib.buf_free(None)
-    #del fp, head
+    del fp, head
     return 0
 
 def read_head(file):
     """Return (and read) only the header of gse2 file as dictionary."""
-    fp = libc.fopen(file,"rb")
+    f = open(file,"rb")
+    fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
-    libc.close(fp)
+    f.close()
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head,i[0])
@@ -222,10 +202,11 @@ def read_head(file):
 
 def getstartandendtime(file):
     """Return start and endtime of gse2 file"""
-    fp = libc.fopen(file,"rb")
+    f = open(file,"rb")
+    fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
-    libc.close(fp)
+    f.close()
     os.environ['TZ'] = 'UTC'
     time.tzset()
     dmsec = head.t_sec - int(head.t_sec)
