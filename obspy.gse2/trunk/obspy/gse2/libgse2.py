@@ -6,21 +6,24 @@
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008 Moritz Beyreuther, Stefan Stange
-# 
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #---------------------------------------------------------------------
+""" 
+Contains wrappers for gse_functions - The GSE2 library.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+"""
 
 import sys, os, time, ctypes as C
 
@@ -39,7 +42,7 @@ class FILE(C.Structure): # Never directly used
     pass
 c_file_p = C.POINTER(FILE)
 
-# ctypes, PyFile_AsFile, convert python file pointer to C file pointer
+# ctypes, PyFile_AsFile: convert python file pointer to C file pointer
 C.pythonapi.PyFile_AsFile.argtypes= [C.py_object]
 C.pythonapi.PyFile_AsFile.restype= c_file_p
 
@@ -110,7 +113,13 @@ class HEADER(C.Structure):
     ]
 
 def read(file):
-    """Read gse2 file and return header as dictionary and data as list"""
+    """
+    Read GSE2 file and return header and data.
+
+    @params file: Filename of GSE2 file to read.
+    @return: Dictionary containing header entries and list containing data
+        as longs.
+    """
     f = open(file, "rb")
     fp = C.pythonapi.PyFile_AsFile(f) 
     head = HEADER()
@@ -128,38 +137,36 @@ def read(file):
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head,i[0])
-    #
-    #print "CHK1 %d\nCHK2 %d" % (chksum,chksum2)
-    #print n
-    #print "Actual number of data read: %d" % head.n_samps
-    #print data[0:head.n_samps]
     del fp, head
     return headdict , data[0:n]
 
 def write(headdict,data,file):
-    """Write gse2 file, given the header as dict and data as list of long integers
+    """
+    Write GSE2 file, given the header and data.
 
-    The header dictionary contains:
-    {
-        'd_year': int,
-        'd_mon': int,
-        'd_day': int,
-        't_hour': int,
-        't_min': int,
-        't_sec': float,
-        'station': char*6,
-        'channel': char*4,
-        'auxid': char*5,
-        'datatype': char*4,
-        'n_samps': int,
-        'samp_rate': float,
-        'calib': float,
-        'calper': float,
-        'instype': char*7,
-        'hang': float,
-        'vang': float,
-    }
-    NOTE: datatype, n_samps and samp_rate are absolutely necessary!
+    @params headdict: Dictonary containing the following entries:
+        {
+            'd_year': int,
+            'd_mon': int,
+            'd_day': int,
+            't_hour': int,
+            't_min': int,
+            't_sec': float,
+            'station': char*6,
+            'channel': char*4,
+            'auxid': char*5,
+            'datatype': char*4,
+            'n_samps': int,
+            'samp_rate': float,
+            'calib': float,
+            'calper': float,
+            'instype': char*7,
+            'hang': float,
+            'vang': float,
+        }
+        NOTE: datatype, n_samps and samp_rate are absolutely necessary!
+    @params data: List of longs containing the data.
+    @params file: Name of GSE2 file to write.
     """
     n = len(data)
     tr = (C.c_long * n)()
@@ -188,7 +195,12 @@ def write(headdict,data,file):
     return 0
 
 def read_head(file):
-    """Return (and read) only the header of gse2 file as dictionary."""
+    """
+    Return (and read) only the header of gse2 file as dictionary.
+
+    @params file: Name of GSE2 file.
+    @return: Dictonary containing header entries.
+    """
     f = open(file,"rb")
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
@@ -201,7 +213,13 @@ def read_head(file):
     return headdict
 
 def getstartandendtime(file):
-    """Return start and endtime of gse2 file"""
+    """
+    Return start and endtime/date of gse2 file
+    
+    @params file: Name of GSE2 file.
+    @return: [startdate,stopdate,startime,stoptime] Start and Stop time as
+        Julian seconds and date string.
+    """
     f = open(file,"rb")
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
@@ -226,12 +244,6 @@ def getstartandendtime(file):
 del c_file_p
 
 if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod(exclude_empty=True)
-    #h,d = read("test.gse")
-    #print "READ",h,d
-    #err = write(h,d,"test.gse.2")
-    #print "WROTE","test.gse.2",err
     import numpy
     numpy.random.seed(815)
     data = numpy.random.random_integers(0,2**26,1000).tolist()
