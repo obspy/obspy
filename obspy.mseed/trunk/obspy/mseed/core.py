@@ -47,7 +47,6 @@ class MSEEDTrace(object):
         # the actual seismogram data
         self.data=array()
         self.data.extend(data)
-        return self.data
     
     def write(self, filename=None, **kwargs):
         raise NotImplementedError

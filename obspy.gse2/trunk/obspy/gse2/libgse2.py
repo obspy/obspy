@@ -116,7 +116,7 @@ def read(file):
     """
     Read GSE2 file and return header and data.
 
-    @params file: Filename of GSE2 file to read.
+    @param file: Filename of GSE2 file to read.
     @return: Dictionary containing header entries and list containing data
         as longs.
     """
@@ -143,8 +143,8 @@ def read(file):
 def write(headdict,data,file):
     """
     Write GSE2 file, given the header and data.
-
-    @params headdict: Dictonary containing the following entries:
+    
+    @param headdict: Dictonary containing the following entries:
         {
             'd_year': int,
             'd_mon': int,
@@ -164,9 +164,10 @@ def write(headdict,data,file):
             'hang': float,
             'vang': float,
         }
-        NOTE: datatype, n_samps and samp_rate are absolutely necessary!
-    @params data: List of longs containing the data.
-    @params file: Name of GSE2 file to write.
+    @param data: List of longs containing the data.
+    @param file: Name of GSE2 file to write.
+    @requires: headdict dictionary entries datatype, n_samps and samp_rate
+        are absolutely necessary!
     """
     n = len(data)
     tr = (C.c_long * n)()
@@ -180,9 +181,6 @@ def write(headdict,data,file):
     ierr = lib.compress_6b(tr,n)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     #
-    #print "error status after compression: %d\n" % ierr
-    #print "actual number of data written: %d\n" % n
-    #print "chksum written:    %8ld\n" % chksum
     head = HEADER()
     for i in headdict.keys():
         setattr(head,i,headdict[i])
@@ -198,7 +196,7 @@ def read_head(file):
     """
     Return (and read) only the header of gse2 file as dictionary.
 
-    @params file: Name of GSE2 file.
+    @param file: Name of GSE2 file.
     @return: Dictonary containing header entries.
     """
     f = open(file,"rb")
@@ -216,7 +214,7 @@ def getstartandendtime(file):
     """
     Return start and endtime/date of gse2 file
     
-    @params file: Name of GSE2 file.
+    @param file: Name of GSE2 file.
     @return: [startdate,stopdate,startime,stoptime] Start and Stop time as
         Julian seconds and date string.
     """

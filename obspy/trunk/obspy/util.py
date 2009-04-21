@@ -42,4 +42,9 @@ def getParser():
         temp.append(SACTrace)
     except:
         pass
+    try:
+        from obspy.wav.core import WAVTrace
+        temp.append(WAVTrace)
+    except:
+        pass
     return tuple(temp)
