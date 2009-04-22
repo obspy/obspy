@@ -24,24 +24,26 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
+        testdata = [64, 78, 99, 119, 123, 107, 72, 31, 2, 0, 30, 84, 141]
         tr = Trace()
         tr.read(self.file,format='WAV')
         self.assertEqual(tr.stats.npts, 2599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
-        self.assertEqual(tr.data[0:13], [64, 78, 99, 119, 123, 107, 72, 31,
-            2, 0, 30, 84, 141])
+        for _i in xrange(13):
+            self.assertEqual(tr.data[_i], testdata[_i])
     
     def test_readAndWriteViaObspy(self):
         """
         Read and Write files via L{obspy.Trace}
         """
+        testdata = [111, 111, 111, 111, 111, 109, 106, 103, 103, 110, 121, 132, 139]
         tr = Trace()
         self.file = os.path.join(self.path, 'data','3cssan.reg.8.1.RNON.wav')
         tr.read(self.file,format='WAV')
         self.assertEqual(tr.stats.npts, 10599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
-        self.assertEqual(tr.data[0:13], [111, 111, 111, 111, 111, 109, 106,
-            103, 103, 110, 121, 132, 139])
+        for _i in xrange(13):
+            self.assertEqual(tr.data[_i], testdata[_i])
         # now write
         tr2 = Trace(); tr3 = Trace()
         testfile = os.path.join(self.path, 'data','test.wav')
@@ -51,7 +53,8 @@ class CoreTestCase(unittest.TestCase):
         # and read again
         tr3.read(testfile)
         self.assertEqual(tr3.stats,tr.stats)
-        self.assertEqual(tr.data[:],tr3.data[:])
+        for _i in xrange(13):
+            self.assertEqual(tr.data[_i], testdata[_i])
         self.assertEqual(filecmp.cmp(self.file,testfile),True)
         os.remove(testfile)
 

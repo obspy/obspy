@@ -23,6 +23,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read file test via L{obspy.mseed.MSEEDTrace}.
         """
+        testdata = [2787, 2776, 2774, 2780, 2783]
         tr = MSEEDTrace()
         tr.read(self.file)
         self.assertEqual(tr.stats.network, 'NL')
@@ -31,7 +32,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 11947)
         self.assertEqual(tr.stats['sampling_rate'], 40.0)
         self.assertEqual(tr.stats.get('channel'), 'BHZ')
-        self.assertEqual(tr.data[0:5], [2787, 2776, 2774, 2780, 2783])
+        for _i in xrange(5):
+            self.assertEqual(tr.data[_i], testdata[_i])
     
     def test_writeFileViaLibMSEED(self):
         """
@@ -43,22 +45,26 @@ class CoreTestCase(unittest.TestCase):
         """
         Read file test via L{obspy.Trace}
         """
+        testdata = [2787, 2776, 2774, 2780, 2783]
         tr = Trace()
         # without given format -> autodetect using extension
         tr.read(self.file)
         self.assertEqual(tr.stats.network, 'NL')
         self.assertEqual(tr.stats['station'], 'HGN')
-        self.assertEqual(tr.data[0:5], [2787, 2776, 2774, 2780, 2783])
+        for _i in xrange(5):
+            self.assertEqual(tr.data[_i], testdata[_i])
         # with given format
         tr.read(self.file, format='MSEED')
         self.assertEqual(tr.stats.get('location'), '00')
         self.assertEqual(tr.stats.get('channel'), 'BHZ')
-        self.assertEqual(tr.data[0:5], [2787, 2776, 2774, 2780, 2783])
+        for _i in xrange(5):
+            self.assertEqual(tr.data[_i], testdata[_i])
         # with direct read call
         tr.readMSEED(self.file)
         self.assertEqual(tr.stats.npts, 11947)
         self.assertEqual(tr.stats['sampling_rate'], 40.0)
-        self.assertEqual(tr.data[0:5], [2787, 2776, 2774, 2780, 2783])
+        for _i in xrange(5):
+            self.assertEqual(tr.data[_i], testdata[_i])
     
     def test_writeFileViaObsPy(self):
         """

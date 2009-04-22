@@ -21,8 +21,24 @@ class GSE2Trace(object):
         header, data = libgse2.read(filename)
         # reset header information
         self.stats = Stats()
+        # assign all header entries to stats
+        for _i in header.keys():
+            setattr(self.stats,_i,header[_i])
+        # now assign the common attributes of the Trace class
         # station name
         self.stats.station = header['station']
+        # sampling rate in Hz (float)
+        self.stats.sampling_rate = header['samp_rate']
+        # number of samples/data points (int)
+        self.stats.npts = header['n_samps']
+        # network ID
+        self.stats.network = ""
+        # location ID
+        self.stats.location = ""
+        # channel ID
+        self.stats.channel = header['channel']
+        # data quality indicator
+        self.stats.dataquality = ""
         # convert time to seconds since epoch
         os.environ['TZ'] = 'UTC'
         time.tzset()
@@ -36,37 +52,9 @@ class GSE2Trace(object):
         # start time of seismogram in seconds since 1970 (float)
         self.stats.julday = float(starttime/1000000)
         self.stats.starttime = starttime
-        # sampling rate in Hz (float)
-        self.stats.sampling_rate = header['samp_rate']
-        # number of samples/data points (int)
-        self.stats.npts = header['n_samps']
-        # network ID
-        self.stats.network = ""
-        # location ID
-        self.stats.location = ""
-        # channel ID
-        self.stats.channel = header['channel']
-        # data quality indicator
-        self.stats.dataquality = ""
-        # calib factor
-        self.stats.calib = header['calib']
-        # calper factor
-        self.stats.calper = header['calper']
-        # instrument type
-        self.stats.instype = header['instype']
-        # vang factor
-        self.stats.vang = header['vang']
-        # hang factor
-        self.stats.hang = header['hang']
-        # auxid
-        self.stats.auxid = header['auxid']
-        # ent time of seismogram in seconds since 1970 (float)
         self.stats.endtime = endtime
         # type, not actually used by libmseed
-        #self.stats.type = header['type']
-        # the actual seismogram data
-        self.data=array()
-        self.data.extend(data)
+        self.data=array(data)
     
     def write(self, filename=None, **kwargs):
         raise NotImplementedError

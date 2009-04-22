@@ -25,8 +25,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from numpy import array
-from scipy.signal import iirfilter,lfilter,remez,convolve
+from numpy import array, where, fft
+from scipy.signal import iirfilter,lfilter,remez,convolve,get_window
 from scipy.fftpack import hilbert
 
 
@@ -130,7 +130,7 @@ def envelope(data):
 
 def remezFIR(data,freqmin,freqmax,samp_rate=200):
   """
-  The minimax optimal filter using Remez algorithm. Zerophase bandpass?
+  The minimax optimal bandpass using Remez algorithm. Zerophase bandpass?
 
   Finite impulse response (FIR) filter whose transfer function minimizes
   the maximum error between the desired gain and the realized gain in the
@@ -179,7 +179,6 @@ def remezFIR(data,freqmin,freqmax,samp_rate=200):
   #
   # SRC: # http://episteme.arstechnica.com/eve/forums/a/tpc/f/6330927813/m/175006289731
   # See also:
-  # http://aspn.activestate.com/ASPN/Mail/Message/scipy-user/2009409
   # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592174
   # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592172
 
@@ -190,3 +189,33 @@ def remezFIR(data,freqmin,freqmax,samp_rate=200):
   filt = remez(50, array([0, flt, freqmin, freqmax, fut,  samp_rate/2-1]), 
                array([0, 1, 0]),Hz=samp_rate)
   return convolve(filt,data)
+
+def lowpassFIR(data,freq,samp_rate=200,winlen=2048):
+  """FIR-Lowpass Filter
+
+  Filter data by passing data only below a certain frequency.
+  
+  @param data: Data to filter, type numpy.ndarray.
+  @param freq: Data below this frequency pass.
+  @param samprate: Sampling rate in Hz; Default 200.
+  @param winlen: Window length for filter in samples, must be power of 2; Default 2048
+  @return: Filtered data.
+  """
+  # There is not currently an FIR-filter design program in SciPy.  One 
+  # should be constructed as it is not hard to implement (of course making 
+  # it generic with all the options you might want would take some time).
+  # 
+  # What kind of window are you currently using?
+  # 
+  # For your purposes this is what I would do:
+  # SRC: Travis Oliphant
+  # http://aspn.activestate.com/ASPN/Mail/Message/scipy-user/2009409]
+  #
+  #winlen = 2**11 #2**10 = 1024; 2**11 = 2048; 2**12 = 4096
+  w = fft.fftfreq(winlen,1/float(samp_rate)) #give frequency bins in Hz and sample spacing
+  myfilter = where((abs(w)< freq),1.,0.)  #cutoff is low-pass filter
+  h = fft.ifft(myfilter) #ideal filter
+  beta = 11.7
+  myh = fft.fftshift(h) * get_window(beta,winlen)  #beta implies Kaiser
+  return convolve(abs(myh),data)[winlen/2:-winlen/2]
+

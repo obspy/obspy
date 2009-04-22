@@ -25,6 +25,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
+        testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         tr = Trace()
         tr.read(self.file,format='GSE2')
         self.assertEqual(tr.stats['station'], 'RJOB ')
@@ -32,7 +33,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats['sampling_rate'], 200)
         self.assertEqual(tr.stats.get('channel'), '  Z')
         self.assertEqual(tr.stats.get('starttime'), 1125455629.8499985)
-        self.assertEqual(tr.data[0:13], [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2])
+        for _i in xrange(13):
+            self.assertEqual(tr.data[_i], testdata[_i])
     
     def test_writeViaObspy(self):
         """

@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.gse2 import libgse2
-import inspect, os, random, unittest
+import inspect, os, random, unittest, filecmp
 
 
 class LibGSE2TestCase(unittest.TestCase):
@@ -53,9 +53,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         header, data = libgse2.read(gse2file)
-        # define test ranges
-        filename = 'temp.mseed'
-        temp_file = os.path.join(self.path, filename)
+        temp_file = os.path.join(self.path, 'tmp.gse2')
         libgse2.write(header, data, temp_file)
         newheader, newdata = libgse2.read(temp_file)
         self.assertEqual(header, newheader)
@@ -94,6 +92,18 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(1086811559.8499985,times[2])
         self.assertEqual(1086811619.8499985,times[3])
 
+    def test_maxvalueExceeded(self):
+        """
+        Test that exception is raised when data values exceed the maximum
+        of 2^26
+        """
+        testfile = os.path.join(self.path, 'tmp.gse2')
+        data = [2**26+1]
+        header = {}
+        header['samp_rate'] = 200
+        header['n_samps'] = 1
+        header['datatype'] = 'CM6'
+        self.assertRaises(OverflowError,libgse2.write,header, data, testfile)
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')

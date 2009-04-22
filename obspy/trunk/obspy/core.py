@@ -34,7 +34,7 @@ class Trace(TraceBase):
         super(Trace, self).__init__(*args, **kwargs)
         self.filename = None
         self.format = None
-        self.data = array()
+        #self.data = array()
         self.stats = Stats()
         self._formats = []
         # inherit from all obspy trace classes

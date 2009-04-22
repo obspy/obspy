@@ -45,8 +45,7 @@ class MSEEDTrace(object):
         # type, not actually used by libmseed
         self.stats.type = header['type']
         # the actual seismogram data
-        self.data=array()
-        self.data.extend(data)
+        self.data=array(data)
     
     def write(self, filename=None, **kwargs):
         raise NotImplementedError

@@ -29,6 +29,7 @@ import math
 import os
 import platform
 import sys
+import array
 
 
 #Import libmseed library.
@@ -123,6 +124,7 @@ class libmseed(object):
         #Creates MSTraceGroup Structure
         mstg = self.readTraces(filename, dataflag = dataflag)
         data = []
+        #data = array.array('l')
         header = []
         mst = mstg.contents.traces
         numtraces = mstg.contents.numtraces
@@ -184,8 +186,9 @@ class libmseed(object):
         self._convertDictToMST(mstg.contents.traces, header)
         # Needs to be redone, dynamic??
         mstg.contents.numtraces = numtraces
-        # Create void pointer and allocates more memory to it
+        # Chain can be faster accessed than mstg.contents.traces.contents.datasamples
         chain = mstg.contents.traces.contents.datasamples
+        # Create void pointer and allocate more memory to it
         tempdatpoint = C.c_int32()
         C.resize(tempdatpoint,
                  clibmseed.ms_samplesize(C.c_char(header['sampletype'])) *
@@ -195,6 +198,10 @@ class libmseed(object):
         # Write data in MSTrace structure
         for _i in xrange(header['numsamples']):
             chain[_i] = C.c_int32(data[_i])
+        # Try to do the pointer stuff more efficient. It works, but it
+        # fails with to many iterations in test_libmseed readandwrite
+        #mstg.contents.traces.contents.datasamples = (C.c_int32*header['numsamples'])(*data[:])
+        #mstg.contents.traces.contents.datasamples = C.cast((C.c_int32*header['numsamples'])(*data[:]),C.POINTER(C.c_int32))
         return mstg
 
     def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush, verbose):
@@ -577,6 +584,7 @@ class libmseed(object):
         while starttime < endtime:
             pixel_endtime = starttime + stepsize
             tempdatlist = []
+            #tempdatlist = array.array('l')
             #Inner Loop over all times.
             for _i in timeslist:
                 #Calculate current chain in the MSTraceGroup Structure.
@@ -620,6 +628,7 @@ class libmseed(object):
                                                              chain.samplecnt])
             #If empty list do nothing.
             if tempdatlist == []:
+            #if tempdatlist == array.array('l'):
                 pass
             #If not empty append min, max and timestamp values to list.
             else:

@@ -67,25 +67,26 @@ class WAVTrace(object):
         # ------------------------------------------
         # reset header information
         self.stats = Stats()
-        # station name
-        self.stats.station = ""
-        starttime = None
-        # sampling rate in Hz (float)
-        self.stats.sampling_rate = rate
-        # number of samples/data points (int)
-        self.stats.npts = length
-        # network ID
-        self.stats.network = ""
-        # location ID
-        self.stats.location = ""
         # wav format nchannel
         self.stats.nchannel = nchannel
         # wav format width
         self.stats.width = width
         # wav format comptype
         self.stats.comptype = comptype
-        self.data = array()
-        self.data.extend(data)
+        # sampling rate in Hz (float)
+        self.stats.sampling_rate = rate
+        # number of samples/data points (int)
+        self.stats.npts = length
+        # now the general trace attributes
+        # station name
+        self.stats.station = ""
+        # starttime
+        starttime = None
+        # network ID
+        self.stats.network = ""
+        # location ID
+        self.stats.location = ""
+        self.data = array(data)
     
     def write(self, filename, framerate=7000, **kwargs):
         """

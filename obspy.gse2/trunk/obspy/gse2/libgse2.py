@@ -8,7 +8,8 @@
 # Copyright (C) 2008 Moritz Beyreuther, Stefan Stange
 #---------------------------------------------------------------------
 """ 
-Contains wrappers for gse_functions - The GSE2 library.
+Contains wrappers for gse_functions - The GSE2 library. Currently supports
+only CM6 compressed GSE2 files, this should be sufficient for most cases.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -114,7 +115,10 @@ class HEADER(C.Structure):
 
 def read(file):
     """
-    Read GSE2 file and return header and data.
+    Read GSE2 file and return header and data. 
+    
+    Currently supports only CM6 compressed GSE2 files, this should be
+    sufficient for most cases.
 
     @param file: Filename of GSE2 file to read.
     @return: Dictionary containing header entries and list containing data
@@ -144,9 +148,12 @@ def write(headdict,data,file):
     """
     Write GSE2 file, given the header and data.
     
-    @param headdict: Dictonary containing the following entries:
+    Currently supports only CM6 compressed GSE2 files, this should be
+    sufficient for most cases.
+
+    @param headdict: Dictonary containing the following entries
         {
-            'd_year': int,
+            'd_year'\: int,
             'd_mon': int,
             'd_day': int,
             't_hour': int,
@@ -164,12 +171,15 @@ def write(headdict,data,file):
             'hang': float,
             'vang': float,
         }
-    @param data: List of longs containing the data.
+    @param data: Iterable of longs containing the data.
     @param file: Name of GSE2 file to write.
     @requires: headdict dictionary entries datatype, n_samps and samp_rate
         are absolutely necessary!
     """
     n = len(data)
+    # Maximum values above 2^26 will result in corrupted/wrong data!
+    if max(data) > 2**26:
+        raise OverflowError("Compression Error, data must be less equal 2^26")
     tr = (C.c_long * n)()
     tr[0:n] = data
     lib.buf_init(None)
@@ -196,6 +206,9 @@ def read_head(file):
     """
     Return (and read) only the header of gse2 file as dictionary.
 
+    Currently supports only CM6 compressed GSE2 files, this should be
+    sufficient for most cases.
+
     @param file: Name of GSE2 file.
     @return: Dictonary containing header entries.
     """
@@ -214,6 +227,9 @@ def getstartandendtime(file):
     """
     Return start and endtime/date of gse2 file
     
+    Currently supports only CM6 compressed GSE2 files, this should be
+    sufficient for most cases.
+
     @param file: Name of GSE2 file.
     @return: [startdate,stopdate,startime,stoptime] Start and Stop time as
         Julian seconds and date string.
