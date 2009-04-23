@@ -19,18 +19,16 @@ GNU-LGPL and further information can be found here:
 http://www.gnu.org/
 """
 
+from calendar import timegm
 from datetime import datetime, timedelta
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS
 from struct import unpack
-from time import mktime
 import StringIO
 import ctypes as C
 import math
 import os
 import platform
 import sys
-import array
-
 
 #Import libmseed library.
 if sys.platform=='win32':
@@ -67,7 +65,7 @@ class libmseed(object):
         
         @param dt: Datetime object.
         """
-        return long((mktime(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
+        return long((timegm(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
     
     def convertMSTimeToDatetime(self, timestring):
         """
@@ -75,7 +73,7 @@ class libmseed(object):
         
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
-        return datetime.fromtimestamp(timestring / HPTMODULUS)
+        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
     
     def _convertMSTToDict(self, m):
         """
@@ -322,6 +320,13 @@ class libmseed(object):
         work correctly for files containing only one trace with all records
         in the correct order.
         
+        The method is so complex because we wanted to create a method that just
+        uses the first and the last record of any given file and returns the
+        start- and the endtime from that file. The libmseed could not be
+        used to read the last record without looping over all records or
+        creating a temporary file. The fpos attribute of the libmseed
+        ms_readmsr does not seem to work.
+        
         The returned endtime is the time of the last datasample and not the
         time that the last sample covers.
         The method used relies on the asumptions that any offset specified in
@@ -382,10 +387,10 @@ class libmseed(object):
         if not time_correction_applied:
             offset_in_msecs = unpack(b_o+'l', offset)[0] * 100
             st_dt_obj = st_dt_obj + timedelta(microseconds = offset_in_msecs)
-        # UTC and other possible offsets.
-        utc_offset = corrected_starttime - st_dt_obj
-        # Apply utc_offset.
-        st_dt_obj = st_dt_obj + utc_offset
+        # Offset in Blockette 1001 that can not easily be read otherwise.
+        blkt_offset = corrected_starttime - st_dt_obj
+        # Apply blkt_offset.
+        st_dt_obj = st_dt_obj + blkt_offset
         # Calculate the size of the last record. Works with incomplete records.
         filesize = os.path.getsize(filename)
         if filesize % record_length == 0:
@@ -437,7 +442,7 @@ class libmseed(object):
         # Get endtime of the last record
         et_dt_obj = et_dt_obj + timedelta(microseconds = (numsamples -1) / \
                                           float(sample_rate) * HPTMODULUS)
-        et_dt_obj = et_dt_obj + utc_offset
+        et_dt_obj = et_dt_obj + blkt_offset
         return(st_dt_obj, et_dt_obj)
     
     def printGapList(self, filename, time_tolerance = -1, 
