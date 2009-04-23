@@ -113,6 +113,8 @@ class HEADER(C.Structure):
         ('vang', C.c_float),
     ]
 
+gse2head = [_i[0] for _i in HEADER._fields_]
+
 def read(file):
     """
     Read GSE2 file and return header and data. 
@@ -151,6 +153,9 @@ def write(headdict,data,file):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
+    @param required: headdict dictionary entries datatype, n_samps and samp_rate are absolutely necessary
+    @param data: Iterable of longs containing the data.
+    @param file: Name of GSE2 file to write.
     @param headdict: Dictonary containing the following entries
         {
             'd_year'\: int,
@@ -171,17 +176,17 @@ def write(headdict,data,file):
             'hang': float,
             'vang': float,
         }
-    @param data: Iterable of longs containing the data.
-    @param file: Name of GSE2 file to write.
-    @requires: headdict dictionary entries datatype, n_samps and samp_rate
-        are absolutely necessary!
     """
+    #@requires: headdict dictionary entries datatype, n_samps and samp_rate
     n = len(data)
     # Maximum values above 2^26 will result in corrupted/wrong data!
     if max(data) > 2**26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
     tr = (C.c_long * n)()
-    tr[0:n] = data
+    try:
+        tr[0:n] = data
+    except TypeError:
+        raise TypeError("GSE2 data must be of type int or long, cast data to long!")
     lib.buf_init(None)
     f = open(file,"wb")
     fp = C.pythonapi.PyFile_AsFile(f)
@@ -192,8 +197,9 @@ def write(headdict,data,file):
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     #
     head = HEADER()
-    for i in headdict.keys():
-        setattr(head,i,headdict[i])
+    for _i in headdict.keys():
+        if _i in gse2head:
+            setattr(head,_i,headdict[_i])
     lib.write_header(fp,C.pointer(head))
     lib.buf_dump(fp)
     f.write("CHK2 %8ld\n\n" % chksum)

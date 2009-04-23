@@ -56,5 +56,48 @@ class GSE2Trace(object):
         # type, not actually used by libmseed
         self.data=array(data)
     
-    def write(self, filename=None, **kwargs):
-        raise NotImplementedError
+    def write(self, filename, **kwargs):
+        #
+        # Assign all attributes which have same name in gse2head
+        #
+        header = {}
+        for _i in libgse2.gse2head:
+            try:
+                header[_i] = getattr(self.stats,_i)
+            except AttributeError:
+                pass
+        #
+        # Translate the common (renamed) entries
+        #
+        # sampling rate
+        if not header['samp_rate']:
+            try:
+                header['samp_rate'] = self.stats.sampling_rate
+            except:
+                raise ValueError("No sampling rate given")
+        # number of samples
+        if not header['n_samps']:
+            try:
+                header['n_samps'] = self.stats.sampling_rate
+            except:
+                header['n_samps'] = len(data)
+        # year, month, day, hour, min, sec
+        if not header['d_day']:
+            try:
+                # seconds till epoch to time
+                os.environ['TZ'] = 'UTC'
+                dmsec = self.stats.starttime - int(self.stats.starttime) 
+                time.tzset()
+                (header['d_year'],
+                 header['d_mon'],
+                 header['d_day'],
+                 header['t_hour'],
+                 header['t_min'],
+                 header['t_sec']) = time.gmtime(int(self.stats.starttime))[0:6]
+                header['t_sec'] += dmsec
+            except:
+                pass
+        try:
+            libgse2.write(header,self.data,filename)
+        except TypeError:
+            libgse2.write(header,array(self.data,format='l'),filename)
