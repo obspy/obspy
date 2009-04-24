@@ -32,7 +32,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
         self.assertEqual(tr.stats.get('channel'), '  Z')
-        self.assertEqual(tr.stats.get('starttime'), 1125455629.8499985)
+        self.assertEqual(tr.stats.get('starttime'), 1125455629.849998)
         for _i in xrange(13):
             self.assertEqual(tr.data[_i], testdata[_i])
         tr2 = Trace()
@@ -41,7 +41,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.npts, 12000)
         self.assertEqual(tr2.stats['sampling_rate'], 200)
         self.assertEqual(tr2.stats.get('channel'), '  Z')
-        self.assertEqual(tr2.stats.get('starttime'), 1125455629.8499985)
+        self.assertEqual(tr2.stats.get('starttime'), 1125455629.849998)
         for _i in xrange(13):
             self.assertEqual(tr2.data[_i], testdata[_i])
     

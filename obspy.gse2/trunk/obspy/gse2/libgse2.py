@@ -122,9 +122,10 @@ def read(file):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
+    @type file: String
     @param file: Filename of GSE2 file to read.
-    @return: Dictionary containing header entries and list containing data
-        as longs.
+    @rtype: Dictionary, Interable
+    @return: Header entries and data as longs.
     """
     f = open(file, "rb")
     fp = C.pythonapi.PyFile_AsFile(f) 
@@ -153,28 +154,35 @@ def write(headdict,data,file):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
-    @param required: headdict dictionary entries datatype, n_samps and samp_rate are absolutely necessary
-    @param data: Iterable of longs containing the data.
+    @requires: headdict dictionary entries C{'datatype', 'n_samps', 'samp_rate'} are
+        absolutely necessary
+    @type data: Iterable of longs
+    @param data: Contains the data.
+    @type file: String
     @param file: Name of GSE2 file to write.
-    @param headdict: Dictonary containing the following entries
+    @type headdict: Dictonary
+    @param headdict: Header containing the following entries C{
         {
-            'd_year'\: int,
-            'd_mon': int,
-            'd_day': int,
-            't_hour': int,
-            't_min': int,
-            't_sec': float,
-            'station': char*6,
-            'channel': char*4,
-            'auxid': char*5,
-            'datatype': char*4,
-            'n_samps': int,
-            'samp_rate': float,
-            'calib': float,
-            'calper': float,
-            'instype': char*7,
-            'hang': float,
-            'vang': float,
+        'd_year': int,
+        'd_mon': int,
+        'd_mon': int,
+        'd_day': int,
+        't_hour': int,
+        't_min': int,
+        't_sec': float,
+        'station': char*6,
+        'station': char*6,
+        'channel': char*4,
+        'auxid': char*5,
+        'datatype': char*4,
+        'n_samps': int,
+        'samp_rate': float,
+        'calib': float,
+        'calper': float,
+        'instype': char*7,
+        'hang': float,
+        'vang': float
+        }
         }
     """
     #@requires: headdict dictionary entries datatype, n_samps and samp_rate
@@ -215,8 +223,10 @@ def read_head(file):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
+    @type file: String
     @param file: Name of GSE2 file.
-    @return: Dictonary containing header entries.
+    @rtype: Dictonary
+    @return: Header entries.
     """
     f = open(file,"rb")
     fp = C.pythonapi.PyFile_AsFile(f)
@@ -236,9 +246,11 @@ def getstartandendtime(file):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
+    @type file: String
     @param file: Name of GSE2 file.
-    @return: [startdate,stopdate,startime,stoptime] Start and Stop time as
-        Julian seconds and date string.
+    @rtype: List
+    @return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
+        Julian seconds and as date string.
     """
     f = open(file,"rb")
     fp = C.pythonapi.PyFile_AsFile(f)

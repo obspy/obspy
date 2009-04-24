@@ -2,7 +2,7 @@
 
 from obspy.gse2 import libgse2
 from obspy.numpy import array
-from obspy.util import Stats
+from obspy.util import Stats, Time
 import os, time
 
 
@@ -40,20 +40,27 @@ class GSE2Trace(object):
         # data quality indicator
         self.stats.dataquality = ""
         # convert time to seconds since epoch
-        os.environ['TZ'] = 'UTC'
-        time.tzset()
-        dmsec = header['t_sec'] - int(header['t_sec'])
-        datestr = "%04d%02d%02d%02d%02d%02d" % (
+        #os.environ['TZ'] = 'UTC'
+        #time.tzset()
+        #dmsec = header['t_sec'] - int(header['t_sec'])
+        #datestr = "%04d%02d%02d%02d%02d%02d" % (
+        #        header['d_year'],header['d_mon'],header['d_day'],
+        #        header['t_hour'],header['t_min'],header['t_sec']
+        #)
+        #starttime = float(time.mktime(time.strptime(datestr,'%Y%m%d%H%M%S')) + dmsec)
+        #endtime = starttime + header['n_samps']/float(header['samp_rate'])
+        # start time of seismogram in seconds since 1970 (float)
+        #self.stats.julday = float(starttime/1000000)
+        #self.stats.starttime = starttime
+        #self.stats.endtime = endtime
+        # type, not actually used by libmseed
+        datestr = "%04d%02d%02d%02d%02d%09.6f" % (
                 header['d_year'],header['d_mon'],header['d_day'],
                 header['t_hour'],header['t_min'],header['t_sec']
         )
-        starttime = float(time.mktime(time.strptime(datestr,'%Y%m%d%H%M%S')) + dmsec)
-        endtime = starttime + header['n_samps']/float(header['samp_rate'])
-        # start time of seismogram in seconds since 1970 (float)
-        self.stats.julday = float(starttime/1000000)
-        self.stats.starttime = starttime
-        self.stats.endtime = endtime
-        # type, not actually used by libmseed
+        self.stats.starttime = Time(datestr)
+        self.stats.endtime = Time(self.stats.starttime +
+                                  header['n_samps']/float(header['samp_rate']))
         self.data=array(data)
     
     def write(self, filename, **kwargs):
