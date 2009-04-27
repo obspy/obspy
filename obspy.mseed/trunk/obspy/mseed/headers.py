@@ -303,9 +303,34 @@ MSTraceGroup_s._fields_ = [
     ('numtraces', C.c_int),                # Number of MSTraces in the trace chain
     ('traces', C.POINTER(MSTrace_s)),       # Root of the trace chain
 ]
-
 MSTraceGroup = MSTraceGroup_s
+
 
 # Define the high precision time tick interval as 1/modulus seconds */
 # Default modulus of 1000000 defines tick interval as a microsecond */
 HPTMODULUS = 1000000.0
+
+
+# C file pointer class
+class FILE(C.Structure): # Never directly used
+    """C file pointer class for type checking with argtypes"""
+    pass
+c_file_p = C.POINTER(FILE)
+
+# Reading Mini-SEED records from files
+class MSFileParam_s(C.Structure):
+    pass
+
+MSFileParam_s._fields_ = [
+
+  ('fp', c_file_p),
+  ('rawrec', C.c_char_p),
+  ('filename', C.c_char * 512),
+  ('autodet', C.c_int),
+  ('readlen', C.c_int),
+  ('packtype', C.c_int),
+  ('packhdroffset', C.c_long),
+  ('filepos', C.c_long),
+  ('recordcount', C.c_int),
+]
+MSFileParam = MSFileParam_s

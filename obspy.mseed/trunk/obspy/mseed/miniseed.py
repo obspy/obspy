@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Class for handling Mini-SEED files.
+Class for that defines a Mini-SEED object.
 
-Contains wrappers for libmseed - The Mini-SEED library.
+Contains and uses wrappers for libmseed - The Mini-SEED library.
 
 Currently only supports Mini-SEED files with integer data values.
 
@@ -29,6 +29,7 @@ import math
 import os
 import platform
 import sys
+import inspect
 
 #Import libmseed library.
 if sys.platform=='win32':
@@ -42,10 +43,23 @@ clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
                                 lib_name))
 
 
-class libmseed(object):
+class miniseed(object):
     """
-    Class for handling Mini-SEED files.
+    Class that defines a Mini-SEED object in Python.
     """
+    def __init__(self, filename, mode = 1):
+        """
+        Init the object.
+        """
+        path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.filename = os.path.join(path, filename)
+        
+    def __getattr__(self, name):
+        """
+        Will be called if the attribute is unknown
+        """
+        return eval('self.get'+name)(self.filename)
+        
     def convertDatetimeToMSTime(self, dt):
         """
         Takes datetime object and returns an epoch time in ms.
@@ -364,10 +378,22 @@ class libmseed(object):
             header[_i] = getattr(chain, _i)
         return header
 
-    def getStartAndEndTime(self, filename):
+    def getstarttime(self, filename):
         """
-        Returns the start- and endtime of a Mini-SEED file as a tuple
-        containing two datetime objects.
+        Returns Starttime of a Mini-SEED file as a datetime object.
+        
+        @param filename: Mini-SEED file string.
+        """
+        first_record = self.read_MSRec(filename, dataflag = 0)
+        # Get the starttime using the libmseed method msr_starttime
+        clibmseed.msr_starttime.restype = C.c_int64
+        starttime = clibmseed.msr_starttime(first_record)
+        self.starttime = self.convertMSTimeToDatetime(starttime)
+        return self.starttime
+    
+    def getendtime(self, filename):
+        """
+        Returns Endtime of a Mini-SEED file as a datetime object.
         
         This method only reads the first and the last record. Thus it will only
         work correctly for files containing only one trace with all records
@@ -378,19 +404,14 @@ class libmseed(object):
         
         @param filename: Mini-SEED file string.
         """
-        first_record = self.read_MSRec(filename, dataflag = 0)
-        # Get the starttime using the libmseed method msr_starttime
-        clibmseed.msr_starttime.restype = C.c_int64
-        starttime = clibmseed.msr_starttime(first_record)
-        starttime = self.convertMSTimeToDatetime(starttime)
         #Read last record.
         last_record = self.read_MSRec(filename, dataflag = 0,
                                       record_number = -1)
         # Get the endtime using the libmseed method msr_endtime
         clibmseed.msr_endtime.restype = C.c_int64
         endtime = clibmseed.msr_endtime(last_record)
-        endtime = self.convertMSTimeToDatetime(endtime)
-        return(starttime, endtime)
+        self.endtime = self.convertMSTimeToDatetime(endtime)
+        return self.endtime
     
     def printGapList(self, filename, time_tolerance = -1, 
                      samprate_tolerance = -1, min_gap = None, max_gap = None):
@@ -408,7 +429,7 @@ class libmseed(object):
                                                     r[6], r[7])
         print "Total: %d gap(s)" % len(result)
     
-    def getGapList(self, filename, time_tolerance = -1, 
+    def getgaps(self, filename, time_tolerance = -1, 
                    samprate_tolerance = -1, min_gap = None, max_gap = None):
         """
         Returns gaps, overlaps and trace header information of a given file.
@@ -781,3 +802,8 @@ class libmseed(object):
                     facecolor = bgcolor, edgecolor = bgcolor, format = format)
             imgdata.seek(0)
             return imgdata.read()
+
+if __name__=='__main__':
+    filename = 'tests/data/BW.BGLD..EHE.D.2008.001'
+    MS = miniseed(filename)
+    import pdb;pdb.set_trace()

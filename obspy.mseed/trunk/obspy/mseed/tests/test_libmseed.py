@@ -23,38 +23,15 @@ class LibMSEEDTestCase(unittest.TestCase):
     def tearDown(self):
         pass
     
-    def test_resetMemory(self):
-        """
-        Tests to reset the memory. Needed to read two files in one python
-        session.
-        """
-        filename = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001')
-        mseed = libmseed()
-        msrec = mseed.read_MSRec(filename, dataflag = 0)
-        first_record = msrec[0].contents.sequence_number
-        msrec = mseed.read_MSRec(filename, dataflag = 0)
-        second_record = msrec[0].contents.sequence_number
-        #Reset Memory and read the same file again
-        mseed.resetMemory()
-        msrec = mseed.read_MSRec(filename, dataflag = 0)
-        new_first_record = msrec[0].contents.sequence_number
-        msrec = mseed.read_MSRec(filename, dataflag = 0)
-        new_second_record = msrec[0].contents.sequence_number
-        self.assertEqual(first_record, new_first_record)
-        self.assertEqual(second_record, new_second_record)
-        #Reset Memory.
-        mseed.resetMemory()
-    
-    def test_convertDatetimes(self):
+    def test_convertDatetime(self):
         """
         Tests all time conversion methods.
         
         This is a sanity test. A conversion to a format and back should not
         change the value
         """
-        #These values are created using the Linux "date -u -d @TIMESTRING"
-        #command. These values are assumed to be correct.
+        # These values are created using the Linux "date -u -d @TIMESTRING"
+        # command. These values are assumed to be correct.
         timesdict = {'1234567890' : datetime(2009, 2, 13, 23, 31, 30),
                      '1111111111' : datetime(2005, 3, 18, 1, 58, 31),
                      '1212121212' : datetime(2008, 5, 30, 4, 20, 12),
@@ -62,21 +39,33 @@ class LibMSEEDTestCase(unittest.TestCase):
                      '100000' : datetime(1970, 1, 2, 3, 46, 40),
                      '200000000' : datetime(1976, 5, 3, 19, 33, 20)}
         mseed = libmseed()
-        #Loop over timesdict.
+        # Loop over timesdict.
         for _i in timesdict.keys():
             self.assertEqual(timesdict[_i],
                     mseed.convertMSTimeToDatetime(long(_i)*1000000L))
             self.assertEqual(long(_i) * 1000000L,
                     mseed.convertDatetimeToMSTime(timesdict[_i]))
-        #Additional sanity tests.
-        # today
+        # Additional sanity tests.
+        # Today.
         now = datetime.now()
         self.assertEqual(now, mseed.convertMSTimeToDatetime(
                               mseed.convertDatetimeToMSTime(now)))
-        # some random date
+        # Some random date.
         timestring = random.randint(0, 2000000) * 1e6
         self.assertEqual(timestring, mseed.convertDatetimeToMSTime(
                         mseed.convertMSTimeToDatetime(timestring)))
+        
+    def test_CFilePointer(self):
+        """
+        Tests whether the convertion to a C file pointer works.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, 
+                                  'BW.BGLD..EHE.D.2008.001')
+        open_file = open(filename, 'rb')
+        pointer = mseed._convertToCFilePointer(open_file)
+        self.assertNotEqual(str(pointer).find('LP_FILE'), -1)
+        open_file.close()
         
     def test_readMSRec(self):
         """
@@ -94,15 +83,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
                     -367, -414, -427]
         msr = mseed.read_MSRec(filename)
-        chain = msr[0].contents
+        chain = msr.contents
         self.assertEqual('BGLD', chain.station)
         self.assertEqual('EHE', chain.channel)
         self.assertEqual(200, chain.samprate)
         data = chain.datasamples[0:13]
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
-        #Reset Memory.
-        mseed.resetMemory()
     
     def test_readTraces(self):
         """
@@ -127,8 +114,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(numtraces, 1)
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
-        #Reset Memory.
-        mseed.resetMemory()
     
     def test_readAnWriteTraces(self):
         """
@@ -165,8 +150,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                     self.assertEqual(data, newdata)
                     self.assertEqual(numtraces, newnumtraces)
                     os.remove(temp_file)
-    #Reset Memory.
-        mseed.resetMemory()
     
     def test_getGapList(self):
         """
@@ -200,8 +183,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
-        #Reset Memory.
-        mseed.resetMemory()
     
     def test_readFirstHeaderInfo(self):
         """
@@ -216,8 +197,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         self.assertEqual(header['channel'], 'EHE')
-        #Reset Memory.
-        mseed.resetMemory()
     
     def test_getStartAndEndTime(self):
         """
@@ -231,36 +210,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
         # get the start- and end time
         times = mseed.getStartAndEndTime(filename)
-        # reseting the ms_readmsr() method of libmseed
-        mseed.resetMemory()
         # parse the whole file
         mstg = mseed.readTraces(filename, dataflag = 0)
         chain = mstg.contents.traces.contents
-        self.assertEqual(times[0], mseed.convertMSTimeToDatetime(chain.starttime))
-        self.assertEqual(times[1], mseed.convertMSTimeToDatetime(chain.endtime))
-        #Reset Memory.
-        mseed.resetMemory()
+        self.assertEqual(times[0],
+                         mseed.convertMSTimeToDatetime(chain.starttime))
+        self.assertEqual(times[1],
+                         mseed.convertMSTimeToDatetime(chain.endtime))
         
-#    def test_threadedReadingFiles(self):
-#        """
-#        More than one file is read at once. This test identifies any not thread
-#        safe parts of the read_MSRec method.
-#        """
-#        mseed = libmseed()
-#        #Getting reference values
-#        filename1 = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-#        sequence_numbers1 = []
-#        for _i in range(10):
-#            msr = mseed.read_MSRec(filename1)
-#            sequence_numbers1.append(msr.contents.sequence_number)
-#        mseed.resetMemory()
-#        filename2 = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
-#        sequence_numbers1 = []
-#        for _i in range(10):
-#            msr = mseed.read_MSRec(filename2)
-#            sequence_numbers1.append(msr.contents.sequence_number)
-#        mseed.resetMemory()
-
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
