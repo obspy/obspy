@@ -28,22 +28,50 @@ class Stats(dict):
 
 class Time(float):
     """
-    A class handling conversion from date to timestamps
-
-    You may the following syntax to change or access data in this class:
+    A class handling conversion from utc date to timestamps
+    
+    You may use the following syntax to change or access data in this class:
         >>> Time(0.0)
         0.0
         >>> Time('19700101000000')
         0.0
-        >>> Time('20040609200559.849998') + 10
-        1086811569.849998
         >>> t = Time(1240561632.005)
         >>> t.date
         '2009-04-24T08:27:12.005000'
         >>> t.year
         2009
-        >>> (t.year,t.hour,t.month,t.hour,t.min,"%9.6f"%t.sec)
+        >>> t.year, t.hour, t.month, t.hour, t.min, "%9.6f"%t.sec
         (2009, 8, 4, 8, 27, '12.005000')
+        >>> t
+        1240561632.0050001
+        >>> t + 100
+        1240561732.0050001
+        >>> type(t + 100)
+        <type 'float'>
+        >>> t2 = Time(t+100)
+        >>> t2
+        1240561732.0050001
+        >>> type(t2)
+        <class '__main__.Time'>
+        >>> t2.date
+        '2009-04-24T08:28:52.005000'
+
+    @type year: integer
+    @ivar year: The year
+    @type month: integer
+    @ivar month: The month
+    @type day: integer
+    @ivar day: The day
+    @type hour: integer
+    @ivar hour: The hour
+    @type min: integer
+    @ivar min: The minute
+    @type sec: float
+    @ivar year: The seconds
+    @type date: string
+    @ivar date: The seconds
+    @rtype: float
+    @return: Timestamp (julian seconds/seconds since 1970)
     """
     def __new__(cls,T,format="%Y%m%d%H%M%S",tzone='UTC'):
         os.environ['TZ'] = tzone

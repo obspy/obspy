@@ -9,7 +9,7 @@ performance issues.
 import sys, imp
 
 # circumvent name clash
-numpy = imp.load_module('numpy',*imp.find_module('numpy',sys.path[:-1])) 
+numpy = imp.load_module('numpy',*imp.find_module('numpy',sys.path[::-1])) 
 #if False:
 if numpy:
     class array(numpy.ndarray):
