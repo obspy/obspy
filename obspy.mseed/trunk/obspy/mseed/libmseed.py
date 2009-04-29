@@ -226,6 +226,8 @@ class libmseed(object):
         @param numtraces: Number of traces in the structure. No function so
             far.
         """
+        # variable
+        npts = header['numsamples']
         # Init MSTraceGroupint
         clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
         mstg = clibmseed.mst_initgroup(None)
@@ -236,23 +238,22 @@ class libmseed(object):
         self._convertDictToMST(mstg.contents.traces, header)
         # Needs to be redone, dynamic??
         mstg.contents.numtraces = numtraces
-        # Chain can be faster accessed than
-        # mstg.contents.traces.contents.datasamples
-        chain = mstg.contents.traces.contents.datasamples
         # Create void pointer and allocate more memory to it
         tempdatpoint = C.c_int32()
         C.resize(tempdatpoint,
                  clibmseed.ms_samplesize(C.c_char(header['sampletype'])) *
-                 header['numsamples'])
+                 npts)
         # Set pointer to tempdatpoint
         mstg.contents.traces.contents.datasamples = C.pointer(tempdatpoint)
-        # Write data in MSTrace structure
-        for _i in xrange(header['numsamples']):
-            chain[_i] = C.c_int32(data[_i])
-        # Try to do the pointer stuff more efficient. It works, but it
-        # fails with to many iterations in test_libmseed readandwrite
-#        mstg.contents.traces.contents.datasamples = (C.c_int32*header['numsamples'])(*data[:])
-#        mstg.contents.traces.contents.datasamples = C.cast((C.c_int32*header['numsamples'])(*data[:]),C.POINTER(C.c_int32))
+        ## Chain can be faster accessed than
+        ##mstg.contents.traces.contents.datasamples
+        ## Write data in MSTrace structure
+        ##chain = mstg.contents.traces.contents.datasamples
+        ##for _i in xrange(header['numsamples']):
+        ##    chain[_i] = C.c_int32(data[_i])
+        # Fast slice assignment by "casting" c_int32 to c_int32_Array_11947
+        chain=type((C.c_int32*npts)()).from_address(C.addressof(tempdatpoint))
+        chain[0:npts] = data[:] 
         return mstg
 
     def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush,
