@@ -1,0 +1,1 @@
+../../../trunk/obspy/core.py
