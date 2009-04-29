@@ -23,9 +23,11 @@ from calendar import timegm
 from datetime import datetime
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
+from PIL import PsdImagePlugin
 import StringIO
 import ctypes as C
 import math
+import numpy as N
 import os
 import platform
 import sys
@@ -38,8 +40,8 @@ else:
         lib_name = 'libmseed.lin64.so'
     else:
         lib_name = 'libmseed.so'
-clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed', 
-                                lib_name))
+clibmseed = N.ctypeslib.load_library(lib_name,
+                        os.path.join(os.path.dirname(__file__), 'libmseed'))
 
 
 class libmseed(object):
@@ -213,6 +215,25 @@ class libmseed(object):
         ff.close()
         return msr
     
+    def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
+        """
+        Takes a Ctypes c_int32 array and its length and returns it as a numpy
+        array.
+        
+        This works by reference and no data is copied.
+        
+        @param buffer: Ctypes c_int32 buffer.
+        @param buffer_elements: length of the buffer
+        """
+        buffer_type = C.c_int32 * buffer_elements
+        # Get address of array_in_c, which contains the reference to the C array.
+        array_address = C.addressof(buffer.contents)
+        # Make ctypes style array from C array.
+        ctypes_array = buffer_type.from_address(array_address)
+        # Make a NumPy array from that.
+        xxx = N.ctypeslib.as_array(ctypes_array)
+        return xxx
+    
     def _populateMSTG(self, header, data, numtraces=1):
         """
         Populates MSTrace_Group structure from given header, data and
@@ -245,13 +266,6 @@ class libmseed(object):
                  npts)
         # Set pointer to tempdatpoint
         mstg.contents.traces.contents.datasamples = C.pointer(tempdatpoint)
-        ## Chain can be faster accessed than
-        ##mstg.contents.traces.contents.datasamples
-        ## Write data in MSTrace structure
-        ##chain = mstg.contents.traces.contents.datasamples
-        ##for _i in xrange(header['numsamples']):
-        ##    chain[_i] = C.c_int32(data[_i])
-        # Fast slice assignment by "casting" c_int32 to c_int32_Array_11947
         chain=type((C.c_int32*npts)()).from_address(C.addressof(tempdatpoint))
         chain[0:npts] = data[:] 
         return mstg
@@ -536,8 +550,8 @@ class libmseed(object):
         #While loop over the plotting duration.
         while starttime < endtime:
             pixel_endtime = starttime + stepsize
-            tempdatlist = []
-            #tempdatlist = array.array('l')
+            maxlist = []
+            minlist = []
             #Inner Loop over all times.
             for _i in timeslist:
                 #Calculate current chain in the MSTraceGroup Structure.
@@ -562,7 +576,10 @@ class libmseed(object):
                               (_i[1] - _i[0]) * chain.samplecnt
                         if end > _i[1]:
                             end = _i[1]
-                        tempdatlist.extend(chain.datasamples[0 : int(end)])
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.numsamples)
+                        maxlist.append(temparr[0 : int(end)].max())
+                        minlist.append(temparr[0 : int(end)].min())
                 #Starttime is right in the current trace.
                 else:
                     #Endtime also is in the trace. Append to tempdatlist.
@@ -571,21 +588,25 @@ class libmseed(object):
                                 chain.samplecnt
                         end = float((pixel_endtime - _i[0])) / \
                               (_i[1] - _i[0]) * chain.samplecnt
-                        tempdatlist.extend(chain.datasamples[int(start) : \
-                                                             int(end)])
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.samplecnt)
+                        maxlist.append(temparr[int(start) : int(end)].max())
+                        minlist.append(temparr[int(start) : int(end)].min())
                     #Endtime is not in the trace. Append to tempdatlist.
                     else:
                         start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
                                 chain.samplecnt
-                        tempdatlist.extend(chain.datasamples[int(start) : \
-                                                             chain.samplecnt])
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.numsamples)
+                        maxlist.append(temparr[int(start) : chain.samplecnt].max())
+                        minlist.append(temparr[int(start) : chain.samplecnt].min())
             #If empty list do nothing.
-            if tempdatlist == []:
+            if minlist == []:
             #if tempdatlist == array.array('l'):
                 pass
             #If not empty append min, max and timestamp values to list.
             else:
-                minmaxlist.append((min(tempdatlist), max(tempdatlist), 
+                minmaxlist.append((min(minlist), max(maxlist), 
                                    starttime + 0.5 * stepsize))
             #New starttime for while loop.
             starttime = pixel_endtime
