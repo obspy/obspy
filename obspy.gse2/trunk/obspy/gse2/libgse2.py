@@ -115,7 +115,7 @@ class HEADER(C.Structure):
 
 gse2head = [_i[0] for _i in HEADER._fields_]
 
-def read(file):
+def read(file,test_chksum=False):
     """
     Read GSE2 file and return header and data. 
     
@@ -124,6 +124,8 @@ def read(file):
 
     @type file: String
     @param file: Filename of GSE2 file to read.
+    @type test_chksum: Bool
+    @param test_chksum: If True: Test Checksum and raise Exception
     @rtype: Dictionary, Interable
     @return: Header entries and data as longs.
     """
@@ -138,7 +140,7 @@ def read(file):
     chksum = C.c_longlong()
     chksum = lib.check_sum(data, head.n_samps, chksum)
     chksum2 = int(f.readline().strip().split()[1])
-    if chksum != chksum2:
+    if test_chksum and chksum != chksum2:
         raise ChksumError("Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d" % (chksum,chksum2,chksum,chksum2))
     f.close()
     headdict = {}
