@@ -67,7 +67,7 @@ class LibGSE2TestCase(unittest.TestCase):
         The values can be read from the filename.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header = libgse2.read_head(gse2file)
+        header = libgse2.readHead(gse2file)
         self.assertEqual('RNON ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -86,11 +86,20 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         # get the start- and end time
-        times = libgse2.getstartandendtime(gse2file)
+        times = libgse2.getStartAndEndTime(gse2file)
         self.assertEqual('2004-06-09T20:05:59.850',times[0])
         self.assertEqual('2004-06-09T20:06:59.850',times[1])
         self.assertEqual(1086811559.8499985,times[2])
         self.assertEqual(1086811619.8499985,times[3])
+
+    def test_isWidi2(self):
+        """
+        See if first 4 characters are WID2, if not raise type error.
+        """
+        self.assertRaises(TypeError,libgse2.read,__file__)
+        self.assertRaises(TypeError,libgse2.getStartAndEndTime,__file__)
+        self.assertRaises(TypeError,libgse2.readHead,__file__)
+
 
     def test_maxvalueExceeded(self):
         """

@@ -113,14 +113,24 @@ class HEADER(C.Structure):
         ('vang', C.c_float),
     ]
 
+# module wide variable, can be imported by:
+# >>> from obspy.gse2 import gse2head
 gse2head = [_i[0] for _i in HEADER._fields_]
+
+def isGse2(f):
+    widi = f.read(4)
+    if widi != 'WID2':
+        raise TypeError("File is not in GSE2 format")
+    f.seek(0)
 
 def read(file,test_chksum=False):
     """
     Read GSE2 file and return header and data. 
     
     Currently supports only CM6 compressed GSE2 files, this should be
-    sufficient for most cases.
+    sufficient for most cases. Data are in circular frequency counts, for
+    nanometer per second multiply by 2PI and calper: nm_per_s = data * 2 *
+    pi * header['calper'].
 
     @type file: String
     @param file: Filename of GSE2 file to read.
@@ -130,6 +140,7 @@ def read(file,test_chksum=False):
     @return: Header entries and data as longs.
     """
     f = open(file, "rb")
+    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f) 
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
@@ -148,13 +159,18 @@ def read(file,test_chksum=False):
         headdict[i[0]] = getattr(head,i[0])
     del fp, head
     return headdict , data[0:n]
+    # from numpy 1.2.1 it's possible to use:
+    #import numpy as N
+    #return headdict , N.ctypeslib.as_array(data)
 
 def write(headdict,data,file):
     """
     Write GSE2 file, given the header and data.
     
     Currently supports only CM6 compressed GSE2 files, this should be
-    sufficient for most cases.
+    sufficient for most cases. Data are in circular frequency counts, for
+    nanometer per second multiply by 2PI and calper: 
+    nm_per_s = data * 2 * pi * header['calper'].
 
     @requires: headdict dictionary entries C{'datatype', 'n_samps', 'samp_rate'} are
         absolutely necessary
@@ -218,7 +234,7 @@ def write(headdict,data,file):
     del fp, head
     return 0
 
-def read_head(file):
+def readHead(file):
     """
     Return (and read) only the header of gse2 file as dictionary.
 
@@ -231,6 +247,7 @@ def read_head(file):
     @return: Header entries.
     """
     f = open(file,"rb")
+    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
@@ -241,7 +258,7 @@ def read_head(file):
     del fp, head
     return headdict
 
-def getstartandendtime(file):
+def getStartAndEndTime(file):
     """
     Return start and endtime/date of gse2 file
     
@@ -255,6 +272,7 @@ def getstartandendtime(file):
         Julian seconds and as date string.
     """
     f = open(file,"rb")
+    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp,C.pointer(head))
