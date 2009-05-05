@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time, os
+import time, os, datetime
 
 class Stats(dict):
     """
@@ -20,11 +20,90 @@ class Stats(dict):
       >>> x = stats.keys()
       >>> x.sort()
       >>> x
-      ['network', 'station']
+      ['channel', 'dataquality', 'location', 'network', 'npts', 'sampling_rate', 'starttime', 'station']
+
+    @type station: String
+    @ivar station: Station name
+    @type sampling_rate: Float
+    @ivar sampling_rate: Sampling rate
+    @type npts: Int
+    @ivar npts: Number of data points
+    @type network: String
+    @ivar network: Stations network code
+    @type location: String
+    @ivar location: Stations location code
+    @type channel: String
+    @ivar channel: Channel
+    @type dataquality: String
+    @ivar dataquality: Data quality
+    @type starttime: Datetime Object
+    @ivar starttime: Starttime of seismogram
     """
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
+        # fill some dummy values
+        self.station = "dummy"
+        self.sampling_rate = 1.0
+        self.npts = -1
+        self.network = "--"
+        self.location = ""
+        self.channel = "BHZ"
+        self.dataquality = ""
+        self.starttime = DateTime.utcfromtimestamp(0.0)
+
+class UTC(datetime.tzinfo):
+    """
+    A UTC class
+    
+    http://docs.python.org/library/datetime.html#tzinfo-objects
+    """
+    zero_ = datetime.timedelta(0)
+    def utcoffset(self, dt):
+        return self.zero_
+    def tzname(self, dt):
+        return "UTC"
+    def dst(self, dt):
+        return self.zero
+
+class DateTime(datetime.datetime):
+    """
+    A class handling conversion from utc datetime to utc timestamps. This
+    class inherits from datetime.datetime and refines the UTC timezone support.
+    
+    You may use the following syntax to change or access data in this class:
+        >>> DateTime.utcfromtimestamp(0.0)
+        DateTime(1970, 1, 1, 0, 0)
+        >>> DateTime(1970,1,1)
+        DateTime(1970, 1, 1, 0, 0)
+        >>> t = DateTime.utcfromtimestamp(1240561632.005)
+        >>> t
+        DateTime(2009, 4, 24, 8, 27, 12, 5000)
+        >>> t.year
+        2009
+        >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
+        (2009, 8, 4, 8, 27, 12, 5000)
+        >>> t.timestamp() + 100
+        1240561732.0050001
+        >>> t2 = DateTime.utcfromtimestamp(t.timestamp()+60)
+        >>> t2
+        DateTime(2009, 4, 24, 8, 28, 12, 5000)
+    """
+    # timezone need to be set explicitly, see
+    # http://www.mail-archive.com/python-bugs-list@python.org/msg08141.html
+    def __init__(self,*args,**kwargs):
+        os.environ['TZ'] = 'UTC'
+        datetime.datetime.__init__(self,args,kwargs)
+        # self.replace(tzinfo=UTC())
+    def timestamp(self):
+        """
+        Return UTC timestamp in floating point seconds
+        
+        @rtype: float
+        @return: Timestamp in seconds
+        """
+        os.environ['TZ'] = 'UTC'
+        return float(self.strftime("%s")) + self.microsecond/1.0e6
 
 class Time(float):
     """

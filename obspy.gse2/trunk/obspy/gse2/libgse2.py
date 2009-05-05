@@ -129,8 +129,8 @@ def read(file,test_chksum=False):
     
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases. Data are in circular frequency counts, for
-    nanometer per second multiply by 2PI and calper: nm_per_s = data * 2 *
-    pi * header['calper'].
+    correction of calper multiply by 2PI and calper: data * 2 * pi *
+    header['calper'].
 
     @type file: String
     @param file: Filename of GSE2 file to read.
@@ -169,8 +169,8 @@ def write(headdict,data,file):
     
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases. Data are in circular frequency counts, for
-    nanometer per second multiply by 2PI and calper: 
-    nm_per_s = data * 2 * pi * header['calper'].
+    correction of calper multiply by 2PI and calper: 
+    data * 2 * pi * header['calper'].
 
     @requires: headdict dictionary entries C{'datatype', 'n_samps', 'samp_rate'} are
         absolutely necessary

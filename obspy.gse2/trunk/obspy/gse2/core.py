@@ -2,8 +2,8 @@
 
 from obspy.gse2 import libgse2
 from obspy.numpy import array
-from obspy.util import Stats, Time
-import os, time
+from obspy.util import Stats, DateTime
+import os
 
 
 class GSE2Trace(object):
@@ -40,27 +40,17 @@ class GSE2Trace(object):
         # data quality indicator
         self.stats.dataquality = ""
         # convert time to seconds since epoch
-        #os.environ['TZ'] = 'UTC'
-        #time.tzset()
-        #dmsec = header['t_sec'] - int(header['t_sec'])
-        #datestr = "%04d%02d%02d%02d%02d%02d" % (
-        #        header['d_year'],header['d_mon'],header['d_day'],
-        #        header['t_hour'],header['t_min'],header['t_sec']
-        #)
-        #starttime = float(time.mktime(time.strptime(datestr,'%Y%m%d%H%M%S')) + dmsec)
-        #endtime = starttime + header['n_samps']/float(header['samp_rate'])
-        # start time of seismogram in seconds since 1970 (float)
-        #self.stats.julday = float(starttime/1000000)
-        #self.stats.starttime = starttime
-        #self.stats.endtime = endtime
-        # type, not actually used by libmseed
-        datestr = "%04d%02d%02d%02d%02d%09.6f" % (
+        seconds = int(header['t_sec'])
+        microseconds = int(1e6*(header['t_sec'] - seconds))
+        self.stats.starttime = DateTime(
                 header['d_year'],header['d_mon'],header['d_day'],
-                header['t_hour'],header['t_min'],header['t_sec']
+                header['t_hour'],header['t_min'],
+                seconds,microseconds
         )
-        self.stats.starttime = Time(datestr)
-        self.stats.endtime = Time(self.stats.starttime +
-                                  header['n_samps']/float(header['samp_rate']))
+        self.stats.endtime = DateTime.utcfromtimestamp(
+            self.stats.starttime.timestamp() +
+            header['n_samps']/float(header['samp_rate'])
+        )
         self.data=array(data)
     
     def write(self, filename, **kwargs):
@@ -91,17 +81,13 @@ class GSE2Trace(object):
         # year, month, day, hour, min, sec
         if not header['d_day']:
             try:
-                # seconds till epoch to time
-                os.environ['TZ'] = 'UTC'
-                dmsec = self.stats.starttime - int(self.stats.starttime) 
-                time.tzset()
                 (header['d_year'],
                  header['d_mon'],
                  header['d_day'],
                  header['t_hour'],
                  header['t_min'],
-                 header['t_sec']) = time.gmtime(int(self.stats.starttime))[0:6]
-                header['t_sec'] += dmsec
+                 header['t_sec']) = self.stats.starttime.timetuple()[0:6]
+                header['t_sec'] += self.stats.starttime.microseconds/1.0e6
             except:
                 pass
         try:
