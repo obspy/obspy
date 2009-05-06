@@ -23,7 +23,7 @@ from calendar import timegm
 from datetime import datetime
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
-from PIL import PsdImagePlugin
+#from PIL import PsdImagePlugin
 import StringIO
 import ctypes as C
 import math
@@ -266,8 +266,14 @@ class libmseed(object):
                  npts)
         # Set pointer to tempdatpoint
         mstg.contents.traces.contents.datasamples = C.pointer(tempdatpoint)
+        # This is a little bit faster under the assumption that the data
+        # are already numpy arrays.
+        ##chain = mstg.contents.traces.contents.datasamples
+        ##data_numpy = N.array(data,dtype='l')
+        ##ptr = N.ctypeslib.as_ctypes(data_numpy)
+        ##C.memmove(chain,ptr,npts*4)
         chain=type((C.c_int32*npts)()).from_address(C.addressof(tempdatpoint))
-        chain[0:npts] = data[:] 
+        chain[0:npts] = data
         return mstg
 
     def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush,

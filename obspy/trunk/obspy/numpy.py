@@ -13,7 +13,7 @@ numpy = imp.load_module('numpy',*imp.find_module('numpy',sys.path[::-1]))
 #if False:
 if numpy:
     class array(numpy.ndarray):
-        def __new__(cls, obj, format='f'):
+        def __new__(cls, obj, format='l'):
             # The __new__ method is read before the __inti__ method,
             # inheret from numpy array using the numpy.array fct
             # http://mail.scipy.org/pipermail/numpy-discussion/2006-February/006664.html

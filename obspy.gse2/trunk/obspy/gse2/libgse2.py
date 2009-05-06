@@ -27,6 +27,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import sys, os, time, ctypes as C
+#import numpy as N
+#C = N.ctypeslib.ctypes
 
 if sys.platform=='win32':
     lib = C.cdll.gse_functions
@@ -160,8 +162,8 @@ def read(file,test_chksum=False):
     del fp, head
     return headdict , data[0:n]
     # from numpy 1.2.1 it's possible to use:
-    #import numpy as N
-    #return headdict , N.ctypeslib.as_array(data)
+    ##import numpy as N
+    ##return headdict , N.ctypeslib.as_array(data)
 
 def write(headdict,data,file):
     """
@@ -213,6 +215,8 @@ def write(headdict,data,file):
         tr[0:n] = data
     except TypeError:
         raise TypeError("GSE2 data must be of type int or long, cast data to long!")
+    #tr = data.ctypes.data_as(C.c_void_p)
+    #tr = N.ctypeslib.as_ctypes(data)
     lib.buf_init(None)
     f = open(file,"wb")
     fp = C.pythonapi.PyFile_AsFile(f)

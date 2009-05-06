@@ -5,7 +5,7 @@ The gse2.core test suite.
 """
 
 from obspy import Trace
-import inspect, os, random, unittest
+import inspect, os, random, unittest, copy
 
 
 class CoreTestCase(unittest.TestCase):
@@ -55,7 +55,8 @@ class CoreTestCase(unittest.TestCase):
         tr = Trace()
         tr.read(self.file,format='GSE2')
         tr2 = Trace()
-        tr2.data = tr.data[:]
+        tr2.data = copy.deepcopy(tr.data)
+        #tr2.data = copy.deepcopy(tr.data)
         for _i in ['d_year','d_mon','d_day','t_hour','t_min','t_sec',
                    'station','channel','auxid','datatype','n_samps',
                    'samp_rate','calib','calper','instype','hang','vang']:
