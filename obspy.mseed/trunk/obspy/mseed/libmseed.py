@@ -23,7 +23,6 @@ from calendar import timegm
 from datetime import datetime
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
-#from PIL import PsdImagePlugin
 import StringIO
 import ctypes as C
 import math
@@ -48,116 +47,122 @@ class libmseed(object):
     """
     Class for handling Mini-SEED files.
     """
-    def convertDatetimeToMSTime(self, dt):
-        """
-        Takes datetime object and returns an epoch time in ms.
-        
-        @param dt: Datetime object.
-        """
-        return long((timegm(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
     
-    def convertMSTimeToDatetime(self, timestring):
+    def readMSTraces(self, filename, reclen = -1, timetol = -1,
+                     sampratetol = -1, dataflag = 1, skipnotdata = 1,
+                     dataquality = 1, verbose = 0):
         """
-        Takes Mini-SEED timestring and returns a Python datetime object.
+        Read Mini-SEED file. Returns a list with header informations and data
+        for each trace in the file.
         
-        @param timestring: Mini-SEED timestring (Epoch time string in ms).
-        """
-        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
-    
-    def _convertMSTToDict(self, m):
-        """
-        Return dictionary from MSTrace Object m, leaving the attributes
-        datasamples, ststate and next out
-        
-        @param m: MST structure to be read.
-        """
-        h = {}
-        chain = m.contents
-        # header attributes to be converted
-        attributes = ('network', 'station', 'location', 'channel', 
-                      'dataquality', 'type', 'starttime', 'endtime',
-                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
-        # loop over attributes
-        for _i in attributes:
-            h[_i] = getattr(chain, _i)
-        return h
+        The list returned contains a list for each trace in the file with the
+        lists first element being a header dictionary and its second element
+        containing the data values as a numpy array.
 
-    def _convertDictToMST(self, m, h):
+        @param filename: Name of Mini-SEED file.
+        @param reclen, timetol, sampratetol, dataflag, skipnotdata,
+            dataquality, verbose: These are passed directly to the 
+            readFileToTraceGroup method.
         """
-        Takes dictionary containing MSTrace header data and writes them to the
-        MSTrace Group
-        
-        @param m: MST structure to be modified.
-        @param h: Dictionary containing all necessary information.
-        """
-        chain = m.contents
-        # header attributes to be converted
-        attributes = ('network', 'station', 'location', 'channel', 
-                      'dataquality', 'type', 'starttime', 'endtime',
-                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
-        # loop over attributes
-        for _i in attributes:
-            setattr(chain, _i, h[_i])
-            
-    def _convertToCFilePointer(self, open_file):
-        """
-        Takes an open file and returns a C file pointer for use in ctypes.
-        
-        @param file: Open file.
-        """
-        if not isinstance(open_file, file):
-            raise TypeError('Needs an open file.')
-        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-        C.pythonapi.PyFile_AsFile.restype = c_file_p
-        #Convert open python file to C file pointer.
-        fp = C.pythonapi.PyFile_AsFile(open_file)
-        return fp
-    
-    def _getMSFileInfo(self, filename):
-        """
-        Takes a Mini-SEED filename as an argument and returns a dictionary
-        with some basic information about the file.
-        
-        @param filename: Mini-SEED file string.
-        """
-        info = {}
-        info['filesize'] = os.path.getsize(filename)
-        #Open file and get record length using libmseed.
-        msfile = open(filename, 'rb')
-        rec_buffer = msfile.read(512)
-        info['record_length'] = \
-           clibmseed.ms_find_reclen(C.c_char_p(rec_buffer), C.c_int(512), None)
-        #Calculate Number of Records
-        info['number_of_records'] = long(info['filesize'] / \
-                                         info['record_length'])
-        return info
-
-    def read_ms_using_traces(self, filename, dataflag = 1):
-        """
-        Read Mini-SEED file. Header, Data and numtraces are returned
-
-        @param filename: Name of file to read Mini-SEED data from
-        @param timetol: Time tolerance, default is 1/2 sample period (-1)
-        @sampratetol: Sample rate tolerance, default is rate dependent (-1)
-        @verbosity: Level of diagnostic messages, default 0
-        """
-        #Creates MSTraceGroup Structure
-        mstg = self.readTraces(filename, dataflag = dataflag)
-        data = []
-        #data = array.array('l')
-        header = []
-        mst = mstg.contents.traces
+        # Create empty list that will contain all traces.
+        trace_list = []
+        # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
+        mstg = self.readFileToTraceGroup(filename, reclen = reclen,
+                                         timetol = timetol,
+                                         sampratetol = sampratetol,
+                                         dataflag = dataflag,
+                                         skipnotdata = skipnotdata,
+                                         dataquality = dataquality,
+                                         verbose = verbose)
+        chain = mstg.contents.traces.contents
         numtraces = mstg.contents.numtraces
-        for _i in range(numtraces):
-            data.extend(mst.contents.datasamples[0:mst.contents.numsamples])
-            header.append(self._convertMSTToDict(mst))
-            mst = mst.contents.next
-        return header[0], data, numtraces
+        # Loop over traces and append to trace_list.
+        for _i in xrange(numtraces):
+            header = self._convertMSTToDict(chain)
+            # Access data directly as numpy array.
+            data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
+                                                       chain.numsamples)
+            trace_list.append([header, data])
+            # Set chain to next trace.
+            if _i != numtraces-1:
+                chain = chain.next.contents
+        return trace_list
     
-    def read_MSRec(self, filename, reclen = -1, dataflag = 1, skipnotdata = 1, 
-                   verbose = 0, record_number = 0):
+    def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding=-1,
+                      byteorder=-1, flush=-1, verbose=0):
         """
-        Reads Mini-SEED file and populates MS Record data structure.
+        Write Miniseed file from trace_list
+        
+        @param trace_list: List containing header informations and data.
+        @param outfile: Name of the output file
+        @param reclen: should be set to the desired data record length in bytes
+            which must be expressible as 2 raised to the power of X where X is
+            between (and including) 8 to 20. -1 defaults to 4096
+        @param encoding: should be set to one of the following supported
+            Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
+            DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
+            and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
+        @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
+            big-endian). -1 defaults to big-endian (1)
+        @param flush: if it is not zero all of the data will be packed into 
+            records, otherwise records will only be packed while there are
+            enough data samples to completely fill a record.
+        @param verbose: controls verbosity, a value of zero will result in no 
+            diagnostic output.
+        """
+        # Populate MSTG Structure
+        mstg=self._populateMSTG(trace_list)
+        # Write File and loop over every trace in the MSTraceGroup Structure.
+        numtraces = mstg.contents.numtraces
+        openfile = open(outfile, 'wb')
+        chain = mstg.contents.traces
+        for _i in xrange(numtraces):
+            self._packMSTToFile(chain, openfile, reclen, encoding, byteorder,
+                                flush, verbose)
+            if _i != numtraces-1:
+                chain = chain.contents.next
+        openfile.close()
+    
+    def readFileToTraceGroup(self, filename, reclen = -1, timetol = -1,
+                             sampratetol = -1, dataflag = 1, skipnotdata = 1,
+                             dataquality = 1, verbose = 0):
+        """
+        Reads Mini-SEED data from file. Returns MSTraceGroup structure.
+        
+        @param filename: Name of Mini-SEED file.
+        @param reclen: If reclen is 0 the length of the first record is auto-
+            detected. All subsequent records are then expected to have the
+            same record length. If reclen is negative the length of every
+            record is automatically detected. Defaults to -1.
+        @param timetol: Time tolerance, default to -1 (1/2 sample period).
+        @param sampratetol: Sample rate tolerance, defaults to -1 (rate
+            dependent)
+        @param dataflag: Controls whether data samples are unpacked, defaults
+            to true (0).
+        @param skipnotdata: If true (not zero) any data chunks read that to do
+            not have valid data record indicators will be skipped. Defaults to
+            true (1).
+        @param dataquality: If the dataquality flag is true traces will be
+            grouped by quality in addition to the source name identifiers.
+            Defaults to true (1).
+        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        """
+        # Creates MSTraceGroup Structure
+        mstg = C.pointer(MSTraceGroup())
+        # Uses libmseed to read the file and populate the MSTraceGroup
+        errcode = clibmseed.ms_readtraces(
+            C.pointer(mstg), filename, C.c_int(reclen), 
+            C.c_double(timetol), C.c_double(sampratetol),
+            C.c_short(dataquality), C.c_short(skipnotdata), 
+            C.c_short(dataflag), C.c_short(verbose))
+        if errcode != 0:
+            assert 0, "\n\nError while reading Mini-SEED file: " + filename
+        return mstg
+    
+    def readSingleRecordToMSR(self, filename, reclen = -1, dataflag = 1,
+                              skipnotdata = 1, verbose = 0, record_number = 0):
+        """
+        Reads Mini-SEED record from file and populates MS Record data structure.
         
         @param filename: Mini-SEED file to be read.
         @param reclen: If reclen is 0 the length of the first record is auto-
@@ -215,156 +220,7 @@ class libmseed(object):
         ff.close()
         return msr
     
-    def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
-        """
-        Takes a Ctypes c_int32 array and its length and returns it as a numpy
-        array.
-        
-        This works by reference and no data is copied.
-        
-        @param buffer: Ctypes c_int32 buffer.
-        @param buffer_elements: length of the buffer
-        """
-        buffer_type = C.c_int32 * buffer_elements
-        # Get address of array_in_c, which contains the reference to the C array.
-        array_address = C.addressof(buffer.contents)
-        # Make ctypes style array from C array.
-        ctypes_array = buffer_type.from_address(array_address)
-        # Make a NumPy array from that.
-        xxx = N.ctypeslib.as_array(ctypes_array)
-        return xxx
-    
-    def _populateMSTG(self, header, data, numtraces=1):
-        """
-        Populates MSTrace_Group structure from given header, data and
-        numtraces and returns the MSTrace_Group
-        
-        Currently only works with one continuous trace.
-        
-        @param header: Dictionary with the header values to be written to the
-            structure.
-        @param data: List containing the data values.
-        @param numtraces: Number of traces in the structure. No function so
-            far.
-        """
-        # variable
-        npts = header['numsamples']
-        # Init MSTraceGroupint
-        clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
-        mstg = clibmseed.mst_initgroup(None)
-        # Init MSTrace object and connect with group
-        clibmseed.mst_init.restype = C.POINTER(MSTrace)
-        mstg.contents.traces = clibmseed.mst_init(None)
-        # Write header in MSTrace structure
-        self._convertDictToMST(mstg.contents.traces, header)
-        # Needs to be redone, dynamic??
-        mstg.contents.numtraces = numtraces
-        # Create void pointer and allocate more memory to it
-        tempdatpoint = C.c_int32()
-        C.resize(tempdatpoint,
-                 clibmseed.ms_samplesize(C.c_char(header['sampletype'])) *
-                 npts)
-        # Set pointer to tempdatpoint
-        mstg.contents.traces.contents.datasamples = C.pointer(tempdatpoint)
-        # This is a little bit faster under the assumption that the data
-        # are already numpy arrays.
-        ##chain = mstg.contents.traces.contents.datasamples
-        ##data_numpy = N.array(data,dtype='l')
-        ##ptr = N.ctypeslib.as_ctypes(data_numpy)
-        ##C.memmove(chain,ptr,npts*4)
-        chain=type((C.c_int32*npts)()).from_address(C.addressof(tempdatpoint))
-        chain[0:npts] = data
-        return mstg
-
-    def mst2file(self, mst, outfile, reclen, encoding, byteorder, flush,
-                 verbose):
-        """
-        Takes MS Trace object and writes it to a file
-        """
-        #Allow direclty passing of file pointers, usefull for appending
-        #mseed records on existing mseed files
-        if type(outfile) == file:
-            mseedfile = outfile
-        else:
-            mseedfile = open(outfile, 'wb')
-        #Initialize packedsamples pointer for the mst_pack function
-        self.packedsamples = C.pointer(C.c_int(0))
-        #Callback function for mst_pack to actually write the file
-        def record_handler(record, reclen, _stream):
-            mseedfile.write(record[0:reclen])
-        #Define Python callback function for use in C function
-        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
-                                 C.c_void_p)
-        rec_handler = RECHANDLER(record_handler)
-        #Pack the file into a MiniSEED file
-        clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
-                           self.packedsamples, flush, verbose, None)
-        if not type(outfile) == file:
-            mseedfile.close()
-    
-    def write_ms(self,header,data, outfile, numtraces=1, reclen= -1,
-                 encoding=-1, byteorder=-1, flush=-1, verbose=0):
-        """
-        Write Miniseed file from header, data and numtraces
-        
-        @param header: Dictionary containing the header files
-        @param data: List of the datasamples
-        @param outfile: Name of the output file
-        @param numtraces: Number of traces in trace chain (Use??)
-        @param reclen: should be set to the desired data record length in bytes
-            which must be expressible as 2 raised to the power of X where X is
-            between (and including) 8 to 20. -1 defaults to 4096
-        @param encoding: should be set to one of the following supported
-            Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
-            DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
-            and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
-        @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
-            big-endian). -1 defaults to big-endian (1)
-        @param flush: if it is not zero all of the data will be packed into 
-            records, otherwise records will only be packed while there are
-            enough data samples to completely fill a record.
-        @param verbose: controls verbosity, a value of zero will result in no 
-            diagnostic output.
-        """
-        # Populate MSTG Structure
-        mstg=self._populateMSTG(header, data, numtraces)
-        # Write File from MS-Trace structure
-        self.mst2file(mstg.contents.traces, outfile, reclen, encoding,
-                      byteorder, flush, verbose)
-    
-    def readTraces(self, filename, reclen = -1, timetol = -1, sampratetol = -1,
-                   dataflag = 1, skipnotdata = 1, verbose = 0):
-        """
-        Reads MiniSEED data from file. Returns MSTraceGroup structure.
-        
-        @param filename: Mini-SEED file to be read.
-        @param reclen: If reclen is 0 the length of the first record is auto- 
-            detected. All subsequent records are then expected to have the 
-            same record length. If reclen is negative the length of every 
-            record is automatically detected. Defaults to -1.
-        @param timetol: Time tolerance, default to -1 (1/2 sample period).
-        @param sampratetol: Sample rate tolerance, defaults to -1 (rate 
-            dependent)
-        @param dataflag: Controls whether data samples are unpacked, defaults 
-            to 1
-        @param skipnotdata: If true (not zero) any data chunks read that to do 
-            not have valid data record indicators will be skipped. Defaults to 
-            true (1).
-        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
-        """
-        # Creates MSTraceGroup Structure
-        mstg = C.pointer(MSTraceGroup())
-        # Uses libmseed to read the file and populate the MSTraceGroup
-        errcode = clibmseed.ms_readtraces(
-            C.pointer(mstg), filename, C.c_int(reclen), 
-            C.c_double(timetol), C.c_double(sampratetol),
-            C.c_short(dataflag), C.c_short(skipnotdata), 
-            C.c_short(dataflag), C.c_short(verbose))
-        if errcode != 0:
-            assert 0, "\n\nError while reading Mini-SEED file: "+filename
-        return mstg
-    
-    def getFirstRecordHeaderInfo(self, file):
+    def getFirstRecordHeaderInfo(self, filename):
         """
         Takes a Mini-SEED file and returns header of the first record.
         
@@ -372,10 +228,10 @@ class libmseed(object):
         record of the Mini-SEED file only. It returns the location, network,
         station and channel information.
         
-        @param file: Mini-SEED file string.
+        @param filename: Mini-SEED file string.
         """
         # read first header only
-        msr = self.read_MSRec(file, dataflag = 0)
+        msr = self.readSingleRecordToMSR(filename, dataflag = 0)
         header = {}
         chain = msr.contents
         # header attributes to be read
@@ -399,37 +255,21 @@ class libmseed(object):
         
         @param filename: Mini-SEED file string.
         """
-        first_record = self.read_MSRec(filename, dataflag = 0)
+        first_record = self.readSingleRecordToMSR(filename, dataflag = 0)
         # Get the starttime using the libmseed method msr_starttime
         clibmseed.msr_starttime.restype = C.c_int64
         starttime = clibmseed.msr_starttime(first_record)
-        starttime = self.convertMSTimeToDatetime(starttime)
+        starttime = self._convertMSTimeToDatetime(starttime)
         #Read last record.
-        last_record = self.read_MSRec(filename, dataflag = 0,
+        last_record = self.readSingleRecordToMSR(filename, dataflag = 0,
                                       record_number = -1)
         # Get the endtime using the libmseed method msr_endtime
         clibmseed.msr_endtime.restype = C.c_int64
         endtime = clibmseed.msr_endtime(last_record)
-        endtime = self.convertMSTimeToDatetime(endtime)
+        endtime = self._convertMSTimeToDatetime(endtime)
         return(starttime, endtime)
     
-    def printGapList(self, filename, time_tolerance = -1, 
-                     samprate_tolerance = -1, min_gap = None, max_gap = None):
-        """
-        Print gap/overlap list summary information for the given filename.
-        """
-        result = self.getGapList(filename, time_tolerance, samprate_tolerance, 
-                                 min_gap, max_gap)
-        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample', 
-                                               'Next Sample', 'Gap', 'Samples')
-        for r in result:
-            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]), 
-                                                    r[4].isoformat(), 
-                                                    r[5].isoformat(), 
-                                                    r[6], r[7])
-        print "Total: %d gap(s)" % len(result)
-    
-    def getGapList(self, filename, time_tolerance = -1, 
+    def getGapList(self, filename, time_tolerance = -1,
                    samprate_tolerance = -1, min_gap = None, max_gap = None):
         """
         Returns gaps, overlaps and trace header information of a given file.
@@ -448,9 +288,10 @@ class libmseed(object):
             channel, starttime, endtime, gap, samples) 
         """
         # read file
-        mstg = self.readTraces(str(filename), dataflag = 0, skipnotdata = 0,
-                               timetol = time_tolerance,
-                               sampratetol = samprate_tolerance)
+        mstg = self.readFileToTraceGroup(str(filename), dataflag = 0,
+                                         skipnotdata = 0,
+                                         timetol = time_tolerance,
+                                         sampratetol = samprate_tolerance)
         gap_list = []
         # iterate through traces
         cur = mstg.contents.traces.contents
@@ -495,144 +336,29 @@ class libmseed(object):
             cur = next
         return gap_list
     
-    def _isRateTolerable(self, sr1, sr2):
+    def printGapList(self, filename, time_tolerance = -1, 
+                     samprate_tolerance = -1, min_gap = None, max_gap = None):
         """
-        Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
+        Print gap/overlap list summary information for the given filename.
         """
-        return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
-    
-    def graphCreateMinMaxTimestampList(self, file, width, starttime = None, 
-                                       endtime = None):
-        """
-        Creates a list with tuples containing a minimum value, a maximum value
-        and a timestamp in microseconds.
-        
-        Only values between the start- and the endtime will be calculated. The
-        first two items of the returned list are the actual start- and endtimes
-        of the returned list. This is needed to cope with many different
-        Mini-SEED files.
-        The returned timestamps are the mean times of the minmax value pair.
-        
-        @requires: The Mini-SEED file has to contain only one trace. It may
-            contain gaps and overlaps and it may be arranged in any order but
-            the first and last records must be in chronological order as they
-            are used to determine the start- and endtime.
-        
-        @param file: Mini-SEED file string.
-        @param width: Number of tuples in the list. Corresponds to the width
-            in pixel of the graph.
-        @param starttime: Starttime of the List/Graph as a Datetime object. If
-            none is supplied the starttime of the file will be used.
-            Defaults to None.
-        @param endtime: Endtime of the List/Graph as a Datetime object. If none
-            is supplied the endtime of the file will be used.
-            Defaults to None.
-        """
-        #Read traces using the readTraces method.
-        mstg = self.readTraces(file, skipnotdata = 0)
-        #Create list with start-, endtime and number in chain.
-        timeslist = []
-        cur = mstg.contents.traces.contents
-        for _i in range(mstg.contents.numtraces):
-            timeslist.append((cur.starttime, cur.endtime, _i + 1))
-            if _i + 1 < mstg.contents.numtraces:
-                cur = cur.next.contents
-        #Sort list according to starttime.
-        timeslist.sort()
-        #Get start- and endtime and convert them too microsecond timestamp.
-        start_and_end_time = self.getStartAndEndTime(file)
-        if not starttime:
-            starttime = self.convertDatetimeToMSTime(start_and_end_time[0])
-        else:
-            starttime = self.convertDatetimeToMSTime(starttime)
-        if not endtime:
-            endtime = self.convertDatetimeToMSTime(start_and_end_time[1])
-        else:
-            endtime = self.convertDatetimeToMSTime(endtime)
-        #Calculate time for one pixel.
-        stepsize = (endtime - starttime) / width
-        #First two items are start- and endtime.
-        minmaxlist=[starttime, endtime]
-        #While loop over the plotting duration.
-        while starttime < endtime:
-            pixel_endtime = starttime + stepsize
-            maxlist = []
-            minlist = []
-            #Inner Loop over all times.
-            for _i in timeslist:
-                #Calculate current chain in the MSTraceGroup Structure.
-                chain = mstg.contents.traces.contents
-                for _ in xrange(_i[2] - 1):
-                    chain = chain.next.contents
-                #If the starttime is bigger than the endtime of the current
-                #trace delete the item from the list.
-                if starttime > _i[1]:
-                    #Still need to figure out how to delete the item from the
-                    #list.
-                    pass
-                elif starttime < _i[0]:
-                    #If starttime and endtime of the current pixel are too
-                    #small than leave the list.
-                    if pixel_endtime < _i[0]:
-                        #Leave the loop.
-                        pass
-                    #Otherwise append the border to tempdatlist.
-                    else:
-                        end = float((pixel_endtime - _i[0])) / \
-                              (_i[1] - _i[0]) * chain.samplecnt
-                        if end > _i[1]:
-                            end = _i[1]
-                        temparr = self._accessCtypesArrayAsNumpyArray\
-                        (chain.datasamples, chain.numsamples)
-                        maxlist.append(temparr[0 : int(end)].max())
-                        minlist.append(temparr[0 : int(end)].min())
-                #Starttime is right in the current trace.
-                else:
-                    #Endtime also is in the trace. Append to tempdatlist.
-                    if pixel_endtime < _i[1]:
-                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
-                                chain.samplecnt
-                        end = float((pixel_endtime - _i[0])) / \
-                              (_i[1] - _i[0]) * chain.samplecnt
-                        temparr = self._accessCtypesArrayAsNumpyArray\
-                        (chain.datasamples, chain.samplecnt)
-                        maxlist.append(temparr[int(start) : int(end)].max())
-                        minlist.append(temparr[int(start) : int(end)].min())
-                    #Endtime is not in the trace. Append to tempdatlist.
-                    else:
-                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
-                                chain.samplecnt
-                        temparr = self._accessCtypesArrayAsNumpyArray\
-                        (chain.datasamples, chain.numsamples)
-                        maxlist.append(temparr[int(start) : chain.samplecnt].max())
-                        minlist.append(temparr[int(start) : chain.samplecnt].min())
-            #If empty list do nothing.
-            if minlist == []:
-            #if tempdatlist == array.array('l'):
-                pass
-            #If not empty append min, max and timestamp values to list.
-            else:
-                minmaxlist.append((min(minlist), max(maxlist), 
-                                   starttime + 0.5 * stepsize))
-            #New starttime for while loop.
-            starttime = pixel_endtime
-        return minmaxlist
-    
-    def graph_create_graph(self, file, outfile = None, format = None,
-                           size = (800, 200), starttime = False,
-                           endtime = False, dpi = 100, color = 'red',
-                           bgcolor = 'white', transparent = False,
-                           shadows = False, minmaxlist = False):
+        result = self.getGapList(filename, time_tolerance, samprate_tolerance, 
+                                 min_gap, max_gap)
+        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample', 
+                                               'Next Sample', 'Gap', 'Samples')
+        for r in result:
+            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]), 
+                                                    r[4].isoformat(), 
+                                                    r[5].isoformat(), 
+                                                    r[6], r[7])
+        print "Total: %d gap(s)" % len(result)
+
+    def plotMSFile(self, filename, outfile = None, format = None,
+                   size = (800, 200), starttime = False, endtime = False,
+                   dpi = 100, color = 'red', bgcolor = 'white',
+                   transparent = False, shadows = False, minmaxlist = False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
         directly to the file system or returns an binary image string.
-        
-        Currently only supports files with one continuous trace. I still have
-        to figure out how to remove the frame around the graph and create the
-        option to set a start and end time of the graph.
-        
-        The option to set a start- and endtime to plot currently only works
-        for starttime smaller and endtime greater than the file's times.
         
         For all color values you can use legit html names, html hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
@@ -641,7 +367,7 @@ class libmseed(object):
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
         
-        @param file: Mini-SEED file string
+        @param filename: Mini-SEED file string
         @param outfile: Output file string. Also used to automatically
             determine the output format. Currently supported is emf, eps, pdf,
             png, ps, raw, rgba, svg and svgz output.
@@ -687,7 +413,7 @@ class libmseed(object):
             raise ValueError('Either outfile or format needs to be set.')
         #Get a list with minimum and maximum values.
         if not minmaxlist:
-            minmaxlist = self.graphCreateMinMaxTimestampList(file = file,
+            minmaxlist = self._getMinMaxList(filename = filename,
                                                     width = size[0],
                                                     starttime = starttime,
                                                     endtime = endtime)
@@ -809,3 +535,307 @@ class libmseed(object):
                     facecolor = bgcolor, edgecolor = bgcolor, format = format)
             imgdata.seek(0)
             return imgdata.read()
+    
+    def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
+        """
+        Takes a Ctypes c_int32 array and its length and returns it as a numpy
+        array.
+        
+        This works by reference and no data is copied.
+        
+        @param buffer: Ctypes c_int32 buffer.
+        @param buffer_elements: length of the buffer
+        """
+        buffer_type = C.c_int32 * buffer_elements
+        # Get address of array_in_c, which contains reference to the C array.
+        array_address = C.addressof(buffer.contents)
+        # Make ctypes style array from C array.
+        ctypes_array = buffer_type.from_address(array_address)
+        # Make a NumPy array from that.
+        return N.ctypeslib.as_array(ctypes_array)
+
+    def _convertDatetimeToMSTime(self, dt):
+        """
+        Takes datetime object and returns an epoch time in ms.
+        
+        @param dt: Datetime object.
+        """
+        return long((timegm(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
+    
+    def _convertMSTimeToDatetime(self, timestring):
+        """
+        Takes Mini-SEED timestring and returns a Python datetime object.
+        
+        @param timestring: Mini-SEED timestring (Epoch time string in ms).
+        """
+        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
+    
+    def _convertMSTToDict(self, m):
+        """
+        Return dictionary from MSTrace Object m, leaving the attributes
+        datasamples, ststate and next out
+        
+        @param m: MST structure to be read.
+        """
+        h = {}
+        # header attributes to be converted
+        attributes = ('network', 'station', 'location', 'channel', 
+                      'dataquality', 'type', 'starttime', 'endtime',
+                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
+        # loop over attributes
+        for _i in attributes:
+            h[_i] = getattr(m, _i)
+        return h
+
+    def _convertDictToMST(self, m, h):
+        """
+        Takes dictionary containing MSTrace header data and writes them to the
+        MSTrace Group
+        
+        @param m: MST structure to be modified.
+        @param h: Dictionary containing all necessary information.
+        """
+        chain = m.contents
+        # header attributes to be converted
+        attributes = ('network', 'station', 'location', 'channel', 
+                      'dataquality', 'type', 'starttime', 'endtime',
+                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
+        # loop over attributes
+        for _i in attributes:
+            setattr(chain, _i, h[_i])
+    
+    def _convertToCFilePointer(self, open_file):
+        """
+        Takes an open file and returns a C file pointer for use in ctypes.
+        
+        @param file: Open file.
+        """
+        if not isinstance(open_file, file):
+            raise TypeError('Needs an open file.')
+        # Define ctypes arg- and restypes.
+        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+        C.pythonapi.PyFile_AsFile.restype = c_file_p
+        # Convert open python file to C file pointer.
+        return C.pythonapi.PyFile_AsFile(open_file)
+    
+    def _getMinMaxList(self, filename, width, starttime = None,
+                       endtime = None):
+        """
+        Creates a list with tuples containing a minimum value, a maximum value
+        and a timestamp in microseconds.
+        
+        Only values between the start- and the endtime will be calculated. The
+        first two items of the returned list are the actual start- and endtimes
+        of the returned list. This is needed to cope with many different
+        Mini-SEED files.
+        The returned timestamps are the mean times of the minmax value pair.
+        
+        @requires: The Mini-SEED file has to contain only one trace. It may
+            contain gaps and overlaps and it may be arranged in any order but
+            the first and last records must be in chronological order as they
+            are used to determine the start- and endtime.
+        
+        @param filename: Mini-SEED file string.
+        @param width: Number of tuples in the list. Corresponds to the width
+            in pixel of the graph.
+        @param starttime: Starttime of the List/Graph as a Datetime object. If
+            none is supplied the starttime of the file will be used.
+            Defaults to None.
+        @param endtime: Endtime of the List/Graph as a Datetime object. If none
+            is supplied the endtime of the file will be used.
+            Defaults to None.
+        """
+        #Read traces using the readFileToTraceGroup method.
+        mstg = self.readFileToTraceGroup(filename, skipnotdata = 0)
+        #Create list with start-, endtime and number in chain.
+        timeslist = []
+        cur = mstg.contents.traces.contents
+        for _i in range(mstg.contents.numtraces):
+            timeslist.append((cur.starttime, cur.endtime, _i + 1))
+            if _i + 1 < mstg.contents.numtraces:
+                cur = cur.next.contents
+        #Sort list according to starttime.
+        timeslist.sort()
+        #Get start- and endtime and convert them too microsecond timestamp.
+        start_and_end_time = self.getStartAndEndTime(filename)
+        if not starttime:
+            starttime = self._convertDatetimeToMSTime(start_and_end_time[0])
+        else:
+            starttime = self._convertDatetimeToMSTime(starttime)
+        if not endtime:
+            endtime = self._convertDatetimeToMSTime(start_and_end_time[1])
+        else:
+            endtime = self._convertDatetimeToMSTime(endtime)
+        #Calculate time for one pixel.
+        stepsize = (endtime - starttime) / width
+        #First two items are start- and endtime.
+        minmaxlist=[starttime, endtime]
+        #While loop over the plotting duration.
+        while starttime < endtime:
+            pixel_endtime = starttime + stepsize
+            maxlist = []
+            minlist = []
+            #Inner Loop over all times.
+            for _i in timeslist:
+                #Calculate current chain in the MSTraceGroup Structure.
+                chain = mstg.contents.traces.contents
+                for _ in xrange(_i[2] - 1):
+                    chain = chain.next.contents
+                #If the starttime is bigger than the endtime of the current
+                #trace delete the item from the list.
+                if starttime > _i[1]:
+                    #Still need to figure out how to delete the item from the
+                    #list.
+                    pass
+                elif starttime < _i[0]:
+                    #If starttime and endtime of the current pixel are too
+                    #small than leave the list.
+                    if pixel_endtime < _i[0]:
+                        #Leave the loop.
+                        pass
+                    #Otherwise append the border to tempdatlist.
+                    else:
+                        end = float((pixel_endtime - _i[0])) / \
+                              (_i[1] - _i[0]) * chain.samplecnt
+                        if end > _i[1]:
+                            end = _i[1]
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.numsamples)
+                        maxlist.append(temparr[0 : int(end)].max())
+                        minlist.append(temparr[0 : int(end)].min())
+                #Starttime is right in the current trace.
+                else:
+                    #Endtime also is in the trace. Append to tempdatlist.
+                    if pixel_endtime < _i[1]:
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                                chain.samplecnt
+                        end = float((pixel_endtime - _i[0])) / \
+                              (_i[1] - _i[0]) * chain.samplecnt
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.samplecnt)
+                        maxlist.append(temparr[int(start) : int(end)].max())
+                        minlist.append(temparr[int(start) : int(end)].min())
+                    #Endtime is not in the trace. Append to tempdatlist.
+                    else:
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                                chain.samplecnt
+                        temparr = self._accessCtypesArrayAsNumpyArray\
+                        (chain.datasamples, chain.numsamples)
+                        maxlist.append(temparr[int(start) : \
+                                               chain.samplecnt].max())
+                        minlist.append(temparr[int(start) : \
+                                               chain.samplecnt].min())
+            #If empty list do nothing.
+            if minlist == []:
+            #if tempdatlist == array.array('l'):
+                pass
+            #If not empty append min, max and timestamp values to list.
+            else:
+                minmaxlist.append((min(minlist), max(maxlist), 
+                                   starttime + 0.5 * stepsize))
+            #New starttime for while loop.
+            starttime = pixel_endtime
+        return minmaxlist
+    
+    def _getMSFileInfo(self, filename):
+        """
+        Takes a Mini-SEED filename as an argument and returns a dictionary
+        with some basic information about the file.
+        
+        @param filename: Mini-SEED file string.
+        """
+        info = {}
+        info['filesize'] = os.path.getsize(filename)
+        #Open file and get record length using libmseed.
+        msfile = open(filename, 'rb')
+        rec_buffer = msfile.read(512)
+        info['record_length'] = \
+           clibmseed.ms_find_reclen(C.c_char_p(rec_buffer), C.c_int(512), None)
+        #Calculate Number of Records
+        info['number_of_records'] = long(info['filesize'] / \
+                                         info['record_length'])
+        return info
+    
+    def _isRateTolerable(self, sr1, sr2):
+        """
+        Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
+        """
+        return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
+    
+    def _packMSTToFile(self, mst, outfile, reclen, encoding, byteorder, flush,
+                       verbose):
+        """
+        Takes MS Trace object and writes it to a file
+        """
+        #Allow direclty passing of file pointers, usefull for appending
+        #mseed records on existing mseed files
+        if type(outfile) == file:
+            mseedfile = outfile
+        else:
+            mseedfile = open(outfile, 'wb')
+        #Initialize packedsamples pointer for the mst_pack function
+        self.packedsamples = C.pointer(C.c_int(0))
+        #Callback function for mst_pack to actually write the file
+        def record_handler(record, reclen, _stream):
+            mseedfile.write(record[0:reclen])
+        #Define Python callback function for use in C function
+        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
+                                 C.c_void_p)
+        rec_handler = RECHANDLER(record_handler)
+        #Pack the file into a MiniSEED file
+        clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
+                           self.packedsamples, flush, verbose, None)
+        if not type(outfile) == file:
+            mseedfile.close()
+    
+    def _populateMSTG(self, trace_list):
+        """
+        Populates MSTrace_Group structure from given header, data and
+        numtraces and returns the MSTrace_Group
+        
+        Currently only works with one continuous trace.
+        
+        @param header: Dictionary with the header values to be written to the
+            structure.
+        @param data: List containing the data values.
+        @param numtraces: Number of traces in the structure. No function so
+            far.
+        """
+        # Define return types for C functions.
+        clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
+        clibmseed.mst_init.restype = C.POINTER(MSTrace)
+        # Init MSTraceGroup
+        mstg = clibmseed.mst_initgroup(None)
+        numtraces = len(trace_list)
+        chain = mstg.contents.traces
+        strchain = 'mstg.contents.traces'
+        for _i in xrange(numtraces):
+            # Init MSTrace object and connect with group
+            evalstring = strchain + ' = clibmseed.mst_init(None)'
+            exec(evalstring)
+            # Write header in MSTrace structure
+            # variable
+            npts = trace_list[_i][0]['numsamples']
+            self._convertDictToMST(chain, trace_list[_i][0])
+            # Needs to be redone, dynamic??
+            mstg.contents.numtraces = numtraces
+            # Create void pointer and allocate more memory to it
+            tempdatpoint = C.c_int32()
+            C.resize(tempdatpoint,
+                     clibmseed.ms_samplesize(C.c_char(trace_list[_i][0]\
+                                                      ['sampletype'])) * npts)
+            # Set pointer to tempdatpoint
+            chain.contents.datasamples = C.pointer(tempdatpoint)
+            # This is a little bit faster under the assumption that the data
+            # are already numpy arrays.
+            ##chain = mstg.contents.traces.contents.datasamples
+            ##data_numpy = N.array(data,dtype='l')
+            ##ptr = N.ctypeslib.as_ctypes(data_numpy)
+            ##C.memmove(chain,ptr,npts*4)
+            datpoints=type((C.c_int32*npts)()).from_address(C.addressof\
+                                                            (tempdatpoint))
+            datpoints[0:npts] = trace_list[_i][1]
+            if _i != numtraces-1:
+                chain = chain.contents.next
+                strchain = strchain + '.contents.next'
+        return mstg

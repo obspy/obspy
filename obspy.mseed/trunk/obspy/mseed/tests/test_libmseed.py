@@ -6,6 +6,7 @@ The libmseed test suite.
 from datetime import datetime
 from obspy.mseed import libmseed
 import inspect
+import numpy as N
 import os
 import random
 import unittest
@@ -43,18 +44,18 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Loop over timesdict.
         for _i in timesdict.keys():
             self.assertEqual(timesdict[_i],
-                    mseed.convertMSTimeToDatetime(_i*1000000L))
+                    mseed._convertMSTimeToDatetime(_i*1000000L))
             self.assertEqual(_i * 1000000L,
-                    mseed.convertDatetimeToMSTime(timesdict[_i]))
+                    mseed._convertDatetimeToMSTime(timesdict[_i]))
         # Additional sanity tests.
         # Today.
         now = datetime.now()
-        self.assertEqual(now, mseed.convertMSTimeToDatetime(
-                              mseed.convertDatetimeToMSTime(now)))
+        self.assertEqual(now, mseed._convertMSTimeToDatetime(
+                              mseed._convertDatetimeToMSTime(now)))
         # Some random date.
         timestring = random.randint(0, 2000000) * 1e6
-        self.assertEqual(timestring, mseed.convertDatetimeToMSTime(
-                        mseed.convertMSTimeToDatetime(timestring)))
+        self.assertEqual(timestring, mseed._convertDatetimeToMSTime(
+                        mseed._convertMSTimeToDatetime(timestring)))
         
     def test_CFilePointer(self):
         """
@@ -83,7 +84,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         # list of known data samples
         datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
                     -367, -414, -427]
-        msr = mseed.read_MSRec(filename)
+        msr = mseed.readSingleRecordToMSR(filename)
         chain = msr.contents
         self.assertEqual('BGLD', chain.station)
         self.assertEqual('EHE', chain.channel)
@@ -107,16 +108,17 @@ class LibMSEEDTestCase(unittest.TestCase):
         # list of known data samples
         datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
                     -367, -414, -427]
-        header, data, numtraces = mseed.read_ms_using_traces(mseed_file)
+        trace_list = mseed.readMSTraces(mseed_file)
+        header = trace_list[0][0]
         self.assertEqual('BGLD', header['station'])
         self.assertEqual('EHE', header['channel'])
         self.assertEqual(200, header['samprate'])
         self.assertEqual(1199145599915000, header['starttime'])
-        self.assertEqual(numtraces, 1)
+        data = trace_list[0][1][0:13].tolist()
         for i in range(len(datalist)-1):
             self.assertEqual(datalist[i]-datalist[i+1], data[i]-data[i+1])
     
-    def test_readAnWriteTraces(self):
+    def test_readAndWriteTraces(self):
         """
         Writes, reads and compares files created via libmseed.
         
@@ -126,13 +128,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed() 
         mseed_file = os.path.join(self.path, 'test.mseed')
-        header, data, numtraces = mseed.read_ms_using_traces(mseed_file)
+        trace_list = mseed.readMSTraces(mseed_file)
         # define test ranges
         record_length_values = [2**i for i in range(8, 21)]
         encoding_values = [1, 3, 10, 11]
         byteorder_values = [0, 1]
         # deletes the data quality indicators
-        testheader = header.copy()
+        testheader = trace_list[0][0].copy()
         del testheader['dataquality']
         # loops over all combinations of test values
         for reclen in record_length_values:
@@ -141,16 +143,42 @@ class LibMSEEDTestCase(unittest.TestCase):
                     filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
                                                         encoding)
                     temp_file = os.path.join(self.path, filename)
-                    mseed.write_ms(header, data, temp_file,
-                                   numtraces, encoding=encoding, 
-                                   byteorder=byteorder, reclen=reclen)
-                    result = mseed.read_ms_using_traces(temp_file)
-                    newheader, newdata, newnumtraces = result
-                    del newheader['dataquality']
-                    self.assertEqual(testheader, newheader)
-                    self.assertEqual(data, newdata)
-                    self.assertEqual(numtraces, newnumtraces)
+                    mseed.writeMSTraces(trace_list, temp_file,
+                                        encoding=encoding, byteorder=byteorder,
+                                        reclen=reclen)
+                    new_trace_list = mseed.readMSTraces(temp_file)
+                    del new_trace_list[0][0]['dataquality']
+                    self.assertEqual(testheader, new_trace_list[0][0])
+                    N.testing.assert_array_equal(trace_list[0][1],
+                                                 new_trace_list[0][1])
                     os.remove(temp_file)
+                    
+    def test_readAndWriteFileWithGaps(self):
+        """
+        Tests reading and writing files with more than one trace.
+        """
+        mseed = libmseed() 
+        filename = os.path.join(self.path, 'gaps.mseed')
+        # Read file and test if all traces are being read.
+        trace_list = mseed.readMSTraces(filename)
+        self.assertEqual(len(trace_list), 4)
+        # Four traces need to have three gaps.
+        gap_list = mseed.getGapList(filename)
+        self.assertEqual(len(gap_list), len(trace_list)-1)
+        # Write File to temporary file.
+        outfile = 'tempfile.mseed'
+        mseed.writeMSTraces(trace_list[:], outfile)
+        # Read the same file again and compare it to the original file.
+        new_trace_list = mseed.readMSTraces(outfile)
+        self.assertEqual(len(trace_list), len(new_trace_list))
+        new_gap_list = mseed.getGapList(outfile)
+        self.assertEqual(gap_list, new_gap_list)
+        # Compare new_trace_list with trace_list
+        for _i in xrange(len(trace_list)):
+            self.assertEqual(trace_list[_i][0], new_trace_list[_i][0])
+            N.testing.assert_array_equal(trace_list[_i][1],
+                                         new_trace_list[_i][1])
+        os.remove(outfile)
     
     def test_getGapList(self):
         """
@@ -203,21 +231,21 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Tests getting the start- and end time of a file.
         
-        The values are compared with the readTraces() method which parses the
-        whole file. This will only work for files with only one trace and with-
-        out any gaps or overlaps.
+        The values are compared with the readFileToTraceGroup() method which 
+        parses the whole file. This will only work for files with only one
+        trace and without any gaps or overlaps.
         """
         mseed = libmseed()
         filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
         # get the start- and end time
         times = mseed.getStartAndEndTime(filename)
         # parse the whole file
-        mstg = mseed.readTraces(filename, dataflag = 0)
+        mstg = mseed.readFileToTraceGroup(filename, dataflag = 0)
         chain = mstg.contents.traces.contents
         self.assertEqual(times[0],
-                         mseed.convertMSTimeToDatetime(chain.starttime))
+                         mseed._convertMSTimeToDatetime(chain.starttime))
         self.assertEqual(times[1],
-                         mseed.convertMSTimeToDatetime(chain.endtime))
+                         mseed._convertMSTimeToDatetime(chain.endtime))
         
 
 def suite():
