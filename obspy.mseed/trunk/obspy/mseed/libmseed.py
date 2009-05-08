@@ -826,6 +826,10 @@ class libmseed(object):
                                                       ['sampletype'])) * npts)
             # Set pointer to tempdatpoint
             chain.contents.datasamples = C.pointer(tempdatpoint)
+            # It should work like this
+            #ptr = N.ctypeslib.as_ctypes(trace_list[_i][1])
+            #ch = C.pointer(C.c_int32.from_address(C.addressof(ptr)))
+            #chain.contents.datasamples = ch
             # This is a little bit faster under the assumption that the data
             # are already numpy arrays.
             ##chain = mstg.contents.traces.contents.datasamples

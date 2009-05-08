@@ -10,6 +10,7 @@ import numpy as N
 import os
 import random
 import unittest
+import copy
 
 
 class LibMSEEDTestCase(unittest.TestCase):
@@ -143,7 +144,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                     filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
                                                         encoding)
                     temp_file = os.path.join(self.path, filename)
-                    mseed.writeMSTraces(trace_list, temp_file,
+                    mseed.writeMSTraces(copy.deepcopy(trace_list), temp_file,
                                         encoding=encoding, byteorder=byteorder,
                                         reclen=reclen)
                     new_trace_list = mseed.readMSTraces(temp_file)
