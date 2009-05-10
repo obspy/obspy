@@ -76,7 +76,10 @@ date handling:
 'Z       '
 >>> t.IsValidSacFile('test2.sac')
 1
-
+>>> t.ReadXYSacFile('testxy.sac')
+1
+>>> t.WriteSacBinary('testbin.sac')
+1
 """    
 
 import array,os,string
@@ -225,33 +228,6 @@ class ReadSac(PyTutil,parser.Parser):
         return(ok)
 
 
-    def IsXYSACfile(self,name):
-	"""Test for a valid SAC file using arrays: IsSACfile(path)
-	Return value is a one if valid, zero if not."""
-	#
-	ok = 1
-	#
-	# size check info
-	#
-	npts = self.GetHvalue('npts')
-	st = os.stat(name) #file's size = st[6] 
-	sizecheck = st[6] - (632 + 2 * 4 * npts)
-	#
-	# get the SAC file version number
-	#
-	version = self.GetHvalue('nvhdr',hf,hi,hs)
-	#
-	# if any of these conditions are true,
-	#   the file is NOT a SAC file
-	#
-	if sizecheck != 0:
-		ok = 0
-	elif ((version < 0) or (version > 20) ):
-		ok = 0
-	#
-	return(ok)
-
-
     def ReadSacHeader(self,fname):
 	"""\nRead a header value into the header arrays 
         \tok = ReadSacHeader(thePath)
@@ -373,6 +349,31 @@ class ReadSac(PyTutil,parser.Parser):
         return ok
 
 
+    def IsXYSACfile(self):
+	"""Test for a valid SAC file using arrays: IsSACfile(path)
+	Return value is a one if valid, zero if not."""
+	#
+	ok = 1
+	#
+	# size check info
+	#
+	npts = self.GetHvalue('npts')
+	#
+	# get the SAC file version number
+	#
+	version = self.GetHvalue('nvhdr')
+	#
+	# if any of these conditions are true,
+	#   the file is NOT a SAC file
+	#
+	if npts != len(self.seis):
+            ok = 0
+	elif ((version < 0) or (version > 20)):
+            ok = 0
+	#
+	return(ok)
+
+
     def ReadXYSacFile(self,fname):
         """\nRead a SAC XY file (not tested much) 
         \tok = ReadSXYSacFile(thePath)
@@ -380,8 +381,8 @@ class ReadSac(PyTutil,parser.Parser):
         The data are in two floating point arrays x and y.
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         #
-        self.x = array.array('f')
-        self.y = array.array('f')
+        ok = 1
+        self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
@@ -397,31 +398,44 @@ class ReadSac(PyTutil,parser.Parser):
             #    in strings. Store them in array (an convert the char to a
             #    list). That's a total of 632 bytes.
             #--------------------------------------------------------------
-            self.hf.fromfile(f,70)     # read in the float values
-            self.hi.fromfile(f,40)     # read in the int values
-            self.hs.fromfile(f,192)
+            # read in the float values
+            for i in range(14):
+                a=map(float,f.readline().split())
+                b=map(self.hf.append,a)  
+            # read in the int values
+            for i in range(8):
+                a=map(int,f.readline().split())
+                b=map(self.hi.append,a)
+            # reading in the string part is a bit more complicated
+            # because every string field has to be 8 characters long
+            # apart from the second field which is 16 characters long
+            # resulting in a total length of 192 characters
+            a=f.readline().split()
+            b=map(self.hs.append,a[0].ljust(8))
+            b=map(self.hs.append,a[1].ljust(16))
+            for i in range(7):
+                a=f.readline().split()
+                for k in a:
+                    b=map(self.hs.append,k.ljust(8))
+                    
+            #--------------------------------------------------------------
+            # read in the seismogram points
+            #--------------------------------------------------------------
+            while True:
+                line = f.readline()
+                if not line: break
+                a=map(float,line.split())
+                b=map(self.seis.append,a)  
+            f.close()
             #
-            # only continue if it is a SAC file
+            # check if number of points in header and length of
+            # trace are identical; check if it is little-endian
             #
-            #
-            ok = self.IsXYSACfile(fname)
-            if ok:
-                #--------------------------------------------------------------
-                # read in the seismogram points
-                #--------------------------------------------------------------
-                npts = self.hi[9]  # you just have to know it's in the 10th place
-                #             # actually, it's in the SAC manual
-                #
-                mBytes = npts * 4
-                #
-                self.y.fromfile(f,npts) # the data are now in s
-                self.x.fromfile(f,npts) # the data are now in s
-                #
-                f.close()
-                #
-                #--------------------------------------------------------------
+            if not self.IsXYSACfile():
+                raise Exception
         except:
             # make sure we close the file
+            print "%s is not a valid SAC file"%fname
             if f.closed == 0: # zero means the file is open
                 f.close()
                 ok = 0
@@ -580,9 +594,12 @@ class ReadSac(PyTutil,parser.Parser):
         """
         # check if important header-values are defined
         try:
-            self.channel = self.GetHvalue('kcmpnm')
             self.npts = self.GetHvalue('npts')
             self.df = 1./self.GetHvalue('delta')
+        except:
+            return 0
+        try:
+            self.channel = self.GetHvalue('kcmpnm')
             self.station = self.GetHvalue('kstnm')
             year = self.GetHvalue('nzyear')
             yday = self.GetHvalue('nzjday')
@@ -591,14 +608,16 @@ class ReadSac(PyTutil,parser.Parser):
             sec  = self.GetHvalue('nzsec')
             msec = self.GetHvalue('nzmsec')
             sec = sec + 0.001*msec
+            mon, day, ok=self.monthdate(year,yday)
+            date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
+            if date.find('-12345') != -1:
+                date = "19700101000000"
         except:
             print "One of the following header values is not set:"
             print "kcmpnm, npts, delta, kstnm, nzyear, nzjday, nzhour"
             print "nzmin, nzsec, nzmsec"
             print "Please check your SAC-data and try again"
             return 0
-        mon, day, ok=self.monthdate(year,yday)
-        date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
         self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date)
         self.trace = self.seis.tolist()
         # consistency check
@@ -618,3 +637,6 @@ if __name__ == "__main__":
     import os.path
     if os.path.isfile('test2.sac'):
         os.remove('test2.sac')
+    if os.path.isfile('testbin.sac'):
+        os.remove('testbin.sac')
+        
