@@ -832,13 +832,11 @@ class libmseed(object):
             #chain.contents.datasamples = ch
             # This is a little bit faster under the assumption that the data
             # are already numpy arrays.
-            ##chain = mstg.contents.traces.contents.datasamples
-            ##data_numpy = N.array(data,dtype='l')
-            ##ptr = N.ctypeslib.as_ctypes(data_numpy)
-            ##C.memmove(chain,ptr,npts*4)
-            datpoints=type((C.c_int32*npts)()).from_address(C.addressof\
-                                                            (tempdatpoint))
-            datpoints[0:npts] = trace_list[_i][1]
+            ptr = N.ctypeslib.as_ctypes(trace_list[_i][1])
+            C.memmove(chain.contents.datasamples,ptr,npts*4)
+            #datpoints=type((C.c_int32*npts)()).from_address(C.addressof\
+            #                                                (tempdatpoint))
+            #datpoints[0:npts] = trace_list[_i][1]
             if _i != numtraces-1:
                 chain = chain.contents.next
                 strchain = strchain + '.contents.next'
