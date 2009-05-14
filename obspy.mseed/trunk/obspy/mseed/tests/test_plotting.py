@@ -46,7 +46,7 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
             format = 'png', color = '#ffcc66', bgcolor = '#99ffff',
             minmaxlist = minmaxlist)
         imgfile = open(os.path.join(self.outpath,
-            'full_graph_777x222px_orange_and_turquoise.png'))
+            'full_graph_777x222px_orange_and_turquoise.png'), 'rb')
         self.assertEqual(imgstring, imgfile.read())
         imgfile.close()
         # same graph as above but with a transparent background and a green/

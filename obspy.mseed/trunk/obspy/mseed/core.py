@@ -20,7 +20,11 @@ class MSEEDTrace(object):
             msg = "File not found '%s'" % (filename)
             raise IOError(msg)
         # read MiniSEED file
-        header, data, self.numsamples = __libmseed__.read_ms_using_traces(filename)
+        trace_list = __libmseed__.readMSTraces(filename)
+        # XXX: not very smart to handle only first trace 
+        # will be fixed soon as we introduce streams
+        header = trace_list[0][0]
+        data = trace_list[0][1]
         # reset header information
         self.stats = Stats()
         # station name
