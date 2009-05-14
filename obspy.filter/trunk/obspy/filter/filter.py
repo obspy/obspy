@@ -25,10 +25,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from numpy import array, where, fft
+from numpy import array, where, fft, sin, cos, pi
 from scipy.signal import iirfilter,lfilter,remez,convolve,get_window
 from scipy.fftpack import hilbert
-
+from sys import exit
 
 def bandpass(data,freqmin,freqmax,df=200,corners=4):
   """Butterworth-Bandpass Filter
@@ -218,4 +218,25 @@ def lowpassFIR(data,freq,samp_rate=200,winlen=2048):
   beta = 11.7
   myh = fft.fftshift(h) * get_window(beta,winlen)  #beta implies Kaiser
   return convolve(abs(myh),data)[winlen/2:-winlen/2]
+
+def rotate_NE_RT(n,e,ba):
+  """Rotates horizontal components of a seismogram:
+
+  The North- and East-Component of a seismogram will be rotated in Radial and Transversal
+  Component. The angle is given as the back-azimuth, that is defined as the angle measured
+  between the vector pointing from the station to the source and the vector pointing from
+  the station to the north.
+  
+  @param n: Data of the North component of the seismogram.
+  @param e: Data of the East component of the seismogram.
+  @param ba: The back azimuth from station to source in degrees.
+  @return: Radial and Transversal component of seismogram.
+  """
+  if n.__len__()!=e.__len__():
+      exit("Error: North and East component have different length!?!")
+  if ba<0 or ba>360:
+      exit("Error: Back Azimuth should be between 0 and 360 degrees!")
+  r=e*sin((ba+180)*2*pi/360)+n*cos((ba+180)*2*pi/360)
+  t=e*cos((ba+180)*2*pi/360)-n*sin((ba+180)*2*pi/360)
+  return r,t
 
