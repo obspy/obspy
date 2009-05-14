@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time, os, datetime
+from calendar import timegm
+import datetime
+
 
 class Stats(dict):
     """
@@ -52,24 +54,28 @@ class Stats(dict):
         self.dataquality = ""
         self.starttime = DateTime.utcfromtimestamp(0.0)
 
-class UTC(datetime.tzinfo):
-    """
-    A UTC class
-    
-    http://docs.python.org/library/datetime.html#tzinfo-objects
-    """
-    zero_ = datetime.timedelta(0)
-    def utcoffset(self, dt):
-        return self.zero_
-    def tzname(self, dt):
-        return "UTC"
-    def dst(self, dt):
-        return self.zero
+
+#class UTC(datetime.tzinfo):
+#    """
+#    A UTC class
+#    
+#    http://docs.python.org/library/datetime.html#tzinfo-objects
+#    """
+#    zero_ = datetime.timedelta(0)
+#    def utcoffset(self, dt):
+#        return self.zero_
+#    def tzname(self, dt):
+#        return "UTC"
+#    def dst(self, dt):
+#        return self.zero
+
 
 class DateTime(datetime.datetime):
     """
-    A class handling conversion from utc datetime to utc timestamps. This
-    class inherits from datetime.datetime and refines the UTC timezone support.
+    A class handling conversion from utc datetime to utc timestamps. 
+    
+    This class inherits from datetime.datetime and refines the UTC timezone 
+    support.
     
     You may use the following syntax to change or access data in this class:
         >>> DateTime.utcfromtimestamp(0.0)
@@ -91,10 +97,11 @@ class DateTime(datetime.datetime):
     """
     # timezone need to be set explicitly, see
     # http://www.mail-archive.com/python-bugs-list@python.org/msg08141.html
-    def __init__(self,*args,**kwargs):
-        os.environ['TZ'] = 'UTC'
-        datetime.datetime.__init__(self,args,kwargs)
-        # self.replace(tzinfo=UTC())
+#    def __init__(self, *args, **kwargs):
+#        #os.environ['TZ'] = 'UTC'
+#        datetime.datetime.__init__(self, *args, **kwargs)
+#        # self.replace(tzinfo=UTC())
+    
     def timestamp(self):
         """
         Return UTC timestamp in floating point seconds
@@ -102,85 +109,89 @@ class DateTime(datetime.datetime):
         @rtype: float
         @return: Timestamp in seconds
         """
-        os.environ['TZ'] = 'UTC'
-        return float(self.strftime("%s")) + self.microsecond/1.0e6
+        #XXX: datetime.strftime("%s") is not working in windows
+        #os.environ['TZ'] = 'UTC'
+        #return float(self.strftime("%s")) + self.microsecond/1.0e6
+        return float(timegm(self.timetuple())) + self.microsecond/1.0e6
 
-class Time(float):
-    """
-    A class handling conversion from utc date to timestamps
-    
-    You may use the following syntax to change or access data in this class:
-        >>> Time(0.0)
-        0.0
-        >>> Time('19700101000000')
-        0.0
-        >>> t = Time(1240561632.005)
-        >>> t.date
-        '2009-04-24T08:27:12.005000'
-        >>> t.year
-        2009
-        >>> t.year, t.hour, t.month, t.hour, t.min, "%9.6f"%t.sec
-        (2009, 8, 4, 8, 27, '12.005000')
-        >>> t
-        1240561632.0050001
-        >>> t + 100
-        1240561732.0050001
-        >>> type(t + 100)
-        <type 'float'>
-        >>> t2 = Time(t+100)
-        >>> t2
-        1240561732.0050001
-        >>> type(t2)
-        <class '__main__.Time'>
-        >>> t2.date
-        '2009-04-24T08:28:52.005000'
 
-    @type year: integer
-    @ivar year: The year
-    @type month: integer
-    @ivar month: The month
-    @type day: integer
-    @ivar day: The day
-    @type hour: integer
-    @ivar hour: The hour
-    @type min: integer
-    @ivar min: The minute
-    @type sec: float
-    @ivar year: The seconds
-    @type date: string
-    @ivar date: The seconds
-    @rtype: float
-    @return: Timestamp (julian seconds/seconds since 1970)
-    """
-    def __new__(cls,T,format="%Y%m%d%H%M%S",tzone='UTC'):
-        os.environ['TZ'] = tzone
-        time.tzset()
-        # Given timestamp
-        if type(T) in [int,long,float]:
-            _timestamp = int(T)
-            _msec = T - int(T)
-        # Given datetime
-        elif type(T) is str:
-            try:
-                [date,_i] = T.split('.')
-                _msec = float("0.%s"%_i)
-            except ValueError:
-                date = T
-                _msec = 0.0
-            _timestamp = time.mktime(time.strptime(date,format))
-        # Given unknown type
-        else:
-            raise TypeError("Time in wrong format, must be number or string")
-        # New style class float initializiation
-        myself = float.__new__(cls,_timestamp + _msec)
-        myself.timetuple = time.gmtime(_timestamp)
-        for _i,_j in zip(['year','month','day','hour','min','sec','wday','yday','dst'], 
-                         myself.timetuple):
-            setattr(myself,_i,_j)
-        myself.sec += _msec
-        myself.date = "%s.%06d" % (time.strftime('%Y-%m-%dT%H:%M:%S',myself.timetuple),
-                                 _msec*1e6+.5)
-        return myself
+#class Time(float):
+#    """
+#    A class handling conversion from utc date to timestamps
+#    
+#    You may use the following syntax to change or access data in this class:
+#        >>> Time(0.0)
+#        0.0
+#        >>> Time('19700101000000')
+#        0.0
+#        >>> t = Time(1240561632.005)
+#        >>> t.date
+#        '2009-04-24T08:27:12.005000'
+#        >>> t.year
+#        2009
+#        >>> t.year, t.hour, t.month, t.hour, t.min, "%9.6f"%t.sec
+#        (2009, 8, 4, 8, 27, '12.005000')
+#        >>> t
+#        1240561632.0050001
+#        >>> t + 100
+#        1240561732.0050001
+#        >>> type(t + 100)
+#        <type 'float'>
+#        >>> t2 = Time(t+100)
+#        >>> t2
+#        1240561732.0050001
+#        >>> type(t2)
+#        <class '__main__.Time'>
+#        >>> t2.date
+#        '2009-04-24T08:28:52.005000'
+#
+#    @type year: integer
+#    @ivar year: The year
+#    @type month: integer
+#    @ivar month: The month
+#    @type day: integer
+#    @ivar day: The day
+#    @type hour: integer
+#    @ivar hour: The hour
+#    @type min: integer
+#    @ivar min: The minute
+#    @type sec: float
+#    @ivar year: The seconds
+#    @type date: string
+#    @ivar date: The seconds
+#    @rtype: float
+#    @return: Timestamp (julian seconds/seconds since 1970)
+#    """
+#    def __new__(cls,T,format="%Y%m%d%H%M%S",tzone='UTC'):
+#        os.environ['TZ'] = tzone
+#        time.tzset()
+#        # Given timestamp
+#        if type(T) in [int,long,float]:
+#            _timestamp = int(T)
+#            _msec = T - int(T)
+#        # Given datetime
+#        elif type(T) is str:
+#            try:
+#                [date,_i] = T.split('.')
+#                _msec = float("0.%s"%_i)
+#            except ValueError:
+#                date = T
+#                _msec = 0.0
+#            _timestamp = time.mktime(time.strptime(date,format))
+#        # Given unknown type
+#        else:
+#            raise TypeError("Time in wrong format, must be number or string")
+#        # New style class float initializiation
+#        myself = float.__new__(cls,_timestamp + _msec)
+#        myself.timetuple = time.gmtime(_timestamp)
+#        for _i,_j in zip(['year','month','day','hour','min','sec','wday','yday','dst'], 
+#                         myself.timetuple):
+#            setattr(myself,_i,_j)
+#        myself.sec += _msec
+#        myself.date = "%s.%06d" % (time.strftime('%Y-%m-%dT%H:%M:%S',myself.timetuple),
+#                                 _msec*1e6+.5)
+#        return myself
+
 
 def getParser():
     """

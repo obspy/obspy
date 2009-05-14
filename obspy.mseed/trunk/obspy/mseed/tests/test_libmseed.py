@@ -3,14 +3,14 @@
 The libmseed test suite.
 """
 
-from datetime import datetime
 from obspy.mseed import libmseed
+from obspy.util import DateTime
+import copy
 import inspect
 import numpy as N
 import os
 import random
 import unittest
-import copy
 
 
 class LibMSEEDTestCase(unittest.TestCase):
@@ -34,23 +34,21 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         # These values are created using the Linux "date -u -d @TIMESTRING"
         # command. These values are assumed to be correct.
-        timesdict = {1234567890 : datetime(2009, 2, 13, 23, 31, 30),
-                     1111111111 : datetime(2005, 3, 18, 1, 58, 31),
-                     1212121212 : datetime(2008, 5, 30, 4, 20, 12),
-                     1313131313 : datetime(2011, 8, 12, 6, 41, 53),
-                     100000 : datetime(1970, 1, 2, 3, 46, 40),
-                     100000.111112 : datetime(1970, 1, 2, 3, 46, 40, 111112),
-                     200000000 : datetime(1976, 5, 3, 19, 33, 20)}
+        timesdict = {1234567890 : DateTime(2009, 2, 13, 23, 31, 30),
+                     1111111111 : DateTime(2005, 3, 18, 1, 58, 31),
+                     1212121212 : DateTime(2008, 5, 30, 4, 20, 12),
+                     1313131313 : DateTime(2011, 8, 12, 6, 41, 53),
+                     100000 : DateTime(1970, 1, 2, 3, 46, 40),
+                     100000.111112 : DateTime(1970, 1, 2, 3, 46, 40, 111112),
+                     200000000 : DateTime(1976, 5, 3, 19, 33, 20)}
         mseed = libmseed()
         # Loop over timesdict.
-        for _i in timesdict.keys():
-            self.assertEqual(timesdict[_i],
-                    mseed._convertMSTimeToDatetime(_i*1000000L))
-            self.assertEqual(_i * 1000000L,
-                    mseed._convertDatetimeToMSTime(timesdict[_i]))
+        for ts, dt in timesdict.iteritems():
+            self.assertEqual(dt, mseed._convertMSTimeToDatetime(ts*1000000L))
+            self.assertEqual(ts * 1000000L, mseed._convertDatetimeToMSTime(dt))
         # Additional sanity tests.
         # Today.
-        now = datetime.now()
+        now = DateTime.now()
         self.assertEqual(now, mseed._convertMSTimeToDatetime(
                               mseed._convertDatetimeToMSTime(now)))
         # Some random date.
@@ -197,8 +195,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(gap_list[0][1], 'BGLD')
         self.assertEqual(gap_list[0][2], '')
         self.assertEqual(gap_list[0][3], 'EHE')
-        self.assertEqual(gap_list[0][4], datetime(2008, 1, 1, 0, 0, 1, 970000))
-        self.assertEqual(gap_list[0][5], datetime(2008, 1, 1, 0, 0, 4, 35000))
+        self.assertEqual(gap_list[0][4], DateTime(2008, 1, 1, 0, 0, 1, 970000))
+        self.assertEqual(gap_list[0][5], DateTime(2008, 1, 1, 0, 0, 4, 35000))
         self.assertEqual(gap_list[0][6], 2.065)
         self.assertEqual(gap_list[0][7], 412)
         self.assertEqual(gap_list[1][6], 2.065)

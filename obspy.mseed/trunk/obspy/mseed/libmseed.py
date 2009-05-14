@@ -19,10 +19,9 @@ GNU-LGPL and further information can be found here:
 http://www.gnu.org/
 """
 
-from calendar import timegm
-from datetime import datetime
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
+from obspy.util import DateTime
 import StringIO
 import ctypes as C
 import math
@@ -30,6 +29,7 @@ import numpy as N
 import os
 import platform
 import sys
+
 
 #Import libmseed library.
 if sys.platform=='win32':
@@ -329,8 +329,8 @@ class libmseed(object):
             else:
                 nsamples+=1
             # Convert to python datetime objects
-            time1 = datetime.utcfromtimestamp(cur.endtime / HPTMODULUS)
-            time2 = datetime.utcfromtimestamp(next.starttime / HPTMODULUS)
+            time1 = DateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
+            time2 = DateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
             gap_list.append((cur.network, cur.station, cur.location, 
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
@@ -556,19 +556,19 @@ class libmseed(object):
 
     def _convertDatetimeToMSTime(self, dt):
         """
-        Takes datetime object and returns an epoch time in ms.
+        Takes obspy.util.DateTime object and returns an epoch time in ms.
         
-        @param dt: Datetime object.
+        @param dt: obspy.util.DateTime object.
         """
-        return long((timegm(dt.timetuple()) * HPTMODULUS) + dt.microsecond)
+        return long(dt.timestamp() * HPTMODULUS)
     
     def _convertMSTimeToDatetime(self, timestring):
         """
-        Takes Mini-SEED timestring and returns a Python datetime object.
+        Takes Mini-SEED timestring and returns a obspy.util.DateTime object.
         
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
-        return datetime.utcfromtimestamp(timestring / HPTMODULUS)
+        return DateTime.utcfromtimestamp(timestring / HPTMODULUS)
     
     def _convertMSTToDict(self, m):
         """
