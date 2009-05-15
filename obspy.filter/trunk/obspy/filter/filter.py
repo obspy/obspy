@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from numpy import array, where, fft, sin, cos, pi
 from scipy.signal import iirfilter,lfilter,remez,convolve,get_window
 from scipy.fftpack import hilbert
-from sys import exit
 
 def bandpass(data,freqmin,freqmax,df=200,corners=4):
   """Butterworth-Bandpass Filter
@@ -233,9 +232,9 @@ def rotate_NE_RT(n,e,ba):
   @return: Radial and Transversal component of seismogram.
   """
   if n.__len__()!=e.__len__():
-      exit("Error: North and East component have different length!?!")
+      raise TypeError("North and East component have different length!?!")
   if ba<0 or ba>360:
-      exit("Error: Back Azimuth should be between 0 and 360 degrees!")
+      raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
   r=e*sin((ba+180)*2*pi/360)+n*cos((ba+180)*2*pi/360)
   t=e*cos((ba+180)*2*pi/360)-n*sin((ba+180)*2*pi/360)
   return r,t
