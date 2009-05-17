@@ -521,13 +521,12 @@ class libmseed(object):
             # Close the open file
             open_file.close()
         # Handle non existing files and files of the wrong type.
-        except ZeroDivisionError, error:
+        except IOError, error:
             # Close file and remove the already written file.
             open_file.close()
             os.remove(outfile)
             # Write to standard error.
-            sys.stderr.write(error)
-#            sys.stderr.write(str(error)+'\n')
+            sys.stderr.write(str(error)+'\n')
             sys.stderr.write('No file has been written.\n')
             sys.stderr.write('Please check your files and try again.\n')
 
