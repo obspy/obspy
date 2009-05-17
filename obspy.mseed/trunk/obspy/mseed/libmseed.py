@@ -31,9 +31,14 @@ import platform
 import sys
 
 
-#Import libmseed library.
-if sys.platform=='win32':
+# Use different shared libmseed library depending on the platform.
+# 32 bit Windows.
+if sys.platform == 'win32':
     lib_name = 'libmseed.win32.dll'
+# 32 bit OSX, tested with 10.5.6
+elif sys.platform == 'darwin':
+    lib_name = 'libmseed.dylib'
+# 32 and 64 bit UNIX
 else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'
@@ -351,6 +356,180 @@ class libmseed(object):
                                                     r[5].isoformat(), 
                                                     r[6], r[7])
         print "Total: %d gap(s)" % len(result)
+        
+    def cutMSFileByRecords(self, filename, starttime, endtime):
+        """
+        Cuts a Mini-SEED file by cutting at records.
+        
+        The method takes a Mini-SEED file and tries to match it as good as
+        possible to the supplied time range. It will simply cut off records
+        that are not within the time range. The record that covers the
+        starttime will be the first record and the one that covers the endtime
+        will be the last record.
+        
+        This method will only work correctly for files containing only traces
+        from one single source. All traces have to be in chronological order.
+        Also all records in the file need to have the same length.
+        
+        It will return an empty string if the file does not cover the desired
+        range.
+        
+        @return: Byte string containing the cut file.
+        
+        @param filename: File string of the Mini-SEED file to be cut.
+        @param starttime: obspy.util.DateTime object.
+        @param endtime: obspy.util.DateTime object.
+        """
+        # Read the start- and endtime of the file.
+        times = self.getStartAndEndTime(filename)
+        # Set the starttime.
+        if starttime <= times[0]:
+            starttime = times[0]
+        elif starttime >= times[1]:
+            return ''
+        # Set the endtime.
+        if endtime >= times[1]:
+            endtime = times[1]
+        elif endtime <= times[0]:
+            return ''
+        # Make educated guessed about the most likely records that cover start-
+        # and endtime.
+        info = self._getMSFileInfo(filename)
+        start_record = int((starttime.timestamp() - times[0].timestamp()) / \
+                           (times[1].timestamp() - times[0].timestamp()) * \
+                       info['number_of_records'])
+        end_record = int((endtime.timestamp() - times[0].timestamp()) / \
+                         (times[1].timestamp() - times[0].timestamp()) * \
+                       info['number_of_records']) + 1
+        # Loop until the correct start_record is found
+        while True:
+            msr = self.readSingleRecordToMSR(filename, dataflag = 0, 
+                                             record_number = start_record)
+            chain = msr.contents
+            stime = chain.starttime
+            # Calculate last covered record.
+            etime = self._convertMSTimeToDatetime(stime + ((chain.samplecnt - \
+                            1) / chain.samprate) * HPTMODULUS)
+            stime = self._convertMSTimeToDatetime(stime)
+            # Leave loop if correct record is found or change record number
+            # otherwise.
+            if starttime >= stime and starttime <= etime:
+                break
+            elif starttime <= stime:
+                start_record -= 1
+            else:
+                start_record += 1
+        # Loop until the correct end_record is found
+        while True:
+            msr = self.readSingleRecordToMSR(filename, dataflag = 0, 
+                                             record_number = end_record)
+            chain = msr.contents
+            stime = chain.starttime
+            # Calculate last covered record.
+            etime = self._convertMSTimeToDatetime(stime + ((chain.samplecnt - \
+                            1) / chain.samprate) * HPTMODULUS)
+            stime = self._convertMSTimeToDatetime(stime)
+            # Leave loop if correct record is found or change record number
+            # otherwise.
+            if endtime >= stime and endtime <= etime:
+                break
+            elif endtime <= stime:
+                end_record -= 1
+            else:
+                end_record += 1
+        # Open the file and read the cut file.
+        open_file = open(filename)
+        record_length = info['record_length']
+        # Jump to starting location.
+        open_file.seek(record_length * start_record, 0)
+        # Read until end_location.
+        return_string = open_file.read(record_length * (end_record - \
+                                                        start_record +1))
+        open_file.close()
+        # Return the cut file string.
+        return return_string
+        
+    def mergeAndCutMSFiles(self, file_list, outfile, starttime = None,
+                           endtime = None):
+        """
+        This method takes several Mini-SEED files and returns one merged file.
+        
+        It is also possible to specify a start- and a endtime and all records
+        that are out of bounds will be cut.
+        If two not identical files cover a common time frame they will still
+        be merged and no data is lost.
+        
+        The input files can be given in any order but they have to be files
+        that contain only traces from one source and one component and the
+        traces inside the files have to be in chronological order. Otherwise
+        the produced output will not be correct. All files also have to be from
+        the same source.
+        
+        @param file_list: A list containing Mini-SEED filename strings.
+        @param outfile: String of the file to be created.
+        @param starttime: obspy.util.DateTime object.
+        @param endtime: obspy.util.DateTime object.
+        """
+        # Copy file_list to not alter the provided list.
+        file_list = file_list[:]
+        # Remove duplicates in list
+        file_list = list(set(file_list))
+        # Check if all files in the list are from one source. Raise ValueError
+        # otherwise.
+        check_list = [self.getFirstRecordHeaderInfo(filename) for filename in\
+                      file_list]
+        for _i in range(len(check_list) -1):
+            if check_list[_i] != check_list[_i+1]:
+                raise ValueError
+        # Get the start- and the endtime for each file in filelist.
+        file_list = [[filename, self.getStartAndEndTime(filename)] for \
+                     filename in file_list]
+        # Sort the list first by endtime and then by starttime. This results
+        # in a list which is sorted by starttime first and then by endtime.
+        file_list.sort(cmp = lambda x,y: int(self._convertDatetimeToMSTime(\
+                       x[1][1]) - self._convertDatetimeToMSTime(y[1][1])))
+        file_list.sort(cmp = lambda x,y: int(self._convertDatetimeToMSTime(\
+                       x[1][0]) - self._convertDatetimeToMSTime(y[1][0])))
+        # Set start- and endtime if they have not been set.
+        if not starttime:
+            starttime = file_list[0][1][0]
+        if not endtime:
+            endtime = max([file[1][1] for file in file_list])
+        open_file = open(outfile, 'wb')
+        try:
+            # Loop over all files in file_list and append to final output file.
+            for file in file_list:
+                file_starttime = file[1][0]
+                file_endtime = file[1][1]
+                # If the starttime of the file is in range of the desired file.
+                if file_starttime >= starttime and file_starttime <= endtime:
+                    # If the whole file is inside the range, just append it.
+                    if file_endtime <= endtime:
+                        new_file = open(file[0], 'rb')
+                        open_file.write(new_file.read())
+                        new_file.close()
+                    # Otherwise cut it.
+                    else:
+                        open_file.write(self.cutMSFileByRecords(filename = \
+                                        file[0], starttime = starttime,
+                                        endtime = endtime))
+                # If some parts of the file are in range cut it. Neglect all
+                # other cases as they are not necessary.
+                elif file_starttime < starttime and file_endtime > starttime:
+                    open_file.write(self.cutMSFileByRecords(file = file[0],
+                                    starttime = starttime, endtime = endtime))
+            # Close the open file
+            open_file.close()
+        # Handle non existing files and files of the wrong type.
+        except ZeroDivisionError, error:
+            # Close file and remove the already written file.
+            open_file.close()
+            os.remove(outfile)
+            # Write to standard error.
+            sys.stderr.write(error)
+#            sys.stderr.write(str(error)+'\n')
+            sys.stderr.write('No file has been written.\n')
+            sys.stderr.write('Please check your files and try again.\n')
 
     def plotMSFile(self, filename, outfile = None, format = None,
                    size = (800, 200), starttime = False, endtime = False,
@@ -560,7 +739,7 @@ class libmseed(object):
         
         @param dt: obspy.util.DateTime object.
         """
-        return long(dt.timestamp() * HPTMODULUS)
+        return int(dt.timestamp() * HPTMODULUS)
     
     def _convertMSTimeToDatetime(self, timestring):
         """
@@ -754,6 +933,7 @@ class libmseed(object):
         #Calculate Number of Records
         info['number_of_records'] = long(info['filesize'] / \
                                          info['record_length'])
+        msfile.close()
         return info
     
     def _isRateTolerable(self, sr1, sr2):
@@ -806,37 +986,37 @@ class libmseed(object):
         clibmseed.mst_init.restype = C.POINTER(MSTrace)
         # Init MSTraceGroup
         mstg = clibmseed.mst_initgroup(None)
+        # Set numtraces.
         numtraces = len(trace_list)
+        mstg.contents.numtraces = numtraces
+        # Define starting point of the MSTG structure and the same as a string.
         chain = mstg.contents.traces
         strchain = 'mstg.contents.traces'
+        # Loop over all traces in trace_list.
         for _i in xrange(numtraces):
-            # Init MSTrace object and connect with group
+            # Init MSTrace object and connect with group. I'm not really sure
+            # how to avoid this akward way of doing it.
             evalstring = strchain + ' = clibmseed.mst_init(None)'
             exec(evalstring)
-            # Write header in MSTrace structure
-            # variable
+            # Create variable with the number of sampels in this trace for
+            # faster future access.
             npts = trace_list[_i][0]['numsamples']
+            # Write header in MSTrace structure
             self._convertDictToMST(chain, trace_list[_i][0])
-            # Needs to be redone, dynamic??
-            mstg.contents.numtraces = numtraces
-            # Create void pointer and allocate more memory to it
+            # Create a single datapoint and resize its memory to be able to
+            # hold all datapoints.
             tempdatpoint = C.c_int32()
             C.resize(tempdatpoint,
                      clibmseed.ms_samplesize(C.c_char(trace_list[_i][0]\
                                                       ['sampletype'])) * npts)
-            # Set pointer to tempdatpoint
+            # The datapoints in the MSTG structure are a pointer to the memory
+            # area reserved for tempdatpoint.
             chain.contents.datasamples = C.pointer(tempdatpoint)
-            # It should work like this
-            #ptr = N.ctypeslib.as_ctypes(trace_list[_i][1])
-            #ch = C.pointer(C.c_int32.from_address(C.addressof(ptr)))
-            #chain.contents.datasamples = ch
-            # This is a little bit faster under the assumption that the data
-            # are already numpy arrays.
-            ptr = N.ctypeslib.as_ctypes(trace_list[_i][1])
-            C.memmove(chain.contents.datasamples,ptr,npts*4)
-            #datpoints=type((C.c_int32*npts)()).from_address(C.addressof\
-            #                                                (tempdatpoint))
-            #datpoints[0:npts] = trace_list[_i][1]
+            # Pointer to the Numpy data buffer.
+            datptr = trace_list[_i][1].ctypes.get_data()
+            # Manually move the contents of the numpy data buffer to the
+            # address of the previously created memory area.
+            C.memmove(chain.contents.datasamples,datptr,npts*4)
             if _i != numtraces-1:
                 chain = chain.contents.next
                 strchain = strchain + '.contents.next'

@@ -166,7 +166,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(len(gap_list), len(trace_list)-1)
         # Write File to temporary file.
         outfile = 'tempfile.mseed'
-        mseed.writeMSTraces(trace_list[:], outfile)
+        mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
         # Read the same file again and compare it to the original file.
         new_trace_list = mseed.readMSTraces(outfile)
         self.assertEqual(len(trace_list), len(new_trace_list))
@@ -178,6 +178,27 @@ class LibMSEEDTestCase(unittest.TestCase):
             N.testing.assert_array_equal(trace_list[_i][1],
                                          new_trace_list[_i][1])
         os.remove(outfile)
+        
+#    def test_readAndWriteBigFile(self):
+#        """
+#        """
+#        mseed = libmseed() 
+#        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+#        # Read file and test if all traces are being read.
+#        import time
+#        a = time.time()
+#        trace_list = mseed.readMSTraces(filename)
+#        b = time.time()
+#        print 'Time taken to read big file', b-a
+#        # Write File to temporary file.
+#        write_list = copy.deepcopy(trace_list)
+#        outfile = 'tempfile.mseed'
+#        c = time.time()
+#        mseed.writeMSTraces(write_list, outfile)
+#        d = time.time()
+#        print 'Time taken to write big file', d-c
+#        ####All checks are removed. This test is just to measure time.
+#        os.remove(outfile)
     
     def test_getGapList(self):
         """
@@ -246,6 +267,72 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(times[1],
                          mseed._convertMSTimeToDatetime(chain.endtime))
         
+    def test_cutMSFileByRecord(self):
+        """
+        Tests file cutting on a record basis. The cut file is compared to a
+        manually cut file which start- and endtimes will be read
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        small_filename = os.path.join(self.path,
+                                    'BW.BGLD..EHE.D.2008.001_first_10_percent')
+        tiny_filename = os.path.join(self.path,
+                                    'BW.BGLD..EHE.D.2008.001.first_record')
+        # Compare a cut file with the a manually cut file. The starttime is
+        # smaller than the starttime of the file.
+        times = mseed.getStartAndEndTime(small_filename)
+        small_filestring = mseed.cutMSFileByRecords(filename,
+                                    starttime = DateTime.utcfromtimestamp(0),
+                                    endtime = times[1])
+        open_file = open(small_filename, 'rb')
+        self.assertEqual(small_filestring, open_file.read())
+        open_file.close()
+        # Compare a cut file with the a manually cut file.
+        times = mseed.getStartAndEndTime(tiny_filename)
+        tiny_filestring = mseed.cutMSFileByRecords(filename,
+                                    starttime = DateTime.utcfromtimestamp(0),
+                                    endtime = times[1])
+        open_file = open(tiny_filename, 'rb')
+        self.assertEqual(tiny_filestring, open_file.read())
+        open_file.close()
+        
+    def test_mergeAndCutMSFiles(self):
+        """
+        Creates ten small files, randomizes their order, merges the middle
+        eight files and compares it to the desired result.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        outfile = os.path.join(self.path, 'merge_test_temp.mseed')
+        #Create 10 small files.
+        open_file = open(filename, 'rb')
+        first_ten_records = open_file.read(10 * 512)
+        open_file.close()
+        for _i in range(10):
+            new_file = open(str(_i) + '_temp.mseed', 'wb')
+            new_file.write(first_ten_records[_i * 512: (_i+1) * 512])
+            new_file.close()
+        file_list = [str(_i) + '_temp.mseed' for _i in range(10)]
+        # Randomize list.
+        file_list.sort(key = lambda x: random.random())
+        # Get the needed start- and endtime.
+        second_msr = mseed.readSingleRecordToMSR(filename, dataflag = 0,
+                                                 record_number = 1)
+        starttime = mseed._convertMSTimeToDatetime(
+                                        second_msr.contents.starttime)
+        ninth_msr = mseed.readSingleRecordToMSR(filename, dataflag = 0,
+                                                 record_number = 9)
+        endtime = mseed._convertMSTimeToDatetime(
+                                        ninth_msr.contents.starttime)
+        # Create the merged file<
+        mseed.mergeAndCutMSFiles(file_list, outfile, starttime, endtime)
+        open_file = open(outfile, 'rb')
+        # Compare the file to the desired output.
+        self.assertEqual(open_file.read(), first_ten_records[512:-512])
+        open_file.close()
+        os.remove(outfile)
+        for _i in file_list:
+            os.remove(_i)
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
