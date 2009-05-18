@@ -11,3 +11,4 @@ except ImportError:
 
 
 from obspy.core import Trace
+from obspy.core import Stream

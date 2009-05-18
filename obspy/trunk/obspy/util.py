@@ -221,6 +221,19 @@ def getParser():
     return tuple(temp)
 
 
+def getStreamParser():
+    """
+    Collects all obspy parser classes that can handle streams.
+    """
+    temp = []
+    try:
+        from obspy.mseed.core import MSEEDStream
+        temp.append(MSEEDStream)
+    except:
+        pass
+    return tuple(temp)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

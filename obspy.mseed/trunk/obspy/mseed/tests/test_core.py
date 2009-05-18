@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.mseed import MSEEDTrace
-from obspy import Trace
+from obspy import Trace, Stream
 import inspect
 import os
 import unittest
@@ -15,6 +15,7 @@ class CoreTestCase(unittest.TestCase):
         #Directory where the test files are located
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(path, 'data', 'test.mseed')
+        self.gapfile =  os.path.join(path, 'data', 'gaps.mseed')
     
     def tearDown(self):
         pass
@@ -65,6 +66,19 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats['sampling_rate'], 40.0)
         for _i in xrange(5):
             self.assertEqual(tr.data[_i], testdata[_i])
+            
+    def test_readFileViaObsPyStream(self):
+        """
+        Read file test via L{obspy.Stream}
+        
+        Only a very short test. Still needs to be extended.
+        """
+        st = Stream()
+        # without given format -> autodetect using extension
+        st.read(self.gapfile)
+        self.assertEqual(4, len(st.traces))
+        for _i in st.traces:
+            self.assertEqual(True, isinstance(_i, MSEEDTrace))
     
     def test_writeFileViaObsPy(self):
         """

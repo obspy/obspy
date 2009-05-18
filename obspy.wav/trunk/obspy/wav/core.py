@@ -103,9 +103,11 @@ class WAVTrace(object):
         """
         # write WAV file
         w = wave.open(filename, 'wb')
-        try: self.stats.npts
-        except AttributeError: 
-            self.stats.npts = len(self.data)
+        self.stats.npts = len(self.data)
+        # Does not work with some tests because self.stats.npts = -1
+#        try: self.stats.npts
+#        except AttributeError:
+#            self.stats.npts = len(self.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)
         w.setparams((1,1,framerate,self.stats.npts,'NONE', 'not compressed'))
         w.writeframes(struct.pack('%dB' % (self.stats.npts*1),*self.data))
