@@ -989,14 +989,11 @@ class libmseed(object):
         numtraces = len(trace_list)
         mstg.contents.numtraces = numtraces
         # Define starting point of the MSTG structure and the same as a string.
+        # Init MSTrace object and connect with group
+        mstg.contents.traces = clibmseed.mst_init(None)
         chain = mstg.contents.traces
-        strchain = 'mstg.contents.traces'
         # Loop over all traces in trace_list.
         for _i in xrange(numtraces):
-            # Init MSTrace object and connect with group. I'm not really sure
-            # how to avoid this akward way of doing it.
-            evalstring = strchain + ' = clibmseed.mst_init(None)'
-            exec(evalstring)
             # Create variable with the number of sampels in this trace for
             # faster future access.
             npts = trace_list[_i][0]['numsamples']
@@ -1017,6 +1014,6 @@ class libmseed(object):
             # address of the previously created memory area.
             C.memmove(chain.contents.datasamples,datptr,npts*4)
             if _i != numtraces-1:
+                chain.contents.next = clibmseed.mst_init(None)
                 chain = chain.contents.next
-                strchain = strchain + '.contents.next'
         return mstg
