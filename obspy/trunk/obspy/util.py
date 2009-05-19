@@ -55,21 +55,6 @@ class Stats(dict):
         self.starttime = DateTime.utcfromtimestamp(0.0)
 
 
-#class UTC(datetime.tzinfo):
-#    """
-#    A UTC class
-#    
-#    http://docs.python.org/library/datetime.html#tzinfo-objects
-#    """
-#    zero_ = datetime.timedelta(0)
-#    def utcoffset(self, dt):
-#        return self.zero_
-#    def tzname(self, dt):
-#        return "UTC"
-#    def dst(self, dt):
-#        return self.zero
-
-
 class DateTime(datetime.datetime):
     """
     A class handling conversion from utc datetime to utc timestamps. 
@@ -78,11 +63,11 @@ class DateTime(datetime.datetime):
     support.
     
     You may use the following syntax to change or access data in this class:
-        >>> DateTime.utcfromtimestamp(0.0)
+        >>> DateTime(0.0)
         DateTime(1970, 1, 1, 0, 0)
-        >>> DateTime(1970,1,1)
+        >>> DateTime(1970, 1, 1)
         DateTime(1970, 1, 1, 0, 0)
-        >>> t = DateTime.utcfromtimestamp(1240561632.005)
+        >>> t = DateTime(1240561632.005)
         >>> t
         DateTime(2009, 4, 24, 8, 27, 12, 5000)
         >>> t.year
@@ -91,16 +76,29 @@ class DateTime(datetime.datetime):
         (2009, 8, 4, 8, 27, 12, 5000)
         >>> t.timestamp() + 100
         1240561732.0050001
-        >>> t2 = DateTime.utcfromtimestamp(t.timestamp()+60)
+        >>> t2 = DateTime(t.timestamp()+60)
         >>> t2
         DateTime(2009, 4, 24, 8, 28, 12, 5000)
+        >>> DateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
+        DateTime(2009, 5, 24, 8, 28, 12, 5001)
+        
     """
-    # timezone need to be set explicitly, see
-    # http://www.mail-archive.com/python-bugs-list@python.org/msg08141.html
-#    def __init__(self, *args, **kwargs):
-#        #os.environ['TZ'] = 'UTC'
-#        datetime.datetime.__init__(self, *args, **kwargs)
-#        # self.replace(tzinfo=UTC())
+    def __new__(cls, *args, **kwargs):
+        if len(args)==1:
+            arg = args[0]
+            if type(arg) in [int, long, float]:
+                dt = datetime.datetime.utcfromtimestamp(arg)
+                return datetime.datetime.__new__(cls, dt.year, dt.month, 
+                                                 dt.day, dt.hour, 
+                                                 dt.minute, dt.second, 
+                                                 dt.microsecond)
+            elif isinstance(arg, datetime.datetime):
+                dt = arg
+                return datetime.datetime.__new__(cls, dt.year, dt.month, 
+                                                 dt.day, dt.hour, 
+                                                 dt.minute, dt.second, 
+                                                 dt.microsecond)
+        return datetime.datetime.__new__(cls, *args, **kwargs)
     
     def timestamp(self):
         """
