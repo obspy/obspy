@@ -1,22 +1,21 @@
 #!/scratch/seisoft/Python-2.5.2/bin/python
-
-#computes and plots logarithmic spectogram of the input trace
-#input in gse2 format
-#needed specifications: sampling rate (Hz), number of steps, window length (both in samples)
-
+"""
+computes and plots logarithmic spectogram of the input trace
+input in numpy-array format
+needed specifications: sampling rate (Hz), number of steps, window length (both in samples)
+# Draws a seismogram and a spectogram of the input data. Spectogram can be logarithmic in frequency if desired.
+# Input parameters: inp - data in numpy array format
+#                   sample_rate - sampling frequency in Hz
+#                   samp_length - total length of the data trace (in samples)
+#                   log - set to True for logarithmic spectogram, False for normal spectogram
+#                   name - string for the filename of the output .png-file
+"""
 import obspy,time
 import glob, os
 from pylab import *
 from numpy import *
 
-def spec(inp,sample_rate,samp_length,log):
-
-# Draws a seismogram and a spectogram of the input data. Spectogram can be logarithmic in frequency if desired.
-# Input parameters: inp - data in numpy array format
-#										sample_rate - sampling frequency in Hz
-#										samp_length - total length of the data trace (in samples)
-#										log - set to True for logarithmic spectogram, False for normal spectogram
-	
+def spec(inp=0,sample_rate=100,samp_length=1,log=False,name="specto"):
 	
 	samp_rate = 1/float(sample_rate)
 	step_size = samp_length/80.
@@ -87,5 +86,6 @@ def spec(inp,sample_rate,samp_length,log):
 	axis(v)
 	xticks([0,tick_dist,2*tick_dist,3*tick_dist,4*tick_dist,tick_big])
 	ylabel('amplitude (arbitrary)')
-	savefig('spec.pdf')
+	figname = name+'.png'
+	savefig(figname)
 	
