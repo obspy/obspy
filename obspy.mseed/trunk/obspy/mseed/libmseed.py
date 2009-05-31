@@ -22,6 +22,7 @@ http://www.gnu.org/
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
 from obspy.util import DateTime
+from struct import unpack
 import StringIO
 import ctypes as C
 import math
@@ -356,6 +357,108 @@ class libmseed(object):
                                                     r[5].isoformat(), 
                                                     r[6], r[7])
         print "Total: %d gap(s)" % len(result)
+        
+    def getDataQualityFlagsCount(self, filename):
+        """
+        Counts each set data quality flag bit of each record in one Mini-SEED
+        file.
+        
+        This method will count all set data quality flag bits in the fixed
+        section of the data header in a Mini-SEED file and return the count.
+        Each set bit will increase the return value. Please refer to the SEED
+        manual for details about the flags.
+        
+        If all data quality flags are set the count will increase by eight for
+        each record.
+        
+        This will only work correctly if each record in the file has the same
+        record length.
+        
+        @param filename: Mini-SEED file to be parsed.f
+        """
+        # Get record length of the file.
+        info = self._getMSFileInfo(filename)
+        # Open the file.
+        mseedfile = open(filename, 'rb')
+        # This will increase by one for each set quality bit.
+        quality_count = 0
+        record_length = info['record_length']
+        # Jump to the first data quality byte.
+        mseedfile.seek(38)
+        # Loop over all records.
+        for _i in xrange(info['number_of_records']):
+            # Read data quality byte.
+            data_quality_flags = mseedfile.read(1)
+            # Jump to next byte.
+            mseedfile.seek(record_length - 1, 1)
+            # Unpack the binary data.
+            data_quality_flags = unpack('B', data_quality_flags)[0]
+            # Add the value of each bit to the quality_count.
+            for _j in xrange(8):
+                if (data_quality_flags and (1 << _j)) != 0:
+                    quality_count += 1
+        return quality_count
+    
+    def getTimingQuality(self, filename):
+        """
+        Reads timing quality and returns a dictionary containing statistics
+        about it.
+        
+        This method will read the timing quality in Blockette 1001 for each
+        record in the file if available and return the following statistics:
+        Minima, maxima, average, median and upper and lower quantile.
+        
+        This will only work correctly if all records in the file have the same
+        record length.
+        
+        @param filename: Mini-SEED file to be parsed.
+        """
+        # Get information about the file.
+        info = self._getMSFileInfo(filename)
+        # Create Timing Quality list.
+        timing_qualities = []
+        # Loop over each record
+        for _i in xrange(info['number_of_records']):
+            print _i
+            msr = self.readSingleRecordToMSR(filename, _i)
+            print _i
+            # Enclose in try-except block because not all records need to
+            # have Blockette 1001.
+            try:
+                # Append timing quality to list.
+                timing_qualities.append(\
+                                    msr.contents.Blkt1001.contents.timing_qual)
+            except:
+                pass
+        # Create new dictionary.
+        timing_quality = {}
+        # Length of the list.
+        tq_length = len(timing_qualities)
+        # If no data was collected just return an empty list.
+        if tq_length == 0:
+            return timing_qualities
+        # Add minima and maxima to the dictionary.
+        timing_quality['min'] = min(timing_qualities)
+        timing_quality['max'] = max(timing_qualities)
+
+        # Add average value
+        timing_quality['average'] = sum(timing_qualities)/tq_length
+        # Sort the list for further calculations.
+        timing_qualities.sort()
+        # Calculate the median of the list.
+        tq_modulo = tq_length%2
+        # Check for even or uneven.
+        if tq_modulo == 0:
+            timing_quality['median'] = (timing_qualities[tq_length/2] + \
+                                        timing_qualities[tq_length/2] + 1) / 2
+        else:
+            timing_quality['median'] = timing_qualities[int(tq_length/2)]
+        # Calculate upper and lower 25%-quantile.
+        timing_quality['lower_quantile'] = \
+                                    timing_qualities[int(tq_length * 0.25)-1]
+        timing_quality['upper_quantile'] = \
+                                    timing_qualities[int(tq_length * 0.75)]
+        return timing_quality
         
     def cutMSFileByRecords(self, filename, starttime, endtime):
         """
