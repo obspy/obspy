@@ -419,9 +419,7 @@ class libmseed(object):
         timing_qualities = []
         # Loop over each record
         for _i in xrange(info['number_of_records']):
-            print _i
-            msr = self.readSingleRecordToMSR(filename, _i)
-            print _i
+            msr = self.readSingleRecordToMSR(filename, record_number = _i)
             # Enclose in try-except block because not all records need to
             # have Blockette 1001.
             try:
@@ -436,7 +434,7 @@ class libmseed(object):
         tq_length = len(timing_qualities)
         # If no data was collected just return an empty list.
         if tq_length == 0:
-            return timing_qualities
+            return timing_quality
         # Add minima and maxima to the dictionary.
         timing_quality['min'] = min(timing_qualities)
         timing_quality['max'] = max(timing_qualities)
