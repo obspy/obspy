@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Python for observatories."""
+"""Python for Seismological Observatories."""
 
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
 try:
@@ -12,3 +12,16 @@ except ImportError:
 
 from obspy.core import Trace
 from obspy.core import Stream
+#
+import core
+import filter
+import gse2
+import imaging
+import mseed
+import numpy
+import parser
+import picker
+import sac
+import util
+import wav
+import xseed
