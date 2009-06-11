@@ -62,7 +62,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         filename = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001')
+                                  u'BW.BGLD..EHE.D.2008.001')
         open_file = open(filename, 'rb')
         pointer = mseed._convertToCFilePointer(open_file)
         self.assertNotEqual(str(pointer).find('LP_FILE'), -1)
@@ -78,7 +78,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Only checks relative values.
         """
         filename = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001.first_record')
+                                  u'BW.BGLD..EHE.D.2008.001.first_record')
         mseed = libmseed()
         # list of known data samples
         datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
@@ -102,7 +102,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Only checks relative values.
         """
         mseed_file = os.path.join(self.path, 
-                                  'BW.BGLD..EHE.D.2008.001.first_record')
+                                  u'BW.BGLD..EHE.D.2008.001.first_record')
         mseed = libmseed()
         # list of known data samples
         datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
@@ -126,7 +126,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         regardless of write options.
         """
         mseed = libmseed() 
-        mseed_file = os.path.join(self.path, 'test.mseed')
+        mseed_file = os.path.join(self.path, u'test.mseed')
         trace_list = mseed.readMSTraces(mseed_file)
         # define test ranges
         record_length_values = [2**i for i in range(8, 21)]
@@ -139,7 +139,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         for reclen in record_length_values:
             for byteorder in byteorder_values:
                 for encoding in encoding_values:
-                    filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
+                    filename = u'temp.%s.%s.%s.mseed' % (reclen, byteorder, 
                                                         encoding)
                     temp_file = os.path.join(self.path, filename)
                     mseed.writeMSTraces(copy.deepcopy(trace_list), temp_file,
@@ -157,7 +157,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Tests reading and writing files with more than one trace.
         """
         mseed = libmseed() 
-        filename = os.path.join(self.path, 'gaps.mseed')
+        filename = os.path.join(self.path, u'gaps.mseed')
         # Read file and test if all traces are being read.
         trace_list = mseed.readMSTraces(filename)
         self.assertEqual(len(trace_list), 4)
@@ -165,7 +165,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), len(trace_list)-1)
         # Write File to temporary file.
-        outfile = 'tempfile.mseed'
+        outfile = u'tempfile.mseed'
         mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
         # Read the same file again and compare it to the original file.
         new_trace_list = mseed.readMSTraces(outfile)
@@ -209,7 +209,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         # test file with 3 gaps
-        filename = os.path.join(self.path, 'gaps.mseed')
+        filename = os.path.join(self.path, u'gaps.mseed')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 3)
         self.assertEqual(gap_list[0][0], 'BW')
@@ -225,11 +225,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(gap_list[2][6], 4.125)
         self.assertEqual(gap_list[2][7], 824)
         # real example without gaps
-        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(gap_list, [])
         # real example with a gap
-        filename = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
+        filename = os.path.join(self.path, u'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
     
@@ -240,7 +240,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         The values can be read from the filename.
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
         header = mseed.getFirstRecordHeaderInfo(filename)
         self.assertEqual(header['location'], '')
         self.assertEqual(header['network'], 'BW')
@@ -256,7 +256,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         trace and without any gaps or overlaps.
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
         # get the start- and end time
         times = mseed.getStartAndEndTime(filename)
         # parse the whole file
@@ -273,11 +273,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         manually cut file which start- and endtimes will be read
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
+        filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
         small_filename = os.path.join(self.path,
-                                    'BW.BGLD..EHE.D.2008.001_first_10_percent')
+                                u'BW.BGLD..EHE.D.2008.001_first_10_percent')
         tiny_filename = os.path.join(self.path,
-                                    'BW.BGLD..EHE.D.2008.001.first_record')
+                                u'BW.BGLD..EHE.D.2008.001.first_record')
         # Compare a cut file with the a manually cut file. The starttime is
         # smaller than the starttime of the file.
         times = mseed.getStartAndEndTime(small_filename)
@@ -302,17 +302,17 @@ class LibMSEEDTestCase(unittest.TestCase):
         eight files and compares it to the desired result.
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-        outfile = os.path.join(self.path, 'merge_test_temp.mseed')
+        filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
+        outfile = os.path.join(self.path, u'merge_test_temp.mseed')
         #Create 10 small files.
         open_file = open(filename, 'rb')
         first_ten_records = open_file.read(10 * 512)
         open_file.close()
         for _i in range(10):
-            new_file = open(str(_i) + '_temp.mseed', 'wb')
+            new_file = open(str(_i) + u'_temp.mseed', 'wb')
             new_file.write(first_ten_records[_i * 512: (_i+1) * 512])
             new_file.close()
-        file_list = [str(_i) + '_temp.mseed' for _i in range(10)]
+        file_list = [str(_i) + u'_temp.mseed' for _i in range(10)]
         # Randomize list.
         file_list.sort(key = lambda x: random.random())
         # Get the needed start- and endtime.

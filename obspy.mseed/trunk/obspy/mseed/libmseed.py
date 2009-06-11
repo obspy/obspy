@@ -73,7 +73,7 @@ class libmseed(object):
         # Create empty list that will contain all traces.
         trace_list = []
         # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
-        mstg = self.readFileToTraceGroup(filename, reclen = reclen,
+        mstg = self.readFileToTraceGroup(str(filename), reclen = reclen,
                                          timetol = timetol,
                                          sampratetol = sampratetol,
                                          dataflag = dataflag,
@@ -157,7 +157,7 @@ class libmseed(object):
         mstg = C.pointer(MSTraceGroup())
         # Uses libmseed to read the file and populate the MSTraceGroup
         errcode = clibmseed.ms_readtraces(
-            C.pointer(mstg), filename, C.c_int(reclen), 
+            C.pointer(mstg), str(filename), C.c_int(reclen), 
             C.c_double(timetol), C.c_double(sampratetol),
             C.c_short(dataquality), C.c_short(skipnotdata), 
             C.c_short(dataflag), C.c_short(verbose))
@@ -216,8 +216,8 @@ class libmseed(object):
         FP_chain.packhdroffset = 0
         FP_chain.recordcount = 0
         # Populate the MSRecord structure with the help of libmseed.
-        clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr), filename,
-                               C.c_int(reclen), None, None, 
+        clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
+                               str(filename), C.c_int(reclen), None, None, 
                                C.c_short(skipnotdata), C.c_short(dataflag),
                                C.c_short(verbose))
         # Clean up memory and close all open files.
@@ -294,7 +294,7 @@ class libmseed(object):
             channel, starttime, endtime, gap, samples) 
         """
         # read file
-        mstg = self.readFileToTraceGroup(str(filename), dataflag = 0,
+        mstg = self.readFileToTraceGroup(filename, dataflag = 0,
                                          skipnotdata = 0,
                                          timetol = time_tolerance,
                                          sampratetol = samprate_tolerance)
@@ -448,8 +448,9 @@ class libmseed(object):
         for _i in xrange(fileinfo['number_of_records']):
             # Loop over every record.
             clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
-                                   filename, C.c_int(first_record), None, None, 
-                                   C.c_short(1), C.c_short(0), C.c_short(0))
+                                   str(filename), C.c_int(first_record), None,
+                                   None, C.c_short(1), C.c_short(0),
+                                   C.c_short(0))
             # Enclose in try-except block because not all records need to
             # have Blockette 1001.
             try:
