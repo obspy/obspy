@@ -53,10 +53,10 @@ class libmseed(object):
     """
     Class for handling Mini-SEED files.
     """
-    
-    def readMSTraces(self, filename, reclen = -1, timetol = -1,
-                     sampratetol = -1, dataflag = 1, skipnotdata = 1,
-                     dataquality = 1, verbose = 0):
+
+    def readMSTraces(self, filename, reclen= -1, timetol= -1,
+                     sampratetol= -1, dataflag=1, skipnotdata=1,
+                     dataquality=1, verbose=0):
         """
         Read Mini-SEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -73,13 +73,13 @@ class libmseed(object):
         # Create empty list that will contain all traces.
         trace_list = []
         # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
-        mstg = self.readFileToTraceGroup(str(filename), reclen = reclen,
-                                         timetol = timetol,
-                                         sampratetol = sampratetol,
-                                         dataflag = dataflag,
-                                         skipnotdata = skipnotdata,
-                                         dataquality = dataquality,
-                                         verbose = verbose)
+        mstg = self.readFileToTraceGroup(str(filename), reclen=reclen,
+                                         timetol=timetol,
+                                         sampratetol=sampratetol,
+                                         dataflag=dataflag,
+                                         skipnotdata=skipnotdata,
+                                         dataquality=dataquality,
+                                         verbose=verbose)
         chain = mstg.contents.traces.contents
         numtraces = mstg.contents.numtraces
         # Loop over traces and append to trace_list.
@@ -90,12 +90,12 @@ class libmseed(object):
                                                        chain.numsamples)
             trace_list.append([header, data])
             # Set chain to next trace.
-            if _i != numtraces-1:
+            if _i != numtraces - 1:
                 chain = chain.next.contents
         return trace_list
-    
-    def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding=-1,
-                      byteorder=-1, flush=-1, verbose=0):
+
+    def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding= -1,
+                      byteorder= -1, flush= -1, verbose=0):
         """
         Write Miniseed file from trace_list
         
@@ -117,7 +117,7 @@ class libmseed(object):
             diagnostic output.
         """
         # Populate MSTG Structure
-        mstg=self._populateMSTG(trace_list)
+        mstg = self._populateMSTG(trace_list)
         # Write File and loop over every trace in the MSTraceGroup Structure.
         numtraces = mstg.contents.numtraces
         openfile = open(outfile, 'wb')
@@ -125,13 +125,13 @@ class libmseed(object):
         for _i in xrange(numtraces):
             self._packMSTToFile(chain, openfile, reclen, encoding, byteorder,
                                 flush, verbose)
-            if _i != numtraces-1:
+            if _i != numtraces - 1:
                 chain = chain.contents.next
         openfile.close()
-    
-    def readFileToTraceGroup(self, filename, reclen = -1, timetol = -1,
-                             sampratetol = -1, dataflag = 1, skipnotdata = 1,
-                             dataquality = 1, verbose = 0):
+
+    def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
+                             sampratetol= -1, dataflag=1, skipnotdata=1,
+                             dataquality=1, verbose=0):
         """
         Reads Mini-SEED data from file. Returns MSTraceGroup structure.
         
@@ -157,16 +157,16 @@ class libmseed(object):
         mstg = C.pointer(MSTraceGroup())
         # Uses libmseed to read the file and populate the MSTraceGroup
         errcode = clibmseed.ms_readtraces(
-            C.pointer(mstg), str(filename), C.c_int(reclen), 
+            C.pointer(mstg), str(filename), C.c_int(reclen),
             C.c_double(timetol), C.c_double(sampratetol),
-            C.c_short(dataquality), C.c_short(skipnotdata), 
+            C.c_short(dataquality), C.c_short(skipnotdata),
             C.c_short(dataflag), C.c_short(verbose))
         if errcode != 0:
             assert 0, "\n\nError while reading Mini-SEED file: " + filename
         return mstg
-    
-    def readSingleRecordToMSR(self, filename, reclen = -1, dataflag = 1,
-                              skipnotdata = 1, verbose = 0, record_number = 0):
+
+    def readSingleRecordToMSR(self, filename, reclen= -1, dataflag=1,
+                              skipnotdata=1, verbose=0, record_number=0):
         """
         Reads Mini-SEED record from file and populates MS Record data structure.
         
@@ -208,7 +208,7 @@ class libmseed(object):
         FP_chain = FileParam.contents
         FP_chain.fp = fpp
         FP_chain.filepos = filepos
-        FP_chain.filename= filename
+        FP_chain.filename = filename
         FP_chain.rawrec = None
         FP_chain.readlen = 256
         FP_chain.autodet = 1
@@ -217,7 +217,7 @@ class libmseed(object):
         FP_chain.recordcount = 0
         # Populate the MSRecord structure with the help of libmseed.
         clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
-                               str(filename), C.c_int(reclen), None, None, 
+                               str(filename), C.c_int(reclen), None, None,
                                C.c_short(skipnotdata), C.c_short(dataflag),
                                C.c_short(verbose))
         # Clean up memory and close all open files.
@@ -225,7 +225,7 @@ class libmseed(object):
         del FileParam
         ff.close()
         return msr
-    
+
     def getFirstRecordHeaderInfo(self, filename):
         """
         Takes a Mini-SEED file and returns header of the first record.
@@ -237,7 +237,7 @@ class libmseed(object):
         @param filename: Mini-SEED file string.
         """
         # read first header only
-        msr = self.readSingleRecordToMSR(filename, dataflag = 0)
+        msr = self.readSingleRecordToMSR(filename, dataflag=0)
         header = {}
         chain = msr.contents
         # header attributes to be read
@@ -261,22 +261,22 @@ class libmseed(object):
         
         @param filename: Mini-SEED file string.
         """
-        first_record = self.readSingleRecordToMSR(filename, dataflag = 0)
+        first_record = self.readSingleRecordToMSR(filename, dataflag=0)
         # Get the starttime using the libmseed method msr_starttime
         clibmseed.msr_starttime.restype = C.c_int64
         starttime = clibmseed.msr_starttime(first_record)
         starttime = self._convertMSTimeToDatetime(starttime)
         #Read last record.
-        last_record = self.readSingleRecordToMSR(filename, dataflag = 0,
-                                      record_number = -1)
+        last_record = self.readSingleRecordToMSR(filename, dataflag=0,
+                                      record_number= -1)
         # Get the endtime using the libmseed method msr_endtime
         clibmseed.msr_endtime.restype = C.c_int64
         endtime = clibmseed.msr_endtime(last_record)
         endtime = self._convertMSTimeToDatetime(endtime)
         return(starttime, endtime)
-    
-    def getGapList(self, filename, time_tolerance = -1,
-                   samprate_tolerance = -1, min_gap = None, max_gap = None):
+
+    def getGapList(self, filename, time_tolerance= -1,
+                   samprate_tolerance= -1, min_gap=None, max_gap=None):
         """
         Returns gaps, overlaps and trace header information of a given file.
         
@@ -294,14 +294,14 @@ class libmseed(object):
             channel, starttime, endtime, gap, samples) 
         """
         # read file
-        mstg = self.readFileToTraceGroup(filename, dataflag = 0,
-                                         skipnotdata = 0,
-                                         timetol = time_tolerance,
-                                         sampratetol = samprate_tolerance)
+        mstg = self.readFileToTraceGroup(filename, dataflag=0,
+                                         skipnotdata=0,
+                                         timetol=time_tolerance,
+                                         sampratetol=samprate_tolerance)
         gap_list = []
         # iterate through traces
         cur = mstg.contents.traces.contents
-        for _ in xrange(mstg.contents.numtraces-1):
+        for _ in xrange(mstg.contents.numtraces - 1):
             next = cur.next.contents
             # Skip MSTraces with 0 sample rate, usually from SOH records
             if cur.samprate == 0:
@@ -309,13 +309,13 @@ class libmseed(object):
                 continue
             # Check that sample rates match using default tolerance
             if not self._isRateTolerable(cur.samprate, next.samprate):
-                msg = "%s Sample rate changed! %.10g -> %.10g\n"
-                print msg % (cur.samprate, next.samprate)
+                msg = "%s: Sample rate changed! %.10g -> %.10g\n"
+                print msg % (filename, cur.samprate, next.samprate)
             gap = (next.starttime - cur.endtime) / HPTMODULUS
             # Check that any overlap is not larger than the trace coverage
             if gap < 0:
                 if next.samprate:
-                    delta =  1 / float(next.samprate)
+                    delta = 1 / float(next.samprate)
                 else:
                     delta = 0
                 temp = (next.endtime - next.starttime) / HPTMODULUS + delta
@@ -331,33 +331,33 @@ class libmseed(object):
             # Number of missing samples
             nsamples = math.fabs(gap) * cur.samprate
             if gap > 0:
-                nsamples-=1
+                nsamples -= 1
             else:
-                nsamples+=1
+                nsamples += 1
             # Convert to python datetime objects
             time1 = DateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
             time2 = DateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
-            gap_list.append((cur.network, cur.station, cur.location, 
+            gap_list.append((cur.network, cur.station, cur.location,
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
         return gap_list
-    
-    def printGapList(self, filename, time_tolerance = -1, 
-                     samprate_tolerance = -1, min_gap = None, max_gap = None):
+
+    def printGapList(self, filename, time_tolerance= -1,
+                     samprate_tolerance= -1, min_gap=None, max_gap=None):
         """
         Print gap/overlap list summary information for the given filename.
         """
-        result = self.getGapList(filename, time_tolerance, samprate_tolerance, 
+        result = self.getGapList(filename, time_tolerance, samprate_tolerance,
                                  min_gap, max_gap)
-        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample', 
+        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample',
                                                'Next Sample', 'Gap', 'Samples')
         for r in result:
-            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]), 
-                                                    r[4].isoformat(), 
-                                                    r[5].isoformat(), 
+            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
+                                                    r[4].isoformat(),
+                                                    r[5].isoformat(),
                                                     r[6], r[7])
         print "Total: %d gap(s)" % len(result)
-        
+
     def getDataQualityFlagsCount(self, filename):
         """
         Counts each set data quality flag bit of each record in one Mini-SEED
@@ -398,8 +398,8 @@ class libmseed(object):
                 if (data_quality_flags and (1 << _j)) != 0:
                     quality_count += 1
         return quality_count
-    
-    def getTimingQuality(self, filename, first_record = -1):
+
+    def getTimingQuality(self, filename, first_record= -1):
         """
         Reads timing quality and returns a dictionary containing statistics
         about it.
@@ -435,7 +435,7 @@ class libmseed(object):
         FP_chain = FileParam.contents
         FP_chain.fp = fpp
         FP_chain.filepos = 0
-        FP_chain.filename= filename
+        FP_chain.filename = filename
         FP_chain.rawrec = None
         FP_chain.readlen = 256
         FP_chain.autodet = 1
@@ -475,24 +475,24 @@ class libmseed(object):
         timing_quality['min'] = min(timing_qualities)
         timing_quality['max'] = max(timing_qualities)
         # Add average value
-        timing_quality['average'] = sum(timing_qualities)/tq_length
+        timing_quality['average'] = sum(timing_qualities) / tq_length
         # Sort the list for further calculations.
         timing_qualities.sort()
         # Calculate the median of the list.
-        tq_modulo = tq_length%2
+        tq_modulo = tq_length % 2
         # Check for even or uneven.
         if tq_modulo == 0:
-            timing_quality['median'] = (timing_qualities[tq_length/2] + \
-                                        timing_qualities[tq_length/2] + 1) / 2
+            timing_quality['median'] = (timing_qualities[tq_length / 2] + \
+                                        timing_qualities[tq_length / 2] + 1) / 2
         else:
-            timing_quality['median'] = timing_qualities[int(tq_length/2)]
+            timing_quality['median'] = timing_qualities[int(tq_length / 2)]
         # Calculate upper and lower 25%-quantile.
         timing_quality['lower_quantile'] = \
-                                    timing_qualities[int(tq_length * 0.25)-1]
+                                    timing_qualities[int(tq_length * 0.25) - 1]
         timing_quality['upper_quantile'] = \
                                     timing_qualities[int(tq_length * 0.75)]
         return timing_quality
-        
+
     def cutMSFileByRecords(self, filename, starttime, endtime):
         """
         Cuts a Mini-SEED file by cutting at records.
@@ -539,8 +539,8 @@ class libmseed(object):
                        info['number_of_records']) + 1
         # Loop until the correct start_record is found
         while True:
-            msr = self.readSingleRecordToMSR(filename, dataflag = 0, 
-                                             record_number = start_record)
+            msr = self.readSingleRecordToMSR(filename, dataflag=0,
+                                             record_number=start_record)
             chain = msr.contents
             stime = chain.starttime
             # Calculate last covered record.
@@ -557,8 +557,8 @@ class libmseed(object):
                 start_record += 1
         # Loop until the correct end_record is found
         while True:
-            msr = self.readSingleRecordToMSR(filename, dataflag = 0, 
-                                             record_number = end_record)
+            msr = self.readSingleRecordToMSR(filename, dataflag=0,
+                                             record_number=end_record)
             chain = msr.contents
             stime = chain.starttime
             # Calculate last covered record.
@@ -580,13 +580,13 @@ class libmseed(object):
         open_file.seek(record_length * start_record, 0)
         # Read until end_location.
         return_string = open_file.read(record_length * (end_record - \
-                                                        start_record +1))
+                                                        start_record + 1))
         open_file.close()
         # Return the cut file string.
         return return_string
-        
-    def mergeAndCutMSFiles(self, file_list, outfile, starttime = None,
-                           endtime = None):
+
+    def mergeAndCutMSFiles(self, file_list, outfile, starttime=None,
+                           endtime=None):
         """
         This method takes several Mini-SEED files and returns one merged file.
         
@@ -614,17 +614,17 @@ class libmseed(object):
         # otherwise.
         check_list = [self.getFirstRecordHeaderInfo(filename) for filename in\
                       file_list]
-        for _i in range(len(check_list) -1):
-            if check_list[_i] != check_list[_i+1]:
+        for _i in range(len(check_list) - 1):
+            if check_list[_i] != check_list[_i + 1]:
                 raise ValueError
         # Get the start- and the endtime for each file in filelist.
         file_list = [[filename, self.getStartAndEndTime(filename)] for \
                      filename in file_list]
         # Sort the list first by endtime and then by starttime. This results
         # in a list which is sorted by starttime first and then by endtime.
-        file_list.sort(cmp = lambda x,y: int(self._convertDatetimeToMSTime(\
+        file_list.sort(cmp=lambda x, y: int(self._convertDatetimeToMSTime(\
                        x[1][1]) - self._convertDatetimeToMSTime(y[1][1])))
-        file_list.sort(cmp = lambda x,y: int(self._convertDatetimeToMSTime(\
+        file_list.sort(cmp=lambda x, y: int(self._convertDatetimeToMSTime(\
                        x[1][0]) - self._convertDatetimeToMSTime(y[1][0])))
         # Set start- and endtime if they have not been set.
         if not starttime:
@@ -646,14 +646,14 @@ class libmseed(object):
                         new_file.close()
                     # Otherwise cut it.
                     else:
-                        open_file.write(self.cutMSFileByRecords(filename = \
-                                        file[0], starttime = starttime,
-                                        endtime = endtime))
+                        open_file.write(self.cutMSFileByRecords(filename=\
+                                        file[0], starttime=starttime,
+                                        endtime=endtime))
                 # If some parts of the file are in range cut it. Neglect all
                 # other cases as they are not necessary.
                 elif file_starttime < starttime and file_endtime > starttime:
-                    open_file.write(self.cutMSFileByRecords(file = file[0],
-                                    starttime = starttime, endtime = endtime))
+                    open_file.write(self.cutMSFileByRecords(file=file[0],
+                                    starttime=starttime, endtime=endtime))
             # Close the open file
             open_file.close()
         # Handle non existing files and files of the wrong type.
@@ -662,14 +662,14 @@ class libmseed(object):
             open_file.close()
             os.remove(outfile)
             # Write to standard error.
-            sys.stderr.write(str(error)+'\n')
+            sys.stderr.write(str(error) + '\n')
             sys.stderr.write('No file has been written.\n')
             sys.stderr.write('Please check your files and try again.\n')
 
-    def plotMSFile(self, filename, outfile = None, format = None,
-                   size = (800, 200), starttime = False, endtime = False,
-                   dpi = 100, color = 'red', bgcolor = 'white',
-                   transparent = False, shadows = False, minmaxlist = False):
+    def plotMSFile(self, filename, outfile=None, format=None,
+                   size=(800, 200), starttime=False, endtime=False,
+                   dpi=100, color='red', bgcolor='white',
+                   transparent=False, shadows=False, minmaxlist=False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
         directly to the file system or returns an binary image string.
@@ -727,20 +727,20 @@ class libmseed(object):
             raise ValueError('Either outfile or format needs to be set.')
         #Get a list with minimum and maximum values.
         if not minmaxlist:
-            minmaxlist = self._getMinMaxList(filename = filename,
-                                                    width = size[0],
-                                                    starttime = starttime,
-                                                    endtime = endtime)
+            minmaxlist = self._getMinMaxList(filename=filename,
+                                                    width=size[0],
+                                                    starttime=starttime,
+                                                    endtime=endtime)
         starttime = minmaxlist[0]
         endtime = minmaxlist[1]
-        stepsize = (endtime - starttime)/size[0]
+        stepsize = (endtime - starttime) / size[0]
         minmaxlist = minmaxlist[2:]
         length = len(minmaxlist)
         #Importing pyplot and numpy.
         import matplotlib.pyplot as plt
         #Setup figure and axes
-        fig = plt.figure(num = None, figsize = (float(size[0])/dpi,
-                         float(size[1])/dpi))
+        fig = plt.figure(num=None, figsize=(float(size[0]) / dpi,
+                         float(size[1]) / dpi))
         ax = fig.add_subplot(111)
         # hide axes + ticks
         ax.axison = False
@@ -770,86 +770,86 @@ class libmseed(object):
         if transparent:
             bgcolor = None
         #Draw gradient background if needed.
-        if type(bgcolor) == type((1,2)):
-            for _i in xrange(size[0]+1):
+        if type(bgcolor) == type((1, 2)):
+            for _i in xrange(size[0] + 1):
                 #Convert hex values to integers
                 r1 = int(bgcolor[0][1:3], 16)
                 r2 = int(bgcolor[1][1:3], 16)
-                delta_r = (float(r2) - float(r1))/size[0]
+                delta_r = (float(r2) - float(r1)) / size[0]
                 g1 = int(bgcolor[0][3:5], 16)
                 g2 = int(bgcolor[1][3:5], 16)
-                delta_g = (float(g2) - float(g1))/size[0]
+                delta_g = (float(g2) - float(g1)) / size[0]
                 b1 = int(bgcolor[0][5:], 16)
                 b2 = int(bgcolor[1][5:], 16)
-                delta_b = (float(b2) - float(b1))/size[0]
+                delta_b = (float(b2) - float(b1)) / size[0]
                 new_r = hex(int(r1 + delta_r * _i))[2:]
                 new_g = hex(int(g1 + delta_g * _i))[2:]
                 new_b = hex(int(b1 + delta_b * _i))[2:]
                 if len(new_r) == 1:
-                    new_r = '0'+new_r
+                    new_r = '0' + new_r
                 if len(new_g) == 1:
-                    new_g = '0'+new_g
+                    new_g = '0' + new_g
                 if len(new_b) == 1:
-                    new_b = '0'+new_b
+                    new_b = '0' + new_b
                 #Create color string
-                bglinecolor = '#'+new_r+new_g+new_b
-                plt.axvline(x = starttime + _i*stepsize, color = bglinecolor)
+                bglinecolor = '#' + new_r + new_g + new_b
+                plt.axvline(x=starttime + _i * stepsize, color=bglinecolor)
             bgcolor = 'white'
         #Clone color for looping.
         loop_color = color
         #Draw horizontal lines.
         for _i in range(length):
             #Make gradient if color is a 2-tupel.
-            if type(loop_color) == type((1,2)):
+            if type(loop_color) == type((1, 2)):
                 #Convert hex values to integers
                 r1 = int(loop_color[0][1:3], 16)
                 r2 = int(loop_color[1][1:3], 16)
-                delta_r = (float(r2) - float(r1))/length
+                delta_r = (float(r2) - float(r1)) / length
                 g1 = int(loop_color[0][3:5], 16)
                 g2 = int(loop_color[1][3:5], 16)
-                delta_g = (float(g2) - float(g1))/length
+                delta_g = (float(g2) - float(g1)) / length
                 b1 = int(loop_color[0][5:], 16)
                 b2 = int(loop_color[1][5:], 16)
-                delta_b = (float(b2) - float(b1))/length
+                delta_b = (float(b2) - float(b1)) / length
                 new_r = hex(int(r1 + delta_r * _i))[2:]
                 new_g = hex(int(g1 + delta_g * _i))[2:]
                 new_b = hex(int(b1 + delta_b * _i))[2:]
                 if len(new_r) == 1:
-                    new_r = '0'+new_r
+                    new_r = '0' + new_r
                 if len(new_g) == 1:
-                    new_g = '0'+new_g
+                    new_g = '0' + new_g
                 if len(new_b) == 1:
-                    new_b = '0'+new_b
+                    new_b = '0' + new_b
                 #Create color string
-                color = '#'+new_r+new_g+new_b
+                color = '#' + new_r + new_g + new_b
             #Calculate relative values needed for drawing the lines.
-            yy = (float(minmaxlist[_i][0])-miny)/(maxy-miny)
-            xx = (float(minmaxlist[_i][1])-miny)/(maxy-miny)
+            yy = (float(minmaxlist[_i][0]) - miny) / (maxy - miny)
+            xx = (float(minmaxlist[_i][1]) - miny) / (maxy - miny)
             #Draw shadows if desired.
             if shadows:
-                plt.axvline(x = minmaxlist[_i][2] + stepsize, ymin = yy - 0.01,
-                            ymax = xx - 0.01, color = 'k', alpha = 0.4)
+                plt.axvline(x=minmaxlist[_i][2] + stepsize, ymin=yy - 0.01,
+                            ymax=xx - 0.01, color='k', alpha=0.4)
             #Draw actual data lines.
-            plt.axvline(x = minmaxlist[_i][2], ymin = yy, ymax = xx,
-                        color = color)
+            plt.axvline(x=minmaxlist[_i][2], ymin=yy, ymax=xx,
+                        color=color)
         #Save file.
         if outfile:
             #If format is set use it.
             if format:
-                plt.savefig(outfile, dpi = dpi, transparent = transparent,
-                    facecolor = bgcolor, edgecolor = bgcolor, format = format)
+                plt.savefig(outfile, dpi=dpi, transparent=transparent,
+                    facecolor=bgcolor, edgecolor=bgcolor, format=format)
             #Otherwise try to get the format from outfile or default to png.
             else:
-                plt.savefig(outfile, dpi = dpi, transparent = transparent,
-                    facecolor = bgcolor, edgecolor = bgcolor)
+                plt.savefig(outfile, dpi=dpi, transparent=transparent,
+                    facecolor=bgcolor, edgecolor=bgcolor)
         #Return an binary imagestring if outfile is not set but format is.
         if not outfile:
             imgdata = StringIO.StringIO()
-            plt.savefig(imgdata, dpi = dpi, transparent = transparent,
-                    facecolor = bgcolor, edgecolor = bgcolor, format = format)
+            plt.savefig(imgdata, dpi=dpi, transparent=transparent,
+                    facecolor=bgcolor, edgecolor=bgcolor, format=format)
             imgdata.seek(0)
             return imgdata.read()
-    
+
     def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
         """
         Takes a Ctypes c_int32 array and its length and returns it as a numpy
@@ -875,7 +875,7 @@ class libmseed(object):
         @param dt: obspy.util.DateTime object.
         """
         return int(dt.timestamp() * HPTMODULUS)
-    
+
     def _convertMSTimeToDatetime(self, timestring):
         """
         Takes Mini-SEED timestring and returns a obspy.util.DateTime object.
@@ -883,7 +883,7 @@ class libmseed(object):
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
         return DateTime.utcfromtimestamp(timestring / HPTMODULUS)
-    
+
     def _convertMSTToDict(self, m):
         """
         Return dictionary from MSTrace Object m, leaving the attributes
@@ -893,7 +893,7 @@ class libmseed(object):
         """
         h = {}
         # header attributes to be converted
-        attributes = ('network', 'station', 'location', 'channel', 
+        attributes = ('network', 'station', 'location', 'channel',
                       'dataquality', 'type', 'starttime', 'endtime',
                       'samprate', 'samplecnt', 'numsamples', 'sampletype')
         # loop over attributes
@@ -911,13 +911,13 @@ class libmseed(object):
         """
         chain = m.contents
         # header attributes to be converted
-        attributes = ('network', 'station', 'location', 'channel', 
+        attributes = ('network', 'station', 'location', 'channel',
                       'dataquality', 'type', 'starttime', 'endtime',
                       'samprate', 'samplecnt', 'numsamples', 'sampletype')
         # loop over attributes
         for _i in attributes:
             setattr(chain, _i, h[_i])
-    
+
     def _convertToCFilePointer(self, open_file):
         """
         Takes an open file and returns a C file pointer for use in ctypes.
@@ -931,9 +931,9 @@ class libmseed(object):
         C.pythonapi.PyFile_AsFile.restype = c_file_p
         # Convert open python file to C file pointer.
         return C.pythonapi.PyFile_AsFile(open_file)
-    
-    def _getMinMaxList(self, filename, width, starttime = None,
-                       endtime = None):
+
+    def _getMinMaxList(self, filename, width, starttime=None,
+                       endtime=None):
         """
         Creates a list with tuples containing a minimum value, a maximum value
         and a timestamp in microseconds.
@@ -960,7 +960,7 @@ class libmseed(object):
             Defaults to None.
         """
         #Read traces using the readFileToTraceGroup method.
-        mstg = self.readFileToTraceGroup(filename, skipnotdata = 0)
+        mstg = self.readFileToTraceGroup(filename, skipnotdata=0)
         #Create list with start-, endtime and number in chain.
         timeslist = []
         cur = mstg.contents.traces.contents
@@ -983,7 +983,7 @@ class libmseed(object):
         #Calculate time for one pixel.
         stepsize = (endtime - starttime) / width
         #First two items are start- and endtime.
-        minmaxlist=[starttime, endtime]
+        minmaxlist = [starttime, endtime]
         #While loop over the plotting duration.
         while starttime < endtime:
             pixel_endtime = starttime + stepsize
@@ -1021,7 +1021,7 @@ class libmseed(object):
                 else:
                     #Endtime also is in the trace. Append to tempdatlist.
                     if pixel_endtime < _i[1]:
-                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) * \
                                 chain.samplecnt
                         end = float((pixel_endtime - _i[0])) / \
                               (_i[1] - _i[0]) * chain.samplecnt
@@ -1031,7 +1031,7 @@ class libmseed(object):
                         minlist.append(temparr[int(start) : int(end)].min())
                     #Endtime is not in the trace. Append to tempdatlist.
                     else:
-                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) *\
+                        start = float((starttime - _i[0])) / (_i[1] - _i[0]) * \
                                 chain.samplecnt
                         temparr = self._accessCtypesArrayAsNumpyArray\
                         (chain.datasamples, chain.numsamples)
@@ -1045,12 +1045,12 @@ class libmseed(object):
                 pass
             #If not empty append min, max and timestamp values to list.
             else:
-                minmaxlist.append((min(minlist), max(maxlist), 
+                minmaxlist.append((min(minlist), max(maxlist),
                                    starttime + 0.5 * stepsize))
             #New starttime for while loop.
             starttime = pixel_endtime
         return minmaxlist
-    
+
     def _getMSFileInfo(self, filename):
         """
         Takes a Mini-SEED filename as an argument and returns a dictionary
@@ -1070,13 +1070,13 @@ class libmseed(object):
                                          info['record_length'])
         msfile.close()
         return info
-    
+
     def _isRateTolerable(self, sr1, sr2):
         """
         Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
         """
         return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
-    
+
     def _packMSTToFile(self, mst, outfile, reclen, encoding, byteorder, flush,
                        verbose):
         """
@@ -1102,7 +1102,7 @@ class libmseed(object):
                            self.packedsamples, flush, verbose, None)
         if not type(outfile) == file:
             mseedfile.close()
-    
+
     def _populateMSTG(self, trace_list):
         """
         Populates MSTrace_Group structure from given header, data and
@@ -1148,8 +1148,8 @@ class libmseed(object):
             datptr = trace_list[_i][1].ctypes.get_data()
             # Manually move the contents of the numpy data buffer to the
             # address of the previously created memory area.
-            C.memmove(chain.contents.datasamples,datptr,npts*4)
-            if _i != numtraces-1:
+            C.memmove(chain.contents.datasamples, datptr, npts * 4)
+            if _i != numtraces - 1:
                 chain.contents.next = clibmseed.mst_init(None)
                 chain = chain.contents.next
         return mstg
