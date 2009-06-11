@@ -35,7 +35,7 @@ setup(
     name='obspy.mseed',
     version=version,
     description="Read and write support for MiniSEED files (seismograms).",
-    long_description="""""",
+    long_description="""https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev""",
     classifiers=[],
     keywords='Seismology MiniSEED',
     author='Lion Krischer, Robert Barsch, Moritz Beyreuther',
@@ -51,7 +51,7 @@ setup(
         'obspy',
         'setuptools',
     ],
-    dependency_links = [
+    dependency_links=[
         "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy"
     ],
 )
