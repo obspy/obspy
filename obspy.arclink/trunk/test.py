@@ -1,9 +1,9 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-from twisted.internet import defer, protocol, reactor
-from twisted.protocols import basic, policies
+from twisted.internet import protocol, reactor
+from twisted.protocols import basic
 import time
-from StringIO import StringIO
 
 
 HELLO = 0
@@ -18,27 +18,19 @@ PURGE = 8
 BYE = 9
 
 
-class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
-
-    # If enabled then log ArcLink communication
-    debug = True
-
-    # Number of seconds to wait before timing out a connection.  If
-    # None, perform no timeout checking.
-    timeout = None
-    MAX_LENGTH = 1024 * 1024
-
-    def __init__(self, user="Anonymous",
-                       institute="Anonymous",
-                       requesttype="WAVEFORM",
-                       requestdata=["2008,1,1,0,0,0 2008,1,1,1,0,0 BW ROTZ EHE .", ],
-                       outfile='temp.mseed'):
+class ArcLinkClient(basic.LineReceiver):
+    """
+    """
+    def __init__(self, user="Anonymous", institute="Anonymous",
+                 request_type="WAVEFORM format=MSEED",
+                 request_data=["2008,1,1,0,0,0 2008,1,1,1,0,0 BW ROTZ EHE .", ],
+                 outfile='temp.mseed', debug=True):
         self.user = user or 'Anonymous'
         self.institute = institute or 'Anonymous'
-        self.requesttype = requesttype
-        self.requestdata = requestdata
+        self.request_type = request_type
+        self.request_data = request_data
         self.outfile = outfile
-
+        self.debug = debug
 
     def sendLine(self, line):
         # Log sendLine only if you are in debug mode for performance
@@ -46,17 +38,14 @@ class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
             print '>>> ' + line
         basic.LineReceiver.sendLine(self, line)
 
-
     def connectionMade(self):
-        self.content = StringIO()
-        self.setTimeout(self.timeout)
+        self.content = open(self.outfile, 'wb')
         self.state = HELLO
         self.sendLine('HELLO')
 
     def lineReceived(self, line):
         if self.debug:
-            print '<<< ' + line[0:10], self.state
-
+            print '... ' + line
         if self.state == HELLO:
             self.state = HELLO2
             return
@@ -66,16 +55,16 @@ class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
             return
         elif self.state == USER:
             if line != 'OK':
-                raise
+                raise Exception('USER: expected OK, got %s' % line)
             self.state = INSTITUTION
             self.sendLine('INSTITUTION ' + self.user)
             return
         elif self.state == INSTITUTION:
             if line != 'OK':
-                raise
+                raise Exception('INSTITUTION: expected OK, got %s' % line)
             self.state = REQUEST
-            self.sendLine("REQUEST " + self.requesttype)
-            for r in self.requestdata:
+            self.sendLine("REQUEST " + self.request_type)
+            for r in self.request_data:
                 self.sendLine(r)
             self.sendLine("END")
             return
@@ -86,9 +75,10 @@ class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
             return
         elif self.state == STATUS:
             if not 'status="' in line:
-                raise
+                raise Exception('STATUS: expected XML, got %s' % line)
             if 'status="OK"' not in line:
-                reactor.callLater(5, self.sendLine, "STATUS " + self.request_id)
+                reactor.callLater(5, self.sendLine,
+                                  "STATUS " + self.request_id)
                 return
             self.state = DOWNLOAD
             self.sendLine("DOWNLOAD " + self.request_id)
@@ -96,41 +86,37 @@ class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
         elif self.state == DOWNLOAD:
             if line == 'ERROR':
                 self.state = STATUS
-                reactor.callLater(5, self.sendLine, "STATUS " + self.request_id)
+                reactor.callLater(5, self.sendLine,
+                                  "STATUS " + self.request_id)
                 return
             self.state = DOWNLOAD2
             self.size = int(line)
-            if self.size > self.MAX_LENGTH:
-                raise Exception("MaxLength!!")
+            self.clock = time.clock()
             self.setRawMode()
             return
         elif self.state == PURGE:
             if line != 'OK':
-                raise
-            self.state = BYE
-            return
+                raise Exception('USER: expected OK got %s' % line)
         self.sendLine("BYE")
-        self.content.close()
+        #self.content.close()
         self.transport.loseConnection()
 
     def rawDataReceived(self, data):
-        if self.content.pos + len(data) < self.size:
+        pos = self.content.tell()
+        if pos + len(data) < self.size:
             self.content.write(data)
             if self.debug:
-                print '...', self.content.pos, 'of', self.size
+                print '... (data chunk)', pos, 'of', self.size
             return
         self.content.write(data[0:-5])
         self.setLineMode()
+        if self.debug:
+            print '... (data chunk)', self.content.tell(), 'of', self.size
+            print '>>> END', '(%.3lf seconds)' % (time.clock() - self.clock)
         self.state = PURGE
         self.sendLine("PURGE " + self.request_id)
-        if self.debug:
-            print '...', self.content.pos, 'of', self.size
-        fh = open(self.outfile, 'w')
-        self.content.seek(0)
-        fh.write(self.content.read())
-        fh.close()
+        self.content.close()
         return
-
 
 
 class ArcLinkClientFactory(protocol.ClientFactory):
