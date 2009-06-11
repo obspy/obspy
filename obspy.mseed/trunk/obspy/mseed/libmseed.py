@@ -197,7 +197,7 @@ class libmseed(object):
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
         msr = clibmseed.msr_init(None)
         # defines return type
-        clibmseed.ms_readmsr.restype = C.c_int
+        clibmseed.ms_readmsr_r.restype = C.c_int
         # Init MSFileParam struct.
         FileParam = C.pointer(MSFileParam())
         # Open file and jump to the start of the record to be read.
@@ -399,7 +399,7 @@ class libmseed(object):
                     quality_count += 1
         return quality_count
     
-    def getTimingQuality(self, filename):
+    def getTimingQuality(self, filename, first_record = -1):
         """
         Reads timing quality and returns a dictionary containing statistics
         about it.
@@ -412,14 +412,44 @@ class libmseed(object):
         record length.
         
         @param filename: Mini-SEED file to be parsed.
+        @param first_record: Determines the auto-detection of the record
+            lengths in the file. If 0 only the length of the first record is
+            detected automatically. All subsequent records are then assumed
+            to have the same record length. If -1 the length of each record
+            is automatically detected. Defaults to -1.
         """
-        # Get information about the file.
-        info = self._getMSFileInfo(filename)
+        # Get some information about the file.
+        fileinfo = self._getMSFileInfo(filename)
+        # init MSRecord structure
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr = clibmseed.msr_init(None)
+        # defines return type
+        clibmseed.ms_readmsr_r.restype = C.c_int
+        # Init MSFileParam struct.
+        FileParam = C.pointer(MSFileParam())
+        # Open file.
+        ff = open(filename, 'rb')
+        # Convert to filepointer
+        fpp = self._convertToCFilePointer(ff)
+        # Populate FileParam structure.
+        FP_chain = FileParam.contents
+        FP_chain.fp = fpp
+        FP_chain.filepos = 0
+        FP_chain.filename= filename
+        FP_chain.rawrec = None
+        FP_chain.readlen = 256
+        FP_chain.autodet = 1
+        FP_chain.packtype = 0
+        FP_chain.packhdroffset = 0
+        FP_chain.recordcount = 0
         # Create Timing Quality list.
         timing_qualities = []
         # Loop over each record
-        for _i in xrange(info['number_of_records']):
-            msr = self.readSingleRecordToMSR(filename, record_number = _i)
+        for _i in xrange(fileinfo['number_of_records']):
+            # Loop over every record.
+            clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
+                                   filename, C.c_int(first_record), None, None, 
+                                   C.c_short(1), C.c_short(0), C.c_short(0))
             # Enclose in try-except block because not all records need to
             # have Blockette 1001.
             try:
@@ -428,6 +458,11 @@ class libmseed(object):
                                     msr.contents.Blkt1001.contents.timing_qual)
             except:
                 pass
+        # Clean up and close file.
+        del msr
+        del fpp
+        del FileParam
+        ff.close()
         # Create new dictionary.
         timing_quality = {}
         # Length of the list.
@@ -438,7 +473,6 @@ class libmseed(object):
         # Add minima and maxima to the dictionary.
         timing_quality['min'] = min(timing_qualities)
         timing_quality['max'] = max(timing_qualities)
-
         # Add average value
         timing_quality['average'] = sum(timing_qualities)/tq_length
         # Sort the list for further calculations.
