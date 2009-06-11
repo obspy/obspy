@@ -1,147 +1,144 @@
 #!/usr/bin/python
 
-from twisted.internet import protocol
-from twisted.protocols import basic
-from twisted.protocols import policies
-from twisted.internet import reactor
-from twisted.internet import defer
-
+from twisted.internet import defer, protocol, reactor
+from twisted.protocols import basic, policies
 import time
+from StringIO import StringIO
 
-OK        = 0
-ERROR     = 1
-VERSION   = 2
-REQUEST   = 3
-STATUS    = 4
+
+HELLO = 0
+HELLO2 = 1
+USER = 2
+INSTITUTION = 3
+REQUEST = 4
+STATUS = 5
+DOWNLOAD = 6
+DOWNLOAD2 = 7
+PURGE = 8
+BYE = 9
+
 
 class ArcLinkClient(basic.LineReceiver, policies.TimeoutMixin):
 
     # If enabled then log ArcLink communication
     debug = True
-    
+
     # Number of seconds to wait before timing out a connection.  If
     # None, perform no timeout checking.
     timeout = None
+    MAX_LENGTH = 1024 * 1024
 
-
-    def __init__(self, user="Anonymous", 
-                       institute="Anonymous", 
-                       requesttype = "INVENTORY",
-                       requestdata =["2005,1,1,0,0,0 2005,12,31,0,0,0 GE *",]):
+    def __init__(self, user="Anonymous",
+                       institute="Anonymous",
+                       requesttype="WAVEFORM",
+                       requestdata=["2008,1,1,0,0,0 2008,1,1,1,0,0 BW ROTZ EHE .", ],
+                       outfile='temp.mseed'):
         self.user = user or 'Anonymous'
         self.institute = institute or 'Anonymous'
         self.requesttype = requesttype
         self.requestdata = requestdata
+        self.outfile = outfile
 
 
     def sendLine(self, line):
         # Log sendLine only if you are in debug mode for performance
         if self.debug:
             print '>>> ' + line
-        basic.LineReceiver.sendLine(self,line)
+        basic.LineReceiver.sendLine(self, line)
 
 
     def connectionMade(self):
+        self.content = StringIO()
         self.setTimeout(self.timeout)
-        self.state_HELLO()
+        self.state = HELLO
+        self.sendLine('HELLO')
 
     def lineReceived(self, line):
-        self.resetTimeout()
+        if self.debug:
+            print '<<< ' + line[0:10], self.state
 
-	# Log lineReceived only if you are in debug mode for performance
-	if self.debug:
-            print '<<< ' + line
-
-        if line=="ERROR":
-            return self._failresponse()
-
-        # Catch two lines for version + instution string
-        if self._expected==VERSION:
-          self._content+=1
-          if self._content<2:
+        if self.state == HELLO:
+            self.state = HELLO2
             return
-        
-        if self._expected==STATUS:
-            if not 'ready=="true"' in line:
-              time.sleep(10)
-              return self.state_STATUS()
-            else:
-              return self._okresponse()
-        
-        if self._expected==REQUEST:
-            self._reqid = line
-            return self._okresponse()
-        
-        if line=="OK":
-            return self._okresponse()
-        else:
-            return self._failresponse()
-
-    def run(self):
-        d = state_HELLO()
-        d.addCallback(state_USER)
-        d.addCallback(state_INSTITUTION)
- 
-
-    def state_HELLO(self):
-        d = defer.Deferred()
-        self.sendLine("HELLO")
-        self._content = 0
-        self._expected = VERSION
-        self._okresponse = self.state_USER
-        self._failresponse = self.state_USER
-        return d
-  
-    def state_USER(self):
-        self.sendLine("USER "+self.user)
-        self._expected = OK
-        self._okresponse = self.state_INSTITUTION
-        self._failresponse = self.state_BYE
-
-
-    def state_INSTITUTION(self):
-        self.sendLine("INSTITUTION "+self.user)
-        self._expected = OK
-        self._okresponse = self.state_BYE
-        self._failresponse = self.state_BYE
-
-
-    def state_REQUEST(self):
-        self.sendLine("REQUEST "+self.requesttype)
-        for r in self.requestdata:
-          self.sendLine(r)
-        self.sendLine("END")
-        self._expected = REQUEST
-        self._okresponse = self.state_STATUS
-        self._failresponse = self.state_BYE
-
-
-    def state_STATUS(self):
-        self.sendLine("STATUS "+self._reqid)
-        self._content = ""
-        self._expected = STATUS
-        self._okresponse = self.state_PURGE
-        self._failresponse = self.state_STATUS
-
-
-    def state_PURGE(self):
-        self.sendLine("PURGE "+self._reqid)
-        self._expected = OK
-        self._okresponse = self.state_BYE
-        self._failresponse = self.state_BYE
-
-  
-    def state_BYE(self):
+        elif self.state == HELLO2:
+            self.state = USER
+            self.sendLine('USER ' + self.user)
+            return
+        elif self.state == USER:
+            if line != 'OK':
+                raise
+            self.state = INSTITUTION
+            self.sendLine('INSTITUTION ' + self.user)
+            return
+        elif self.state == INSTITUTION:
+            if line != 'OK':
+                raise
+            self.state = REQUEST
+            self.sendLine("REQUEST " + self.requesttype)
+            for r in self.requestdata:
+                self.sendLine(r)
+            self.sendLine("END")
+            return
+        elif self.state == REQUEST:
+            self.state = STATUS
+            self.request_id = line
+            self.sendLine("STATUS " + self.request_id)
+            return
+        elif self.state == STATUS:
+            if not 'status="' in line:
+                raise
+            if 'status="OK"' not in line:
+                reactor.callLater(5, self.sendLine, "STATUS " + self.request_id)
+                return
+            self.state = DOWNLOAD
+            self.sendLine("DOWNLOAD " + self.request_id)
+            return
+        elif self.state == DOWNLOAD:
+            if line == 'ERROR':
+                self.state = STATUS
+                reactor.callLater(5, self.sendLine, "STATUS " + self.request_id)
+                return
+            self.state = DOWNLOAD2
+            self.size = int(line)
+            if self.size > self.MAX_LENGTH:
+                raise Exception("MaxLength!!")
+            self.setRawMode()
+            return
+        elif self.state == PURGE:
+            if line != 'OK':
+                raise
+            self.state = BYE
+            return
         self.sendLine("BYE")
+        self.content.close()
         self.transport.loseConnection()
-        
+
+    def rawDataReceived(self, data):
+        if self.content.pos + len(data) < self.size:
+            self.content.write(data)
+            if self.debug:
+                print '...', self.content.pos, 'of', self.size
+            return
+        self.content.write(data[0:-5])
+        self.setLineMode()
+        self.state = PURGE
+        self.sendLine("PURGE " + self.request_id)
+        if self.debug:
+            print '...', self.content.pos, 'of', self.size
+        fh = open(self.outfile, 'w')
+        self.content.seek(0)
+        fh.write(self.content.read())
+        fh.close()
+        return
+
+
 
 class ArcLinkClientFactory(protocol.ClientFactory):
     protocol = ArcLinkClient
-    
+
     def startedConnecting(self, connector):
         print "CONNECTED"
-    
+
     def clientConnectionFailed(self, connector, reason):
         print 'connection failed:', reason.getErrorMessage()
         reactor.stop()
