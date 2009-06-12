@@ -333,6 +333,43 @@ class LibMSEEDTestCase(unittest.TestCase):
         os.remove(outfile)
         for _i in file_list:
             os.remove(_i)
+    
+    def test_getDataQualityFlagsCount(self):
+        """
+        This test reads a self-made Mini-SEED file with set Data Quality Bits.
+        A real test file would be better as this test tests a file that was
+        created by the inverse method that reads the bits.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, u'qualityflags.mseed')
+        # Read quality flags.
+        flags = mseed.getDataQualityFlagsCount(filename)
+        # The test file contains 18 records. The first record has no set bit,
+        # bit 0 of the second record is set, bit 1 of the third, ..., bit 7 of
+        # the 9th record is set. The last nine records have 0 to 8 set bits,
+        # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
+        # Altogether the file contains 44 set bits.
+        self.assertEqual(flags, 44)
+        
+    def test_getTimingQuality(self):
+        """
+        This test reads a self-made Mini-SEED file with Timing Quality
+        information in Blockette 1001. A real test file would be better.
+        
+        The test file contains 101 records with the timing quality ranging from
+        0 to 100 in steps of 1.
+        
+        The result is compared to the result from the following R command:
+        
+        V <- 0:100; min(V); max(V); mean(V); median(V); quantile(V, 0.75,
+        type = 3); quantile(V, 0.25, type = 3)
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path, u'timingquality.mseed')
+        tq = mseed.getTimingQuality(filename)
+        self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
+                              'median': 50.0, 'upper_quantile': 75.0,
+                              'lower_quantile': 24.0})
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')

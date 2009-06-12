@@ -200,6 +200,7 @@ class blkt_1001_s(C.Structure):
         ('reserved', C.c_ubyte), 
         ('framecnt', C.c_ubyte),
     ]
+blkt_1001 = blkt_1001_s
 
 
 #Blockette 2000, Opaque Data (without header)

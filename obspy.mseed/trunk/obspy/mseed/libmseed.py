@@ -395,11 +395,12 @@ class libmseed(object):
             data_quality_flags = unpack('B', data_quality_flags)[0]
             # Add the value of each bit to the quality_count.
             for _j in xrange(8):
-                if (data_quality_flags and (1 << _j)) != 0:
+                if (data_quality_flags & (1 << _j)) != 0:
                     quality_count += 1
         return quality_count
 
-    def getTimingQuality(self, filename, first_record= -1):
+    def getTimingQuality(self, filename, first_record = True,
+                         rl_autodetection= -1):
         """
         Reads timing quality and returns a dictionary containing statistics
         about it.
@@ -408,11 +409,26 @@ class libmseed(object):
         record in the file if available and return the following statistics:
         Minima, maxima, average, median and upper and lower quantile.
         
-        This will only work correctly if all records in the file have the same
-        record length.
+        It is probably pretty safe to set the first_record parameter to True
+        because the timing quality is a vendor specific value and thus it will
+        probably be set for each record or for none.
+        
+        The method to calculate the quantiles uses a integer round outwards
+        policy: lower quantiles are rounded down (probability < 0.5), and upper
+        quantiles (probability > 0.5) are rounded up.
+        This gives no more than the requested probability in the tails, and at
+        least the requested probability in the central area.
+        The median is calculating by either taking the middle value or, with an
+        even numbers of values, the average between the two middle values.
         
         @param filename: Mini-SEED file to be parsed.
-        @param first_record: Determines the auto-detection of the record
+        @param first_record: Determines whether all records are assumed to 
+            either have a timing quality in Blockette 1001 or not depending on
+            whether the first records has one. If True and the first records
+            does not have a timing quality it will not parse the whole file. If
+            False is will parse the whole file anyway and search for a timing
+            quality in each record. Defaults to True.
+        @param rl_autodetection: Determines the auto-detection of the record
             lengths in the file. If 0 only the length of the first record is
             detected automatically. All subsequent records are then assumed
             to have the same record length. If -1 the length of each record
@@ -448,17 +464,18 @@ class libmseed(object):
         for _i in xrange(fileinfo['number_of_records']):
             # Loop over every record.
             clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
-                                   str(filename), C.c_int(first_record), None,
-                                   None, C.c_short(1), C.c_short(0),
+                                   str(filename), C.c_int(rl_autodetection),
+                                   None, None, C.c_short(1), C.c_short(0),
                                    C.c_short(0))
             # Enclose in try-except block because not all records need to
             # have Blockette 1001.
             try:
                 # Append timing quality to list.
                 timing_qualities.append(\
-                                    msr.contents.Blkt1001.contents.timing_qual)
+                            float(msr.contents.Blkt1001.contents.timing_qual))
             except:
-                pass
+                if first_record:
+                    break
         # Clean up and close file.
         del msr
         del fpp
@@ -488,9 +505,9 @@ class libmseed(object):
             timing_quality['median'] = timing_qualities[int(tq_length / 2)]
         # Calculate upper and lower 25%-quantile.
         timing_quality['lower_quantile'] = \
-                                    timing_qualities[int(tq_length * 0.25) - 1]
+                        timing_qualities[int(math.floor(tq_length * 0.25))-1]
         timing_quality['upper_quantile'] = \
-                                    timing_qualities[int(tq_length * 0.75)]
+                        timing_qualities[int(math.ceil(tq_length * 0.75))-1]
         return timing_quality
 
     def cutMSFileByRecords(self, filename, starttime, endtime):
