@@ -181,27 +181,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                                          new_trace_list[_i][1])
         os.remove(outfile)
 
-#    def test_readAndWriteBigFile(self):
-#        """
-#        """
-#        mseed = libmseed() 
-#        filename = os.path.join(self.path, 'BW.BGLD..EHE.D.2008.001')
-#        # Read file and test if all traces are being read.
-#        import time
-#        a = time.time()
-#        trace_list = mseed.readMSTraces(filename)
-#        b = time.time()
-#        print 'Time taken to read big file', b-a
-#        # Write File to temporary file.
-#        write_list = copy.deepcopy(trace_list)
-#        outfile = 'tempfile.mseed'
-#        c = time.time()
-#        mseed.writeMSTraces(write_list, outfile)
-#        d = time.time()
-#        print 'Time taken to write big file', d-c
-#        ####All checks are removed. This test is just to measure time.
-#        os.remove(outfile)
-
     def test_getGapList(self):
         """
         Searches gaps via libmseed and compares the result with known values.
@@ -374,6 +353,33 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
                               'median': 50.0, 'upper_quantile': 75.0,
                               'lower_quantile': 24.0})
+        
+    def test_isMSEED(self):
+        """
+        This tests the isMSEED method by just validating that each file in the
+        data directory is a Mini-SEED file and each file in the working
+        directory is not a Mini-SEED file.
+        
+        The filenames are hard coded so the test will not fail with future
+        changes in the structure of the package.
+        """
+        mseed = libmseed()
+        # Mini-SEED filenames.
+        mseed_filenames = [u'BW.BGLD..EHE.D.2008.001', u'gaps.mseed',
+                           u'qualityflags.mseed', u'test.mseed',
+                           u'timingquality.mseed']
+        # Non Mini-SEED filenames.
+        non_mseed_filenames = [u'test_libmseed.py', u'__init__.py',
+                               u'test_core.py']
+        # Loop over Mini-SEED files
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            isMSEED = mseed.isMSEED(filename)
+            self.assertEqual(isMSEED, True)
+        # Loop over non Mini-SEED files
+        for _i in mseed_filenames:
+            isMSEED = mseed.isMSEED(_i)
+            self.assertEqual(isMSEED, False)
 
 
 def suite():

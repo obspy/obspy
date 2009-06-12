@@ -45,7 +45,7 @@ else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'
     else:
-        lib_name = 'libmseed.so'
+        lib_name = 'libmseed-2.2.so'
 clibmseed = N.ctypeslib.load_library(lib_name,
                         os.path.join(os.path.dirname(__file__), 'libmseed'))
 
@@ -54,6 +54,36 @@ class libmseed(object):
     """
     Class for handling Mini-SEED files.
     """
+    
+    def printFileInformation(self, filename):
+        """
+        Prints some informations about the file.
+        
+        @param filename: Mini-SEED file.
+        """
+        try:
+            #Read Trace Group
+            mstg = self.readFileToTraceGroup(str(filename), dataflag = 0)
+            clibmseed.mst_printtracelist(mstg, 1, 1, 1)
+        except:
+            print 'The file could not be read.'
+        
+    def isMSEED(self, filename):
+        """
+        Tests whether a file is a Mini-SEED file or not.
+        
+        Returns True on success or False otherwise.
+        This method will just read the first record and not the whole file.
+        Thus it cannot be used to validate a Mini-SEED file.
+        
+        @param filename: Mini-SEED file.
+        """
+        try:
+            msr = self.readSingleRecordToMSR(filename, dataflag = 0)
+            del msr
+            return True
+        except:
+            return False
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
@@ -684,7 +714,7 @@ class libmseed(object):
 
     def plotMSFile(self, filename, outfile=None, format=None,
                    size=(800, 200), starttime=False, endtime=False,
-                   dpi=100, color='red', bgcolor='white',
+                   dpi=100, color='red', bgcolor='white', yrange_tol = 2,
                    transparent=False, shadows=False, minmaxlist=False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
@@ -728,6 +758,9 @@ class libmseed(object):
             parameter is a 2-tupel containing two html hex string colors a 
             gradient between the two colors will be applied to the background.
             Defaults to 'white'.
+        @param yrange_tol: Tolerance in percent for the y-range. This will be
+            cut from the full y-range. Useful for plotting files with few very
+            big data values. Defaults to 2.
         @param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
             Defaults to False.
@@ -762,21 +795,14 @@ class libmseed(object):
         ax.axison = False
         #Make the graph fill the whole image.
         fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-        #Determine range for the y axis. This may not be the smartest way to
-        #do it.
-        miny = 99999999999999999
-        maxy = -9999999999999999
-        for _i in range(length):
-            try:
-                if minmaxlist[_i][0] < miny:
-                    miny = minmaxlist[_i][0]
-            except:
-                pass
-            try:
-                if minmaxlist[_i][1] > maxy:
-                    maxy = minmaxlist[_i][1]
-            except:
-                pass
+        #Determine range for the y axis. This will ensure that 98% percent of
+        # all values are fully visible.
+        minlist = [i[0] for i in minmaxlist]
+        maxlist = [i[1] for i in minmaxlist]
+        minlist.sort()
+        maxlist.sort()
+        miny = minlist[int(math.ceil(length * yrange_tol *0.01))]
+        maxy = maxlist[int(math.floor(length * (1 - (yrange_tol * 0.01))))]
         #Set axes and disable ticks
         plt.ylim(miny, maxy)
         plt.xlim(starttime, endtime)

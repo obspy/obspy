@@ -12,16 +12,52 @@ except ImportError:
 
 from obspy.core import Trace
 from obspy.core import Stream
-#
-import core
-import filter
-import gse2
-import imaging
-import mseed
-import numpy
-import parser
-import picker
-import sac
-import util
-import wav
-import xseed
+
+try:
+    import core
+except:
+    pass
+try:
+    import filter
+except:
+    pass
+try:
+    import gse2
+except:
+    pass
+try:
+    import imaging
+except:
+    pass
+try:
+    import mseed
+except:
+    pass
+try:
+    import numpy
+except:
+    pass
+try:
+    import parser
+except:
+    pass
+try:
+    import picker
+except:
+    pass
+try:
+    import sac
+except:
+    pass
+try:
+    import util
+except:
+    pass
+try:
+    import wav
+except:
+    pass
+try:
+    import xseed
+except:
+    pass

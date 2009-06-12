@@ -34,6 +34,7 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         gap_file = os.path.join(self.path, 'BW.RJOB..EHZ.D.2009.056')
         small_file = os.path.join(self.path, 'test.mseed')
         small_gap_file = os.path.join(self.path, 'gaps.mseed')
+        real_gap_file = os.path.join(self.path, '2_gaps_10_overlaps.mseed')
         # calculate full minmaxlist only once
         minmaxlist = mseed._getMinMaxList(mseed_file, 777)
         # full graph with user defined colors and size.
@@ -91,7 +92,10 @@ class LibMSEEDPlottingTestCase(unittest.TestCase):
         mseed.plotMSFile(filename=small_gap_file, outfile=
             os.path.join(self.outpath,
             'small_graph_with_small_gaps_yellow'), color='y')
-
+        # Plot real test-file with 2 gaps and 10 overlaps
+        mseed.plotMSFile(filename=real_gap_file, outfile=
+            os.path.join(self.outpath,
+            'real_test_file_with_two_gaps'), color='r')
     def test_PlotOutputFormats(self):
         """
         Test various output formats.
