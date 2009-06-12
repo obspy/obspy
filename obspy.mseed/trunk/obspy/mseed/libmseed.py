@@ -35,7 +35,8 @@ import sys
 # Use different shared libmseed library depending on the platform.
 # 32 bit Windows.
 if sys.platform == 'win32':
-    lib_name = 'libmseed.win32.dll'
+    #lib_name = 'libmseed-2.2.win32.dll'
+    lib_name = 'libmseed-2.1.7.win32.dll'
 # 32 bit OSX, tested with 10.5.6
 elif sys.platform == 'darwin':
     lib_name = 'libmseed.dylib'
