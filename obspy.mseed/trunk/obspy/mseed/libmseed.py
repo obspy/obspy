@@ -35,8 +35,7 @@ import sys
 # Use different shared libmseed library depending on the platform.
 # 32 bit Windows.
 if sys.platform == 'win32':
-    #lib_name = 'libmseed-2.2.win32.dll'
-    lib_name = 'libmseed-2.1.7.win32.dll'
+    lib_name = 'libmseed-2.2.win32.dll'
 # 32 bit OSX, tested with 10.5.6
 elif sys.platform == 'darwin':
     lib_name = 'libmseed.dylib'
@@ -54,7 +53,7 @@ class libmseed(object):
     """
     Class for handling Mini-SEED files.
     """
-    
+
     def printFileInformation(self, filename):
         """
         Prints some informations about the file.
@@ -63,11 +62,11 @@ class libmseed(object):
         """
         try:
             #Read Trace Group
-            mstg = self.readFileToTraceGroup(str(filename), dataflag = 0)
+            mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
             clibmseed.mst_printtracelist(mstg, 1, 1, 1)
         except:
             print 'The file could not be read.'
-        
+
     def isMSEED(self, filename):
         """
         Tests whether a file is a Mini-SEED file or not.
@@ -79,7 +78,7 @@ class libmseed(object):
         @param filename: Mini-SEED file.
         """
         try:
-            msr = self.readSingleRecordToMSR(filename, dataflag = 0)
+            msr = self.readSingleRecordToMSR(filename, dataflag=0)
             del msr
             return True
         except:
@@ -714,7 +713,7 @@ class libmseed(object):
 
     def plotMSFile(self, filename, outfile=None, format=None,
                    size=(800, 200), starttime=False, endtime=False,
-                   dpi=100, color='red', bgcolor='white', yrange_tol = 2,
+                   dpi=100, color='red', bgcolor='white', yrange_tol=2,
                    transparent=False, shadows=False, minmaxlist=False):
         """
         Creates a graph of any given Mini-SEED file. It either saves the image
@@ -801,7 +800,7 @@ class libmseed(object):
         maxlist = [i[1] for i in minmaxlist]
         minlist.sort()
         maxlist.sort()
-        miny = minlist[int(math.ceil(length * yrange_tol *0.01))]
+        miny = minlist[int(math.ceil(length * yrange_tol * 0.01))]
         maxy = maxlist[int(math.floor(length * (1 - (yrange_tol * 0.01))))]
         #Set axes and disable ticks
         plt.ylim(miny, maxy)
