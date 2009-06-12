@@ -399,7 +399,7 @@ class libmseed(object):
                     quality_count += 1
         return quality_count
 
-    def getTimingQuality(self, filename, first_record = True,
+    def getTimingQuality(self, filename, first_record=True,
                          rl_autodetection= -1):
         """
         Reads timing quality and returns a dictionary containing statistics
@@ -505,20 +505,20 @@ class libmseed(object):
             timing_quality['median'] = timing_qualities[int(tq_length / 2)]
         # Calculate upper and lower 25%-quantile.
         timing_quality['lower_quantile'] = \
-                        timing_qualities[int(math.floor(tq_length * 0.25))-1]
+                        timing_qualities[int(math.floor(tq_length * 0.25)) - 1]
         timing_quality['upper_quantile'] = \
-                        timing_qualities[int(math.ceil(tq_length * 0.75))-1]
+                        timing_qualities[int(math.ceil(tq_length * 0.75)) - 1]
         return timing_quality
 
-    def cutMSFileByRecords(self, filename, starttime, endtime):
+    def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
         """
         Cuts a Mini-SEED file by cutting at records.
         
         The method takes a Mini-SEED file and tries to match it as good as
         possible to the supplied time range. It will simply cut off records
         that are not within the time range. The record that covers the
-        starttime will be the first record and the one that covers the endtime
-        will be the last record.
+        start time will be the first record and the one that covers the 
+        end time will be the last record.
         
         This method will only work correctly for files containing only traces
         from one single source. All traces have to be in chronological order.
@@ -533,26 +533,25 @@ class libmseed(object):
         @param starttime: obspy.util.DateTime object.
         @param endtime: obspy.util.DateTime object.
         """
-        # Read the start- and endtime of the file.
-        times = self.getStartAndEndTime(filename)
-        # Set the starttime.
-        if starttime <= times[0]:
-            starttime = times[0]
-        elif starttime >= times[1]:
+        # Read the start and end time of the file.
+        (start, end) = self.getStartAndEndTime(filename)
+        # Set the start time.
+        if not starttime or starttime <= start:
+            starttime = start
+        elif starttime >= end:
             return ''
-        # Set the endtime.
-        if endtime >= times[1]:
-            endtime = times[1]
-        elif endtime <= times[0]:
+        # Set the end time.
+        if not endtime or endtime >= end:
+            endtime = end
+        elif endtime <= start:
             return ''
-        # Make educated guessed about the most likely records that cover start-
-        # and endtime.
+        # Guess the most likely records that cover start- and end time.
         info = self._getMSFileInfo(filename)
-        start_record = int((starttime.timestamp() - times[0].timestamp()) / \
-                           (times[1].timestamp() - times[0].timestamp()) * \
+        start_record = int((starttime.timestamp() - start.timestamp()) / \
+                           (end.timestamp() - start.timestamp()) * \
                        info['number_of_records'])
-        end_record = int((endtime.timestamp() - times[0].timestamp()) / \
-                         (times[1].timestamp() - times[0].timestamp()) * \
+        end_record = int((endtime.timestamp() - start.timestamp()) / \
+                         (end.timestamp() - start.timestamp()) * \
                        info['number_of_records']) + 1
         # Loop until the correct start_record is found
         while True:
@@ -591,16 +590,15 @@ class libmseed(object):
             else:
                 end_record += 1
         # Open the file and read the cut file.
-        open_file = open(filename)
+        fh = open(filename, 'rb')
         record_length = info['record_length']
         # Jump to starting location.
-        open_file.seek(record_length * start_record, 0)
+        fh.seek(record_length * start_record, 0)
         # Read until end_location.
-        return_string = open_file.read(record_length * (end_record - \
-                                                        start_record + 1))
-        open_file.close()
+        data = fh.read(record_length * (end_record - start_record + 1))
+        fh.close()
         # Return the cut file string.
-        return return_string
+        return data
 
     def mergeAndCutMSFiles(self, file_list, outfile, starttime=None,
                            endtime=None):
