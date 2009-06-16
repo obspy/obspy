@@ -4,9 +4,11 @@
 The InvSim test suite.
 """
 
-from obspy.filter import specInv, pazToFreqResp, cosTaper
+from obspy.filter import specInv, cosTaper, seisSim, pazToFreqResp
+from obspy.filter.seismometer import wood_anderson, wwssn_sp, wwssn_lp, kirnos
 import inspect, os, random, unittest, filecmp
 import numpy as N
+import math as M
 from pylab import load
 import gzip
 
@@ -22,54 +24,98 @@ class InvSimTestCase(unittest.TestCase):
     
     def tearDown(self):
         pass
-    
-    def test_InvSimVsPitsa(self):
-        """
-        Compares instrument deconvolution of invsim versus pitsa.
-        """
-        nfft = 4096
-        t_samp = 1/200.0
-        poles = [-4.21000 +4.66000j, -4.21000 -4.66000j, -2.105000+0.00000j]
-        zeroes = [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j]
-        scale_fac = 0.4
 
-        #
+    def cosTaperPitsa(self,i,n1,n2,n3,n4):
+        PI = M.pi
+        if (i <= n1) or (i >= n4):
+            #check for zero taper
+            if (i == n2) or (i == n3):
+                return 1.0
+            else:
+                return 0.0
+        elif (i > n1) and (i <= n2):
+            temp =  PI * (i-n1)/float(n2-n1+1)
+            fact = 0.5 - 0.5*M.cos(temp)
+            return abs(fact)
+        elif (i >= n3) and (i < n4):
+            temp = PI * (n4-i)/float(n4-n3+1)
+            fact = 0.5 - 0.5*M.cos(temp)
+            return abs(fact)
+        else:
+            return 1.0
+    
+    def test_seisSimVsPitsa1(self):
+        """
+        Test seisSim seismometer simulation against seismometer simulation of pitsa
+        """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.asc.gz')
+        file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
         data = load(f)
         f.close()
-        #
-        ndat = len(data)
-        data = N.concatenate((data,N.zeros(nfft-ndat)))
-        # In the following line there is index mistake in Pitsa (start at
-        # 0!), need to reimplement it to be able to compare
-        data[1:ndat+1] = data[1:ndat+1] * cosTaper(ndat,0.05)
-        freq_response = pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft)
-        found = specInv(freq_response,600,nfft)
-        spec = N.fft.rfft(data)
-        spec2 = N.conj(freq_response) * spec
-        data2 = N.fft.irfft(spec2)[0:ndat]
-        #
-        # linear detrend, 
-        x1=data2[0]
-        x2=data2[-1]
-        # Again mistake in pitsa, it should be ndat-1. Need to
-        # reimplement it to be able to compare
-        data2 -= ( x1 + N.arange(ndat)*(x2-x1) / float(ndat) )
-        #
-        # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_corr.asc.gz')
-        f = gzip.open(file)
-        data_pitsa = load(f)
-        f.close()
-        #
-        rms = N.sqrt(N.sum((data2-data_pitsa)**2)/ndat)
-        self.assertEqual(rms < 0.02, True)
-        N.testing.assert_array_almost_equal(data2,data_pitsa,decimal=1)
-        #print "RMS misfit:",rms
-        #print "RMS orig:   0.0179758634012"
-    
+
+        # paz of test file
+        samp_rate = 200.0
+        le3d = {
+            'poles' :  [-4.21000 +4.66000j, -4.21000 -4.66000j, -2.105000+0.00000j],
+            'zeroes' : [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j],
+            'gain' : 0.4
+        }
+        
+        ##import pylab as pl
+        ##pl.figure()
+        ##ii = 1
+        for instrument in ['None','wood_anderson', 'wwssn_sp', 'wwssn_lp', 'kirnos']:
+            # simulate instrument
+            exec "datcorr = seisSim(data,samp_rate,le3d,inst_sim=%s,water_level=600.0)" % instrument
+            # load pitsa file
+            file = os.path.join(self.path, 'rjob_20051006_%s.gz'%instrument)
+            f = gzip.open(file)
+            data_pitsa = load(f)
+            f.close()
+            # calculate normalized rms
+            rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
+            print "RMS misfit %15s:"%instrument,rms
+            self.assertEqual(rms < 1.e-5, True)
+            ##pl.subplot(3,2,ii)
+            ##pl.plot(datcorr,'r',data_pitsa,'b--')
+            ##pl.title(instrument)
+            ##ii += 1
+        ##pl.subplot(3,2,6)
+        ##pl.plot(data,'k')
+        ##pl.title('original data')
+        ##pl.savefig("instrument.ps")
+
+    ####def test_seisSimVsPitsa2(self):
+    ####    from obspy.mseed import test as tests_
+    ####    path = os.path.dirname(inspect.getsourcefile(tests_))
+    ####    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
+    ####    g = Trace()
+    ####    g.read(file,format='MSEED')
+    ####    # paz of test file
+    ####    samp_rate = 200.0
+    ####    le3dE = {
+
+    ####        'poles' : [-4.44221 +4.44355j, -4.44221 -4.44355j],
+    ####        'zeroes' : [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j],
+    ####        'gain' : 0.4
+    ####    }
+    ####    
+    ####    ##import pylab as pl
+    ####    ##pl.figure()
+    ####    ##ii = 1
+    ####    for instrument in ['None','wood_anderson', 'wwssn_sp', 'wwssn_lp', 'kirnos']:
+    ####        # simulate instrument
+    ####        exec "datcorr = seisSim(data,samp_rate,le3dE,inst_sim=%s,water_level=600.0)" % instrument
+    ####        # load pitsa file
+    ####        #file = os.path.join(self.path, 'rjob_20051006_%s.gz'%instrument)
+    ####        #f = gzip.open(file)
+    ####        #data_pitsa = load(f)
+    ####        #f.close()
+    ####        # calculate normalized rms
+    ####        #rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
+    ####        #print "RMS misfit %15s:"%instrument,rms
+    ####        #self.assertEqual(rms < 1.e-5, True)
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')

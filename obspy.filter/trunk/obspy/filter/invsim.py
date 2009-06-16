@@ -2,6 +2,7 @@
 
 import numpy as N
 import math as M
+from scipy import signal
 PI = N.pi
 
 
@@ -27,7 +28,10 @@ def cosTaper(npts,p):
     @return: Cosine taper array/vector of length npts.
     """
     #
-    frac = int(npts*p/2+.5)
+    if p == 0.0 or p == 1.0:
+        frac = int(npts*p/2.0)
+    else:
+        frac = int(npts*p/2.0) + 1
     return N.concatenate((
         0.5*(1+N.cos(N.linspace(PI,2*PI,frac))),
         N.ones(npts-2*frac),
@@ -35,7 +39,80 @@ def cosTaper(npts,p):
         ),axis=0)
 
 
+def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft):
+    """
+    Convert Poles and Zeros (PAZ) to frequency response. Fast version which
+    uses scipy. For understanding the source code, take a look at pazToFreqResp3.
+    
+    @type poles: List of complex numbers
+    @param poles: The poles of the transfer function
+    @type zeros: List of complex numbers
+    @param zeros: The zeros of the transfer function
+    @type scale_fac: Float
+    @param scale_fac: Gain factor
+    @type t_samp: Float
+    @param t_samp: Sampling interval in seconds
+    @type nfft: Int
+    @param nfft: Number of FFT points of signal which needs correction
+    @rtype: numpy.ndarray complex128
+    @return: Frequency response of PAZ of length nfft 
+    """
+    n = nfft/2
+    a,b=signal.ltisys.zpk2tf(zeroes,poles,scale_fac)
+    fy = 1/(t_samp*2.0)*2*PI
+    # start at zero to get zero for offset/ DC of fft
+    f = N.arange(0,fy+fy/n,fy/n) #arange should includes fy/n
+    w,h=signal.freqs(a,b,f)
+    h = N.conj(h)
+    h[-1] = h[-1].real + 0.0j
+    return h
+
+
 def pazToFreqResp2(poles,zeroes,scale_fac,t_samp,nfft):
+    """
+    Convert Poles and Zeros (PAZ) to frequency response. Fast version which
+    uses array computation. For understanding the source code, take a look
+    at pazToFreqResp3.
+    
+    @type poles: List of complex numbers
+    @param poles: The poles of the transfer function
+    @type zeros: List of complex numbers
+    @param zeros: The zeros of the transfer function
+    @type scale_fac: Float
+    @param scale_fac: Gain factor
+    @type t_samp: Float
+    @param t_samp: Sampling interval in seconds
+    @type nfft: Int
+    @param nfft: Number of FFT points of signal which needs correction
+    @rtype: numpy.ndarray complex128
+    @return: Frequency response of PAZ of length nfft 
+    """
+    npole = len(poles)
+    nzero = len(zeroes)
+    delta_f = 1.0/(t_samp*nfft)
+    s = N.arange(0,nfft/2+1,dtype=N.complex128)
+    s.imag = s.real*delta_f*2*PI
+    s.real = 0.0
+    num = 1.0 + 0.0j
+    for ii in xrange(nzero):
+        num = (s - zeroes[ii]) * num
+    denom = 1.0 + 0.0j
+    for ii in xrange(npole):
+        denom = (s - poles[ii]) * denom
+    del s
+    tr = num/denom
+    tr[denom==0.0+0.0j] = 1.0 + 0.0j
+    del num, denom
+    tr *= scale_fac
+    tr = N.conj(tr)
+    #
+    tr[0] = complex(tr[0].real,0.0)
+    tr[nfft/2] = complex(tr[nfft/2].real,0.0)
+    #
+    return tr
+
+
+def pazToFreqResp3(poles,zeroes,scale_fac,t_samp,nfft):
     """
     Convert Poles and Zeros (PAZ) to frequency response
     
@@ -84,55 +161,63 @@ def pazToFreqResp2(poles,zeroes,scale_fac,t_samp,nfft):
     return tr
 
 
-def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft):
-    """
-    Convert Poles and Zeros (PAZ) to frequency response. Fast version which
-    uses array computation. For understanding the source code, take a look
-    at pazToFreqResp2.
-    
-    @type poles: List of complex numbers
-    @param poles: The poles of the transfer function
-    @type zeros: List of complex numbers
-    @param zeros: The zeros of the transfer function
-    @type scale_fac: Float
-    @param scale_fac: Gain factor
-    @type t_samp: Float
-    @param t_samp: Sampling interval in seconds
-    @type nfft: Int
-    @param nfft: Number of FFT points of signal which needs correction
-    @rtype: numpy.ndarray complex128
-    @return: Frequency response of PAZ of length nfft 
-    """
-    npole = len(poles)
-    nzero = len(zeroes)
-    delta_f = 1.0/(t_samp*nfft)
-    s = N.arange(0,nfft/2+1,dtype=N.complex128)
-    s.imag = s.real*delta_f*2*PI
-    s.real = 0.0
-    num = 1.0 + 0.0j
-    for ii in xrange(nzero):
-        num = (s - zeroes[ii]) * num
-    denom = 1.0 + 0.0j
-    for ii in xrange(npole):
-        denom = (s - poles[ii]) * denom
-    del s
-    tr = num/denom
-    tr[denom==0.0+0.0j] = 1.0 + 0.0j
-    del num, denom
-    tr *= scale_fac
-    tr = N.conj(tr)
-    #
-    tr[0] = complex(tr[0].real,0.0)
-    tr[nfft/2] = complex(tr[nfft/2].real,0.0)
-    #
-    return tr
-
-
-def specInv2(spec,wlev,nfft):
+def specInv(spec,wlev,nfft):
     """
     Invert Spectrum and shrink values under WaterLevel. Fast version which
     uses array computation. For understanding the source code, take a look
     at specInv2.
+
+    @note: In place opertions on spec
+    @type: Complex numpy ndarray
+    @param: spectrum to invert, in place opertaion 
+    """
+    
+    max_spec_amp=N.abs(spec).max()
+    
+    swamp = max_spec_amp*10.**(-wlev/20.0)
+    swamp2 = swamp**2
+    found = 0
+    
+    if N.abs(spec[0].real) < swamp:
+        if N.abs(spec[0].real) > 0.0:
+            real = 1./swamp2;
+        else:
+            real = 0.0;
+        found += 1
+    else:
+        real = 1./spec[0].real**2
+    spec[0] = complex(real,0.0)
+    
+    if N.abs(spec[nfft/2].real) < swamp:
+        if N.abs(spec[nfft/2].real) > 0.0:
+            real = 1./swamp2
+        else:
+            real = 0.0;
+        found += 1
+    else:
+        real = 1./ spec[nfft/2].real**2
+    spec[nfft/2] = complex(real,0.0)
+    
+    spec0 = spec[0]
+    specn = spec[nfft/2]
+    spec = spec[1:-1]
+    sqr_len = abs(spec)**2
+    idx = N.where(sqr_len<swamp2)
+    spec[idx] *= N.sqrt(swamp2/sqr_len[idx])
+    sqr_len[idx] = abs(spec[idx])**2
+    found += len(idx[0])
+
+    inn = N.where(sqr_len>0.0)
+    spec[inn] = 1/spec[inn]
+    spec[sqr_len==0.0] = complex(0.0,0.0)
+    spec = N.concatenate(([spec0],spec,[specn]))
+    
+    return found
+
+
+def specInv2(spec,wlev,nfft):
+    """
+    Invert Spectrum and shrink values under WaterLevel.
 
     @note: In place opertions on spec
     @type spec: Complex numpy ndarray
@@ -189,59 +274,84 @@ def specInv2(spec,wlev,nfft):
     
     return found 
 
-
-def specInv(spec,wlev,nfft):
+def seisSim(data,samp_rate,paz,inst_sim=None,water_level=600.0):
     """
-    @note: In place opertions on spec
-    @type: Complex numpy ndarray
-    @param: spectrum to invert, in place opertaion 
+    Simulate seismometer. This function works in the frequency domain,
+    where nfft is the next power of len(data) to avoid warp around effects
+    during convolution. The inverse of the frequency response of the
+    seismometer is convelved by the spectrum of the data and convolved by
+    the frequency response of the seismometer to simulate.
+    
+    @type data: Numpy Ndarray
+    @param data: Seismogram, (zero mean?)
+    @type samp_rate: Float
+    @param samp_rate: Sample Rate of Seismogram
+    @type paz: Dictionary
+    @param paz: Dictionary containing keys 'poles', 'zeroes',
+    'gain'. poles and zeroes must be a list of complex floating point
+    numbers, gain must be of type float.
+    @type water_level: Float
+    @param water_level: Water_Level for spectrum to simulate
+    @param samp_rate: Sample Rate of Seismogram
+    @type inst_sim: Dictionary, None
+    @param inst_sim: Dictionary containing keys 'poles', 'zeroes',
+    'gain'. poles and zeroes must be a list of complex floating point
+    numbers, gain must be of type float. Or None for no simulation.
+    Ready to go poles, zeros, gain dictonaries for instruments to simulate
+    can be imported from obspy.filter.seismometer
     """
-    
-    max_spec_amp=N.abs(spec).max()
-    
-    swamp = max_spec_amp*10.**(-wlev/20.0)
-    swamp2 = swamp**2
-    found = 0
-    
-    if N.abs(spec[0].real) < swamp:
-        if N.abs(spec[0].real) > 0.0:
-            real = 1./swamp2;
-        else:
-            real = 0.0;
-        found += 1
+    error = """
+    %s must be either of none or dictionary type. With poles, zeroes
+    and gain as dictionary keys, values of poles and zeroes are list of
+    complex entries, of gain as float.
+    """
+    samp_int = 1/float(samp_rate)
+    try:
+        poles  = paz['poles']
+        zeroes = paz['zeroes']
+        gain   = paz['gain']
+    except:
+        raise TypeError(error%'paz')
+    #
+    ndat = len(data)
+    # find next power of 2 in order to prohibit wrap around effects
+    # during convolution, the number of points for the FFT has to be at
+    # least 2 *ndat cf. Numerical Recipes p. 429 calculate next power
+    # of 2
+    nfft = int( M.pow(2,M.ceil(N.log2(2*ndat))) )
+    # explicitly copy, else input data will be modified
+    tr = data * cosTaper(ndat,0.05)
+    freq_response = pazToFreqResp(poles,zeroes,gain,samp_int,nfft)
+    found = specInv(freq_response,water_level,nfft)
+    spec = N.fft.rfft(tr,n=nfft)
+    spec *= N.conj(freq_response)
+    del freq_response
+    #
+    # now depending on inst_sim, simulate the seismometer
+    if isinstance(inst_sim,type(None)):
+        pass
+    elif isinstance(inst_sim,dict):
+        try:
+            poles  = inst_sim['poles']
+            zeroes = inst_sim['zeroes']
+            gain   = inst_sim['gain']
+        except:
+            raise KeyError(error%'inst_sim')
+        spec *= N.conj(pazToFreqResp(poles,zeroes,gain,samp_int,nfft))
     else:
-        real = 1./spec[0].real**2
-    spec[0] = complex(real,0.0)
+        raise TypeError(error%'inst_sim')
     
-    if N.abs(spec[nfft/2].real) < swamp:
-        if N.abs(spec[nfft/2].real) > 0.0:
-            real = 1./swamp2
-        else:
-            real = 0.0;
-        found += 1
-    else:
-        real = 1./ spec[nfft/2].real**2
-    spec[nfft/2] = complex(real,0.0)
-    
-    spec0 = spec[0]
-    specn = spec[nfft/2]
-    spec = spec[1:-1]
-    sqr_len = abs(spec)**2
-    idx = N.where(sqr_len<swamp2)
-    spec[idx] *= N.sqrt(swamp2/sqr_len[idx])
-    sqr_len[idx] = abs(spec[idx])**2
-    found += len(idx[0])
-
-    inn = N.where(sqr_len>0.0)
-    spec[inn] = 1/spec[inn]
-    spec[sqr_len==0.0] = complex(0.0,0.0)
-    spec = N.concatenate(([spec0],spec,[specn]))
-
-    return found 
-
+    tr2 = N.fft.irfft(spec)[0:ndat]
+    #
+    # linear detrend, 
+    x1=tr2[0]
+    x2=tr2[-1]
+    tr2 -= ( x1 + N.arange(ndat)*(x2-x1) / float(ndat-1) )
+    #
+    return tr2
 
 def simFilt(tr2,tsa,fc0,fc1,fc2,h0,h1,h2,do_int):
-    """Filter Simulation. Not used any more far."""
+    """Filter Simulation. Not used any more."""
     # boolean galvo = true; /* galvanometer  */
     # double oms0,oms1,oms2;  /* filter coefficients */
     # double xk0,xk1,xk2;     /* k sub i dash */
