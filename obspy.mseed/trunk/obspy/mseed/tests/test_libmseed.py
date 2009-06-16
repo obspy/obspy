@@ -332,7 +332,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         # the 9th record is set. The last nine records have 0 to 8 set bits,
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
-        self.assertEqual(flags, 44)
+        self.assertEqual(flags, [9, 8, 7, 6, 5, 4, 3, 2])
 
     def test_getTimingQuality(self):
         """
@@ -353,7 +353,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
                               'median': 50.0, 'upper_quantile': 75.0,
                               'lower_quantile': 24.0})
-        
+
     def test_isMSEED(self):
         """
         This tests the isMSEED method by just validating that each file in the

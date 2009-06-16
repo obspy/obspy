@@ -390,43 +390,42 @@ class libmseed(object):
 
     def getDataQualityFlagsCount(self, filename):
         """
-        Counts each set data quality flag bit of each record in one Mini-SEED
-        file.
+        Counts all data quality flags of the given Mini-SEED file.
         
         This method will count all set data quality flag bits in the fixed
-        section of the data header in a Mini-SEED file and return the count.
-        Each set bit will increase the return value. Please refer to the SEED
-        manual for details about the flags.
-        
-        If all data quality flags are set the count will increase by eight for
-        each record.
+        section of the data header in a Mini-SEED file and returns the total
+        count for each flag type. Please refer to the SEED manual for details 
+        about the flags.
         
         This will only work correctly if each record in the file has the same
         record length.
         
-        @param filename: Mini-SEED file to be parsed.f
+        @param filename: Mini-SEED file name.
+        @return: List of all flag counts.
         """
         # Get record length of the file.
         info = self._getMSFileInfo(filename)
         # Open the file.
         mseedfile = open(filename, 'rb')
         # This will increase by one for each set quality bit.
-        quality_count = 0
+        quality_count = [0, 0, 0, 0, 0, 0, 0, 0]
         record_length = info['record_length']
-        # Jump to the first data quality byte.
-        mseedfile.seek(38)
         # Loop over all records.
         for _i in xrange(info['number_of_records']):
+            # Skip non data records.
+            data = mseedfile.read(39)
+            if data[6] != 'D':
+                continue
             # Read data quality byte.
-            data_quality_flags = mseedfile.read(1)
+            data_quality_flags = data[38]
             # Jump to next byte.
-            mseedfile.seek(record_length - 1, 1)
+            mseedfile.seek(record_length - 39, 1)
             # Unpack the binary data.
             data_quality_flags = unpack('B', data_quality_flags)[0]
             # Add the value of each bit to the quality_count.
             for _j in xrange(8):
                 if (data_quality_flags & (1 << _j)) != 0:
-                    quality_count += 1
+                    quality_count[_j] += 1
         return quality_count
 
     def getTimingQuality(self, filename, first_record=True,
