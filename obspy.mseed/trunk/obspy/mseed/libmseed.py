@@ -397,14 +397,14 @@ class libmseed(object):
         count for each flag type.
         
         Data quality flags:
-            [Bit 0] — Amplifier saturation detected (station dependent)
-            [Bit 1] — Digitizer clipping detected
-            [Bit 2] — Spikes detected
-            [Bit 3] — Glitches detected
-            [Bit 4] — Missing/padded data present
-            [Bit 5] — Telemetry synchronization error
-            [Bit 6] — A digital filter may be charging
-            [Bit 7] — Time tag is questionable
+          [Bit 0] - Amplifier saturation detected (station dependent)
+          [Bit 1] - Digitizer clipping detected
+          [Bit 2] - Spikes detected
+          [Bit 3] - Glitches detected
+          [Bit 4] - Missing/padded data present
+          [Bit 5] - Telemetry synchronization error
+          [Bit 6] - A digital filter may be charging
+          [Bit 7] - Time tag is questionable
         
         This will only work correctly if each record in the file has the same
         record length.
@@ -530,18 +530,11 @@ class libmseed(object):
         timing_quality['min'] = min(timing_qualities)
         timing_quality['max'] = max(timing_qualities)
         # Add average value
-        timing_quality['average'] = sum(timing_qualities) / tq_length
-        # Sort the list for further calculations.
-        timing_qualities.sort()
+        timing_quality['average'] = N.mean(timing_qualities)
         # Calculate the median of the list.
-        tq_modulo = tq_length % 2
-        # Check for even or uneven.
-        if tq_modulo == 0:
-            timing_quality['median'] = (timing_qualities[tq_length / 2] + \
-                                        timing_qualities[tq_length / 2] + 1) / 2
-        else:
-            timing_quality['median'] = timing_qualities[int(tq_length / 2)]
+        timing_quality['median'] = N.median(timing_qualities)
         # Calculate upper and lower 25%-quantile.
+        timing_qualities.sort()
         timing_quality['lower_quantile'] = \
                         timing_qualities[int(math.floor(tq_length * 0.25)) - 1]
         timing_quality['upper_quantile'] = \
