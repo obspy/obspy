@@ -394,8 +394,17 @@ class libmseed(object):
         
         This method will count all set data quality flag bits in the fixed
         section of the data header in a Mini-SEED file and returns the total
-        count for each flag type. Please refer to the SEED manual for details 
-        about the flags.
+        count for each flag type.
+        
+        Data quality flags:
+            [Bit 0] — Amplifier saturation detected (station dependent)
+            [Bit 1] — Digitizer clipping detected
+            [Bit 2] — Spikes detected
+            [Bit 3] — Glitches detected
+            [Bit 4] — Missing/padded data present
+            [Bit 5] — Telemetry synchronization error
+            [Bit 6] — A digital filter may be charging
+            [Bit 7] — Time tag is questionable
         
         This will only work correctly if each record in the file has the same
         record length.
