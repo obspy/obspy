@@ -55,31 +55,33 @@ date handling:
     
 >>> t=ReadSac()
 >>> t.ReadSacFile('test.sac')
-1
 >>> t.get_attr()
 1
 >>> t.GetHvalue('npts')
 100
 >>> t.SetHvalue("kstnm","spiff")
-1
+>>> t.GetHvalue('kstnm')
+'spiff   '
 >>> t.WriteSacBinary('test2.sac')
-1
+>>> os.path.exists('test2.sac')
+True
 >>> t.ReadSacHeader('test2.sac')
-1
+>>> (t.hf != None)
+True
 >>> t.SetHvalue("kstnm","spoff")
-1
+>>> t.GetHvalue('kstnm')
+'spoff   '
 >>> t.WriteSacHeader('test2.sac')
-1
 >>> t.SetHvalueInFile('test2.sac',"kcmpnm",'Z')
-1
 >>> t.GetHvalueFromFile('test2.sac',"kcmpnm")
 'Z       '
 >>> t.IsValidSacFile('test2.sac')
-1
 >>> t.ReadXYSacFile('testxy.sac')
-1
+>>> t.GetHvalue('npts')
+100
 >>> t.WriteSacBinary('testbin.sac')
-1
+>>> os.path.exists('testbin.sac')
+True
 """    
 
 import array,os,string
@@ -87,12 +89,20 @@ from sacutil import *
 from obspy import parser
 
 
+class SacError(Exception):
+    pass
+
+
+class SacIOError(Exception):
+    pass
+
+    
 class ReadSac(PyTutil,parser.Parser):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
 
 
-    def __init__(self):
+    def __init__(self,filen=False):
         self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,   \
                       'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8, 't0':10,\
                       't1':11,'t2':12,'t3':13,'t4':14,'t5':15,'t6':16,\
@@ -119,6 +129,15 @@ class ReadSac(PyTutil,parser.Parser):
                       'kuser2':18,'kcmpnm':19,'knetwk':20,\
                       'kdatrd':21,'kinst':22}
 
+        self.hf = self.hi = self.hs = None
+        
+        if filen:
+            self.__call__(filen)
+
+
+    def __call__(self,filename):
+        self.ReadSacFile(filename)
+
 
     def GetHvalue(self,item):
         """Get a header value using the header arrays: GetHvalue("npts")
@@ -144,8 +163,8 @@ class ReadSac(PyTutil,parser.Parser):
                 myarray = self.hs[start:end]
             return(myarray.tostring())
         else:
-            return('NULL')
-
+            raise SacError("Cannot find header entry for: ",item)
+        
 
     def SetHvalue(self,item,value):
 	"""Set a header value using the header arrays: SetHvalue("npts",2048)
@@ -156,15 +175,12 @@ class ReadSac(PyTutil,parser.Parser):
 	#
 	key = string.lower(item) # convert the item to lower case
 	#
-	ok = 0
 	if self.fdict.has_key(key):
 		index = self.fdict[key]
 		self.hf[index] = float(value)
-		ok = 1
 	elif self.idict.has_key(key):
 		index = self.idict[key]
 		self.hi[index] = int(value)
-		ok = 1
 	elif self.sdict.has_key(key):
 		index = self.sdict[key]
 		vlen = len(value)
@@ -194,39 +210,31 @@ class ReadSac(PyTutil,parser.Parser):
 				self.hs[i+start] = ' '
 			for i in range(0,vlen):
 				self.hs[i+start] = value[i]
-		ok = 1
-	
-	return(ok)
+        else:
+            raise SacError("Cannot find header entry for: ",item)
 
 
-    def IsSACfile(self,name):
+    def IsSACfile(self, name, fsize=True, lenchk=False):
         """Test for a valid SAC file using arrays: IsSACfile(path)
         Return value is a one if valid, zero if not.
         """
-        #
-        ok = 1
-        #
-        # size check info
-        #
         npts = self.GetHvalue('npts')
-        st = os.stat(name) #file's size = st[6] 
-        sizecheck = st[6] - (632 + 4 * npts)
-        #
+        if fsize:
+            st = os.stat(name) #file's size = st[6] 
+            sizecheck = st[6] - (632 + 4 * npts)
+            # size check info
+            if sizecheck != 0:
+                raise SacError("File-size and theoretical size inconsistent!")
+        if lenchk:
+            if npts != len(self.seis):
+                raise SacError("Number of points in header and length of trace inconsistent!")
         # get the SAC file version number
-        #
         version = self.GetHvalue('nvhdr')
-        #
-        # if any of these conditions are true,
-        #   the file is NOT a SAC file
-        #
+        if version < 0 or version > 20:
+            raise SacError("Unknown header version!")
         if self.GetHvalue('delta') <= 0:
-            ok = 0
-        elif sizecheck != 0:
-            ok = 0
-        elif ((version < 0) or (version > 20) ):
-            ok = 0
-        return(ok)
-
+            raise SacError("Delta < 0 is not a valid header entry!")
+        
 
     def ReadSacHeader(self,fname):
 	"""\nRead a header value into the header arrays 
@@ -237,35 +245,34 @@ class ReadSac(PyTutil,parser.Parser):
 	self.hf = array.array('f') # allocate the array for header floats
 	self.hi = array.array('l') # allocate the array for header ints
 	self.hs = array.array('c') # allocate the array for header characters
-	#--------------------------------------------------------------
-	# open the file
-	#
-	try:
+        #### check if file exists
+        try:
+	    #### open the file
             f = open(fname,'r')
-            #--------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, then 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
-            self.hf.fromfile(f,70)     # read in the float values
-            self.hi.fromfile(f,40)     # read in the int values
-            self.hs.fromfile(f,192)    # read in the char values
-            #
-            f.close()
-            #
-            ok = self.IsSACfile(fname)
-            if not self.get_attr():
-                raise Exception
-            #
-            #--------------------------------------------------------------
-	except:
-            # make sure we close the file
-            ok = 0
-            #if f.close() == 0: # zero means the file is open
-            #	f.close()
-        return(ok)
+        except IOError:
+            raise SacIOError("No such file:"+fname)
+        else:
+            try:
+                #--------------------------------------------------------------
+                # parse the header
+                #
+                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                #    in strings. Store them in array (an convert the char to a
+                #    list). That's a total of 632 bytes.
+                #--------------------------------------------------------------
+                self.hf.fromfile(f,70)     # read in the float values
+                self.hi.fromfile(f,40)     # read in the int values
+                self.hs.fromfile(f,192)    # read in the char values
+            except EOFError, e:
+                raise SacIOError("Cannot read all header values: ",e)
+            else:
+                ##### only continue if it is a SAC file
+                try:
+                    self.IsSACfile(fname)
+                except SacError, e:
+                    self.hf = self.hi = self.hs = None
+                    f.close()
+                    raise SacError(e)
 
 
     def WriteSacHeader(self,fname):
@@ -277,25 +284,21 @@ class ReadSac(PyTutil,parser.Parser):
         #--------------------------------------------------------------
         # open the file
         #
-        ok = 1
         try:
-            if not self.get_attr():
-                raise Exception
+            os.path.exists(fname)
+        except IOError:
+            print "No such file:"+fname
+        else:
             f = open(fname,'r+') # open file for modification
             f.seek(0,0) # set pointer to the file beginning
-            # write the header
-            self.hf.tofile(f)
-            self.hi.tofile(f)
-            self.hs.tofile(f)
-            f.close()
-            #
-            #--------------------------------------------------------------
-        except:
-            # make sure we close the file
-            #if f.closed == 0: # zero means the file is open
-            #	f.close()
-            ok = 0
-        return(ok)
+            try:
+                # write the header
+                self.hf.tofile(f)
+                self.hi.tofile(f)
+                self.hs.tofile(f)
+            except Exception, e:
+                f.close()
+                raise SacError("Cannot write header to file: ",fname,'  ',e)
 
 
     def ReadSacFile(self,fname):
@@ -308,70 +311,48 @@ class ReadSac(PyTutil,parser.Parser):
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
-        #--------------------------------------------------------------
-        # open the file
-        #
         try:
+            #### open the file
             f = open(fname,'rb')
-            #--------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, then 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
-            self.hf.fromfile(f,70)     # read in the float values
-            self.hi.fromfile(f,40)     # read in the int values
-            self.hs.fromfile(f,192)    # read in the char values
-            #
-            # only continue if it is a SAC file
-            #
-            ok = self.IsSACfile(fname)
-            if ok:
+        except IOError:
+            raise SacIOError("No such file:"+fname)
+        else:
+            try:
                 #--------------------------------------------------------------
-                # read in the seismogram points
+                # parse the header
+                #
+                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                #    in strings. Store them in array (an convert the char to a
+                #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
-                npts = self.hi[9]  # you just have to know it's in the 10th place
-                #             # actually, it's in the SAC manual
-                #
-                mBytes = npts * 4
-                #
-                self.seis = array.array('f')
-                self.seis.fromfile(f,npts) # the data are now in s
-                f.close()
-                if not self.get_attr():
-                    raise Exception
-        except:
-            ok = 0
-            # make sure we close the file
-    	    #if f.closed == 0: # zero means the file is open
-            #	f.close()
-        return ok
+                self.hf.fromfile(f,70)     # read in the float values
+                self.hi.fromfile(f,40)     # read in the int values
+                self.hs.fromfile(f,192)    # read in the char values
+            except EOFError, e:
+                raise SacIOError("Cannot read any or no header values: ",e)
+            else:
+                ##### only continue if it is a SAC file
+                try:
+                    self.IsSACfile(fname)
+                except SacError, e:
+                    raise SacError(e)
+                else:
+                    #--------------------------------------------------------------
+                    # read in the seismogram points
+                    #--------------------------------------------------------------
+                    npts = self.hi[9]  # you just have to know it's in the 10th place
+                    #             # actually, it's in the SAC manual
+                    mBytes = npts * 4
+                    #
+                    self.seis = array.array('f')
+                    try:
+                        self.seis.fromfile(f,npts) # the data are now in s
+                    except EOFError, e:
+                        self.hf = self.hi = self.hs = self.seis = None
+                        f.close()
+                        raise SacIOError("Cannot read any or only some data points: ",e)
 
 
-    def IsXYSACfile(self):
-	"""Test for a valid SAC file using arrays: IsSACfile(path)
-	Return value is a one if valid, zero if not."""
-	#
-	ok = 1
-	#
-	# size check info
-	#
-	npts = self.GetHvalue('npts')
-	#
-	# get the SAC file version number
-	#
-	version = self.GetHvalue('nvhdr')
-	#
-	# if any of these conditions are true,
-	#   the file is NOT a SAC file
-	#
-	if npts != len(self.seis):
-            ok = 0
-	elif ((version < 0) or (version > 20)):
-            ok = 0
-	#
-	return(ok)
 
 
     def ReadXYSacFile(self,fname):
@@ -381,85 +362,84 @@ class ReadSac(PyTutil,parser.Parser):
         The data are in two floating point arrays x and y.
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         #
-        ok = 1
         self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
-        #--------------------------------------------------------------
-        # open the file
-        #
+        ###### open the file
         try:
             f = open(fname,'r')
-            #--------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, then 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
-            # read in the float values
-            for i in range(14):
-                a=map(float,f.readline().split())
-                b=map(self.hf.append,a)  
-            # read in the int values
-            for i in range(8):
-                a=map(int,f.readline().split())
-                b=map(self.hi.append,a)
-            # reading in the string part is a bit more complicated
-            # because every string field has to be 8 characters long
-            # apart from the second field which is 16 characters long
-            # resulting in a total length of 192 characters
-            a=f.readline().split()
-            b=map(self.hs.append,a[0].ljust(8))
-            b=map(self.hs.append,a[1].ljust(16))
-            for i in range(7):
-                a=f.readline().split()
-                for k in a:
-                    b=map(self.hs.append,k.ljust(8))
-                    
-            #--------------------------------------------------------------
-            # read in the seismogram points
-            #--------------------------------------------------------------
-            while True:
-                line = f.readline()
-                if not line: break
-                a=map(float,line.split())
-                b=map(self.seis.append,a)  
-            f.close()
-            #
-            # check if number of points in header and length of
-            # trace are identical; check if it is little-endian
-            #
-            if not self.IsXYSACfile():
-                raise Exception
-        except:
-            # make sure we close the file
-            print "%s is not a valid SAC file"%fname
-            if f.closed == 0: # zero means the file is open
+        except IOError:
+            raise SacIOError("No such file:"+fname)
+        else:
+            try:
+                #--------------------------------------------------------------
+                # parse the header
+                #
+                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                #    in strings. Store them in array (an convert the char to a
+                #    list). That's a total of 632 bytes.
+                #--------------------------------------------------------------
+                # read in the float values
+                for i in range(14):
+                    a=map(float,f.readline().split())
+                    b=map(self.hf.append,a)  
+                # read in the int values
+                for i in range(8):
+                    a=map(int,f.readline().split())
+                    b=map(self.hi.append,a)
+                # reading in the string part is a bit more complicated
+                # because every string field has to be 8 characters long
+                # apart from the second field which is 16 characters long
+                # resulting in a total length of 192 characters
+                a=f.readline()
+                b=map(self.hs.append,a[0:8])
+                b=map(self.hs.append,a[8:24])
+                for i in range(7):
+                    a=f.readline().split()
+                    for k in a:
+                        b=map(self.hs.append,k.ljust(8))
+                        
+                #--------------------------------------------------------------
+                # read in the seismogram points
+                #--------------------------------------------------------------
+                while True:
+                    line = f.readline()
+                    if not line: break
+                    a=map(float,line.split())
+                    b=map(self.seis.append,a)
+            except IOError, e:
+                self.hf = self.hs = self.hi = self.seis = None
                 f.close()
-                ok = 0
-        return(ok)
+                raise SacIOError("%s is not a valid SAC file:"%fname, e)
+            try:
+                self.IsSACfile(fname,fsize=False,lenchk=True)
+            except SacError,e:
+                f.close()
+                raise SacError(e)
+
+
+    def WriteSaxXY(self,ofname):
+        pass
 
 
     def WriteSacBinary(self,ofname):
         """\nWrite a SAC file using the head arrays and array seis 
-        \tok = WriteSacBinary(thePath)
+        \tWriteSacBinary(thePath)
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         try:
-            if not self.get_attr():
-                raise Exception
             f = open(ofname,'wb+')
-            self.hf.tofile(f)
-            self.hi.tofile(f)
-            self.hs.tofile(f)
-            self.seis.tofile(f)
-            f.close()
-            ok = 1
-        except:
-            print 'Error writing file ', ofname
-            ok = 0
-        return(ok)
+        except IOError:
+            raise SacIOError("Cannot open file: ",ofname)
+        else:
+            try:
+                self.hf.tofile(f)
+                self.hi.tofile(f)
+                self.hs.tofile(f)
+                self.seis.tofile(f)
+            except Exception, e:
+                f.close()
+                raise SacIOError("Cannot write SAC-buffer to file: ",ofname,e)
 
         
     def PrintIValue(self, label='=', value=-12345):
@@ -537,13 +517,9 @@ class ReadSac(PyTutil,parser.Parser):
         #
         #  Read in the Header
         #
-        ok = self.ReadSacHeader(thePath)
+        self.ReadSacHeader(thePath)
         #
-        if ok:
-            return(self.GetHvalue(theItem))
-        else:
-            print "Problem in GetHvalueFromFile."
-            return(-12345)
+        return(self.GetHvalue(theItem))
 
 
     def SetHvalueInFile(self, thePath,theItem,theValue):
@@ -551,24 +527,12 @@ class ReadSac(PyTutil,parser.Parser):
         SetHvalueFromFile(thePath,theItem, theValue)
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
         #
-        ok = 0
-        #
         #  Read in the Header
         #
-        r_ok = self.ReadSacHeader(thePath)
+        self.ReadSacHeader(thePath)
         #
-        if r_ok:
-            before = self.GetHvalue(theItem)
-            if before != 'NULL':
-                c_ok = self.SetHvalue(theItem,theValue)
-                if c_ok:
-                    after = self.GetHvalue(theItem)
-                    ok = self.WriteSacHeader(thePath)	
-                    #
-                    #print 'Changed ',before,' to ',after,' in ',thePath
-                else:
-                    print "Problem in SetHvalueInFile."
-        return(ok)
+        self.SetHvalue(theItem,theValue)
+        self.WriteSacHeader(thePath)	
 
 
     def IsValidSacFile(self, thePath):
@@ -578,13 +542,9 @@ class ReadSac(PyTutil,parser.Parser):
         #
         #  Read in the Header
         #
-        ok = self.ReadSacHeader(thePath)
+        self.ReadSacHeader(thePath)
         #
-        if ok:
-            ok = self.IsSACfile(thePath)
-        else:
-            ok = 0
-        return(ok)
+        self.IsSACfile(thePath)
 
 
     def get_attr(self):
