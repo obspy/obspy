@@ -530,9 +530,9 @@ class libmseed(object):
         timing_quality['min'] = min(timing_qualities)
         timing_quality['max'] = max(timing_qualities)
         # Add average value
-        timing_quality['average'] = N.mean(timing_qualities)
+        timing_quality['average'] = float(N.mean(timing_qualities))
         # Calculate the median of the list.
-        timing_quality['median'] = N.median(timing_qualities)
+        timing_quality['median'] = float(N.median(timing_qualities))
         # Calculate upper and lower 25%-quantile.
         timing_qualities.sort()
         timing_quality['lower_quantile'] = \
