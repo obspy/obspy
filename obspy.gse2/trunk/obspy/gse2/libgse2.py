@@ -33,18 +33,12 @@ import sys, os, time, ctypes as C
 if sys.platform == 'win32':
     lib_name = 'gse_functions.win32.dll'
 else:
-#    if platform.architecture()[0] == '64bit':
-#        lib_name = 'gse_functions.lin64.so'
-#    else:
-#        lib_name = 'gse_functions.so'
-    lib_name = 'gse_functions.so'
+    if sys.platform.architecture()[0] == '64bit':
+        lib_name = 'gse_functions.lin64.so'
+    else:
+        lib_name = 'gse_functions.so'
 
 lib = C.CDLL(os.path.join(os.path.dirname(__file__), lib_name))
-
-#if sys.platform=='win32':
-#    lib = C.cdll.gse_functions
-#else:
-#    lib = C.CDLL(os.path.join(os.path.dirname(__file__),'gse_functions.so'))
 
 # Exception type for mismatching checksums
 class ChksumError(StandardError):
@@ -79,10 +73,6 @@ lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
 # gse_functions buf_init
 lib.buf_init.argtypes = [C.c_void_p]
 lib.buf_init.restype = C.c_void_p
-
-# gse_functions labs
-#lib.labs.argtypes = [C.c_int]
-#lib.labs.restype = C.c_int
 
 # gse_functions diff_2nd
 lib.diff_2nd.argtypes = [C.c_void_p, C.c_int, C.c_int]
@@ -165,7 +155,8 @@ def read(file, test_chksum=False):
     chksum = lib.check_sum(data, head.n_samps, chksum)
     chksum2 = int(f.readline().strip().split()[1])
     if test_chksum and chksum != chksum2:
-        raise ChksumError("Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d" % (chksum, chksum2, chksum, chksum2))
+        msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
+        raise ChksumError(msg % (chksum, chksum2, chksum, chksum2))
     f.close()
     headdict = {}
     for i in head._fields_:
@@ -185,8 +176,8 @@ def write(headdict, data, file):
     correction of calper multiply by 2PI and calper: 
     data * 2 * pi * header['calper'].
 
-    @requires: headdict dictionary entries C{'datatype', 'n_samps', 'samp_rate'} are
-        absolutely necessary
+    @requires: headdict dictionary entries C{'datatype', 'n_samps', 
+        'samp_rate'} are absolutely necessary
     @type data: Iterable of longs
     @param data: Contains the data.
     @type file: String
@@ -306,9 +297,8 @@ def getStartAndEndTime(file):
     del fp, head
     return [startdate, stopdate, startime, stoptime]
 
-#import pdb;pdb.set_trace()
-
 del c_file_p
+
 
 if __name__ == '__main__':
     import numpy

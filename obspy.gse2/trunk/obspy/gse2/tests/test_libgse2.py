@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.gse2 import libgse2
-import inspect, os, random, unittest, filecmp
+import inspect, os, unittest
 
 
 class LibGSE2TestCase(unittest.TestCase):
@@ -56,7 +56,6 @@ class LibGSE2TestCase(unittest.TestCase):
         temp_file = os.path.join(self.path, 'tmp.gse2')
         libgse2.write(header, data, temp_file)
         newheader, newdata = libgse2.read(temp_file)
-        import pdb;pdb.set_trace()
         self.assertEqual(header, newheader)
         self.assertEqual(data, newdata)
         os.remove(temp_file)
