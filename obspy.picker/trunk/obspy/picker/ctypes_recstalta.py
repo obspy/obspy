@@ -27,73 +27,128 @@ Module implementing the Recursive STA/LTA (see Withers et al. 1998 p. 98)
 Two versions, a fast ctypes one and a slow python one. In this doctest the
 ctypes version is tested against the python implementation
       
->>> random.seed(815)
->>> a = [random.gauss(0.,1.) for i in range(1000)]
->>> nsta=5
->>> nlta=10
->>> a1 = copy.deepcopy(a)
->>> c1 = recstalta(a,nsta,nlta)
->>> c2 = recstalta_py(a1,nsta,nlta)
->>> c1[99:103]
-[1.0616963616768496, 1.3318426875849496, 1.248654066654898, 1.1828839719916469]
+>>> numpy.random.seed(815)
+>>> a = numpy.random.randn(1000)
+>>> nsta, nlta = 5, 10
+>>> c1 = recStalta(a,nsta,nlta)
+>>> c2 = recStaltaPy(a.copy(),nsta,nlta)
 >>> c2[99:103]
-[1.0616963616768493, 1.3318426875849498, 1.2486540666548982, 1.1828839719916469]
->>> err = sum([abs(i-j) for i,j in zip(c1,c2)])
+array([ 0.80810165,  0.75939449,  0.91763978,  0.97465004])
+>>> err = sum(abs(c1-c2))
 >>> err <= 1e-10
 True
+>>> recStalta([1],nsta,nlta)
+Traceback (most recent call last):
+...
+AssertionError: Error, data need to be a numpy ndarray
 """
 
-import os, random, copy
+import os, random, copy, numpy
 import ctypes as C
 
-def recstalta(a,nsta,nlta):
+def recStalta(a,nsta,nlta):
     """Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
-    a    -- seismic trace
-    nsta -- short time average window in samples
-    nlta -- long time average window in samples
-    This version directly uses a C version via CTypes"""
+    @note: This version directly uses a C version via CTypes
+    @type a: Numpy ndarray
+    @param a: Seismic Trace
+    @type nsta: Int
+    @param nsta: Length of short time average window in samples
+    @type lsta: Int
+    @param lsta: Length of long time average window in samples
+    @rtype: Numpy ndarray
+    @return: Charactristic function of STA/LTA
+    """
 
+    assert type(a) == numpy.ndarray, "Error, data need to be a numpy ndarray"
     ndat = len(a)
     lib = C.CDLL(os.path.join(os.path.dirname(__file__),'recstalta.so'))
 
     lib.recstalta.argtypes=[C.c_void_p,C.c_int,C.c_int,C.c_int]
     lib.recstalta.restype=C.POINTER(C.c_double)
 
-    # would be much easier using numpy, but we want was less dependencies as possible
-    #import numpy; a = array(a)
-    #charfct = C.pointer(lib.recstalta(a.ctypes.data_as(C.c_void_p),ndat,nsta,nlta))
-    c_a = (C.c_double*ndat)()
-    c_a[0:ndat] = a
-    charfct = C.pointer(lib.recstalta(c_a,ndat,nsta,nlta))
-    return charfct.contents[0:ndat]
+    charfct = C.pointer(lib.recstalta(a.ctypes.data_as(C.c_void_p),ndat,nsta,nlta))
+    # old method using interable a
+    #c_a = (C.c_double*ndat)()
+    #c_a[0:ndat] = a
+    #charfct = C.pointer(lib.recstalta(c_a,ndat,nsta,nlta))
+    return numpy.array(charfct.contents[0:ndat])
 
-def recstalta_py(a,nsta,nlta):
-    """Recursive STA/LTA (see Withers et al. 1998 p. 98)
+def recStaltaPy(a,nsta,nlta):
+    """
+    Recursive STA/LTA (see Withers et al. 1998 p. 98)
     
-    NOTE: There exists a version of this trigger wrapped in C called
-    recstalta in this module!"""
-    
-    #import numpy
-    #assert type(a) == numpy.ndarray, "Error, data need to be a numpy array"
+    @note: There exists a faster version of this trigger wrapped in C
+    called recstalta in this module!
+    @type a: Numpy ndarray
+    @param a: Seismic Trace
+    @type nsta: Int
+    @param nsta: Length of short time average window in samples
+    @type lsta: Int
+    @param lsta: Length of long time average window in samples
+    @rtype: Numpy ndarray
+    @return: Charactristic function of STA/LTA
+    """
 
     ndat = len(a)
-    charfunct = copy.deepcopy(a)
+    charfct = copy.deepcopy(a)
     #
     # compute the short time average (STA) and long time average (LTA)
     # given by Evans and Allen
     #Csta = 1-exp(-S/Nsta); Clta = 1-exp(-S/Nlta)
     csta = 1./nsta; clta = 1./nlta
-    sta = 0.; lta = 0.; charfunct[0] = 0.
+    sta = 0.; lta = 0.; charfct[0] = 0.
     for i in range(1,ndat):
         # THERE IS A SQUARED MISSING IN THE FORMULA, I ADDED IT
         sta=csta*a[i]**2 + (1-csta)*sta
         lta=clta*a[i]**2 + (1-clta)*lta
-        charfunct[i] = sta/lta
+        charfct[i] = sta/lta
         if i < nlta:
-            charfunct[i] = 0.
+            charfct[i] = 0.
+    return charfct
 
-    return charfunct
+def triggerOnset(charfct,thres1,thres2,samp_int=1):
+    """
+    Given thres1 and thres2 calculate trigger on and off times from
+    characteristic function.
+
+    @type charfct: Numpy ndarray
+    @param charfct: Characteristic function of e.g. STA/LTA trigger
+    @type thres1: Float
+    @param thres1: Value above which trigger (of characteristic function)
+        is activated
+    @type thres2: Float
+    @param thres2: Value below which trigger (of characteristic function)
+        is deactivated
+    @type samp_int: Float
+    @param samp_int: Sample interval, needed as return times are in second
+    @rtype: List
+    @return: Nested List of trigger on and of times in samples
+    """
+    try: 
+        on = where(charfct>thres1)[0]
+        ind = on.min()
+        of = ind + where(charfct[ind:]<thres2)[0]
+    except ValueError:
+        return True
+    #
+    pick = []
+    start = stop = indstart = indstop = 0
+    while True:
+        try: 
+            buf = start
+            indstart = where(on[indstart:]>stop)[0].min() + indstart
+            start = on[indstart]
+            #
+            indstop = where(of[indstop:]>start)[0].min() + indstop
+            stop = of[indstop]
+        except ValueError: # only activated if out of indices
+            if not (start == buf) and not (start == 0):
+                pick.add([start*samp_int,len(charfct)-1*samp_int])
+            break
+        #
+        pick.add([start*samp_int,stop*samp_int])
+
 
 if __name__ == '__main__':
     import doctest
