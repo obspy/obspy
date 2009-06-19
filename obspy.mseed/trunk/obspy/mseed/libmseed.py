@@ -497,7 +497,7 @@ class libmseed(object):
         FP_chain.packhdroffset = 0
         FP_chain.recordcount = 0
         # Create Timing Quality list.
-        timing_qualities = []
+        data = []
         # Loop over each record
         for _i in xrange(fileinfo['number_of_records']):
             # Loop over every record.
@@ -509,8 +509,7 @@ class libmseed(object):
             # have Blockette 1001.
             try:
                 # Append timing quality to list.
-                timing_qualities.append(\
-                            float(msr.contents.Blkt1001.contents.timing_qual))
+                data.append(float(msr.contents.Blkt1001.contents.timing_qual))
             except:
                 if first_record:
                     break
@@ -520,26 +519,21 @@ class libmseed(object):
         del FileParam
         ff.close()
         # Create new dictionary.
-        timing_quality = {}
+        result = {}
         # Length of the list.
-        tq_length = len(timing_qualities)
+        n = len(data)
+        data = sorted(data)
         # If no data was collected just return an empty list.
-        if tq_length == 0:
-            return timing_quality
-        # Add minima and maxima to the dictionary.
-        timing_quality['min'] = min(timing_qualities)
-        timing_quality['max'] = max(timing_qualities)
-        # Add average value
-        timing_quality['average'] = float(N.mean(timing_qualities))
-        # Calculate the median of the list.
-        timing_quality['median'] = float(N.median(timing_qualities))
-        # Calculate upper and lower 25%-quantile.
-        timing_qualities.sort()
-        timing_quality['lower_quantile'] = \
-                        timing_qualities[int(math.floor(tq_length * 0.25)) - 1]
-        timing_quality['upper_quantile'] = \
-                        timing_qualities[int(math.ceil(tq_length * 0.75)) - 1]
-        return timing_quality
+        if n == 0:
+            return result
+        # Calculate some statistical values.
+        result['min'] = min(data)
+        result['max'] = max(data)
+        result['average'] = sum(data)/n
+        result['median'] = data[n//2]
+        result['lower_quantile']  = data[n//4]
+        result['upper_quantile']  = data[3*n//4]
+        return result
 
     def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
         """

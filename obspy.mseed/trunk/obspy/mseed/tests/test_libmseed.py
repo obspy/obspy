@@ -352,7 +352,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         tq = mseed.getTimingQuality(filename)
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
                               'median': 50.0, 'upper_quantile': 75.0,
-                              'lower_quantile': 24.0})
+                              'lower_quantile': 25.0})
 
     def test_isMSEED(self):
         """
