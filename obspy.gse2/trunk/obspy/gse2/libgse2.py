@@ -26,14 +26,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import sys, os, time, ctypes as C
+import platform,  sys, os, time, ctypes as C
 #import numpy as N
 #C = N.ctypeslib.ctypes
 
-if sys.platform == 'win32':
+if platform == 'win32':
     lib_name = 'gse_functions.win32.dll'
 else:
-    if sys.platform.architecture()[0] == '64bit':
+    if platform.architecture()[0] == '64bit':
         lib_name = 'gse_functions.lin64.so'
     else:
         lib_name = 'gse_functions.so'
@@ -125,6 +125,39 @@ def isGse2(f):
     if widi != 'WID2':
         raise TypeError("File is not in GSE2 format")
     f.seek(0)
+
+def writeHeader(f,head):
+    """
+    Rewriting the write_header Function of gse_functions.c
+
+    Different operation systems are delivering different output for the
+    scientific format of floats (fprinf libc6). Here we ensure to deliver
+    in a for GSE2 valid format independent of the OS. For speed issues we
+    simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
+    This fails for numbers XX>99, but should not occur.
+    """
+    mantissa,exponent = str("%10.4e"%head.calib).split('e')
+    calib = "%se%+03d"%(mantissa,int(exponent))
+    f.write("WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d %11.6f %s %7.3f %-6s %5.1f %4.1f\n" % (
+            head.d_year,
+            head.d_mon,
+            head.d_day,
+            head.t_hour,
+            head.t_min,
+            head.t_sec,
+            head.station,
+            head.channel,
+            head.auxid,
+            head.datatype,
+            head.n_samps,
+            head.samp_rate,
+            calib,
+            head.calper,
+            head.instype,
+            head.hang,
+            head.vang
+        )
+    )
 
 def read(file, test_chksum=False):
     """
@@ -232,7 +265,14 @@ def write(headdict, data, file):
     for _i in headdict.keys():
         if _i in gse2head:
             setattr(head, _i, headdict[_i])
+    # We leave this function ONLY for type checking, as the file pointer is
+    # seeked to 0 the header is overwritten!
     lib.write_header(fp, C.pointer(head))
+    f.seek(0)
+    # This is the actual function where the header is written. It avoids
+    # the different format of 10.4e with fprintf on windows and linux.
+    # For further details, see the __doc__ of writeHeader
+    writeHeader(f,head)
     lib.buf_dump(fp)
     f.write("CHK2 %8ld\n\n" % chksum)
     f.close()
