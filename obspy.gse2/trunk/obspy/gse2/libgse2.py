@@ -26,11 +26,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import platform,  sys, os, time, ctypes as C
-#import numpy as N
-#C = N.ctypeslib.ctypes
+import platform, os, time, ctypes as C
 
-if platform == 'win32':
+
+if platform.system() == 'Windows':
     lib_name = 'gse_functions.win32.dll'
 else:
     if platform.architecture()[0] == '64bit':
@@ -324,6 +323,7 @@ def getStartAndEndTime(file):
     lib.read_header(fp, C.pointer(head))
     f.close()
     os.environ['TZ'] = 'UTC'
+    # XXX: won't work with windows!
     time.tzset()
     dmsec = head.t_sec - int(head.t_sec)
     datestr = "%04d%02d%02d%02d%02d%02d" % (head.d_year, head.d_mon, head.d_day,
