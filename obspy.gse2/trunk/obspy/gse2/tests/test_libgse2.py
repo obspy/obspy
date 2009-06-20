@@ -5,6 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.gse2 import libgse2
+from obspy.util import DateTime
 import inspect, os, unittest
 
 
@@ -87,10 +88,10 @@ class LibGSE2TestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         # get the start- and end time
         times = libgse2.getStartAndEndTime(gse2file)
-        self.assertEqual('2004-06-09T20:05:59.850', times[0])
-        self.assertEqual('2004-06-09T20:06:59.850', times[1])
-        self.assertEqual(1086811559.8499985, times[2])
-        self.assertEqual(1086811619.8499985, times[3])
+        self.assertEqual(DateTime(2004, 6, 9, 20, 5, 59, 849998), times[0])
+        self.assertEqual(DateTime(2004, 6, 9, 20, 6, 59, 849998), times[1])
+        self.assertEqual(1086811559.849998, times[2])
+        self.assertEqual(1086811619.849998, times[3])
 
     def test_isWidi2(self):
         """

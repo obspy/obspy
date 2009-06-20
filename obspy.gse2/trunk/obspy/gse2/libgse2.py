@@ -5,11 +5,12 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008 Moritz Beyreuther, Stefan Stange
+# Copyright (C) 2008 Moritz Beyreuther
 #---------------------------------------------------------------------
 """ 
-Contains wrappers for gse_functions - The GSE2 library. Currently supports
-only CM6 compressed GSE2 files, this should be sufficient for most cases.
+Contains wrappers for gse_functions - The GSE2 library of Stefan Stange.
+Currently supports only CM6 compressed GSE2 files, this should be
+sufficient for most cases.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -27,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import platform, os, time, ctypes as C
+from obspy.util import DateTime
 
 
 if platform.system() == 'Windows':
@@ -322,26 +324,14 @@ def getStartAndEndTime(file):
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
     f.close()
-    os.environ['TZ'] = 'UTC'
-    # XXX: won't work with windows!
-    time.tzset()
-    dmsec = head.t_sec - int(head.t_sec)
-    datestr = "%04d%02d%02d%02d%02d%02d" % (head.d_year, head.d_mon, head.d_day,
-                                       head.t_hour, head.t_min, head.t_sec)
-    startime = float(time.mktime(time.strptime(datestr, '%Y%m%d%H%M%S')) + dmsec)
-    stoptime = startime + head.n_samps / float(head.samp_rate)
-    startdate = "%s.%s" % (time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(startime)),
-                           ("%.3f" % startime).split('.')[1])
-    stopdate = "%s.%s" % (time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime(stoptime)),
-                           ("%.3f" % stoptime).split('.')[1])
+    seconds = int(head.t_sec)
+    microseconds = int(1e6 * (head.t_sec - seconds ))
+    startdate = DateTime(head.d_year, head.d_mon, head.d_day,
+                         head.t_hour, head.t_min, seconds, microseconds)
+    stopdate = DateTime(startdate.timestamp() +
+                        head.n_samps/float(head.samp_rate))
     del fp, head
-    return [startdate, stopdate, startime, stoptime]
+    return [startdate, stopdate, startdate.timestamp(), stopdate.timestamp()]
 
 del c_file_p
 
-
-if __name__ == '__main__':
-    import numpy
-    numpy.random.seed(815)
-    data = numpy.random.random_integers(0, 2 ** 26, 1000).tolist()
-    write({'n_samps':len(data)}, data, "test.gse.1")

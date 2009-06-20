@@ -71,6 +71,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.get('starttime'), tr.stats.get('starttime'))
         for _i in xrange(100):
             self.assertEqual(tr.data[_i], tr3.data[_i])
+        os.remove(tmpfile)
 
 
 def suite():
