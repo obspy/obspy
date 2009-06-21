@@ -10,8 +10,7 @@ except ImportError:
     __path__ = extend_path(__path__, __name__)
 
 
-from obspy.core import Trace
-from obspy.core import Stream
+from obspy.core import Trace, Stream, read
 
 #try:
 #    import core

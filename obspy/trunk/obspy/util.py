@@ -40,6 +40,8 @@ class Stats(dict):
     @ivar dataquality: Data quality
     @type starttime: Datetime Object
     @ivar starttime: Starttime of seismogram
+    @type endtime: Datetime Object
+    @ivar endtime: Endtime of seismogram
     """
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)
@@ -53,6 +55,7 @@ class Stats(dict):
         self.channel = "BHZ"
         self.dataquality = ""
         self.starttime = DateTime.utcfromtimestamp(0.0)
+        self.endtime = DateTime.utcfromtimestamp(86400.0)
 
 
 class DateTime(datetime.datetime):
@@ -190,47 +193,31 @@ class DateTime(datetime.datetime):
 #                                 _msec*1e6+.5)
 #        return myself
 
-
-def getParser():
+def getFormatsAndMethods():
     """
     Collects all obspy parser classes.
     """
     temp = []
+    # There is one try-except block for each supported file format.
     try:
-        from obspy.mseed.core import MSEEDTrace
-        temp.append(MSEEDTrace)
+        from obspy.mseed.core import isMSEED, readMSEED
+        # The first item is the name of the format, the second the checking function.
+        temp.append(['MSEED', isMSEED, readMSEED])
     except:
         pass
     try:
-        from obspy.gse2.core import GSE2Trace
-        temp.append(GSE2Trace)
+        from obspy.gse2.core import isGSE2, readGSE2
+        # The first item is the name of the format, the second the checking function.
+        temp.append(['GSE2', isGSE2, readGSE2])
     except:
         pass
     try:
-        from obspy.sac.core import SACTrace
-        temp.append(SACTrace)
+        from obspy.wav.core import isWAV, readWAV
+        # The first item is the name of the format, the second the checking function.
+        temp.append(['WAV', isWAV, readWAV])
     except:
         pass
-    try:
-        from obspy.wav.core import WAVTrace
-        temp.append(WAVTrace)
-    except:
-        pass
-    return tuple(temp)
-
-
-def getStreamParser():
-    """
-    Collects all obspy parser classes that can handle streams.
-    """
-    temp = []
-    try:
-        from obspy.mseed.core import MSEEDStream
-        temp.append(MSEEDStream)
-    except:
-        pass
-    return tuple(temp)
-
+    return temp
 
 if __name__ == '__main__':
     import doctest
