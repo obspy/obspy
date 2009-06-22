@@ -40,6 +40,7 @@ if sys.platform == 'win32':
 elif sys.platform == 'darwin':
     lib_name = 'libmseed.dylib'
 # 32 and 64 bit UNIX
+#XXX Check glibc version by platform.libc_ver()
 else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'

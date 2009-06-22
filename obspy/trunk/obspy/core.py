@@ -148,6 +148,7 @@ class Stream(object):
             from obspy.imaging import waveform
         except:
             msg = """Please install the obspy.imaging module to be able to plot
-                  ObsPy Stream objects."""
-            raise Exception(msg)
+                  ObsPy Stream objects.\n"""
+            print msg
+            raise
         waveform.plotWaveform(self, **kwargs)

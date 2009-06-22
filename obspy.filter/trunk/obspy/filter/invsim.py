@@ -209,7 +209,7 @@ def specInv(spec,wlev,nfft):
 
     inn = N.where(sqr_len>0.0)
     spec[inn] = 1/spec[inn]
-    spec[sqr_len==0.0] = complex(0.0,0.0)
+    spec[sqr_len<=1.0e-10] = complex(0.0,0.0) #where sqr_len == 0.0
     spec = N.concatenate(([spec0],spec,[specn]))
     
     return found
