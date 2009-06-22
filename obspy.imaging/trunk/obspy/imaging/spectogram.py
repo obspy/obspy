@@ -117,7 +117,7 @@ def nearestPow2(x):
     else: 
         return b
 
-def spectoGram(data,samp_rate=100.0,log=False,name="specto"):
+def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
     """
     Computes and plots logarithmic spectogram of the input trace.
     
@@ -127,56 +127,50 @@ def spectoGram(data,samp_rate=100.0,log=False,name="specto"):
     @param sample_rate: Samplerate in Hz
     @type log: Bool
     @param log: True logarithmic frequency axis, False linear frequency axis
-    @type name: String
-    @param name: String for the filename of output png file
+    @type outfile: String
+    @param outfile: String for the filename of output file, if None
+        interactive plotting is activated.
+    @type format: String
+    @param format: Format of image to save
     """
-    pl.clf()
-    samp_int = 1/float(samp_rate)
-    samp_length = len(data)
-    step_size = samp_length/80.
-    samp_length_win = samp_length/10.
+    pl.ioff()
 
-    nstep = nearestPow2(step_size)
-    window_length_sample = nearestPow2(samp_length_win)
+    samp_int = 1/float(samp_rate)
+    npts = len(data)
+    nstep = nearestPow2(npts/80.0)
+    nfft = nearestPow2(npts/10.0)
 
     data = data-data.mean()
 
-    nfft = window_length_sample
-    nlap = nfft - nstep
-    spectogram = pl.specgram(data,Fs=samp_rate,NFFT=nfft,noverlap=nlap)[0][1:,:]#????
-    spectogram = 10*N.log10(spectogram)
+    #spectogram = pl.specgram(data,Fs=samp_rate,NFFT=nfft,noverlap=nlap)[0][1:,:]#????
+    spectogram, freq, time, image = pl.specgram(data,Fs=samp_rate,
+                                                NFFT=nfft,noverlap=nfft-nstep)
+    # db scale and remove offset
+    spectogram = 10*N.log10(spectogram[1:,:])
+    freq = freq[1:]
 
-    shap = shape(spectogram)
-    print "Shap",shap
-    print spectogram.max()
-    print spectogram.min()
-    x = arange(0,shap[1]*(nstep*samp_int),(nstep*samp_int))
-    upper = samp_rate/2
-    lower = samp_rate/window_length_sample
-    far = shap[0]
-    y = linspace(lower,upper,far)
-    X,Y = meshgrid(x,y)
-    subplot(212)
-    pcolor(X,Y,spectogram)
+    X,Y = pl.meshgrid(time,freq)
+    pl.figure()
+    pl.subplot(212)
+    pl.pcolor(X,Y,spectogram)
     if log:
-        semilogy()
-    gap = (window_length_sample/2.)*samp_int
-    h = [-gap,(samp_length*samp_int)-gap,lower,upper]
-    axis(h)
-    
-    tick_dist = floor((samp_length*samp_int)/6.)
-    tick_big = 5*tick_dist
-    ticks = arange(0,tick_big,tick_dist)
-    xticks([0-gap,tick_dist-gap,(2*tick_dist)-gap,(3*tick_dist)-gap,(4*tick_dist)-gap,tick_big-gap],['0',tick_dist,2*tick_dist,3*tick_dist,4*tick_dist,tick_big] )
-    xlabel('Time [s]')
-    ylabel('Frequency [Hz]')
-    subplot(211)
-    v = [0,samp_length*samp_int,min(data),max(data)]
-    xx = arange(0,samp_length,dtype='f')/samp_rate
-    plot(xx,data)
-    xlabel('Time [s]')
-    axis(v)
-    xticks([0,tick_dist,2*tick_dist,3*tick_dist,4*tick_dist,tick_big])
-    ylabel('Amplitude (arbitrary)')
-    figname = name+'.png'
-    savefig(figname)
+        pl.semilogy()
+    pl.ylim((freq[0],freq[-1]))
+    pl.grid(False)
+    pl.xlabel('Time [s]')
+    pl.ylabel('Frequency [Hz]')
+
+    pl.subplot(211)
+    xx = arange(0,npts,dtype='f')/samp_rate
+    pl.plot(xx,data)
+    pl.xlabel('Time [s]')
+    pl.ylabel('Amplitude (arbitrary)')
+
+    if outfile:
+        if format:
+            pl.savefig(outfile,format=format)
+        else:
+            pl.savefig(outfile)
+    else:
+        pl.show()
+

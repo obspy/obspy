@@ -39,9 +39,9 @@ class Stats(dict):
     @ivar channel: Channel
     @type dataquality: String
     @ivar dataquality: Data quality
-    @type starttime: Datetime Object
+    @type starttime: obspy.DateTime Object
     @ivar starttime: Starttime of seismogram
-    @type endtime: Datetime Object
+    @type endtime: obspy.DateTime Object
     @ivar endtime: Endtime of seismogram
     """
     def __init__(self, *args, **kwargs):

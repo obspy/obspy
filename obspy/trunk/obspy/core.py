@@ -42,6 +42,9 @@ class Trace(object):
     ObsPy Trace class.
     
     This class contains information about one trace.
+
+    @type data: Numpy ndarray
+    @ivar data: Data samples
     """
     def __init__(self, header = None, data = None):
         self.stats = Stats()
@@ -60,9 +63,11 @@ class Trace(object):
             str(self.stats['npts']) + ' samples'
         return return_string
 
+
 class Stream(object):
     """
     ObsPy Stream class to collect Traces.
+    
     """
     def __init__(self, traces = None):
         self.traces = []
@@ -91,6 +96,14 @@ class Stream(object):
         for _i in self.traces:
             return_string = return_string + '\n' + str(_i)
         return return_string
+    
+    def __getitem__(self, index):
+        """
+        __getitem__ method of obspy.Stream objects.
+        
+        @return: Trace objects
+        """
+        return self.traces[index]
     
     def plot(self, **kwargs):
         """

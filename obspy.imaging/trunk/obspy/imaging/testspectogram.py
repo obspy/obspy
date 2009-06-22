@@ -9,11 +9,10 @@ import spectogram
 path = os.path.dirname(inspect.getsourcefile(gse2tests))
 file = os.path.join(path, 'data', 'loc_RJOB20050831023349.z')
 
-g = obspy.Trace()
-g.read(file,format='GSE2')
+g = obspy.read(file,format='GSE2')
 
-spectogram.spec(inp=g.data,sample_rate=200.0,samp_length=len(g.data),log=True)
-spectogram.spectoGram(g.data,samp_rate=200.0,log=True,name="spec2")
+spectogram.spec(inp=g[0].data,sample_rate=200.0,samp_length=len(g[0].data),log=True)
+spectogram.spectoGram(g[0].data,samp_rate=200.0,log=True,outfile='hallo.png')
 
 #clf()
 #plot(g.data)
