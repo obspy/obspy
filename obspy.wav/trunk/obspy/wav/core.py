@@ -66,6 +66,9 @@ def readWAV(filename, **kwargs):
     # header information
     header = {'sampling_rate': rate, 'npts': length}
     return Trace(header = header, data = array(data))
+
+def writeWAV(stream_object, filename, **kwargs):
+    raise NotImplementedError
     
 #    def write(self, filename, framerate=7000, **kwargs):
 #        """

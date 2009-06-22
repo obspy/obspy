@@ -751,8 +751,8 @@ class libmseed(object):
         h = {}
         # header attributes to be converted
         attributes = ('network', 'station', 'location', 'channel',
-                      'dataquality', 'type', 'starttime', 'endtime',
-                      'samprate', 'samplecnt', 'numsamples', 'sampletype')
+                      'dataquality', 'starttime', 'endtime', 'samprate',
+                      'samplecnt', 'numsamples', 'sampletype')
         # loop over attributes
         for _i in attributes:
             h[_i] = getattr(m, _i)
@@ -767,6 +767,7 @@ class libmseed(object):
         @param h: Dictionary containing all necessary information.
         """
         chain = m.contents
+        h['type'] = '\x00'
         # header attributes to be converted
         attributes = ('network', 'station', 'location', 'channel',
                       'dataquality', 'type', 'starttime', 'endtime',

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from obspy.core import Trace
 from obspy.gse2 import libgse2
 from obspy.numpy import array
 from obspy.util import Stats, DateTime
-from obspy.core import Trace
 import os
 
 def isGSE2(filename):
     """
-    Checks whether a file is GSE2 or not.
+    Checks whether a file is GSE2 or not. Returns True or False.
+    
+    @param filename: GSE2 file to be read.
     """
     # Open file.
     f = open(filename)
@@ -17,6 +19,11 @@ def isGSE2(filename):
     return False
 
 def readGSE2(filename, **kwargs):
+    """
+    Reads a GSE2 file and returns an obspy.Trace object.
+    
+    @param filename: GSE2 file to be read.
+    """
     # read GSE2 file
     header, data = libgse2.read(filename)
     # assign all header entries to a new dictionary compatible with an Obspy
@@ -27,6 +34,7 @@ def readGSE2(filename, **kwargs):
     # convert time to seconds since epoch
     seconds = int(header['t_sec'])
     microseconds = int(1e6*(header['t_sec'] - seconds))
+    # Calculate start time.
     new_header['starttime'] = DateTime(
             header['d_year'],header['d_mon'],header['d_day'],
             header['t_hour'],header['t_min'],
@@ -36,7 +44,10 @@ def readGSE2(filename, **kwargs):
         new_header['starttime'].timestamp() +
         header['n_samps']/float(header['samp_rate'])
     )
-    return Trace(header = new_header, data =array(data))
+    return Trace(header = new_header, data = array(data))
+
+def writeGSE2(stream_object, filename, **kwargs):
+    raise NotImplementedError
 
 #def writeGSE2(filename, **kwargs):
 #    #

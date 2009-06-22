@@ -128,21 +128,21 @@ def getFormatsAndMethods(verbose=False):
     failure = []
     # There is one try-except block for each supported file format.
     try:
-        from obspy.mseed.core import isMSEED, readMSEED
+        from obspy.mseed.core import isMSEED, readMSEED, writeMSEED
         # The first item is the name of the format, the second the checking function.
-        temp.append(['MSEED', isMSEED, readMSEED])
+        temp.append(['MSEED', isMSEED, readMSEED, writeMSEED])
     except:
         failure.append(traceback.format_exc())
     try:
-        from obspy.gse2.core import isGSE2, readGSE2
+        from obspy.gse2.core import isGSE2, readGSE2, writeGSE2
         # The first item is the name of the format, the second the checking function.
-        temp.append(['GSE2', isGSE2, readGSE2])
+        temp.append(['GSE2', isGSE2, readGSE2, writeGSE2])
     except:
         failure.append(traceback.format_exc())
     try:
-        from obspy.wav.core import isWAV, readWAV
+        from obspy.wav.core import isWAV, readWAV, writeWAV
         # The first item is the name of the format, the second the checking function.
-        temp.append(['WAV', isWAV, readWAV])
+        temp.append(['WAV', isWAV, readWAV, writeWAV])
     except:
         failure.append(traceback.format_exc())
     if verbose:

@@ -283,3 +283,15 @@ class Stream(object):
         # Loop over all items in keys.
         for _i in keys:
             self.traces.sort(key = lambda x:x.stats[_i])
+            
+    def write(self, filename, format, **kwargs):
+        """
+        """
+        formats = getFormatsAndMethods()
+        try:
+            format_index = [_i[0] for _i in formats].index(format.upper())
+        except:
+            msg = 'Format is not supported. Supported Formats: '+ \
+                  ', '.join([_i[0] for _i in formats])
+            raise TypeError(msg)
+        formats[format_index][3](self, filename, **kwargs)
