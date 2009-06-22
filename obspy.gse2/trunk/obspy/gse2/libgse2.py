@@ -55,13 +55,13 @@ c_file_p = C.POINTER(FILE)
 C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 C.pythonapi.PyFile_AsFile.restype = c_file_p
 
-# gse_functions read_header
-lib.read_header.argtypes = [c_file_p, C.c_void_p]
-lib.read_header.restype = C.c_int
+## gse_functions read_header
+#lib.read_header.argtypes = [c_file_p, C.c_void_p]
+#lib.read_header.restype = C.c_int
 
-# gse_functions decomp_6b
-lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
-lib.decomp_6b.restype = C.c_int
+## gse_functions decomp_6b
+#lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
+#lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
 lib.rem_2nd_diff.argtypes = [C.c_void_p, C.c_int]
@@ -83,13 +83,13 @@ lib.diff_2nd.restype = C.c_void_p
 lib.compress_6b.argyptes = [C.c_void_p, C.c_int]
 lib.compress_6b.restype = C.c_int
 
-# gse_functions write_header
-lib.write_header.argtypes = [c_file_p, C.c_void_p]
-lib.write_header.restype = C.c_void_p
+## gse_functions write_header
+#lib.write_header.argtypes = [c_file_p, C.c_void_p]
+#lib.write_header.restype = C.c_void_p
 
-# gse_functions buf_dump
-lib.buf_dump.argtypes = [c_file_p]
-lib.buf_dump.restype = C.c_void_p
+## gse_functions buf_dump
+#lib.buf_dump.argtypes = [c_file_p]
+#lib.buf_dump.restype = C.c_void_p
 
 # gse_functions buf_free
 lib.buf_free.argtypes = [C.c_void_p]

@@ -4,6 +4,7 @@ The ObsPy core classes.
 """
 from obspy.util import Stats, getFormatsAndMethods
 import copy
+import math
 import os
 
 
@@ -11,6 +12,10 @@ def read(filename, format = None):
     """
     This function will check a file's format and read it into a Stream object
     if possible.
+    
+    @param format: Format of the file to read. If it is none the format will be
+        autodetected. If you specify a format no further format checking is
+        done.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -22,29 +27,45 @@ def read(filename, format = None):
                  reading formats. Please update or extend your ObsPy
                  installation"""
         raise Exception(msg)
-    format = ''
-    # Check the format of the file.
-    for _i in formats:
-        if _i[1](filename):
-            format = _i
-            break
-    if len(format) == 0:
-        msg = 'Format is not supported. Supported Formats: '+ \
-              ', '.join([_i[0] for _i in formats])
-        raise TypeError(msg)
-    temp_object = format[2](filename)
+    fileformat = []
+    if not format:
+        # Autodetect format
+        for _i in formats:
+            if _i[1](filename):
+                fileformat = _i
+                break
+        if len(fileformat) == 0:
+            msg = 'Format is not supported. Supported Formats: '+ \
+                  ', '.join([_i[0] for _i in formats])
+            raise TypeError(msg)
+    else:
+        try:
+            format_index = [_i[0] for _i in formats].index(format.upper())
+            fileformat = formats[format_index]
+        except:
+            msg = 'Format is not supported. Supported Formats: '+ \
+                  ', '.join([_i[0] for _i in formats])
+            raise TypeError(msg)
+    temp_object = fileformat[2](filename)
     if isinstance(temp_object, Trace):
         return Stream(traces = [temp_object])
-    return temp_object 
+    return temp_object
+
+def supportedFormats():
+    """
+    This function will return a list with all file formats supported by your
+    ObSpy installation.
+    """
+    return [_i[0] for _i in getFormatsAndMethods()]
 
 class Trace(object):
     """
     ObsPy Trace class.
     
     This class contains information about one trace.
-
-    @type data: Numpy ndarray
-    @ivar data: Data samples
+    
+    @type data: Numpy ndarray 
+    @ivar data: Data samples 
     """
     def __init__(self, header = None, data = None):
         self.stats = Stats()
@@ -62,7 +83,6 @@ class Trace(object):
             str(self.stats['sampling_rate']) + ' Hz, ' +\
             str(self.stats['npts']) + ' samples'
         return return_string
-
 
 class Stream(object):
     """
@@ -97,13 +117,76 @@ class Stream(object):
             return_string = return_string + '\n' + str(_i)
         return return_string
     
-    def __getitem__(self, index):
+         
+    def __getitem__(self, index): 
+        """ 
+        __getitem__ method of obspy.Stream objects. 
+          
+        @return: Trace objects 
+        """ 
+        return self.traces[index] 
+    
+    def append(self, filename, **kwargs):
         """
-        __getitem__ method of obspy.Stream objects.
+        This method reads a file and appends its traces to the Stream object.
         
-        @return: Trace objects
+        All kwargs are passed to the obspy.read() function.
+        
+        @param filename: File to read.
         """
-        return self.traces[index]
+        new_stream = read(filename, **kwargs)
+        self.traces.extend(new_stream.traces)
+        del new_stream
+    
+    def getGaps(self, min_gap = None, max_gap = None):
+        """
+        Returns a list which contains information about all gaps/overlaps that
+        result from the Traces in the Stream object.
+        
+        The returned list contains one item in the following form for each gap/
+        overlap:
+        [network, station, location, channel, starttime of the gap, endtime of
+        the gap, duration of the gap, number of missing samples]
+        
+        Please be aware that no sorting and checking of stations, channels, ...
+        is done. This method only compares the start- and endtimes of the
+        Traces.
+        
+        @param min_gap: All gaps smaller than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
+        @param max_gap: All gaps larger than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
+        """
+        gap_list = []
+        for _i in range(len(self.traces) -1):
+            stats = self.traces[_i].stats
+            stime = stats['endtime']
+            etime = self.traces[_i + 1].stats['starttime']
+            duration = etime - stime
+            gap = etime.timestamp() - stime.timestamp()
+             # Check that any overlap is not larger than the trace coverage
+            if gap < 0:
+                delta = 1 / float(self.traces[_i + 1].stats['sampling_rate'])
+                temp = self.traces[_i + 1].stats['endtime'].timestamp() - \
+                       etime.timestamp()
+                if (gap * -1) > temp:
+                    gap = -1 * temp
+            # Check gap/overlap criteria
+            if min_gap and gap < min_gap:
+                continue
+            if max_gap and gap > max_gap:
+                continue
+            # Number of missing samples
+            nsamples = math.fabs(gap) * stats['sampling_rate']
+            if gap > 0:
+                nsamples -= 1
+            else:
+                nsamples += 1
+            gap_list.append([stats['network'], stats['station'],
+                            stats['location'], stats['channel'],
+                            stime, etime, duration,
+                            nsamples])
+        return gap_list
     
     def plot(self, **kwargs):
         """
@@ -165,3 +248,38 @@ class Stream(object):
             print msg
             raise
         waveform.plotWaveform(self, **kwargs)
+
+    def printGaps(self, **kwargs):
+        """
+        Print gap/overlap list summary information of the Stream object.
+        """
+        result = self.getGaps(**kwargs)
+        print "%-17s %-26s %-26s %-15s %-8s" % ('Source', 'Last Sample',
+                                               'Next Sample', 'Gap', 'Samples')
+        for r in result:
+            print "%-17s %-26s %-26s %-15s %-.8g" % ('_'.join(r[0:4]),
+                                                    r[4].isoformat(),
+                                                    r[5].isoformat(),
+                                                    r[6], r[7])
+        print "Total: %d gap(s) or overlap(s)" % len(result)
+        
+    def sort(self, keys = ['network', 'station', 'channel', 'starttime']):
+        """
+        Method to sort the traces in the Stream object.
+        
+        The traces will be sorted according to the keys list. It will be sorted
+        by the first item first, then by the second and so on. It will always
+        be sorted from low to high and from A to Z.
+        
+        @param keys: List containing the values according to which the traces
+             will be sorted. They will be sorted by the first item first and
+             then by the second item and so on.
+             Available items: 'network', 'station', 'channel', 'location',
+             'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality' 
+             Defaults to ['network', 'station', 'channel', 'starttime'].
+        """
+        # Reverse list first.
+        keys.reverse()
+        # Loop over all items in keys.
+        for _i in keys:
+            self.traces.sort(key = lambda x:x.stats[_i])
