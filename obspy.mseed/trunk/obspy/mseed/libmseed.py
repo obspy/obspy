@@ -21,7 +21,7 @@ http://www.gnu.org/
 
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
-from obspy.util import DateTime, scoreatpercentile
+from obspy.core.util import DateTime, scoreatpercentile
 from struct import unpack
 import ctypes as C
 import math

@@ -20,12 +20,12 @@ import StringIO
 import doctest
 
 
-D2R = pi/180
-R2D = 180/pi
+D2R = pi / 180
+R2D = 180 / pi
 EPSILON = 0.00001
 
 
-def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None, 
+def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
               format=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
@@ -61,34 +61,34 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
         np1 = NodalPlane(fm[0], fm[1], fm[2])
     else:
         raise TypeError("Wrong input value for 'fm'.")
-    
+
     # size must be at least 100
-    if size<100:
-        size=100
+    if size < 100:
+        size = 100
     # actual painting diam is only 95% due to an axis display glitch
-    plot_size = size*0.95
-    
+    plot_size = size * 0.95
+
     # plot the figure
-    fig = plt.figure(figsize=(3,3), dpi=100)
+    fig = plt.figure(figsize=(3, 3), dpi=100)
     fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    fig.set_figheight(size/100)
-    fig.set_figwidth(size/100)
+    fig.set_figheight(size / 100)
+    fig.set_figwidth(size / 100)
     ax = fig.add_subplot(111, aspect='equal')
-    
+
     # hide axes + ticks
     ax.axison = False
-    
+
     # plot
     if mt:
         (T, N, P) = MT2Axes(mt)
         if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
             plotDC(ax, np1, plot_size, linewidth, color, alpha)
         else:
-            plotMT(ax, T, N, P, plot_size, color, outline=True, 
+            plotMT(ax, T, N, P, plot_size, color, outline=True,
                    plot_zerotrace=True, alpha=alpha, linewidth=linewidth)
     else:
         plotDC(ax, np1, plot_size, linewidth, color, alpha)
-    
+
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
     # export
     if file:
@@ -105,7 +105,7 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
         show()
 
 
-def plotMT(ax, T, N, P, size=200, color='b', outline=True, 
+def plotMT(ax, T, N, P, size=200, color='b', outline=True,
            plot_zerotrace=True, alpha=1.0, linewidth=2, x0=0, y0=0):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
@@ -118,12 +118,12 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     Adapted from ps_tensor / utilmeca.c / Generic Mapping Tools (GMT).
     @see: http://gmt.soest.hawaii.edu
     """
-    b=1
+    b = 1
     big_iso = 0
     j = 1
     j2 = 0
     j3 = 0
-    n=0
+    n = 0
     azi = zeros((3, 2))
     x = zeros(400)
     y = zeros(400)
@@ -135,7 +135,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     yp1 = zeros(800)
     xp2 = zeros(400)
     yp2 = zeros(400)
-    
+
     a = zeros(3)
     p = zeros(3)
     v = zeros(3)
@@ -148,87 +148,89 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     v[0] = T.val
     v[1] = N.val
     v[2] = P.val
-    
+
     vi = (v[0] + v[1] + v[2]) / 3.
     for i in range(0, 3):
         v[i] = v[i] - vi
-    
+
     radius_size = size * 0.5
-    
-    if fabs(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]) < EPSILON:
+
+    if fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
         # pure implosion-explosion
         if vi > 0.:
-            cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+            cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
                                  alpha=alpha, linewidth=linewidth, ec='k',
                                  fc=color)
             ax.add_patch(cir)
         if vi < 0.:
-            cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+            cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
                                  alpha=alpha, linewidth=linewidth, ec='k',
                                  fc='w')
             ax.add_patch(cir)
         return
-    
+
     if fabs(v[0]) >= fabs(v[2]):
         d = 0
         m = 2
     else:
         d = 2
         m = 0
-    
+
     if (plot_zerotrace):
         vi = 0.
-    
-    f = - v[1] / float(v[d])
+
+    f = -v[1] / float(v[d])
     iso = vi / float(v[d])
-    
+
     # Cliff Frohlich, Seismological Research letters,
     # Vol 7, Number 1, January-February, 1996
     # Unless the isotropic parameter lies in the range
     # between -1 and 1 - f there will be no nodes whatsoever
-    
+
     if iso < -1:
-        cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+        cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
                              alpha=alpha, linewidth=linewidth, ec='k',
                              fc='w')
         ax.add_patch(cir)
         return
-    elif iso > 1-f:
-        cir = patches.Circle((x0, y0), radius=radius_size, fill=False, 
+    elif iso > 1 - f:
+        cir = patches.Circle((x0, y0), radius=radius_size, fill=False,
                              alpha=alpha, linewidth=linewidth, ec='k',
                              fc=color)
         ax.add_patch(cir)
         return
-    
-    spd = sin(p[d]*D2R)
-    cpd = cos(p[d]*D2R)
-    spb = sin(p[b]*D2R)
-    cpb = cos(p[b]*D2R)
-    spm = sin(p[m]*D2R)
-    cpm = cos(p[m]*D2R)
-    sad = sin(a[d]*D2R)
-    cad = cos(a[d]*D2R)
-    sab = sin(a[b]*D2R)
-    cab = cos(a[b]*D2R)
-    sam = sin(a[m]*D2R)
-    cam = cos(a[m]*D2R)
-    
+
+    spd = sin(p[d] * D2R)
+    cpd = cos(p[d] * D2R)
+    spb = sin(p[b] * D2R)
+    cpb = cos(p[b] * D2R)
+    spm = sin(p[m] * D2R)
+    cpm = cos(p[m] * D2R)
+    sad = sin(a[d] * D2R)
+    cad = cos(a[d] * D2R)
+    sab = sin(a[b] * D2R)
+    cab = cos(a[b] * D2R)
+    sam = sin(a[m] * D2R)
+    cam = cos(a[m] * D2R)
+
     for i in range(0, 360):
         fir = i * D2R
         s2alphan = (2. + 2. * iso) / float(3. + (1. - 2. * f) * cos(2. * fir))
         if s2alphan > 1.:
-            big_iso+=1
+            big_iso += 1
         else:
             alphan = arcsin(sqrt(s2alphan))
             sfi = sin(fir)
             cfi = cos(fir)
             san = sin(alphan)
             can = cos(alphan)
-            
+
             xz = can * spd + san * sfi * spb + san * cfi * spm
-            xn = can * cpd * cad + san * sfi * cpb * cab + san * cfi * cpm * cam
-            xe = can * cpd * sad + san * sfi * cpb * sab + san * cfi * cpm * sam
-            
+            xn = can * cpd * cad + san * sfi * cpb * cab + \
+                 san * cfi * cpm * cam
+            xe = can * cpd * sad + san * sfi * cpb * sab + \
+                 san * cfi * cpm * sam
+
             if fabs(xn) < EPSILON and fabs(xe) < EPSILON:
                 takeoff = 0.
                 az = 0.
@@ -253,43 +255,43 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
             else:
                 if fabs(fabs(az - azp) - pi) < D2R * 10.:
                         azi[n][1] = azp
-                        n+=1
+                        n += 1
                         azi[n][0] = az
-                if fabs(fabs(az -azp) - pi * 2.) < D2R * 2.:
+                if fabs(fabs(az - azp) - pi * 2.) < D2R * 2.:
                         if azp < az:
                             azi[n][0] += pi * 2.
                         else:
                             azi[n][0] -= pi * 2.
-                if n==0:
+                if n == 0:
                     x[j] = x0 + radius_size * r * si
                     y[j] = y0 + radius_size * r * co
-                    j+=1
-                elif n==1:
+                    j += 1
+                elif n == 1:
                     x2[j2] = x0 + radius_size * r * si
                     y2[j2] = y0 + radius_size * r * co
-                    j2+=1
-                elif n==2:
+                    j2 += 1
+                elif n == 2:
                     x3[j3] = x0 + radius_size * r * si
                     y3[j3] = y0 + radius_size * r * co
-                    j3+=1
+                    j3 += 1
                 azp = az
     azi[n][1] = az
-    
+
     if v[1] < 0.:
         rgb1 = color
         rgb2 = 'w'
     else:
         rgb1 = 'w'
         rgb2 = color
-    
-    cir = patches.Circle((x0, y0), radius=radius_size, fill=True, 
+
+    cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
                          alpha=alpha, linewidth=linewidth, ec='k',
                          fc=rgb2)
     ax.add_patch(cir)
-    if n==0:
+    if n == 0:
         ax.fill(x[0:360], y[0:360], rgb1, alpha=alpha, linewidth=linewidth)
         return
-    elif n==1:
+    elif n == 1:
         for i in range(0, j):
             xp1[i] = x[i]
             yp1[i] = y[i]
@@ -303,7 +305,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp1[i] = x0 + radius_size * si
-                i+=1
+                i += 1
                 yp1[i] = y0 + radius_size * co
                 az -= D2R
         else:
@@ -312,7 +314,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp1[i] = x0 + radius_size * si
-                i+=1
+                i += 1
                 yp1[i] = y0 + radius_size * co
                 az += D2R
         ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
@@ -329,7 +331,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp2[i] = x0 + radius_size * si;
-                i+=1
+                i += 1
                 yp2[i] = y0 + radius_size * co;
                 az -= D2R
         else:
@@ -338,29 +340,29 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp2[i] = x0 + radius_size * si
-                i+=1
+                i += 1
                 yp2[i] = y0 + radius_size * co
                 az += D2R
         ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
         return
-    elif n==2:
+    elif n == 2:
         for i in range(0, j3):
             xp1[i] = x3[i]
             yp1[i] = y3[i]
         for ii in range(0, j):
             xp1[i] = x[ii]
-            i+=1
+            i += 1
             yp1[i] = y[ii]
         if big_iso:
-            ii=j2-1
-            while ii>=0:
+            ii = j2 - 1
+            while ii >= 0:
                 xp1[i] = x2[ii]
-                i+=1
+                i += 1
                 yp1[i] = y2[ii]
-                ii-=1
+                ii -= 1
             ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
             return
-        
+
 #        if azi[2][0] - azi[0][1] > pi:
 #            azi[2][0] -= pi * 2.
 #        elif azi[0][1] - azi[2][0] < pi:
@@ -371,7 +373,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp1[i] = x0 + radius_size * si
-                i+=1
+                i += 1
                 yp1[i] = y0 + radius_size * co
                 az -= D2R
         else:
@@ -379,12 +381,12 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
             while az < azi[2][0]:
                 si = sin(az)
                 co = cos(az)
-                xp1[i] = x0+ radius_size * si
-                i+=1
-                yp1[i] = y0+ radius_size * co
+                xp1[i] = x0 + radius_size * si
+                i += 1
+                yp1[i] = y0 + radius_size * co
                 az += D2R
         ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
-        
+
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
@@ -397,9 +399,9 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
             while az > azi[1][0]:
                 si = sin(az)
                 co = cos(az)
-                xp2[i] = x0+ radius_size * si
-                i+=1
-                yp2[i] = y0+ radius_size * co
+                xp2[i] = x0 + radius_size * si
+                i += 1
+                yp2[i] = y0 + radius_size * co
                 az -= D2R
         else:
             az = azi[1][1] + D2R
@@ -407,7 +409,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 si = sin(az)
                 co = cos(az)
                 xp2[i] = x0 + radius_size * si
-                i+=1
+                i += 1
                 yp2[i] = y0 + radius_size * co
                 az += D2R
         ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
@@ -426,7 +428,7 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
     S1 = np1.strike
     D1 = np1.dip
     R1 = np1.rake
-    
+
     M = 0
     if R1 > 180:
         R1 -= 180
@@ -434,59 +436,59 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
     if R1 < 0:
         R1 += 180
         M = 1
-    
+
     # Get azimuth and dip of second plane
     (S2, D2, _R2) = AuxPlane(S1, D1, R1)
-    
-    D = size/2
-    
+
+    D = size / 2
+
     if D1 >= 90:
         D1 = 89.9999
     if D2 >= 90:
         D2 = 89.9999
-    
+
     phi = arange(0, pi, .01)
-    l1 = sqrt(power(90 - D1, 2)/(power(sin(phi), 2) + power(cos(phi), 2) * \
+    l1 = sqrt(power(90 - D1, 2) / (power(sin(phi), 2) + power(cos(phi), 2) * \
                                  power(90 - D1, 2) / power(90, 2)))
-    l2 = sqrt(power(90 - D2, 2)/(power(sin(phi), 2) + power(cos(phi), 2) * \
+    l2 = sqrt(power(90 - D2, 2) / (power(sin(phi), 2) + power(cos(phi), 2) * \
                                  power(90 - D2, 2) / power(90, 2)))
-    
+
     inc = 1
-    (X1, Y1) = Pol2Cart(phi+S1*D2R, l1)
-    
+    (X1, Y1) = Pol2Cart(phi + S1 * D2R, l1)
+
     if M == 1:
         lo = S1 - 180
         hi = S2
         if lo > hi:
             inc = -inc
-        th1 = arange(S1-180, S2, inc)
-        (Xs1, Ys1) = Pol2Cart(th1*D2R, 90*ones((1, len(th1))))
-        (X2, Y2) = Pol2Cart(phi+S2*D2R, l2)
-        th2 = arange(S2+180, S1, -inc)
+        th1 = arange(S1 - 180, S2, inc)
+        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * ones((1, len(th1))))
+        (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
+        th2 = arange(S2 + 180, S1, -inc)
     else:
         hi = S1 - 180
         lo = S2 - 180
         if lo > hi:
             inc = -inc
         th1 = arange(hi, lo, -inc)
-        (Xs1, Ys1) = Pol2Cart(th1*D2R, 90*ones((1, len(th1))))
-        (X2, Y2) = Pol2Cart(phi+S2*D2R, l2)
+        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * ones((1, len(th1))))
+        (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
         X2 = X2[::-1]
         Y2 = Y2[::-1]
         th2 = arange(S2, S1, inc)
-    (Xs2, Ys2) = Pol2Cart(th2*D2R, 90*ones((1, len(th2))))
-    X = concatenate((X1,Xs1[0],X2,Xs2[0]),1)
-    Y = concatenate((Y1,Ys1[0],Y2,Ys2[0]),1)
-    
-    X = X * D/90
-    Y = Y * D/90
-    phid = arange(0,2*pi,.01)
-    (x,y) = Pol2Cart(phid, 90)
-    xx = x*D/90
-    yy = y*D/90
+    (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * ones((1, len(th2))))
+    X = concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
+    Y = concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
+
+    X = X * D / 90
+    Y = Y * D / 90
+    phid = arange(0, 2 * pi, .01)
+    (x, y) = Pol2Cart(phid, 90)
+    xx = x * D / 90
+    yy = y * D / 90
     ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
     ax.fill(Y, X, 'w', alpha=alpha, linewidth=linewidth)
-    l = lines.Line2D(xx, yy, color='k', 
+    l = lines.Line2D(xx, yy, color='k',
                      linewidth=linewidth, zorder=10, alpha=alpha)
     ax.add_line(l)
 
@@ -494,8 +496,8 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
 def Pol2Cart(th, r):
     """
     """
-    x = r*cos(th)
-    y = r*sin(th)
+    x = r * cos(th)
+    y = r * sin(th)
     return (x, y)
 
 
@@ -507,20 +509,20 @@ def StrikeDip(n, e, u):
     Adapted from bb.m written by Andy Michaels and Oliver Boyd.
     @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    r2d = 180/pi
+    r2d = 180 / pi
     if u < 0:
         n = -n
         e = -e
         u = -u
-    
-    strike = arctan2(e,n)*r2d
+
+    strike = arctan2(e, n) * r2d
     strike = strike - 90
     while strike >= 360:
             strike = strike - 360
     while strike < 0:
             strike = strike + 360
     x = sqrt(power(n, 2) + power(e, 2))
-    dip = arctan2(x, u)*r2d
+    dip = arctan2(x, u) * r2d
     return (strike, dip)
 
 
@@ -531,32 +533,32 @@ def AuxPlane(s1, d1, r1):
     Adapted from bb.m written by Andy Michael and Oliver Boyd.
     @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    r2d = 180/pi
-    
-    z = (s1+90)/r2d
-    z2 = d1/r2d
-    z3 = r1/r2d
+    r2d = 180 / pi
+
+    z = (s1 + 90) / r2d
+    z2 = d1 / r2d
+    z3 = r1 / r2d
     # slick vector in plane 1
-    sl1 = -cos(z3)*cos(z)-sin(z3)*sin(z)*cos(z2)
-    sl2 = cos(z3)*sin(z)-sin(z3)*cos(z)*cos(z2)
-    sl3 = sin(z3)*sin(z2)
+    sl1 = -cos(z3) * cos(z) - sin(z3) * sin(z) * cos(z2)
+    sl2 = cos(z3) * sin(z) - sin(z3) * cos(z) * cos(z2)
+    sl3 = sin(z3) * sin(z2)
     (strike, dip) = StrikeDip(sl2, sl1, sl3)
-    
-    n1 = sin(z)*sin(z2) # normal vector to plane 1
-    n2 = cos(z)*sin(z2)
+
+    n1 = sin(z) * sin(z2) # normal vector to plane 1
+    n2 = cos(z) * sin(z2)
     h1 = -sl2 # strike vector of plane 2
     h2 = sl1
     # note h3=0 always so we leave it out
     # n3 = cos(z2)
-    
-    z = h1*n1 + h2*n2
-    z = z/sqrt(h1*h1 + h2*h2)
+
+    z = h1 * n1 + h2 * n2
+    z = z / sqrt(h1 * h1 + h2 * h2)
     z = arccos(z)
     rake = 0
     if sl3 > 0:
-        rake = z*r2d
+        rake = z * r2d
     if sl3 <= 0:
-        rake = -z*r2d
+        rake = -z * r2d
     return (strike, dip, rake)
 
 
@@ -577,12 +579,12 @@ def MT2Plane(mt):
                [-v[0, 1], v[0, 0], v[0, 2]]])
     IMAX = D.argmax()
     IMIN = D.argmin()
-    AE = (V[:,IMAX]+V[:,IMIN])/sqrt(2.0)
-    AN = (V[:,IMAX]-V[:,IMIN])/sqrt(2.0)
+    AE = (V[:, IMAX] + V[:, IMIN]) / sqrt(2.0)
+    AN = (V[:, IMAX] - V[:, IMIN]) / sqrt(2.0)
     AER = sqrt(power(AE[0], 2) + power(AE[1], 2) + power(AE[2], 2))
     ANR = sqrt(power(AN[0], 2) + power(AN[1], 2) + power(AN[2], 2))
-    AE = AE/AER
-    AN = AN/ANR
+    AE = AE / AER
+    AN = AN / ANR
     if AN[2] <= 0.:
         AN1 = AN
         AE1 = AE
@@ -600,78 +602,78 @@ def TDL(AN, BN):
     Adapted from bb.m written by Oliver S. Boyd.
     @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    XN=AN[0]
-    YN=AN[1]
-    ZN=AN[2]
-    XE=BN[0]
-    YE=BN[1]
-    ZE=BN[2]
-    AAA=1.0E-06
-    CON=57.2957795
+    XN = AN[0]
+    YN = AN[1]
+    ZN = AN[2]
+    XE = BN[0]
+    YE = BN[1]
+    ZE = BN[2]
+    AAA = 1.0 / (1000000)
+    CON = 57.2957795
     if fabs(ZN) < AAA:
-        FD=90.
-        AXN=fabs(XN)
+        FD = 90.
+        AXN = fabs(XN)
         if AXN > 1.0:
-            AXN=1.0
-        FT=arcsin(AXN)*CON
-        ST=-XN
-        CT=YN
+            AXN = 1.0
+        FT = arcsin(AXN) * CON
+        ST = -XN
+        CT = YN
         if ST >= 0. and CT < 0:
-            FT=180.-FT
+            FT = 180. - FT
         if ST < 0. and CT <= 0:
-            FT=180.+FT
+            FT = 180. + FT
         if ST < 0. and CT > 0:
-            FT=360.-FT
-        FL=arcsin(abs(ZE))*CON
-        SL=-ZE
+            FT = 360. - FT
+        FL = arcsin(abs(ZE)) * CON
+        SL = -ZE
         if fabs(XN) < AAA:
-            CL=XE/YN
+            CL = XE / YN
         else:
-            CL=-YE/XN
-        if SL >= 0. and CL < 0: 
-            FL=180.-FL
-        if SL < 0. and CL <= 0: 
-            FL=FL-180.
-        if SL < 0. and CL > 0: 
-            FL=-FL
+            CL = -YE / XN
+        if SL >= 0. and CL < 0:
+            FL = 180. - FL
+        if SL < 0. and CL <= 0:
+            FL = FL - 180.
+        if SL < 0. and CL > 0:
+            FL = -FL
     else:
-        if -ZN > 1.0: 
-            ZN=-1.0
-        FDH=arccos(-ZN)
-        FD=FDH*CON
-        SD=sin(FDH)
+        if - ZN > 1.0:
+            ZN = -1.0
+        FDH = arccos(-ZN)
+        FD = FDH * CON
+        SD = sin(FDH)
         if SD == 0:
             return
-        ST=-XN/SD
-        CT=YN/SD
-        SX=fabs(ST)
-        if SX > 1.0: 
-            SX=1.0
-        FT=arcsin(SX)*CON
-        if ST >= 0. and CT < 0: 
-            FT=180.-FT
-        if ST < 0. and CT <= 0: 
-            FT=180.+FT
-        if ST < 0. and CT > 0: 
-            FT=360.-FT
-        SL=-ZE/SD
-        SX=fabs(SL)
-        if SX > 1.0: 
-            SX=1.0
-        FL=arcsin(SX)*CON
+        ST = -XN / SD
+        CT = YN / SD
+        SX = fabs(ST)
+        if SX > 1.0:
+            SX = 1.0
+        FT = arcsin(SX) * CON
+        if ST >= 0. and CT < 0:
+            FT = 180. - FT
+        if ST < 0. and CT <= 0:
+            FT = 180. + FT
+        if ST < 0. and CT > 0:
+            FT = 360. - FT
+        SL = -ZE / SD
+        SX = fabs(SL)
+        if SX > 1.0:
+            SX = 1.0
+        FL = arcsin(SX) * CON
         if ST == 0:
-            CL=XE/CT
+            CL = XE / CT
         else:
-            XXX=YN*ZN*ZE/SD/SD+YE
-            CL=-SD*XXX/XN
+            XXX = YN * ZN * ZE / SD / SD + YE
+            CL = -SD * XXX / XN
             if CT == 0:
-                CL=YE/ST
-        if SL >= 0. and CL < 0: 
-            FL=180.-FL
-        if SL < 0. and CL <= 0: 
-            FL=FL-180.
-        if SL < 0. and CL > 0: 
-            FL=-FL
+                CL = YE / ST
+        if SL >= 0. and CL < 0:
+            FL = 180. - FL
+        if SL < 0. and CL <= 0:
+            FL = FL - 180.
+        if SL < 0. and CL > 0:
+            FL = -FL
     return (FT, FD, FL)
 
 
@@ -689,16 +691,16 @@ def MT2Axes(mt):
     pl = arcsin(-V[0])
     az = arctan2(V[2], -V[1])
     for i in range(0, 3):
-        if pl[i]<=0:
+        if pl[i] <= 0:
             pl[i] = -pl[i]
             az[i] += pi
         if az[i] < 0:
-            az[i] += 2*pi
-        if az[i] > 2*pi:
-            az[i] -= 2*pi
+            az[i] += 2 * pi
+        if az[i] > 2 * pi:
+            az[i] -= 2 * pi
     pl *= R2D
     az *= R2D
-    
+
     T = PrincipalAxis(D[2], az[2], pl[2])
     N = PrincipalAxis(D[1], az[1], pl[1])
     P = PrincipalAxis(D[0], az[0], pl[0])
@@ -765,48 +767,48 @@ class MomentTensor(object):
       26
     """
     def __init__(self, *args):
-        if len(args)==2:
+        if len(args) == 2:
             A = args[0]
             self.expo = args[1]
-            if len(A)==6:
+            if len(A) == 6:
                 # six independent components
-                self.mt = array([[A[0], A[3], A[4]], 
-                                 [A[3], A[1], A[5]], 
+                self.mt = array([[A[0], A[3], A[4]],
+                                 [A[3], A[1], A[5]],
                                  [A[4], A[5], A[2]]])
-            elif isinstance(A, ndarray) and A.shape==(3, 3):
+            elif isinstance(A, ndarray) and A.shape == (3, 3):
                 # full matrix
                 self.mt = A
             else:
                 raise TypeError("Wrong size of input parameter.")
-        elif len(args)==7:
+        elif len(args) == 7:
             # six independent components
-            self.mt = array([[args[0], args[3], args[4]], 
-                             [args[3], args[1], args[5]], 
+            self.mt = array([[args[0], args[3], args[4]],
+                             [args[3], args[1], args[5]],
                              [args[4], args[5], args[2]]])
             self.expo = args[6]
         else:
             raise TypeError("Wrong size of input parameter.")
-    
+
     @property
     def xx(self):
         return self.mt[0][0]
-    
+
     @property
     def xy(self):
         return self.mt[0][1]
-    
+
     @property
     def xz(self):
         return self.mt[0][2]
-    
+
     @property
     def yz(self):
         return self.mt[1][2]
-    
+
     @property
     def yy(self):
         return self.mt[1][1]
-    
+
     @property
     def zz(self):
         return self.mt[2][2]

@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
+
+import StringIO
 import matplotlib.pyplot as plt
+
 
 def plotWaveform(stream_object, outfile=None, format=None,
                size=(800, 200), starttime=False, endtime=False,
@@ -91,7 +95,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # Calculate 98%-range.
     yrange = eighty_nine_maxy - eighty_nine_miny
     # If the outer two percent are more than 10 times bigger discard them.
-    if miny + 10*yrange < maxy:
+    if miny + 10 * yrange < maxy:
         miny = eighty_nine_miny
         maxy = eighty_nine_maxy
     else:
@@ -190,6 +194,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
         else:
             plt.show()
 
+
 def _getMinMaxList(stream_object, width, starttime=None,
                    endtime=None):
     """
@@ -219,7 +224,7 @@ def _getMinMaxList(stream_object, width, starttime=None,
     """
     # Sort traces according to starttime.
     traces = stream_object.traces
-    traces.sort(key = lambda x:x.stats['starttime'])
+    traces.sort(key=lambda x:x.stats['starttime'])
     #Get start- and endtime and convert them to UNIX timestamp.
     if not starttime:
         starttime = traces[0].stats['starttime'].timestamp()
@@ -267,7 +272,7 @@ def _getMinMaxList(stream_object, width, starttime=None,
             else:
                 #Endtime also is in the trace. Append to tempdatlist.
                 if pixel_endtime < a_etime:
-                    start = float((starttime - a_stime)) /(a_etime - a_stime)*\
+                    start = float((starttime - a_stime)) / (a_etime - a_stime) * \
                             npts
                     end = float((pixel_endtime - a_stime)) / \
                           (a_etime - a_stime) * npts
@@ -275,7 +280,7 @@ def _getMinMaxList(stream_object, width, starttime=None,
                     minlist.append(_i.data[int(start) : int(end)].min())
                 #Endtime is not in the trace. Append to tempdatlist.
                 else:
-                    start = float((starttime - a_stime)) /(a_etime - a_stime)*\
+                    start = float((starttime - a_stime)) / (a_etime - a_stime) * \
                             npts
                     maxlist.append(_i.data[int(start) : \
                                            npts].max())

@@ -27,8 +27,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import platform, os, time, ctypes as C
-from obspy.util import DateTime
+import platform, os, ctypes as C
+from obspy.core.util import DateTime
 
 
 if platform.system() == 'Windows':
@@ -121,13 +121,15 @@ class HEADER(C.Structure):
 # >>> from obspy.gse2 import gse2head
 gse2head = [_i[0] for _i in HEADER._fields_]
 
+
 def isGse2(f):
     widi = f.read(4)
     if widi != 'WID2':
         raise TypeError("File is not in GSE2 format")
     f.seek(0)
 
-def writeHeader(f,head):
+
+def writeHeader(f, head):
     """
     Rewriting the write_header Function of gse_functions.c
 
@@ -137,8 +139,8 @@ def writeHeader(f,head):
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
     """
-    mantissa,exponent = str("%10.4e"%head.calib).split('e')
-    calib = "%se%+03d"%(mantissa,int(exponent))
+    mantissa, exponent = str("%10.4e" % head.calib).split('e')
+    calib = "%se%+03d" % (mantissa, int(exponent))
     f.write("WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d %11.6f %s %7.3f %-6s %5.1f %4.1f\n" % (
             head.d_year,
             head.d_mon,
@@ -159,6 +161,7 @@ def writeHeader(f,head):
             head.vang
         )
     )
+
 
 def read(file, test_chksum=False):
     """
@@ -200,6 +203,7 @@ def read(file, test_chksum=False):
     # from numpy 1.2.1 it's possible to use:
     ##import numpy as N
     ##return headdict , N.ctypeslib.as_array(data)
+
 
 def write(headdict, data, file):
     """
@@ -273,13 +277,14 @@ def write(headdict, data, file):
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on windows and linux.
     # For further details, see the __doc__ of writeHeader
-    writeHeader(f,head)
+    writeHeader(f, head)
     lib.buf_dump(fp)
     f.write("CHK2 %8ld\n\n" % chksum)
     f.close()
     lib.buf_free(None)
     del fp, head
     return 0
+
 
 def readHead(file):
     """
@@ -305,6 +310,7 @@ def readHead(file):
     del fp, head
     return headdict
 
+
 def getStartAndEndTime(file):
     """
     Return start and endtime/date of gse2 file
@@ -325,13 +331,10 @@ def getStartAndEndTime(file):
     lib.read_header(fp, C.pointer(head))
     f.close()
     seconds = int(head.t_sec)
-    microseconds = int(1e6 * (head.t_sec - seconds ))
+    microseconds = int(1e6 * (head.t_sec - seconds))
     startdate = DateTime(head.d_year, head.d_mon, head.d_day,
                          head.t_hour, head.t_min, seconds, microseconds)
     stopdate = DateTime(startdate.timestamp() +
-                        head.n_samps/float(head.samp_rate))
+                        head.n_samps / float(head.samp_rate))
     del fp, head
     return [startdate, stopdate, startdate.timestamp(), stopdate.timestamp()]
-
-del c_file_p
-

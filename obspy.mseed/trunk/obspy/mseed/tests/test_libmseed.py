@@ -4,7 +4,7 @@ The libmseed test suite.
 """
 
 from obspy.mseed import libmseed
-from obspy.util import DateTime
+from obspy.core.util import DateTime
 import copy
 import inspect
 import numpy as N

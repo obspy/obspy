@@ -3,8 +3,8 @@
 from obspy.core import Trace
 from obspy.gse2 import libgse2
 from obspy.numpy import array
-from obspy.util import Stats, DateTime
-import os
+from obspy.util import DateTime
+
 
 def isGSE2(filename):
     """
@@ -13,10 +13,19 @@ def isGSE2(filename):
     @param filename: GSE2 file to be read.
     """
     # Open file.
-    f = open(filename)
-    if f.read(4) == 'WID2':
+    try:
+        f = open(filename)
+    except:
+        return False
+    try:
+        data = f.read(4)
+    except:
+        data = False
+    f.close()
+    if data == 'WID2':
         return True
     return False
+
 
 def readGSE2(filename, **kwargs):
     """
@@ -33,18 +42,19 @@ def readGSE2(filename, **kwargs):
                   header['channel']}
     # convert time to seconds since epoch
     seconds = int(header['t_sec'])
-    microseconds = int(1e6*(header['t_sec'] - seconds))
+    microseconds = int(1e6 * (header['t_sec'] - seconds))
     # Calculate start time.
     new_header['starttime'] = DateTime(
-            header['d_year'],header['d_mon'],header['d_day'],
-            header['t_hour'],header['t_min'],
-            seconds,microseconds
+            header['d_year'], header['d_mon'], header['d_day'],
+            header['t_hour'], header['t_min'],
+            seconds, microseconds
     )
     new_header['endtime'] = DateTime.utcfromtimestamp(
         new_header['starttime'].timestamp() +
-        header['n_samps']/float(header['samp_rate'])
+        header['n_samps'] / float(header['samp_rate'])
     )
-    return Trace(header = new_header, data = array(data))
+    return Trace(header=new_header, data=array(data))
+
 
 def writeGSE2(stream_object, filename, **kwargs):
     raise NotImplementedError

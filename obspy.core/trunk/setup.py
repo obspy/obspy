@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2008-2009 by:
+# Copyright (c) 2009 by:
 #     * Moritz Beyreuther
-#     * Stefan Stange
+#     * Lion Krischner
+#     * Robert Barsch
 #
 # GNU General Public License (GPL)
 #
@@ -27,38 +28,31 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.2'
+version = '0.0.1'
 
 
 setup(
-    name='obspy.gse2',
+    name='obspy.core',
     version=version,
-    description="Read and write support for GSE2 files (seismograms).",
+    description="",
     long_description="""
-    obspy.gse2
+    obspy.core
     ==========
-    Read and write support for GSE2 files (seismograms).
     
     Latest developer version:
-    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev
+    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev
     """,
     classifiers=[],
-    keywords='Seismology GSE2',
-    author='Moritz Beyreuther, Stefan Stange',
+    keywords='Seismology',
+    author='Moritz Beyreuther, Lion Krischner, Robert Barsch',
     author_email='beyreuth@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
+    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core',
     license='GPL',
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=False,
-    # test_suite = "obspy.gse2.tests",
+    zip_safe=True,
     install_requires=[
-        'obspy.core',
         'setuptools',
-        'numpy',
-    ],
-    dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )

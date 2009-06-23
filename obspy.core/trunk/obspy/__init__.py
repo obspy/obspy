@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""Python for Seismological Observatories."""
+"""Python for observatories."""
 
-# A namespace package will not have any method, class or any other
-# objects defined in that level.
-# @see: http://baijum81.livejournal.com/22412.html
+from obspy.core.core import *
+from obspy.core import util
+from obspy.core import parser
 
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
 try:
@@ -12,7 +12,3 @@ try:
 except ImportError:
     from pkgutil import extend_path
     __path__ = extend_path(__path__, __name__)
-
-import sys
-import pdb;pdb.set_trace()
-print "a"

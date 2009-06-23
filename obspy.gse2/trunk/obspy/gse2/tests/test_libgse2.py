@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.gse2 import libgse2
-from obspy.util import DateTime
+from obspy.core.util import DateTime
 import inspect, os, unittest
 
 

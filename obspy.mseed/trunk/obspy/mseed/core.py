@@ -2,8 +2,6 @@
 
 from obspy.core import Stream, Trace
 from obspy.mseed import libmseed
-from obspy.util import Stats
-import os
 
 
 def isMSEED(filename):
@@ -14,6 +12,7 @@ def isMSEED(filename):
     """
     __libmseed__ = libmseed()
     return __libmseed__.isMSEED(filename)
+
 
 def readMSEED(filename):
     """
@@ -41,13 +40,14 @@ def readMSEED(filename):
         for _j in convert_dict.keys():
             header[_j] = old_header[convert_dict[_j]]
         # Convert times to obspy.DateTime objects.
-        header['starttime'] =\
+        header['starttime'] = \
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
-        header['endtime'] =\
+        header['endtime'] = \
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
         # Append traces.
-        traces.append(Trace(header = header, data = _i[1]))
-    return Stream(traces = traces)
+        traces.append(Trace(header=header, data=_i[1]))
+    return Stream(traces=traces)
+
 
 def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
                byteorder= -1, flush= -1, verbose=0):
@@ -99,6 +99,6 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
         header['samplecnt'] = len(_i.data)
         trace_list.append([header, _i.data])
     # Write resulting trace_list to Mini-SEED file.
-    __libmseed__.writeMSTraces(trace_list, outfile = filename, reclen = reclen,
-                               encoding = encoding, byteorder = byteorder,
-                               flush = flush, verbose = verbose)
+    __libmseed__.writeMSTraces(trace_list, outfile=filename, reclen=reclen,
+                               encoding=encoding, byteorder=byteorder,
+                               flush=flush, verbose=verbose)

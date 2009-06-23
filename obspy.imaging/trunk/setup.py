@@ -26,7 +26,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.5'
+version = '0.0.6'
 
 
 setup(
@@ -51,10 +51,14 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.imaging.tests",
+    test_suite="obspy.imaging.tests",
     install_requires=[
         'setuptools',
         'matplotlib',
-        'numpy'
+        'numpy',
+        'obspy.core'
+    ],
+    dependency_links=[
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )

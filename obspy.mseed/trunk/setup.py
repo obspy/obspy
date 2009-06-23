@@ -28,14 +28,21 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.0.2'
 
 
 setup(
     name='obspy.mseed',
     version=version,
     description="Read and write support for MiniSEED files (seismograms).",
-    long_description="""https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev""",
+    long_description="""
+    obspy.mseed
+    ===========
+    Read and write support for MiniSEED files (seismograms).
+    
+    Latest developer version:
+    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev
+    """,
     classifiers=[],
     keywords='Seismology MiniSEED',
     author='Lion Krischer, Robert Barsch, Moritz Beyreuther',
@@ -48,10 +55,11 @@ setup(
     zip_safe=False,
     # test_suite = "obspy.mseed.tests",
     install_requires=[
-        'obspy',
+        'obspy.core',
         'setuptools',
+        'numpy'
     ],
     dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )
