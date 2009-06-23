@@ -21,9 +21,8 @@ http://www.gnu.org/
 
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
-from obspy.util import DateTime
+from obspy.util import DateTime, scoreatpercentile
 from struct import unpack
-import StringIO
 import ctypes as C
 import math
 import numpy as N
@@ -45,9 +44,9 @@ else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'
     else:
-        lib_name = 'libmseed-2.2.so'
-clibmseed = N.ctypeslib.load_library(lib_name,
-                        os.path.join(os.path.dirname(__file__), 'libmseed'))
+        lib_name = 'libmseed-2.1.7.so'
+clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
+                                lib_name))
 
 
 class libmseed(object):
@@ -530,10 +529,11 @@ class libmseed(object):
         # Calculate some statistical values.
         result['min'] = min(data)
         result['max'] = max(data)
-        result['average'] = sum(data)/n
-        result['median'] = data[n//2]
-        result['lower_quantile']  = data[n//4]
-        result['upper_quantile']  = data[3*n//4]
+        result['average'] = sum(data) / n
+        data = sorted(data)
+        result['median'] = scoreatpercentile(data, 50, sort=False)
+        result['lower_quantile'] = scoreatpercentile(data, 25, sort=False)
+        result['upper_quantile'] = scoreatpercentile(data, 75, sort=False)
         return result
 
     def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
