@@ -20,7 +20,7 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
     # test_suite = "obspy.gse2.tests",
     install_requires=[
         'setuptools',
