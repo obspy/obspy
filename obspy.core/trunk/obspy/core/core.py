@@ -2,7 +2,7 @@
 """
 The ObsPy core classes.
 """
-from obspy.util import Stats, getFormatsAndMethods
+from obspy.core.util import Stats, getFormatsAndMethods
 import copy
 import math
 import os
