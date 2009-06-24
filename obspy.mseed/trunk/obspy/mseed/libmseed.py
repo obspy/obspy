@@ -21,7 +21,7 @@ http://www.gnu.org/
 
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     c_file_p, MSFileParam
-from obspy.core.util import DateTime, scoreatpercentile
+from obspy.core.util import UTCDateTime, scoreatpercentile
 from struct import unpack
 import ctypes as C
 import math
@@ -365,8 +365,8 @@ class libmseed(object):
             else:
                 nsamples += 1
             # Convert to python datetime objects
-            time1 = DateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
-            time2 = DateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
+            time1 = UTCDateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
+            time2 = UTCDateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
             gap_list.append((cur.network, cur.station, cur.location,
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
@@ -556,8 +556,8 @@ class libmseed(object):
         @return: Byte string containing the cut file.
         
         @param filename: File string of the Mini-SEED file to be cut.
-        @param starttime: obspy.util.DateTime object.
-        @param endtime: obspy.util.DateTime object.
+        @param starttime: obspy.util.UTCDateTime object.
+        @param endtime: obspy.util.UTCDateTime object.
         """
         # Read the start and end time of the file.
         (start, end) = self.getStartAndEndTime(filename)
@@ -644,8 +644,8 @@ class libmseed(object):
         
         @param file_list: A list containing Mini-SEED filename strings.
         @param outfile: String of the file to be created.
-        @param starttime: obspy.util.DateTime object.
-        @param endtime: obspy.util.DateTime object.
+        @param starttime: obspy.util.UTCDateTime object.
+        @param endtime: obspy.util.UTCDateTime object.
         """
         # Copy file_list to not alter the provided list.
         file_list = file_list[:]
@@ -727,19 +727,19 @@ class libmseed(object):
 
     def _convertDatetimeToMSTime(self, dt):
         """
-        Takes obspy.util.DateTime object and returns an epoch time in ms.
+        Takes obspy.util.UTCDateTime object and returns an epoch time in ms.
         
-        @param dt: obspy.util.DateTime object.
+        @param dt: obspy.util.UTCDateTime object.
         """
         return int(dt.timestamp() * HPTMODULUS)
 
     def _convertMSTimeToDatetime(self, timestring):
         """
-        Takes Mini-SEED timestring and returns a obspy.util.DateTime object.
+        Takes Mini-SEED timestring and returns a obspy.util.UTCDateTime object.
         
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
-        return DateTime.utcfromtimestamp(timestring / HPTMODULUS)
+        return UTCDateTime.utcfromtimestamp(timestring / HPTMODULUS)
 
     def _convertMSTToDict(self, m):
         """

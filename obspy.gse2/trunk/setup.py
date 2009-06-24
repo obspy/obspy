@@ -38,9 +38,6 @@ setup(
     obspy.gse2
     ==========
     Read and write support for GSE2 files (seismograms).
-    
-    Latest developer version:
-    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev
     """,
     classifiers=[],
     keywords='Seismology GSE2',
@@ -58,7 +55,8 @@ setup(
         'setuptools',
         'numpy',
     ],
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev",
     dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev"
     ],
 )

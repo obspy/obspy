@@ -39,9 +39,9 @@ class Stats(dict):
     @ivar channel: Channel
     @type dataquality: String
     @ivar dataquality: Data quality
-    @type starttime: obspy.DateTime Object
+    @type starttime: obspy.UTCDateTime Object
     @ivar starttime: Starttime of seismogram
-    @type endtime: obspy.DateTime Object
+    @type endtime: obspy.UTCDateTime Object
     @ivar endtime: Endtime of seismogram
     """
     def __init__(self, *args, **kwargs):
@@ -55,11 +55,11 @@ class Stats(dict):
         self.location = ""
         self.channel = "BHZ"
         self.dataquality = ""
-        self.starttime = DateTime.utcfromtimestamp(0.0)
-        self.endtime = DateTime.utcfromtimestamp(86400.0)
+        self.starttime = UTCDateTime.utcfromtimestamp(0.0)
+        self.endtime = UTCDateTime.utcfromtimestamp(86400.0)
 
 
-class DateTime(datetime.datetime):
+class UTCDateTime(datetime.datetime):
     """
     A class handling conversion from utc datetime to utc timestamps. 
     
@@ -67,24 +67,24 @@ class DateTime(datetime.datetime):
     support.
     
     You may use the following syntax to change or access data in this class:
-        >>> DateTime(0.0)
-        DateTime(1970, 1, 1, 0, 0)
-        >>> DateTime(1970, 1, 1)
-        DateTime(1970, 1, 1, 0, 0)
-        >>> t = DateTime(1240561632.005)
+        >>> UTCDateTime(0.0)
+        UTCDateTime(1970, 1, 1, 0, 0)
+        >>> UTCDateTime(1970, 1, 1)
+        UTCDateTime(1970, 1, 1, 0, 0)
+        >>> t = UTCDateTime(1240561632.005)
         >>> t
-        DateTime(2009, 4, 24, 8, 27, 12, 5000)
+        UTCDateTime(2009, 4, 24, 8, 27, 12, 5000)
         >>> t.year
         2009
         >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
         (2009, 8, 4, 8, 27, 12, 5000)
         >>> t.timestamp() + 100
         1240561732.0050001
-        >>> t2 = DateTime(t.timestamp()+60)
+        >>> t2 = UTCDateTime(t.timestamp()+60)
         >>> t2
-        DateTime(2009, 4, 24, 8, 28, 12, 5000)
-        >>> DateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
-        DateTime(2009, 5, 24, 8, 28, 12, 5001)
+        UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
+        >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
+        UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
 
     """
     def __new__(cls, *args, **kwargs):

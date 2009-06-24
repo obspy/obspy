@@ -6,6 +6,8 @@
 # objects defined in that level.
 # @see: http://baijum81.livejournal.com/22412.html
 
+# DON'T IMPORT HERE ANYTHING!
+
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
 try:
     __import__('pkg_resources').declare_namespace(__name__)

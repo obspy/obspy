@@ -37,9 +37,6 @@ setup(
     obspy.imaging
     =============
     Provides tools for displaying features used in seismology.
-    
-    Latest developer version:
-    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev
     """,
     classifiers=[],
     keywords='obspy imaging beachball focal mechanism',
@@ -58,7 +55,8 @@ setup(
         'numpy',
         'obspy.core'
     ],
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev",
     dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev"
     ],
 )

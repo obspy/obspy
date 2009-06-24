@@ -35,13 +35,7 @@ setup(
     name='obspy.core',
     version=version,
     description="",
-    long_description="""
-    obspy.core
-    ==========
-    
-    Latest developer version:
-    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev
-    """,
+    long_description="""""",
     classifiers=[],
     keywords='Seismology',
     author='Moritz Beyreuther, Lion Krischner, Robert Barsch',
@@ -55,4 +49,5 @@ setup(
     install_requires=[
         'setuptools',
     ],
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
 )

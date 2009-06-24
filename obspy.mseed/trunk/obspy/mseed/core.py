@@ -39,7 +39,7 @@ def readMSEED(filename):
         # Convert header.
         for _j in convert_dict.keys():
             header[_j] = old_header[convert_dict[_j]]
-        # Convert times to obspy.DateTime objects.
+        # Convert times to obspy.UTCDateTime objects.
         header['starttime'] = \
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
         header['endtime'] = \
@@ -85,7 +85,7 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
         header = {}
         for _j in convert_dict.keys():
             header[_j] = _i.stats[convert_dict[_j]]
-        # Convert obspy.DateTime times to Mini-SEED times.
+        # Convert obspy.UTCDateTime times to Mini-SEED times.
         header['starttime'] = \
             __libmseed__._convertDatetimeToMSTime(header['starttime'])
         header['endtime'] = \

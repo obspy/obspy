@@ -10,13 +10,7 @@ setup(
     name='obspy',
     version=version,
     description="",
-    long_description="""
-    obspy
-    =====
-    
-    Latest developer version:
-    https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy-dev
-    """,
+    long_description="""""",
     classifiers=[],
     keywords='Seismology',
     author='Moritz Beyreuther',
@@ -37,10 +31,11 @@ setup(
         'obspy.mseed',
         'obspy.imaging'
     ],
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy-dev",
     dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core",
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2",
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed",
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging",
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev",
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev",
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev",
     ],
 )

@@ -3,7 +3,7 @@
 from obspy.core import Trace
 from obspy.gse2 import libgse2
 from obspy.numpy import array
-from obspy.util import DateTime
+from obspy.util import UTCDateTime
 
 
 def isGSE2(filename):
@@ -44,12 +44,12 @@ def readGSE2(filename, **kwargs):
     seconds = int(header['t_sec'])
     microseconds = int(1e6 * (header['t_sec'] - seconds))
     # Calculate start time.
-    new_header['starttime'] = DateTime(
+    new_header['starttime'] = UTCDateTime(
             header['d_year'], header['d_mon'], header['d_day'],
             header['t_hour'], header['t_min'],
             seconds, microseconds
     )
-    new_header['endtime'] = DateTime.utcfromtimestamp(
+    new_header['endtime'] = UTCDateTime.utcfromtimestamp(
         new_header['starttime'].timestamp() +
         header['n_samps'] / float(header['samp_rate'])
     )
