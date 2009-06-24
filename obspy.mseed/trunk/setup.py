@@ -39,6 +39,9 @@ setup(
     obspy.mseed
     ===========
     Read and write support for MiniSEED files (seismograms).
+    
+    SVN version:
+    <https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev>
     """,
     classifiers=[],
     keywords='Seismology MiniSEED',
@@ -56,8 +59,7 @@ setup(
         'setuptools',
         'numpy'
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev",
     dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )

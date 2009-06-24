@@ -28,14 +28,17 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.0.2'
 
 
 setup(
     name='obspy.core',
     version=version,
     description="",
-    long_description="""""",
+    long_description="""
+    SVN version:
+    <https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev>
+    """,
     classifiers=[],
     keywords='Seismology',
     author='Moritz Beyreuther, Lion Krischner, Robert Barsch',
@@ -49,5 +52,4 @@ setup(
     install_requires=[
         'setuptools',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
 )
