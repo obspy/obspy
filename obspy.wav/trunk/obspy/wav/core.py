@@ -25,8 +25,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from obspy.numpy import array
-from obspy.util import Stats
+from obspy.core.numpy import array
+from obspy.core.util import Stats
 import os, wave, struct
 from obspy.core import Trace
 

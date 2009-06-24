@@ -27,8 +27,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import platform, os, ctypes as C
-from obspy.core.util import UTCDateTime
+import platform, os
+import ctypes as C 
+import numpy as N
+from obspy.core.util import UTCDateTime, c_file_p
 
 
 if platform.system() == 'Windows':
@@ -45,23 +47,17 @@ lib = C.CDLL(os.path.join(os.path.dirname(__file__), lib_name))
 class ChksumError(StandardError):
     pass
 
-# C file pointer class
-class FILE(C.Structure): # Never directly used
-    """C file pointer class for type checking with argtypes"""
-    pass
-c_file_p = C.POINTER(FILE)
-
 # ctypes, PyFile_AsFile: convert python file pointer to C file pointer
 C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 C.pythonapi.PyFile_AsFile.restype = c_file_p
 
 ## gse_functions read_header
-#lib.read_header.argtypes = [c_file_p, C.c_void_p]
-#lib.read_header.restype = C.c_int
+lib.read_header.argtypes = [c_file_p, C.c_void_p]
+lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
-#lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
-#lib.decomp_6b.restype = C.c_int
+lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
+lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
 lib.rem_2nd_diff.argtypes = [C.c_void_p, C.c_int]
@@ -84,12 +80,12 @@ lib.compress_6b.argyptes = [C.c_void_p, C.c_int]
 lib.compress_6b.restype = C.c_int
 
 ## gse_functions write_header
-#lib.write_header.argtypes = [c_file_p, C.c_void_p]
-#lib.write_header.restype = C.c_void_p
+lib.write_header.argtypes = [c_file_p, C.c_void_p]
+lib.write_header.restype = C.c_void_p
 
 ## gse_functions buf_dump
-#lib.buf_dump.argtypes = [c_file_p]
-#lib.buf_dump.restype = C.c_void_p
+lib.buf_dump.argtypes = [c_file_p]
+lib.buf_dump.restype = C.c_void_p
 
 # gse_functions buf_free
 lib.buf_free.argtypes = [C.c_void_p]
@@ -171,13 +167,13 @@ def read(file, test_chksum=False):
     sufficient for most cases. Data are in circular frequency counts, for
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
-
+    
     @type file: String
     @param file: Filename of GSE2 file to read.
     @type test_chksum: Bool
     @param test_chksum: If True: Test Checksum and raise Exception
-    @rtype: Dictionary, Interable
-    @return: Header entries and data as longs.
+    @rtype: Dictionary, Numpy.ndarray int32
+    @return: Header entries and data as numpy.ndarray of type int32.
     """
     f = open(file, "rb")
     isGse2(f)
@@ -199,10 +195,8 @@ def read(file, test_chksum=False):
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
     del fp, head
-    return headdict , data[0:n]
-    # from numpy 1.2.1 it's possible to use:
-    ##import numpy as N
-    ##return headdict , N.ctypeslib.as_array(data)
+    # return headdict , data[0:n]
+    return headdict , N.ctypeslib.as_array(data)
 
 
 def write(headdict, data, file):
@@ -213,7 +207,10 @@ def write(headdict, data, file):
     sufficient for most cases. Data are in circular frequency counts, for
     correction of calper multiply by 2PI and calper: 
     data * 2 * pi * header['calper'].
-
+    
+    Warning: The data are actually compressed in place for performance
+    issues, if you still want to use the data afterwards use data.copy()
+    
     @requires: headdict dictionary entries C{'datatype', 'n_samps', 
         'samp_rate'} are absolutely necessary
     @type data: Iterable of longs
@@ -247,15 +244,13 @@ def write(headdict, data, file):
     """
     #@requires: headdict dictionary entries datatype, n_samps and samp_rate
     n = len(data)
+    # see that data are of type numpy.ndarray, dtype int32
+    assert type(data) == N.ndarray, "Error, data need to be int32 numpy ndarray"
+    assert data.dtype == 'int32', "Error, data need to be int32 numpy ndarray"
     # Maximum values above 2^26 will result in corrupted/wrong data!
-    if max(data) > 2 ** 26:
+    if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
-    tr = (C.c_long * n)()
-    try:
-        tr[0:n] = data
-    except TypeError:
-        raise TypeError("GSE2 data must be of type int or long, cast data to long!")
-    #tr = data.ctypes.data_as(C.c_void_p)
+    tr = data.ctypes.data_as(C.c_void_p)
     #tr = N.ctypeslib.as_ctypes(data)
     lib.buf_init(None)
     f = open(file, "wb")

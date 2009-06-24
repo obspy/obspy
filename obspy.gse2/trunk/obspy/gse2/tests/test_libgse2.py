@@ -7,7 +7,7 @@ The libgse2 test suite.
 from obspy.gse2 import libgse2
 from obspy.core.util import UTCDateTime
 import inspect, os, unittest
-
+import numpy as N
 
 class LibGSE2TestCase(unittest.TestCase):
     """
@@ -55,11 +55,10 @@ class LibGSE2TestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         header, data = libgse2.read(gse2file)
         temp_file = os.path.join(self.path, 'tmp.gse2')
-        libgse2.write(header, data, temp_file)
+        libgse2.write(header, data.copy(), temp_file)
         newheader, newdata = libgse2.read(temp_file)
         self.assertEqual(header, newheader)
-        self.assertEqual(data, newdata)
-        os.remove(temp_file)
+        N.testing.assert_equal(data, newdata)
 
     def test_readHeaderInfo(self):
         """
@@ -108,12 +107,26 @@ class LibGSE2TestCase(unittest.TestCase):
         of 2^26
         """
         testfile = os.path.join(self.path, 'tmp.gse2')
-        data = [2 ** 26 + 1]
+        data = N.array([2 ** 26 + 1])
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
         self.assertRaises(OverflowError, libgse2.write, header, data, testfile)
+
+    def test_arrayNotNumpy(self):
+        """
+        Test that exception is raised when data are not of type int32 numpy array
+        """
+        testfile = os.path.join(self.path, 'tmp.gse2')
+        data = [2,26,1]
+        header = {}
+        header['samp_rate'] = 200
+        header['n_samps'] = 1
+        header['datatype'] = 'CM6'
+        self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
+        data = N.array([2,26,1],dtype='f')
+        self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')

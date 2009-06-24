@@ -1,1 +1,0 @@
-../../../trunk/obspy/__init__.py

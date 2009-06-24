@@ -4,6 +4,7 @@ Defines the libmseed structures and blockettes.
 """
 
 import ctypes as C
+from obspy.core.util import c_file_p
 
 # SEED binary time
 class BTime(C.Structure):
@@ -311,16 +312,13 @@ MSTraceGroup = MSTraceGroup_s
 # Default modulus of 1000000 defines tick interval as a microsecond */
 HPTMODULUS = 1000000.0
 
-
-# C file pointer class
-class FILE(C.Structure): # Never directly used
-    """C file pointer class for type checking with argtypes"""
-    pass
-c_file_p = C.POINTER(FILE)
-
 # Reading Mini-SEED records from files
 class MSFileParam_s(C.Structure):
     pass
+
+# Define ctypes arg- and restypes.
+C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+C.pythonapi.PyFile_AsFile.restype = c_file_p
 
 MSFileParam_s._fields_ = [
 

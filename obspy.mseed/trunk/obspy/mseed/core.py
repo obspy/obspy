@@ -83,8 +83,8 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
                 'starttime', 'endtime' : 'endtime'}
     for _i in traces:
         header = {}
-        for _j in convert_dict.keys():
-            header[_j] = _i.stats[convert_dict[_j]]
+        for _j, _k in convert_dict.iteritems():
+            header[_j] = _i.stats[_k]
         # Convert obspy.UTCDateTime times to Mini-SEED times.
         header['starttime'] = \
             __libmseed__._convertDatetimeToMSTime(header['starttime'])

@@ -4,6 +4,7 @@
 from calendar import timegm
 import datetime
 import traceback
+import ctypes as C
 
 
 class Stats(dict):
@@ -198,6 +199,15 @@ def scoreatpercentile(a, per, limit=(), sort=True):
     else:
         return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
 
+# C file pointer class
+class FILE(C.Structure): # Never directly used
+    """C file pointer class for type checking with argtypes"""
+    pass
+c_file_p = C.POINTER(FILE)
+
+# Define ctypes arg- and restypes.
+#C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+#C.pythonapi.PyFile_AsFile.restype = c_file_p
 
 if __name__ == '__main__':
     import doctest

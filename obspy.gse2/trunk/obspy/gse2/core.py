@@ -2,8 +2,7 @@
 
 from obspy.core import Trace
 from obspy.gse2 import libgse2
-from obspy.numpy import array
-from obspy.util import UTCDateTime
+from obspy.core.util import UTCDateTime
 
 
 def isGSE2(filename):
@@ -53,7 +52,7 @@ def readGSE2(filename, **kwargs):
         new_header['starttime'].timestamp() +
         header['n_samps'] / float(header['samp_rate'])
     )
-    return Trace(header=new_header, data=array(data))
+    return Trace(header=new_header, data=data)
 
 
 def writeGSE2(stream_object, filename, **kwargs):
@@ -81,7 +80,7 @@ def writeGSE2(stream_object, filename, **kwargs):
 #    # number of samples
 #    if not header['n_samps']:
 #        try:
-#            header['n_samps'] = self.stats.sampling_rate
+#            header['n_samps'] = self.stats.npts
 #        except:
 #            header['n_samps'] = len(data)
 #    # year, month, day, hour, min, sec
