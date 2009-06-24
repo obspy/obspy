@@ -76,7 +76,7 @@ class InvSimTestCase(unittest.TestCase):
             f.close()
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
-            print "RMS misfit %15s:"%instrument,rms
+            #print "RMS misfit %15s:"%instrument,rms
             self.assertEqual(rms < 1.e-5, True)
             ##pl.subplot(3,2,ii)
             ##pl.plot(datcorr,'r',data_pitsa,'b--')
@@ -119,7 +119,7 @@ class InvSimTestCase(unittest.TestCase):
             f.close()
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
-            print "RMS misfit %15s:"%instrument,rms
+            #print "RMS misfit %15s:"%instrument,rms
             self.assertEqual(rms < 1.e-4, True)
             ##pl.subplot(3,2,ii)
             ##pl.plot(datcorr,'r',data_pitsa,'b--')

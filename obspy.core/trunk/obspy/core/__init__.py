@@ -3,3 +3,4 @@
 from core import *
 import util
 import parser
+from testing import runTests
