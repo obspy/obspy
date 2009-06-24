@@ -12,7 +12,3 @@ try:
 except ImportError:
     from pkgutil import extend_path
     __path__ = extend_path(__path__, __name__)
-
-import sys
-import pdb;pdb.set_trace()
-print "a"
