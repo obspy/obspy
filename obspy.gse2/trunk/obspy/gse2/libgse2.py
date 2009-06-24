@@ -159,7 +159,7 @@ def writeHeader(f, head):
     )
 
 
-def read(file, test_chksum=False):
+def read(infile, test_chksum=False):
     """
     Read GSE2 file and return header and data. 
     
@@ -169,13 +169,16 @@ def read(file, test_chksum=False):
     header['calper'].
     
     @type file: String
-    @param file: Filename of GSE2 file to read.
+    @param file: Filename of GSE2 file to read, can also be a file pointer
     @type test_chksum: Bool
     @param test_chksum: If True: Test Checksum and raise Exception
     @rtype: Dictionary, Numpy.ndarray int32
     @return: Header entries and data as numpy.ndarray of type int32.
     """
-    f = open(file, "rb")
+    if type(infile) == file:
+        f = infile
+    else:
+        f = open(infile, "rb")
     isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
@@ -194,12 +197,16 @@ def read(file, test_chksum=False):
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
+    #
+    # cleaning up
     del fp, head
+    if not type(infile) == file:
+        f.close()
     # return headdict , data[0:n]
     return headdict , N.ctypeslib.as_array(data)
 
 
-def write(headdict, data, file):
+def write(headdict, data, outfile):
     """
     Write GSE2 file, given the header and data.
     
@@ -215,8 +222,8 @@ def write(headdict, data, file):
         'samp_rate'} are absolutely necessary
     @type data: Iterable of longs
     @param data: Contains the data.
-    @type file: String
-    @param file: Name of GSE2 file to write.
+    @type outfile: String, File
+    @param outfile: Name of GSE2 file to write, can also be a file pointer
     @type headdict: Dictonary
     @param headdict: Header containing the following entries C{
         {
@@ -253,7 +260,10 @@ def write(headdict, data, file):
     tr = data.ctypes.data_as(C.c_void_p)
     #tr = N.ctypeslib.as_ctypes(data)
     lib.buf_init(None)
-    f = open(file, "wb")
+    if type(outfile) == file:
+        f = outfile
+    else:
+        f = open(outfile, "wb")
     fp = C.pythonapi.PyFile_AsFile(f)
     chksum = C.c_longlong()
     chksum = abs(lib.check_sum(tr, n, chksum))
@@ -266,18 +276,20 @@ def write(headdict, data, file):
         if _i in gse2head:
             setattr(head, _i, headdict[_i])
     # We leave this function ONLY for type checking, as the file pointer is
-    # seeked to 0 the header is overwritten!
+    # seeked to pos the header is overwritten!
+    pos = f.tell()
     lib.write_header(fp, C.pointer(head))
-    f.seek(0)
+    f.seek(pos)
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on windows and linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, head)
     lib.buf_dump(fp)
     f.write("CHK2 %8ld\n\n" % chksum)
-    f.close()
     lib.buf_free(None)
     del fp, head
+    if not type(outfile) == file:
+        f.close()
     return 0
 
 

@@ -26,6 +26,19 @@ def isGSE2(filename):
     return False
 
 
+convert_dict = {'station': 'station',
+                'samp_rate':'sampling_rate',
+                'n_samps': 'npts',
+                'instype': 'instype',
+                'datatype': 'datatype',
+                'vang': 'vang',
+                'auxid': 'auxid',
+                'channel': 'channel',
+                'calper': 'calper',
+                'calib': 'calib'
+}
+
+
 def readGSE2(filename, **kwargs):
     """
     Reads a GSE2 file and returns an obspy.Trace object.
@@ -36,9 +49,9 @@ def readGSE2(filename, **kwargs):
     header, data = libgse2.read(filename)
     # assign all header entries to a new dictionary compatible with an Obspy
     # Trace object.
-    new_header = {'station': header['station'], 'sampling_rate' : \
-                  header['samp_rate'], 'npts': header['n_samps'], 'channel': \
-                  header['channel']}
+    new_header = {}
+    for i,j in convert_dict.iteritems():
+        new_header[j] = header[i]
     # convert time to seconds since epoch
     seconds = int(header['t_sec'])
     microseconds = int(1e6 * (header['t_sec'] - seconds))
@@ -55,47 +68,31 @@ def readGSE2(filename, **kwargs):
     return Trace(header=new_header, data=data)
 
 
-def writeGSE2(stream_object, filename, **kwargs):
-    raise NotImplementedError
 
-#def writeGSE2(filename, **kwargs):
-#    #
-#    # Assign all attributes which have same name in gse2head
-#    #
-#    header = {}
-#    for _i in libgse2.gse2head:
-#        try:
-#            header[_i] = getattr(self.stats,_i)
-#        except AttributeError:
-#            pass
-#    #
-#    # Translate the common (renamed) entries
-#    #
-#    # sampling rate
-#    if not header['samp_rate']:
-#        try:
-#            header['samp_rate'] = self.stats.sampling_rate
-#        except:
-#            raise ValueError("No sampling rate given")
-#    # number of samples
-#    if not header['n_samps']:
-#        try:
-#            header['n_samps'] = self.stats.npts
-#        except:
-#            header['n_samps'] = len(data)
-#    # year, month, day, hour, min, sec
-#    if not header['d_day']:
-#        try:
-#            (header['d_year'],
-#             header['d_mon'],
-#             header['d_day'],
-#             header['t_hour'],
-#             header['t_min'],
-#             header['t_sec']) = self.stats.starttime.timetuple()[0:6]
-#            header['t_sec'] += self.stats.starttime.microseconds/1.0e6
-#        except:
-#            pass
-#    try:
-#        libgse2.write(header,self.data,filename)
-#    except TypeError:
-#        libgse2.write(header,array(self.data,format='l'),filename)
+def writeGSE2(stream_object, filename, **kwargs):
+    #
+    # Translate the common (renamed) entries
+    f = open(filename,'ab')
+    for trace in stream_object:
+        header = {}
+        for _j, _k in convert_dict.iteritems():
+            try:
+                header[_j] = trace.stats[_k]
+            except:
+                pass
+        # year, month, day, hour, min, sec
+        try:
+            (header['d_year'],
+             header['d_mon'],
+             header['d_day'],
+             header['t_hour'],
+             header['t_min'],
+             header['t_sec']) = trace.stats.starttime.timetuple()[0:6]
+            header['t_sec'] += trace.stats.starttime.microseconds/1.0e6
+        except:
+            pass
+        try:
+            libgse2.write(header,trace.data,f)
+        except AssertionError:
+            libgse2.write(header,trace.data.astype('l'),f)
+    f.close()
