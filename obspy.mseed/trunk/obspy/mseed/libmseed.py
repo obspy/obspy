@@ -21,7 +21,7 @@ http://www.gnu.org/
 
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     MSFileParam
-from obspy.core.util import UTCDateTime, scoreatpercentile
+from obspy.core.util import UTCDateTime, scoreatpercentile, c_file_p
 from struct import unpack
 import ctypes as C
 import math
@@ -784,6 +784,9 @@ class libmseed(object):
         """
         if not isinstance(open_file, file):
             raise TypeError('Needs an open file.')
+        # If not defined, define ctypes arg- and restypes.
+        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+        C.pythonapi.PyFile_AsFile.restype = c_file_p
         # Convert open python file to C file pointer.
         return C.pythonapi.PyFile_AsFile(open_file)
 

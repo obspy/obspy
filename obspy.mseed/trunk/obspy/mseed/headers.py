@@ -316,10 +316,6 @@ HPTMODULUS = 1000000.0
 class MSFileParam_s(C.Structure):
     pass
 
-# Define ctypes arg- and restypes.
-C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-C.pythonapi.PyFile_AsFile.restype = c_file_p
-
 MSFileParam_s._fields_ = [
 
   ('fp', c_file_p),

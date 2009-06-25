@@ -8,7 +8,7 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_core.suite())
     suite.addTest(test_libmseed.suite())
-    suite.addTest(test_plotting.suite())
+    #suite.addTest(test_plotting.suite())
     return suite
 
 

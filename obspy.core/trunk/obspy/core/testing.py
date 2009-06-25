@@ -12,7 +12,7 @@ def suite():
             __import__('obspy.%s.tests' % module)
             exec "suite.addTests(obspy.%s.tests.suite())" % module
         except:
-            print "Not checking module %s which have no test suite" % module
+            print "Cannot import test suite of module obspy.%s" % module
             time.sleep(0.5)
             continue
     return suite
@@ -23,3 +23,6 @@ def runTests():
     """
     unittest.TextTestRunner(verbosity=2).run(suite())
     #unittest.main(defaultTest='suite')
+
+if __name__ == '__main__':
+    runTests()
