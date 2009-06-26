@@ -132,7 +132,7 @@ class UTCDateTime(datetime.datetime):
         return datetime.datetime(self.year, self.month, self.day, self.hour,
                                  self.minute, self.second, self.microsecond)
 
-    timestamp = property(getTimeStamp)
+    datetime = property(getDateTime)
 
 
     def __add__(self, *args, **kwargs):
