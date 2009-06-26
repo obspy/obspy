@@ -573,14 +573,20 @@ class libmseed(object):
             return ''
         # Guess the most likely records that cover start- and end time.
         info = self._getMSFileInfo(filename)
-        start_record = int((starttime.timestamp() - start.timestamp()) / \
-                           (end.timestamp() - start.timestamp()) * \
-                       info['number_of_records'])
-        end_record = int((endtime.timestamp() - start.timestamp()) / \
-                         (end.timestamp() - start.timestamp()) * \
-                       info['number_of_records']) + 1
+        nr = info['number_of_records']
+        start_record = int((starttime.timestamp - start.timestamp) /
+                           (end.timestamp - start.timestamp) * nr)
+        end_record = int((endtime.timestamp - start.timestamp) /
+                         (end.timestamp - start.timestamp) * nr) + 1
         # Loop until the correct start_record is found
         while True:
+            # check boundaries
+            if start_record < 0:
+                start_record = 0
+                break
+            elif start_record > nr - 1:
+                start_record = nr - 1
+                break
             msr = self.readSingleRecordToMSR(filename, dataflag=0,
                                              record_number=start_record)
             chain = msr.contents
@@ -599,6 +605,13 @@ class libmseed(object):
                 start_record += 1
         # Loop until the correct end_record is found
         while True:
+            # check boundaries
+            if end_record < 0:
+                end_record = 0
+                break
+            elif end_record > nr - 1:
+                end_record = nr - 1
+                break
             msr = self.readSingleRecordToMSR(filename, dataflag=0,
                                              record_number=end_record)
             chain = msr.contents
@@ -731,7 +744,7 @@ class libmseed(object):
         
         @param dt: obspy.util.UTCDateTime object.
         """
-        return int(dt.timestamp() * HPTMODULUS)
+        return int(dt.timestamp * HPTMODULUS)
 
     def _convertMSTimeToDatetime(self, timestring):
         """

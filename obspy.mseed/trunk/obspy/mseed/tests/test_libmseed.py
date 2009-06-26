@@ -280,6 +280,19 @@ class LibMSEEDTestCase(unittest.TestCase):
         data = mseed.cutMSFileByRecords(original_filename, endtime=end)
         data2 = open(filename, 'rb').read()
         self.assertEqual(data, data2)
+        # Cut only first record
+        (start, _) = mseed.getStartAndEndTime(original_filename)
+        data = mseed.cutMSFileByRecords(original_filename, endtime=start + 1)
+        data2 = open(filename, 'rb').read()
+        self.assertEqual(data, data2)
+        # cuts nothing if start time equals end time
+        (start, _) = mseed.getStartAndEndTime(original_filename)
+        data = mseed.cutMSFileByRecords(original_filename, endtime=start)
+        self.assertEqual(data, '')
+        # cuts nothing if start time equals end time
+        (_, end) = mseed.getStartAndEndTime(original_filename)
+        data = mseed.cutMSFileByRecords(original_filename, starttime=end)
+        self.assertEqual(data, '')
 
     def test_mergeAndCutMSFiles(self):
         """

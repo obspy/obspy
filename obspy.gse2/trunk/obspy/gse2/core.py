@@ -50,7 +50,7 @@ def readGSE2(filename, **kwargs):
     # assign all header entries to a new dictionary compatible with an Obspy
     # Trace object.
     new_header = {}
-    for i,j in convert_dict.iteritems():
+    for i, j in convert_dict.iteritems():
         new_header[j] = header[i]
     # convert time to seconds since epoch
     seconds = int(header['t_sec'])
@@ -62,7 +62,7 @@ def readGSE2(filename, **kwargs):
             seconds, microseconds
     )
     new_header['endtime'] = UTCDateTime.utcfromtimestamp(
-        new_header['starttime'].timestamp() +
+        new_header['starttime'].timestamp +
         header['n_samps'] / float(header['samp_rate'])
     )
     return Trace(header=new_header, data=data)
@@ -72,7 +72,7 @@ def readGSE2(filename, **kwargs):
 def writeGSE2(stream_object, filename, **kwargs):
     #
     # Translate the common (renamed) entries
-    f = open(filename,'ab')
+    f = open(filename, 'ab')
     for trace in stream_object:
         header = {}
         for _j, _k in convert_dict.iteritems():
@@ -88,11 +88,11 @@ def writeGSE2(stream_object, filename, **kwargs):
              header['t_hour'],
              header['t_min'],
              header['t_sec']) = trace.stats.starttime.timetuple()[0:6]
-            header['t_sec'] += trace.stats.starttime.microseconds/1.0e6
+            header['t_sec'] += trace.stats.starttime.microseconds / 1.0e6
         except:
             pass
         try:
-            libgse2.write(header,trace.data,f)
+            libgse2.write(header, trace.data, f)
         except AssertionError:
-            libgse2.write(header,trace.data.astype('l'),f)
+            libgse2.write(header, trace.data.astype('l'), f)
     f.close()

@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import platform, os
-import ctypes as C 
+import ctypes as C
 import numpy as N
 from obspy.core.util import UTCDateTime, c_file_p
 
@@ -341,7 +341,7 @@ def getStartAndEndTime(file):
     microseconds = int(1e6 * (head.t_sec - seconds))
     startdate = UTCDateTime(head.d_year, head.d_mon, head.d_day,
                             head.t_hour, head.t_min, seconds, microseconds)
-    stopdate = UTCDateTime(startdate.timestamp() +
+    stopdate = UTCDateTime(startdate.timestamp +
                            head.n_samps / float(head.samp_rate))
     del fp, head
-    return [startdate, stopdate, startdate.timestamp(), stopdate.timestamp()]
+    return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]

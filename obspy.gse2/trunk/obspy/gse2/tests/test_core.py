@@ -35,18 +35,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.get('vang'), -1.0)
         self.assertEqual(tr.stats.get('calper'), 1.0)
         self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
-        self.assertEqual(tr.stats.starttime.timestamp(), 1125455629.849998)
+        self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
         for _i in xrange(13):
             self.assertEqual(tr.data[_i], testdata[_i])
-        #tr2 = Trace()
-        #tr2.readGSE2(self.file, format='GSE2')
-        #self.assertEqual(tr2.stats['station'], 'RJOB ')
-        #self.assertEqual(tr2.stats.npts, 12000)
-        #self.assertEqual(tr2.stats['sampling_rate'], 200)
-        #self.assertEqual(tr2.stats.get('channel'), '  Z')
-        #self.assertEqual(tr2.stats.starttime.timestamp(), 1125455629.849998)
-        #for _i in xrange(13):
-        #    self.assertEqual(tr2.data[_i], testdata[_i])
 
     def test_readAndWriteViaObspy(self):
         """
@@ -65,6 +56,7 @@ class CoreTestCase(unittest.TestCase):
         st2.write(tmpfile, format='GSE2')
         # read comparison trace
         tr3 = obspy.read(tmpfile)[0]
+        os.remove(tmpfile)
         # check if equal
         self.assertEqual(tr3.stats['station'], tr.stats['station'])
         self.assertEqual(tr3.stats.npts, tr.stats.npts)

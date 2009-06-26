@@ -227,15 +227,15 @@ def _getMinMaxList(stream_object, width, starttime=None,
     traces.sort(key=lambda x:x.stats['starttime'])
     #Get start- and endtime and convert them to UNIX timestamp.
     if not starttime:
-        starttime = traces[0].stats['starttime'].timestamp()
+        starttime = traces[0].stats['starttime'].timestamp
     else:
-        starttime = starttime.timestamp()
+        starttime = starttime.timestamp
     if not endtime:
         # The endtime of the last trace in the previously sorted list is
         # supposed to be the endtime of the plot.
-        endtime = traces[-1].stats['endtime'].timestamp()
+        endtime = traces[-1].stats['endtime'].timestamp
     else:
-        endtime = endtime.timestamp()
+        endtime = endtime.timestamp
     #Calculate time for one pixel.
     stepsize = (endtime - starttime) / width
     #First two items are start- and endtime.
@@ -247,8 +247,8 @@ def _getMinMaxList(stream_object, width, starttime=None,
         minlist = []
         #Inner Loop over all traces.
         for _i in traces:
-            a_stime = _i.stats['starttime'].timestamp()
-            a_etime = _i.stats['endtime'].timestamp()
+            a_stime = _i.stats['starttime'].timestamp
+            a_etime = _i.stats['endtime'].timestamp
             npts = _i.stats['npts']
             #If the starttime is bigger than the endtime of the current
             #trace delete the item from the list.

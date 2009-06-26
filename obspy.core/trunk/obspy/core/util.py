@@ -79,9 +79,9 @@ class UTCDateTime(datetime.datetime):
         2009
         >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
         (2009, 8, 4, 8, 27, 12, 5000)
-        >>> t.timestamp() + 100
+        >>> t.timestamp + 100
         1240561732.0050001
-        >>> t2 = UTCDateTime(t.timestamp()+60)
+        >>> t2 = UTCDateTime(t.timestamp+60)
         >>> t2
         UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
         >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
@@ -103,19 +103,101 @@ class UTCDateTime(datetime.datetime):
                                                  dt.day, dt.hour,
                                                  dt.minute, dt.second,
                                                  dt.microsecond)
+        elif len(args) == 0:
+            dt = datetime.datetime.utcnow()
+            return datetime.datetime.__new__(cls, dt.year, dt.month,
+                                             dt.day, dt.hour,
+                                             dt.minute, dt.second,
+                                             dt.microsecond)
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
-    def timestamp(self):
+    def getTimeStamp(self):
         """
-        Return UTC timestamp in floating point seconds
+        Returns UTC timestamp in floating point seconds.
         
         @rtype: float
         @return: Timestamp in seconds
         """
-        #XXX: datetime.strftime("%s") is not working in windows
-        #os.environ['TZ'] = 'UTC'
-        #return float(self.strftime("%s")) + self.microsecond/1.0e6
         return float(timegm(self.timetuple())) + self.microsecond / 1.0e6
+
+    timestamp = property(getTimeStamp)
+
+    def getDateTime(self):
+        """
+        Converts current UTCDateTime object in a Python datetime object.
+        
+        @rtype: datetime
+        @return: Python datetime object of current UTCDateTime
+        """
+        return datetime.datetime(self.year, self.month, self.day, self.hour,
+                                 self.minute, self.second, self.microsecond)
+
+    timestamp = property(getTimeStamp)
+
+
+    def __add__(self, *args, **kwargs):
+        """
+        Adds seconds and microseconds from current UTCDateTime object.
+        
+            >>> a = UTCDateTime(0.0)
+            >>> a
+            UTCDateTime(1970, 1, 1, 0, 0)
+            >>> a + 1
+            UTCDateTime(1970, 1, 1, 0, 0, 1)
+            >>> a + 1.123456
+            UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
+            >>> a + 60*60*24*31 + 0.1
+            UTCDateTime(1970, 2, 1, 0, 0, 0, 100000)
+        
+        @return: UTCDateTime
+        """
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, int):
+                td = datetime.timedelta(seconds=arg)
+                dt = datetime.datetime.__add__(self, td)
+                return UTCDateTime(dt)
+            elif isinstance(arg, float):
+                sec = int(arg)
+                msec = int((arg % 1) * 1000000)
+                td = datetime.timedelta(seconds=sec, microseconds=msec)
+                dt = datetime.datetime.__add__(self, td)
+                return UTCDateTime(dt)
+        else:
+            dt = datetime.datetime.__add__(self, *args, **kwargs)
+            return UTCDateTime(dt)
+
+    def __sub__(self, *args, **kwargs):
+        """
+        Substracts seconds and microseconds from current UTCDateTime object.
+        
+            >>> a = UTCDateTime(0.0) + 60*60*24*31
+            >>> a
+            UTCDateTime(1970, 2, 1, 0, 0)
+            >>> a - 1
+            UTCDateTime(1970, 1, 31, 23, 59, 59)
+            >>> a - 1.123456
+            UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
+            >>> a - 60*60*24*31
+            UTCDateTime(1970, 1, 1, 0, 0)
+        
+        @return: UTCDateTime
+        """
+        if len(args) == 1:
+            arg = args[0]
+            if isinstance(arg, int):
+                td = datetime.timedelta(seconds=arg)
+                dt = datetime.datetime.__sub__(self, td)
+                return UTCDateTime(dt)
+            elif isinstance(arg, float):
+                sec = int(arg)
+                msec = int((arg % 1) * 1000000)
+                td = datetime.timedelta(seconds=sec, microseconds=msec)
+                dt = datetime.datetime.__sub__(self, td)
+                return UTCDateTime(dt)
+        else:
+            dt = datetime.datetime.__sub__(self, *args, **kwargs)
+            return UTCDateTime(dt)
 
 
 def getFormatsAndMethods(verbose=False):
@@ -199,6 +281,7 @@ def scoreatpercentile(a, per, limit=(), sort=True):
     else:
         return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
 
+
 # C file pointer class
 class FILE(C.Structure): # Never directly used
     """C file pointer class for type checking with argtypes"""
@@ -208,6 +291,7 @@ c_file_p = C.POINTER(FILE)
 # Define ctypes arg- and restypes.
 #C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 #C.pythonapi.PyFile_AsFile.restype = c_file_p
+
 
 if __name__ == '__main__':
     import doctest

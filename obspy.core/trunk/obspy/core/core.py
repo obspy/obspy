@@ -8,7 +8,7 @@ import math
 import os
 
 
-def read(filename, format = None):
+def read(filename, format=None):
     """
     This function will check a file's format and read it into a Stream object
     if possible.
@@ -35,7 +35,7 @@ def read(filename, format = None):
                 fileformat = _i
                 break
         if len(fileformat) == 0:
-            msg = 'Format is not supported. Supported Formats: '+ \
+            msg = 'Format is not supported. Supported Formats: ' + \
                   ', '.join([_i[0] for _i in formats])
             raise TypeError(msg)
     else:
@@ -43,12 +43,12 @@ def read(filename, format = None):
             format_index = [_i[0] for _i in formats].index(format.upper())
             fileformat = formats[format_index]
         except:
-            msg = 'Format is not supported. Supported Formats: '+ \
+            msg = 'Format is not supported. Supported Formats: ' + \
                   ', '.join([_i[0] for _i in formats])
             raise TypeError(msg)
     temp_object = fileformat[2](filename)
     if isinstance(temp_object, Trace):
-        return Stream(traces = [temp_object])
+        return Stream(traces=[temp_object])
     return temp_object
 
 def supportedFormats():
@@ -67,7 +67,7 @@ class Trace(object):
     @type data: Numpy ndarray 
     @ivar data: Data samples 
     """
-    def __init__(self, header = None, data = None):
+    def __init__(self, header=None, data=None):
         self.stats = Stats()
         self.data = None
         if header != None:
@@ -76,11 +76,11 @@ class Trace(object):
         if data != None:
             self.data = data
     def __str__(self):
-        return_string = self.stats['network'] + self.stats['station'] +\
-            self.stats['channel'] + ' | ' +\
-            str(self.stats['starttime'].strftime('%Y-%m-%d,%H:%M:%S'))+'--' +\
-            str(self.stats['endtime'].strftime('%Y-%m-%d,%H:%M:%S')) + ' | ' +\
-            str(self.stats['sampling_rate']) + ' Hz, ' +\
+        return_string = self.stats['network'] + self.stats['station'] + \
+            self.stats['channel'] + ' | ' + \
+            str(self.stats['starttime'].strftime('%Y-%m-%d,%H:%M:%S')) + '--' + \
+            str(self.stats['endtime'].strftime('%Y-%m-%d,%H:%M:%S')) + ' | ' + \
+            str(self.stats['sampling_rate']) + ' Hz, ' + \
             str(self.stats['npts']) + ' samples'
         return return_string
 
@@ -89,11 +89,11 @@ class Stream(object):
     ObsPy Stream class to collect Traces.
     
     """
-    def __init__(self, traces = None):
+    def __init__(self, traces=None):
         self.traces = []
         if traces:
             self.traces.extend(traces)
-            
+
     def __add__(self, other):
         """
         Method to add two streams.
@@ -103,8 +103,8 @@ class Stream(object):
         """
         traces = copy.deepcopy(self.traces)
         traces.extend(copy.deepcopy(other.traces))
-        return Stream(traces = traces)
-    
+        return Stream(traces=traces)
+
     def __str__(self):
         """
         __str__ method of obspy.Stream objects.
@@ -112,20 +112,20 @@ class Stream(object):
         It will contain the number of Traces in the Stream and the return value
         of each Trace's __str__ method.
         """
-        return_string = str(len(self.traces))+ ' Trace(s) in Stream:'
+        return_string = str(len(self.traces)) + ' Trace(s) in Stream:'
         for _i in self.traces:
             return_string = return_string + '\n' + str(_i)
         return return_string
-    
-         
-    def __getitem__(self, index): 
+
+
+    def __getitem__(self, index):
         """ 
         __getitem__ method of obspy.Stream objects. 
           
         @return: Trace objects 
-        """ 
-        return self.traces[index] 
-    
+        """
+        return self.traces[index]
+
     def append(self, filename, **kwargs):
         """
         This method reads a file and appends its traces to the Stream object.
@@ -137,8 +137,8 @@ class Stream(object):
         new_stream = read(filename, **kwargs)
         self.traces.extend(new_stream.traces)
         del new_stream
-    
-    def getGaps(self, min_gap = None, max_gap = None):
+
+    def getGaps(self, min_gap=None, max_gap=None):
         """
         Returns a list which contains information about all gaps/overlaps that
         result from the Traces in the Stream object.
@@ -158,17 +158,17 @@ class Stream(object):
             value is assumed to be in seconds. Defaults to None.
         """
         gap_list = []
-        for _i in range(len(self.traces) -1):
+        for _i in range(len(self.traces) - 1):
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
             duration = etime - stime
-            gap = etime.timestamp() - stime.timestamp()
+            gap = etime.timestamp - stime.timestamp
              # Check that any overlap is not larger than the trace coverage
             if gap < 0:
                 delta = 1 / float(self.traces[_i + 1].stats['sampling_rate'])
-                temp = self.traces[_i + 1].stats['endtime'].timestamp() - \
-                       etime.timestamp()
+                temp = self.traces[_i + 1].stats['endtime'].timestamp - \
+                       etime.timestamp
                 if (gap * -1) > temp:
                     gap = -1 * temp
             # Check gap/overlap criteria
@@ -187,7 +187,7 @@ class Stream(object):
                             stime, etime, duration,
                             nsamples])
         return gap_list
-    
+
     def plot(self, **kwargs):
         """
         Creates a graph of ObsPy Stream object. It either saves the image
@@ -262,8 +262,8 @@ class Stream(object):
                                                     r[5].isoformat(),
                                                     r[6], r[7])
         print "Total: %d gap(s) or overlap(s)" % len(result)
-        
-    def sort(self, keys = ['network', 'station', 'channel', 'starttime']):
+
+    def sort(self, keys=['network', 'station', 'channel', 'starttime']):
         """
         Method to sort the traces in the Stream object.
         
@@ -282,8 +282,8 @@ class Stream(object):
         keys.reverse()
         # Loop over all items in keys.
         for _i in keys:
-            self.traces.sort(key = lambda x:x.stats[_i])
-            
+            self.traces.sort(key=lambda x:x.stats[_i])
+
     def write(self, filename, format, **kwargs):
         """
         """
@@ -291,7 +291,7 @@ class Stream(object):
         try:
             format_index = [_i[0] for _i in formats].index(format.upper())
         except:
-            msg = 'Format is not supported. Supported Formats: '+ \
+            msg = 'Format is not supported. Supported Formats: ' + \
                   ', '.join([_i[0] for _i in formats])
             raise TypeError(msg)
         formats[format_index][3](self, filename, **kwargs)
