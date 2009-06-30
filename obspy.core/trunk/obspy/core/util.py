@@ -228,6 +228,12 @@ def getFormatsAndMethods(verbose=False):
         temp.append(['WAV', isWAV, readWAV, writeWAV])
     except:
         failure.append(traceback.format_exc())
+    try:
+        from obspy.sac.core import isSAC, readSAC, writeSAC
+        # The first item is the name of the format, the second the checking function.
+        temp.append(['SAC', isSAC, readSAC, writeSAC])
+    except:
+        failure.append(traceback.format_exc())
     if verbose:
         for _i in xrange(len(failure)):
             print failure[_i]

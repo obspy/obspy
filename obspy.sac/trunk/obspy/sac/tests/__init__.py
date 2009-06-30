@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from obspy.wav.tests import test_core
+from obspy.sac.tests import test_sacio, test_core
 import unittest
 
 def suite():
     suite = unittest.TestSuite()
+    suite.addTest(test_sacio.suite())
     suite.addTest(test_core.suite())
     return suite
 

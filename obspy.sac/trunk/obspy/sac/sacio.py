@@ -86,7 +86,7 @@ True
 
 import array,os,string
 from sacutil import *
-from obspy import parser
+#from obspy import parser
 
 
 class SacError(Exception):
@@ -97,10 +97,10 @@ class SacIOError(Exception):
     pass
 
     
-class ReadSac(PyTutil,parser.Parser):
+#class ReadSac(PyTutil,parser.Parser):
+class ReadSac(object):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
-
 
     def __init__(self,filen=False):
         self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,   \
@@ -167,49 +167,49 @@ class ReadSac(PyTutil,parser.Parser):
         
 
     def SetHvalue(self,item,value):
-	"""Set a header value using the header arrays: SetHvalue("npts",2048)
-	Return value is 1 if no problems occurred, zero otherwise."""
-	#
-	# it's trivial to search each dictionary with the key and return
-	#   the value that matches the key
-	#
-	key = string.lower(item) # convert the item to lower case
-	#
-	if self.fdict.has_key(key):
-		index = self.fdict[key]
-		self.hf[index] = float(value)
-	elif self.idict.has_key(key):
-		index = self.idict[key]
-		self.hi[index] = int(value)
-	elif self.sdict.has_key(key):
-		index = self.sdict[key]
-		vlen = len(value)
-		if index == 0:
-			if vlen > 8:
-				vlen = 8
-			for i in range(0,8):
-				self.hs[i] = ' '
-			for i in range(0,vlen):
-				self.hs[i] = value[i]
-		elif index == 1:
-			start = 8
-			if vlen > 16:
-				vlen =16 
-			for i in range(0,16):
-				self.hs[i+start] = ' '
-			for i in range(0,vlen):
-				self.hs[i+start] = value[i]
-		else:
-			#
-			# if you are here, then the index > 2
-			#
-			if vlen > 8:
-				vlen = 8
-			start  = 8 + index*8 
-			for i in range(0,8):
-				self.hs[i+start] = ' '
-			for i in range(0,vlen):
-				self.hs[i+start] = value[i]
+        """Set a header value using the header arrays: SetHvalue("npts",2048)
+        Return value is 1 if no problems occurred, zero otherwise."""
+        #
+        # it's trivial to search each dictionary with the key and return
+        #   the value that matches the key
+        #
+        key = string.lower(item) # convert the item to lower case
+        #
+        if self.fdict.has_key(key):
+                index = self.fdict[key]
+                self.hf[index] = float(value)
+        elif self.idict.has_key(key):
+                index = self.idict[key]
+                self.hi[index] = int(value)
+        elif self.sdict.has_key(key):
+                index = self.sdict[key]
+                vlen = len(value)
+                if index == 0:
+                        if vlen > 8:
+                                vlen = 8
+                        for i in range(0,8):
+                                self.hs[i] = ' '
+                        for i in range(0,vlen):
+                                self.hs[i] = value[i]
+                elif index == 1:
+                        start = 8
+                        if vlen > 16:
+                                vlen =16 
+                        for i in range(0,16):
+                                self.hs[i+start] = ' '
+                        for i in range(0,vlen):
+                                self.hs[i+start] = value[i]
+                else:
+                        #
+                        # if you are here, then the index > 2
+                        #
+                        if vlen > 8:
+                                vlen = 8
+                        start  = 8 + index*8 
+                        for i in range(0,8):
+                                self.hs[i+start] = ' '
+                        for i in range(0,vlen):
+                                self.hs[i+start] = value[i]
         else:
             raise SacError("Cannot find header entry for: ",item)
 
@@ -237,17 +237,17 @@ class ReadSac(PyTutil,parser.Parser):
         
 
     def ReadSacHeader(self,fname):
-	"""\nRead a header value into the header arrays 
+        """\nRead a header value into the header arrays 
         \tok = ReadSacHeader(thePath)
         The header is split into three arrays - floats, ints, and strings
         The "ok" value is one if no problems occurred, zero otherwise.\n"""
-	#
-	self.hf = array.array('f') # allocate the array for header floats
-	self.hi = array.array('l') # allocate the array for header ints
-	self.hs = array.array('c') # allocate the array for header characters
+        #
+        self.hf = array.array('f') # allocate the array for header floats
+        self.hi = array.array('l') # allocate the array for header ints
+        self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
-	    #### open the file
+            #### open the file
             f = open(fname,'r')
         except IOError:
             raise SacIOError("No such file:"+fname)
@@ -532,7 +532,7 @@ class ReadSac(PyTutil,parser.Parser):
         self.ReadSacHeader(thePath)
         #
         self.SetHvalue(theItem,theValue)
-        self.WriteSacHeader(thePath)	
+        self.WriteSacHeader(thePath)        
 
 
     def IsValidSacFile(self, thePath):
@@ -547,47 +547,47 @@ class ReadSac(PyTutil,parser.Parser):
         self.IsSACfile(thePath)
 
 
-    def get_attr(self):
-        """added for compatibility reasons with other obspy
-        modules (e.g. gseparser)
-        
-        """
-        # check if important header-values are defined
-        try:
-            self.npts = self.GetHvalue('npts')
-            self.df = 1./self.GetHvalue('delta')
-        except:
-            return 0
-        try:
-            self.channel = self.GetHvalue('kcmpnm')
-            self.station = self.GetHvalue('kstnm')
-            year = self.GetHvalue('nzyear')
-            yday = self.GetHvalue('nzjday')
-            hour = self.GetHvalue('nzhour')
-            mint = self.GetHvalue('nzmin')
-            sec  = self.GetHvalue('nzsec')
-            msec = self.GetHvalue('nzmsec')
-            sec = sec + 0.001*msec
-            mon, day, ok=self.monthdate(year,yday)
-            date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
-            if date.find('-12345') != -1:
-                date = "19700101000000"
-        except:
-            print "One of the following header values is not set:"
-            print "kcmpnm, npts, delta, kstnm, nzyear, nzjday, nzhour"
-            print "nzmin, nzsec, nzmsec"
-            print "Please check your SAC-data and try again"
-            return 0
-        self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date)
-        self.trace = self.seis.tolist()
-        # consistency check
-        if not self.is_attr('trace',list,None,assertation=True): return 0
-        if not self.is_attr('df',float,200.): return 0
-        if not self.is_attr('station',str,'FUR     ',length=8): return 0
-        if not self.is_attr('channel',str,'SHZ     ',length=8): return 0
-        if not self.is_attr('julsec',float,0.0): return 0
-        if not self.is_attr('npts',int,len(self.trace),assertation=True): return 0
-        return 1
+    #def get_attr(self):
+    #    """added for compatibility reasons with other obspy
+    #    modules (e.g. gseparser)
+    #    
+    #    """
+    #    # check if important header-values are defined
+    #    try:
+    #        self.npts = self.GetHvalue('npts')
+    #        self.df = 1./self.GetHvalue('delta')
+    #    except:
+    #        return 0
+    #    try:
+    #        self.channel = self.GetHvalue('kcmpnm')
+    #        self.station = self.GetHvalue('kstnm')
+    #        year = self.GetHvalue('nzyear')
+    #        yday = self.GetHvalue('nzjday')
+    #        hour = self.GetHvalue('nzhour')
+    #        mint = self.GetHvalue('nzmin')
+    #        sec  = self.GetHvalue('nzsec')
+    #        msec = self.GetHvalue('nzmsec')
+    #        sec = sec + 0.001*msec
+    #        mon, day, ok=self.monthdate(year,yday)
+    #        date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
+    #        if date.find('-12345') != -1:
+    #            date = "19700101000000"
+    #    except:
+    #        print "One of the following header values is not set:"
+    #        print "kcmpnm, npts, delta, kstnm, nzyear, nzjday, nzhour"
+    #        print "nzmin, nzsec, nzmsec"
+    #        print "Please check your SAC-data and try again"
+    #        return 0
+    #    self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date)
+    #    self.trace = self.seis.tolist()
+    #    # consistency check
+    #    if not self.is_attr('trace',list,None,assertation=True): return 0
+    #    if not self.is_attr('df',float,200.): return 0
+    #    if not self.is_attr('station',str,'FUR     ',length=8): return 0
+    #    if not self.is_attr('channel',str,'SHZ     ',length=8): return 0
+    #    if not self.is_attr('julsec',float,0.0): return 0
+    #    if not self.is_attr('npts',int,len(self.trace),assertation=True): return 0
+    #    return 1
 
 
 
