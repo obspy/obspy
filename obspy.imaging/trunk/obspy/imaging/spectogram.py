@@ -1,9 +1,10 @@
-#!/scratch/seisoft/Python-2.5.2/bin/python
+# -*- coding: utf-8 -*-
 
 import obspy, time, glob, os
 import pylab as pl
 import numpy as N
 import math as M
+from matplotlib import mlab
 
 def nearestPow2(x):
     """
@@ -53,13 +54,17 @@ def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
 
     data = data-data.mean()
 
-    spectogram, freq, time, image = pl.specgram(data,Fs=samp_rate,
-                                                NFFT=nfft,noverlap=nlap)
+    # here we call not pl.specgram as this already produces a plot
+    # matplotlib.mlab.specgram should be faster as it computes only the
+    # arrays
+    # XXX mlab.specgram uses fft, would be better and faster use rfft
+    spectogram, freq, time = mlab.specgram(data,Fs=samp_rate,
+                                           NFFT=nfft,noverlap=nlap)
     # db scale and remove offset
     spectogram = 10*N.log10(spectogram[1:,:])
     freq = freq[1:]
 
-    X,Y = pl.meshgrid(time,freq)
+    X,Y = N.meshgrid(time,freq)
     pl.pcolor(X,Y,spectogram)
     if log:
         pl.semilogy()
