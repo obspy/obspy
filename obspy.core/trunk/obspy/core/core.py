@@ -126,17 +126,44 @@ class Stream(object):
         """
         return self.traces[index]
 
-    def append(self, filename, **kwargs):
+    def append(self, trace):
         """
-        This method reads a file and appends its traces to the Stream object.
+        This method appends a single Trace object to the Stream object.
         
-        All kwargs are passed to the obspy.read() function.
+        It will make a deepcopy of the Trace and not pass it by reference.
         
-        @param filename: File to read.
+        @param trace: obspy.Trace object.
         """
-        new_stream = read(filename, **kwargs)
-        self.traces.extend(new_stream.traces)
-        del new_stream
+        if isinstance(trace, Trace):
+            self.traces.append(copy.deepcopy(trace))
+        else:
+            msg = 'Append only supports a single Trace object as an argument.'
+            raise TypeError(msg)
+        
+    def count(self):
+        """
+        Returns the number of Traces in the Stream object.
+        """
+        return len(self.traces)
+        
+    def extend(self, trace_list):
+        """
+        This method will extend the traces attribut of the Stream object with
+        a list of Trace objects.
+        
+        It will make a the list and not pass itsself and its items by
+        reference.
+        """
+        if isinstance(trace_list, list):
+            for _i in trace_list:
+                # Make sure each item in the list is a trace.
+                if not isinstance(_i, Trace):
+                    msg = 'Extend only accepts a list of Trace objects.'
+                    raise TypeError(msg)
+            self.traces.extend(copy.deepcopy(trace_list))
+        else:
+            msg = 'Extend only supports a list of Trace objects as argument.'
+            raise TypeError(msg)
 
     def getGaps(self, min_gap=None, max_gap=None):
         """
@@ -162,7 +189,7 @@ class Stream(object):
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
-            duration = etime - stime
+            duration = etime.timestamp - stime.timestamp
             gap = etime.timestamp - stime.timestamp
              # Check that any overlap is not larger than the trace coverage
             if gap < 0:
@@ -187,6 +214,31 @@ class Stream(object):
                             stime, etime, duration,
                             nsamples])
         return gap_list
+    
+    def insert(self, index, object):
+        """
+        Inserts either a single Trace object or a list of Trace objects before
+        index.
+        
+        It will make a deepcopy of the object and not pass it by reference.
+        
+        @param object: Single Trace object or list of Trace objects.
+        """
+        if isinstance(object, Trace):
+            self.traces.insert(index, copy.deepcopy(object))
+        elif isinstance(object, list):
+            # Make sure each item in the list is a trace.
+            for _i in object:
+                if not isinstance(_i, Trace):
+                    msg = 'Only accepts a Trace object or a list of Trace ' +\
+                           'objects.'
+                    raise TypeError(msg)
+            # Insert each item of the list.
+            for _i in range(len(object)):
+                self.traces.insert(index + _i, copy.deepcopy(object[_i]))
+        else:
+            msg = 'Only accepts a Trace object or a list of Trace objects.'
+            raise TypeError(msg)
 
     def plot(self, **kwargs):
         """
@@ -248,6 +300,17 @@ class Stream(object):
             print msg
             raise
         waveform.plotWaveform(self, **kwargs)
+        
+    def pop(self, index = -1):
+        """
+        Removes the Trace object specified by index from the Stream object and
+        returns it. If no index is given it will remove the last Trace.
+        
+        @param index: Index of the Trace object to be removed.
+        """
+        temp_trace = self.traces[index]
+        del(self.traces)[index]
+        return temp_trace
 
     def printGaps(self, **kwargs):
         """
@@ -262,6 +325,20 @@ class Stream(object):
                                                     r[5].isoformat(),
                                                     r[6], r[7])
         print "Total: %d gap(s) or overlap(s)" % len(result)
+        
+    def remove(self, index):
+        """
+        Removes the Trace object specified by index from the Stream object.
+        
+        @param index: Index of the Trace object to be removed
+        """
+        del(self.traces)[index]
+        
+    def reverse(self):
+        """
+        Reverses the Traces of the Stream object in place.
+        """ 
+        self.traces.reverse()
 
     def sort(self, keys=['network', 'station', 'channel', 'starttime']):
         """
