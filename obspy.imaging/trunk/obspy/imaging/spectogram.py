@@ -64,11 +64,18 @@ def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
     spectogram = 10*N.log10(spectogram[1:,:])
     freq = freq[1:]
 
-    X,Y = N.meshgrid(time,freq)
-    pl.pcolor(X,Y,spectogram)
     if log:
+        X,Y = N.meshgrid(time,freq)
+        pl.pcolor(X,Y,spectogram)
         pl.semilogy()
-    pl.ylim((freq[0],freq[-1]))
+        pl.ylim((freq[0],freq[-1]))
+    else:
+        # this method is much much faster!
+        spectogram = N.flipud(spectogram)
+        extent = 0, N.amax(time), freq[0], freq[-1]
+        pl.imshow(spectogram, None, extent=extent)
+        pl.axis('auto')
+
     pl.grid(False)
     pl.xlabel('Time [s]')
     pl.ylabel('Frequency [Hz]')
