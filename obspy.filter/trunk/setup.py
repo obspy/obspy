@@ -47,9 +47,12 @@ setup(
     zip_safe=True,
     # test_suite = "obspy.gse2.tests",
     install_requires=[
-        'https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy',
+        'obspy.core',
         'setuptools',
         'scipy',
         # -*- Extra requirements: -*
     ],        
+    dependency_links=[
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
+    ],
 )
