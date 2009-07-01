@@ -30,7 +30,7 @@ version = '0.0.1'
 
 
 setup(
-    name='obspy.gse2',
+    name='obspy.sac',
     version=version,
     description="Read and write support for SAC files (seismograms).",
     long_description="""""",
@@ -46,11 +46,11 @@ setup(
     zip_safe=True,
     # test_suite = "obspy.sac.tests",
     install_requires=[
-        'obspy',
+        'obspy.core',
         'setuptools',
         # -*- Extra requirements: -*
     ],
     dependency_links = [
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy"
+        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )
