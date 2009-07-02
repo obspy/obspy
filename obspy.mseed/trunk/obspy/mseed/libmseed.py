@@ -707,7 +707,7 @@ class libmseed(object):
                 # If some parts of the file are in range cut it. Neglect all
                 # other cases as they are not necessary.
                 elif file_starttime < starttime and file_endtime > starttime:
-                    open_file.write(self.cutMSFileByRecords(file=file[0],
+                    open_file.write(self.cutMSFileByRecords(filename=file[0],
                                     starttime=starttime, endtime=endtime))
             # Close the open file
             open_file.seek(0)
