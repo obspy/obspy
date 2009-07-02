@@ -1,4 +1,5 @@
 from filter import *
+from rotate import *
 from invsim import cosTaper
 from invsim import pazToFreqResp
 from invsim import pazToFreqResp2

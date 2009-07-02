@@ -218,24 +218,3 @@ def lowpassFIR(data,freq,samp_rate=200,winlen=2048):
   myh = fft.fftshift(h) * get_window(beta,winlen)  #beta implies Kaiser
   return convolve(abs(myh),data)[winlen/2:-winlen/2]
 
-def rotate_NE_RT(n,e,ba):
-  """Rotates horizontal components of a seismogram:
-
-  The North- and East-Component of a seismogram will be rotated in Radial and Transversal
-  Component. The angle is given as the back-azimuth, that is defined as the angle measured
-  between the vector pointing from the station to the source and the vector pointing from
-  the station to the north.
-  
-  @param n: Data of the North component of the seismogram.
-  @param e: Data of the East component of the seismogram.
-  @param ba: The back azimuth from station to source in degrees.
-  @return: Radial and Transversal component of seismogram.
-  """
-  if n.__len__()!=e.__len__():
-      raise TypeError("North and East component have different length!?!")
-  if ba<0 or ba>360:
-      raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
-  r=e*sin((ba+180)*2*pi/360)+n*cos((ba+180)*2*pi/360)
-  t=e*cos((ba+180)*2*pi/360)-n*sin((ba+180)*2*pi/360)
-  return r,t
-

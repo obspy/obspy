@@ -16,7 +16,7 @@ newdata = data[0.45*1e4:0.59*1e4]
 fmin = 5.
 fmax = 20.
 
-tworunzph = obspy.filter.lowpassZPHSH(newdata,fmin)
+tworunzph = obspy.filter.lowpassZPHSH(newdata,fmin,corners=4)
 olifir = obspy.filter.lowpassFIR(newdata,fmin)
 
 clf()
