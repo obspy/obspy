@@ -67,6 +67,19 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
+    def getWaveform(self, **kwargs):
+        """
+        Gets a list of network latency values.
+        
+        @param network_id: Network code, e.g. 'BW'.
+        @param station_id: Station code, e.g. 'MANZ'.
+        @param location_id: Location code, e.g. '01'.
+        @param channel_id: Channel code, e.g. 'EHE'.
+        @return: List of dictionaries containing latency information.
+        """
+        url = '/seismology/waveform/getWaveform'
+        return self.client._fetch(url, **kwargs)
+
 
 class _StationMapperClient(object):
     """
@@ -99,8 +112,7 @@ class _StationMapperClient(object):
                              station_id=station_id, **kwargs)
         resource_name = items[0]['resource_name']
         url = '/xml/seismology/station/' + resource_name
-        doc = self.client._fetch(url, **kwargs)
-        return doc
+        return self.client._fetch(url, **kwargs)
 
     def getXMLResource(self, network_id, station_id, **kwargs):
         """
