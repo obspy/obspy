@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from calendar import timegm
+import ctypes as C
 import datetime
 import traceback
-import ctypes as C
 
 
 class Stats(dict):
@@ -58,9 +58,11 @@ class Stats(dict):
         self.dataquality = ""
         self.starttime = UTCDateTime.utcfromtimestamp(0.0)
         self.endtime = UTCDateTime.utcfromtimestamp(86400.0)
-    
-    def is_attr(self,attr,typ,default,length=False,assertation=False,verbose=False):
-        """True if attribute of cetain type and optional length exists
+
+    def is_attr(self, attr, typ, default, length=False, assertation=False,
+                verbose=False):
+        """
+        True if attribute of certain type and optional length exists
         
         Function is probably most useful for checking if necessary
         attributes are provided, e.g. when writing seismograms to file
@@ -77,29 +79,29 @@ class Stats(dict):
         # Check if attribute exists
         if not attr in self.__dict__.keys():
             if assertation:
-                assert False,"%s attribute of Seismogram required" % attr
+                assert False, "%s attribute of Seismogram required" % attr
             if verbose:
                 print "WARNING: %s attribute of Seismogram missing",
-                print "forcing",attr,"=",default
-            setattr(self,attr,default)
+                print "forcing", attr, "=", default
+            setattr(self, attr, default)
             return False
         # Check if attribute is of correct type
-        if not isinstance(getattr(self,attr),typ):
+        if not isinstance(getattr(self, attr), typ):
             if assertation:
-                assert False,"%s attribute of Seismogram not of type %s" % (attr,typ)
+                assert False, "%s attribute of Seismogram not of type %s" % (attr, typ)
             if verbose:
-                print "WARNING: %s attribute of Seismogram not of type %s" % (attr,typ),
-                print "forcing",attr,"=",default
-            setattr(self,attr,default)
+                print "WARNING: %s attribute of Seismogram not of type %s" % (attr, typ),
+                print "forcing", attr, "=", default
+            setattr(self, attr, default)
             return False
         # Check if attribute has correct length
         if (length):
-            if (len(getattr(self,attr)) != length):
+            if (len(getattr(self, attr)) != length):
                 if assertation:
-                    assert False, "%s attribute of Seismogram is != %i" % (attribute,length)
+                    assert False, "%s attribute of Seismogram is != %i" % (attribute, length)
                 if verbose:
-                    print "%s attribute of Seismogram is != %i" % (attribute,length)
-                setattr(self,attr,default)
+                    print "%s attribute of Seismogram is != %i" % (attribute, length)
+                setattr(self, attr, default)
                 return False
         # If not test failed
         return True
@@ -131,23 +133,46 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
         >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
-
+        >>> UTCDateTime("19700101")
+        UTCDateTime(1970, 1, 1, 0, 0)
+        >>> UTCDateTime("1970-01-01 12:23:34")
+        UTCDateTime(1970, 1, 1, 12, 23, 34)
+        >>> UTCDateTime("1970-01-01T12:23:34.123456")
+        UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
             arg = args[0]
             if type(arg) in [int, long, float]:
                 dt = datetime.datetime.utcfromtimestamp(arg)
-                return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                                 dt.day, dt.hour,
-                                                 dt.minute, dt.second,
-                                                 dt.microsecond)
             elif isinstance(arg, datetime.datetime):
                 dt = arg
+            elif isinstance(arg, basestring):
+                arg = arg.replace('T', ' ')
+                arg = arg.replace('-', '')
+                arg = arg.replace(':', '')
+                ms = 0
+                if '.' in arg:
+                    parts = arg.split('.')
+                    arg = parts[0].strip()
+                    try:
+                        ms = int(parts[1].strip())
+                    except:
+                        pass
+                for pattern in ["%Y%m%d %H%M%S", "%Y%m%d"]:
+                    try:
+                        dt = datetime.datetime.strptime(arg, pattern)
+                    except:
+                        continue
+                    else:
+                        break
                 return datetime.datetime.__new__(cls, dt.year, dt.month,
                                                  dt.day, dt.hour,
-                                                 dt.minute, dt.second,
-                                                 dt.microsecond)
+                                                 dt.minute, dt.second, ms)
+            return datetime.datetime.__new__(cls, dt.year, dt.month,
+                                             dt.day, dt.hour,
+                                             dt.minute, dt.second,
+                                             dt.microsecond)
         elif len(args) == 0:
             dt = datetime.datetime.utcnow()
             return datetime.datetime.__new__(cls, dt.year, dt.month,
@@ -159,7 +184,7 @@ class UTCDateTime(datetime.datetime):
     def getTimeStamp(self):
         """
         Returns UTC timestamp in floating point seconds.
-        
+
         @rtype: float
         @return: Timestamp in seconds
         """
@@ -170,7 +195,7 @@ class UTCDateTime(datetime.datetime):
     def getDateTime(self):
         """
         Converts current UTCDateTime object in a Python datetime object.
-        
+
         @rtype: datetime
         @return: Python datetime object of current UTCDateTime
         """
@@ -179,11 +204,10 @@ class UTCDateTime(datetime.datetime):
 
     datetime = property(getDateTime)
 
-
     def __add__(self, *args, **kwargs):
         """
         Adds seconds and microseconds from current UTCDateTime object.
-        
+
             >>> a = UTCDateTime(0.0)
             >>> a
             UTCDateTime(1970, 1, 1, 0, 0)
@@ -191,9 +215,9 @@ class UTCDateTime(datetime.datetime):
             UTCDateTime(1970, 1, 1, 0, 0, 1)
             >>> a + 1.123456
             UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
-            >>> a + 60*60*24*31 + 0.1
+            >>> a + 60 * 60 * 24 * 31 + 0.1
             UTCDateTime(1970, 2, 1, 0, 0, 0, 100000)
-        
+
         @return: UTCDateTime
         """
         if len(args) == 1:
@@ -215,17 +239,17 @@ class UTCDateTime(datetime.datetime):
     def __sub__(self, *args, **kwargs):
         """
         Substracts seconds and microseconds from current UTCDateTime object.
-        
-            >>> a = UTCDateTime(0.0) + 60*60*24*31
+
+            >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
             >>> a
             UTCDateTime(1970, 2, 1, 0, 0)
             >>> a - 1
             UTCDateTime(1970, 1, 31, 23, 59, 59)
             >>> a - 1.123456
             UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
-            >>> a - 60*60*24*31
+            >>> a - 60 * 60 * 24 * 31
             UTCDateTime(1970, 1, 1, 0, 0)
-        
+
         @return: UTCDateTime
         """
         if len(args) == 1:
@@ -250,7 +274,7 @@ def getFormatsAndMethods(verbose=False):
     Collects all obspy parser classes.
 
     @type verbose: Bool
-    @param verbose: Print error messages/ exceptions while parsing.
+    @param verbose: Print error messages / exceptions while parsing.
     """
     temp = []
     failure = []
@@ -288,16 +312,16 @@ def getFormatsAndMethods(verbose=False):
 def scoreatpercentile(a, per, limit=(), sort=True):
     """
     Calculates the score at the given 'per' percentile of the sequence a.
-    
-    For example, the score at per=50 is the median.
-    
+
+    For example, the score at per = 50 is the median.
+
     If the desired quantile lies between two data points, we interpolate
     between them.
-    
+
     If the parameter 'limit' is provided, it should be a tuple (lower,
     upper) of two values.  Values of 'a' outside this (closed) interval
     will be ignored.
-    
+
         >>> a = [1, 2, 3, 4]
         >>> scoreatpercentile(a, 25)
         1.75
@@ -312,7 +336,7 @@ def scoreatpercentile(a, per, limit=(), sort=True):
         40
         >>> scoreatpercentile(a, 75)
         42.5
-    
+
     This method is taken from scipy.stats.scoreatpercentile
     Copyright (c) Gary Strangman
     """
