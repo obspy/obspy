@@ -207,7 +207,7 @@ class UTCDateTime(datetime.datetime):
     def __add__(self, *args, **kwargs):
         """
         Adds seconds and microseconds from current UTCDateTime object.
-
+        
             >>> a = UTCDateTime(0.0)
             >>> a
             UTCDateTime(1970, 1, 1, 0, 0)
@@ -217,7 +217,9 @@ class UTCDateTime(datetime.datetime):
             UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
             >>> a + 60 * 60 * 24 * 31 + 0.1
             UTCDateTime(1970, 2, 1, 0, 0, 0, 100000)
-
+            >>> UTCDateTime(0.5) + UTCDateTime(10.5)
+            11.0
+        
         @return: UTCDateTime
         """
         if len(args) == 1:
@@ -232,6 +234,8 @@ class UTCDateTime(datetime.datetime):
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__add__(self, td)
                 return UTCDateTime(dt)
+            elif isinstance(arg, UTCDateTime):
+                return self.timestamp + arg.timestamp
         else:
             dt = datetime.datetime.__add__(self, *args, **kwargs)
             return UTCDateTime(dt)
@@ -239,7 +243,7 @@ class UTCDateTime(datetime.datetime):
     def __sub__(self, *args, **kwargs):
         """
         Substracts seconds and microseconds from current UTCDateTime object.
-
+        
             >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
             >>> a
             UTCDateTime(1970, 2, 1, 0, 0)
@@ -249,7 +253,9 @@ class UTCDateTime(datetime.datetime):
             UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
             >>> a - 60 * 60 * 24 * 31
             UTCDateTime(1970, 1, 1, 0, 0)
-
+            >>> UTCDateTime(10.0) - UTCDateTime(9.5)
+            0.5
+        
         @return: UTCDateTime
         """
         if len(args) == 1:
@@ -264,6 +270,8 @@ class UTCDateTime(datetime.datetime):
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__sub__(self, td)
                 return UTCDateTime(dt)
+            elif isinstance(arg, UTCDateTime):
+                return self.timestamp - arg.timestamp
         else:
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
             return UTCDateTime(dt)
