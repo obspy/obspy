@@ -139,6 +139,8 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 12, 23, 34)
         >>> UTCDateTime("1970-01-01T12:23:34.123456")
         UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+        >>> UTCDateTime("20090701121212")
+        UTCDateTime(2009, 7, 1, 12, 12, 12)
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
@@ -148,9 +150,10 @@ class UTCDateTime(datetime.datetime):
             elif isinstance(arg, datetime.datetime):
                 dt = arg
             elif isinstance(arg, basestring):
-                arg = arg.replace('T', ' ')
+                arg = arg.replace('T', '')
                 arg = arg.replace('-', '')
                 arg = arg.replace(':', '')
+                arg = arg.replace(' ', '')
                 ms = 0
                 if '.' in arg:
                     parts = arg.split('.')
@@ -159,7 +162,7 @@ class UTCDateTime(datetime.datetime):
                         ms = int(parts[1].strip())
                     except:
                         pass
-                for pattern in ["%Y%m%d %H%M%S", "%Y%m%d"]:
+                for pattern in ["%Y%m%d%H%M%S", "%Y%m%d"]:
                     try:
                         dt = datetime.datetime.strptime(arg, pattern)
                     except:
