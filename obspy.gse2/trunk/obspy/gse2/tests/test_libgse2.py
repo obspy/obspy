@@ -59,6 +59,7 @@ class LibGSE2TestCase(unittest.TestCase):
         newheader, newdata = libgse2.read(temp_file)
         self.assertEqual(header, newheader)
         N.testing.assert_equal(data, newdata)
+        os.remove(temp_file)
 
     def test_readHeaderInfo(self):
         """

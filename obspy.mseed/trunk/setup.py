@@ -53,7 +53,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=False,
-    # test_suite = "obspy.mseed.tests",
+    test_suite = "obspy.mseed.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',

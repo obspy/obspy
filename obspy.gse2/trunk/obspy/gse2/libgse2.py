@@ -183,12 +183,14 @@ def read(infile, test_chksum=False):
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    data = (C.c_long * head.n_samps)()
-    n = lib.decomp_6b(fp, head.n_samps, data)
+    #data = (C.c_long * head.n_samps)()
+    data = N.zeros(head.n_samps,dtype='int32')
+    LP_data = data.ctypes.data_as(C.c_void_p) # Pointer to data
+    n = lib.decomp_6b(fp, head.n_samps, LP_data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
-    lib.rem_2nd_diff(data, head.n_samps)
+    lib.rem_2nd_diff(LP_data, head.n_samps)
     chksum = C.c_longlong()
-    chksum = lib.check_sum(data, head.n_samps, chksum)
+    chksum = lib.check_sum(LP_data, head.n_samps, chksum)
     chksum2 = int(f.readline().strip().split()[1])
     if test_chksum and chksum != chksum2:
         msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
@@ -203,7 +205,7 @@ def read(infile, test_chksum=False):
     if not type(infile) == file:
         f.close()
     # return headdict , data[0:n]
-    return headdict , N.ctypeslib.as_array(data)
+    return headdict , data
 
 
 def write(headdict, data, outfile):

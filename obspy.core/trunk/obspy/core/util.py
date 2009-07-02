@@ -58,6 +58,51 @@ class Stats(dict):
         self.dataquality = ""
         self.starttime = UTCDateTime.utcfromtimestamp(0.0)
         self.endtime = UTCDateTime.utcfromtimestamp(86400.0)
+    
+    def is_attr(self,attr,typ,default,length=False,assertation=False,verbose=False):
+        """True if attribute of cetain type and optional length exists
+        
+        Function is probably most useful for checking if necessary
+        attributes are provided, e.g. when writing seismograms to file
+
+        >>> p=Stats()
+        >>> p.julsec = 0.0
+        >>> p.is_attr('julsec',float,1.0)
+        True
+        >>> p.is_attr('julsec',int,123)
+        False
+        >>> p.julsec
+        123
+        """
+        # Check if attribute exists
+        if not attr in self.__dict__.keys():
+            if assertation:
+                assert False,"%s attribute of Seismogram required" % attr
+            if verbose:
+                print "WARNING: %s attribute of Seismogram missing",
+                print "forcing",attr,"=",default
+            setattr(self,attr,default)
+            return False
+        # Check if attribute is of correct type
+        if not isinstance(getattr(self,attr),typ):
+            if assertation:
+                assert False,"%s attribute of Seismogram not of type %s" % (attr,typ)
+            if verbose:
+                print "WARNING: %s attribute of Seismogram not of type %s" % (attr,typ),
+                print "forcing",attr,"=",default
+            setattr(self,attr,default)
+            return False
+        # Check if attribute has correct length
+        if (length):
+            if (len(getattr(self,attr)) != length):
+                if assertation:
+                    assert False, "%s attribute of Seismogram is != %i" % (attribute,length)
+                if verbose:
+                    print "%s attribute of Seismogram is != %i" % (attribute,length)
+                setattr(self,attr,default)
+                return False
+        # If not test failed
+        return True
 
 
 class UTCDateTime(datetime.datetime):

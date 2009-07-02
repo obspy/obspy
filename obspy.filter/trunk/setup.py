@@ -45,7 +45,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    # test_suite = "obspy.gse2.tests",
+    test_suite = "obspy.filter.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',

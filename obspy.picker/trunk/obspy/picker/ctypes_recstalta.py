@@ -27,8 +27,8 @@ Module implementing the Recursive STA/LTA (see Withers et al. 1998 p. 98)
 Two versions, a fast ctypes one and a slow python one. In this doctest the
 ctypes version is tested against the python implementation
       
->>> numpy.random.seed(815)
->>> a = numpy.random.randn(1000)
+>>> N.random.seed(815)
+>>> a = N.random.randn(1000)
 >>> nsta, nlta = 5, 10
 >>> c1 = recStalta(a,nsta,nlta)
 >>> c2 = recStaltaPy(a.copy(),nsta,nlta)
@@ -41,13 +41,18 @@ True
 Traceback (most recent call last):
 ...
 AssertionError: Error, data need to be a numpy ndarray
+>>> recStalta(N.array([1],dtype='int32'),nsta,nlta)
+Traceback (most recent call last):
+...
+AssertionError: Error, data need to be float64 numpy ndarray
 """
 
-import os, random, copy, numpy
+import os, random, copy, numpy as N
 import ctypes as C
 
 def recStalta(a,nsta,nlta):
     """Recursive STA/LTA (see Withers et al. 1998 p. 98)
+    Fast version written in C.
 
     @note: This version directly uses a C version via CTypes
     @type a: Numpy ndarray
@@ -60,8 +65,10 @@ def recStalta(a,nsta,nlta):
     @return: Charactristic function of STA/LTA
     """
 
-    assert type(a) == numpy.ndarray, "Error, data need to be a numpy ndarray"
+    assert type(a) == N.ndarray, "Error, data need to be a numpy ndarray"
+    assert a.dtype == 'float64', "Error, data need to be float64 numpy ndarray"
     ndat = len(a)
+
     lib = C.CDLL(os.path.join(os.path.dirname(__file__),'recstalta.so'))
 
     lib.recstalta.argtypes=[C.c_void_p,C.c_int,C.c_int,C.c_int]
@@ -72,11 +79,12 @@ def recStalta(a,nsta,nlta):
     #c_a = (C.c_double*ndat)()
     #c_a[0:ndat] = a
     #charfct = C.pointer(lib.recstalta(c_a,ndat,nsta,nlta))
-    return numpy.array(charfct.contents[0:ndat])
+    return N.array(charfct.contents[0:ndat])
 
 def recStaltaPy(a,nsta,nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
+    Slow version written in Python.
     
     @note: There exists a faster version of this trigger wrapped in C
     called recstalta in this module!

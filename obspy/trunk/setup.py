@@ -21,7 +21,7 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=True,
-    # test_suite = "obspy.gse2.tests",
+    test_suite = "obspy.core.testing.suite",
     install_requires=[
         'setuptools',
         'numpy',

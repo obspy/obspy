@@ -4,7 +4,7 @@
 The libgse2 test suite.
 """
 
-from obspy.sac import sacio
+from obspy.sac import sacio, SacError
 from obspy.core.util import UTCDateTime
 import inspect, os, unittest
 import numpy as N
@@ -53,6 +53,13 @@ class SacioTestCase(unittest.TestCase):
         t.WriteSacBinary('testbin.sac')
         self.assertEqual(os.path.exists('testbin.sac'), True)
         os.remove('testbin.sac')
+
+    def test_isSAC(self):
+        """
+        See if assertation is Raised if file ist not a sac file
+        """
+        t=sacio.ReadSac()
+        self.assertRaises(SacError, t.ReadSacFile, __file__)
 
 def suite():
     return unittest.makeSuite(SacioTestCase, 'test')

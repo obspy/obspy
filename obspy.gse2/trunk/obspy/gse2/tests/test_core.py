@@ -56,7 +56,6 @@ class CoreTestCase(unittest.TestCase):
         st2.write(tmpfile, format='GSE2')
         # read comparison trace
         tr3 = obspy.read(tmpfile)[0]
-        os.remove(tmpfile)
         # check if equal
         self.assertEqual(tr3.stats['station'], tr.stats['station'])
         self.assertEqual(tr3.stats.npts, tr.stats.npts)
@@ -67,6 +66,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.get('calper'), tr.stats.get('calper'))
         self.assertEqual(tr.stats.get('calib'), tr.stats.get('calib'))
         N.testing.assert_equal(tr.data, tr3.data)
+        os.remove(tmpfile)
 
 
 def suite():

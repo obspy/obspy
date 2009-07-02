@@ -44,7 +44,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    # test_suite = "obspy.sac.tests",
+    test_suite = "obspy.sac.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',
