@@ -2,6 +2,7 @@
 
 import re
 
+from obspy.core.util import formatScientific
 from obspy.xseed import utils
 
 
@@ -139,43 +140,12 @@ class Float(Field):
         # special format for exponential output
         result = format_str % (self.mask % temp)
         if 'E' in self.mask or 'e' in self.mask:
-            result = self.formatExponential(result)
+            result = formatScientific(result.upper())
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)
             raise SEEDTypeException(msg)
         return result
-
-    def formatExponential(self, data):
-        """
-        Formats floats in a fixed exponential format.
-        
-        Different operation systems are delivering different output for the
-        exponential format of floats. Here we ensure to deliver in a for SEED
-        valid format independent of the OS. For speed issues we simple cut any 
-        number ending with E+0XX or E-0XX down to E+XX or E-XX. This fails for 
-        numbers XX>99, but should not occur, because the SEED standard does 
-        not allow this values either.
-        
-        Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45) 
-        [MSC v.1310 32 bit (Intel)] on win32
-        >>> '%E' % 2.5
-        '2.500000E+000'
-        
-        Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
-        [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
-        >>> '%E' % 2.5
-        '2.500000E+00'
-        """
-        data = data.upper()
-        if data[-4] == 'E':
-            return data
-        if 'E+0' in data:
-            return data.replace('E+0', 'E+')
-        if 'E-0' in data:
-            return data.replace('E-0', 'E-')
-        msg = "Can't format float %s in field %s" % (data, self.field_name)
-        raise SEEDTypeException(msg)
 
 
 class FixedString(Field):

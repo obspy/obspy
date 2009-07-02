@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import platform, os
 import ctypes as C
 import numpy as N
-from obspy.core.util import UTCDateTime, c_file_p
+from obspy.core.util import UTCDateTime, c_file_p, formatScientific
 
 
 if platform.system() == 'Windows':
@@ -135,8 +135,7 @@ def writeHeader(f, head):
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
     """
-    mantissa, exponent = str("%10.4e" % head.calib).split('e')
-    calib = "%se%+03d" % (mantissa, int(exponent))
+    calib = formatScientific("%10.4e" % head.calib)
     f.write("WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d %11.6f %s %7.3f %-6s %5.1f %4.1f\n" % (
             head.d_year,
             head.d_mon,

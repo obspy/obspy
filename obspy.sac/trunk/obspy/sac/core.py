@@ -1,0 +1,118 @@
+# -*- coding: utf-8 -*-
+
+from obspy.core import Trace
+from obspy.sac.sacio import ReadSac
+from obspy.core.util import UTCDateTime
+import numpy as N
+import array
+
+
+def isSAC(filename):
+    """
+    Checks whether a file is SAC or not. Returns True or False.
+    
+    @param filename: SAC file to be read.
+    """
+    g = ReadSac()
+    try:
+        npts = GetHvalueFromFile(filename,'npts')
+    except:
+        return False
+    st = os.stat(filename) #file's size = st[6] 
+    sizecheck = st[6] - (632 + 4 * npts)
+    # size check info
+    if sizecheck != 0:
+        # File-size and theoretical size inconsistent!
+        return False
+    return True
+
+
+# we put here everything but the time, they are going to starttime
+# left sac attributes, right trace attributes
+#XXX NOTE not all values from the read in dictonary are converted
+# this is definetly a problem when reading an writing a read sac file.
+convert_dict = {'npts': 'npts',
+                'delta':'sampling_rate',
+                'kcmpnm': 'channel',
+                'kstnm': 'station'
+}
+
+def readSAC(filename, **kwargs):
+    """
+    Reads a SAC file and returns an obspy.Trace object.
+    
+    @param filename: SAC file to be read.
+    """
+    # read SAC file
+    t=ReadSac()
+    t.ReadSacFile(filename)
+    # assign all header entries to a new dictionary compatible with an Obspy
+    header = {}
+    for i, j in convert_dict.iteritems():
+        header[j] = t.GetHvalue(i)
+    # convert time to UTCDateTime
+    year = t.GetHvalue('nzyear')
+    yday = t.GetHvalue('nzjday')
+    hour = t.GetHvalue('nzhour')
+    mint = t.GetHvalue('nzmin')
+    sec  = t.GetHvalue('nzsec')
+    msec = t.GetHvalue('nzmsec')
+    microsec = msec * 1000
+    mon, day = UTCDateTime.strptime(str(year)+str(yday),"%Y%j").timetuple()[1:3]
+    header['starttime'] = UTCDateTime(year,mon,day,hour,mint,sec,microsec)
+    header['endtime']   = UTCDateTime( header['starttime'].timestamp +
+        header['npts'] / float(header['sampling_rate'])
+    )
+    #XXX From Python2.6 the buffer interface can be generally used to
+    # directly pass the pointers from the array.array class to
+    # numpy.ndarray, old version:
+    # data=N.fromstring(t.seis.tostring(),dtype='float32'))
+    return Trace(header=header, 
+                 data=N.frombuffer(t.seis,dtype='float32'))
+
+
+def writeSAC(stream_object, filename, **kwargs):
+    """
+    Write SAC file and returns an obspy.Trace object.
+    
+    @param filename: SAC file to be read.
+    """
+    #
+    # Translate the common (renamed) entries
+    for trace in stream_object:
+        t=ReadSac()
+        for _j, _k in convert_dict.iteritems():
+            try:
+                t.SetHvalue(_j, trace.stats[_k])
+            except:
+                pass
+        # year, month, day, hour, min, sec
+        try:
+            (year,month,day,hour,mint,
+                    sec) = trace.stats.starttime.timetuple()[0:6]
+            msec = trace.stats.starttime.microseconds / 1e3
+            yday = trace.stats.starttime.strftime("%j")
+            t.SetHvalue('nzyear', year)
+            t.SetHvalue('nzjday', yday)
+            t.SetHvalue('nzhour', hour)
+            t.SetHvalue('nzmin', mint)
+            t.SetHvalue('nzsec', sec)
+            t.SetHvalue('nzmsec', msec)
+        except:
+            pass
+        if trace.data.dtype != 'float32':
+            trace.data = trace.data.astype('float32')
+        # building array of floats
+        t.seis = array.array('f')
+        # pass data as string (actually it's a copy), using a list for
+        # passing would require a type info per list entry and thus use a lot
+        # of memory
+        # XXX use the buffer interface at soon as it is supported in
+        # array.array, Python2.6
+        t.seis.fromstring(trace.data.tostring())
+        try:
+            t.WriteSacBinary(filename)
+        except:
+            raise
+        # XXX currently only one trace is supported
+        break
