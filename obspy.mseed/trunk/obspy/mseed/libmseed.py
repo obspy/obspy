@@ -19,9 +19,10 @@ GNU-LGPL and further information can be found here:
 http://www.gnu.org/
 """
 
+from StringIO import StringIO
+from obspy.core.util import UTCDateTime, scoreatpercentile, c_file_p
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     MSFileParam
-from obspy.core.util import UTCDateTime, scoreatpercentile, c_file_p
 from struct import unpack
 import ctypes as C
 import math
@@ -639,8 +640,7 @@ class libmseed(object):
         # Return the cut file string.
         return data
 
-    def mergeAndCutMSFiles(self, file_list, outfile, starttime=None,
-                           endtime=None):
+    def mergeAndCutMSFiles(self, file_list, starttime=None, endtime=None):
         """
         This method takes several Mini-SEED files and returns one merged file.
         
@@ -659,6 +659,7 @@ class libmseed(object):
         @param outfile: String of the file to be created.
         @param starttime: obspy.util.UTCDateTime object.
         @param endtime: obspy.util.UTCDateTime object.
+        @return: Byte string containing the merged and cut file.
         """
         # Copy file_list to not alter the provided list.
         file_list = file_list[:]
@@ -685,7 +686,7 @@ class libmseed(object):
             starttime = file_list[0][1][0]
         if not endtime:
             endtime = max([file[1][1] for file in file_list])
-        open_file = open(outfile, 'wb')
+        open_file = StringIO()
         try:
             # Loop over all files in file_list and append to final output file.
             for file in file_list:
@@ -709,12 +710,12 @@ class libmseed(object):
                     open_file.write(self.cutMSFileByRecords(file=file[0],
                                     starttime=starttime, endtime=endtime))
             # Close the open file
-            open_file.close()
+            open_file.seek(0)
+            return open_file.read()
         # Handle non existing files and files of the wrong type.
         except IOError, error:
             # Close file and remove the already written file.
             open_file.close()
-            os.remove(outfile)
             # Write to standard error.
             sys.stderr.write(str(error) + '\n')
             sys.stderr.write('No file has been written.\n')

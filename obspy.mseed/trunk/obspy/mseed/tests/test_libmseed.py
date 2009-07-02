@@ -323,12 +323,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         endtime = mseed._convertMSTimeToDatetime(
                                         ninth_msr.contents.starttime)
         # Create the merged file<
-        mseed.mergeAndCutMSFiles(file_list, outfile, starttime, endtime)
-        fh = open(outfile, 'rb')
+        data = mseed.mergeAndCutMSFiles(file_list, starttime, endtime)
         # Compare the file to the desired output.
-        self.assertEqual(fh.read(), first_ten_records[512:-512])
-        fh.close()
-        os.remove(outfile)
+        self.assertEqual(data, first_ten_records[512:-512])
         for _i in file_list:
             os.remove(_i)
 
