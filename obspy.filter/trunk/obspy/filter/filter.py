@@ -52,6 +52,11 @@ def bandpassZPHSH(data,freqmin,freqmax,df=200,corners=2):
   Filter data from freqmin to freqmax using corners corners and doing 2 runs
   over the data, one from left to right and one from right to left.
   Note that the default corners is 2, because of the two runs involved.
+  
+  NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at the end of the trace!
+  As this part of the trace is assumed to generally be of low interest/importance this issue
+  is ignored at the moment.
+  Try ./tests/visual_test_filter.py for plots showing the issue.
 
   @param data: Data to filter, type numpy.ndarray.
   @param freqmin: Pass band low corner frequency.
@@ -88,6 +93,11 @@ def bandstopZPHSH(data,freqmin,freqmax,df=200,corners=2):
   corners corners and doing 2 runs over the data, one from left to right and
   one from right to left.
   Note that the default corners is 2, because of the two runs involved.
+  
+  NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at the end of the trace!
+  As this part of the trace is assumed to generally be of low interest/importance this issue
+  is ignored at the moment.
+  Try ./tests/visual_test_filter.py for plots showing the issue.
 
   @param data: Data to filter, type numpy.ndarray.
   @param freqmin: Stop band low corner frequency.
@@ -122,6 +132,11 @@ def lowpassZPHSH(data,freq,df=200,corners=2):
   and doing 2 runs over the data, one from left to right and one from right
   to left.
   Note that the default corners is 2, because of the two runs involved.
+  
+  NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at the end of the trace!
+  As this part of the trace is assumed to generally be of low interest/importance this issue
+  is ignored at the moment.
+  Try ./tests/visual_test_filter.py for plots showing the issue.
 
   @param data: Data to filter, type numpy.ndarray.
   @param freq: Filter corner frequency.
@@ -155,6 +170,11 @@ def highpassZPHSH(data,freq,df=200,corners=2):
   and doing 2 runs over the data, one from left to right and one from right
   to left.
   Note that the default corners is 2, because of the two runs involved.
+  
+  NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at the end of the trace!
+  As this part of the trace is assumed to generally be of low interest/importance this issue
+  is ignored at the moment.
+  Try ./tests/visual_test_filter.py for plots showing the issue.
 
   @param data: Data to filter, type numpy.ndarray.
   @param freq: Filter corner frequency.
