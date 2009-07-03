@@ -34,6 +34,13 @@ def bandpass(data,freqmin,freqmax,df=200,corners=4):
   
   Filter data from freqmin to freqmax using
   corners corners.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freqmin: Pass band low corner frequency.
+  @param freqmax: Pass band high corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, [freqmin/fe, freqmax/fe], btype='band',ftype='butter',output='ba')
@@ -45,6 +52,13 @@ def bandpassZPHSH(data,freqmin,freqmax,df=200,corners=2):
   Filter data from freqmin to freqmax using corners corners and doing 2 runs
   over the data, one from left to right and one from right to left.
   Note that the default corners is 2, because of the two runs involved.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freqmin: Pass band low corner frequency.
+  @param freqmax: Pass band high corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   x=bandpass(data, freqmin, freqmax, df, corners)
   x=bandpass(x[::-1], freqmin, freqmax, df, corners)
@@ -55,6 +69,13 @@ def bandstop(data,freqmin,freqmax,df=200,corners=4):
   
   Filter data removing data between frequencies freqmin and freqmax using
   corners corners.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freqmin: Stop band low corner frequency.
+  @param freqmax: Stop band high corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, [freqmin/fe, freqmax/fe], btype='bandstop',ftype='butter',output='ba')
@@ -67,6 +88,13 @@ def bandstopZPHSH(data,freqmin,freqmax,df=200,corners=2):
   corners corners and doing 2 runs over the data, one from left to right and
   one from right to left.
   Note that the default corners is 2, because of the two runs involved.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freqmin: Stop band low corner frequency.
+  @param freqmax: Stop band high corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   x=bandstop(data, freqmin, freqmax, df, corners)
   x=bandstop(x[::-1], freqmin, freqmax, df, corners)
@@ -76,6 +104,12 @@ def lowpass(data,freq,df=200,corners=4):
   """Butterworth-Lowpass Filter
   
   Filter data removing data over certain frequency freq using corners corners.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freq: Filter corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, freq/fe, btype='lowpass',ftype='butter',output='ba')
@@ -88,6 +122,12 @@ def lowpassZPHSH(data,freq,df=200,corners=2):
   and doing 2 runs over the data, one from left to right and one from right
   to left.
   Note that the default corners is 2, because of the two runs involved.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freq: Filter corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   x=lowpass(data, freq, df, corners)
   x=lowpass(x[::-1], freq, df, corners)
@@ -97,6 +137,12 @@ def highpass(data,freq,df=200,corners=4):
   """Butterworth-Highpass Filter:
   
   Filter data removing data below certain frequency freq using corners corners.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freq: Filter corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   fe=.5*df
   [b,a]=iirfilter(corners, freq/fe, btype='highpass',ftype='butter',output='ba')
@@ -109,6 +155,12 @@ def highpassZPHSH(data,freq,df=200,corners=2):
   and doing 2 runs over the data, one from left to right and one from right
   to left.
   Note that the default corners is 2, because of the two runs involved.
+
+  @param data: Data to filter, type numpy.ndarray.
+  @param freq: Filter corner frequency.
+  @param df: Sampling rate in Hz; Default 200.
+  @param corners: Filter corners. Note: This is twice the value of PITSA's filter sections
+  @return: Filtered data.
   """
   x=highpass(data, freq, df, corners)
   x=highpass(x[::-1], freq, df, corners)
@@ -122,6 +174,9 @@ def envelope(data):
   then taking the squareroot.
   (See Kanasewich: Time Sequence Analysis in Geophysics)
   The envelope at the start/end should not be taken too seriously.
+
+  @param data: Data to make envelope of, type numpy.ndarray.
+  @return: Envelope of input data.
   """
   hilb=hilbert(data)
   data=pow(pow(data,2)+pow(hilb,2),0.5)
