@@ -206,6 +206,28 @@ class FilterTestCase(unittest.TestCase):
         #print "RMS misfit (including last 200 samples):",N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
         self.assertEqual(rms < 1.e-5, True)
 
+    def test_envelopeVsPitsa(self):
+        """
+        Test Envelope filter against pitsa.
+        The rms is not so good, but the fit is still good in most parts.
+        """
+        # load test file
+        file = os.path.join(self.path, 'rjob_20051006.gz')
+        f = gzip.open(file)
+        data = load(f)
+        f.close()
+        # filter trace
+        datcorr = envelope(data)
+        # load pitsa file
+        file = os.path.join(self.path, 'rjob_20051006_envelope.gz')
+        f = gzip.open(file)
+        data_pitsa = load(f)
+        f.close()
+        # calculate normalized rms
+        rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
+        #print "RMS misfit:",N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
+        self.assertEqual(rms < 1.e-2, True)
+
 def suite():
     return unittest.makeSuite(FilterTestCase, 'test')
 
