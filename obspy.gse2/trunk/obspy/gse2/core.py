@@ -13,29 +13,30 @@ def isGSE2(filename):
     """
     # Open file.
     try:
-        f = open(filename)
+        fh = open(filename)
     except:
         return False
     try:
-        data = f.read(4)
+        data = fh.read(4)
     except:
         data = False
-    f.close()
+    fh.close()
     if data == 'WID2':
         return True
     return False
 
 
-convert_dict = {'station': 'station',
-                'samp_rate':'sampling_rate',
-                'n_samps': 'npts',
-                'instype': 'instype',
-                'datatype': 'datatype',
-                'vang': 'vang',
-                'auxid': 'auxid',
-                'channel': 'channel',
-                'calper': 'calper',
-                'calib': 'calib'
+convert_dict = {
+    'station': 'station',
+    'samp_rate':'sampling_rate',
+    'n_samps': 'npts',
+    'instype': 'instype',
+    'datatype': 'datatype',
+    'vang': 'vang',
+    'auxid': 'auxid',
+    'channel': 'channel',
+    'calper': 'calper',
+    'calib': 'calib'
 }
 
 
@@ -52,27 +53,19 @@ def readGSE2(filename, **kwargs):
     new_header = {}
     for i, j in convert_dict.iteritems():
         new_header[j] = header[i]
-    # convert time to seconds since epoch
-    seconds = int(header['t_sec'])
-    microseconds = int(1e6 * (header['t_sec'] - seconds))
     # Calculate start time.
     new_header['starttime'] = UTCDateTime(
-            header['d_year'], header['d_mon'], header['d_day'],
-            header['t_hour'], header['t_min'],
-            seconds, microseconds
-    )
-    new_header['endtime'] = UTCDateTime.utcfromtimestamp(
-        new_header['starttime'].timestamp +
+        header['d_year'], header['d_mon'], header['d_day'],
+        header['t_hour'], header['t_min'], 0) + header['t_sec']
+    new_header['endtime'] = new_header['starttime'] + \
         header['n_samps'] / float(header['samp_rate'])
-    )
     return Trace(header=new_header, data=data)
-
 
 
 def writeGSE2(stream_object, filename, **kwargs):
     #
     # Translate the common (renamed) entries
-    f = open(filename, 'ab')
+    fh = open(filename, 'ab')
     for trace in stream_object:
         header = {}
         for _j, _k in convert_dict.iteritems():
@@ -92,7 +85,7 @@ def writeGSE2(stream_object, filename, **kwargs):
         except:
             pass
         try:
-            libgse2.write(header, trace.data, f)
+            libgse2.write(header, trace.data, fh)
         except AssertionError:
-            libgse2.write(header, trace.data.astype('l'), f)
-    f.close()
+            libgse2.write(header, trace.data.astype('l'), fh)
+    fh.close()

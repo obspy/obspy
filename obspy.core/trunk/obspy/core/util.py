@@ -137,18 +137,29 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 0, 0)
         >>> UTCDateTime("1970-01-01 12:23:34")
         UTCDateTime(1970, 1, 1, 12, 23, 34)
-        >>> UTCDateTime("1970-01-01T12:23:34.123456")
-        UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
         >>> UTCDateTime("20090701121212")
         UTCDateTime(2009, 7, 1, 12, 12, 12)
+        >>> a = UTCDateTime("1970-01-01T12:23:34.123456")
+        >>> a
+        UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+        >>> str(a)
+        '1970-01-01 12:23:34.123456'
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
             arg = args[0]
             if type(arg) in [int, long, float]:
                 dt = datetime.datetime.utcfromtimestamp(arg)
+                return datetime.datetime.__new__(cls, dt.year, dt.month,
+                                                 dt.day, dt.hour,
+                                                 dt.minute, dt.second,
+                                                 dt.microsecond)
             elif isinstance(arg, datetime.datetime):
                 dt = arg
+                return datetime.datetime.__new__(cls, dt.year, dt.month,
+                                                 dt.day, dt.hour,
+                                                 dt.minute, dt.second,
+                                                 dt.microsecond)
             elif isinstance(arg, basestring):
                 arg = arg.replace('T', '')
                 arg = arg.replace('-', '')
@@ -162,6 +173,7 @@ class UTCDateTime(datetime.datetime):
                         ms = int(parts[1].strip())
                     except:
                         pass
+                dt = None
                 for pattern in ["%Y%m%d%H%M%S", "%Y%m%d"]:
                     try:
                         dt = datetime.datetime.strptime(arg, pattern)
@@ -169,19 +181,18 @@ class UTCDateTime(datetime.datetime):
                         continue
                     else:
                         break
-                return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                                 dt.day, dt.hour,
-                                                 dt.minute, dt.second, ms)
-            return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                             dt.day, dt.hour,
-                                             dt.minute, dt.second,
-                                             dt.microsecond)
+                if dt:
+                    return datetime.datetime.__new__(cls, dt.year, dt.month,
+                                                     dt.day, dt.hour,
+                                                     dt.minute, dt.second, ms)
         elif len(args) == 0:
             dt = datetime.datetime.utcnow()
             return datetime.datetime.__new__(cls, dt.year, dt.month,
                                              dt.day, dt.hour,
                                              dt.minute, dt.second,
                                              dt.microsecond)
+        # XXX
+        print "UTCDateTime.__new__", args, kwargs
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     def getTimeStamp(self):
