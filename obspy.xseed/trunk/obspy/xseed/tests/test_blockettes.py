@@ -31,6 +31,8 @@ def suite():
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette032.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette033.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette034.txt'))
+    suite.addTest(doctest.DocFileSuite(docpath + 'blockette041.txt'))
+    suite.addTest(doctest.DocFileSuite(docpath + 'blockette043.txt'))
     suite.addTest(doctest.DocFileSuite(docpath + 'blockette050.txt'))
 #    suite.addTest(doctest.DocFileSuite(docpath + 'blockette051.txt'))
     suite.addTest(doctest.DocFileSuite(docpath + 'blockette052.txt'))
