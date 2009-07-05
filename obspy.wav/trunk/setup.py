@@ -46,7 +46,7 @@ setup(
     zip_safe=False,
     test_suite = "obspy.wav.tests.suite",
     install_requires=[
-        'obspy',
+        'obspy.core',
         'setuptools',
     ],
     dependency_links = [

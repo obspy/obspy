@@ -15,7 +15,8 @@ def read(filename, format=None):
     
     @param format: Format of the file to read. If it is none the format will be
         autodetected. If you specify a format no further format checking is
-        done.
+        done. To avoid problems please use the option only when you are sure
+        which format your file has. Defaults to None.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -98,12 +99,29 @@ class Stream(object):
         """
         Method to add two streams.
         
-        It will just take deepcopies of both Stream's Traces and create a new
+        It will make a deepcopy of both Stream's Traces and create a new
         Stream object.
         """
         traces = copy.deepcopy(self.traces)
         traces.extend(copy.deepcopy(other.traces))
         return Stream(traces=traces)
+    
+    def __iadd__(self, other):
+        """
+        Method to add two streams with self += other.
+        
+        It will make a deepcopy of the other Stream's Traces and extend the
+        Stream object with them.
+        """
+        new_traces = copy.deepcopy(other.traces)
+        self.extend(new_traces)
+        return self
+    
+    def __len__(self):
+        """
+        Returns the number of Traces in the Stream object.
+        """
+        return len(self.traces)
 
     def __str__(self):
         """
@@ -117,7 +135,6 @@ class Stream(object):
             return_string = return_string + '\n' + str(_i)
         return return_string
 
-
     def __getitem__(self, index):
         """ 
         __getitem__ method of obspy.Stream objects. 
@@ -126,16 +143,19 @@ class Stream(object):
         """
         return self.traces[index]
 
-    def append(self, trace):
+    def append(self, trace, reference = False):
         """
         This method appends a single Trace object to the Stream object.
         
-        It will make a deepcopy of the Trace and not pass it by reference.
-        
         @param trace: obspy.Trace object.
+        @param reference: If true it will pass the Trace by reference. If
+            false it will make a deepcopy of the Trace. Defaults to False.
         """
         if isinstance(trace, Trace):
-            self.traces.append(copy.deepcopy(trace))
+            if not reference:
+                self.traces.append(copy.deepcopy(trace))
+            else:
+                self.traces.append(trace)
         else:
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
@@ -146,13 +166,14 @@ class Stream(object):
         """
         return len(self.traces)
         
-    def extend(self, trace_list):
+    def extend(self, trace_list, reference = False):
         """
         This method will extend the traces attribut of the Stream object with
         a list of Trace objects.
         
-        It will make a the list and not pass itsself and its items by
-        reference.
+        @param trace_list: list of obspy.Trace objects.
+        @param reference: If true it will pass the Traces by reference. If
+            false it will make a deepcopy of the Traces. Defaults to False.
         """
         if isinstance(trace_list, list):
             for _i in trace_list:
@@ -160,7 +181,10 @@ class Stream(object):
                 if not isinstance(_i, Trace):
                     msg = 'Extend only accepts a list of Trace objects.'
                     raise TypeError(msg)
-            self.traces.extend(copy.deepcopy(trace_list))
+            if not reference:
+                self.traces.extend(copy.deepcopy(trace_list))
+            else:
+                self.traces.extend(trace_list)
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
@@ -215,17 +239,21 @@ class Stream(object):
                             nsamples])
         return gap_list
     
-    def insert(self, index, object):
+    def insert(self, index, object, reference = False):
         """
         Inserts either a single Trace object or a list of Trace objects before
         index.
         
-        It will make a deepcopy of the object and not pass it by reference.
-        
+        @param index: The Trace will be inserted before index.
         @param object: Single Trace object or list of Trace objects.
+        @param reference: If True it will pass the Traces by reference. If
+            false it will make a deepcopy of the Traces. Defaults to False.
         """
         if isinstance(object, Trace):
-            self.traces.insert(index, copy.deepcopy(object))
+            if not reference:
+                self.traces.insert(index, copy.deepcopy(object))
+            else:
+                self.traces.insert(index, object)
         elif isinstance(object, list):
             # Make sure each item in the list is a trace.
             for _i in object:
@@ -235,7 +263,10 @@ class Stream(object):
                     raise TypeError(msg)
             # Insert each item of the list.
             for _i in range(len(object)):
-                self.traces.insert(index + _i, copy.deepcopy(object[_i]))
+                if not reference:
+                    self.traces.insert(index + _i, copy.deepcopy(object[_i]))
+                else:
+                    self.traces.insert(index + _i, object[_i])
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)
@@ -355,6 +386,19 @@ class Stream(object):
              'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality' 
              Defaults to ['network', 'station', 'channel', 'starttime'].
         """
+        # Check the list and all items.
+        msg = "keys must be a list of item strings. Available items to sort "+\
+              "after: \n'network', 'station', 'channel', 'location', " +\
+              "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
+        if not isinstance(keys, list):
+            raise TypeError(msg)
+        items = ('network', 'station', 'channel', 'location', 'starttime',
+                 'endtime', 'sampling_rate', 'npts', 'dataquality')
+        for _i in keys:
+            try:
+                items.index(_i)
+            except:
+                raise TypeError(msg)
         # Reverse list first.
         keys.reverse()
         # Loop over all items in keys.

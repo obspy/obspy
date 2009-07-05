@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import unittest, time
 import obspy
+import time
+import unittest
 
 
 def suite():

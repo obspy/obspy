@@ -3,8 +3,7 @@
 """Python for observatories."""
 
 from obspy.core.core import *
-from obspy.core import util
-from obspy.core import parser
+from obspy.core import util, parser, Stream, Trace
 
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
 try:
