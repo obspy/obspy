@@ -5,6 +5,7 @@ from calendar import timegm
 import ctypes as C
 import datetime
 import traceback
+import copy
 
 
 class Stats(dict):
@@ -24,6 +25,8 @@ class Stats(dict):
       >>> x = stats.keys()
       >>> x.sort()
       >>> x[0:3]
+      ['channel', 'dataquality', 'endtime']
+      >>> copy.deepcopy(x)[0:3]
       ['channel', 'dataquality', 'endtime']
 
     @type station: String
@@ -144,6 +147,9 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
         >>> str(a)
         '1970-01-01 12:23:34.123456'
+        >>> t3 = copy.deepcopy(t)
+        >>> t3.timestamp
+        1240561632.0050001
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
@@ -173,6 +179,12 @@ class UTCDateTime(datetime.datetime):
                         ms = int(parts[1].strip())
                     except:
                         pass
+                # The module copy.deepcopy passes a (binary) string to
+                # datetime which contains the class specifictions. If 
+                # arg is not a digit by now, it must be a binary string and
+                # we pass it to datetime
+                if not arg.isdigit():
+                    return datetime.datetime.__new__(cls, *args, **kwargs)
                 dt = None
                 for pattern in ["%Y%m%d%H%M%S", "%Y%m%d"]:
                     try:
@@ -192,7 +204,7 @@ class UTCDateTime(datetime.datetime):
                                              dt.minute, dt.second,
                                              dt.microsecond)
         # XXX
-        print "UTCDateTime.__new__", args, kwargs
+        #print "UTCDateTime.__new__", args, kwargs
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     def getTimeStamp(self):

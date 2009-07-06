@@ -392,8 +392,8 @@ class Stream(object):
               "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
         if not isinstance(keys, list):
             raise TypeError(msg)
-        items = ('network', 'station', 'channel', 'location', 'starttime',
-                 'endtime', 'sampling_rate', 'npts', 'dataquality')
+        items = ['network', 'station', 'channel', 'location', 'starttime',
+                 'endtime', 'sampling_rate', 'npts', 'dataquality']
         for _i in keys:
             try:
                 items.index(_i)

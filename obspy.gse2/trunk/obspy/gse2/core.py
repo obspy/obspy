@@ -81,9 +81,9 @@ def writeGSE2(stream_object, filename, **kwargs):
              header['t_hour'],
              header['t_min'],
              header['t_sec']) = trace.stats.starttime.timetuple()[0:6]
-            header['t_sec'] += trace.stats.starttime.microseconds / 1.0e6
+            header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         except:
-            pass
+            raise
         try:
             libgse2.write(header, trace.data, fh)
         except AssertionError:

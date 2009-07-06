@@ -51,21 +51,11 @@ class CoreTestCase(unittest.TestCase):
         st2 = obspy.Stream()
         st2.traces.append(obspy.Trace())
         tr2 = st2[0]
-        # XXX: strange bytecodes going to UTCDateTime
-        print "XXX"
         tr2.data = copy.deepcopy(tr.data)
         tr2.stats = copy.deepcopy(tr.stats)
         st2.write(tmpfile, format='GSE2')
         # read comparison trace
         tr3 = obspy.read(tmpfile)[0]
-        # XXX: wrong values for st3!!
-        print '=' * 20
-        print "TR", tr.stats
-        print "TR2", tr2.stats
-        print "TR3", tr3.stats
-        print '=' * 20
-        print
-        import pdb;pdb.set_trace()
         # check if equal
         self.assertEqual(tr3.stats['station'], tr.stats['station'])
         self.assertEqual(tr3.stats.npts, tr.stats.npts)
@@ -76,7 +66,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr3.stats.get('calper'), tr.stats.get('calper'))
         self.assertEqual(tr3.stats.get('calib'), tr.stats.get('calib'))
         N.testing.assert_equal(tr3.data, tr.data)
-        os.remove(tmpfile)
+        #os.remove(tmpfile)
 
 
 def suite():
