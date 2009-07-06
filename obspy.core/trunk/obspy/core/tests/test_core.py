@@ -17,18 +17,19 @@ class CoreTestCase(unittest.TestCase):
     def setUp(self):
         # Directory where the test files are located
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        # Test files.
-        self.mseed_file = os.path.join(path, 'data', 'gaps.mseed')
-        self.gse2_file = os.path.join(path, 'data', 'loc_RNON20040609200559.z')
-        # Make sure obspy.mseed and obspy.gse2 modules are installed.
-        formats = obspy.supportedFormats()
-        for _i in ['MSEED', 'GSE2']:
-            try:
-                formats.index(_i)
-            except:
-                msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' +\
-                      'test the obspy.core.core methods and functions'
-                raise ImportError(msg)
+        # Test files, this makes also shure that obspy.mseed and obspy.gse2
+        # modules are installed.
+        try:
+            import obspy.mseed.tests
+            path2 = os.path.dirname(inspect.getsourcefile(obspy.mseed.tests))
+            self.mseed_file = os.path.join(path2, 'data', 'gaps.mseed')
+            import obspy.gse2.tests
+            path2 = os.path.dirname(inspect.getsourcefile(obspy.gse2.tests))
+            self.gse2_file = os.path.join(path2, 'data', 'loc_RNON20040609200559.z')
+        except ImportError:
+            msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' +\
+                  'test the obspy.core.core methods and functions'
+            raise ImportError(msg)
 
     def tearDown(self):
         pass
