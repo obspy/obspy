@@ -391,7 +391,7 @@ def scoreatpercentile(a, per, limit=(), sort=True):
         return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
 
 
-# C file pointer class
+# C file pointer/ descriptor class
 class FILE(C.Structure): # Never directly used
     """C file pointer class for type checking with argtypes"""
     pass

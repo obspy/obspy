@@ -47,7 +47,8 @@ lib = C.CDLL(os.path.join(os.path.dirname(__file__), lib_name))
 class ChksumError(StandardError):
     pass
 
-# ctypes, PyFile_AsFile: convert python file pointer to C file pointer
+# ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
+# pointer descriptor
 C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 C.pythonapi.PyFile_AsFile.restype = c_file_p
 

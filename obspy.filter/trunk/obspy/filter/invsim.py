@@ -39,7 +39,7 @@ def cosTaper(npts,p):
         ),axis=0)
 
 
-def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft):
+def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft,freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. Fast version which
     uses scipy. For understanding the source code, take a look at pazToFreqResp3.
@@ -59,12 +59,14 @@ def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft):
     """
     n = nfft/2
     a,b=signal.ltisys.zpk2tf(zeroes,poles,scale_fac)
-    fy = 1/(t_samp*2.0)*2*PI
+    fy = 1/(t_samp*2.0)
     # start at zero to get zero for offset/ DC of fft
     f = N.arange(0,fy+fy/n,fy/n) #arange should includes fy/n
-    w,h=signal.freqs(a,b,f)
+    w,h=signal.freqs(a,b,f*2*PI)
     h = N.conj(h)
     h[-1] = h[-1].real + 0.0j
+    if freq:
+        return h,f
     return h
 
 
