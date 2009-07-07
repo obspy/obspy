@@ -2,6 +2,8 @@
 
 from lxml import etree, objectify
 import sys
+import tempfile
+import obspy
 import urllib
 
 
@@ -67,7 +69,7 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getWaveform(self, **kwargs):
+    def getWaveform(self, *args, **kwargs):
         """
         Gets a list of network latency values.
         
@@ -77,8 +79,20 @@ class _WaveformMapperClient(object):
         @param channel_id: Channel code, e.g. 'EHE'.
         @return: List of dictionaries containing latency information.
         """
+        map = ['network_id', 'station_id', 'location_id', 'channel_id',
+               'start_datetime', 'end_datetime']
+        for i in range(len(args)):
+            kwargs[map[i]] = args[i]
         url = '/seismology/waveform/getWaveform'
-        return self.client._fetch(url, **kwargs)
+        data = self.client._fetch(url, **kwargs)
+        if not data:
+            return None
+        tf = tempfile.NamedTemporaryFile(mode='wb')
+        tf.write(data)
+        tf.seek(0)
+        tf.close()
+        return trace
+
 
 
 class _StationMapperClient(object):
