@@ -90,6 +90,7 @@ class _WaveformMapperClient(object):
         tf = tempfile.NamedTemporaryFile(mode='wb')
         tf.write(data)
         tf.seek(0)
+        trace = obspy.read(tf.name)
         tf.close()
         return trace
 
