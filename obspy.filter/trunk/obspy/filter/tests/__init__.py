@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.filter import invsim
-from obspy.filter.tests import test_invsim
-from obspy.filter.tests import test_filter
+from obspy.filter.tests import test_invsim,test_filter,test_rotate
 import unittest
 import doctest
 
@@ -12,6 +11,7 @@ def suite():
     suite.addTest(test_invsim.suite())
     suite.addTest(doctest.DocTestSuite(invsim))
     suite.addTest(test_filter.suite())
+    suite.addTest(test_rotate.suite())
     return suite
 
 
