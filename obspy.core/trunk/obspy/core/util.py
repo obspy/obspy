@@ -60,7 +60,7 @@ class Stats(dict):
         self.channel = "BHZ"
         self.dataquality = ""
         self.starttime = UTCDateTime(0)
-        self.endtime = UTCDateTime(0)+60*60*24
+        self.endtime = UTCDateTime(0) + 60 * 60 * 24
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):
@@ -146,7 +146,7 @@ class UTCDateTime(datetime.datetime):
         >>> a
         UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
         >>> str(a)
-        '1970-01-01 12:23:34.123456'
+        '1970-01-01T12:23:34.123456'
         >>> t3 = copy.deepcopy(t)
         >>> t3.timestamp
         1240561632.0050001
@@ -299,6 +299,13 @@ class UTCDateTime(datetime.datetime):
         else:
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
             return UTCDateTime(dt)
+
+    def __str__(self, *args, **kwargs):
+        """
+        Returns string representation of the UTCDateTime object.
+        """
+        text = datetime.datetime.__str__(self, *args, **kwargs)
+        return text.replace(' ', 'T')
 
 
 def getFormatsAndMethods(verbose=False):
