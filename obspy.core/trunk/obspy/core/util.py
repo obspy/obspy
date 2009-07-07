@@ -59,8 +59,8 @@ class Stats(dict):
         self.location = ""
         self.channel = "BHZ"
         self.dataquality = ""
-        self.starttime = UTCDateTime.utcfromtimestamp(0.0)
-        self.endtime = UTCDateTime.utcfromtimestamp(86400.0)
+        self.starttime = UTCDateTime(0)
+        self.endtime = UTCDateTime(0)+60*60*24
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):
@@ -203,8 +203,6 @@ class UTCDateTime(datetime.datetime):
                                              dt.day, dt.hour,
                                              dt.minute, dt.second,
                                              dt.microsecond)
-        # XXX
-        #print "UTCDateTime.__new__", args, kwargs
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     def getTimeStamp(self):

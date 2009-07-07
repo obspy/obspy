@@ -1,3 +1,4 @@
+a="""
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2008-2009 by:
@@ -20,7 +21,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
-
+"""
 """
 setup.py bdist_egg
 """
@@ -44,7 +45,7 @@ setup(
     author='Moritz Beyreuther, Stefan Stange',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
-    license='GPL',
+    license=a,
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
