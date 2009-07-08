@@ -5,11 +5,8 @@ The Rotate test suite.
 """
 
 from obspy.filter import rotate_NE_RT
-import inspect, os, random, unittest, filecmp
+import inspect, os, unittest, gzip
 import numpy as N
-import math as M
-from pylab import load
-import gzip
 
 
 class RotateTestCase(unittest.TestCase):
@@ -31,11 +28,11 @@ class RotateTestCase(unittest.TestCase):
         # load test files
         file = os.path.join(self.path, 'rjob_20051006_n.gz')
         f = gzip.open(file)
-        data_n = load(f)
+        data_n = N.loadtxt(f)
         f.close()
         file = os.path.join(self.path, 'rjob_20051006_e.gz')
         f = gzip.open(file)
-        data_e = load(f)
+        data_e = N.loadtxt(f)
         f.close()
         #test different angles, one from each sector
         for angle in [30,115,185,305]:
@@ -44,16 +41,16 @@ class RotateTestCase(unittest.TestCase):
             # load pitsa files
             file = os.path.join(self.path, 'rjob_20051006_r_%sdeg.gz'%angle)
             f = gzip.open(file)
-            data_pitsa_r = load(f)
+            data_pitsa_r = N.loadtxt(f)
             f.close()
             file = os.path.join(self.path, 'rjob_20051006_t_%sdeg.gz'%angle)
             f = gzip.open(file)
-            data_pitsa_t = load(f)
+            data_pitsa_t = N.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = N.sqrt(N.sum((datcorr_r-data_pitsa_r)**2)/N.sum(data_pitsa_r**2))
-            rms = rms + N.sqrt(N.sum((datcorr_t-data_pitsa_t)**2)/N.sum(data_pitsa_t**2))
-            rms = rms/2.
+            rms =  N.sqrt(N.sum((datcorr_r-data_pitsa_r)**2)/N.sum(data_pitsa_r**2))
+            rms += N.sqrt(N.sum((datcorr_t-data_pitsa_t)**2)/N.sum(data_pitsa_t**2))
+            rms /= 2.0
             #from pylab import figure,plot,legend,show
             #figure()
             #plot(datcorr_r,label="R ObsPy")

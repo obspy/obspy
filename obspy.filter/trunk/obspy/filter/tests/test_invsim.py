@@ -6,11 +6,9 @@ The InvSim test suite.
 
 from obspy.filter import specInv, cosTaper, seisSim, pazToFreqResp
 from obspy.filter.seismometer import wood_anderson, wwssn_sp, wwssn_lp, kirnos
-import inspect, os, random, unittest, filecmp
+import inspect, os, unittest, gzip
 import numpy as N
 import math as M
-from pylab import load
-import gzip
 
 
 class InvSimTestCase(unittest.TestCase):
@@ -26,6 +24,9 @@ class InvSimTestCase(unittest.TestCase):
         pass
 
     def cosTaperPitsa(self,i,n1,n2,n3,n4):
+        """
+        Cosinus Taper definition of Pitsa
+        """
         PI = M.pi
         if (i <= n1) or (i >= n4):
             #check for zero taper
@@ -52,7 +53,7 @@ class InvSimTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = load(f)
+        data = N.loadtxt(f)
         f.close()
 
         # paz of test file
@@ -72,7 +73,7 @@ class InvSimTestCase(unittest.TestCase):
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz'%instrument)
             f = gzip.open(file)
-            data_pitsa = load(f)
+            data_pitsa = N.loadtxt(f)
             f.close()
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
@@ -95,7 +96,7 @@ class InvSimTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
         f = gzip.open(file)
-        data = load(f)
+        data = N.loadtxt(f)
         f.close()
 
         # paz of test file
@@ -115,7 +116,7 @@ class InvSimTestCase(unittest.TestCase):
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz'%instrument)
             f = gzip.open(file)
-            data_pitsa = load(f)
+            data_pitsa = N.loadtxt(f)
             f.close()
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
