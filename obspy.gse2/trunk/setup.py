@@ -35,7 +35,9 @@ setup(
 
     This module contains python wrappers for gse_functions - The GSE2 library
     of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
-    should be sufficient for most cases.
+    should be sufficient for most cases. Gse_functions are written in C and
+    interfaced via python-ctypes.
+    See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
     """,
     classifiers=[],
     keywords='Seismology, GSE2',

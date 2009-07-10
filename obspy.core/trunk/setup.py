@@ -52,5 +52,5 @@ setup(
     install_requires=[
         'setuptools',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.core-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
 )

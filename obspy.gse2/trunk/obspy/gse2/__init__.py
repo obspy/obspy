@@ -3,7 +3,9 @@ Read & Write Seismograms, Format GSE2.
 
 This module contains python wrappers for gse_functions - The GSE2 library
 of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
-should be sufficient for most cases.
+should be sufficient for most cases. Gse_functions is written in C and
+interfaced via python-ctypes.
+See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
 
 GNU General Public License (GPL)

@@ -12,7 +12,7 @@ def suite():
     """
     suite = unittest.TestSuite()
     for module in ['core', 'gse2', 'mseed', 'sac', 'wav', 'filter', 
-                   'imaging', 'xseed', 'picker', 'arclink']:
+                   'imaging', 'xseed', 'trigger', 'arclink']:
         try:
             name = 'obspy.%s.tests' % module
             __import__(name)

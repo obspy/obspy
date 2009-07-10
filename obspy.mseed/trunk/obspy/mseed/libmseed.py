@@ -1,22 +1,36 @@
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------
+# Filename: libmseed.py
+#  Purpose: Python wrapper for libmseed of Chad Trabant
+#   Author: Lion Krischer, Robert Barsch, Moritz Beyreuther
+#    Email: kirscher@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2008-2010 Lion Krischer, Rober Barsch, Moritz Beyreuther
+#---------------------------------------------------------------------
 """
 Class for handling Mini-SEED files.
 
-Contains wrappers for libmseed - The Mini-SEED library.
+Contains wrappers for libmseed - The Mini-SEED library. The C library is
+interfaced via python-ctypes. Currently only supports Mini-SEED files with
+integer data values.
 
-Currently only supports Mini-SEED files with integer data values.
 
-This library is free software; you can redistribute it and/or modify
-it under the terms of the GNU Library General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.
+GNU General Public License (GPL)
 
-This library is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Library General Public License (GNU-LGPL) for more details.  The
-GNU-LGPL and further information can be found here:
-http://www.gnu.org/
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
 """
 
 from StringIO import StringIO

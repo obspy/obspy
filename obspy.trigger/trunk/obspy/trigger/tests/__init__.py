@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.picker import ctypes_recstalta
+from obspy.trigger import ctypes_recstalta
 import unittest, doctest
 
 def suite():
