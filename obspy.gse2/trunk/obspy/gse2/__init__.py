@@ -1,18 +1,12 @@
 """
-GSE module for ObsPy - Python for seismological observatories.
+Read & Write Seismograms, Format GSE2.
 
-#-------------------------------------------------------------------
-# Filename: libgse2.py
-#  Purpose: Python wrapper for gse_functions of Stefan Stange
-#   Author: Moritz Beyreuther
-#    Email: moritz.beyreuther@geophysik.uni-muenchen.de
-#
-# Copyright (C) 2008 Moritz Beyreuther
-#---------------------------------------------------------------------
+This module contains python wrappers for gse_functions - The GSE2 library
+of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
+should be sufficient for most cases.
 
-Contains wrappers for gse_functions - The GSE2 library of Stefan Stange.
-Currently supports only CM6 compressed GSE2 files, this should be
-sufficient for most cases.
+
+GNU General Public License (GPL)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,10 +15,11 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
 """

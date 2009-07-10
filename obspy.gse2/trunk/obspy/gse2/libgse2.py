@@ -5,12 +5,13 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008 Moritz Beyreuther
+# Copyright (C) 2008-2010 Moritz Beyreuther
 #---------------------------------------------------------------------
 """ 
-Contains wrappers for gse_functions - The GSE2 library of Stefan Stange.
+Python wrapper for gse_functions - The GSE2 library of Stefan Stange.
 Currently supports only CM6 compressed GSE2 files, this should be
 sufficient for most cases.
+
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
