@@ -54,6 +54,9 @@ def gps2DistAzimuth(lat1,lon1,lat2,lon2) :
     """
     Computes the distance between two geographic points on the WGS84
     ellipsoid and the forward and backward azimuths between these points.
+
+    Latitudes should be positive for eastern/northern hemispheres and
+    negative for western/southern hemispheres respectively.
     
     This code is based on an implementation incorporated in
     Matplotlib Basemap Toolkit 0.9.5
@@ -89,12 +92,22 @@ def gps2DistAzimuth(lat1,lon1,lat2,lon2) :
             Calculate: the ellipsoidal distance (dist) and
             forward and reverse azimuths between the points (alpha12, alpha21).
 
-    @param lat1: Latitude of point A in degrees
-    @param lon1: Longitude of point A in degrees
-    @param lat2: Latitude of point B in degrees
-    @param lon2: Longitude of point B in degrees
+    @param lat1: Latitude of point A in degrees (positive for northern, negative for southern hemisphere)
+    @param lon1: Longitude of point A in degrees (positive for eastern, negative for western hemisphere)
+    @param lat2: Latitude of point B in degrees (positive for northern, negative for southern hemisphere)
+    @param lon2: Longitude of point B in degrees (positive for eastern, negative for western hemisphere)
     @return: (Great circle distance in m, azimuth A->B in degrees, azimuth B->A in degrees)
     """
+    #Check inputs
+    if lat1>90 or lat1<-90:
+        raise ValueError("Latitude of Point 1 out of bounds! (must be between -90 and 90 degrees)")
+    if lon1>180 or lon1<-180:
+        raise ValueError("Longitude of Point 1 out of bounds! (must be between -180 and +180 degrees)")
+    if lat2>90 or lat2<-90:
+        raise ValueError("Latitude of Point 2 out of bounds! (must be between -90 and 90 degrees)")
+    if lon2>180 or lon2<-180:
+        raise ValueError("Longitude of Point 2 out of bounds! (must be between -180 and +180 degrees)")
+    
     #Data on the WGS84 reference ellipsoid:
     a = 6378137.0       #semimajor axis in m
     f = 1/298.257223563 #flattening
