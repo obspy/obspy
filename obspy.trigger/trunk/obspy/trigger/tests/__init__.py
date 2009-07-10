@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from obspy.trigger import ctypes_recstalta
+from obspy.trigger import trigger
 import unittest, doctest
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(doctest.DocTestSuite(ctypes_recstalta))
+    suite.addTest(doctest.DocTestSuite(trigger))
     return suite
 
 if __name__ == '__main__':

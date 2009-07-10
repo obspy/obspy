@@ -29,9 +29,9 @@ USA.
 setup(
     name='obspy.trigger',
     version=version,
-    description="Python trigger routines for seismology",
+    description="Python trigger routines for seismology.",
     long_description="""
-    obspy.trigger - Python trigger routines for seismology
+    obspy.trigger - Python trigger routines for seismology.
     """,
     classifiers=[],
     keywords='Seismology, Triggers',

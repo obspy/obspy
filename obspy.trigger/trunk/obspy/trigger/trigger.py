@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------
-# Filename: ctypes_recstalta.py
-#  Purpose: StaLta trigger of C function, interfaced via pyton-ctypes
+# Filename: trigger.py
+#  Purpose: Python trigger routines for seismology.
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
@@ -12,7 +12,9 @@ Python trigger routines for seismology.
 
 Module implementing the Recursive STA/LTA (see Withers et al. 1998 p. 98)
 Two versions, a fast ctypes one and a slow python one. In this doctest the
-ctypes version is tested against the python implementation
+ctypes version is tested against the python implementation. Further the
+classic and delayed STA/LTA, the carlstatrig and the zdecect are
+implemented. (see Withers et al. 1998 p. 98).
       
 
 GNU General Public License (GPL)
@@ -65,10 +67,10 @@ def recStalta(a,nsta,nlta):
     @param a: Seismic Trace
     @type nsta: Int
     @param nsta: Length of short time average window in samples
-    @type lsta: Int
-    @param lsta: Length of long time average window in samples
+    @type nlta: Int
+    @param nlta: Length of long time average window in samples
     @rtype: Numpy ndarray
-    @return: Charactristic function of STA/LTA
+    @return: Charactristic function of recursive STA/LTA
     """
 
     assert type(a) == N.ndarray, "Error, data need to be a numpy ndarray"
@@ -98,10 +100,10 @@ def recStaltaPy(a,nsta,nlta):
     @param a: Seismic Trace
     @type nsta: Int
     @param nsta: Length of short time average window in samples
-    @type lsta: Int
-    @param lsta: Length of long time average window in samples
+    @type nlta: Int
+    @param nlta: Length of long time average window in samples
     @rtype: Numpy ndarray
-    @return: Charactristic function of STA/LTA
+    @return: Charactristic function of recursive STA/LTA
     """
 
     ndat = len(a)
@@ -120,6 +122,141 @@ def recStaltaPy(a,nsta,nlta):
         if i < nlta:
             charfct[i] = 0.
     return charfct
+
+def carlStaTrig(a,Nsta,Nlta,ratio,quiet):
+    """Computes the carlStaTrig characteristic function
+
+    eta = star - (ratio * ltar) - abs(sta - lta) - quiet
+
+    @type a: Numpy ndarray
+    @param a: Seismic Trace
+    @type Nsta: Int
+    @param Nsta: Length of short time average window in samples
+    @type Nlta: Int
+    @param Nlta: Length of long time average window in samples
+    @type ration: Float
+    @param ratio: as ratio gets smaller, carlstatrig gets more sensitive
+    @type quiet: Float
+    @param quiet: as quiet gets smaller, carlstatrig gets more sensitive
+    @rtype: Numpy ndarray
+    @return: Charactristic function of CarlStaTrig
+    """
+    m=len(a)
+    #
+    sta=zeros(len(a),dtype=float)
+    lta=zeros(len(a),dtype=float)
+    star =zeros(len(a),dtype=float)
+    ltar =zeros(len(a),dtype=float)
+    pad_sta=zeros(Nsta)
+    pad_lta=zeros(Nlta) # avoid for 0 division 0/1=0
+    #
+    # compute the short time average (STA)
+    for i in xrange(Nsta): # window size to smooth over
+        sta += concatenate((pad_sta,a[i:m-Nsta+i]))
+    sta /= Nsta
+    #
+    # compute the long time average (LTA), 8 sec average over sta
+    for i in xrange(Nlta): # window size to smooth over
+        lta += concatenate((pad_lta,sta[i:m-Nlta+i]))
+    lta /= Nlta
+    lta = concatenate((zeros(1),lta))[:m] #XXX ???
+    #
+    # compute star, average of abs diff between trace and lta
+    for i in xrange(Nsta): # window size to smooth over
+        star += concatenate((pad_sta,abs(a[i:m-Nsta+i]-lta[i:m-Nsta+i])))
+    star /= Nsta
+    #
+    # compute ltar, 8 sec average over star
+    for i in xrange(Nlta): # window size to smooth over
+        ltar += concatenate((pad_lta,star[i:m-Nlta+i]))
+    ltar /= Nlta
+    #
+    eta =  star - (ratio * ltar) - abs(sta - lta) - quiet
+    eta[:Nlta] = -1.0
+    return eta
+
+def classicStaLta(a,Nsta,Nlta):
+    """Computes the standard STA/LTA from a given imput array a. The length of
+    the STA is given by Nsta in samples, respectively is the length of the
+    LTA given by Nlta in samples.
+
+    @type a: Numpy ndarray
+    @param a: Seismic Trace
+    @type Nsta: Int
+    @param Nsta: Length of short time average window in samples
+    @type Nlta: Int
+    @param Nlta: Length of long time average window in samples
+    @rtype: Numpy ndarray
+    @return: Charactristic function of classic STA/LTA
+    """
+    m=len(a)
+    stalta=zeros(m,dtype=float)
+    start = 0
+    stop = 0
+    #
+    # compute the short time average (STA)
+    sta=zeros(len(a),dtype=float)
+    pad_sta=zeros(Nsta)
+    for i in range(Nsta): # window size to smooth over
+        sta=sta+concatenate((pad_sta,a[i:m-Nsta+i]**2))
+    sta=sta/Nsta
+    #
+    # compute the long time average (LTA)
+    lta=zeros(len(a),dtype=float)
+    pad_lta=ones(Nlta) # avoid for 0 division 0/1=0
+    for i in range(Nlta): # window size to smooth over
+        lta=lta+concatenate((pad_lta,a[i:m-Nlta+i]**2))
+    lta=lta/Nlta
+    #
+    # pad zeros of length Nlta to avoid overfit and
+    # return STA/LTA ratio
+    sta[0:Nlta]=0
+    return sta/lta
+
+def delayedStaLta(a,Nsta,Nlta):
+    """Delayed STA/LTA, (see Withers et al. 1998 p. 97)
+
+    @type a: Numpy ndarray
+    @param a: Seismic Trace
+    @type Nsta: Int
+    @param Nsta: Length of short time average window in samples
+    @type Nlta: Int
+    @param Nlta: Length of long time average window in samples
+    @rtype: Numpy ndarray
+    @return: Charactristic function of delayed STA/LTA
+    """
+    m=len(a)
+    stalta=zeros(m,dtype=float)
+    on = 0;
+    start = 0;
+    stop = 0;
+    #
+    # compute the short time average (STA) and long time average (LTA)
+    # don't start for STA at Nsta because it's muted later anyway
+    sta=zeros(len(a),dtype=float)
+    lta=zeros(len(a),dtype=float)
+    for i in range(Nlta+Nsta+1,m):
+        sta[i]=(a[i]**2 + a[i-Nsta]**2)/Nsta + sta[i-1]
+        lta[i]=(a[i-Nsta-1]**2 + a[i-Nsta-Nlta-1]**2)/Nlta + lta[i-1]
+        sta[0:Nlta+Nsta+50]=0
+    return sta/lta
+
+def zdetect(a,Nsta):
+    """Z-detector, (see Withers et al. 1998 p. 99)"""
+    m=len(a)
+    #
+    # Z-detector given by Swindell and Snell (1977)
+    Z=zeros(len(a),dtype=float)
+    sta=zeros(len(a),dtype=float)
+    # Standard Sta
+    pad_sta=zeros(Nsta)
+    for i in range(Nsta): # window size to smooth over
+        sta=sta+concatenate((pad_sta,a[i:m-Nsta+i]**2))
+    a_mean=mean(sta)
+    a_std=std(sta)
+    Z=(sta-a_mean)/a_std
+    return Z
+
 
 def triggerOnset(charfct,thres1,thres2,samp_int=1):
     """
@@ -167,5 +304,3 @@ def triggerOnset(charfct,thres1,thres2,samp_int=1):
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-    #import pdb
-    #pdb.set_trace()
