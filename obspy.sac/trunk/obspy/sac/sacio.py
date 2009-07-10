@@ -54,9 +54,8 @@ date handling:
 #################### TESTS ########################################
     
 >>> t=ReadSac()
->>> t.ReadSacFile('test.sac')
->>> t.get_attr()
-1
+>>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+>>> t.ReadSacFile(file)
 >>> t.GetHvalue('npts')
 100
 >>> t.SetHvalue("kstnm","spiff")
@@ -76,12 +75,15 @@ True
 >>> t.GetHvalueFromFile('test2.sac',"kcmpnm")
 'Z       '
 >>> t.IsValidSacFile('test2.sac')
->>> t.ReadXYSacFile('testxy.sac')
+>>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
+>>> t.ReadXYSacFile(file)
 >>> t.GetHvalue('npts')
 100
 >>> t.WriteSacBinary('testbin.sac')
 >>> os.path.exists('testbin.sac')
 True
+>>> os.remove('test2.sac')
+>>> os.remove('testbin.sac')
 """    
 
 import array,os,string
