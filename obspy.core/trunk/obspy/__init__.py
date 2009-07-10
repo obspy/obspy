@@ -1,9 +1,31 @@
 # -*- coding: utf-8 -*-
+"""
+obspy.core - Core class of ObsPy, Python for Seismological Observatories
 
-"""Python for observatories."""
+This class contains common methods and classes for ObsPy. It includes
+a UTCDateTime, a Stats and general comment methods.
+
+
+GNU General Public License (GPL)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
+"""
 
 from obspy.core.core import *
-from obspy.core import util, parser, Stream, Trace
+from obspy.core import util, Stream, Trace
 
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
 try:

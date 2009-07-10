@@ -36,7 +36,6 @@ setup(
     This module contains python wrappers for gse_functions - The GSE2 library
     of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
     should be sufficient for most cases.
-
     """,
     classifiers=[],
     keywords='Seismology, GSE2',
