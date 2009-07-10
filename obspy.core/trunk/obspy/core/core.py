@@ -73,7 +73,12 @@ class Trace(object):
         self.data = None
         if header != None:
             for _i in header.keys():
-                self.stats[_i] = header[_i]
+                if type(header[_i]) == dict:
+                    self.stats[_i] = Stats(dummy=False)
+                    for _j in header[_i].keys():
+                        self.stats[_i][_j] = header[_i][_j]
+                else:
+                    self.stats[_i] = header[_i]
         if data != None:
             self.data = data
     def __str__(self):

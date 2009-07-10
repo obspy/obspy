@@ -83,18 +83,24 @@ class Stats(dict):
     @ivar endtime: Endtime of seismogram
     """
     def __init__(self, *args, **kwargs):
+        """
+        @type dummy: bool
+        @param dummy: Initialize dummy values, default: True
+        """
+        flag = kwargs.pop('dummy', True)
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
-        # fill some dummy values
-        self.station = "dummy"
-        self.sampling_rate = 1.0
-        self.npts = -1
-        self.network = "--"
-        self.location = ""
-        self.channel = "BHZ"
-        self.dataquality = ""
-        self.starttime = UTCDateTime(0)
-        self.endtime = UTCDateTime(0) + 60 * 60 * 24
+        if flag: 
+            # fill some dummy values
+            self.station = "dummy"
+            self.sampling_rate = 1.0
+            self.npts = -1
+            self.network = "--"
+            self.location = "--"
+            self.channel = "---"
+            self.dataquality = ""
+            self.starttime = UTCDateTime(0)
+            self.endtime = UTCDateTime(0) + 60 * 60 * 24
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):

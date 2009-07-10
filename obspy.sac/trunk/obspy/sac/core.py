@@ -37,6 +37,21 @@ convert_dict = {'npts': 'npts',
                 'kstnm': 'station'
 }
 
+sac_extra = ['depmin', 'depmax', 'scale', 'odelta', 'b', 'e', 'o', 'a',
+             't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9',
+             'f', 'stla', 'stlo', 'stel', 'stdp', 'evla', 'evlo', 'evdp',
+             'mag', 'user0', 'user1', 'user2', 'user3', 'user4', 'user5',
+             'user6', 'user7', 'user8', 'user9', 'dist', 'az', 'baz',
+             'gcarc', 'depmen', 'cmpaz', 'cmpinc', 'nzyear', 'nzjday',
+             'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'nvhdr', 'norid',
+             'nevid', 'nwfid', 'iftype', 'idep', 'iztype', 'iinst',
+             'istreg', 'ievreg', 'ievtype', 'iqual', 'isynth', 'imagtyp',
+             'imagsrc', 'leven', 'lpspol', 'lovrok', 'lcalda', 'kevnm',
+             'khole', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4', 'kt5',
+             'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1',
+             'kuser2', 'knetwk', 'kdatrd', 'kinst',
+]
+
 def readSAC(filename, **kwargs):
     """
     Reads a SAC file and returns an obspy.Trace object.
@@ -50,6 +65,9 @@ def readSAC(filename, **kwargs):
     header = {}
     for i, j in convert_dict.iteritems():
         header[j] = t.GetHvalue(i)
+    header['sac'] = {}
+    for i in sac_extra:
+        header['sac'][i] = t.GetHvalue(i)
     # convert time to UTCDateTime
     year = t.GetHvalue('nzyear')
     yday = t.GetHvalue('nzjday')
@@ -84,6 +102,12 @@ def writeSAC(stream_object, filename, **kwargs):
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
+            except:
+                pass
+        # filling up from the sac specific part
+        for _i in sac_extra:
+            try:
+                t.SetHvalue(_i, trace.stats.sac[_i])
             except:
                 pass
         # year, month, day, hour, min, sec

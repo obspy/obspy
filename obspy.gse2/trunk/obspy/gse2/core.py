@@ -30,14 +30,17 @@ convert_dict = {
     'station': 'station',
     'samp_rate':'sampling_rate',
     'n_samps': 'npts',
-    'instype': 'instype',
-    'datatype': 'datatype',
-    'vang': 'vang',
-    'auxid': 'auxid',
     'channel': 'channel',
-    'calper': 'calper',
-    'calib': 'calib'
 }
+
+gse2_extra = [
+    'instype',
+    'datatype',
+    'vang',
+    'auxid',
+    'calper',
+    'calib'
+]
 
 
 def readGSE2(filename, **kwargs):
@@ -53,6 +56,10 @@ def readGSE2(filename, **kwargs):
     new_header = {}
     for i, j in convert_dict.iteritems():
         new_header[j] = header[i]
+    # assign gse specific header entries
+    new_header['gse2'] = {}
+    for i in gse2_extra:
+        new_header['gse2'][i] = header[i]
     # Calculate start time.
     new_header['starttime'] = UTCDateTime(
         header['d_year'], header['d_mon'], header['d_day'],
@@ -71,6 +78,11 @@ def writeGSE2(stream_object, filename, **kwargs):
         for _j, _k in convert_dict.iteritems():
             try:
                 header[_j] = trace.stats[_k]
+            except:
+                pass
+        for _j in gse2_extra:
+            try:
+                header[_j] = trace.stats.gse2[_j]
             except:
                 pass
         # year, month, day, hour, min, sec
