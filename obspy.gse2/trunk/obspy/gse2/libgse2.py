@@ -8,8 +8,10 @@
 # Copyright (C) 2008-2010 Moritz Beyreuther
 #---------------------------------------------------------------------
 """ 
-Python wrapper for gse_functions - The GSE2 library of Stefan Stange.
-Currently supports only CM6 compressed GSE2 files, this should be
+Read & Write Seismograms, Format GSE2.
+
+Python wrappers for gse_functions - The GSE2 library of Stefan Stange.
+Currently CM6 compressed GSE2 files are supported, this should be
 sufficient for most cases.
 
 
