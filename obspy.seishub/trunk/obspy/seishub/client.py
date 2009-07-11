@@ -14,13 +14,21 @@ class Client(object):
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
+        self.event = _EventMapperClient(self)
 
     def _fetch(self, url, *args, **kwargs):
         remoteaddr = self.base_url + url + '?'
         for key, value in kwargs.iteritems():
             if not value:
                 continue
-            remoteaddr += str(key) + '=' + str(value) + '&'
+            if isinstance(value, tuple) and len(value) == 2:
+                remoteaddr += 'min_' + str(key) + '=' + str(value[0]) + '&'
+                remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
+            elif isinstance(value, list) and len(value) == 2:
+                remoteaddr += 'min_' + str(key) + '=' + str(value[0]) + '&'
+                remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
+            else:
+                remoteaddr += str(key) + '=' + str(value) + '&'
         doc = urllib.urlopen(remoteaddr).read()
         return doc
 
@@ -55,7 +63,7 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node.getchildren()[0]) for node in root.getchildren()]
 
-    def getLatency(self, **kwargs):
+    def getLatency(self, *args, **kwargs):
         """
         Gets a list of network latency values.
         
@@ -65,6 +73,9 @@ class _WaveformMapperClient(object):
         @param channel_id: Channel code, e.g. 'EHE'.
         @return: List of dictionaries containing latency information.
         """
+        map = ['network_id', 'station_id', 'location_id', 'channel_id']
+        for i in range(len(args)):
+            kwargs[map[i]] = args[i]
         url = '/seismology/waveform/getLatency'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
@@ -95,14 +106,41 @@ class _WaveformMapperClient(object):
         return trace
 
 
-
-class _StationMapperClient(object):
-    """
-    """
+class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
-    def getList(self, **kwargs):
+    def getResource(self, resource_name, **kwargs):
+        """
+        Gets a resource.
+        
+        @param resource_name: Name of the resource.
+        @param format: Format string, e.g. 'xml' or 'map'.
+        @return: Resource
+        """
+        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
+              resource_name
+        return self.client._fetch(url, **kwargs)
+
+    def getXMLResource(self, resource_name, **kwargs):
+        """
+        Gets a XML resource.
+        
+        @param resource_name: Name of the resource.
+        @return: Resource
+        """
+        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
+              resource_name
+        return self.client._objectify(url, **kwargs)
+
+
+class _StationMapperClient(_BaseRESTClient):
+    """
+    """
+    package = 'seismology'
+    resourcetype = 'station'
+
+    def getList(self, *args, **kwargs):
         """
         Gets a list of station information.
         
@@ -110,35 +148,26 @@ class _StationMapperClient(object):
         @param station_id: Station code, e.g. 'MANZ'.
         @return: List of dictionaries containing station information.
         """
-        url = '/seismology/station/getStationList'
+        map = ['network_id', 'station_id']
+        for i in range(len(args)):
+            kwargs[map[i]] = args[i]
+        url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getResource(self, network_id, station_id, **kwargs):
-        """
-        Gets a station resource.
-        
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param format: Format string, e.g. 'xml' or 'map'.
-        @return: Resource
-        """
-        items = self.getList(limit=1, network_id=network_id,
-                             station_id=station_id, **kwargs)
-        resource_name = items[0]['resource_name']
-        url = '/xml/seismology/station/' + resource_name
-        return self.client._fetch(url, **kwargs)
 
-    def getXMLResource(self, network_id, station_id, **kwargs):
+class _EventMapperClient(_BaseRESTClient):
+    """
+    """
+    package = 'seismology'
+    resourcetype = 'event'
+
+    def getList(self, *args, **kwargs):
         """
-        Gets a station XML resource.
+        Gets a list of event information.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @return: Resource
+        @return: List of dictionaries containing event information.
         """
-        items = self.getList(limit=1, network_id=network_id,
-                             station_id=station_id, **kwargs)
-        resource_name = items[0]['resource_name']
-        url = '/xml/seismology/station/' + resource_name
-        return self.client._objectify(url, **kwargs)
+        url = '/seismology/event/getList'
+        root = self.client._objectify(url, **kwargs)
+        return [node.__dict__ for node in root.getchildren()]

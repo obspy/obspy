@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 """
 
 from core import *
+from util import *
 import util
 import parser
 from testing import runTests
