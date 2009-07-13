@@ -3,9 +3,9 @@
 # Filename: libmseed.py
 #  Purpose: Python wrapper for libmseed of Chad Trabant
 #   Author: Lion Krischer, Robert Barsch, Moritz Beyreuther
-#    Email: kirscher@geophysik.uni-muenchen.de
+#    Email: krischer@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Lion Krischer, Rober Barsch, Moritz Beyreuther
+# Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
 Class for handling Mini-SEED files.
