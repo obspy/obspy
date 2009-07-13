@@ -164,7 +164,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
         cur_stats = stats_list[_j]
         title_text = '%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
             cur_stats.station, cur_stats.channel, cur_stats.sampling_rate,
-            cur_stats.npts)
+            int((endtime - starttime) * cur_stats.sampling_rate))
         plt.title(title_text, horizontalalignment = 'left',
                   fontsize = 'small', verticalalignment = 'center')
         # Set axes and disable ticks on the y axis.
