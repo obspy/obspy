@@ -34,8 +34,8 @@ setup(
     obspy.imaging - Provides tools for displaying features used in seismology.
     """,
     classifiers=[],
-    keywords='obspy imaging beachball focal mechanism, waveforms and
-    spectograms',
+    keywords='obspy imaging beachball focal mechanism, waveforms and ' + \
+        'spectograms',
     author='Robert Barsch, Christian Sippl, Tobi Megies',
     author_email='barsch@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging',
