@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from lxml import etree, objectify
-import sys
-import tempfile
 import obspy
+import sys
+import os
+import tempfile
 import urllib
 
 
@@ -98,11 +99,25 @@ class _WaveformMapperClient(object):
         data = self.client._fetch(url, **kwargs)
         if not data:
             return None
-        tf = tempfile.NamedTemporaryFile(mode='wb')
-        tf.write(data)
-        tf.seek(0)
-        trace = obspy.read(tf.name)
-        tf.close()
+
+        class TempFile(object):
+            def __init__(self, fd, fname):
+                self._fileobj = os.fdopen(fd, 'w+b')
+                self.name = fname
+            def __getattr__(self, attr):
+                return getattr(self._fileobj, attr)
+
+        def mktempfile(dir=None, suffix='.tmp'):
+            return TempFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
+
+
+        tf = mktempfile()
+        try:
+            tf.write(data)
+            tf.seek(0)
+            trace = obspy.read(tf.name, 'MSEED')
+        finally:
+            tf.close()
         return trace
 
 

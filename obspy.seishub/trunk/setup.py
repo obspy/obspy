@@ -46,6 +46,8 @@ setup(
     zip_safe=False,
     #test_suite = "obspy.gse2.tests.suite",
     install_requires=[
+        'obspy.core',
+        'obspy.mseed',
         'setuptools',
         'numpy',
         'lxml',
