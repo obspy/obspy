@@ -33,7 +33,7 @@ setup(
     obspy.filter - Basic filtering routines for seismograms.
 
     Capabilities include rotating and instrument correction.
-    """
+    """,
     classifiers=[],
     keywords='Seismology Filter',
     author='Tobias Megies, Moritz Beyreuther, Yannik Behr',
@@ -44,13 +44,13 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.filter.tests.suite",
+    test_suite="obspy.filter.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',
         'scipy',
         # -*- Extra requirements: -*
-    ],        
+    ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.filter/trunk#egg=obspy.filter-dev",
     dependency_links=[
         "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
