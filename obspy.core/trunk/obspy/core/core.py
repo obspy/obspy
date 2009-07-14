@@ -82,13 +82,10 @@ class Trace(object):
         if data != None:
             self.data = data
     def __str__(self):
-        return_string = self.stats['network'] + self.stats['station'] + \
-            self.stats['channel'] + ' | ' + \
-            str(self.stats['starttime'].strftime('%Y-%m-%d,%H:%M:%S')) + '--' + \
-            str(self.stats['endtime'].strftime('%Y-%m-%d,%H:%M:%S')) + ' | ' + \
-            str(self.stats['sampling_rate']) + ' Hz, ' + \
-            str(self.stats['npts']) + ' samples'
-        return return_string
+        out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+              "%(starttime)s -- %(endtime)s | " + \
+              "%(sampling_rate)f Hz, %(npts)d samples"
+        return out % (self.stats)
 
 class Stream(object):
     """
@@ -110,7 +107,7 @@ class Stream(object):
         traces = copy.deepcopy(self.traces)
         traces.extend(copy.deepcopy(other.traces))
         return Stream(traces=traces)
-    
+
     def __iadd__(self, other):
         """
         Method to add two streams with self += other.
@@ -121,7 +118,7 @@ class Stream(object):
         new_traces = copy.deepcopy(other.traces)
         self.extend(new_traces)
         return self
-    
+
     def __len__(self):
         """
         Returns the number of Traces in the Stream object.
@@ -148,7 +145,7 @@ class Stream(object):
         """
         return self.traces[index]
 
-    def append(self, trace, reference = False):
+    def append(self, trace, reference=False):
         """
         This method appends a single Trace object to the Stream object.
         
@@ -164,14 +161,14 @@ class Stream(object):
         else:
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
-        
+
     def count(self):
         """
         Returns the number of Traces in the Stream object.
         """
         return len(self.traces)
-        
-    def extend(self, trace_list, reference = False):
+
+    def extend(self, trace_list, reference=False):
         """
         This method will extend the traces attribut of the Stream object with
         a list of Trace objects.
@@ -243,8 +240,8 @@ class Stream(object):
                             stime, etime, duration,
                             nsamples])
         return gap_list
-    
-    def insert(self, index, object, reference = False):
+
+    def insert(self, index, object, reference=False):
         """
         Inserts either a single Trace object or a list of Trace objects before
         index.
@@ -263,7 +260,7 @@ class Stream(object):
             # Make sure each item in the list is a trace.
             for _i in object:
                 if not isinstance(_i, Trace):
-                    msg = 'Only accepts a Trace object or a list of Trace ' +\
+                    msg = 'Only accepts a Trace object or a list of Trace ' + \
                            'objects.'
                     raise TypeError(msg)
             # Insert each item of the list.
@@ -336,8 +333,8 @@ class Stream(object):
             print msg
             raise
         waveform.plotWaveform(self, **kwargs)
-        
-    def pop(self, index = -1):
+
+    def pop(self, index= -1):
         """
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
@@ -361,7 +358,7 @@ class Stream(object):
                                                     r[5].isoformat(),
                                                     r[6], r[7])
         print "Total: %d gap(s) or overlap(s)" % len(result)
-        
+
     def remove(self, index):
         """
         Removes the Trace object specified by index from the Stream object.
@@ -369,11 +366,11 @@ class Stream(object):
         @param index: Index of the Trace object to be removed
         """
         del(self.traces)[index]
-        
+
     def reverse(self):
         """
         Reverses the Traces of the Stream object in place.
-        """ 
+        """
         self.traces.reverse()
 
     def sort(self, keys=['network', 'station', 'channel', 'starttime']):
@@ -392,8 +389,8 @@ class Stream(object):
              Defaults to ['network', 'station', 'channel', 'starttime'].
         """
         # Check the list and all items.
-        msg = "keys must be a list of item strings. Available items to sort "+\
-              "after: \n'network', 'station', 'channel', 'location', " +\
+        msg = "keys must be a list of item strings. Available items to sort " + \
+              "after: \n'network', 'station', 'channel', 'location', " + \
               "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
         if not isinstance(keys, list):
             raise TypeError(msg)
