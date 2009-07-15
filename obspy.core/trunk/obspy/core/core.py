@@ -492,3 +492,17 @@ class Stream(object):
         for trace in self:
             trace.trim(starttime, endtime)
 
+    def ltrim(self, starttime):
+        """
+        Cuts all traces of this Stream object to given start time.
+        """
+        for trace in self:
+            trace.ltrim(starttime)
+
+    def rtrim(self, endtime):
+        """
+        Cuts all traces of this Stream object to given end time.
+        """
+        for trace in self:
+            trace.rtrim(endtime)
+
