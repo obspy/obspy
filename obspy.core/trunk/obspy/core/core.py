@@ -103,7 +103,7 @@ class Trace(object):
             raise
         waveform.plotWaveform(Stream([self]), **kwargs)
 
-    def rtrim(self, starttime):
+    def ltrim(self, starttime):
         """
         Cuts Trace objects to given start time.
         """
@@ -118,10 +118,12 @@ class Trace(object):
         # cut from right
         delta = (starttime - self.stats.starttime)
         samples = int(round(delta * self.stats.sampling_rate))
+        total = len(self.data) - samples
         self.data = self.data[samples:]
+        self.stats.npts = len(self.data)
         self.stats.starttime = starttime
 
-    def ltrim(self, endtime):
+    def rtrim(self, endtime):
         """
         Cuts Trace objects to given end time.
         """
@@ -130,13 +132,16 @@ class Trace(object):
         elif not isinstance(endtime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        if endtime >= self.stats.endtime or endtime <= self.stats.starttime:
+        if endtime >= self.stats.endtime or endtime < self.stats.starttime:
             return
         # cut from right
         delta = (self.stats.endtime - endtime)
         samples = int(round(delta * self.stats.sampling_rate))
         total = len(self.data) - samples
+        if endtime == self.stats.starttime:
+            total = 1
         self.data = self.data[0:total]
+        self.stats.npts = len(self.data)
         self.stats.endtime = endtime
 
     def trim(self, starttime, endtime):
@@ -145,8 +150,8 @@ class Trace(object):
         """
         if starttime > endtime:
             endtime, starttime = starttime, endtime
-        self.rtrim(starttime)
-        self.ltrim(endtime)
+        self.ltrim(starttime)
+        self.rtrim(endtime)
 
 
 class Stream(object):
@@ -479,3 +484,11 @@ class Stream(object):
                   ', '.join([_i[0] for _i in formats])
             raise TypeError(msg)
         formats[format_index][3](self, filename, **kwargs)
+
+    def trim(self, starttime, endtime):
+        """
+        Cuts all traces of this Stream object to given start and end time.
+        """
+        for trace in self:
+            trace.trim(starttime, endtime)
+
