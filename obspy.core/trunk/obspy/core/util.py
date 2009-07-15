@@ -90,7 +90,7 @@ class Stats(dict):
         flag = kwargs.pop('dummy', True)
         dict.__init__(self, *args, **kwargs)
         self.__dict__ = self
-        if flag: 
+        if flag:
             # fill some dummy values
             self.station = "dummy"
             self.sampling_rate = 1.0
@@ -131,9 +131,11 @@ class Stats(dict):
         # Check if attribute is of correct type
         if not isinstance(getattr(self, attr), typ):
             if assertation:
-                assert False, "%s attribute of Seismogram not of type %s" % (attr, typ)
+                msg = "%s attribute of Seismogram not of type %s"
+                assert False, msg % (attr, typ)
             if verbose:
-                print "WARNING: %s attribute of Seismogram not of type %s" % (attr, typ),
+                msg = "WARNING: %s attribute of Seismogram not of type %s"
+                print msg % (attr, typ),
                 print "forcing", attr, "=", default
             setattr(self, attr, default)
             return False
@@ -141,9 +143,11 @@ class Stats(dict):
         if (length):
             if (len(getattr(self, attr)) != length):
                 if assertation:
-                    assert False, "%s attribute of Seismogram is != %i" % (attribute, length)
+                    msg = "%s attribute of Seismogram is != %i"
+                    assert False, msg % (attr, length)
                 if verbose:
-                    print "%s attribute of Seismogram is != %i" % (attribute, length)
+                    msg = "%s attribute of Seismogram is != %i"
+                    print msg % (attr, length)
                 setattr(self, attr, default)
                 return False
         # If not test failed
@@ -185,6 +189,8 @@ class UTCDateTime(datetime.datetime):
         >>> a = UTCDateTime("1970-01-01T12:23:34.123456")
         >>> a
         UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+        >>> UTCDateTime("1970-01-01T12:23:34.5")
+        UTCDateTime(1970, 1, 1, 12, 23, 34, 500000)
         >>> str(a)
         '1970-01-01T12:23:34.123456'
         >>> t3 = copy.deepcopy(t)
@@ -216,7 +222,7 @@ class UTCDateTime(datetime.datetime):
                     parts = arg.split('.')
                     arg = parts[0].strip()
                     try:
-                        ms = int(parts[1].strip())
+                        ms = float('.' + parts[1].strip())
                     except:
                         pass
                 # The module copy.deepcopy passes a (binary) string to
@@ -234,9 +240,11 @@ class UTCDateTime(datetime.datetime):
                     else:
                         break
                 if dt:
+                    dt = UTCDateTime(dt) + ms
                     return datetime.datetime.__new__(cls, dt.year, dt.month,
                                                      dt.day, dt.hour,
-                                                     dt.minute, dt.second, ms)
+                                                     dt.minute, dt.second,
+                                                     dt.microsecond)
         elif len(args) == 0:
             dt = datetime.datetime.utcnow()
             return datetime.datetime.__new__(cls, dt.year, dt.month,
@@ -340,12 +348,12 @@ class UTCDateTime(datetime.datetime):
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
             return UTCDateTime(dt)
 
-    def __str__(self, *args, **kwargs):
+    def __str__(self, separator='T', *args, **kwargs):
         """
         Returns string representation of the UTCDateTime object.
         """
         text = datetime.datetime.__str__(self, *args, **kwargs)
-        return text.replace(' ', 'T')
+        return text.replace(' ', separator)
 
 
 def getFormatsAndMethods(verbose=False):
@@ -446,6 +454,7 @@ c_file_p = C.POINTER(FILE)
 #C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 #C.pythonapi.PyFile_AsFile.restype = c_file_p
 
+
 def formatScientific(value):
     """
     Formats floats in a fixed exponential format.
@@ -480,7 +489,7 @@ def formatScientific(value):
         mantissa, exponent = value.split('E')
         return "%sE%+03d" % (mantissa, int(exponent))
     else:
-        msg = "Can't format scientific %s in field %s" % (data, self.field_name)
+        msg = "Can't format scientific %s" % (value)
         raise TypeError(msg)
 
 
