@@ -2,7 +2,8 @@
 """
 The ObsPy core classes.
 """
-from obspy.core.util import Stats, getFormatsAndMethods
+
+from obspy.core.util import Stats, getFormatsAndMethods, UTCDateTime
 import copy
 import math
 import os
@@ -52,12 +53,14 @@ def read(filename, format=None):
         return Stream(traces=[temp_object])
     return temp_object
 
+
 def supportedFormats():
     """
     This function will return a list with all file formats supported by your
     ObSpy installation.
     """
     return [_i[0] for _i in getFormatsAndMethods()]
+
 
 class Trace(object):
     """
@@ -81,11 +84,70 @@ class Trace(object):
                     self.stats[_i] = header[_i]
         if data != None:
             self.data = data
+
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
               "%(starttime)s -- %(endtime)s | " + \
               "%(sampling_rate)f Hz, %(npts)d samples"
         return out % (self.stats)
+
+    def plot(self, **kwargs):
+        """
+        """
+        try:
+            from obspy.imaging import waveform
+        except:
+            msg = """Please install the obspy.imaging module to be able to plot
+                  ObsPy Stream objects.\n"""
+            print msg
+            raise
+        waveform.plotWaveform(Stream([self]), **kwargs)
+
+    def rtrim(self, starttime):
+        """
+        Cuts Trace objects to given start time.
+        """
+        if isinstance(starttime, float) or isinstance(starttime, int):
+            starttime = UTCDateTime(self.stats.starttime) + starttime
+        elif not isinstance(starttime, UTCDateTime):
+            raise TypeError
+        # check if in boundary
+        if starttime <= self.stats.starttime or \
+           starttime >= self.stats.endtime:
+            return
+        # cut from right
+        delta = (starttime - self.stats.starttime)
+        samples = int(round(delta * self.stats.sampling_rate))
+        self.data = self.data[samples:]
+        self.stats.starttime = starttime
+
+    def ltrim(self, endtime):
+        """
+        Cuts Trace objects to given end time.
+        """
+        if isinstance(endtime, float) or isinstance(endtime, int):
+            endtime = UTCDateTime(self.stats.endtime) - endtime
+        elif not isinstance(endtime, UTCDateTime):
+            raise TypeError
+        # check if in boundary
+        if endtime >= self.stats.endtime or endtime <= self.stats.starttime:
+            return
+        # cut from right
+        delta = (self.stats.endtime - endtime)
+        samples = int(round(delta * self.stats.sampling_rate))
+        total = len(self.data) - samples
+        self.data = self.data[0:total]
+        self.stats.endtime = endtime
+
+    def trim(self, starttime, endtime):
+        """
+        Cuts Trace object to given start and end time.
+        """
+        if starttime > endtime:
+            endtime, starttime = starttime, endtime
+        self.rtrim(starttime)
+        self.ltrim(endtime)
+
 
 class Stream(object):
     """
@@ -217,9 +279,8 @@ class Stream(object):
             etime = self.traces[_i + 1].stats['starttime']
             duration = etime.timestamp - stime.timestamp
             gap = etime.timestamp - stime.timestamp
-             # Check that any overlap is not larger than the trace coverage
+            # Check that any overlap is not larger than the trace coverage
             if gap < 0:
-                delta = 1 / float(self.traces[_i + 1].stats['sampling_rate'])
                 temp = self.traces[_i + 1].stats['endtime'].timestamp - \
                        etime.timestamp
                 if (gap * -1) > temp:

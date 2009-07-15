@@ -8,6 +8,7 @@ import obspy
 import os
 import unittest
 
+
 class CoreTestCase(unittest.TestCase):
     """
     Tests the obspy.core.core functions and classes. Please be aware that the
@@ -15,9 +16,7 @@ class CoreTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        # Directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        # Test files, this makes also shure that obspy.mseed and obspy.gse2
+        # Test files, this makes also sure that obspy.mseed and obspy.gse2
         # modules are installed.
         try:
             import obspy.mseed.tests
@@ -27,13 +26,13 @@ class CoreTestCase(unittest.TestCase):
             path2 = os.path.dirname(inspect.getsourcefile(obspy.gse2.tests))
             self.gse2_file = os.path.join(path2, 'data', 'loc_RNON20040609200559.z')
         except ImportError:
-            msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' +\
+            msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' + \
                   'test the obspy.core.core methods and functions'
             raise ImportError(msg)
 
     def tearDown(self):
         pass
-    
+
     def test_getitem(self):
         """
         Tests the getting of items of the Stream objects.
@@ -45,7 +44,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[0:], stream.traces[0:])
         self.assertEqual(stream[:2], stream.traces[:2])
         self.assertEqual(stream[:], stream.traces[:])
-        
+
     def test_adding(self):
         """
         Tests the adding of two stream objects.
@@ -58,9 +57,9 @@ class CoreTestCase(unittest.TestCase):
         # This will create a copy of all Traces and thus the objects should not
         # be identical but the Traces attributes should be identical.
         for _i in range(4):
-            self.assertNotEqual(stream[_i], stream[_i+4])
-            self.assertEqual(stream[_i].stats, stream[_i+4].stats)
-            N.testing.assert_array_equal(stream[_i].data, stream[_i+4].data)
+            self.assertNotEqual(stream[_i], stream[_i + 4])
+            self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
+            N.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
         # Now add another stream to it.
         other_stream = obspy.read(self.gse2_file)
         self.assertEqual(1, len(other_stream))
@@ -75,7 +74,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertNotEqual(new_stream[8], other_stream[0])
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
         N.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
-        
+
     def test_iadding(self):
         """
         Tests the __iadd__ method of the Stream objects.
@@ -110,7 +109,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[0].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[0].data, stream[-1].data)
         # Append the same again but pass by reference.
-        stream.append(stream[0], reference = True)
+        stream.append(stream[0], reference=True)
         self.assertEqual(len(stream), 6)
         # Now the two objects should be identical.
         self.assertEqual(stream[0], stream[-1])
@@ -118,7 +117,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(TypeError, stream.append, stream[:])
         self.assertRaises(TypeError, stream.append, 1)
         self.assertRaises(TypeError, stream.append, stream[0].data)
-        
+
     def test_countAndLen(self):
         """
         Tests the count method and __len__ attribut of the Stream objects.
@@ -127,7 +126,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(4, len(stream))
         self.assertEqual(4, stream.count())
         self.assertEqual(stream.count(), len(stream))
-        
+
     def test_extend(self):
         """
         Tests the extending method of the Stream objects.
@@ -148,7 +147,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[1].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Extend with the same again but pass by reference.
-        stream.extend(stream[0:2], reference = True)
+        stream.extend(stream[0:2], reference=True)
         self.assertEqual(len(stream), 8)
         # Now the two objects should be identical.
         self.assertEqual(stream[0], stream[-2])
@@ -158,7 +157,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(TypeError, stream.extend, stream[0])
         self.assertRaises(TypeError, stream.extend, 1)
         self.assertRaises(TypeError, stream.extend, stream[0:2].append(1))
-    
+
     def test_insert(self):
         """
         Tests the insert Method of the Stream objects.
@@ -175,7 +174,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[1].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Do the same again but pass by refernce.
-        stream.insert(1, stream[-1], reference = True)
+        stream.insert(1, stream[-1], reference=True)
         self.assertEqual(len(stream), 6)
         # Now the two Traces should ne identical
         self.assertEqual(stream[1], stream[-1])
@@ -193,7 +192,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[2].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[2].data, stream[-1].data)
         # Do the same again but pass by refernce.
-        stream.insert(1, stream[-2:], reference = True)
+        stream.insert(1, stream[-2:], reference=True)
         self.assertEqual(len(stream), 10)
         # Now the two Traces should ne identical
         self.assertEqual(stream[1], stream[-2])
@@ -202,7 +201,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(TypeError, stream.insert, 1, 1)
         self.assertRaises(TypeError, stream.insert, stream[0], stream[0])
         self.assertRaises(TypeError, stream.insert, 1, stream[0:2].append(1))
-        
+
     def test_getGaps(self):
         """
         Tests the getGaps method of the Stream objects. It is compared directly
@@ -211,8 +210,8 @@ class CoreTestCase(unittest.TestCase):
         stream = obspy.read(self.mseed_file)
         gap_list = stream.getGaps()
         # Gapslist created with obspy.mseed
-        mseed_gap_list = [('BW', 'BGLD', '', 'EHE', UTCDateTime(2008, 1, 1, 0,\
-                          0, 1, 970000), UTCDateTime(2008, 1, 1, 0, 0, 4,\
+        mseed_gap_list = [('BW', 'BGLD', '', 'EHE', UTCDateTime(2008, 1, 1, 0, \
+                          0, 1, 970000), UTCDateTime(2008, 1, 1, 0, 0, 4, \
                           35000), 2.0649999999999999, 412.0), ('BW', 'BGLD',
                           '', 'EHE', UTCDateTime(2008, 1, 1, 0, 0, 8, 150000),
                           UTCDateTime(2008, 1, 1, 0, 0, 10, 215000),
@@ -228,10 +227,10 @@ class CoreTestCase(unittest.TestCase):
                 self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
             # The small differences are probably due to rounding errors.
             self.assertAlmostEqual(mseed_gap_list[_i][6], gap_list[_i][6],
-                                   places = 3)
+                                   places=3)
             self.assertAlmostEqual(mseed_gap_list[_i][7], gap_list[_i][7],
-                                   places = 3)
-            
+                                   places=3)
+
     def test_pop(self):
         """
         Test the pop method of the Stream objects.
@@ -260,7 +259,7 @@ class CoreTestCase(unittest.TestCase):
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
-            
+
     def test_remove(self):
         """
         Tests the remove method of the Stream objects.
@@ -279,7 +278,7 @@ class CoreTestCase(unittest.TestCase):
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
-        
+
     def test_reverse(self):
         """
         Tests the reverse method of the Stream objects.
@@ -296,7 +295,7 @@ class CoreTestCase(unittest.TestCase):
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
-            
+
     def test_sort(self):
         """
         Tests the sorting of the Stream objects.
@@ -322,30 +321,163 @@ class CoreTestCase(unittest.TestCase):
                 'channel' : 'FFF', 'npts' : 1000, 'sampling_rate' : 500.0}]
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
-            new_trace = obspy.Trace(header = _i)
-            stream.append(new_trace, reference = True)
+            new_trace = obspy.Trace(header=_i)
+            stream.append(new_trace, reference=True)
         # Use normal sorting.
         stream.sort()
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces], 
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [300.0, 500.0, 400.0, 200.0, 100.0])
         # Sort after sampling_rate.
-        stream.sort(keys = ['sampling_rate'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces], 
+        stream.sort(keys=['sampling_rate'])
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [100.0, 200.0, 300.0, 400.0, 500.0])
         # Sort after channel and sampling rate.
-        stream.sort(keys = ['channel', 'sampling_rate'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces], 
+        stream.sort(keys=['channel', 'sampling_rate'])
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [200.0, 500.0, 300.0, 400.0, 100.0])
         # Sort after npts and channel and sampling_rate.
-        stream.sort(keys = ['npts', 'channel', 'sampling_rate'])
-        self.assertEqual([i.stats.sampling_rate for i in stream.traces], 
+        stream.sort(keys=['npts', 'channel', 'sampling_rate'])
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [500.0, 300.0, 200.0, 400.0, 100.0])
         # Sorting without a list or a wrong item string should fail.
-        self.assertRaises(TypeError, stream.sort, keys = 1)
-        self.assertRaises(TypeError, stream.sort, keys = 'samping_rate')
-        self.assertRaises(TypeError, stream.sort, keys = ['npts', 'starttime',
+        self.assertRaises(TypeError, stream.sort, keys=1)
+        self.assertRaises(TypeError, stream.sort, keys='samping_rate')
+        self.assertRaises(TypeError, stream.sort, keys=['npts', 'starttime',
                                                           'wrong_value'])
-        
+
+    def test_rtrimTrace(self):
+        """
+        Tests the rtrim method of the Trace objects.
+        """
+        # set up
+        trace = obspy.core.Trace(data=range(0, 1000))
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        trace.stats.starttime = start
+        trace.stats.sampling_rate = 200.0
+        end = UTCDateTime(2000, 1, 1, 0, 0, 5, 0)
+        trace.stats.endtime = end
+        # rtrim 100 samples
+        tr = deepcopy(trace)
+        tr.rtrim(0.5)
+        self.assertEquals(tr.data[0:5], [100, 101, 102, 103, 104])
+        self.assertEquals(len(tr.data), 900)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start + 0.5)
+        self.assertEquals(tr.stats.endtime, end)
+        # rtrim 202 samples
+        tr = deepcopy(trace)
+        tr.rtrim(1.010)
+        self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
+        self.assertEquals(len(tr.data), 798)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start + 1.010)
+        self.assertEquals(tr.stats.endtime, end)
+        # rtrim to UTCDateTime
+        tr = deepcopy(trace)
+        tr.rtrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
+        self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
+        self.assertEquals(len(tr.data), 798)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start + 1.010)
+        self.assertEquals(tr.stats.endtime, end)
+        # some sanity checks
+        # negative start time
+        tr = deepcopy(trace)
+        tr.rtrim(UTCDateTime(1999))
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        tr.rtrim(-100)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        # start time > end time
+        tr.rtrim(UTCDateTime(2001))
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        tr.rtrim(5.1)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        # start time == end time
+        tr.rtrim(5)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+
+    def test_ltrimTrace(self):
+        """
+        Tests the ltrim method of the Trace objects.
+        """
+        # set up
+        trace = obspy.core.Trace(data=range(0, 1000))
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        trace.stats.starttime = start
+        trace.stats.sampling_rate = 200.0
+        end = UTCDateTime(2000, 1, 1, 0, 0, 5, 0)
+        trace.stats.endtime = end
+        # rtrim 100 samples
+        tr = deepcopy(trace)
+        tr.ltrim(0.5)
+        self.assertEquals(tr.data[-5:], [895, 896, 897, 898, 899])
+        self.assertEquals(len(tr.data), 900)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start)
+        self.assertEquals(tr.stats.endtime, end - 0.5)
+        # rtrim 202 samples
+        tr = deepcopy(trace)
+        tr.ltrim(1.010)
+        self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
+        self.assertEquals(len(tr.data), 798)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start)
+        self.assertEquals(tr.stats.endtime, end - 1.010)
+        # rtrim to UTCDateTime
+        tr = deepcopy(trace)
+        tr.ltrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 990000))
+        self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
+        self.assertEquals(len(tr.data), 798)
+        self.assertEquals(tr.stats.sampling_rate, 200.0)
+        self.assertEquals(tr.stats.starttime, start)
+        self.assertEquals(tr.stats.endtime, end - 1.010)
+        # some sanity checks
+        # negative end time
+        tr = deepcopy(trace)
+        tr.rtrim(UTCDateTime(1999))
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        tr.rtrim(-100)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        # end time > start time
+        tr.rtrim(UTCDateTime(2001))
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        tr.rtrim(5.1)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+        # end time == start time
+        tr.rtrim(5)
+        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.data, tr.data)
+
+    def test_trimTrace(self):
+        """
+        Tests the trim method of the Trace objects.
+        """
+        # set up
+        trace = obspy.core.Trace(data=range(0, 1000))
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        trace.stats.starttime = start
+        trace.stats.sampling_rate = 200.0
+        end = UTCDateTime(2000, 1, 1, 0, 0, 5, 0)
+        trace.stats.endtime = end
+        # rtrim 100 samples
+        trace.trim(0.5, 0.5)
+        self.assertEquals(trace.data[-5:], [895, 896, 897, 898, 899])
+        self.assertEquals(trace.data[0:5], [100, 101, 102, 103, 104])
+        self.assertEquals(len(trace.data), 800)
+        self.assertEquals(trace.stats.sampling_rate, 200.0)
+        self.assertEquals(trace.stats.starttime, start + 0.5)
+        self.assertEquals(trace.stats.endtime, end - 0.5)
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
