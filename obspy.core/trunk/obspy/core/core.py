@@ -91,6 +91,10 @@ class Trace(object):
               "%(sampling_rate)f Hz, %(npts)d samples"
         return out % (self.stats)
 
+    def getId(self):
+        out = "%(network)s.%(station)s.%(location)s.%(channel)s"
+        return out % (self.stats)
+
     def plot(self, **kwargs):
         """
         """
