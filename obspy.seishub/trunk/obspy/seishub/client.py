@@ -115,10 +115,15 @@ class _WaveformMapperClient(object):
         try:
             tf.write(data)
             tf.seek(0)
-            trace = obspy.read(tf.name, 'MSEED')
+            stream = obspy.read(tf.name, 'MSEED')
         finally:
             tf.close()
-        return trace
+        # trim stream
+        if 'start_datetime' in kwargs:
+            stream.ltrim(kwargs['start_datetime'])
+        if 'end_datetime' in kwargs:
+            stream.rtrim(kwargs['end_datetime'])
+        return stream
 
 
 class _BaseRESTClient(object):

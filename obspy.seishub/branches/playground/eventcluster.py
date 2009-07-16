@@ -116,8 +116,6 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 msg = "!!! Error fetching waveform for %s.%s.%s.%s for %s"
                 print msg % (nid, sid, location_id, channel_id, dt)
                 continue
-            # trim to time window
-            stream.trim(dt + time_window[0], dt + time_window[1])
             for trace in stream:
                 # calculate zero mean
                 trace.data = trace.data - trace.data.mean()
