@@ -79,6 +79,20 @@ class CoreTestCase(unittest.TestCase):
         """
         pass
 
+    def test_setStats(self):
+        """
+        Tests related to issue #4.
+        """
+        st = read(self.file)
+        st += st
+        # change stats attributes
+        st[0].stats.station = 'AAA'
+        st[1].stats['station'] = 'BBB'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEquals(st[1].stats['station'], 'BBB')
+        self.assertEquals(st[1].stats.station, 'BBB')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
