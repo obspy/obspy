@@ -102,6 +102,10 @@ class Stats(dict):
             self.starttime = UTCDateTime(0)
             self.endtime = UTCDateTime(0) + 60 * 60 * 24
 
+    def __setitem__(self, item, value):
+        setattr(self, item, value)
+        dict.__setitem__(self, item, value)
+
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):
         """
