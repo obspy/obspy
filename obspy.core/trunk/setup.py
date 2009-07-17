@@ -5,10 +5,10 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.3'
+version = '0.0.4'
 
 
-GPL2="""
+GPL2 = """
 GNU General Public License (GPL)
 
 This program is free software; you can redistribute it and/or
@@ -30,9 +30,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 setup(
     name='obspy.core',
     version=version,
-    description="Core class of ObsPy, Python for Seismological Observatories",
+    description="ObsPy core classes, Python for Seismological Observatories",
     long_description="""
-    obspy.core - Core class of ObsPy, Python for Seismological Observatories
+    obspy.core - Core classes of ObsPy, Python for Seismological Observatories
 
     This class contains common methods and classes for ObsPy. It includes
     a UTCDateTime, a Stats, the Stream and Trace classes and methods for
@@ -48,7 +48,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.core.tests.suite",
+    test_suite="obspy.core.tests.suite",
     install_requires=[
         'setuptools',
     ],

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from obspy.core import Trace
 from obspy.core.util import getFormatsAndMethods
 import copy

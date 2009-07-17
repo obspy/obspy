@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------
+#  Purpose: Core classes of ObsPy, Python for Seismological Observatories
+#   Author: Robert Barsch
+#           Moritz Beyreuther
+#           Lion Krischer
+#    Email: barsch@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2008-2010 Robert Barsch, Moritz Beyreuthe, Lion Krischer
+#---------------------------------------------------------------------
 """
-obspy.core - Core class of ObsPy, Python for Seismological Observatories
+obspy.core - Core classes of ObsPy, Python for Seismological Observatories
 
 This class contains common methods and classes for ObsPy. It includes
 a UTCDateTime, a Stats and general comment methods.
