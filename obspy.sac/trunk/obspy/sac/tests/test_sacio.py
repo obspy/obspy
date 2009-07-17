@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.sac import sacio, SacError
-from obspy.core.util import UTCDateTime
+from obspy.core import UTCDateTime
 import inspect, os, unittest
 import numpy as N
 
@@ -26,29 +26,29 @@ class SacioTestCase(unittest.TestCase):
         Tests for sacio read and write
         """
         sacfile = os.path.join(self.path, 'test.sac')
-        t=sacio.ReadSac()
+        t = sacio.ReadSac()
         t.ReadSacFile(sacfile)
         # commented get_attr method in sacio
         #self.assertEqual(t.get_attr(), 1)
         self.assertEqual(t.GetHvalue('npts'), 100)
-        self.assertEqual(t.GetHvalue("kstnm"),"STA     ")
-        t.SetHvalue("kstnm","spiff")
+        self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
+        t.SetHvalue("kstnm", "spiff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
         t.WriteSacBinary('test2.sac')
         self.assertEqual(os.path.exists('test2.sac'), True)
         t.ReadSacHeader('test2.sac')
-        self.assertEqual( (t.hf != None), True)
-        t.SetHvalue("kstnm","spoff")
+        self.assertEqual((t.hf != None), True)
+        t.SetHvalue("kstnm", "spoff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spoff   ')
         t.WriteSacHeader('test2.sac')
-        t.SetHvalueInFile('test2.sac',"kcmpnm",'Z')
-        self.assertEqual(t.GetHvalueFromFile('test2.sac',"kcmpnm"), 'Z       ')
+        t.SetHvalueInFile('test2.sac', "kcmpnm", 'Z')
+        self.assertEqual(t.GetHvalueFromFile('test2.sac', "kcmpnm"), 'Z       ')
         t.IsValidSacFile('test2.sac')
         os.remove('test2.sac')
 
     def test_readWriteXY(self):
-        t=sacio.ReadSac()
-        t.ReadXYSacFile(os.path.join(self.path,'testxy.sac'))
+        t = sacio.ReadSac()
+        t.ReadXYSacFile(os.path.join(self.path, 'testxy.sac'))
         self.assertEqual(t.GetHvalue('npts'), 100)
         t.WriteSacBinary('testbin.sac')
         self.assertEqual(os.path.exists('testbin.sac'), True)
@@ -58,7 +58,7 @@ class SacioTestCase(unittest.TestCase):
         """
         See if assertation is Raised if file ist not a sac file
         """
-        t=sacio.ReadSac()
+        t = sacio.ReadSac()
         self.assertRaises(SacError, t.ReadSacFile, __file__)
 
 def suite():

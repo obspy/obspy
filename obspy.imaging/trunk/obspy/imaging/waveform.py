@@ -28,16 +28,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-from obspy.core.util import UTCDateTime
+from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
 import matplotlib.pyplot as plt
 import numpy as N
 
 def plotWaveform(stream_object, outfile=None, format=None,
-               size = None, starttime=False, endtime=False,
+               size=None, starttime=False, endtime=False,
                dpi=100, color='k', bgcolor='w',
                transparent=False, minmaxlist=False,
-               number_of_ticks=5, tick_format = '%H:%M:%S', tick_rotation=0):
+               number_of_ticks=5, tick_format='%H:%M:%S', tick_rotation=0):
     """
     Creates a graph of any given ObsPy Stream object. It either saves the image
     directly to the file system or returns an binary image string.
@@ -96,6 +96,11 @@ def plotWaveform(stream_object, outfile=None, format=None,
         tick_format.
         Defaults to 0.
     """
+    # check stream
+    if isinstance(stream_object, Trace):
+        stream_object = Stream([stream_object])
+    elif not isinstance(stream_object, Stream):
+        raise TypeError
     # Default width.
     if not size:
         temp_width = 800
@@ -110,7 +115,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
                                                 starttime=starttime,
                                                 endtime=endtime)
     # Number of plots.
-    minmax_items = len(minmaxlist)-2
+    minmax_items = len(minmaxlist) - 2
     # Determine the size of the picture. Each plot will get 250 px in height.
     if not size:
         size = (800, minmax_items * 250)
@@ -126,10 +131,10 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # Setup figure and axes
     plt.figure(num=None, figsize=(float(size[0]) / dpi,
                      float(size[1]) / dpi))
-    suptitle = '%s - %s' % (UTCDateTime(starttime).strftime('%x %X'), 
+    suptitle = '%s - %s' % (UTCDateTime(starttime).strftime('%x %X'),
                            UTCDateTime(endtime).strftime('%x %X'))
-    plt.suptitle(suptitle, x = 0.02, y = 0.96, fontsize='small',
-                 horizontalalignment = 'left')
+    plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
+                 horizontalalignment='left')
     # Determine range for the y axis. This will ensure that at least 98% of all
     # values are fully visible.
     # This also assures that all subplots have the same scale on the y-axis.
@@ -159,7 +164,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # list with it
     average_list = []
     for _i in minmaxlist:
-        average_list.append(sum([_j[0] + _j[1] for _j in _i])/(2*length))
+        average_list.append(sum([_j[0] + _j[1] for _j in _i]) / (2 * length))
     # The next step is to find the maximum distance from the average values in
     # the yrange and store it.
     max_range = 0
@@ -172,18 +177,18 @@ def plotWaveform(stream_object, outfile=None, format=None,
             max_range = min_value
     # Create the location of the ticks.
     tick_location = []
-    x_range = endtime-starttime
+    x_range = endtime - starttime
     if number_of_ticks > 1:
         for _i in xrange(number_of_ticks):
-            tick_location.append(starttime + _i*x_range/(number_of_ticks-1))
+            tick_location.append(starttime + _i * x_range / (number_of_ticks - 1))
     elif number_of_ticks == 1:
-        tick_location.append(starttime + x_range/2)
+        tick_location.append(starttime + x_range / 2)
     # Create tick names
     tick_names = [UTCDateTime(_i).strftime(tick_format) for _i in \
                   tick_location]
     if number_of_ticks > 1:
         # Adjust first tick to be visible.
-        tick_location[0] = tick_location[0]+0.5*x_range/size[0]
+        tick_location[0] = tick_location[0] + 0.5 * x_range / size[0]
     # If color gradient is wanted calculate the start- and endcolors.
     if type(color) == type((1, 2)):
         #Convert hex values to integers
@@ -198,21 +203,21 @@ def plotWaveform(stream_object, outfile=None, format=None,
         delta_b = (float(b2) - float(b1)) / length
     # Loop over all items in minmaxlist.
     for _j in range(minmax_items):
-        plt.subplot(minmax_items, 1, _j+1)
+        plt.subplot(minmax_items, 1, _j + 1)
         # Make title
         cur_stats = stats_list[_j]
         title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
             cur_stats.station, cur_stats.location, cur_stats.channel,
             cur_stats.sampling_rate,
             int((endtime - starttime) * cur_stats.sampling_rate))
-        plt.title(title_text, horizontalalignment = 'left',
-                  fontsize = 'small', verticalalignment = 'center')
+        plt.title(title_text, horizontalalignment='left',
+                  fontsize='small', verticalalignment='center')
         # Set axes and disable ticks on the y axis.
         plt.ylim(average_list[_j] - max_range, average_list[_j] + max_range)
         plt.xlim(starttime, endtime)
         plt.yticks([])
-        plt.xticks(tick_location, tick_names, rotation = tick_rotation, 
-                   fontsize = 'small')
+        plt.xticks(tick_location, tick_names, rotation=tick_rotation,
+                   fontsize='small')
         # Overwrite the background gradient if transparent is set.
         if transparent:
             bgcolor = None
@@ -331,7 +336,7 @@ def _getMinMaxList(stream_object, width, starttime=None,
         # Reset loop times
         starttime = plot_starttime
         endtime = plot_endtime
-        minmaxlist= []
+        minmaxlist = []
         # While loop over the plotting duration.
         while starttime < endtime:
             pixel_endtime = starttime + stepsize

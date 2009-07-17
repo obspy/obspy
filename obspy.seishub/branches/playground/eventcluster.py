@@ -4,10 +4,9 @@
 import os, numpy as N, ctypes as C
 from obspy.filter import seisSim
 from obspy.seishub.client import Client
-from obspy.core.util import UTCDateTime
+from obspy.core import UTCDateTime
 
 client = Client("http://teide.geophysik.uni-muenchen.de:8080")
-
 
 
 def xcorr(tr1, tr2, window_len):

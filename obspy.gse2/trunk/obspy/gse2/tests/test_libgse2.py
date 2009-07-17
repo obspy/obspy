@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 
 from obspy.gse2 import libgse2
-from obspy.core.util import UTCDateTime
+from obspy.core import UTCDateTime
 import inspect, os, unittest
 import numpy as N
 
@@ -120,13 +120,13 @@ class LibGSE2TestCase(unittest.TestCase):
         Test that exception is raised when data are not of type int32 numpy array
         """
         testfile = os.path.join(self.path, 'tmp.gse2')
-        data = [2,26,1]
+        data = [2, 26, 1]
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
         self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
-        data = N.array([2,26,1],dtype='f')
+        data = N.array([2, 26, 1], dtype='f')
         self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
 
 def suite():

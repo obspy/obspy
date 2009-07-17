@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import obspy
+import sys
 import time
 import unittest
-import sys
 
 
 def suite():
@@ -11,16 +10,16 @@ def suite():
     The obspy test suite.
     """
     suite = unittest.TestSuite()
-    for module in ['core', 'gse2', 'mseed', 'sac', 'wav', 'filter', 
-                   'imaging', 'xseed', 'trigger', 'arclink']:
+    for module in ['core', 'gse2', 'mseed', 'sac', 'wav', 'filter', 'imaging',
+                   'xseed', 'trigger', 'arclink']:
+        name = 'obspy.%s.tests' % module
         try:
-            name = 'obspy.%s.tests' % module
             __import__(name)
-            suite.addTests(sys.modules[name].suite())
-        except:
+        except ImportError:
             print "Cannot import test suite of module obspy.%s" % module
             time.sleep(0.5)
-            continue
+        else:
+            suite.addTests(sys.modules[name].suite())
     return suite
 
 

@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-The ObsPy core classes.
-"""
-
-from obspy.core.util import Stats, getFormatsAndMethods, UTCDateTime
+from obspy.core import Trace
+from obspy.core.util import getFormatsAndMethods
 import copy
 import math
 import os
@@ -11,13 +7,12 @@ import os
 
 def read(filename, format=None):
     """
-    This function will check a file's format and read it into a Stream object
-    if possible.
+    Reads a file into a L{obspy.core.Stream} object.
     
-    @param format: Format of the file to read. If it is none the format will be
-        autodetected. If you specify a format no further format checking is
-        done. To avoid problems please use the option only when you are sure
-        which format your file has. Defaults to None.
+    @param format: Format of the file to read. If it is None the format will be
+        automatically detected. If you specify a format no further format 
+        checking is done. To avoid problems please use the option only when 
+        you are sure which format your file has. Defaults to None.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -25,168 +20,65 @@ def read(filename, format=None):
     # Gets the available formats and the corresponding methods.
     formats = getFormatsAndMethods()
     if len(formats) == 0:
-        msg = """Your current ObsPy installation does not support any file
-                 reading formats. Please update or extend your ObsPy
-                 installation"""
+        msg = "Your current ObsPy installation does not support any file " + \
+              "reading formats. Please update or extend your ObsPy " + \
+              "installation."
         raise Exception(msg)
     fileformat = []
     if not format:
-        # Autodetect format
+        # detect format
         for _i in formats:
             if _i[1](filename):
                 fileformat = _i
                 break
         if len(fileformat) == 0:
-            msg = 'Format is not supported. Supported Formats: ' + \
-                  ', '.join([_i[0] for _i in formats])
-            raise TypeError(msg)
+            msg = "Format is not supported. Supported Formats: "
+            raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     else:
         try:
             format_index = [_i[0] for _i in formats].index(format.upper())
             fileformat = formats[format_index]
         except:
-            msg = 'Format is not supported. Supported Formats: ' + \
-                  ', '.join([_i[0] for _i in formats])
-            raise TypeError(msg)
+            msg = "Format is not supported. Supported Formats: "
+            raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     temp_object = fileformat[2](filename)
     if isinstance(temp_object, Trace):
         return Stream(traces=[temp_object])
     return temp_object
 
 
-def supportedFormats():
-    """
-    This function will return a list with all file formats supported by your
-    ObSpy installation.
-    """
-    return [_i[0] for _i in getFormatsAndMethods()]
-
-
-class Trace(object):
-    """
-    ObsPy Trace class.
-    
-    This class contains information about one trace.
-    
-    @type data: Numpy ndarray 
-    @ivar data: Data samples 
-    """
-    def __init__(self, header=None, data=None):
-        self.stats = Stats()
-        self.data = None
-        if header != None:
-            for _i in header.keys():
-                if type(header[_i]) == dict:
-                    self.stats[_i] = Stats(dummy=False)
-                    for _j in header[_i].keys():
-                        self.stats[_i][_j] = header[_i][_j]
-                else:
-                    self.stats[_i] = header[_i]
-        if data != None:
-            self.data = data
-
-    def __str__(self):
-        out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
-              "%(starttime)s - %(endtime)s | " + \
-              "%(sampling_rate).1f Hz, %(npts)d samples"
-        return out % (self.stats)
-
-    def getId(self):
-        out = "%(network)s.%(station)s.%(location)s.%(channel)s"
-        return out % (self.stats)
-
-    def plot(self, **kwargs):
-        """
-        """
-        try:
-            from obspy.imaging import waveform
-        except:
-            msg = """Please install the obspy.imaging module to be able to plot
-                  ObsPy Stream objects.\n"""
-            print msg
-            raise
-        waveform.plotWaveform(Stream([self]), **kwargs)
-
-    def ltrim(self, starttime):
-        """
-        Cuts Trace objects to given start time.
-        """
-        if isinstance(starttime, float) or isinstance(starttime, int):
-            starttime = UTCDateTime(self.stats.starttime) + starttime
-        elif not isinstance(starttime, UTCDateTime):
-            raise TypeError
-        # check if in boundary
-        if starttime <= self.stats.starttime or \
-           starttime >= self.stats.endtime:
-            return
-        # cut from right
-        delta = (starttime - self.stats.starttime)
-        samples = int(round(delta * self.stats.sampling_rate))
-        total = len(self.data) - samples
-        self.data = self.data[samples:]
-        self.stats.npts = len(self.data)
-        self.stats.starttime = starttime
-
-    def rtrim(self, endtime):
-        """
-        Cuts Trace objects to given end time.
-        """
-        if isinstance(endtime, float) or isinstance(endtime, int):
-            endtime = UTCDateTime(self.stats.endtime) - endtime
-        elif not isinstance(endtime, UTCDateTime):
-            raise TypeError
-        # check if in boundary
-        if endtime >= self.stats.endtime or endtime < self.stats.starttime:
-            return
-        # cut from right
-        delta = (self.stats.endtime - endtime)
-        samples = int(round(delta * self.stats.sampling_rate))
-        total = len(self.data) - samples
-        if endtime == self.stats.starttime:
-            total = 1
-        self.data = self.data[0:total]
-        self.stats.npts = len(self.data)
-        self.stats.endtime = endtime
-
-    def trim(self, starttime, endtime):
-        """
-        Cuts Trace object to given start and end time.
-        """
-        if starttime > endtime:
-            endtime, starttime = starttime, endtime
-        self.ltrim(starttime)
-        self.rtrim(endtime)
-
-
 class Stream(object):
     """
-    ObsPy Stream class to collect Traces.
-    
+    ObsPy Stream class to collect L{Trace} objects.
     """
     def __init__(self, traces=None):
         self.traces = []
         if traces:
             self.traces.extend(traces)
 
-    def __add__(self, other):
+    def __add__(self, stream):
         """
         Method to add two streams.
         
         It will make a deepcopy of both Stream's Traces and create a new
         Stream object.
         """
+        if not isinstance(stream, Stream):
+            raise TypeError
         traces = copy.deepcopy(self.traces)
-        traces.extend(copy.deepcopy(other.traces))
+        traces.extend(copy.deepcopy(stream.traces))
         return Stream(traces=traces)
 
-    def __iadd__(self, other):
+    def __iadd__(self, stream):
         """
         Method to add two streams with self += other.
         
         It will make a deepcopy of the other Stream's Traces and extend the
         Stream object with them.
         """
-        new_traces = copy.deepcopy(other.traces)
+        if not isinstance(stream, Stream):
+            raise TypeError
+        new_traces = copy.deepcopy(stream.traces)
         self.extend(new_traces)
         return self
 
@@ -398,8 +290,8 @@ class Stream(object):
         try:
             from obspy.imaging import waveform
         except:
-            msg = """Please install the obspy.imaging module to be able to plot
-                  ObsPy Stream objects.\n"""
+            msg = "Please install module obspy.imaging to be able to " + \
+                  "plot ObsPy Stream objects."
             print msg
             raise
         waveform.plotWaveform(self, **kwargs)
@@ -511,4 +403,3 @@ class Stream(object):
         """
         for trace in self:
             trace.rtrim(endtime)
-

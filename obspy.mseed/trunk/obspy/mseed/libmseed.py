@@ -34,7 +34,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 """
 
 from StringIO import StringIO
-from obspy.core.util import UTCDateTime, scoreatpercentile, c_file_p
+from obspy.core import UTCDateTime
+from obspy.core.util import scoreatpercentile, c_file_p
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     MSFileParam
 from struct import unpack

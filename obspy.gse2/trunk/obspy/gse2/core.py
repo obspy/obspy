@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace
+from obspy.core import Trace, UTCDateTime
 from obspy.gse2 import libgse2
-from obspy.core.util import UTCDateTime
 
 
 def isGSE2(filename):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Core class of ObsPy, Python for Seismological Observatories
+Core classes of ObsPy, Python for Seismological Observatories
 
 This class contains common methods and classes for ObsPy. It includes
 a UTCDateTime, a Stats, the Stream and Trace classes and methods
@@ -25,8 +25,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-from core import *
-from util import *
-import util
-import parser
+# don't change order
+from utcdatetime import UTCDateTime
+from stats import Stats
+from trace import Trace
+from stream import Stream, read
 from testing import runTests
+
+

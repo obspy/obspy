@@ -37,7 +37,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import platform, os
 import ctypes as C
 import numpy as N
-from obspy.core.util import UTCDateTime, c_file_p, formatScientific
+from obspy.core import UTCDateTime
+from obspy.core.util import c_file_p, formatScientific
 
 
 if platform.system() == 'Windows':
@@ -191,7 +192,7 @@ def read(infile, test_chksum=False):
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
     #data = (C.c_long * head.n_samps)()
-    data = N.zeros(head.n_samps,dtype='int32')
+    data = N.zeros(head.n_samps, dtype='int32')
     LP_data = data.ctypes.data_as(C.c_void_p) # Pointer to data
     n = lib.decomp_6b(fp, head.n_samps, LP_data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"

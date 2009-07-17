@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace
+from obspy.core import Trace, UTCDateTime
 from obspy.sac.sacio import ReadSac
-from obspy.core.util import UTCDateTime
 import numpy as N
 import array
 
@@ -15,7 +14,7 @@ def isSAC(filename):
     """
     g = ReadSac()
     try:
-        npts = GetHvalueFromFile(filename,'npts')
+        npts = GetHvalueFromFile(filename, 'npts')
     except:
         return False
     st = os.stat(filename) #file's size = st[6] 
@@ -59,7 +58,7 @@ def readSAC(filename, **kwargs):
     @param filename: SAC file to be read.
     """
     # read SAC file
-    t=ReadSac()
+    t = ReadSac()
     t.ReadSacFile(filename)
     # assign all header entries to a new dictionary compatible with an Obspy
     header = {}
@@ -73,20 +72,20 @@ def readSAC(filename, **kwargs):
     yday = t.GetHvalue('nzjday')
     hour = t.GetHvalue('nzhour')
     mint = t.GetHvalue('nzmin')
-    sec  = t.GetHvalue('nzsec')
+    sec = t.GetHvalue('nzsec')
     msec = t.GetHvalue('nzmsec')
     microsec = msec * 1000
-    mon, day = UTCDateTime.strptime(str(year)+str(yday),"%Y%j").timetuple()[1:3]
-    header['starttime'] = UTCDateTime(year,mon,day,hour,mint,sec,microsec)
-    header['endtime']   = UTCDateTime( header['starttime'].timestamp +
+    mon, day = UTCDateTime.strptime(str(year) + str(yday), "%Y%j").timetuple()[1:3]
+    header['starttime'] = UTCDateTime(year, mon, day, hour, mint, sec, microsec)
+    header['endtime'] = UTCDateTime(header['starttime'].timestamp +
         header['npts'] / float(header['sampling_rate'])
     )
     #XXX From Python2.6 the buffer interface can be generally used to
     # directly pass the pointers from the array.array class to
     # numpy.ndarray, old version:
     # data=N.fromstring(t.seis.tostring(),dtype='float32'))
-    return Trace(header=header, 
-                 data=N.frombuffer(t.seis,dtype='float32'))
+    return Trace(header=header,
+                 data=N.frombuffer(t.seis, dtype='float32'))
 
 
 def writeSAC(stream_object, filename, **kwargs):
@@ -98,7 +97,7 @@ def writeSAC(stream_object, filename, **kwargs):
     #
     # Translate the common (renamed) entries
     for trace in stream_object:
-        t=ReadSac()
+        t = ReadSac()
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
@@ -112,7 +111,7 @@ def writeSAC(stream_object, filename, **kwargs):
                 pass
         # year, month, day, hour, min, sec
         try:
-            (year,month,day,hour,mint,
+            (year, month, day, hour, mint,
                     sec) = trace.stats.starttime.timetuple()[0:6]
             msec = trace.stats.starttime.microseconds / 1e3
             yday = trace.stats.starttime.strftime("%j")
