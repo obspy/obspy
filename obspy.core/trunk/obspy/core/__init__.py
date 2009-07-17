@@ -39,5 +39,3 @@ from stats import Stats
 from trace import Trace
 from stream import Stream, read
 from testing import runTests
-
-

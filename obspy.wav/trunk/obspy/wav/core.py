@@ -25,17 +25,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-#from obspy.core.numpy import array
-from obspy.core.util import Stats
-import os, wave, struct
 from obspy.core import Trace
 import numpy as N
+import struct
+import wave
+
 
 def isWAV(filename):
     # read WAV file
     try:
         w = wave.open(filename, 'rb')
-        (nchannel, width, rate, length, comptype, compname) = w.getparams()
+        (_nchannel, width, _rate, _len, _comptype, _compname) = w.getparams()
         w.close()
     except:
         return False
@@ -43,6 +43,7 @@ def isWAV(filename):
         return True
     else:
         return False
+
 
 def readWAV(filename, **kwargs):
     """
@@ -55,43 +56,45 @@ def readWAV(filename, **kwargs):
     """
     # read WAV file
     w = wave.open(filename, 'rb')
-    (nchannel, width, rate, length, comptype, compname) = w.getparams()
+    (nchannel, width, rate, length, _comptype, _compname) = w.getparams()
     if width == 1:
         format = 'B'
     elif width == 2:
         format = 'h'
     else:
         raise TypeError("Unsupported Format Type, string length %d" % length)
-    data = struct.unpack("%d%s" % (length*nchannel,format),w.readframes(length))
+    data = struct.unpack("%d%s" % (length * nchannel, format), w.readframes(length))
     w.close()
     # header information
     header = {'sampling_rate': rate, 'npts': length}
-    return Trace(header = header, data = N.array(data))
+    return Trace(header=header, data=N.array(data))
+
 
 def writeWAV(stream_object, filename, framerate=7000, **kwargs):
-   
-        """
-        Write audio WAV file. The seismogram is queezed to audible frequencies.
-
-        The resulting wav sound file is as a result really short. The data
-        are written uncompressed as unsigned char.
-
-        @requires: The attributes self.stats.npts = number of samples; self.data =
-            array of data samples.
-        @param filename: Name of WAV file to write.
-        @param framerate: Samplerate of wav file to use. This this will
-            squeeze the seismogram, DEFAULT=7000. 
-        """
-        i = 0
-        for trace in stream_object:
-            # write WAV file
-            if i == 0:
-                w = wave.open(filename, 'wb')
-            else:
-                w = wave.open(filename+"%02d"%i, 'wb')
-            trace.stats.npts = len(trace.data)
-            # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-            w.setparams((1,1,framerate,trace.stats.npts,'NONE', 'not compressed'))
-            w.writeframes(struct.pack('%dB' % (trace.stats.npts*1),*trace.data))
-            w.close()
-            i += 1
+    """
+    Write audio WAV file. The seismogram is queezed to audible frequencies.
+    
+    The resulting wav sound file is as a result really short. The data
+    are written uncompressed as unsigned char.
+    
+    @requires: The attributes self.stats.npts = number of samples; 
+        self.data = array of data samples.
+    @param filename: Name of WAV file to write.
+    @param framerate: Samplerate of wav file to use. This this will
+        squeeze the seismogram, DEFAULT=7000. 
+    """
+    i = 0
+    for trace in stream_object:
+        # write WAV file
+        if i == 0:
+            w = wave.open(filename, 'wb')
+        else:
+            w = wave.open(filename + "%02d" % i, 'wb')
+        trace.stats.npts = len(trace.data)
+        # (nchannels, sampwidth, framerate, nframes, comptype, compname)
+        w.setparams((1, 1, framerate, trace.stats.npts, 'NONE',
+                     'not compressed'))
+        w.writeframes(struct.pack('%dB' % (trace.stats.npts * 1),
+                                  *trace.data))
+        w.close()
+        i += 1
