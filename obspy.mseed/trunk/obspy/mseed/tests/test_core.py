@@ -94,6 +94,25 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(st[1].stats.station, 'BBB')
 
 
+    def test_setStats2(self):
+        """
+        Second tests related to issue #4.
+        """
+
+        st = read(self.file)
+        self.assertEquals(st[0].stats.station, 'HGN')
+        self.assertEquals(st[0].stats['station'], 'HGN')
+        st[0].stats.station = 'AAA'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st = st + st
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st[0].stats.station = 'BBB'
+        self.assertEquals(st[0].stats.station, 'BBB')
+        self.assertEquals(st[0].stats['station'], 'BBB')
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 

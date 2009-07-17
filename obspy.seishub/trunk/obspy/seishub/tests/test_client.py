@@ -34,7 +34,7 @@ class ClientTestCase(unittest.TestCase):
         print data
         data = client.station.getList(network_id='BW', station_id='MANZ')
         print data
-        data = client.station.getResource(network_id='BW', station_id='MANZ',
+        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
                                           format='metadata')
         print data
 

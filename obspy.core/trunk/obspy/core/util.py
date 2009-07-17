@@ -103,8 +103,17 @@ class Stats(dict):
             self.endtime = UTCDateTime(0) + 60 * 60 * 24
 
     def __setitem__(self, item, value):
+        """
+        Set dictionary item and synchronize with attributes.
+        """
         setattr(self, item, value)
         dict.__setitem__(self, item, value)
+
+    def __getitem__(self, item):
+        """
+        Fetches dictionary item from attribute.
+        """
+        return getattr(self, item)
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):
