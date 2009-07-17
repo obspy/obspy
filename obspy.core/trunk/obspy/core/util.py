@@ -89,7 +89,6 @@ class Stats(dict):
         """
         flag = kwargs.pop('dummy', True)
         dict.__init__(self, *args, **kwargs)
-        self.__dict__ = self
         if flag:
             # fill some dummy values
             self.station = "dummy"
@@ -101,19 +100,6 @@ class Stats(dict):
             self.dataquality = ""
             self.starttime = UTCDateTime(0)
             self.endtime = UTCDateTime(0) + 60 * 60 * 24
-
-    def __setitem__(self, item, value):
-        """
-        Set dictionary item and synchronize with attributes.
-        """
-        setattr(self, item, value)
-        dict.__setitem__(self, item, value)
-
-    def __getitem__(self, item):
-        """
-        Fetches dictionary item from attribute.
-        """
-        return getattr(self, item)
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):
@@ -133,7 +119,7 @@ class Stats(dict):
         123
         """
         # Check if attribute exists
-        if not attr in self.__dict__.keys():
+        if not attr in self.keys():
             if assertation:
                 assert False, "%s attribute of Seismogram required" % attr
             if verbose:
@@ -165,6 +151,36 @@ class Stats(dict):
                 return False
         # If not test failed
         return True
+
+    def __getstate__(self):
+        return self.__dict__.items()
+
+    def __setstate__(self, items):
+        for key, val in items:
+            self.__dict__[key] = val
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
+
+    def __setitem__(self, key, value):
+        return super(Stats, self).__setitem__(key, value)
+
+    def __getitem__(self, name):
+        return super(Stats, self).__getitem__(name)
+
+    def __delitem__(self, name):
+        return super(Stats, self).__delitem__(name)
+
+    __getattr__ = __getitem__
+    __setattr__ = __setitem__
+
+    def copy(self, init={}):
+        return Stats(init)
+
+    def __deepcopy__(self, *args, **kwargs):
+        st = Stats()
+        st.update(self)
+        return st
 
 
 class UTCDateTime(datetime.datetime):

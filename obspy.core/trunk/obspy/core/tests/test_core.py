@@ -248,7 +248,7 @@ class CoreTestCase(unittest.TestCase):
         traces.pop()
         # Remove and return the second Trace.
         temp_trace = stream.pop(1)
-        # Assert attributes. The objects itsself are not identical.
+        # Assert attributes. The objects itself are not identical.
         self.assertEqual(temp_trace.stats, traces[1].stats)
         N.testing.assert_array_equal(temp_trace.data, traces[1].data)
         # Remove the second copied Trace.
@@ -259,6 +259,21 @@ class CoreTestCase(unittest.TestCase):
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
+
+    def test_pop2(self):
+        """
+        Test the pop method of the Stream objects.
+        """
+        trace = obspy.core.Trace(data=range(0, 1000))
+        st = obspy.core.Stream([trace])
+        st = st + st + st + st
+        self.assertEqual(len(st), 4)
+        st.pop()
+        self.assertEqual(len(st), 3)
+        st[1].stats.station = 'MUH'
+        st.pop(0)
+        self.assertEqual(len(st), 2)
+        self.assertEqual(st[0].stats.station, 'MUH')
 
     def test_remove(self):
         """
@@ -488,6 +503,54 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(trace.stats.sampling_rate, 200.0)
         self.assertEquals(trace.stats.starttime, start + 0.5)
         self.assertEquals(trace.stats.endtime, end - 0.5)
+
+    def test_setStats(self):
+        """
+        Test related to issue #4.
+        """
+        st = obspy.read(self.mseed_file)
+        st += st
+        # change stats attributes
+        st[0].stats.station = 'AAA'
+        st[1].stats['station'] = 'BBB'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEquals(st[1].stats['station'], 'BBB')
+        self.assertEquals(st[1].stats.station, 'BBB')
+
+    def test_setStats2(self):
+        """
+        Second test related to issue #4.
+        """
+        st = obspy.read(self.mseed_file)
+        self.assertEquals(st[0].stats.station, 'BGLD')
+        self.assertEquals(st[0].stats['station'], 'BGLD')
+        st[0].stats.station = 'AAA'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st = st + st
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st[0].stats.station = 'BBB'
+        self.assertEquals(st[0].stats.station, 'BBB')
+        self.assertEquals(st[0].stats['station'], 'BBB')
+
+    def test_setStats3(self):
+        """
+        Third test related to issue #4.
+        """
+        st = obspy.read(self.mseed_file)
+        st = obspy.core.Stream([st[0]])
+        self.assertEquals(st[0].stats.station, 'BGLD')
+        st = st + st
+        st[0].stats.station = 'AAA'
+        st = st + st
+        st[3].stats.station = 'BBB'
+        for key, value in {0:'AAA', 1:'BGLD', 2:'AAA', 3:'BBB'}.iteritems():
+            self.assertEquals(st[key].stats.station, value)
+            self.assertEquals(st[key].stats['station'], value)
+            self.assertEquals(st[key].stats.get('station'), value)
+            self.assertTrue(value in st[key].stats.values())
 
 
 def suite():
