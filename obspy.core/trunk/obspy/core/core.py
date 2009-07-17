@@ -87,8 +87,8 @@ class Trace(object):
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
-              "%(starttime)s -- %(endtime)s | " + \
-              "%(sampling_rate)f Hz, %(npts)d samples"
+              "%(starttime)s - %(endtime)s | " + \
+              "%(sampling_rate).1f Hz, %(npts)d samples"
         return out % (self.stats)
 
     def getId(self):
@@ -420,14 +420,16 @@ class Stream(object):
         Print gap/overlap list summary information of the Stream object.
         """
         result = self.getGaps(**kwargs)
-        print "%-17s %-26s %-26s %-15s %-8s" % ('Source', 'Last Sample',
+        print "%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
                                                'Next Sample', 'Gap', 'Samples')
+        gaps = 0
         for r in result:
-            print "%-17s %-26s %-26s %-15s %-.8g" % ('_'.join(r[0:4]),
-                                                    r[4].isoformat(),
-                                                    r[5].isoformat(),
-                                                    r[6], r[7])
-        print "Total: %d gap(s) or overlap(s)" % len(result)
+            if r[6] > 0:
+                gaps += 1
+            print "%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
+                                                      r[4], r[5], r[6], r[7])
+        overlaps = len(result) - gaps
+        print "Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)
 
     def remove(self, index):
         """

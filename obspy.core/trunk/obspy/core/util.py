@@ -377,12 +377,14 @@ class UTCDateTime(datetime.datetime):
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
             return UTCDateTime(dt)
 
-    def __str__(self, separator='T', *args, **kwargs):
+    def __str__(self):
         """
         Returns string representation of the UTCDateTime object.
         """
-        text = datetime.datetime.__str__(self, *args, **kwargs)
-        return text.replace(' ', separator)
+        text = datetime.datetime.__str__(self)
+        if not '.' in text:
+            text += '.000000'
+        return text.replace(' ', 'T')
 
 
 def getFormatsAndMethods(verbose=False):
