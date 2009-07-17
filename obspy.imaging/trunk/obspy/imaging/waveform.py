@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as N
 
 def plotWaveform(stream_object, outfile=None, format=None,
-               size=(800, 250), starttime=False, endtime=False,
+               size = None, starttime=False, endtime=False,
                dpi=100, color='k', bgcolor='w',
                transparent=False, minmaxlist=False,
                number_of_ticks=5, tick_format = '%H:%M:%S', tick_rotation=0):
@@ -62,7 +62,8 @@ def plotWaveform(stream_object, outfile=None, format=None,
         Defaults to None.
     @param size: Size tupel in pixel for the output file. This corresponds
         to the resolution of the graph for vector formats.
-        Defaults to 800x250 px.
+        Defaults to a width of 800 pixel and a height of 250 pixel for each
+        seperate plot.
     @param starttime: Starttime of the graph as a datetime object. If not
         set the graph will be plotted from the beginning.
         Defaults to False.
@@ -95,14 +96,24 @@ def plotWaveform(stream_object, outfile=None, format=None,
         tick_format.
         Defaults to 0.
     """
+    # Default width.
+    if not size:
+        temp_width = 800
+    else:
+        temp_width = size[0]
     # Turn interactive mode off or otherwise only the first plot will be fast.
     plt.ioff()
     # Get a list with minimum and maximum values.
     if not minmaxlist:
         minmaxlist = _getMinMaxList(stream_object=stream_object,
-                                                width=size[0],
+                                                width=temp_width,
                                                 starttime=starttime,
                                                 endtime=endtime)
+    # Number of plots.
+    minmax_items = len(minmaxlist)-2
+    # Determine the size of the picture. Each plot will get 250 px in height.
+    if not size:
+        size = (800, minmax_items * 250)
     starttime = minmaxlist[0]
     endtime = minmaxlist[1]
     stepsize = (endtime - starttime) / size[0]
@@ -144,6 +155,21 @@ def plotWaveform(stream_object, outfile=None, format=None,
         yrange = maxy - miny
     miny = miny - (yrange * 0.1)
     maxy = maxy + (yrange * 0.1)
+    # Now we need to calculate the average values of all Traces and create a
+    # list with it
+    average_list = []
+    for _i in minmaxlist:
+        average_list.append(sum([_j[0] + _j[1] for _j in _i])/(2*length))
+    # The next step is to find the maximum distance from the average values in
+    # the yrange and store it.
+    max_range = 0
+    for _i in average_list:
+        max_value = abs(maxy - _i)
+        min_value = abs(_i - miny)
+        if max_value > max_range:
+            max_range = max_value
+        if min_value > max_range:
+            max_range = min_value
     # Create the location of the ticks.
     tick_location = []
     x_range = endtime-starttime
@@ -158,17 +184,31 @@ def plotWaveform(stream_object, outfile=None, format=None,
     if number_of_ticks > 1:
         # Adjust first tick to be visible.
         tick_location[0] = tick_location[0]+0.5*x_range/size[0]
-    for _j in range(len(minmaxlist)):
-        plt.subplot(len(minmaxlist), 1, _j+1)
+    # If color gradient is wanted calculate the start- and endcolors.
+    if type(color) == type((1, 2)):
+        #Convert hex values to integers
+        r1 = int(color[0][1:3], 16)
+        r2 = int(color[1][1:3], 16)
+        delta_r = (float(r2) - float(r1)) / length
+        g1 = int(color[0][3:5], 16)
+        g2 = int(color[1][3:5], 16)
+        delta_g = (float(g2) - float(g1)) / length
+        b1 = int(color[0][5:], 16)
+        b2 = int(color[1][5:], 16)
+        delta_b = (float(b2) - float(b1)) / length
+    # Loop over all items in minmaxlist.
+    for _j in range(minmax_items):
+        plt.subplot(minmax_items, 1, _j+1)
         # Make title
         cur_stats = stats_list[_j]
-        title_text = '%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
-            cur_stats.station, cur_stats.channel, cur_stats.sampling_rate,
+        title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
+            cur_stats.station, cur_stats.location, cur_stats.channel,
+            cur_stats.sampling_rate,
             int((endtime - starttime) * cur_stats.sampling_rate))
         plt.title(title_text, horizontalalignment = 'left',
                   fontsize = 'small', verticalalignment = 'center')
         # Set axes and disable ticks on the y axis.
-        plt.ylim(miny, maxy)
+        plt.ylim(average_list[_j] - max_range, average_list[_j] + max_range)
         plt.xlim(starttime, endtime)
         plt.yticks([])
         plt.xticks(tick_location, tick_names, rotation = tick_rotation, 
@@ -182,16 +222,6 @@ def plotWaveform(stream_object, outfile=None, format=None,
         for _i in range(length):
             #Make gradient if color is a 2-tupel.
             if type(loop_color) == type((1, 2)):
-                #Convert hex values to integers
-                r1 = int(loop_color[0][1:3], 16)
-                r2 = int(loop_color[1][1:3], 16)
-                delta_r = (float(r2) - float(r1)) / length
-                g1 = int(loop_color[0][3:5], 16)
-                g2 = int(loop_color[1][3:5], 16)
-                delta_g = (float(g2) - float(g1)) / length
-                b1 = int(loop_color[0][5:], 16)
-                b2 = int(loop_color[1][5:], 16)
-                delta_b = (float(b2) - float(b1)) / length
                 new_r = hex(int(r1 + delta_r * _i))[2:]
                 new_g = hex(int(g1 + delta_g * _i))[2:]
                 new_b = hex(int(b1 + delta_b * _i))[2:]
@@ -231,7 +261,6 @@ def plotWaveform(stream_object, outfile=None, format=None,
             return imgdata.read()
         else:
             plt.show()
-
 
 def _getMinMaxList(stream_object, width, starttime=None,
                    endtime=None):
@@ -274,6 +303,7 @@ def _getMinMaxList(stream_object, width, starttime=None,
             last_trace_stats = sorted_trace_list[-1][-1].stats
             if cur_trace_stats.station == last_trace_stats.station and \
                cur_trace_stats.network == last_trace_stats.network and \
+               cur_trace_stats.location == last_trace_stats.location and \
                cur_trace_stats.channel == last_trace_stats.channel:
                 sorted_trace_list[-1].append(all_traces[_i])
             else:
