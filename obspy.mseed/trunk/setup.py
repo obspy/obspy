@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.3'
+version = '0.0.4'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -50,7 +50,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=False,
-    test_suite = "obspy.mseed.tests.suite",
+    test_suite="obspy.mseed.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',

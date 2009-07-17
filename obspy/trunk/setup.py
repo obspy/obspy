@@ -4,9 +4,9 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.3'
+version = '0.1.0'
 
-GPL2="""
+GPL2 = """
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
@@ -47,7 +47,7 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.core.testing.suite",
+    test_suite="obspy.core.testing.suite",
     install_requires=[
         'setuptools',
         'numpy',

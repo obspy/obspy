@@ -5,9 +5,9 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.3'
+version = '0.1.0'
 
-GPL2="""
+GPL2 = """
 GNU General Public License (GPL)
 
 This program is free software; you can redistribute it and/or
@@ -49,7 +49,7 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=False,
-    test_suite = "obspy.gse2.tests.suite",
+    test_suite="obspy.gse2.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',

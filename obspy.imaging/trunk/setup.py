@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.7'
+version = '0.1.0'
 
 GPL2 = """
 GNU General Public License (GPL)
