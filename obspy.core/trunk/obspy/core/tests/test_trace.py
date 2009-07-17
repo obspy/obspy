@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
+from numpy import isnan
 from obspy.core import UTCDateTime, Trace
 import unittest
 
@@ -17,11 +18,11 @@ class TraceTestCase(unittest.TestCase):
 
     def test_len(self):
         """
-        Tests the len method of the L{Trace} class.
+        Tests the __len__ and count methods of the L{Trace} class.
         """
-        # set up
         trace = Trace(data=range(0, 1000))
         self.assertEquals(len(trace), 1000)
+        self.assertEquals(trace.count(), 1000)
 
     def test_ltrim(self):
         """
@@ -166,6 +167,107 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace.stats.sampling_rate, 200.0)
         self.assertEquals(trace.stats.starttime, start + 0.5)
         self.assertEquals(trace.stats.endtime, end - 0.5)
+
+    def test_addTraceWithGap(self):
+        """
+        Tests the add method of the L{Trace} class.
+        """
+        # set up
+        tr1 = Trace(data=range(0, 1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr1.stats.endtime = start + 4.995
+        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2.stats.sampling_rate = 200
+        tr2.stats.starttime = start + 10
+        tr2.stats.endtime = start + 14.995
+        # add
+        trace = tr1 + tr2
+        # stats
+        self.assertEquals(trace.stats.starttime, start)
+        self.assertEquals(trace.stats.endtime, start + 14.995)
+        self.assertEquals(trace.stats.sampling_rate, 200)
+        self.assertEquals(trace.stats.npts, 3000)
+        # data
+        self.assertEquals(len(trace), 3000)
+        self.assertEquals(trace[0], 0)
+        self.assertEquals(trace[999], 999)
+        self.assertTrue(isnan(trace[1000]))
+        self.assertTrue(isnan(trace[1999]))
+        self.assertEquals(trace[2000], 999)
+        self.assertEquals(trace[2999], 0)
+
+    def test_addTraceWithOverlap(self):
+        """
+        Tests the add method of the L{Trace} class.
+        """
+        # set up
+        tr1 = Trace(data=range(0, 1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr1.stats.endtime = start + 4.995
+        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2.stats.sampling_rate = 200
+        tr2.stats.starttime = start + 4
+        tr2.stats.endtime = start + 8.995
+        # add
+        trace = tr1 + tr2
+        # stats
+        self.assertEquals(trace.stats.starttime, start)
+        self.assertEquals(trace.stats.endtime, start + 8.995)
+        self.assertEquals(trace.stats.sampling_rate, 200)
+        self.assertEquals(trace.stats.npts, 1800)
+        # data
+        self.assertEquals(len(trace), 1800)
+        self.assertEquals(trace[0], 0)
+        self.assertEquals(trace[799], 799)
+        self.assertEquals(trace[800], (800 + 999) / 2)
+        self.assertEquals(trace[999], (999 + 800) / 2)
+        self.assertEquals(trace[1000], 799)
+        self.assertEquals(trace[1799], 0)
+
+    def test_addSameTrace(self):
+        """
+        Tests the add method of the L{Trace} class.
+        """
+        # set up
+        tr1 = Trace(data=range(0, 1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr1.stats.endtime = start + 5
+        # add
+        trace = tr1 + tr1
+        # should return exact the same values
+        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEquals(trace.data, tr1.data)
+
+    def test_addTraceWithinTrace(self):
+        """
+        Tests the add method of the L{Trace} class.
+        """
+        # set up
+        tr1 = Trace(data=range(0, 1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr1.stats.endtime = start + 5
+        tr2 = Trace(data=range(0, 200))
+        tr2.stats.sampling_rate = 200
+        tr2.stats.starttime = start + 1
+        tr2.stats.endtime = start + 2
+        # add
+        trace = tr1 + tr2
+        # should return exact the same values like trace 1
+        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEquals(trace.data, tr1.data)
+        # add the other way around
+        trace = tr2 + tr1
+        # should return exact the same values like trace 1
+        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEquals(trace.data, tr1.data)
 
 
 def suite():

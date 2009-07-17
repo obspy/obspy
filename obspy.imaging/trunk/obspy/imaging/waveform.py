@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
 import matplotlib.pyplot as plt
-import numpy as N
+
 
 def plotWaveform(stream_object, outfile=None, format=None,
                size=None, starttime=False, endtime=False,
@@ -121,7 +121,6 @@ def plotWaveform(stream_object, outfile=None, format=None,
         size = (800, minmax_items * 250)
     starttime = minmaxlist[0]
     endtime = minmaxlist[1]
-    stepsize = (endtime - starttime) / size[0]
     minmaxlist = minmaxlist[2:]
     # Get all stats attributes any make a new list.
     stats_list = []

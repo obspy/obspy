@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
+from numpy import array, NaN, concatenate
 from obspy.core import UTCDateTime, Stats
 
 
@@ -37,6 +39,73 @@ class Trace(object):
         Returns the number of data samples of a L{Trace} object.
         """
         return len(self.data)
+
+    count = __len__
+
+    def __getitem__(self, index):
+        """ 
+        __getitem__ method of L{Trace} object.
+          
+        @return: List of data points 
+        """
+        return self.data[index]
+
+    def __add__(self, trace):
+        """
+        Adds a Trace object to this Trace
+        
+        It will automatically append the data by interpolating overlaps or
+        filling gaps with NaN samples. Sampling rate and Trace ID must be 
+        the same.
+        """
+        if not isinstance(trace, Trace):
+            raise TypeError
+        #  check id
+        if self.getId() != trace.getId():
+            raise TypeError("Trace ID differs")
+        #  check sample rate
+        if self.stats.sampling_rate != trace.stats.sampling_rate:
+            raise TypeError("Sampling rate differs")
+        # check times
+        if self.stats.starttime <= trace.stats.starttime and \
+           self.stats.endtime >= trace.stats.endtime:
+            # new trace is within this trace
+            return deepcopy(self)
+        elif self.stats.starttime >= trace.stats.starttime and \
+           self.stats.endtime <= trace.stats.endtime:
+            # this trace is within new trace
+            return deepcopy(trace)
+        # shortcuts
+        if self.stats.starttime <= trace.stats.starttime:
+            lt = self
+            rt = trace
+        else:
+            rt = self
+            lt = trace
+        sr = self.stats.sampling_rate
+        delta = int(round(rt.stats.starttime - lt.stats.endtime) * sr)
+        # check if overlap or gap
+        if delta <= 0:
+            # overlap
+            delta = abs(delta)
+            out = deepcopy(lt)
+            ltotal = len(lt)
+            lend = ltotal - delta
+            ldata = array(lt.data[0:lend])
+            rdata = array(rt.data[delta:])
+            samples = (array(lt.data[lend:]) + array(rt.data[0:delta])) / 2
+            out.data = concatenate([ldata, samples, rdata])
+            out.stats.endtime = rt.stats.endtime
+            out.stats.npts = len(out.data)
+        else:
+            # gap
+            out = deepcopy(lt)
+            # get number of missing samples
+            nans = array([NaN] * delta)
+            out.data = concatenate([lt.data, nans, rt.data])
+            out.stats.endtime = rt.stats.endtime
+            out.stats.npts = len(out.data)
+        return out
 
     def getId(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
