@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 
 def plotWaveform(stream_object, outfile=None, format=None,
                size=None, starttime=False, endtime=False,
-               dpi=100, color='k', bgcolor='w',
+               dpi=100, color='k', bgcolor='w', face_color = 'w',
                transparent=False, minmaxlist=False,
                number_of_ticks=5, tick_format='%H:%M:%S', tick_rotation=0):
     """
@@ -80,8 +80,11 @@ def plotWaveform(stream_object, outfile=None, format=None,
     @param bgcolor: Background color of the graph. No gradients are supported
         for the background.
         Defaults to 'w' (white).
+    @param facecolor: Background color for the all background except behind
+        the graphs.
+        Defaults to 'w' (white).
     @param transparent: Make all backgrounds transparent (True/False). This
-        will overwrite the bgcolor param.
+        will overwrite the bgcolor and face_color attributes.
         Defaults to False.
     @param minmaxlist: A list containing minimum, maximum and timestamp
         values. If none is supplied it will be created automatically.
@@ -163,7 +166,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # list with it
     average_list = []
     for _i in minmaxlist:
-        average_list.append(sum([_j[0] + _j[1] for _j in _i]) / (2 * length))
+        average_list.append(sum([(_j[0] + _j[1])/2 for _j in _i]) / len(_i))
     # The next step is to find the maximum distance from the average values in
     # the yrange and store it.
     max_range = 0
@@ -179,7 +182,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     x_range = endtime - starttime
     if number_of_ticks > 1:
         for _i in xrange(number_of_ticks):
-            tick_location.append(starttime + _i * x_range / (number_of_ticks - 1))
+            tick_location.append(starttime + _i * x_range / (number_of_ticks -1))
     elif number_of_ticks == 1:
         tick_location.append(starttime + x_range / 2)
     # Create tick names
@@ -202,7 +205,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
         delta_b = (float(b2) - float(b1)) / length
     # Loop over all items in minmaxlist.
     for _j in range(minmax_items):
-        plt.subplot(minmax_items, 1, _j + 1)
+        plt.subplot(minmax_items, 1, _j + 1, axisbg = bgcolor)
         # Make title
         cur_stats = stats_list[_j]
         title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
@@ -212,18 +215,17 @@ def plotWaveform(stream_object, outfile=None, format=None,
         plt.title(title_text, horizontalalignment='left',
                   fontsize='small', verticalalignment='center')
         # Set axes and disable ticks on the y axis.
-        plt.ylim(average_list[_j] - max_range, average_list[_j] + max_range)
+        cur_min_y = average_list[_j] - max_range
+        cur_max_y = average_list[_j] + max_range
+        plt.ylim(cur_min_y, cur_max_y)
         plt.xlim(starttime, endtime)
         plt.yticks([])
         plt.xticks(tick_location, tick_names, rotation=tick_rotation,
                    fontsize='small')
-        # Overwrite the background gradient if transparent is set.
-        if transparent:
-            bgcolor = None
         # Clone color for looping.
         loop_color = color
         # Draw horizontal lines.
-        for _i in range(length):
+        for _i in range(len(minmaxlist[_j])):
             #Make gradient if color is a 2-tupel.
             if type(loop_color) == type((1, 2)):
                 new_r = hex(int(r1 + delta_r * _i))[2:]
@@ -240,8 +242,10 @@ def plotWaveform(stream_object, outfile=None, format=None,
             else:
                 bar_color = color
             #Calculate relative values needed for drawing the lines.
-            yy = (float(minmaxlist[_j][_i][0]) - miny) / (maxy - miny)
-            xx = (float(minmaxlist[_j][_i][1]) - miny) / (maxy - miny)
+            yy = (float(minmaxlist[_j][_i][0]) - cur_min_y) / \
+                                                    (cur_max_y - cur_min_y)
+            xx = (float(minmaxlist[_j][_i][1]) - cur_min_y) / \
+                                                    (cur_max_y - cur_min_y)
             #Draw actual data lines.
             plt.axvline(x=minmaxlist[_j][_i][2], ymin=yy, ymax=xx,
                         color=bar_color)
@@ -250,17 +254,17 @@ def plotWaveform(stream_object, outfile=None, format=None,
         #If format is set use it.
         if format:
             plt.savefig(outfile, dpi=dpi, transparent=transparent,
-                facecolor=bgcolor, edgecolor=bgcolor, format=format)
+                facecolor=face_color, edgecolor=face_color, format=format)
         #Otherwise try to get the format from outfile or default to png.
         else:
             plt.savefig(outfile, dpi=dpi, transparent=transparent,
-                facecolor=bgcolor, edgecolor=bgcolor)
+                facecolor=face_color, edgecolor=face_color)
     #Return an binary imagestring if outfile is not set but format is.
     if not outfile:
         if format:
             imgdata = StringIO.StringIO()
             plt.savefig(imgdata, dpi=dpi, transparent=transparent,
-                    facecolor=bgcolor, edgecolor=bgcolor, format=format)
+                    facecolor=face_color, edgecolor=face_color, format=format)
             imgdata.seek(0)
             return imgdata.read()
         else:

@@ -339,7 +339,8 @@ class Stream(object):
         """
         self.traces.reverse()
 
-    def sort(self, keys=['network', 'station', 'channel', 'starttime']):
+    def sort(self, keys=['network', 'station', 'location', 'channel',
+                         'starttime']):
         """
         Method to sort the traces in the Stream object.
         
@@ -352,7 +353,8 @@ class Stream(object):
              then by the second item and so on.
              Available items: 'network', 'station', 'channel', 'location',
              'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality' 
-             Defaults to ['network', 'station', 'channel', 'starttime'].
+             Defaults to ['network', 'station', 'location', 'channel',
+             'starttime'].
         """
         # Check the list and all items.
         msg = "keys must be a list of item strings. Available items to sort " + \
