@@ -339,7 +339,8 @@ class Stream(object):
         """
         self.traces.reverse()
 
-    def sort(self, keys = None):
+    def sort(self, keys=['network', 'station', 'location', 'channel',
+                         'starttime']):
         """
         Method to sort the traces in the Stream object.
         
@@ -355,11 +356,6 @@ class Stream(object):
              Defaults to ['network', 'station', 'location', 'channel',
              'starttime'].
         """
-        # Using an optional keyword argument does not work for some reason. It
-        # would change the order of the Traces if sorted twice in a row.
-        if not keys:
-            keys = ['network', 'station', 'location', 'channel',
-                         'starttime']
         # Check the list and all items.
         msg = "keys must be a list of item strings. Available items to " + \
               "sort after: \n'network', 'station', 'channel', 'location', " + \
@@ -373,11 +369,9 @@ class Stream(object):
                 items.index(_i)
             except:
                 raise TypeError(msg)
-        # Reverse list first.
-        keys.reverse()
-        # Loop over all items in keys.
-        for _i in keys:
-            self.traces.sort(key=lambda x:x.stats[_i], reverse = False)
+        # Loop over all keys in reversed order.
+        for _i in keys[::-1]:
+            self.traces.sort(key=lambda x:x.stats[_i], reverse=False)
 
     def write(self, filename, format, **kwargs):
         """
