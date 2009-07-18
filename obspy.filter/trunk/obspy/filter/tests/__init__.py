@@ -9,7 +9,10 @@ import doctest
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_invsim.suite())
-    suite.addTest(doctest.DocTestSuite(invsim))
+    try:
+        suite.addTest(doctest.DocTestSuite(invsim))
+    except:
+        pass
     suite.addTest(test_filter.suite())
     suite.addTest(test_rotate.suite())
     return suite

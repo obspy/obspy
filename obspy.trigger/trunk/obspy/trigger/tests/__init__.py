@@ -8,7 +8,10 @@ import doctest
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(doctest.DocTestSuite(trigger))
+    try:
+        suite.addTest(doctest.DocTestSuite(trigger))
+    except:
+        pass
     suite.addTest(test_trigger.suite())
     return suite
 

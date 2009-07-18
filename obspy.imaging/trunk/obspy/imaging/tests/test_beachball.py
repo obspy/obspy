@@ -27,72 +27,89 @@ class BeachballTestCase(unittest.TestCase):
         """
         # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-        Beachball(mt, file=os.path.join(self.path, 'sumatra-mt.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-sumatra-mt.png'))
         np1 = [274, 13, 55]
-        Beachball(np1, file=os.path.join(self.path, 'sumatra-np1.png'))
+        Beachball(np1, file=os.path.join(self.path,
+                                         'beachball-sumatra-np1.png'))
         np2 = [130, 79, 98]
-        Beachball(np2, file=os.path.join(self.path, 'sumatra-np2.png'))
+        Beachball(np2, file=os.path.join(self.path,
+                                         'beachball-sumatra-np2.png'))
 
         # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/19950128062621/index.html
         np1 = [264.98, 45.00, -159.99]
-        Beachball(np1, file=os.path.join(self.path, '19950128062621-np1.png'))
+        Beachball(np1, file=os.path.join(self.path,
+                                         'beachball-19950128062621-np1.png'))
         np2 = [160.55, 76.00, -46.78]
-        Beachball(np2, file=os.path.join(self.path, '19950128062621-np2.png'))
+        Beachball(np2, file=os.path.join(self.path,
+                                         'beachball-19950128062621-np2.png'))
 
         # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/20090102141713/index.html
         mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
-        Beachball(mt, file=os.path.join(self.path, '20090102141713-mt.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-20090102141713-mt.png'))
         np1 = [235, 80, 35]
-        Beachball(np1, file=os.path.join(self.path, '20090102141713-np1.png'))
+        Beachball(np1, file=os.path.join(self.path,
+                                         'beachball-20090102141713-np1.png'))
         np2 = [138, 56, 168]
-        Beachball(np2, file=os.path.join(self.path, '20090102141713-np2.png'))
+        Beachball(np2, file=os.path.join(self.path,
+                                         'beachball-20090102141713-np2.png'))
 
         # Explosion
         mt = [1, 1, 1, 0, 0, 0]
-        Beachball(mt, file=os.path.join(self.path, 'explosion.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-explosion.png'))
         # Implosion
         mt = [-1, -1, -1, 0, 0, 0]
-        Beachball(mt, file=os.path.join(self.path, 'implosion.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-implosion.png'))
         # CLVD - Compensate Linear Vector Dipole
         mt = [1, -2, 1, 0, 0, 0]
-        Beachball(mt, file=os.path.join(self.path, 'clvd.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-clvd.png'))
         # Double Couple
         mt = [1, -1, 0, 0, 0, 0]
-        Beachball(mt, file=os.path.join(self.path, 'double-couple.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-double-couple.png'))
 
         # Lars
         mt = [1, -1, 0, 0, 0, -1]
-        Beachball(mt, file=os.path.join(self.path, 'lars.png'))
+        Beachball(mt, file=os.path.join(self.path, 'beachball-lars.png'))
 
         # @see: http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
         np1 = [179, 55, -78]
-        Beachball(np1, file=os.path.join(self.path, 'geiyo-np1.png'))
+        Beachball(np1, file=os.path.join(self.path, 'beachball-geiyo-np1.png'))
 
         # @see: http://iisee.kenken.go.jp/staff/yagi/eq/east_honshu20030726/east_honshu20030726.html
         np1 = [10, 42.5, 90]
-        Beachball(np1, file=os.path.join(self.path, 'honshu-np1.png'))
+        Beachball(np1, file=os.path.join(self.path,
+                                         'beachball-honshu-np1.png'))
         np2 = [10, 42.5, 92]
-        Beachball(np2, file=os.path.join(self.path, 'honshu-np2.png'))
+        Beachball(np2, file=os.path.join(self.path,
+                                         'beachball-honshu-np2.png'))
 
         # @see: http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
         np1 = [150, 87, 1]
-        Beachball(np1, file=os.path.join(self.path, 'tottori-np1.png'))
+        Beachball(np1, file=os.path.join(self.path,
+                                         'beachball-tottori-np1.png'))
 
         # @see: http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
         mt = [0.99, -2.00, 1.01, 0.92, 0.48, 0.15]
-        Beachball(mt, file=os.path.join(self.path, '20040905_1-mt.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-20040905_1-mt.png'))
 
         # @see: http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
         mt = [5.24, -6.77, 1.53, 0.81, 1.49, -0.05]
-        Beachball(mt, file=os.path.join(self.path, '20040905_0-mt.png'))
+        Beachball(mt, file=os.path.join(self.path,
+                                        'beachball-20040905_0-mt.png'))
 
         # @see: http://iisee.kenken.go.jp/staff/thara/miyagi.htm
         mt = [16.578, -7.987, -8.592, -5.515, -29.732, 7.517]
-        Beachball(mt, file=os.path.join(self.path, 'miyagi-mt.png'))
+        Beachball(mt, file=os.path.join(self.path, 'beachball-miyagi-mt.png'))
 
         # @see: http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-        Beachball(mt, file=os.path.join(self.path, 'chile-mt.png'))
+        Beachball(mt, file=os.path.join(self.path, 'beachball-chile-mt.png'))
 
     def test_BeachBallOutputFormats(self):
         """
@@ -102,15 +119,27 @@ class BeachballTestCase(unittest.TestCase):
         # PDF
         data = Beachball(fm, format='pdf')
         self.assertEquals(data[0:4], "%PDF")
+        # as file
+        Beachball(fm, format='pdf', file=os.path.join(self.path,
+                                                      'beachball.pdf'))
         # PS
         data = Beachball(fm, format='ps')
         self.assertEquals(data[0:4], "%!PS")
+        # as file
+        Beachball(fm, format='ps', file=os.path.join(self.path,
+                                                     'beachball.ps'))
         # PNG
         data = Beachball(fm, format='png')
         self.assertEquals(data[1:4], "PNG")
+        # as file
+        Beachball(fm, format='png', file=os.path.join(self.path,
+                                                      'beachball.png'))
         # SVG
         data = Beachball(fm, format='svg')
         self.assertEquals(data[0:5], "<?xml")
+        # as file
+        Beachball(fm, format='svg', file=os.path.join(self.path,
+                                                      'beachball.svg'))
 
     def test_StrikeDip(self):
         """

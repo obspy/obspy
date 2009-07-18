@@ -9,9 +9,12 @@ import unittest
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(doctest.DocTestSuite(util))
-    suite.addTest(doctest.DocTestSuite(stats))
-    suite.addTest(doctest.DocTestSuite(utcdatetime))
+    try:
+        suite.addTest(doctest.DocTestSuite(util))
+        suite.addTest(doctest.DocTestSuite(stats))
+        suite.addTest(doctest.DocTestSuite(utcdatetime))
+    except:
+        pass
     suite.addTest(test_utcdatetime.suite())
     suite.addTest(test_stats.suite())
     suite.addTest(test_trace.suite())

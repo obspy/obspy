@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
-# Filename: libgse2.py
-#  Purpose: Python wrapper for gse_functions of Stefan Stange
+# Filename: beachball.py
+#  Purpose: Draws a beach ball diagram of an earthquake focal mechanism.
 #   Author: Robert Barsch
 #    Email: barsch@geophysik.uni-muenchen.de
 #
@@ -74,6 +74,8 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
     @param color: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
     """
+    # Turn interactive mode off or otherwise only the first plot will be fast.
+    plt.ioff()
     mt = None
     np1 = None
     if isinstance(fm, MomentTensor):

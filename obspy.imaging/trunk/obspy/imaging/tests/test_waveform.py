@@ -35,8 +35,7 @@ class WaveformTestCase(unittest.TestCase):
         """
         # First create a reference plot.
         self.stream.plot(outfile=\
-            os.path.join(self.path, 'Waveform_ReferencePlot.png'))
-
+            os.path.join(self.path, 'waveform-reference.png'))
         # Create a second identical Trace but shift the times a little bit.
         # Also make the plots green and the background light gray.
         self.stream += self.stream
@@ -47,9 +46,8 @@ class WaveformTestCase(unittest.TestCase):
         self.stream[0].stats.endtime = \
             self.stream[0].stats.endtime + 2 * 60 * 60
         self.stream.plot(outfile=\
-            os.path.join(self.path, 'Waveform_TwoTraces.png'),
+            os.path.join(self.path, 'waveform-2traces.png'),
             color='green', bgcolor='#F5FEA5', face_color='0.7')
-
         # Make a simple plot with a gap and adjust the ticks to show the
         # weekday and microsecond and rotate the ticks two degrees. All
         # background should also be transparent.
@@ -61,10 +59,9 @@ class WaveformTestCase(unittest.TestCase):
         self.stream[1].stats.endtime = \
             self.stream[0].stats.endtime + 2 * 24 * 60 * 60
         self.stream.plot(outfile=\
-            os.path.join(self.path, 'Waveform_SimpleGap_TransparentBG.png'),
+            os.path.join(self.path, 'waveform-simple-gap-transparent.png'),
             tick_format='%a, %H:%M:%S:%f', tick_rotation=2,
             transparent=True)
-
         # Create a two Traces plot with a gap and a color gradient. This should
         # result in two Traces and the second trace should fit right in the
         # middle of the first trace. The second trace will also only have half
@@ -78,7 +75,7 @@ class WaveformTestCase(unittest.TestCase):
         # Make half the amplitude but move it up 100 units.
         self.stream[2].data = 0.5 * self.stream[2].data + 100
         self.stream.plot(outfile=\
-            os.path.join(self.path, 'Waveform_TwoTrace_Gap_and_Gradient.png'),
+            os.path.join(self.path, 'waveform-2traces-gap-and-gradient.png'),
             color=('#FF0000', '#00FFFF'))
 
 

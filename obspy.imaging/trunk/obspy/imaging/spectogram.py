@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
-# Filename: libgse2.py
+# Filename: spectogram.py
 #  Purpose: Plotting Spectogram of Seismograms.
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
@@ -30,11 +30,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 """
 
 
-import obspy, time, glob, os
-import pylab as pl
-import numpy as N
-import math as M
 from matplotlib import mlab
+import math as M
+import numpy as N
+import pylab as pl
+
 
 def nearestPow2(x):
     """
@@ -50,14 +50,15 @@ def nearestPow2(x):
     @rtype: Int
     @return: Nearest power of 2 to x
     """
-    a = M.pow(2,M.ceil(N.log2(x)))
-    b = M.pow(2,M.floor(N.log2(x)))
-    if abs(a-x) < abs(b-x):
+    a = M.pow(2, M.ceil(N.log2(x)))
+    b = M.pow(2, M.floor(N.log2(x)))
+    if abs(a - x) < abs(b - x):
         return a
-    else: 
+    else:
         return b
 
-def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
+
+def spectoGram(data, samp_rate=100.0, log=False, outfile=None, format=None):
     """
     Computes and plots logarithmic spectogram of the input trace.
     
@@ -73,32 +74,33 @@ def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
     @type format: String
     @param format: Format of image to save
     """
+    # Turn interactive mode off or otherwise only the first plot will be fast.
     pl.ioff()
 
-    samp_int = 1/float(samp_rate)
     npts = len(data)
-    nfft = nearestPow2(npts/10.0)
+    # nfft needs to be an integer, otherwise a deprecation will be raised
+    nfft = int(nearestPow2(npts / 10.0))
     if nfft > 4096:
         nfft = 4096
-    nlap = int(nfft*.8)
+    nlap = int(nfft * .8)
 
-    data = data-data.mean()
+    data = data - data.mean()
 
     # here we call not pl.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    spectogram, freq, time = mlab.specgram(data,Fs=samp_rate,
-                                           NFFT=nfft,noverlap=nlap)
+    spectogram, freq, time = mlab.specgram(data, Fs=samp_rate,
+                                           NFFT=nfft, noverlap=nlap)
     # db scale and remove offset
-    spectogram = 10*N.log10(spectogram[1:,:])
+    spectogram = 10 * N.log10(spectogram[1:, :])
     freq = freq[1:]
 
     if log:
-        X,Y = N.meshgrid(time,freq)
-        pl.pcolor(X,Y,spectogram)
+        X, Y = N.meshgrid(time, freq)
+        pl.pcolor(X, Y, spectogram)
         pl.semilogy()
-        pl.ylim((freq[0],freq[-1]))
+        pl.ylim((freq[0], freq[-1]))
     else:
         # this method is much much faster!
         spectogram = N.flipud(spectogram)
@@ -112,9 +114,8 @@ def spectoGram(data,samp_rate=100.0,log=False,outfile=None,format=None):
 
     if outfile:
         if format:
-            pl.savefig(outfile,format=format)
+            pl.savefig(outfile, format=format)
         else:
             pl.savefig(outfile)
     else:
         pl.show()
-

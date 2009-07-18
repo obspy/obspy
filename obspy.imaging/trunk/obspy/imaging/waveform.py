@@ -35,7 +35,7 @@ import matplotlib.pyplot as plt
 
 def plotWaveform(stream_object, outfile=None, format=None,
                size=None, starttime=False, endtime=False,
-               dpi=100, color='k', bgcolor='w', face_color = 'w',
+               dpi=100, color='k', bgcolor='w', face_color='w',
                transparent=False, minmaxlist=False,
                number_of_ticks=5, tick_format='%H:%M:%S', tick_rotation=0):
     """
@@ -166,7 +166,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # list with it
     average_list = []
     for _i in minmaxlist:
-        average_list.append(sum([(_j[0] + _j[1])/2 for _j in _i]) / len(_i))
+        average_list.append(sum([(_j[0] + _j[1]) / 2 for _j in _i]) / len(_i))
     # The next step is to find the maximum distance from the average values in
     # the yrange and store it.
     max_range = 0
@@ -182,7 +182,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
     x_range = endtime - starttime
     if number_of_ticks > 1:
         for _i in xrange(number_of_ticks):
-            tick_location.append(starttime + _i * x_range / (number_of_ticks -1))
+            tick_location.append(starttime + _i * x_range / (number_of_ticks - 1))
     elif number_of_ticks == 1:
         tick_location.append(starttime + x_range / 2)
     # Create tick names
@@ -205,7 +205,7 @@ def plotWaveform(stream_object, outfile=None, format=None,
         delta_b = (float(b2) - float(b1)) / length
     # Loop over all items in minmaxlist.
     for _j in range(minmax_items):
-        plt.subplot(minmax_items, 1, _j + 1, axisbg = bgcolor)
+        plt.subplot(minmax_items, 1, _j + 1, axisbg=bgcolor)
         # Make title
         cur_stats = stats_list[_j]
         title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
