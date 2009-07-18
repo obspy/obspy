@@ -387,11 +387,12 @@ class LibMSEEDTestCase(unittest.TestCase):
         for _i in mseed_filenames:
             filename = os.path.join(self.path, _i)
             isMSEED = mseed.isMSEED(filename)
-            self.assertEqual(isMSEED, True)
+            self.assertTrue(isMSEED)
         # Loop over non Mini-SEED files
-        for _i in mseed_filenames:
-            isMSEED = mseed.isMSEED(_i)
-            self.assertEqual(isMSEED, False)
+        for _i in non_mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            isMSEED = mseed.isMSEED(filename)
+            self.assertFalse(isMSEED)
 
 
 def suite():

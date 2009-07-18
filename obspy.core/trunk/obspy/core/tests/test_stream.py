@@ -318,7 +318,7 @@ class StreamTestCase(unittest.TestCase):
         Tests the sorting of the Stream objects.
         """
         # Create new Stream
-        stream = obspy.Stream()
+        stream = Stream()
         # Create a list of header dictionaries. The sampling rate serves as a
         # unique identifier for each Trace.
         headers = [{'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
@@ -338,7 +338,7 @@ class StreamTestCase(unittest.TestCase):
                 'channel' : 'FFF', 'npts' : 1000, 'sampling_rate' : 500.0}]
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
-            new_trace = obspy.Trace(header=_i)
+            new_trace = Trace(header=_i)
             stream.append(new_trace, reference=True)
         # Use normal sorting.
         stream.sort()
@@ -360,7 +360,66 @@ class StreamTestCase(unittest.TestCase):
         self.assertRaises(TypeError, stream.sort, keys=1)
         self.assertRaises(TypeError, stream.sort, keys='samping_rate')
         self.assertRaises(TypeError, stream.sort, keys=['npts', 'starttime',
-                                                          'wrong_value'])
+                                                        'wrong_value'])
+
+    def test_bug_sort(self):
+        """XXX: Bug #6 - fails yet
+        Sorting twice - changes order
+        """
+        stream = Stream()
+        headers = [{'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
+                UTCDateTime(1990, 1, 2), 'network' : 'AAA', 'station' : 'ZZZ',
+                'channel' : 'XXX', 'npts' : 10000, 'sampling_rate' : 100.0},
+                {'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
+                UTCDateTime(1990, 1, 3), 'network' : 'AAA', 'station' : 'YYY',
+                'channel' : 'CCC', 'npts' : 10000, 'sampling_rate' : 200.0},
+                {'starttime' : UTCDateTime(2000, 1, 1), 'endtime' : \
+                UTCDateTime(2001, 1, 2), 'network' : 'AAA', 'station' : 'EEE',
+                'channel' : 'GGG', 'npts' : 1000, 'sampling_rate' : 300.0},
+                {'starttime' : UTCDateTime(1989, 1, 1), 'endtime' : \
+                UTCDateTime(2010, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
+                'channel' : 'GGG', 'npts' : 10000, 'sampling_rate' : 400.0},
+                {'starttime' : UTCDateTime(2010, 1, 1), 'endtime' : \
+                UTCDateTime(2011, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
+                'channel' : 'FFF', 'npts' : 1000, 'sampling_rate' : 500.0}]
+        # Create a Trace object of it and append it to the Stream object.
+        for _i in headers:
+            new_trace = Trace(header=_i)
+            stream.append(new_trace, reference=True)
+        stream.sort()
+        a = [i.stats.sampling_rate for i in stream.traces]
+        stream.sort()
+        b = [i.stats.sampling_rate for i in stream.traces]
+        # should be equal
+        self.assertEqual(a, b)
+
+    def test_merge(self):
+        """
+        Test the merge method of the Stream objects.
+        """
+        stream = obspy.read(self.mseed_file)
+        start = UTCDateTime("2007-12-31T23:59:59.915000")
+        end = UTCDateTime("2008-01-01T00:04:31.790000")
+        self.assertEquals(len(stream), 4)
+        self.assertEquals(len(stream[0]), 412)
+        self.assertEquals(len(stream[1]), 824)
+        self.assertEquals(len(stream[2]), 824)
+        self.assertEquals(len(stream[3]), 50668)
+        self.assertEquals(stream[0].stats.starttime, start)
+        self.assertEquals(stream[3].stats.endtime, end)
+        for i in range(0, 4):
+            self.assertEquals(stream[i].stats.sampling_rate, 200)
+            self.assertEquals(stream[i].getId(), 'BW.BGLD..EHE')
+        stream.verify()
+        # merge it
+        stream.merge()
+        stream.verify()
+        self.assertEquals(len(stream), 1)
+        self.assertEquals(len(stream[0]), 54376)
+        self.assertEquals(stream[0].stats.starttime, start)
+        self.assertEquals(stream[0].stats.endtime, end)
+        self.assertEquals(stream[0].stats.sampling_rate, 200)
+        self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
 
     def test_bugfix_setStats(self):
         """

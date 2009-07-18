@@ -28,15 +28,17 @@ USA.
 """
 
 setup(
-    name='obspy.seishub',
+    name='obspy.arclink',
     version=version,
-    description="SeisHub database client for ObsPy.",
-    long_description="obspy.seishub - SeisHub database client for ObsPy.",
+    description="ArcLink/WebDC request client for of ObsPy.",
+    long_description="""
+    obspy.arclink - ArcLink/WebDC request client for of ObsPy.
+    """,
     classifiers=[],
-    keywords='ObsPy, Seismology, SeisHub',
+    keywords='ObsPy, Seismology, ArcLink, MiniSEED, SEED, Inventory, Waveform',
     author='Robert Barsch',
     author_email='barsch@lmu.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.seishub',
+    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink',
     license=GPL2,
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
@@ -46,9 +48,7 @@ setup(
         'obspy.core',
         'obspy.mseed',
         'setuptools',
-        'numpy',
         'lxml',
-        'matplotlib',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.seishub/trunk#egg=obspy.seishub-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink/trunk#egg=obspy.arclink-dev",
 )

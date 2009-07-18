@@ -357,8 +357,8 @@ class Stream(object):
              'starttime'].
         """
         # Check the list and all items.
-        msg = "keys must be a list of item strings. Available items to sort " + \
-              "after: \n'network', 'station', 'channel', 'location', " + \
+        msg = "keys must be a list of item strings. Available items to " + \
+              "sort after: \n'network', 'station', 'channel', 'location', " + \
               "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
         if not isinstance(keys, list):
             raise TypeError(msg)
@@ -407,3 +407,30 @@ class Stream(object):
         """
         for trace in self:
             trace.rtrim(endtime)
+
+    def verify(self):
+        """
+        Verifies all L{Trace} objects in this L{Stream}.
+        """
+        for trace in self:
+            trace.verify()
+
+    def merge(self):
+        """
+        Merges L{Trace} objects with same IDs.
+        
+        Gaps an overlaps are usually separated in distinct traces. This method
+        tries to merge them and to create distinct traces within this L{Stream}
+        object.  
+        """
+        self.sort()
+        traces_dict = {}
+        for trace in self.traces:
+            id = trace.getId()
+            if id not in traces_dict:
+                traces_dict[id] = trace
+                continue
+            else:
+                traces_dict[id] = traces_dict[id] + trace
+        del self.traces[:]
+        self.traces = traces_dict.values()

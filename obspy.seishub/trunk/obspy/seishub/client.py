@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from lxml import etree, objectify
+from lxml import objectify
 import obspy
-import sys
 import os
 import tempfile
 import urllib
@@ -11,7 +10,7 @@ import urllib
 class Client(object):
     """
     """
-    def __init__(self, base_url, *args, **kwargs):
+    def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080"):
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)

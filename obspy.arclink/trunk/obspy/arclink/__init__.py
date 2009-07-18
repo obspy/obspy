@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Read & Write Seismograms, Format GSE2.
+ArcLink/WebDC request client for of ObsPy.
 
-This module contains python wrappers for gse_functions - The GSE2 library
-of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
-should be sufficient for most cases. Gse_functions is written in C and
-interfaced via python-ctypes.
-See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
+See: http://www.webdc.eu
 
 
 GNU General Public License (GPL)
@@ -26,3 +22,5 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
+
+from client import Client

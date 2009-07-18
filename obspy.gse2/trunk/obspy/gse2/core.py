@@ -64,7 +64,7 @@ def readGSE2(filename, **kwargs):
         header['d_year'], header['d_mon'], header['d_day'],
         header['t_hour'], header['t_min'], 0) + header['t_sec']
     new_header['endtime'] = new_header['starttime'] + \
-        header['n_samps'] / float(header['samp_rate'])
+        (header['n_samps'] - 1) / float(header['samp_rate'])
     return Trace(header=new_header, data=data)
 
 

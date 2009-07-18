@@ -14,7 +14,7 @@ class Trace(object):
     @type data: Numpy ndarray 
     @ivar data: Data samples 
     """
-    def __init__(self, header=None, data=None):
+    def __init__(self, header=None, data=array([])):
         self.stats = Stats()
         self.data = None
         if header != None:
@@ -25,8 +25,8 @@ class Trace(object):
                         self.stats[_i][_j] = header[_i][_j]
                 else:
                     self.stats[_i] = header[_i]
-        if data != None:
-            self.data = data
+        self.data = data
+        self.stats.npts = len(self.data)
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
@@ -83,7 +83,7 @@ class Trace(object):
             rt = self
             lt = trace
         sr = self.stats.sampling_rate
-        delta = int(round(rt.stats.starttime - lt.stats.endtime) * sr)
+        delta = int(round((rt.stats.starttime - lt.stats.endtime) * sr)) - 1
         # check if overlap or gap
         if delta <= 0:
             # overlap
@@ -174,3 +174,19 @@ class Trace(object):
         # cut it
         self.ltrim(starttime)
         self.rtrim(endtime)
+
+    def verify(self):
+        """
+        Verifies this L{Trace} object with saved stats values.
+        """
+        if len(self.data) != self.stats.npts:
+            msg = "ntps(%d) differs from data size(%d)"
+            raise Exception(msg % (self.stats.npts, len(self.data)))
+        delta = self.stats.endtime - self.stats.starttime
+        if delta < 0:
+            msg = "End time(%s) before start time(%s)"
+            raise Exception(msg % (self.stats.endtime, self.stats.starttime))
+        sr = self.stats.sampling_rate
+        if int(round(delta * sr)) + 1 != len(self.data):
+            msg = "Sample rate(%d) * time delta(%.4lf) + 1 != data size(%d)"
+            raise Exception(msg % (sr, delta, len(self.data)))

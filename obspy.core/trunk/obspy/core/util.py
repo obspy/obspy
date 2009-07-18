@@ -140,6 +140,8 @@ def formatScientific(value):
     '3.4e+02'
     >>> formatScientific("3.4E+02")
     '3.4E+02'
+    >>> formatScientific("%-10.4e" % 0.5960000)
+    '5.9600e-01'
     """
     if 'e' in value:
         mantissa, exponent = value.split('e')

@@ -10,14 +10,13 @@ import unittest
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for libgse2 core interface
+    Test cases for L{obspy.seishub.client.Client}.
     """
 
     def test_getStations(self):
         """
         """
-        url = "http://admin:admin@teide.geophysik.uni-muenchen.de:8080"
-        client = Client(url)
+        client = Client()
         data = client.waveform.getNetworkIds()
         print data
         data = client.waveform.getStationIds()
@@ -37,9 +36,6 @@ class ClientTestCase(unittest.TestCase):
         data = client.station.getResource('dataless.seed.BW_MANZ.xml',
                                           format='metadata')
         print data
-
-
-
 
 
 def suite():

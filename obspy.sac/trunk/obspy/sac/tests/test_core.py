@@ -25,10 +25,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
-        testdata = N.array([ -8.74227766e-08,  -3.09016973e-01,
-            -5.87785363e-01, -8.09017122e-01,  -9.51056600e-01,
-            -1.00000000e+00, -9.51056302e-01,  -8.09016585e-01,
-            -5.87784529e-01, -3.09016049e-01], dtype='float32')
+        testdata = N.array([ -8.74227766e-08, -3.09016973e-01,
+            - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
+            - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
+            - 5.87784529e-01, -3.09016049e-01], dtype='float32')
         #
         tr = obspy.read(self.file, format='SAC')[0]
         self.assertEqual(tr.stats['station'], 'STA     ')
@@ -39,7 +39,7 @@ class CoreTestCase(unittest.TestCase):
         N.testing.assert_array_almost_equal(testdata[0:10], tr.data[0:10])
 
     def test_readAndWriteViaObspy(self):
-        raise NotImplementedError("Write Method not implemented jet")
+        raise NotImplementedError("Write Method not implemented yet")
 
     #def test_readAndWriteViaObspy(self):
     #    """

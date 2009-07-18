@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Python Support for database Seishub
+SeisHub database client for ObsPy.
 
 
 GNU General Public License (GPL)

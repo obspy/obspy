@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
+from obspy.core.stream import read
 from obspy.core import *
 
 # See http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.seishub.tests import test_client
+from obspy.arclink.tests import test_client
 import unittest
 
 

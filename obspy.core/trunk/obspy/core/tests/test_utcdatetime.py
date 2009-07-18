@@ -44,6 +44,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt2.timestamp, 1240561632.0050001)
         self.assertEquals(dt.timestamp, 1240561633.0050001)
 
+    def test_sub(self):
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
+        self.assertAlmostEquals(end - start, 4.995)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

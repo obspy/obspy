@@ -144,8 +144,10 @@ def writeHeader(f, head):
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
     This fails for numbers XX>99, but should not occur.
     """
-    calib = formatScientific("%10.4e" % head.calib)
-    f.write("WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d %11.6f %s %7.3f %-6s %5.1f %4.1f\n" % (
+    calib = formatScientific("%10.2e" % head.calib)
+    header = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
+             "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
+    f.write(header % (
             head.d_year,
             head.d_mon,
             head.d_day,
@@ -207,13 +209,11 @@ def read(infile, test_chksum=False):
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
-    #
     # cleaning up
     del fp, head
     if not type(infile) == file:
         f.close()
-    # return headdict , data[0:n]
-    return headdict , data
+    return headdict, data
 
 
 def write(headdict, data, outfile):
@@ -285,11 +285,6 @@ def write(headdict, data, outfile):
     for _i in headdict.keys():
         if _i in gse2head:
             setattr(head, _i, headdict[_i])
-    # We leave this function ONLY for type checking, as the file pointer is
-    # seeked to pos the header is overwritten!
-    pos = f.tell()
-    lib.write_header(fp, C.pointer(head))
-    f.seek(pos)
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on windows and linux.
     # For further details, see the __doc__ of writeHeader
@@ -300,7 +295,6 @@ def write(headdict, data, outfile):
     del fp, head
     if not type(outfile) == file:
         f.close()
-    return 0
 
 
 def readHead(file):

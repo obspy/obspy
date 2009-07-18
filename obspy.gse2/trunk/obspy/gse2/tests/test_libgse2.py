@@ -4,10 +4,13 @@
 The libgse2 test suite.
 """
 
-from obspy.gse2 import libgse2
 from obspy.core import UTCDateTime
-import inspect, os, unittest
+from obspy.gse2 import libgse2
+import inspect
+import os
+import unittest
 import numpy as N
+
 
 class LibGSE2TestCase(unittest.TestCase):
     """
@@ -45,7 +48,8 @@ class LibGSE2TestCase(unittest.TestCase):
             header['t_sec'])
         )
         for i in range(len(datalist) - 1):
-            self.assertEqual(datalist[i] - datalist[i + 1], data[i] - data[i + 1])
+            self.assertEqual(datalist[i] - datalist[i + 1],
+                             data[i] - data[i + 1])
         #from pylab import plot,array,show;plot(array(data));show()
 
     def test_readAnWrite(self):
@@ -117,7 +121,7 @@ class LibGSE2TestCase(unittest.TestCase):
 
     def test_arrayNotNumpy(self):
         """
-        Test that exception is raised when data are not of type int32 numpy array
+        Test if exception is raised when data are not of type int32 numpy array
         """
         testfile = os.path.join(self.path, 'tmp.gse2')
         data = [2, 26, 1]
@@ -125,9 +129,12 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
+        self.assertRaises(AssertionError, libgse2.write, header, data,
+                          testfile)
         data = N.array([2, 26, 1], dtype='f')
-        self.assertRaises(AssertionError, libgse2.write, header, data, testfile)
+        self.assertRaises(AssertionError, libgse2.write, header, data,
+                          testfile)
+
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')
