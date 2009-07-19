@@ -4,9 +4,11 @@
 The gse2.core test suite.
 """
 
-import obspy
-from obspy.core import Stream, Trace
-import inspect, os, unittest, copy
+from obspy.core import Stream, Trace, UTCDateTime, read
+import inspect
+import os
+import unittest
+import copy
 import numpy as N
 
 
@@ -17,7 +19,6 @@ class CoreTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
 
     def tearDown(self):
         pass
@@ -26,9 +27,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
+        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        #
-        st = obspy.read(self.file, format='GSE2')
+        # read
+        st = read(gse2file)
         st.verify()
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
@@ -46,10 +48,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and Write files via L{obspy.Trace}
         """
-        self.file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
-        tmpfile = os.path.join(self.path, 'data', 'tmp.gse2')
+        tempfile = 'temp1.gse2'
+        gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
         # read trace
-        st1 = obspy.read(self.file, format='GSE2')
+        st1 = read(gse2file)
         st1.verify()
         tr1 = st1[0]
         # write comparison trace
@@ -58,9 +60,10 @@ class CoreTestCase(unittest.TestCase):
         tr2 = st2[0]
         tr2.data = copy.deepcopy(tr1.data)
         tr2.stats = copy.deepcopy(tr1.stats)
-        st2.write(tmpfile, format='GSE2')
+        st2.write(tempfile, format='GSE2')
         # read comparison trace
-        st3 = obspy.read(tmpfile)
+        st3 = read(tempfile)
+        os.remove(tempfile)
         st3.verify()
         tr3 = st3[0]
         # check if equal
@@ -79,7 +82,35 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr3.stats.gse2.get('calib'),
                          tr1.stats.gse2.get('calib'))
         N.testing.assert_equal(tr3.data, tr1.data)
-        os.remove(tmpfile)
+
+    def test_writeIntegersViaObsPy(self):
+        """
+        Write file test via L{obspy.Trace}.
+        """
+        tempfile = 'temp2.gse2'
+        npts = 1000
+        # data cloud of integers - float won't work!
+        data = N.random.randint(-1000, 1000, npts)
+        stats = {'network': 'BW', 'station': 'TEST', 'location':'',
+                 'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0,
+                 'vang': 1.0, 'calper': 1.0, 'calib': 1.0}
+        start = UTCDateTime(2000, 1, 1)
+        stats['starttime'] = start
+        stats['endtime'] = start + (npts - 1) * 0.005
+        tr = Trace(data=data, header=stats)
+        tr.verify()
+        st = Stream([tr])
+        st.verify()
+        # write
+        st.write(tempfile, format="GSE2")
+        # read again
+        stream = read(tempfile)
+        os.remove(tempfile)
+        stream.verify()
+        # XXX:
+        print stream[0].data[0:10]
+        print data[0:10]
+        self.assertEquals(stream[0].data.tolist(), data.tolist())
 
 
 def suite():

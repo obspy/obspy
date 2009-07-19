@@ -40,9 +40,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_deepcopy(self):
         dt = UTCDateTime(1240561632.0050001)
         dt2 = copy.deepcopy(dt)
-        dt += 1
+        dt += 68
         self.assertEquals(dt2.timestamp, 1240561632.0050001)
-        self.assertEquals(dt.timestamp, 1240561633.0050001)
+        self.assertEquals(dt.timestamp, 1240561700.0050001)
 
     def test_sub(self):
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)

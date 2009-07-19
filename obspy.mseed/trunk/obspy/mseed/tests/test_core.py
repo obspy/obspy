@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace, read
+from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.mseed.core import readMSEED
 import inspect
+import numpy as N
 import os
 import unittest
 
@@ -12,9 +13,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # Directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.file = os.path.join(path, 'data', 'test.mseed')
-        self.gapfile = os.path.join(path, 'data', 'gaps.mseed')
+        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
 
     def tearDown(self):
         pass
@@ -23,8 +22,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Read file test via L{obspy.mseed.core.readMSEED}.
         """
+        testfile = os.path.join(self.path, 'data', 'test.mseed')
         testdata = [2787, 2776, 2774, 2780, 2783]
-        stream = readMSEED(self.file)
+        # read
+        stream = readMSEED(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
@@ -37,17 +38,18 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeFileViaLibMSEED(self):
         """
-        Write file test via L{obspy.Trace}.
+        Write file test via L{obspy.mseed.core.writeMSEED}.
         """
         pass
 
     def test_readFileViaObsPy(self):
         """
-        Read file test via L{obspy.core.Trace}
+        Read file test via L{obspy.core.Stream}.
         """
+        testfile = os.path.join(self.path, 'data', 'test.mseed')
         testdata = [2787, 2776, 2774, 2780, 2783]
         # without given format -> auto detect file format
-        stream = read(self.file)
+        stream = read(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
@@ -55,32 +57,46 @@ class CoreTestCase(unittest.TestCase):
         for _i in xrange(5):
             self.assertEqual(stream[0].data[_i], testdata[_i])
         # with given format
-        stream = read(self.file, format='MSEED')
+        stream = read(testfile, format='MSEED')
         stream.verify()
         self.assertEqual(stream[0].stats.get('location'), '00')
         self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
         self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
         for _i in xrange(5):
             self.assertEqual(stream[0].data[_i], testdata[_i])
-
-    def test_readFileViaObsPyStream(self):
-        """
-        Read file test via L{obspy.Stream}
-        
-        Only a very short test. Still needs to be extended.
-        """
+        # file with gaps
+        gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
-        stream = read(self.gapfile)
+        stream = read(gapfile)
         stream.verify()
         self.assertEqual(4, len(stream.traces))
         for _i in stream.traces:
             self.assertEqual(True, isinstance(_i, Trace))
 
-    def test_writeFileViaObsPy(self):
+    def test_writeIntegersViaObsPy(self):
         """
-        Write file test via L{obspy.Trace}.
+        Write integer array via L{obspy.core.Stream}.
         """
-        pass
+        tempfile = 'temp1.mseed'
+        npts = 1000
+        # data array of integers - float won't work!
+        data = N.random.randint(-1000, 1000, npts)
+        stats = {'network': 'BW', 'station': 'TEST', 'location':'',
+                 'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
+        start = UTCDateTime(2000, 1, 1)
+        stats['starttime'] = start
+        stats['endtime'] = start + (npts - 1) * 0.005
+        tr = Trace(data=data, header=stats)
+        tr.verify()
+        st = Stream([tr])
+        st.verify()
+        # write
+        st.write(tempfile, format="MSEED")
+        # read again
+        stream = read(tempfile)
+        os.remove(tempfile)
+        stream.verify()
+        self.assertEquals(stream[0].data.tolist(), data.tolist())
 
 
 def suite():

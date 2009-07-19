@@ -26,7 +26,8 @@ class StreamTestCase(unittest.TestCase):
             self.mseed_file = os.path.join(path2, 'data', 'gaps.mseed')
             import obspy.gse2.tests
             path2 = os.path.dirname(inspect.getsourcefile(obspy.gse2.tests))
-            self.gse2_file = os.path.join(path2, 'data', 'loc_RNON20040609200559.z')
+            self.gse2_file = os.path.join(path2, 'data',
+                                          'loc_RNON20040609200559.z')
         except ImportError:
             msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' + \
                   'test the obspy.core.core methods and functions'
@@ -415,7 +416,7 @@ class StreamTestCase(unittest.TestCase):
         stream.merge()
         stream.verify()
         self.assertEquals(len(stream), 1)
-        self.assertEquals(len(stream[0]), 54376)
+        self.assertEquals(len(stream[0]), (end - start) * 200 + 1)
         self.assertEquals(stream[0].stats.starttime, start)
         self.assertEquals(stream[0].stats.endtime, end)
         self.assertEquals(stream[0].stats.sampling_rate, 200)
