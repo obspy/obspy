@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 import ctypes as C
 import numpy as N
 import os
+import struct
 import platform
 
 if platform.system() == 'Windows':
@@ -64,21 +65,20 @@ def recStalta(a, nsta, nlta):
     @rtype: Numpy ndarray
     @return: Charactristic function of recursive STA/LTA
     """
-
-    assert type(a) == N.ndarray, "Error, data must be a numpy ndarray"
-    assert a.dtype == 'float64', "Error, data must be float64 numpy ndarray"
-    ndat = len(a)
-
-    lib.recstalta.argtypes = [C.c_void_p, C.c_int, C.c_int, C.c_int]
+    lib.recstalta.argtypes = [N.ctypeslib.ndpointer(dtype='float64',
+                                                    ndim=1,
+                                                    flags='C_CONTIGUOUS'), 
+                              C.c_int, C.c_int, C.c_int]
     lib.recstalta.restype = C.POINTER(C.c_double)
+    # reading C memory into buffer which can be converted to numpy array
+    C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
+    C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
 
-    charfct = C.pointer(lib.recstalta(a.ctypes.data_as(C.c_void_p),
-                                      ndat, nsta, nlta))
-    # old method using interable a
-    #c_a = (C.c_double*ndat)()
-    #c_a[0:ndat] = a
-    #charfct = C.pointer(lib.recstalta(c_a,ndat,nsta,nlta))
-    return N.array(charfct.contents[0:ndat])
+    ndat = len(a)
+    size = struct.calcsize('d') # calculate size of float64
+    charfct = lib.recstalta(a, ndat, nsta, nlta) # do not use pointer here
+    return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
+                        dtype='float64',count=ndat)
 
 
 def recStaltaPy(charfct, nsta, nlta):
@@ -113,8 +113,7 @@ def recStaltaPy(charfct, nsta, nlta):
     iclta = 1 - clta
     #charfct = charfct.tolist()
     for i in xrange(1, ndat):
-        ai = charfct[i]
-        sq = ai * ai
+        sq = charfct[i]**2
         sta = csta * sq + icsta * sta
         lta = clta * sq + iclta * lta
         charfct[i] = sta / lta

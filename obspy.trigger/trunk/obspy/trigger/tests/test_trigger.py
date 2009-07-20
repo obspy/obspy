@@ -4,6 +4,7 @@ The obspy.trigger test suite.
 """
 
 from obspy.trigger import recStalta, recStaltaPy
+from ctypes import ArgumentError
 import numpy as N
 import unittest
 
@@ -45,8 +46,8 @@ class TriggerTestCase(unittest.TestCase):
     def test_trigger3(self):
         """
         """
-        self.assertRaises(AssertionError, recStalta, [1], 5, 10)
-        self.assertRaises(AssertionError, recStalta,
+        self.assertRaises(ArgumentError, recStalta, [1], 5, 10)
+        self.assertRaises(ArgumentError, recStalta,
                           N.array([1], dtype='int32'), 5, 10)
 
 

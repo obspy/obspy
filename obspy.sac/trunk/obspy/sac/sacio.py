@@ -164,6 +164,35 @@ class ReadSac(object):
     def __call__(self,filename):
         self.ReadSacFile(filename)
 
+    def InitArrays(self):
+        """
+        Function to initialize the floating, character and integer
+        header arrays (self.hf, self.hs, self.hi) with dummy values. This
+        function is usefull for writing sac files from artificial data,
+        thus the header arrays are not filled by a read method
+        beforehand
+
+        @return: Nothing
+        """
+        # The sac header has 70 floats, then 40 integers, then 192 bytes
+        # in strings. Store them in array (an convert the char to a
+        # list). That's a total of 632 bytes.
+        #
+        # allocate the array for header floats
+        self.hf = array.array('f')
+        for _i in xrange(70):
+            self.hf.append(-9e99)
+        #
+        # allocate the array for header ints
+        self.hi = array.array('l')
+        for _i in xrange(40):
+            self.hi.append(long(-1e9))
+        #
+        # allocate the array for header characters
+        self.hs = array.array('c')
+        for _i in xrange(192):
+            self.hs.append(' ')
+
 
     def GetHvalue(self,item):
         """Get a header value using the header arrays: GetHvalue("npts")

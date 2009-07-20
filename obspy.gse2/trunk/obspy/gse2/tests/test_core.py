@@ -97,7 +97,7 @@ class CoreTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
-        tr = Trace(data=data, header=stats)
+        tr = Trace(data=data.copy(), header=stats)
         tr.verify()
         st = Stream([tr])
         st.verify()
@@ -107,9 +107,6 @@ class CoreTestCase(unittest.TestCase):
         stream = read(tempfile)
         os.remove(tempfile)
         stream.verify()
-        # XXX:
-        print stream[0].data[0:10]
-        print data[0:10]
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
 

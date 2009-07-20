@@ -9,6 +9,7 @@ from obspy.gse2 import libgse2
 import inspect
 import os
 import unittest
+from ctypes import ArgumentError
 import numpy as N
 
 
@@ -47,7 +48,8 @@ class LibGSE2TestCase(unittest.TestCase):
             header['t_min'],
             header['t_sec'])
         )
-        for i in range(len(datalist) - 1):
+        data = data.tolist() # much faster this way
+        for i in xrange(len(datalist) - 1):
             self.assertEqual(datalist[i] - datalist[i + 1],
                              data[i] - data[i + 1])
         #from pylab import plot,array,show;plot(array(data));show()
@@ -129,10 +131,10 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        self.assertRaises(AssertionError, libgse2.write, header, data,
+        self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
         data = N.array([2, 26, 1], dtype='f')
-        self.assertRaises(AssertionError, libgse2.write, header, data,
+        self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
 
 

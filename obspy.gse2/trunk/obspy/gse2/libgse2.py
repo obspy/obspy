@@ -60,20 +60,30 @@ class ChksumError(StandardError):
 C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 C.pythonapi.PyFile_AsFile.restype = c_file_p
 
+# reading C memory into buffer which can be converted to numpy array
+C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
+C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
+
 ## gse_functions read_header
 lib.read_header.argtypes = [c_file_p, C.c_void_p]
 lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
-lib.decomp_6b.argtypes = [c_file_p, C.c_int, C.c_void_p]
+lib.decomp_6b.argtypes = [c_file_p, C.c_int, 
+                          N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                                                flags='C_CONTIGUOUS'),]
 lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
-lib.rem_2nd_diff.argtypes = [C.c_void_p, C.c_int]
+lib.rem_2nd_diff.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                                                   flags='C_CONTIGUOUS'),
+                             C.c_int]
 lib.rem_2nd_diff.restype = C.c_int
 
 # gse_functions check_sum
-lib.check_sum.argtypes = [C.c_void_p, C.c_int, C.c_longlong]
+lib.check_sum.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                                                flags='C_CONTIGUOUS'),
+                          C.c_int, C.c_longlong]
 lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
 
 # gse_functions buf_init
@@ -81,11 +91,15 @@ lib.buf_init.argtypes = [C.c_void_p]
 lib.buf_init.restype = C.c_void_p
 
 # gse_functions diff_2nd
-lib.diff_2nd.argtypes = [C.c_void_p, C.c_int, C.c_int]
+lib.diff_2nd.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                                               flags='C_CONTIGUOUS'),
+                         C.c_int, C.c_int]
 lib.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-lib.compress_6b.argyptes = [C.c_void_p, C.c_int]
+lib.compress_6b.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                                                  flags='C_CONTIGUOUS'),
+                            C.c_int]
 lib.compress_6b.restype = C.c_int
 
 ## gse_functions write_header
@@ -195,12 +209,11 @@ def read(infile, test_chksum=False):
     lib.read_header(fp, C.pointer(head))
     #data = (C.c_long * head.n_samps)()
     data = N.zeros(head.n_samps, dtype='int32')
-    LP_data = data.ctypes.data_as(C.c_void_p) # Pointer to data
-    n = lib.decomp_6b(fp, head.n_samps, LP_data)
+    n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
-    lib.rem_2nd_diff(LP_data, head.n_samps)
+    lib.rem_2nd_diff(data, head.n_samps)
     chksum = C.c_longlong()
-    chksum = lib.check_sum(LP_data, head.n_samps, chksum)
+    chksum = lib.check_sum(data, head.n_samps, chksum)
     chksum2 = int(f.readline().strip().split()[1])
     if test_chksum and chksum != chksum2:
         msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
@@ -260,25 +273,24 @@ def write(headdict, data, outfile):
         }
     """
     #@requires: headdict dictionary entries datatype, n_samps and samp_rate
-    n = len(data)
-    # see that data are of type numpy.ndarray, dtype int32
-    assert type(data) == N.ndarray, "Error, data need to be int32 numpy ndarray"
-    assert data.dtype == 'int32', "Error, data need to be int32 numpy ndarray"
-    # Maximum values above 2^26 will result in corrupted/wrong data!
-    if data.max() > 2 ** 26:
-        raise OverflowError("Compression Error, data must be less equal 2^26")
-    tr = data.ctypes.data_as(C.c_void_p)
-    #tr = N.ctypeslib.as_ctypes(data)
-    lib.buf_init(None)
     if type(outfile) == file:
         f = outfile
     else:
         f = open(outfile, "wb")
     fp = C.pythonapi.PyFile_AsFile(f)
+    #
+    n = len(data)
+    lib.buf_init(None)
+    #
     chksum = C.c_longlong()
-    chksum = abs(lib.check_sum(tr, n, chksum))
-    lib.diff_2nd(tr, n, 0)
-    ierr = lib.compress_6b(tr, n)
+    chksum = abs(lib.check_sum(data, n, chksum))
+    # Maximum values above 2^26 will result in corrupted/wrong data!
+    # do this after chksum as chksum does the type checking for numpy array
+    # for you
+    if data.max() > 2 ** 26:
+        raise OverflowError("Compression Error, data must be less equal 2^26")
+    lib.diff_2nd(data, n, 0)
+    ierr = lib.compress_6b(data, n)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     #
     head = HEADER()

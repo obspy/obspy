@@ -27,8 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from obspy.core import Trace
 import numpy as N
-import struct
-import wave
+import struct, wave, os
 
 
 def isWAV(filename):
@@ -86,10 +85,10 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     i = 0
     for trace in stream_object:
         # write WAV file
-        if i == 0:
-            w = wave.open(filename, 'wb')
-        else:
-            w = wave.open(filename + "%02d" % i, 'wb')
+        if i != 0:
+            base ,ext = os.path.splitext(filename)
+            filename = "%s%02d%s" % (base,i,ext)
+        w = wave.open(filename, 'wb')
         trace.stats.npts = len(trace.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)
         w.setparams((1, 1, framerate, trace.stats.npts, 'NONE',

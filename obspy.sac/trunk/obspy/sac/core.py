@@ -3,7 +3,7 @@
 from obspy.core import Trace, UTCDateTime
 from obspy.sac.sacio import ReadSac
 import numpy as N
-import array
+import array, os
 
 
 def isSAC(filename):
@@ -14,7 +14,7 @@ def isSAC(filename):
     """
     g = ReadSac()
     try:
-        npts = GetHvalueFromFile(filename, 'npts')
+        npts = g.GetHvalueFromFile(filename, 'npts')
     except:
         return False
     st = os.stat(filename) #file's size = st[6] 
@@ -96,8 +96,16 @@ def writeSAC(stream_object, filename, **kwargs):
     """
     #
     # Translate the common (renamed) entries
+    i = 0
     for trace in stream_object:
         t = ReadSac()
+        t.InitArrays() # initialize header arrays
+        #
+        # Check for necessary values, set a default if they are missing
+        trace.stats.is_attr('npts', int, len(trace.data)) # set the number of data points
+        trace.stats.is_attr('sampling_rate', float, 1.0)
+        trace.stats.sac.is_attr('nvhdr', int, 1)  # SAC version needed 0<version<20
+        #
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
@@ -113,7 +121,7 @@ def writeSAC(stream_object, filename, **kwargs):
         try:
             (year, month, day, hour, mint,
                     sec) = trace.stats.starttime.timetuple()[0:6]
-            msec = trace.stats.starttime.microseconds / 1e3
+            msec = trace.stats.starttime.microsecond / 1e3
             yday = trace.stats.starttime.strftime("%j")
             t.SetHvalue('nzyear', year)
             t.SetHvalue('nzjday', yday)
@@ -122,7 +130,7 @@ def writeSAC(stream_object, filename, **kwargs):
             t.SetHvalue('nzsec', sec)
             t.SetHvalue('nzmsec', msec)
         except:
-            pass
+            raise
         if trace.data.dtype != 'float32':
             trace.data = trace.data.astype('float32')
         # building array of floats
@@ -133,9 +141,11 @@ def writeSAC(stream_object, filename, **kwargs):
         # XXX use the buffer interface at soon as it is supported in
         # array.array, Python2.6
         t.seis.fromstring(trace.data.tostring())
+        if i != 0:
+            base ,ext = os.path.splitext(filename)
+            filename = "%s%02d%s" % (base,i,ext)
         try:
             t.WriteSacBinary(filename)
         except:
             raise
-        # XXX currently only one trace is supported
-        break
+        i += 1
