@@ -14,6 +14,8 @@ class TriggerTestCase(unittest.TestCase):
     Test cases for obspy.trigger
     """
     def setUp(self):
+        N.random.seed(815)
+        self.data = N.random.randn(int(1e6))
         pass
 
     def tearDown(self):
@@ -21,11 +23,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_trigger(self):
         """
+        Test case for ctypes version of recStalta
         """
-        N.random.seed(815)
-        a = N.random.randn(1000000)
         nsta, nlta = 5, 10
-        c1 = recStalta(a, nsta, nlta)
+        c1 = recStalta(self.data, nsta, nlta)
         self.assertAlmostEquals(c1[99], 0.80810165)
         self.assertAlmostEquals(c1[100], 0.75939449)
         self.assertAlmostEquals(c1[101], 0.91763978)
@@ -33,11 +34,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_trigger2(self):
         """
+        Test case for python version of recStalta
         """
-        N.random.seed(815)
-        a = N.random.randn(1000000).tolist()
         nsta, nlta = 5, 10
-        c2 = recStaltaPy(a, nsta, nlta)
+        c2 = recStaltaPy(self.data, nsta, nlta)
         self.assertAlmostEquals(c2[99], 0.80810165)
         self.assertAlmostEquals(c2[100], 0.75939449)
         self.assertAlmostEquals(c2[101], 0.91763978)
@@ -45,6 +45,7 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_trigger3(self):
         """
+        Type checking recStalta
         """
         self.assertRaises(ArgumentError, recStalta, [1], 5, 10)
         self.assertRaises(ArgumentError, recStalta,

@@ -257,7 +257,7 @@ def zdetect(a, Nsta):
     return Z
 
 
-def triggerOnset(charfct, thres1, thres2, samp_int=1):
+def triggerOnset(charfct, thres1, thres2):
     """
     Given thres1 and thres2 calculate trigger on and off times from
     characteristic function.
@@ -270,8 +270,6 @@ def triggerOnset(charfct, thres1, thres2, samp_int=1):
     @type thres2: Float
     @param thres2: Value below which trigger (of characteristic function)
         is deactivated
-    @type samp_int: Float
-    @param samp_int: Sample interval, needed as return times are in second
     @rtype: List
     @return: Nested List of trigger on and of times in samples
     """
@@ -294,10 +292,11 @@ def triggerOnset(charfct, thres1, thres2, samp_int=1):
             stop = of[indstop]
         except ValueError: # only activated if out of indices
             if not (start == buf) and not (start == 0):
-                pick.add([start * samp_int, len(charfct) - 1 * samp_int])
+                pick.append([start * samp_int, len(charfct) - 1 * samp_int])
             break
         #
-        pick.add([start * samp_int, stop * samp_int])
+        pick.append([start, stop])
+    return pick
 
 
 if __name__ == '__main__':

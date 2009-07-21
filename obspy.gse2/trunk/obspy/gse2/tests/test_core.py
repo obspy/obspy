@@ -92,8 +92,7 @@ class CoreTestCase(unittest.TestCase):
         # data cloud of integers - float won't work!
         data = N.random.randint(-1000, 1000, npts)
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
-                 'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0,
-                 'vang': 1.0, 'calper': 1.0, 'calib': 1.0}
+                 'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
