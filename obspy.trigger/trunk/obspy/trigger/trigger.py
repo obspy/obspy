@@ -259,45 +259,53 @@ def zdetect(a, Nsta):
 
 def triggerOnset(charfct, thres1, thres2):
     """
+    Calculate trigger on and off times.
+
     Given thres1 and thres2 calculate trigger on and off times from
-    characteristic function.
+    characteristic function. 
+    
+    This method is written in pure Python and gets slow as soon as there
+    are more then 1e6 triggerings ("on" AND "of") in charfct --- normally
+    this does not happen.
 
     @type charfct: Numpy ndarray
     @param charfct: Characteristic function of e.g. STA/LTA trigger
     @type thres1: Float
     @param thres1: Value above which trigger (of characteristic function)
-        is activated
+        is activated (higher threshold)
     @type thres2: Float
     @param thres2: Value below which trigger (of characteristic function)
-        is deactivated
+        is deactivated (lower threshold)
     @rtype: List
     @return: Nested List of trigger on and of times in samples
     """
+    # 1) find indices os samples greater than threshold
+    # 2) calculate trigger "of" times by the gap in trigger indices
+    #    above the threshold i.e. the difference of two following indices
+    #    in ind is greater than 1
+    # 3) in principle the same as for "of" just add one to the index to get
+    #    start times, this opperation is not supported on the compact
+    #    syntax
     try:
-        on = N.where(charfct > thres1)[0]
-        ind = on.min()
-        of = ind + N.where(charfct[ind:] < thres2)[0]
+        ind1 = N.where(charfct > thres1)[0]
     except ValueError:
-        return True
+        return []
+    ind2 = N.where(charfct > thres2)[0]
+    #
+    of = [-1]
+    of.extend(ind2[N.diff(ind2) > 1].tolist() )
+    of.extend([ind2[-1]])
+    on = [ind1[0]]
+    on.extend(ind1[N.where(N.diff(ind1) > 1)[0] + 1].tolist() )
     #
     pick = []
-    start = stop = indstart = indstop = 0
-    while True:
-        try:
-            buf = start
-            indstart = N.where(on[indstart:] > stop)[0].min() + indstart
-            start = on[indstart]
-            #
-            indstop = N.where(of[indstop:] > start)[0].min() + indstop
-            stop = of[indstop]
-        except ValueError: # only activated if out of indices
-            if not (start == buf) and not (start == 0):
-                pick.append([start * samp_int, len(charfct) - 1 * samp_int])
-            break
-        #
-        pick.append([start, stop])
+    while of[0] < of[-1]:
+        while not on[0] > of[0]:
+            on.pop(0)
+        while not of[0] >= on[0]:
+            of.pop(0)
+        pick.append([on[0],of[0]])
     return pick
-
 
 if __name__ == '__main__':
     import doctest
