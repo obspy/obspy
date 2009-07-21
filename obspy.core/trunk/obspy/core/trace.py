@@ -14,17 +14,14 @@ class Trace(object):
     @type data: Numpy ndarray 
     @ivar data: Data samples 
     """
-    def __init__(self, header=None, data=array([])):
+    def __init__(self, data=array([]), header={}):
         self.stats = Stats()
         self.data = None
-        if header != None:
-            for _i in header.keys():
-                if type(header[_i]) == dict:
-                    self.stats[_i] = Stats(dummy=False)
-                    for _j in header[_i].keys():
-                        self.stats[_i][_j] = header[_i][_j]
-                else:
-                    self.stats[_i] = header[_i]
+        self.stats.update(header)
+        for key, value in header.iteritems():
+            if not isinstance(value, dict):
+                continue
+            self.stats[key] = Stats(value)
         self.data = data
         self.stats.npts = len(self.data)
 
