@@ -20,45 +20,11 @@ class Stats(dict):
       >>> x = stats.keys()
       >>> x.sort()
       >>> x[0:3]
-      ['channel', 'dataquality', 'endtime']
-
-    @type station: String
-    @ivar station: Station name
-    @type sampling_rate: Float
-    @ivar sampling_rate: Sampling rate
-    @type npts: Int
-    @ivar npts: Number of data points
-    @type network: String
-    @ivar network: Stations network code
-    @type location: String
-    @ivar location: Stations location code
-    @type channel: String
-    @ivar channel: Channel
-    @type dataquality: String
-    @ivar dataquality: Data quality
-    @type starttime: obspy.UTCDateTime Object
-    @ivar starttime: Starttime of seismogram
-    @type endtime: obspy.UTCDateTime Object
-    @ivar endtime: Endtime of seismogram
+      ['network', 'station']
     """
+
     def __init__(self, *args, **kwargs):
-        """
-        @type dummy: bool
-        @param dummy: Initialize dummy values, default: True
-        """
-        flag = kwargs.pop('dummy', True)
         dict.__init__(self, *args, **kwargs)
-        if flag:
-            # fill some dummy values
-            self.station = "dummy"
-            self.sampling_rate = 1.0
-            self.npts = -1
-            self.network = "--"
-            self.location = "--"
-            self.channel = "---"
-            self.dataquality = ""
-            self.starttime = UTCDateTime(0)
-            self.endtime = UTCDateTime(0) + 60 * 60 * 24
 
     def is_attr(self, attr, typ, default, length=False, assertation=False,
                 verbose=False):

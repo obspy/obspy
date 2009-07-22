@@ -96,7 +96,7 @@ def writeGSE2(stream_object, filename, **kwargs):
         except:
             raise
         try:
-            libgse2.write(header, trace.data, fh)
+            libgse2.write(header, trace.data, fh, **kwargs)
         except AssertionError:
-            libgse2.write(header, trace.data.astype('l'), fh)
+            libgse2.write(header, trace.data.astype('l'), fh, **kwargs)
     fh.close()

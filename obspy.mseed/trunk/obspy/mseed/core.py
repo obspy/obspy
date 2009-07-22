@@ -83,6 +83,9 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
                 'starttime', 'endtime' : 'endtime'}
     for _i in traces:
         header = {}
+        #XXX we need to set default values for attributes which are not in
+        # trace.stats object
+        _i.stats.is_attr('dataquality',str,'Q')
         for _j, _k in convert_dict.iteritems():
             header[_j] = _i.stats[_k]
         # Convert obspy.UTCDateTime times to Mini-SEED times.

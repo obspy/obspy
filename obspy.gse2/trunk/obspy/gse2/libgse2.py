@@ -229,7 +229,7 @@ def read(infile, test_chksum=False):
     return headdict, data
 
 
-def write(headdict, data, outfile):
+def write(headdict, data, outfile, inplace=False):
     """
     Write GSE2 file, given the header and data.
     
@@ -247,6 +247,10 @@ def write(headdict, data, outfile):
     @param data: Contains the data.
     @type outfile: String, File
     @param outfile: Name of GSE2 file to write, can also be a file pointer
+    @type inplace: Bool
+    @param inplace: If True, do compression not on a copy of the data but
+    on the data itself --- note this will change the data values and make
+    them therefor unusable
     @type headdict: Dictonary
     @param headdict: Header containing the following entries C{
         {
@@ -278,7 +282,6 @@ def write(headdict, data, outfile):
     else:
         f = open(outfile, "wb")
     fp = C.pythonapi.PyFile_AsFile(f)
-    #
     n = len(data)
     lib.buf_init(None)
     #
@@ -287,6 +290,8 @@ def write(headdict, data, outfile):
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
+    if not inplace:
+        data = data.copy()
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
     lib.diff_2nd(data, n, 0)

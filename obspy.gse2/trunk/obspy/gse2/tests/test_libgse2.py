@@ -61,7 +61,7 @@ class LibGSE2TestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         header, data = libgse2.read(gse2file)
         temp_file = os.path.join(self.path, 'tmp.gse2')
-        libgse2.write(header, data.copy(), temp_file)
+        libgse2.write(header, data, temp_file)
         newheader, newdata = libgse2.read(temp_file)
         self.assertEqual(header, newheader)
         N.testing.assert_equal(data, newdata)

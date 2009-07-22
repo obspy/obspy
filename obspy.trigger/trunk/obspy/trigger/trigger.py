@@ -279,16 +279,18 @@ def triggerOnset(charfct, thres1, thres2):
     @rtype: List
     @return: Nested List of trigger on and of times in samples
     """
-    # 1) find indices os samples greater than threshold
+    # 1) find indices of samples greater than threshold
     # 2) calculate trigger "of" times by the gap in trigger indices
     #    above the threshold i.e. the difference of two following indices
     #    in ind is greater than 1
     # 3) in principle the same as for "of" just add one to the index to get
     #    start times, this opperation is not supported on the compact
     #    syntax
-    try:
-        ind1 = N.where(charfct > thres1)[0]
-    except ValueError:
+    # 4) as long as there is a on time greater than the actual of time find
+    #    trigger on states which are greater than last of state an the
+    #    corresponding of state which is greater than current on state
+    ind1 = N.where(charfct > thres1)[0]
+    if len(ind1) == 0:
         return []
     ind2 = N.where(charfct > thres2)[0]
     #
@@ -299,10 +301,10 @@ def triggerOnset(charfct, thres1, thres2):
     on.extend(ind1[N.where(N.diff(ind1) > 1)[0] + 1].tolist() )
     #
     pick = []
-    while of[0] < of[-1]:
-        while not on[0] > of[0]:
+    while on[-1] > of[0]:
+        while on[0] <= of[0]:
             on.pop(0)
-        while not of[0] >= on[0]:
+        while of[0] < on[0]:
             of.pop(0)
         pick.append([on[0],of[0]])
     return pick

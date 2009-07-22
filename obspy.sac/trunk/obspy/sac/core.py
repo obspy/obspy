@@ -104,6 +104,7 @@ def writeSAC(stream_object, filename, **kwargs):
         # Check for necessary values, set a default if they are missing
         trace.stats.is_attr('npts', int, len(trace.data)) # set the number of data points
         trace.stats.is_attr('sampling_rate', float, 1.0)
+        trace.stats.is_attr('starttime', UTCDateTime, UTCDateTime(0))
         trace.stats.sac.is_attr('nvhdr', int, 1)  # SAC version needed 0<version<20
         #
         for _j, _k in convert_dict.iteritems():

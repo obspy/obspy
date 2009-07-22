@@ -73,6 +73,8 @@ def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft,freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. Fast version which
     uses scipy. For understanding the source code, take a look at pazToFreqResp3.
+    The output contains the frequency zero which is the offset of the
+    trace.
     
     @type poles: List of complex numbers
     @param poles: The poles of the transfer function

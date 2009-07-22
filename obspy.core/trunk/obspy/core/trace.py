@@ -16,6 +16,9 @@ class Trace(object):
     """
     def __init__(self, data=array([]), header={}):
         self.stats = Stats()
+        # set some defaults
+        for default in ['station','network','location','channel']:
+            self.stats[default] = " "
         self.data = None
         self.stats.update(header)
         for key, value in header.iteritems():

@@ -25,7 +25,7 @@ class StatsTestCase(unittest.TestCase):
         x = stats.keys()
         x.sort()
         y = copy.deepcopy(x)[0:3]
-        self.assertEquals(y, ['channel', 'dataquality', 'endtime'])
+        self.assertEquals(y, ['network', 'station'])
 
 
 def suite():
