@@ -16,9 +16,6 @@ class Trace(object):
     """
     def __init__(self, data=array([]), header={}):
         self.stats = Stats()
-        # set some defaults
-        for default in ['station','network','location','channel']:
-            self.stats[default] = " "
         self.data = None
         self.stats.update(header)
         for key, value in header.iteritems():
@@ -27,6 +24,10 @@ class Trace(object):
             self.stats[key] = Stats(value)
         self.data = data
         self.stats.npts = len(self.data)
+        # set some defaults if not set yet
+        for default in ['station', 'network', 'location', 'channel']:
+            if default not in self.stats:
+                self.stats[default] = ''
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

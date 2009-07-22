@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Stats
+from obspy.core import Stats, Stream, Trace
 import copy
 import unittest
 
@@ -26,6 +26,78 @@ class StatsTestCase(unittest.TestCase):
         x.sort()
         y = copy.deepcopy(x)[0:3]
         self.assertEquals(y, ['network', 'station'])
+
+    def test_setterAndGetter(self):
+        """
+        Various setter and getter tests.
+        """
+        # simple
+        stats = Stats()
+        stats.test = 1
+        self.assertEquals(stats.test, 1)
+        self.assertEquals(stats['test'], 1)
+        stats['test'] = 2
+        self.assertEquals(stats.test, 2)
+        self.assertEquals(stats['test'], 2)
+        # nested
+        stats.test = Stats()
+        stats.test['test2'] = 'muh'
+        self.assertEquals(stats.test.test2, 'muh')
+        self.assertEquals(stats.test['test2'], 'muh')
+        self.assertEquals(stats['test'].test2, 'muh')
+        self.assertEquals(stats['test']['test2'], 'muh')
+        stats.test['test2'] = 'maeh'
+        self.assertEquals(stats.test.test2, 'maeh')
+        self.assertEquals(stats.test['test2'], 'maeh')
+        self.assertEquals(stats['test'].test2, 'maeh')
+        self.assertEquals(stats['test']['test2'], 'maeh')
+
+    def test_bugfix_setStats(self):
+        """
+        Test related to issue #4.
+        """
+        st = Stream([Trace()])
+        st += st
+        # change stats attributes
+        st[0].stats.station = 'AAA'
+        st[1].stats['station'] = 'BBB'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEquals(st[1].stats['station'], 'BBB')
+        self.assertEquals(st[1].stats.station, 'BBB')
+
+    def test_bugfix_setStats2(self):
+        """
+        Second test related to issue #4.
+        """
+        st = Stream([Trace([], {'station': 'BGLD'})])
+        self.assertEquals(st[0].stats.station, 'BGLD')
+        self.assertEquals(st[0].stats['station'], 'BGLD')
+        st[0].stats.station = 'AAA'
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st = st + st
+        self.assertEquals(st[0].stats.station, 'AAA')
+        self.assertEquals(st[0].stats['station'], 'AAA')
+        st[0].stats.station = 'BBB'
+        self.assertEquals(st[0].stats.station, 'BBB')
+        self.assertEquals(st[0].stats['station'], 'BBB')
+
+    def test_bugfix_setStats3(self):
+        """
+        Third test related to issue #4.
+        """
+        st = Stream([Trace([], {'station': 'BGLD'})])
+        self.assertEquals(st[0].stats.station, 'BGLD')
+        st = st + st
+        st[0].stats.station = 'AAA'
+        st = st + st
+        st[3].stats.station = 'BBB'
+        for key, value in {0:'AAA', 1:'BGLD', 2:'AAA', 3:'BBB'}.iteritems():
+            self.assertEquals(st[key].stats.station, value)
+            self.assertEquals(st[key].stats['station'], value)
+            self.assertEquals(st[key].stats.get('station'), value)
+            self.assertTrue(value in st[key].stats.values())
 
 
 def suite():

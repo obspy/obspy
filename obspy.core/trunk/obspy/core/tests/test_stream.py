@@ -422,54 +422,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.sampling_rate, 200)
         self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
 
-    def test_bugfix_setStats(self):
-        """
-        Test related to issue #4.
-        """
-        st = obspy.read(self.mseed_file)
-        st += st
-        # change stats attributes
-        st[0].stats.station = 'AAA'
-        st[1].stats['station'] = 'BBB'
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
-        self.assertEquals(st[1].stats['station'], 'BBB')
-        self.assertEquals(st[1].stats.station, 'BBB')
-
-    def test_bugfix_setStats2(self):
-        """
-        Second test related to issue #4.
-        """
-        st = obspy.read(self.mseed_file)
-        self.assertEquals(st[0].stats.station, 'BGLD')
-        self.assertEquals(st[0].stats['station'], 'BGLD')
-        st[0].stats.station = 'AAA'
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
-        st = st + st
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
-        st[0].stats.station = 'BBB'
-        self.assertEquals(st[0].stats.station, 'BBB')
-        self.assertEquals(st[0].stats['station'], 'BBB')
-
-    def test_bugfix_setStats3(self):
-        """
-        Third test related to issue #4.
-        """
-        st = obspy.read(self.mseed_file)
-        st = Stream([st[0]])
-        self.assertEquals(st[0].stats.station, 'BGLD')
-        st = st + st
-        st[0].stats.station = 'AAA'
-        st = st + st
-        st[3].stats.station = 'BBB'
-        for key, value in {0:'AAA', 1:'BGLD', 2:'AAA', 3:'BBB'}.iteritems():
-            self.assertEquals(st[key].stats.station, value)
-            self.assertEquals(st[key].stats['station'], value)
-            self.assertEquals(st[key].stats.get('station'), value)
-            self.assertTrue(value in st[key].stats.values())
-
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

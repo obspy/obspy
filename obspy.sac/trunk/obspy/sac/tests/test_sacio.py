@@ -1,18 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-The libgse2 test suite.
+The sacio test suite.
 """
 
 from obspy.sac import sacio, SacError
-from obspy.core import UTCDateTime
 import inspect, os, unittest
-import numpy as N
 import array
+
 
 class SacioTestCase(unittest.TestCase):
     """
-    Test cases for sacio
+    Test cases for sacio.
     """
     def setUp(self):
         # directory where the test files are located
@@ -26,23 +25,23 @@ class SacioTestCase(unittest.TestCase):
         """
         Tests for sacio, writing artificial seismograms
         """
-        sacfile = os.path.join(self.path, 'test.sac')
         data = array.array('f', [ 1.1, -1.2, 1.3, -1.4, 1.5,
-                                 -1.6, 1.7, -1.8, 1.9, -2.0])
+                                 - 1.6, 1.7, -1.8, 1.9, -2.0])
         t = sacio.ReadSac()
         t.InitArrays()
         t.seis = data
         t.SetHvalue("kstnm", "RJOB")
         t.SetHvalue("npts", len(data)) # set the number of data points
         t.SetHvalue('nvhdr', 1)  # SAC version needed 0<version<20
-        t.SetHvalue('delta',200) # sampling rate
+        t.SetHvalue('delta', 200) # sampling rate
         t.WriteSacBinary('test.sac')
         u = sacio.ReadSac()
         u.ReadSacFile('test.sac')
-        for _k in ["kstnm","npts","nvhdr","delta"]:
-            self.assertEqual(t.GetHvalue(_k),u.GetHvalue(_k))
-        self.assertEqual(t.GetHvalue("kstnm"),"RJOB    ")
-        self.assertEqual(t.seis,u.seis)
+        for _k in ["kstnm", "npts", "nvhdr", "delta"]:
+            self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
+        self.assertEqual(t.GetHvalue("kstnm"), "RJOB    ")
+        self.assertEqual(t.seis, u.seis)
+        os.remove('test.sac')
 
     def test_readWrite(self):
         """
@@ -65,7 +64,8 @@ class SacioTestCase(unittest.TestCase):
         self.assertEqual(t.GetHvalue('kstnm'), 'spoff   ')
         t.WriteSacHeader('test2.sac')
         t.SetHvalueInFile('test2.sac', "kcmpnm", 'Z')
-        self.assertEqual(t.GetHvalueFromFile('test2.sac', "kcmpnm"), 'Z       ')
+        self.assertEqual(t.GetHvalueFromFile('test2.sac', "kcmpnm"),
+                         'Z       ')
         t.IsValidSacFile('test2.sac')
         os.remove('test2.sac')
 
