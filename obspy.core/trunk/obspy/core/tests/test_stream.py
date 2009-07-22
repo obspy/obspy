@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core import UTCDateTime, Stream, Trace, read
 import inspect
 import numpy as N
-import obspy
 import os
 import unittest
 
@@ -40,7 +39,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the getting of items of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         self.assertEqual(stream[0], stream.traces[0])
         self.assertEqual(stream[-1], stream.traces[-1])
         self.assertEqual(stream[3], stream.traces[3])
@@ -52,9 +51,9 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the adding of two stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         self.assertEqual(4, len(stream))
-        # Add the same stream object to itsself.
+        # Add the same stream object to itself.
         stream = stream + stream
         self.assertEqual(8, len(stream))
         # This will create a copy of all Traces and thus the objects should not
@@ -64,7 +63,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
             N.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
         # Now add another stream to it.
-        other_stream = obspy.read(self.gse2_file)
+        other_stream = read(self.gse2_file)
         self.assertEqual(1, len(other_stream))
         new_stream = stream + other_stream
         self.assertEqual(9, len(new_stream))
@@ -82,9 +81,9 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the __iadd__ method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         self.assertEqual(4, len(stream))
-        other_stream = obspy.read(self.gse2_file)
+        other_stream = read(self.gse2_file)
         self.assertEqual(1, len(other_stream))
         # Add the other stream to the stream.
         stream += other_stream
@@ -99,7 +98,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the appending method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         # Check current count of traces
         self.assertEqual(len(stream), 4)
         # Append first traces to the Stream object.
@@ -123,9 +122,9 @@ class StreamTestCase(unittest.TestCase):
 
     def test_countAndLen(self):
         """
-        Tests the count method and __len__ attribut of the Stream objects.
+        Tests the count method and __len__ attribute of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         self.assertEqual(4, len(stream))
         self.assertEqual(4, stream.count())
         self.assertEqual(stream.count(), len(stream))
@@ -134,7 +133,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the extending method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         # Check current count of traces
         self.assertEqual(len(stream), 4)
         # Extend the Stream object with the first two traces.
@@ -165,7 +164,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the insert Method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         self.assertEqual(4, len(stream))
         # Insert the last Trace before the second trace.
         stream.insert(1, stream[-1])
@@ -176,10 +175,10 @@ class StreamTestCase(unittest.TestCase):
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[1].data, stream[-1].data)
-        # Do the same again but pass by refernce.
+        # Do the same again but pass by reference.
         stream.insert(1, stream[-1], reference=True)
         self.assertEqual(len(stream), 6)
-        # Now the two Traces should ne identical
+        # Now the two Traces should be identical
         self.assertEqual(stream[1], stream[-1])
         # Do the same with a list of traces this time.
         # Insert the last two Trace before the second trace.
@@ -194,10 +193,10 @@ class StreamTestCase(unittest.TestCase):
         N.testing.assert_array_equal(stream[1].data, stream[-2].data)
         self.assertEqual(stream[2].stats, stream[-1].stats)
         N.testing.assert_array_equal(stream[2].data, stream[-1].data)
-        # Do the same again but pass by refernce.
+        # Do the same again but pass by reference.
         stream.insert(1, stream[-2:], reference=True)
         self.assertEqual(len(stream), 10)
-        # Now the two Traces should ne identical
+        # Now the two Traces should be identical
         self.assertEqual(stream[1], stream[-2])
         self.assertEqual(stream[2], stream[-1])
         # Using insert without a single Traces or a list of Traces should fail.
@@ -210,9 +209,9 @@ class StreamTestCase(unittest.TestCase):
         Tests the getGaps method of the Stream objects. It is compared directly
         to the obspy.mseed method getGapsList which is assumed to be correct.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         gap_list = stream.getGaps()
-        # Gapslist created with obspy.mseed
+        # Gaps list created with obspy.mseed
         mseed_gap_list = [('BW', 'BGLD', '', 'EHE', UTCDateTime(2008, 1, 1, 0, \
                           0, 1, 970000), UTCDateTime(2008, 1, 1, 0, 0, 4, \
                           35000), 2.0649999999999999, 412.0), ('BW', 'BGLD',
@@ -238,13 +237,13 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the pop method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Remove and return the last Trace.
         temp_trace = stream.pop()
         self.assertEqual(3, len(stream))
-        # Assert attributes. The objects itsself are not identical.
+        # Assert attributes. The objects itself are not identical.
         self.assertEqual(temp_trace.stats, traces[-1].stats)
         N.testing.assert_array_equal(temp_trace.data, traces[-1].data)
         # Remove the last copied Trace.
@@ -282,7 +281,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the remove method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Use the remove method of the Stream object and of the list of Traces.
@@ -301,7 +300,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the reverse method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Use reversing of the Stream object and of the list.
@@ -398,7 +397,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the merge method of the Stream objects.
         """
-        stream = obspy.read(self.mseed_file)
+        stream = read(self.mseed_file)
         start = UTCDateTime("2007-12-31T23:59:59.915000")
         end = UTCDateTime("2008-01-01T00:04:31.790000")
         self.assertEquals(len(stream), 4)
