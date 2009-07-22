@@ -17,15 +17,18 @@ class StatsTestCase(unittest.TestCase):
 
     def test_deepcopy(self):
         """
-        Tests initialization from a given time string.
+        Tests deepcopy method from L{obspy.core.Stats}.
         """
         stats = Stats()
         stats.network = 'BW'
         stats['station'] = 'ROTZ'
-        x = stats.keys()
-        x.sort()
-        y = copy.deepcopy(x)[0:3]
-        self.assertEquals(y, ['network', 'station'])
+        stats2 = copy.deepcopy(stats)
+        stats.network = 'CZ'
+        stats.station = 'RJOB'
+        self.assertEquals(stats2.network, 'BW')
+        self.assertEquals(stats2.station, 'ROTZ')
+        self.assertEquals(stats.network, 'CZ')
+        self.assertEquals(stats.station, 'RJOB')
 
     def test_simpleStats(self):
         """
