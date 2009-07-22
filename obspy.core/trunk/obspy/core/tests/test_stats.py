@@ -27,19 +27,29 @@ class StatsTestCase(unittest.TestCase):
         y = copy.deepcopy(x)[0:3]
         self.assertEquals(y, ['network', 'station'])
 
-    def test_setterAndGetter(self):
+    def test_simpleStats(self):
         """
         Various setter and getter tests.
         """
-        # simple
         stats = Stats()
         stats.test = 1
         self.assertEquals(stats.test, 1)
         self.assertEquals(stats['test'], 1)
+        stats['test2'] = 2
+        self.assertEquals(stats.test2, 2)
+        self.assertEquals(stats['test2'], 2)
         stats['test'] = 2
         self.assertEquals(stats.test, 2)
         self.assertEquals(stats['test'], 2)
-        # nested
+        stats.test2 = 1
+        self.assertEquals(stats.test2, 1)
+        self.assertEquals(stats['test2'], 1)
+
+    def test_nestedStats(self):
+        """
+        Various setter and getter tests.
+        """
+        stats = Stats()
         stats.test = Stats()
         stats.test['test2'] = 'muh'
         self.assertEquals(stats.test.test2, 'muh')
