@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from obspy.filter import invsim
-from obspy.filter.tests import test_invsim,test_filter,test_rotate
+from obspy.signal import invsim, trigger
+from obspy.signal.tests import test_invsim,test_filter,test_rotate
+from obspy.signal.tests import test_trigger
 import unittest
 import doctest
 
@@ -11,10 +12,12 @@ def suite():
     suite.addTest(test_invsim.suite())
     try:
         suite.addTest(doctest.DocTestSuite(invsim))
+        suite.addTest(doctest.DocTestSuite(trigger))
     except:
         pass
     suite.addTest(test_filter.suite())
     suite.addTest(test_rotate.suite())
+    suite.addTest(test_trigger.suite())
     return suite
 
 

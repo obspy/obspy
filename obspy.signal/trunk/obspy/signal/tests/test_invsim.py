@@ -4,8 +4,8 @@
 The InvSim test suite.
 """
 
-from obspy.filter import specInv, cosTaper, seisSim, pazToFreqResp
-from obspy.filter.seismometer import wood_anderson, wwssn_sp, wwssn_lp, kirnos
+from obspy.signal import specInv, cosTaper, seisSim, pazToFreqResp
+from obspy.signal.seismometer import wood_anderson, wwssn_sp, wwssn_lp, kirnos
 import inspect, os, unittest, gzip
 import numpy as N
 import math as M

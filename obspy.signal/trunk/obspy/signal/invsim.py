@@ -332,7 +332,7 @@ def seisSim(data,samp_rate,paz,inst_sim=None,water_level=600.0):
     'gain'. poles and zeroes must be a list of complex floating point
     numbers, gain must be of type float. Or None for no simulation.
     Ready to go poles, zeros, gain dictonaries for instruments to simulate
-    can be imported from obspy.filter.seismometer
+    can be imported from obspy.signal.seismometer
     """
     error = """
     %s must be either of none or dictionary type. With poles, zeroes

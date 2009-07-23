@@ -10,8 +10,8 @@ def suite():
     The obspy test suite.
     """
     suite = unittest.TestSuite()
-    for module in ['core', 'gse2', 'mseed', 'sac', 'wav', 'filter', 'imaging',
-                   'xseed', 'trigger']:
+    for module in ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
+                   'xseed']:
         name = 'obspy.%s.tests' % module
         try:
             __import__(name)

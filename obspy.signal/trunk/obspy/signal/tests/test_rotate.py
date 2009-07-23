@@ -4,7 +4,7 @@
 The Rotate test suite.
 """
 
-from obspy.filter import rotate_NE_RT,gps2DistAzimuth
+from obspy.signal import rotate_NE_RT,gps2DistAzimuth
 import inspect, os, unittest, gzip
 import numpy as N
 

@@ -4,8 +4,8 @@
 The Filter test suite.
 """
 
-from obspy.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH 
-from obspy.filter import lowpass,lowpassZPHSH, highpass, highpassZPHSH, envelope
+from obspy.signal import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH 
+from obspy.signal import lowpass,lowpassZPHSH, highpass, highpassZPHSH, envelope
 import inspect, os, unittest, gzip
 import numpy as N
 

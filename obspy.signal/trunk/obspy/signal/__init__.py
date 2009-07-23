@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Basic filtering routines for seismograms.
+Signal processing routines for seismology. 
 
-Capabilities include rotating and instrument correction.
+Capabilities include filtering, triggering, rotation, instrument
+correction and coordinate transformations.
 
 
 GNU General Public License (GPL)
@@ -31,3 +32,4 @@ from invsim import pazToFreqResp2
 from invsim import specInv
 from invsim import seisSim
 import seismometer
+from trigger import *

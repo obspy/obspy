@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.trigger test suite.
+The obspy.signal.trigger test suite.
 """
 
-from obspy.trigger import recStalta, recStaltaPy, triggerOnset
+from obspy.signal import recStalta, recStaltaPy, triggerOnset
 from ctypes import ArgumentError
 import numpy as N
 import unittest
