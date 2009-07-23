@@ -33,7 +33,7 @@ USA.
 import numpy as N
 import math as M
 from scipy import signal
-PI = N.pi
+pi = N.pi
 
 
 def cosTaper(npts,p):
@@ -41,7 +41,7 @@ def cosTaper(npts,p):
     Cosinus Taper.
 
     >>> tap = cosTaper(100,1.0)
-    >>> tap2 = 0.5*(1+N.cos(N.linspace(PI,2*PI,50)))
+    >>> tap2 = 0.5*(1+N.cos(N.linspace(pi,2*pi,50)))
     >>> (tap[0:50]==tap2).all()
     True
     >>> npts = 100
@@ -63,10 +63,35 @@ def cosTaper(npts,p):
     else:
         frac = int(npts*p/2.0) + 1
     return N.concatenate((
-        0.5*(1+N.cos(N.linspace(PI,2*PI,frac))),
+        0.5*(1+N.cos(N.linspace(pi,2*pi,frac))),
         N.ones(npts-2*frac),
-        0.5*(1+N.cos(N.linspace(0,PI,frac)))
+        0.5*(1+N.cos(N.linspace(0,pi,frac)))
         ),axis=0)
+
+def detrend(trace):
+    """
+    Inplace detrend signal simply by subtracting a line through the first
+    and last point of the trace
+
+    @param trace: Data to detrend
+    """
+    ndat = len(trace)
+    x1, x2 = trace[0], trace[-1]
+    trace -= ( x1 + numpy.arange(ndat)*(x2-x1) / float(ndat-1) )
+
+
+def cornFreq2Paz(fc,damp=0.707):
+    """
+    Convert corner frequency and damping to poles and zeros. 2 zeros at
+    postion (0j, 0j) are given as output  (m/s).
+
+    @param fc: Corner frequency
+    @param damping: Corner frequency
+    @return: Dictionary containg poles, zeroes and gain
+    """
+    poles =     [-(damp +M.sqrt(1-damp**2)*1j) *2*pi*fc]
+    poles.append(-(damp -M.sqrt(1-damp**2)*1j) *2*pi*fc)
+    return {'poles':poles,'zeroes':[0j,0j],'gain':1}
 
 
 def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft,freq=False):
@@ -94,7 +119,7 @@ def pazToFreqResp(poles,zeroes,scale_fac,t_samp,nfft,freq=False):
     fy = 1/(t_samp*2.0)
     # start at zero to get zero for offset/ DC of fft
     f = N.arange(0,fy+fy/n,fy/n) #arange should includes fy/n
-    w,h=signal.freqs(a,b,f*2*PI)
+    w,h=signal.freqs(a,b,f*2*pi)
     h = N.conj(h)
     h[-1] = h[-1].real + 0.0j
     if freq:
@@ -125,7 +150,7 @@ def pazToFreqResp2(poles,zeroes,scale_fac,t_samp,nfft):
     nzero = len(zeroes)
     delta_f = 1.0/(t_samp*nfft)
     s = N.arange(0,nfft/2+1,dtype=N.complex128)
-    s.imag = s.real*delta_f*2*PI
+    s.imag = s.real*delta_f*2*pi
     s.real = 0.0
     num = 1.0 + 0.0j
     for ii in xrange(nzero):
@@ -170,7 +195,7 @@ def pazToFreqResp3(poles,zeroes,scale_fac,t_samp,nfft):
     #/* calculate transfer function */
     delta_f = 1.0/(t_samp*nfft)
     for i in xrange(0,nfft/2+1):
-        s = complex(0.0, i*2*PI*delta_f)
+        s = complex(0.0, i*2*pi*delta_f)
         num = 1.0 + 0.0j
         for ii in xrange(nzero):
             num *= (s - zeroes[ii])
@@ -407,10 +432,10 @@ def simFilt(tr2,tsa,fc0,fc1,fc2,h0,h1,h2,do_int):
     if fc0 <= 0.0:
         oms0 = 0.0;
     else:
-        oms0 = M.tan(tsa*PI*fc0)
+        oms0 = M.tan(tsa*pi*fc0)
     
-    oms1 = M.tan(tsa*PI*fc1)
-    oms2 = M.tan(tsa*PI*fc2)
+    oms1 = M.tan(tsa*pi*fc1)
+    oms2 = M.tan(tsa*pi*fc2)
     
     # /*   k sub i dash */
     xk0 = 2.0*h0*oms0

@@ -102,10 +102,10 @@ def writeSAC(stream_object, filename, **kwargs):
         t.InitArrays() # initialize header arrays
         #
         # Check for necessary values, set a default if they are missing
-        trace.stats.is_attr('npts', int, len(trace.data)) # set the number of data points
-        trace.stats.is_attr('sampling_rate', float, 1.0)
-        trace.stats.is_attr('starttime', UTCDateTime, UTCDateTime(0))
-        trace.stats.sac.is_attr('nvhdr', int, 1)  # SAC version needed 0<version<20
+        trace.stats.setdefault('npts', len(trace.data)) # set the number of data points
+        trace.stats.setdefault('sampling_rate', 1.0)
+        trace.stats.setdefault('starttime', UTCDateTime(0.0))
+        trace.stats.sac.setdefault('nvhdr', 1)  # SAC version needed 0<version<20
         #
         for _j, _k in convert_dict.iteritems():
             try:
