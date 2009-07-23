@@ -257,7 +257,7 @@ def zdetect(a, Nsta):
     return Z
 
 
-def triggerOnset(charfct, thres1, thres2):
+def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     """
     Calculate trigger on and off times.
 
@@ -272,10 +272,14 @@ def triggerOnset(charfct, thres1, thres2):
     @param charfct: Characteristic function of e.g. STA/LTA trigger
     @type thres1: Float
     @param thres1: Value above which trigger (of characteristic function)
-        is activated (higher threshold)
+                   is activated (higher threshold)
     @type thres2: Float
     @param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
+    @type max_len: Int
+    @param max_len: Maximum length of triggered event in samples. A new
+                    event will be triggered as soon as the signal reaches
+                    again above thres1.
     @rtype: List
     @return: Nested List of trigger on and of times in samples
     """
@@ -289,6 +293,9 @@ def triggerOnset(charfct, thres1, thres2):
     # 4) as long as there is a on time greater than the actual of time find
     #    trigger on states which are greater than last of state an the
     #    corresponding of state which is greater than current on state
+    # 5) if the signal stays above thres2 longer than max_len an event
+    #    is triggered and following a new event can be triggered as soon as
+    #    the signal is above thres1
     ind1 = N.where(charfct > thres1)[0]
     if len(ind1) == 0:
         return []
@@ -306,6 +313,8 @@ def triggerOnset(charfct, thres1, thres2):
             on.pop(0)
         while of[0] < on[0]:
             of.pop(0)
+        if of[0] - on[0] > max_len:
+            of.insert(0,on[0]+max_len)
         pick.append([on[0],of[0]])
     return pick
 

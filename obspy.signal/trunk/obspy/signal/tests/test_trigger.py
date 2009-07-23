@@ -55,10 +55,21 @@ class TriggerTestCase(unittest.TestCase):
         """
         Test trigger onset function
         """
-        on_of = [[10, 26], [73, 89], [135, 151], [198, 214], [261, 277]]
-        cft = N.sin(N.arange(0,10*N.pi,0.1))
-        picks = triggerOnset(cft,0.8,0.5)
+        on_of = [[6, 31], [69, 94], [131, 181], [215, 265], [278, 315]]
+        cft = N.concatenate((N.sin(N.arange(0,5*N.pi,0.1))+1,
+                             N.sin(N.arange(0,5*N.pi,0.1))+2.1,
+                             N.sin(N.arange(0,5*N.pi,0.1))+0.4))
+        picks = triggerOnset(cft,1.5,1.0,max_len=50)
         self.assertEquals(picks,on_of)
+        #
+        if False: # set True for visual understanding the test
+            import pylab as P
+            P.plot(cft)
+            P.hlines([1.5,1.0],0,len(cft))
+            on_of = N.array(on_of)
+            P.vlines(on_of[:,0],1.0,2.0,color='g',linewidth=2)
+            P.vlines(on_of[:,1],0.5,1.5,color='r',linewidth=2)
+            P.show()
 
 def suite():
     return unittest.makeSuite(TriggerTestCase, 'test')
