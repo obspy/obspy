@@ -25,6 +25,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 500000))
         dt = UTCDateTime("1970-01-01T12:23:34.000005")
         self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 5))
+        dt = UTCDateTime("1969-12-31T23:43:19.900000")
+        self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
 
     def test_toString(self):
         """
@@ -48,6 +50,18 @@ class UTCDateTimeTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
         self.assertAlmostEquals(end - start, 4.995)
+        start = UTCDateTime(1000, 1, 1, 0, 0, 0, 0)
+        end = UTCDateTime(1000, 1, 1, 0, 0, 4, 0)
+        self.assertAlmostEquals(end - start, 4)
+        start = UTCDateTime(0)
+        end = UTCDateTime(-1000.5)
+        self.assertAlmostEquals(end - start, -1000.5)
+
+    def test_negativeTimestamp(self):
+        dt = UTCDateTime(-1000.1)
+        self.assertEquals(str(dt), "1969-12-31T23:43:19.900000")
+        self.assertEquals(dt.timestamp, -1000.1)
+        dt = UTCDateTime(-1000.1)
 
 
 def suite():
