@@ -42,14 +42,17 @@ gse2_extra = [
 ]
 
 
-def readGSE2(filename, **kwargs):
+def readGSE2(filename, headonly=False, **kwargs):
     """
     Reads a GSE2 file and returns an obspy.Trace object.
     
     @param filename: GSE2 file to be read.
     """
     # read GSE2 file
-    header, data = libgse2.read(filename)
+    if headonly:
+        header = libgse2.readHead(filename)
+    else:
+        header, data = libgse2.read(filename)
     # assign all header entries to a new dictionary compatible with an Obspy
     # Trace object.
     new_header = {}
@@ -65,6 +68,8 @@ def readGSE2(filename, **kwargs):
         header['t_hour'], header['t_min'], 0) + header['t_sec']
     new_header['endtime'] = new_header['starttime'] + \
         (header['n_samps'] - 1) / float(header['samp_rate'])
+    if headonly:
+        return Trace(header=new_header)
     return Trace(header=new_header, data=data)
 
 

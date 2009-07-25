@@ -44,6 +44,24 @@ class CoreTestCase(unittest.TestCase):
         for _i in xrange(13):
             self.assertEqual(tr.data[_i], testdata[_i])
 
+    def test_readHeadViaObspy(self):
+        """
+        Read header of files via L{obspy.Trace}
+        """
+        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        # read
+        st = read(gse2file,headonly=True)
+        tr = st[0]
+        self.assertEqual(tr.stats['station'], 'RJOB ')
+        self.assertEqual(tr.stats.npts, 12000)
+        self.assertEqual(tr.stats['sampling_rate'], 200)
+        self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
+        self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
+        self.assertAlmostEqual(tr.stats.gse2.get('calib'), 9.49e-02)
+        self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
+        self.assertEqual(str(tr.data), '[]')
+
     def test_readAndWriteViaObspy(self):
         """
         Read and Write files via L{obspy.Trace}

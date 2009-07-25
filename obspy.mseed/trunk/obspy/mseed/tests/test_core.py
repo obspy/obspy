@@ -73,6 +73,26 @@ class CoreTestCase(unittest.TestCase):
         for _i in stream.traces:
             self.assertEqual(True, isinstance(_i, Trace))
 
+    def test_readHeadFileViaObsPy(self):
+        """
+        Read file test via L{obspy.core.Stream}.
+        """
+        testfile = os.path.join(self.path, 'data', 'test.mseed')
+        # without given format -> auto detect file format
+        stream = read(testfile,headonly=True)
+        self.assertEqual(stream[0].stats.network, 'NL')
+        self.assertEqual(stream[0].stats['station'], 'HGN')
+        self.assertEqual(str(stream[0].data), '[]')
+        self.assertEqual(stream[0].stats.npts, 11947)
+        #
+        gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
+        # without given format -> autodetect using extension
+        stream = read(gapfile,headonly=True)
+        self.assertEqual(4, len(stream.traces))
+        for _i in stream.traces:
+            self.assertEqual(True, isinstance(_i, Trace))
+            self.assertEqual(str(_i.data),'[]')
+
     def test_writeIntegersViaObsPy(self):
         """
         Write integer array via L{obspy.core.Stream}.

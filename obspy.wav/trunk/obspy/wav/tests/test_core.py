@@ -43,6 +43,15 @@ class CoreTestCase(unittest.TestCase):
         #for _i in xrange(13):
         #    self.assertEqual(tr3.data[_i], testdata[_i])
 
+    def test_readHeadViaObspy(self):
+        """
+        Read files via L{obspy.Trace}
+        """
+        tr = obspy.read(self.file,headonly=True)[0]
+        self.assertEqual(tr.stats.npts, 2599)
+        self.assertEqual(tr.stats['sampling_rate'], 7000)
+        self.assertEqual(str(tr.data), '[]')
+
     def test_readAndWriteViaObspy(self):
         """
         Read and Write files via L{obspy.Trace}

@@ -40,6 +40,19 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
         N.testing.assert_array_almost_equal(self.testdata[0:10], tr.data[0:10])
 
+    def test_readHeadViaObspy(self):
+        """
+        Read files via L{obspy.Stream}
+        """
+        tr = read(self.file, format='SAC', headonly=True)[0]
+        self.assertEqual(tr.stats['station'], 'STA     ')
+        self.assertEqual(tr.stats.npts, 100)
+        self.assertEqual(tr.stats['sampling_rate'], 1.0)
+        self.assertEqual(tr.stats.get('channel'), 'Q       ')
+        self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
+        self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
+        self.assertEqual(str(tr.data), '[]')
+
     def test_writeViaObspy(self):
         """
         Writing artificial files via L{obspy.Stream}

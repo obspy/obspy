@@ -167,7 +167,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(len(trace_list), 4)
         # Four traces need to have three gaps.
         gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), len(trace_list) - 1)
+        self.assertEqual(len(gap_list), len(trace_list))
         # Write File to temporary file.
         outfile = u'tempfile.mseed'
         mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
@@ -194,29 +194,30 @@ class LibMSEEDTestCase(unittest.TestCase):
         # test file with 3 gaps
         filename = os.path.join(self.path, u'gaps.mseed')
         gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), 3)
-        self.assertEqual(gap_list[0][0], 'BW')
-        self.assertEqual(gap_list[0][1], 'BGLD')
-        self.assertEqual(gap_list[0][2], '')
-        self.assertEqual(gap_list[0][3], 'EHE')
-        self.assertEqual(gap_list[0][4],
+        self.assertEqual(len(gap_list), 4)
+        # index are now changed, 0 contains head of trace[0]
+        self.assertEqual(gap_list[1][0]['network'], 'BW')
+        self.assertEqual(gap_list[1][0]['station'], 'BGLD')
+        self.assertEqual(gap_list[1][0]['location'], '')
+        self.assertEqual(gap_list[1][0]['channel'], 'EHE')
+        self.assertEqual(gap_list[1][0]['lastsamp'],
                          UTCDateTime(2008, 1, 1, 0, 0, 1, 970000))
-        self.assertEqual(gap_list[0][5],
+        self.assertEqual(gap_list[1][0]['nextsamp'],
                          UTCDateTime(2008, 1, 1, 0, 0, 4, 35000))
-        self.assertEqual(gap_list[0][6], 2.065)
-        self.assertEqual(gap_list[0][7], 412)
-        self.assertEqual(gap_list[1][6], 2.065)
-        self.assertEqual(gap_list[1][7], 412)
-        self.assertEqual(gap_list[2][6], 4.125)
-        self.assertEqual(gap_list[2][7], 824)
+        self.assertEqual(gap_list[1][0]['gap'], 2.065)
+        self.assertEqual(gap_list[1][0]['totsamp'], 412)
+        self.assertEqual(gap_list[2][0]['gap'], 2.065)
+        self.assertEqual(gap_list[2][0]['totsamp'], 412)
+        self.assertEqual(gap_list[3][0]['gap'], 4.125)
+        self.assertEqual(gap_list[3][0]['totsamp'], 824)
         # real example without gaps
         filename = os.path.join(self.path, u'BW.BGLD..EHE.D.2008.001')
         gap_list = mseed.getGapList(filename)
-        self.assertEqual(gap_list, [])
+        self.assertEqual(gap_list[1:], [])
         # real example with a single gap
         filename = os.path.join(self.path, u'BW.RJOB..EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), 1)
+        self.assertEqual(len(gap_list), 2)
 
     def test_readFirstHeaderInfo(self):
         """

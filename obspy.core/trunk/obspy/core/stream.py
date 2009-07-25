@@ -7,7 +7,7 @@ import math
 import os
 
 
-def read(filename, format=None):
+def read(filename, format=None, headonly=False):
     """
     Reads a file into a L{obspy.core.Stream} object.
     
@@ -43,7 +43,10 @@ def read(filename, format=None):
         except:
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
-    temp_object = fileformat[2](filename)
+    if headonly:
+        temp_object = fileformat[2](filename,headonly=True)
+    else:
+        temp_object = fileformat[2](filename)
     if isinstance(temp_object, Trace):
         return Stream(traces=[temp_object])
     return temp_object

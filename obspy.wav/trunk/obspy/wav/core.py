@@ -44,7 +44,7 @@ def isWAV(filename):
         return False
 
 
-def readWAV(filename, **kwargs):
+def readWAV(filename, headonly=False, **kwargs):
     """
     Read audio WAV file.
     
@@ -55,7 +55,12 @@ def readWAV(filename, **kwargs):
     """
     # read WAV file
     w = wave.open(filename, 'rb')
+    # header information
     (nchannel, width, rate, length, _comptype, _compname) = w.getparams()
+    header = {'sampling_rate': rate, 'npts': length}
+    if headonly:
+        return Trace(header=header)
+    #
     if width == 1:
         format = 'B'
     elif width == 2:
@@ -64,8 +69,6 @@ def readWAV(filename, **kwargs):
         raise TypeError("Unsupported Format Type, string length %d" % length)
     data = struct.unpack("%d%s" % (length * nchannel, format), w.readframes(length))
     w.close()
-    # header information
-    header = {'sampling_rate': rate, 'npts': length}
     return Trace(header=header, data=N.array(data))
 
 

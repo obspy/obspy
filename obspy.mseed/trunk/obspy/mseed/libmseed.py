@@ -344,9 +344,9 @@ class libmseed(object):
                                          skipnotdata=0,
                                          timetol=time_tolerance,
                                          sampratetol=samprate_tolerance)
-        gap_list = []
         # iterate through traces
         cur = mstg.contents.traces.contents
+        gap_list = [[self._convertMSTToDict(cur),None]]
         for _ in xrange(mstg.contents.numtraces - 1):
             next = cur.next.contents
             # Skip MSTraces with 0 sample rate, usually from SOH records
@@ -383,8 +383,12 @@ class libmseed(object):
             # Convert to python datetime objects
             time1 = UTCDateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
             time2 = UTCDateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
-            gap_list.append((cur.network, cur.station, cur.location,
-                             cur.channel, time1, time2, gap, nsamples))
+            #gap_list.append((cur.network, cur.station, cur.location,
+            #                 cur.channel, time1, time2, gap, nsamples))
+            _head = self._convertMSTToDict(cur)
+            _head.update({"lastsamp":time1,"nextsamp":time2,
+                          "gap":gap,"totsamp":nsamples})
+            gap_list.append([_head,None]) # stay conform with readMSTraces
             cur = next
         return gap_list
 
@@ -397,11 +401,16 @@ class libmseed(object):
                                  min_gap, max_gap)
         print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample',
                                                'Next Sample', 'Gap', 'Samples')
-        for r in result:
-            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
-                                                    r[4].isoformat(),
-                                                    r[5].isoformat(),
-                                                    r[6], r[7])
+        for _r in result:
+            #print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
+            #                                        r[4].isoformat(),
+            #                                        r[5].isoformat(),
+            #                                        r[6], r[7])
+            r = _r[0] # stay conform with readMSTraces
+            print "%-5s_%-5s_%-5s_%-5s %-26s %-26s %-5s %-.8g" % (r['network'],
+                r['station'], r['location'], r['channel'],
+                r['lastsamp'].isoformat(), r['nextsamp'].isoformat(),
+                r['totsamp'])
         print "Total: %d gap(s)" % len(result)
 
     def getDataQualityFlagsCount(self, filename):

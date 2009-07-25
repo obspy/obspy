@@ -51,7 +51,7 @@ sac_extra = ['depmin', 'depmax', 'scale', 'odelta', 'b', 'e', 'o', 'a',
              'kuser2', 'knetwk', 'kdatrd', 'kinst',
 ]
 
-def readSAC(filename, **kwargs):
+def readSAC(filename, headonly=False, **kwargs):
     """
     Reads a SAC file and returns an obspy.Trace object.
     
@@ -59,7 +59,10 @@ def readSAC(filename, **kwargs):
     """
     # read SAC file
     t = ReadSac()
-    t.ReadSacFile(filename)
+    if headonly:
+        t.ReadSacHeader(filename)
+    else:
+        t.ReadSacFile(filename)
     # assign all header entries to a new dictionary compatible with an Obspy
     header = {}
     for i, j in convert_dict.iteritems():
@@ -80,6 +83,8 @@ def readSAC(filename, **kwargs):
     header['endtime'] = UTCDateTime(header['starttime'].timestamp +
         header['npts'] / float(header['sampling_rate'])
     )
+    if headonly:
+        return Trace(header=header)
     #XXX From Python2.6 the buffer interface can be generally used to
     # directly pass the pointers from the array.array class to
     # numpy.ndarray, old version:
@@ -150,3 +155,4 @@ def writeSAC(stream_object, filename, **kwargs):
         except:
             raise
         i += 1
+

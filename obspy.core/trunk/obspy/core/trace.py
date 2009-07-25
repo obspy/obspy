@@ -23,11 +23,10 @@ class Trace(object):
                 continue
             self.stats[key] = Stats(value)
         self.data = data
-        self.stats.npts = len(self.data)
+        self.stats.setdefault('npts', len(self.data))
         # set some defaults if not set yet
         for default in ['station', 'network', 'location', 'channel']:
-            if default not in self.stats:
-                self.stats[default] = ''
+            self.stats.setdefault(default, '')
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

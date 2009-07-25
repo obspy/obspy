@@ -14,7 +14,7 @@ def isMSEED(filename):
     return __libmseed__.isMSEED(filename)
 
 
-def readMSEED(filename):
+def readMSEED(filename, headonly=False):
     """
     Reads a given Mini-SEED file and returns an obspy.Stream object.
     
@@ -22,7 +22,10 @@ def readMSEED(filename):
     """
     __libmseed__ = libmseed()
     # read MiniSEED file
-    trace_list = __libmseed__.readMSTraces(filename)
+    if headonly:
+        trace_list = __libmseed__.getGapList(filename)
+    else:
+        trace_list = __libmseed__.readMSTraces(filename)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
@@ -37,15 +40,20 @@ def readMSEED(filename):
                         'dataquality': 'dataquality', 'starttime' :
                         'starttime', 'endtime' : 'endtime'}
         # Convert header.
-        for _j in convert_dict.keys():
-            header[_j] = old_header[convert_dict[_j]]
+        for _j, _k in convert_dict.iteritems():
+            header[_j] = old_header[_k]
         # Convert times to obspy.UTCDateTime objects.
         header['starttime'] = \
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
         header['endtime'] = \
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
         # Append traces.
-        traces.append(Trace(header=header, data=_i[1]))
+        if headonly:
+            header['npts'] = int( (header['endtime'] - header['starttime']) *
+                                   header['sampling_rate'] + 1 + 0.5)
+            traces.append(Trace(header=header))
+        else:
+            traces.append(Trace(header=header, data=_i[1]))
     return Stream(traces=traces)
 
 
