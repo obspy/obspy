@@ -68,17 +68,26 @@ def recStalta(a, nsta, nlta):
     lib.recstalta.argtypes = [N.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
                                                     flags='C_CONTIGUOUS'), 
+                              N.ctypeslib.ndpointer(dtype='float64',
+                                                    ndim=1,
+                                                    flags='C_CONTIGUOUS'), 
                               C.c_int, C.c_int, C.c_int]
-    lib.recstalta.restype = C.POINTER(C.c_double)
-    # reading C memory into buffer which can be converted to numpy array
-    C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-    C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
-
+    lib.recstalta.restype = C.c_void_p
     ndat = len(a)
-    size = struct.calcsize('d') # calculate size of float64
-    charfct = lib.recstalta(a, ndat, nsta, nlta) # do not use pointer here
-    return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
-                        dtype='float64',count=ndat)
+    charfct = N.ndarray(ndat, dtype='float64')
+    lib.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
+    return charfct
+
+#
+# Old but fancy version of recStalta, keep it for the moment
+#lib.recstalta.restype = C.POINTER(C.c_double)
+# reading C memory into buffer which can be converted to numpy array
+#C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
+#C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
+#charfct = lib.recstalta(a, ndat, nsta, nlta # do not use pointer here
+#size = struct.calcsize('d') # calculate size of float64
+#return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
+#                    dtype='float64',count=ndat)
 
 
 def recStaltaPy(charfct, nsta, nlta):

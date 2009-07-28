@@ -5,13 +5,13 @@ ObsPy Test Suite Module.
 To run the tests, there are the following possibilities
 
 {{{
-    python -c 'import obspy; print obspy.runTests()'
-    python obspy/core/testing.py
-    python obspy/core/testing.py -v # For a more verbose output
-    python core/testing.py -v obspy.core.tests.test_stream.StreamTestCase
+    python -c 'import obspy; print obspy.runTests()' # Run all tests
+    python obspy/core/testing.py    # Run all tests
+    python obspy/core/testing.py -v # Verbose output
+    python core/testing.py -v obspy.core.tests.test_stream.StreamTestCase.test_adding
 }}}
 
-You can see the name of the test case by -v option.
+Find out the name of a specific test by using the -v options.
 """
 
 import obspy, sys, time, unittest
