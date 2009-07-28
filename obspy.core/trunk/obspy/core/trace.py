@@ -3,7 +3,7 @@
 from copy import deepcopy
 from numpy import array, NaN, concatenate
 from obspy.core import UTCDateTime, Stats
-
+from obspy.core.util import libc
 
 class Trace(object):
     """
@@ -13,10 +13,13 @@ class Trace(object):
     
     @type data: Numpy ndarray 
     @ivar data: Data samples 
+    @param data: Numpy ndarray of data samples
+    @param header: Dictionary containing header fields
+    @param address: Address of data to be freed when trace is deleted
     """
-    def __init__(self, data=array([]), header={}):
+    def __init__(self, data=array([]), header={}, address=None):
+        self.address = address
         self.stats = Stats()
-        self.data = None
         self.stats.update(header)
         for key, value in header.iteritems():
             if not isinstance(value, dict):
@@ -27,6 +30,10 @@ class Trace(object):
         # set some defaults if not set yet
         for default in ['station', 'network', 'location', 'channel']:
             self.stats.setdefault(default, '')
+
+    def __del__(self):
+        if self.address:
+            libc.free(self.address)
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

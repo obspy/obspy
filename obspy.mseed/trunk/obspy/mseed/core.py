@@ -53,7 +53,7 @@ def readMSEED(filename, headonly=False):
                                    header['sampling_rate'] + 1 + 0.5)
             traces.append(Trace(header=header))
         else:
-            traces.append(Trace(header=header, data=_i[1]))
+            traces.append(Trace(header=header, data=_i[1], address=_i[2]))
     return Stream(traces=traces)
 
 

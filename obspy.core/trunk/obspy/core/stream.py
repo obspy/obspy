@@ -113,6 +113,10 @@ class Stream(object):
         """
         return self.traces[index]
 
+    def __del__(self):
+        for trace in self.traces:
+            del trace
+
     def append(self, trace, reference=False):
         """
         This method appends a single Trace object to the Stream object.

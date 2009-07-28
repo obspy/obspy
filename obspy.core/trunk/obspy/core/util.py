@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import ctypes.util
 import ctypes as C
-import traceback
+import traceback, sys
+
+
+if sys.platform == 'win32':
+    libc = C.cdll.msvcrt 
+else:
+    libc = C.CDLL(C.util.find_library('c'))
+libc.free.argtype = [C.c_void_p]    
 
 
 def getFormatsAndMethods(verbose=False):

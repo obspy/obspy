@@ -134,7 +134,7 @@ class libmseed(object):
             # Access data directly as numpy array.
             data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
                                                        chain.numsamples)
-            trace_list.append([header, data])
+            trace_list.append([header, data, chain.datasamples])
             # Set chain to next trace.
             if _i != numtraces - 1:
                 chain = chain.next.contents
@@ -761,7 +761,10 @@ class libmseed(object):
         # Make ctypes style array from C array.
         ctypes_array = buffer_type.from_address(array_address)
         # Make a NumPy array from that.
-        return N.ctypeslib.as_array(ctypes_array)
+        y = N.ctypeslib.as_array(ctypes_array)
+        del ctypes_array, buffer
+        return y
+        #return N.ctypeslib.as_array(ctypes_array)
 
     def _convertDatetimeToMSTime(self, dt):
         """
