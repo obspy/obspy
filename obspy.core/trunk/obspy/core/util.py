@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ctypes as C
+import ctypes.util
 import os
 import tempfile
 import traceback

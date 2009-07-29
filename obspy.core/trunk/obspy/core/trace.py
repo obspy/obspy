@@ -18,7 +18,7 @@ class Trace(object):
     @param address: Address of data to be freed when trace is deleted
     """
     def __init__(self, data=array([]), header={}, address=None):
-        self.address = address
+        #self.address = address
         self.stats = Stats()
         self.stats.update(header)
         for key, value in header.iteritems():
@@ -31,9 +31,9 @@ class Trace(object):
         for default in ['station', 'network', 'location', 'channel']:
             self.stats.setdefault(default, '')
 
-#    def __del__(self):
-#        if self.address:
-#            libc.free(self.address)
+    #def __del__(self):
+    #    if self.address:
+    #        libc.free(self.address)
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

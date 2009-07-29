@@ -23,7 +23,7 @@ def readMSEED(filename, headonly=False):
     __libmseed__ = libmseed()
     # read MiniSEED file
     if headonly:
-        trace_list = __libmseed__.getGapList(filename)
+        trace_list = __libmseed__.readMSHeader(filename)
     else:
         trace_list = __libmseed__.readMSTraces(filename)
     # Create a list containing all the traces.
@@ -53,7 +53,8 @@ def readMSEED(filename, headonly=False):
                                    header['sampling_rate'] + 1 + 0.5)
             traces.append(Trace(header=header))
         else:
-            traces.append(Trace(header=header, data=_i[1], address=_i[2]))
+            traces.append(Trace(header=header, data=_i[1]))
+            #traces.append(Trace(header=header, data=_i[1], address=_i[2]))
     return Stream(traces=traces)
 
 

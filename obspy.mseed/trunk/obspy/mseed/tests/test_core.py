@@ -78,7 +78,6 @@ class CoreTestCase(unittest.TestCase):
         Read file test via L{obspy.core.Stream}.
         """
         testfile = os.path.join(self.path, 'data', 'test.mseed')
-        # without given format -> auto detect file format
         stream = read(testfile,headonly=True)
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')

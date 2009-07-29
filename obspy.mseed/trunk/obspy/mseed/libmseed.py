@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile, c_file_p
+from obspy.core.util import scoreatpercentile, c_file_p, libc
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     MSFileParam
 from struct import unpack
@@ -134,7 +134,7 @@ class libmseed(object):
             # Access data directly as numpy array.
             data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
                                                        chain.numsamples)
-            trace_list.append([header, data, chain.datasamples])
+            trace_list.append([header, data])
             # Set chain to next trace.
             if _i != numtraces - 1:
                 chain = chain.next.contents
@@ -344,9 +344,9 @@ class libmseed(object):
                                          skipnotdata=0,
                                          timetol=time_tolerance,
                                          sampratetol=samprate_tolerance)
+        gap_list = []
         # iterate through traces
         cur = mstg.contents.traces.contents
-        gap_list = [[self._convertMSTToDict(cur),None]]
         for _ in xrange(mstg.contents.numtraces - 1):
             next = cur.next.contents
             # Skip MSTraces with 0 sample rate, usually from SOH records
@@ -383,12 +383,8 @@ class libmseed(object):
             # Convert to python datetime objects
             time1 = UTCDateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
             time2 = UTCDateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
-            #gap_list.append((cur.network, cur.station, cur.location,
-            #                 cur.channel, time1, time2, gap, nsamples))
-            _head = self._convertMSTToDict(cur)
-            _head.update({"lastsamp":time1,"nextsamp":time2,
-                          "gap":gap,"totsamp":nsamples})
-            gap_list.append([_head,None]) # stay conform with readMSTraces
+            gap_list.append((cur.network, cur.station, cur.location,
+                             cur.channel, time1, time2, gap, nsamples))
             cur = next
         return gap_list
 
@@ -401,17 +397,37 @@ class libmseed(object):
                                  min_gap, max_gap)
         print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample',
                                                'Next Sample', 'Gap', 'Samples')
-        for _r in result:
-            #print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
-            #                                        r[4].isoformat(),
-            #                                        r[5].isoformat(),
-            #                                        r[6], r[7])
-            r = _r[0] # stay conform with readMSTraces
-            print "%-5s_%-5s_%-5s_%-5s %-26s %-26s %-5s %-.8g" % (r['network'],
-                r['station'], r['location'], r['channel'],
-                r['lastsamp'].isoformat(), r['nextsamp'].isoformat(),
-                r['totsamp'])
+        for r in result:
+            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
+                                                    r[4].isoformat(),
+                                                    r[5].isoformat(),
+                                                    r[6], r[7])
         print "Total: %d gap(s)" % len(result)
+
+    def readMSHeader(self, filename, time_tolerance= -1,
+                   samprate_tolerance= -1, min_gap=None, max_gap=None):
+        """
+        Returns trace header information of a given file.
+        
+        @param time_tolerance: Time tolerance while reading the traces, default 
+            to -1 (1/2 sample period).
+        @param samprate_tolerance: Sample rate tolerance while reading the 
+            traces, defaults to -1 (rate dependent).
+        @return: Dictionary containing header entries
+        """
+        # read file
+        mstg = self.readFileToTraceGroup(filename, dataflag=0,
+                                         skipnotdata=0,
+                                         timetol=time_tolerance,
+                                         sampratetol=samprate_tolerance)
+        # iterate through traces
+        cur = mstg.contents.traces.contents
+        header = [[self._convertMSTToDict(cur),None]]
+        for _ in xrange(mstg.contents.numtraces - 1):
+            next = cur.next.contents
+            header.append([self._convertMSTToDict(cur),None])
+            cur = next
+        return header
 
     def getDataQualityFlagsCount(self, filename):
         """
@@ -755,16 +771,23 @@ class libmseed(object):
         @param buffer: Ctypes c_int32 buffer.
         @param buffer_elements: length of the buffer
         """
-        buffer_type = C.c_int32 * buffer_elements
+        #buffer_type = C.c_int32 * buffer_elements
         # Get address of array_in_c, which contains reference to the C array.
-        array_address = C.addressof(buffer.contents)
+        #array_address = C.addressof(buffer.contents)
         # Make ctypes style array from C array.
-        ctypes_array = buffer_type.from_address(array_address)
+        #ctypes_array = buffer_type.from_address(array_address)
+        # Allocate numpy array to move memory to
         # Make a NumPy array from that.
-        y = N.ctypeslib.as_array(ctypes_array)
-        del ctypes_array, buffer
-        return y
         #return N.ctypeslib.as_array(ctypes_array)
+        # 
+        numpy_array = N.ndarray(buffer_elements,dtype='int32')
+        datptr = numpy_array.ctypes.get_data()
+        # Manually copy the contents of the C malloced memory area to
+        # the address of the previously created numpy array
+        C.memmove(datptr, buffer, buffer_elements * 4)
+        # free the memory of the buffer
+        libc.free(buffer)
+        return numpy_array
 
     def _convertDatetimeToMSTime(self, dt):
         """
