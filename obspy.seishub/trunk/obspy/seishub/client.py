@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from lxml import objectify
+from obspy.core.util import NamedTemporaryFile
 import obspy
-import os
-import tempfile
 import urllib
 
 
@@ -82,13 +81,15 @@ class _WaveformMapperClient(object):
 
     def getWaveform(self, *args, **kwargs):
         """
-        Gets a list of network latency values.
+        Gets a L{obspy.Stream} object.
         
         @param network_id: Network code, e.g. 'BW'.
         @param station_id: Station code, e.g. 'MANZ'.
         @param location_id: Location code, e.g. '01'.
         @param channel_id: Channel code, e.g. 'EHE'.
-        @return: List of dictionaries containing latency information.
+        @param start_datetime: start time as L{obspy.UTCDateTime} object.
+        @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @return: L{obspy.Stream} object.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id',
                'start_datetime', 'end_datetime']
@@ -98,19 +99,7 @@ class _WaveformMapperClient(object):
         data = self.client._fetch(url, **kwargs)
         if not data:
             return None
-
-        class TempFile(object):
-            def __init__(self, fd, fname):
-                self._fileobj = os.fdopen(fd, 'w+b')
-                self.name = fname
-            def __getattr__(self, attr):
-                return getattr(self._fileobj, attr)
-
-        def mktempfile(dir=None, suffix='.tmp'):
-            return TempFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
-
-
-        tf = mktempfile()
+        tf = NamedTemporaryFile()
         try:
             tf.write(data)
             tf.seek(0)

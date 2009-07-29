@@ -206,6 +206,14 @@ class UTCDateTime(datetime.datetime):
             text += '.000000'
         return text.replace(' ', 'T')
 
+    def formatArcLink(self):
+        """
+        Returns string representation for the ArcLink protocol.
+        """
+        return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
+                                      self.hour, self.minute, self.second,
+                                      self.microsecond)
+
 
 if __name__ == '__main__':
     import doctest

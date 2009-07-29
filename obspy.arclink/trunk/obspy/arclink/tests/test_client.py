@@ -4,6 +4,7 @@ The obspy.arclink.client test suite.
 """
 
 from obspy.arclink import Client
+from obspy.core.utcdatetime import UTCDateTime
 import unittest
 
 
@@ -16,11 +17,43 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         client = Client()
-        data = client.getWaveform()
-        print len(data)
-        data2 = client.saveWaveform('muh.mseed')
-        print len(data2)
-        print "done"
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
+        self.assertEquals(len(stream), 3)
+        for trace in stream:
+            self.assertEquals(trace.stats.starttime, start)
+            self.assertEquals(trace.stats.endtime, end)
+            self.assertEquals(trace.stats.network, 'BW')
+            self.assertEquals(trace.stats.station, 'MANZ')
+        # example 2
+        start = UTCDateTime(2009, 1, 1)
+        end = start + 100
+        stream2 = client.getWaveform('BW', 'RJOB', '', 'EHE', start, end)
+        self.assertEquals(len(stream2), 1)
+        trace2 = stream2[0]
+        self.assertEquals(trace2.stats.starttime, start)
+        self.assertEquals(trace2.stats.endtime, end)
+        self.assertEquals(trace2.stats.network, 'BW')
+        self.assertEquals(trace2.stats.station, 'RJOB')
+        self.assertEquals(trace2.stats.location, '')
+        self.assertEquals(trace2.stats.channel, 'EHE')
+
+    def test_getMissingWaveform(self):
+        """
+        """
+        client = Client()
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        stream = client.getWaveform('AA', 'AAAAA', '', '*', start, end)
+        self.assertEquals(len(stream), 0)
+        # example 2
+        start = UTCDateTime(1008, 1, 1)
+        end = start + 1
+        stream = client.getWaveform('BW', 'MANZ', '', '*', start, end)
+        self.assertEquals(len(stream), 0)
 
 
 def suite():

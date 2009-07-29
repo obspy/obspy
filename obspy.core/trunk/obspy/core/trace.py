@@ -31,9 +31,9 @@ class Trace(object):
         for default in ['station', 'network', 'location', 'channel']:
             self.stats.setdefault(default, '')
 
-    def __del__(self):
-        if self.address:
-            libc.free(self.address)
+#    def __del__(self):
+#        if self.address:
+#            libc.free(self.address)
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

@@ -36,8 +36,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 import ctypes as C
 import numpy as N
 import os
-import struct
 import platform
+
 
 if platform.system() == 'Windows':
     lib_name = 'recstalta.win32.dll'
@@ -47,7 +47,7 @@ else:
     else:
         lib_name = 'recstalta.so'
 
-lib = C.CDLL(os.path.join(os.path.dirname(__file__), lib_name))
+lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
 
 
 def recStalta(a, nsta, nlta):
@@ -67,10 +67,10 @@ def recStalta(a, nsta, nlta):
     """
     lib.recstalta.argtypes = [N.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
-                                                    flags='C_CONTIGUOUS'), 
+                                                    flags='C_CONTIGUOUS'),
                               N.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
-                                                    flags='C_CONTIGUOUS'), 
+                                                    flags='C_CONTIGUOUS'),
                               C.c_int, C.c_int, C.c_int]
     lib.recstalta.restype = C.c_void_p
     ndat = len(a)
@@ -122,7 +122,7 @@ def recStaltaPy(charfct, nsta, nlta):
     iclta = 1 - clta
     #charfct = charfct.tolist()
     for i in xrange(1, ndat):
-        sq = charfct[i]**2
+        sq = charfct[i] ** 2
         sta = csta * sq + icsta * sta
         lta = clta * sq + iclta * lta
         charfct[i] = sta / lta
@@ -311,10 +311,10 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     ind2 = N.where(charfct > thres2)[0]
     #
     of = [-1]
-    of.extend(ind2[N.diff(ind2) > 1].tolist() )
+    of.extend(ind2[N.diff(ind2) > 1].tolist())
     of.extend([ind2[-1]])
     on = [ind1[0]]
-    on.extend(ind1[N.where(N.diff(ind1) > 1)[0] + 1].tolist() )
+    on.extend(ind1[N.where(N.diff(ind1) > 1)[0] + 1].tolist())
     #
     pick = []
     while on[-1] > of[0]:
@@ -323,9 +323,10 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
         while of[0] < on[0]:
             of.pop(0)
         if of[0] - on[0] > max_len:
-            of.insert(0,on[0]+max_len)
-        pick.append([on[0],of[0]])
+            of.insert(0, on[0] + max_len)
+        pick.append([on[0], of[0]])
     return pick
+
 
 if __name__ == '__main__':
     import doctest

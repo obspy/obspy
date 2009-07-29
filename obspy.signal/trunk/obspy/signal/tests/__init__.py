@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from obspy.signal import invsim, trigger
-from obspy.signal.tests import test_invsim,test_filter,test_rotate
-from obspy.signal.tests import test_trigger
-import unittest
+from obspy.signal.tests import test_invsim, test_filter, test_rotate, \
+    test_trigger
 import doctest
+import unittest
 
 
 def suite():

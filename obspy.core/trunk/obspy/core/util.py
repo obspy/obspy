@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import ctypes.util
 import ctypes as C
-import traceback, sys
+import os
+import tempfile
+import traceback
+import sys
 
 
 if sys.platform == 'win32':
-    libc = C.cdll.msvcrt 
+    libc = C.cdll.msvcrt
 else:
     libc = C.CDLL(C.util.find_library('c'))
-libc.free.argtype = [C.c_void_p]    
+libc.free.argtype = [C.c_void_p]
 
 
 def getFormatsAndMethods(verbose=False):
@@ -160,6 +162,22 @@ def formatScientific(value):
     else:
         msg = "Can't format scientific %s" % (value)
         raise TypeError(msg)
+
+
+def NamedTemporaryFile(dir=None, suffix='.tmp'):
+    """
+    Weak replacement for L{tempfile.NamedTemporaryFile}.
+    
+    But this class will work also with Windows Vista's UAC. The calling 
+    program is responsible to close the returned file pointer after usage.
+    """
+    class NamedTemporaryFile(object):
+        def __init__(self, fd, fname):
+            self._fileobj = os.fdopen(fd, 'w+b')
+            self.name = fname
+        def __getattr__(self, attr):
+            return getattr(self._fileobj, attr)
+    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
 
 
 if __name__ == '__main__':

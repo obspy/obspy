@@ -14,10 +14,15 @@ To run the tests, there are the following possibilities
 Find out the name of a specific test by using the -v options.
 """
 
-import obspy, sys, time, unittest
-_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed']
-modules = ['obspy.%s.tests' % d for d in _dirs]
+import obspy
+import sys
+import time
+import unittest
 
+
+_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed',
+         'arclink']
+modules = ['obspy.%s.tests' % d for d in _dirs]
 
 
 def suite():
@@ -34,6 +39,7 @@ def suite():
         else:
             suite.addTests(sys.modules[module].suite())
     return suite
+
 
 def runTests():
     """
