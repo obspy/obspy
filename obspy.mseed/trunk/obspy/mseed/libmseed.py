@@ -80,6 +80,8 @@ class libmseed(object):
             #Read Trace Group
             mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
             clibmseed.mst_printtracelist(mstg, 1, 1, 1)
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg
         except:
             print 'The file could not be read.'
 
@@ -95,6 +97,7 @@ class libmseed(object):
         """
         try:
             msr = self.readSingleRecordToMSR(filename, dataflag=0)
+            clibmseed.msr_free(C.pointer(msr)) # free allocated memory
             del msr
             return True
         except:
@@ -138,6 +141,8 @@ class libmseed(object):
             # Set chain to next trace.
             if _i != numtraces - 1:
                 chain = chain.next.contents
+        clibmseed.mst_freegroup(C.pointer(mstg))
+        del chain, mstg
         return trace_list
 
     def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding= -1,
@@ -200,7 +205,12 @@ class libmseed(object):
         @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
         """
         # Creates MSTraceGroup Structure
-        mstg = C.pointer(MSTraceGroup())
+        clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
+        clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
+        mstg = clibmseed.mst_initgroup(None)
+        # Define return types for C functions. Results in Segmentation
+        # fault when trying to free this memory
+        #mstg = C.pointer(MSTraceGroup())
         # Uses libmseed to read the file and populate the MSTraceGroup
         errcode = clibmseed.ms_readtraces(
             C.pointer(mstg), str(filename), C.c_int(reclen),
@@ -268,7 +278,7 @@ class libmseed(object):
                                C.c_short(verbose))
         # Clean up memory and close all open files.
         del fpp
-        del FileParam
+        del FileParam, FP_chain
         ff.close()
         return msr
 
@@ -286,6 +296,8 @@ class libmseed(object):
         msr = self.readSingleRecordToMSR(filename, dataflag=0)
         header = {}
         chain = msr.contents
+        clibmseed.msr_free(C.pointer(msr)) # free allocated memory
+        del msr
         # header attributes to be read
         attributes = ('location', 'network', 'station', 'channel')
         # loop over attributes
@@ -319,6 +331,8 @@ class libmseed(object):
         clibmseed.msr_endtime.restype = C.c_int64
         endtime = clibmseed.msr_endtime(last_record)
         endtime = self._convertMSTimeToDatetime(endtime)
+        clibmseed.msr_free(C.pointer(first_record))
+        del first_record
         return(starttime, endtime)
 
     def getGapList(self, filename, time_tolerance= -1,
@@ -386,6 +400,8 @@ class libmseed(object):
             gap_list.append((cur.network, cur.station, cur.location,
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
+        clibmseed.mst_freegroup(C.pointer(mstg))
+        del mstg
         return gap_list
 
     def printGapList(self, filename, time_tolerance= -1,
@@ -427,6 +443,8 @@ class libmseed(object):
             next = cur.next.contents
             header.append([self._convertMSTToDict(cur),None])
             cur = next
+        clibmseed.mst_freegroup(C.pointer(mstg))
+        del mstg
         return header
 
     def getDataQualityFlagsCount(self, filename):
@@ -517,6 +535,7 @@ class libmseed(object):
         fileinfo = self._getMSFileInfo(filename)
         # init MSRecord structure
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
         msr = clibmseed.msr_init(None)
         # defines return type
         clibmseed.ms_readmsr_r.restype = C.c_int
@@ -644,6 +663,8 @@ class libmseed(object):
                 start_record -= 1
             else:
                 start_record += 1
+            clibmseed.msr_free(C.pointer(msr))
+            del msr
         # Loop until the correct end_record is found
         while True:
             # check boundaries
@@ -661,6 +682,8 @@ class libmseed(object):
             etime = self._convertMSTimeToDatetime(stime + ((chain.samplecnt - \
                             1) / chain.samprate) * HPTMODULUS)
             stime = self._convertMSTimeToDatetime(stime)
+            clibmseed.msr_free(C.pointer(msr)) # free allocated memory
+            del msr
             # Leave loop if correct record is found or change record number
             # otherwise.
             if endtime >= stime and endtime <= etime:
@@ -771,6 +794,7 @@ class libmseed(object):
         @param buffer: Ctypes c_int32 buffer.
         @param buffer_elements: length of the buffer
         """
+        # 1. METHOD LION
         #buffer_type = C.c_int32 * buffer_elements
         # Get address of array_in_c, which contains reference to the C array.
         #array_address = C.addressof(buffer.contents)
@@ -779,15 +803,24 @@ class libmseed(object):
         # Allocate numpy array to move memory to
         # Make a NumPy array from that.
         #return N.ctypeslib.as_array(ctypes_array)
-        # 
+        # 2. METHOD MORITZ 
         numpy_array = N.ndarray(buffer_elements,dtype='int32')
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
         C.memmove(datptr, buffer, buffer_elements * 4)
-        # free the memory of the buffer
-        libc.free(buffer)
+        # free the memory of the buffer, do not do that when you used 
+        # mst_freegroup before, else Segmentation fault
+        #libc.free( C.cast(buffer, C.c_void_p) )
         return numpy_array
+        # 3. METHOD MORITZ
+        # reading C memory into buffer which can be converted to numpy array
+        # this is read only too
+        #C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
+        #C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
+        #return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(buffer,
+        #                                                    buffer_elements*4),
+        #                    dtype='int32',count=buffer_elements)
 
     def _convertDatetimeToMSTime(self, dt):
         """

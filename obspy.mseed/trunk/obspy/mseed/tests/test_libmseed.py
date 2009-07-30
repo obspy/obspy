@@ -5,9 +5,11 @@ The libmseed test suite.
 
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
+from obspy.mseed.libmseed import clibmseed
 import copy
 import inspect
 import numpy as N
+import ctypes as C
 import os
 import random
 import unittest
@@ -94,6 +96,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         for i in range(len(datalist) - 1):
             self.assertEqual(datalist[i] - datalist[i + 1],
                              data[i] - data[i + 1])
+        clibmseed.msr_free(C.pointer(msr))
+        del chain, msr
 
     def test_readTraces(self):
         """
