@@ -55,6 +55,19 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('BW', 'MANZ', '', '*', start, end)
         self.assertEquals(len(stream), 0)
 
+    def test_getNetworks(self):
+        """
+        """
+        client = Client()
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        result = client.getNetworks(start, end)
+        self.assertTrue('BW' in result.keys())
+        self.assertEquals(result['BW']['code'], 'BW')
+        self.assertEquals(result['BW']['type'], 'SP/BB')
+        self.assertEquals(result['BW']['institutions'], 'Uni München')
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

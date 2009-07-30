@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from lxml import objectify
 from obspy.core import read, Stream
 from obspy.core.util import NamedTemporaryFile
 from telnetlib import Telnet
@@ -51,10 +52,10 @@ class Client(Telnet):
         self.writeln('BYE')
         self.close()
 
-    def _requestWaveform(self, data=[], format='MSEED'):
+    def _fetch(self, request_type, request_data):
         self._hello()
-        self.writeln('REQUEST WAVEFORM format=%s' % format)
-        for line in data:
+        self.writeln(request_type)
+        for line in request_data:
             self.writeln(line)
         self.writeln('END')
         self.readln('OK')
@@ -85,6 +86,10 @@ class Client(Telnet):
         self._bye()
         return data
 
+    def _objectify(self, *args, **kwargs):
+        doc = self._fetch(*args, **kwargs)
+        return objectify.fromstring(doc)
+
     def getWaveform(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime):
         """
@@ -98,12 +103,13 @@ class Client(Telnet):
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
         @return: L{obspy.Stream} object.
         """
+        rtype = 'REQUEST WAVEFORM format=MSEED'
         # adding one second to start and end time to ensure right date times
-        request = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                         (end_datetime + 1).formatArcLink(),
-                                         network_id, station_id, channel_id,
-                                         location_id)
-        data = self._requestWaveform([request])
+        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                       (end_datetime + 1).formatArcLink(),
+                                       network_id, station_id, channel_id,
+                                       location_id)
+        data = self._fetch(rtype, [rdata])
         if data:
             tf = NamedTemporaryFile()
             tf.write(data)
@@ -117,3 +123,22 @@ class Client(Telnet):
         # trim stream
         stream.trim(start_datetime, end_datetime)
         return stream
+
+    def getNetworks(self, start_datetime, end_datetime):
+        """
+        Returns a dictionary of available networks within the given time span.
+        
+        @param start_datetime: start time as L{obspy.UTCDateTime} object.
+        @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @return: dictionary of network data.
+        """
+        rtype = 'REQUEST INVENTORY'
+        rdata = "%s %s *" % (start_datetime.formatArcLink(),
+                             end_datetime.formatArcLink())
+        xml_doc = self._objectify(rtype, [rdata])
+        data = {}
+        for network in xml_doc.network:
+            temp = network.attrib
+            temp['remark'] = str(network.remark)
+            data[network.attrib['code']] = temp
+        return data
