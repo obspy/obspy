@@ -40,12 +40,12 @@ import platform
 
 
 if platform.system() == 'Windows':
-    lib_name = 'recstalta.win32.dll'
+    lib_name = 'signal.win32.dll'
 else:
     if platform.architecture()[0] == '64bit':
-        lib_name = 'recstalta.lin64.so'
+        lib_name = 'signal.lin64.so'
     else:
-        lib_name = 'recstalta.so'
+        lib_name = 'signal.so'
 
 lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
 

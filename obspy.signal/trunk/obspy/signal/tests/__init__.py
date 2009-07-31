@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.signal import invsim, trigger
+from obspy.signal import invsim, trigger, util
 from obspy.signal.tests import test_invsim, test_filter, test_rotate, \
     test_trigger
 import doctest
@@ -13,6 +13,7 @@ def suite():
     try:
         suite.addTest(doctest.DocTestSuite(invsim))
         suite.addTest(doctest.DocTestSuite(trigger))
+        suite.addTest(doctest.DocTestSuite(util))
     except:
         pass
     suite.addTest(test_filter.suite())

@@ -1,16 +1,22 @@
-# Makefile for C extensions of obspy
-#
+# Makefile for coordtrans
 
 INCLUDES= \
 	-I .
 
-CFLAGS = -g -O3
-CC = gcc
-LD = ld
+DEPENDS = \
+	coordtrans.o \
+	xcorr.o \
+	recstalta.o
 
-recstalta.so: recstalta.c
-	$(CC) $(CFLAGS) -c recstalta.c
-	$(CC) $(CFLAGS) -shared -lm -o recstalta.so recstalta.o
+CFLAGS = -g -O3 
+CC = gcc
+
+signal.so: $(DEPENDS)
+	$(CC) $(CFLAGS) -shared -lm -o signal.so $(DEPENDS)
+
+install: signal.so
+	cp signal.so ../lib/signal.so
 
 clean:
-	rm *.so *.o
+	find ./ -name "*.o" -exec rm {} \;
+	rm *.so

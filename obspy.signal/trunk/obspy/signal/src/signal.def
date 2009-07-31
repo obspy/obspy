@@ -1,0 +1,6 @@
+LIBRARY signal.dll
+EXPORTS
+    X_corr
+    utl_geo_km
+    utl_lonlat
+    recstalta
