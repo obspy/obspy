@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lxml import objectify
-from obspy.core import read, Stream
+from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 from telnetlib import Telnet
 import time, sys
@@ -145,8 +145,19 @@ class Client(Telnet):
                              end_datetime.formatArcLink())
         xml_doc = self._objectify(rtype, [rdata])
         data = AttribDict()
+        if not xml_doc.countchildren():
+            return data
         for network in xml_doc.network:
-            temp = AttribDict(network.attrib)
+            # XXX: not secure - map it manually
+            temp = AttribDict(dict(network.attrib))
             temp['remark'] = str(network.remark)
+            try:
+                temp.start = UTCDateTime(temp.start)
+            except:
+                temp.start = None
+            try:
+                temp.end = UTCDateTime(temp.end)
+            except:
+                temp.end = None
             data[network.attrib['code']] = temp
         return data

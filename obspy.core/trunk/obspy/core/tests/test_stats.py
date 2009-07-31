@@ -15,6 +15,16 @@ class StatsTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_initStats(self):
+        """
+        Init tests.
+        """
+        stats = Stats({'test': 'muh'})
+        self.assertEquals(stats.test, 'muh')
+        self.assertEquals(stats['test'], 'muh')
+        self.assertTrue('test' in stats)
+        self.assertTrue('test' in stats.__dict__)
+
     def test_deepcopy(self):
         """
         Tests deepcopy method from L{obspy.core.Stats}.

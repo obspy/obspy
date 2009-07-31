@@ -33,6 +33,10 @@ class AttribDict(dict, object):
       >>> x[0:3]
       ['network', 'station']
     """
+    def __init__(self, data={}):
+        dict.__init__(data)
+        for key, value in data.iteritems():
+            self[key] = value
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
