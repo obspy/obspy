@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import Stats, Stream, Trace
-from obspy.core.trace import Stats
 import copy
 import unittest
 
