@@ -15,6 +15,53 @@ else:
 libc.free.argtype = [C.c_void_p]
 
 
+class AttribDict(dict, object):
+    """
+    A stats class which behaves like a dictionary.
+    
+    You may the following syntax to change or access data in this class:
+      >>> stats = AttribDict()
+      >>> stats.network = 'BW'
+      >>> stats['station'] = 'ROTZ'
+      >>> stats.get('network')
+      'BW'
+      >>> stats['network']
+      'BW'
+      >>> stats.station
+      'ROTZ'
+      >>> x = stats.keys()
+      >>> x.sort()
+      >>> x[0:3]
+      ['network', 'station']
+    """
+
+    def __repr__(self):
+        return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
+
+    def __setitem__(self, key, value):
+        super(AttribDict, self).__setattr__(key, value)
+        return super(AttribDict, self).__setitem__(key, value)
+
+    def __getitem__(self, name):
+        return super(AttribDict, self).__getitem__(name)
+
+    def __delitem__(self, name):
+        super(AttribDict, self).__delattr__(name)
+        return super(AttribDict, self).__delitem__(name)
+
+    __getattr__ = __getitem__
+    __setattr__ = __setitem__
+    __delattr__ = __delitem__
+
+    def copy(self, init={}):
+        return AttribDict(init)
+
+    def __deepcopy__(self, *args, **kwargs):
+        st = AttribDict()
+        st.update(self)
+        return st
+
+
 def getFormatsAndMethods(verbose=False):
     """
     Collects all obspy parser classes.

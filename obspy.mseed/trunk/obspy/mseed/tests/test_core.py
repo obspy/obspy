@@ -78,7 +78,7 @@ class CoreTestCase(unittest.TestCase):
         Read file test via L{obspy.core.Stream}.
         """
         testfile = os.path.join(self.path, 'data', 'test.mseed')
-        stream = read(testfile,headonly=True)
+        stream = read(testfile,headonly=True,format='MSEED')
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(str(stream[0].data), '[]')

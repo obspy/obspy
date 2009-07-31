@@ -21,8 +21,8 @@ class LibMSEEDTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
+        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.path = os.path.join(self.dir, 'data')
 
     def tearDown(self):
         pass
@@ -124,6 +124,40 @@ class LibMSEEDTestCase(unittest.TestCase):
         for i in range(len(datalist) - 1):
             self.assertEqual(datalist[i] - datalist[i + 1],
                              data[i] - data[i + 1])
+        mseed_filenames = [u'gaps.mseed', u'qualityflags.mseed',
+                           u'test.mseed', u'timingquality.mseed']
+        samprate = [200.0,200.0,40.0,200.0]
+        station = ['BGLD','BGLD','HGN','BGLD']
+        npts = [412, 412, 11947, 41604, 1]
+        for _i, _f in enumerate(mseed_filenames):
+            file = os.path.join(self.path,_f)
+            trace_list = mseed.readMSTraces(file)
+            header = trace_list[0][0]
+            self.assertEqual(samprate[_i], header['samprate'])
+            self.assertEqual(station[_i], header['station'])
+            self.assertEqual(npts[_i], len(trace_list[0][1]))
+        del trace_list, header
+
+    def test_readHeader(self):
+        """
+        Compares header data read by libmseed
+        """
+        mseed = libmseed()
+        mseed_filenames = [u'BW.BGLD..EHE.D.2008.001.first_record',
+                           u'gaps.mseed', u'qualityflags.mseed',
+                           u'test.mseed', u'timingquality.mseed']
+        samprate = [200.0,200.0,200.0,40.0,200.0]
+        station = ['BGLD','BGLD','BGLD','HGN','BGLD']
+        starttime = [1199145599915000, 1199145599915000, 1199145599915000,
+                     1054174402043400L,1199145599765000]
+        for _i, _f in enumerate(mseed_filenames):
+            file = os.path.join(self.path,_f)
+            trace_list = mseed.readMSTraces(file)
+            header = trace_list[0][0]
+            self.assertEqual(samprate[_i], header['samprate'])
+            self.assertEqual(station[_i], header['station'])
+            self.assertEqual(starttime[_i], header['starttime'])
+        del trace_list, header
 
     def test_readAndWriteTraces(self):
         """
@@ -383,6 +417,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         # Mini-SEED filenames.
+        mseed_filenames = []
         mseed_filenames = [u'BW.BGLD..EHE.D.2008.001', u'gaps.mseed',
                            u'qualityflags.mseed', u'test.mseed',
                            u'timingquality.mseed']
@@ -396,7 +431,7 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertTrue(isMSEED)
         # Loop over non Mini-SEED files
         for _i in non_mseed_filenames:
-            filename = os.path.join(self.path, _i)
+            filename = os.path.join(self.dir, _i)
             isMSEED = mseed.isMSEED(filename)
             self.assertFalse(isMSEED)
 

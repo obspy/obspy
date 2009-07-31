@@ -2,9 +2,9 @@
 
 from lxml import objectify
 from obspy.core import read, Stream
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, AttribDict
 from telnetlib import Telnet
-import time
+import time, sys
 
 
 class Client(Telnet):
@@ -17,7 +17,10 @@ class Client(Telnet):
                  user="Anonymous", institution="Anonymous", debug=False):
         self.user = user
         self.institution = institution
-        Telnet.__init__(self, host, port, timeout)
+        if sys.hexversion < 0x020600F0:
+            Telnet.__init__(self, host, port)
+        else:
+            Telnet.__init__(self, host, port, timeout)
         # silent connection check
         self.debug = False
         self._hello()
@@ -39,7 +42,10 @@ class Client(Telnet):
         return line
 
     def _hello(self):
-        self.open(self.host, self.port, self.timeout)
+        if sys.hexversion < 0x020600F0:
+            self.open(self.host, self.port)
+        else:
+            self.open(self.host, self.port, self.timeout)
         self.writeln('HELLO')
         self.version = self.readln(')')
         self.node = self.readln()
@@ -82,6 +88,8 @@ class Client(Telnet):
         data = data[:-3]
         if len(data) != length:
             raise Exception('Wrong length!')
+        if self.debug:
+            print data
         self.writeln('PURGE %d' % req_id)
         self._bye()
         return data
@@ -136,9 +144,9 @@ class Client(Telnet):
         rdata = "%s %s *" % (start_datetime.formatArcLink(),
                              end_datetime.formatArcLink())
         xml_doc = self._objectify(rtype, [rdata])
-        data = {}
+        data = AttribDict()
         for network in xml_doc.network:
-            temp = network.attrib
+            temp = AttribDict(network.attrib)
             temp['remark'] = str(network.remark)
             data[network.attrib['code']] = temp
         return data

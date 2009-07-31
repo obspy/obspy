@@ -66,7 +66,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('BW' in result.keys())
         self.assertEquals(result['BW']['code'], 'BW')
         self.assertEquals(result['BW']['type'], 'SP/BB')
-        self.assertEquals(result['BW']['institutions'], 'Uni München')
+        self.assertEquals(result['BW']['institutions'], u'Uni München')
 
 
 def suite():

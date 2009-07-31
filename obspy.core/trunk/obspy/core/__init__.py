@@ -35,7 +35,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 # don't change order
 from utcdatetime import UTCDateTime
-from stats import Stats
-from trace import Trace
+from trace import Trace, Stats
 from stream import Stream, read
 from testing import runTests
