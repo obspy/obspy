@@ -73,7 +73,7 @@ def getStationPAZ(network_id, station_id, datetime):
     node = res.station_control_header
     gains = node.xpath('channel_sensitivity_gain/sensitivity_gain')
     gain = gains[-1]
-    return {'poles': poles, 'zeroes': zeros, 'gain': gain}
+    return {'poles': poles, 'zeros': zeros, 'gain': gain}
 
 
 def xcorrEvents(starttime, endtime, network_id='*', station_id='*',

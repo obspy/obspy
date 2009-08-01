@@ -9,7 +9,7 @@ import urllib
 class Client(object):
     """
     """
-    def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080"):
+    def __init__(self, base_url="http://admin:admin@teide.geophysik.uni-muenchen.de:8080"):
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
@@ -163,6 +163,80 @@ class _StationMapperClient(_BaseRESTClient):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
+    def getPAZ(self, network_id, station_id, datetime, location_id='',
+               channel_id=''):
+        """
+        Get PAZ for a station at given time span.
+        
+        >>> c = Client()
+        >>> a = c.station.getPAZ('BW', 'RJOB', '20090707')
+        >>> a['zeros']
+        [0j, 0j]
+        >>> a['poles'] #doctest: +ELLIPSIS
+        [(-0.037004000000000002+0.037016j), ...]
+        >>> a['gain']
+        60077000.0
+        >>> a['sensitivity']
+        2516800000.0
+
+        @param network_id: Network id, e.g. 'BW'.
+        @param station_id: Station id, e.g. 'RJOB'.
+        @param location_id: Location id, e.g. ''.
+        @param channel_id: Channel id, e.g. 'EHE'.
+        @param datetime: L{obspy.core.UTCDateTime} or time string.
+        @return: Dictionary containing zeros, poles, gain and sensitivity.
+        """
+        # request station information
+        station_list = self.getList(network_id=network_id,
+                                    station_id=station_id, datetime=datetime)
+        if not station_list:
+            return {}
+        # don't allow wild cards - either search over exact one node or all
+        for t in ['*', '?']:
+            if t in channel_id:
+                channel_id = ''
+            if t in location_id:
+                location_id = ''
+
+        xml_doc = station_list[0]
+        # request station resource
+        res = self.client.station.getXMLResource(xml_doc['resource_name'])
+        base_node = res.station_control_header
+        # search for nodes with correct channel and location code
+        if channel_id or location_id:
+            # fetch next following response_poles_and_zeros node
+            xpath_expr = "channel_identifier[channel_identifier='" + \
+                channel_id + "' and location_identifier='" + location_id + \
+                "']/following-sibling::response_poles_and_zeros"
+            paz_node = base_node.xpath(xpath_expr)[0]
+            # fetch next following channel_sensitivity_node with 
+            # stage_sequence_number == 0
+            xpath_expr = "channel_identifier[channel_identifier='" + \
+                channel_id + "' and location_identifier='" + location_id + \
+                "']/following-sibling::channel_sensitivity_" + \
+                "gain[stage_sequence_number='0']"
+            sensitivity_node = base_node.xpath(xpath_expr)[0]
+        else:
+            # just take first existing nodes
+            paz_node = base_node.response_poles_and_zeros[0]
+            sensitivity_node = base_node.channel_sensitivity_gain[-1]
+        # poles
+        poles_real = paz_node.complex_pole.real_pole[:]
+        poles_imag = paz_node.complex_pole.imaginary_pole[:]
+        poles = zip(poles_real, poles_imag)
+        poles = [p[0] + p[1] * 1j for p in poles]
+        # zeros
+        zeros_real = paz_node.complex_zero.real_zero[:][:]
+        zeros_imag = paz_node.complex_zero.imaginary_zero[:][:]
+        zeros = zip(zeros_real, zeros_imag)
+        zeros = [p[0] + p[1] * 1j for p in zeros]
+        # gain
+        gain = paz_node.A0_normalization_factor
+        # sensitivity
+        sensitivity = sensitivity_node.sensitivity_gain
+        return {'poles': poles, 'zeros': zeros, 'gain': gain,
+                'sensitivity': sensitivity}
+
 
 class _EventMapperClient(_BaseRESTClient):
     """
@@ -179,3 +253,8 @@ class _EventMapperClient(_BaseRESTClient):
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

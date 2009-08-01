@@ -4,11 +4,24 @@
 The InvSim test suite.
 """
 
-from obspy.signal import specInv, cosTaper, seisSim, pazToFreqResp
-from obspy.signal.seismometer import wood_anderson, wwssn_sp, wwssn_lp, kirnos
-import inspect, os, unittest, gzip
-import numpy as N
+from obspy.signal import seisSim
+from obspy.signal.seismometer import PAZ_KIRNOS, PAZ_WOOD_ANDERSON, \
+    PAZ_WWSSN_LP, PAZ_WWSSN_SP
+import gzip
+import inspect
 import math as M
+import numpy as N
+import os
+import unittest
+
+
+INSTRUMENTS = {
+    'None': None,
+    'kirnos': PAZ_KIRNOS,
+    'wood_anderson': PAZ_WOOD_ANDERSON,
+    'wwssn_lp': PAZ_WWSSN_LP,
+    'wwssn_sp': PAZ_WWSSN_SP
+}
 
 
 class InvSimTestCase(unittest.TestCase):
@@ -19,15 +32,14 @@ class InvSimTestCase(unittest.TestCase):
         # directory where the test files are located
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(path, 'data')
-    
+
     def tearDown(self):
         pass
 
-    def cosTaperPitsa(self,i,n1,n2,n3,n4):
+    def cosTaperPitsa(self, i, n1, n2, n3, n4):
         """
         Cosinus Taper definition of Pitsa
         """
-        PI = M.pi
         if (i <= n1) or (i >= n4):
             #check for zero taper
             if (i == n2) or (i == n3):
@@ -35,20 +47,20 @@ class InvSimTestCase(unittest.TestCase):
             else:
                 return 0.0
         elif (i > n1) and (i <= n2):
-            temp =  PI * (i-n1)/float(n2-n1+1)
-            fact = 0.5 - 0.5*M.cos(temp)
+            temp = M.pi * (i - n1) / float(n2 - n1 + 1)
+            fact = 0.5 - 0.5 * M.cos(temp)
             return abs(fact)
         elif (i >= n3) and (i < n4):
-            temp = PI * (n4-i)/float(n4-n3+1)
-            fact = 0.5 - 0.5*M.cos(temp)
+            temp = M.pi * (n4 - i) / float(n4 - n3 + 1)
+            fact = 0.5 - 0.5 * M.cos(temp)
             return abs(fact)
         else:
             return 1.0
-    
+
     def test_seisSimVsPitsa1(self):
         """
         Test seisSim seismometer simulation against seismometer simulation
-        of pitsa --- LE3D seismometer.
+        of Pitsa - LE3D seismometer.
         """
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
@@ -58,27 +70,31 @@ class InvSimTestCase(unittest.TestCase):
 
         # paz of test file
         samp_rate = 200.0
-        le3d = {
-            'poles' :  [-4.21000 +4.66000j, -4.21000 -4.66000j, -2.105000+0.00000j],
-            'zeroes' : [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j],
+        PAZ_LE3D = {
+            'poles': [-4.21000 + 4.66000j,
+                      - 4.21000 - 4.66000j,
+                      - 2.105000 + 0.00000j],
+            'zeros': [0.0 + 0.0j] * 4,
             'gain' : 0.4
         }
-        
+
         ##import pylab as pl
         ##pl.figure()
         ##ii = 1
-        for instrument in ['None','wood_anderson', 'wwssn_sp', 'wwssn_lp', 'kirnos']:
+        for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
-            exec "datcorr = seisSim(data,samp_rate,le3d,inst_sim=%s,water_level=600.0)" % instrument
+            datcorr = seisSim(data, samp_rate, PAZ_LE3D, inst_sim=paz,
+                              water_level=600.0)
             # load pitsa file
-            file = os.path.join(self.path, 'rjob_20051006_%s.gz'%instrument)
+            file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             f = gzip.open(file)
             data_pitsa = N.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
-            #print "RMS misfit %15s:"%instrument,rms
-            self.assertEqual(rms < 1.e-5, True)
+            rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
+                         N.sum(data_pitsa ** 2))
+            #print "RMS misfit %15s:" % id, rms
+            self.assertTrue(rms < 1e-05)
             ##pl.subplot(3,2,ii)
             ##pl.plot(datcorr,'r',data_pitsa,'b--')
             ##pl.title(instrument)
@@ -90,8 +106,8 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa2(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation of pitsa
-        --- STS-2 seismometer.
+        Test seisSim seismometer simulation against seismometer simulation of 
+        Pitsa - STS-2 seismometer.
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
@@ -101,27 +117,30 @@ class InvSimTestCase(unittest.TestCase):
 
         # paz of test file
         samp_rate = 200.0
-        sts2 = {
-            'poles' :  [-0.03736 -0.03617j, -0.03736 +0.03617j],
-            'zeroes' : [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j],
+        PAZ_STS2 = {
+            'poles': [-0.03736 - 0.03617j,
+                      - 0.03736 + 0.03617j],
+            'zeros': [0.0 + 0.0j] * 3,
             'gain' : 1.5
         }
-        
+
         ##import pylab as pl
         ##pl.figure()
         ##ii = 1
-        for instrument in ['None','wood_anderson', 'wwssn_sp', 'wwssn_lp', 'kirnos']:
+        for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
-            exec "datcorr = seisSim(data,samp_rate,sts2,inst_sim=%s,water_level=600.0)" % instrument
+            datcorr = seisSim(data, samp_rate, PAZ_STS2, inst_sim=paz,
+                              water_level=600.0)
             # load pitsa file
-            file = os.path.join(self.path, 'rotz_20081028_%s.gz'%instrument)
+            file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             f = gzip.open(file)
             data_pitsa = N.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = N.sqrt(N.sum((datcorr-data_pitsa)**2)/N.sum(data_pitsa**2))
-            #print "RMS misfit %15s:"%instrument,rms
-            self.assertEqual(rms < 1.e-4, True)
+            rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
+                         N.sum(data_pitsa ** 2))
+            #print "RMS misfit %15s:" % id, rms
+            self.assertTrue(rms < 1e-04)
             ##pl.subplot(3,2,ii)
             ##pl.plot(datcorr,'r',data_pitsa,'b--')
             ##pl.title(instrument)
@@ -139,6 +158,7 @@ class InvSimTestCase(unittest.TestCase):
     #    g.read(file,format='MSEED')
     #    # paz of test file
     #    samp_rate = 200.0
+
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')
