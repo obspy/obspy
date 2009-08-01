@@ -38,3 +38,4 @@ from utcdatetime import UTCDateTime
 from trace import Trace, Stats
 from stream import Stream, read
 from testing import runTests
+from util import *

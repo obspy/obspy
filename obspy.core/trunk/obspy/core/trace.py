@@ -3,7 +3,7 @@
 from copy import deepcopy
 from numpy import array, NaN, concatenate
 from obspy.core import UTCDateTime
-from obspy.core.util import AttribDict
+from util import AttribDict
 
 
 class Stats(AttribDict):
