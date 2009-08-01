@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace
+from obspy.core.trace import Trace
 from obspy.core.util import getFormatsAndMethods
 import copy
 import math
@@ -44,7 +44,7 @@ def read(filename, format=None, headonly=False):
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     if headonly:
-        temp_object = fileformat[2](filename,headonly=True)
+        temp_object = fileformat[2](filename, headonly=True)
     else:
         temp_object = fileformat[2](filename)
     if isinstance(temp_object, Trace):
