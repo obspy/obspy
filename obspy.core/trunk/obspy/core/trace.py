@@ -3,10 +3,12 @@
 from copy import deepcopy
 from numpy import array, NaN, concatenate
 from obspy.core import UTCDateTime
-from obspy.core.util import libc, AttribDict
+from obspy.core.util import AttribDict
+
 
 class Stats(AttribDict):
     pass
+
 
 class Trace(object):
     """

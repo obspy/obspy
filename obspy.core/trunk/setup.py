@@ -32,11 +32,13 @@ setup(
     version=version,
     description="ObsPy core classes, Python for Seismological Observatories",
     long_description="""
-    obspy.core - Core classes of ObsPy, Python for Seismological Observatories
+    obspy.core - Core classes of ObsPy: Python for Seismological Observatories
 
     This class contains common methods and classes for ObsPy. It includes
-    a UTCDateTime, a Stats, the Stream and Trace classes and methods for
-    reading seismograms and checking which obspy modules are installed.
+    UTCDateTime, Stats, Stream and Trace classes and methods for reading 
+    seismograms.
+    
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
     keywords='Seismology, ObsPy',
