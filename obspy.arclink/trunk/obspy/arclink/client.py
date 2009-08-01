@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from lxml import objectify
+from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 from telnetlib import Telnet
-import time, sys
+import os
+import sys
+import time
 
 
 class Client(Telnet):
@@ -25,6 +27,12 @@ class Client(Telnet):
         self.debug = False
         self._hello()
         self.debug = debug
+        # fetch and parse inventory schema only once
+        path = os.path.dirname(__file__)
+        file = open(os.path.join(path, 'xsd', 'inventory.xsd'))
+        schema = etree.XMLSchema(file=file)
+        self.inventory_parser = objectify.makeparser(schema=schema)
+        file.close()
 
     def writeln(self, buffer):
         self.write(buffer + '\n')
@@ -94,10 +102,6 @@ class Client(Telnet):
         self._bye()
         return data
 
-    def _objectify(self, *args, **kwargs):
-        doc = self._fetch(*args, **kwargs)
-        return objectify.fromstring(doc)
-
     def getWaveform(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime):
         """
@@ -143,7 +147,11 @@ class Client(Telnet):
         rtype = 'REQUEST INVENTORY'
         rdata = "%s %s *" % (start_datetime.formatArcLink(),
                              end_datetime.formatArcLink())
-        xml_doc = self._objectify(rtype, [rdata])
+        # fetch plain xml document
+        xml_doc = self._fetch(rtype, [rdata])
+        # generate object by using XML schema
+        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
+
         data = AttribDict()
         if not xml_doc.countchildren():
             return data
