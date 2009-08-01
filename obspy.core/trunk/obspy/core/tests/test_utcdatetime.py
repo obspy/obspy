@@ -19,6 +19,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests initialization from a given time string.
         """
+        # without trailing Z
         dt = UTCDateTime("1970-01-01T12:23:34")
         self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
         dt = UTCDateTime("1970-01-01T12:23:34.5")
@@ -27,17 +28,26 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 5))
         dt = UTCDateTime("1969-12-31T23:43:19.900000")
         self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
+        # with trailing Z
+        dt = UTCDateTime("1970-01-01T12:23:34Z")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime("1970-01-01T12:23:34.5Z")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 500000))
+        dt = UTCDateTime("1970-01-01T12:23:34.000005Z")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 5))
+        dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
+        self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
 
     def test_toString(self):
         """
         Tests __str__ method.
         """
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34)
-        self.assertEquals(str(dt), '1970-01-01T12:23:34.000000')
+        self.assertEquals(str(dt), '1970-01-01T12:23:34.000000Z')
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 500000)
-        self.assertEquals(str(dt), '1970-01-01T12:23:34.500000')
+        self.assertEquals(str(dt), '1970-01-01T12:23:34.500000Z')
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 5)
-        self.assertEquals(str(dt), '1970-01-01T12:23:34.000005')
+        self.assertEquals(str(dt), '1970-01-01T12:23:34.000005Z')
 
     def test_deepcopy(self):
         dt = UTCDateTime(1240561632.0050001)
@@ -59,7 +69,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
     def test_negativeTimestamp(self):
         dt = UTCDateTime(-1000.1)
-        self.assertEquals(str(dt), "1969-12-31T23:43:19.900000")
+        self.assertEquals(str(dt), "1969-12-31T23:43:19.900000Z")
         self.assertEquals(dt.timestamp, -1000.1)
         dt = UTCDateTime(-1000.1)
 

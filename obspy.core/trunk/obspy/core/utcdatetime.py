@@ -59,6 +59,7 @@ class UTCDateTime(datetime.datetime):
                 arg = arg.replace('-', '')
                 arg = arg.replace(':', '')
                 arg = arg.replace(' ', '')
+                arg = arg.replace('Z', '')
                 ms = 0
                 if '.' in arg:
                     parts = arg.split('.')
@@ -204,7 +205,7 @@ class UTCDateTime(datetime.datetime):
         text = datetime.datetime.__str__(self)
         if not '.' in text:
             text += '.000000'
-        return text.replace(' ', 'T')
+        return text.replace(' ', 'T') + 'Z'
 
     def formatArcLink(self):
         """
