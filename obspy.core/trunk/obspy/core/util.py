@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from ctypes.util import find_library
 import ctypes as C
 import os
+import sys
 import tempfile
 import traceback
-import sys
 
 
 if sys.platform == 'win32':
     libc = C.cdll.msvcrt
 else:
-    libc = C.CDLL(C.util.find_library('c'))
+    libc = C.CDLL(find_library('c'))
 libc.free.argtype = [C.c_void_p]
 
 
