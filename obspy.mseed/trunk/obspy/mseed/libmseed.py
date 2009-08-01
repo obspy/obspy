@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile, c_file_p, libc
+from obspy.core.util import scoreatpercentile, c_file_p
 from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
     MSFileParam
 from struct import unpack
@@ -50,7 +50,7 @@ import sys
 # Use different shared libmseed library depending on the platform.
 # 32 bit Windows.
 if sys.platform == 'win32':
-    lib_name = 'libmseed-2.2.win32.dll'
+    lib_name = 'libmseed-2.3.win32.dll'
 # 32 bit OSX, tested with 10.5.6
 elif sys.platform == 'darwin':
     lib_name = 'libmseed.dylib'
@@ -60,7 +60,8 @@ else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'
     else:
-        lib_name = 'libmseed-2.1.7.so'
+        # XXX: 2.3 !!!
+        lib_name = 'libmseed-2.2.so'
 clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
                                 lib_name))
 
@@ -438,10 +439,10 @@ class libmseed(object):
                                          sampratetol=samprate_tolerance)
         # iterate through traces
         cur = mstg.contents.traces.contents
-        header = [[self._convertMSTToDict(cur),None]]
+        header = [[self._convertMSTToDict(cur), None]]
         for _ in xrange(mstg.contents.numtraces - 1):
             next = cur.next.contents
-            header.append([self._convertMSTToDict(cur),None])
+            header.append([self._convertMSTToDict(cur), None])
             cur = next
         clibmseed.mst_freegroup(C.pointer(mstg))
         del mstg
@@ -804,7 +805,7 @@ class libmseed(object):
         # Make a NumPy array from that.
         #return N.ctypeslib.as_array(ctypes_array)
         # 2. METHOD MORITZ 
-        numpy_array = N.ndarray(buffer_elements,dtype='int32')
+        numpy_array = N.ndarray(buffer_elements, dtype='int32')
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
