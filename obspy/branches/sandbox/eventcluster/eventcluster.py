@@ -58,10 +58,6 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 print "    -> Skipping: Need at least 2 events per station"
                 print
                 continue
-            # output file
-            filename = "%s.%s.csv" % (nid, sid)
-            fp = open(filename, "w")
-            # body
             streams = []
             for event in events:
                 id = event[0]['resource_name']
@@ -92,12 +88,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                                          paz, inst_sim=None, water_level=50.0)
                     print '    Got Trace:', trace
                 # append
-                streams.append(stream)
-                if event == events[0]:
-                    fp.write('# ' + id)
-                else:
-                    fp.write(',' + id)
-            fp.write("\n")
+                streams.append((id, stream))
             # cross correlation over all prepared streams
             l = len(streams)
             if l < 2:
@@ -105,12 +96,16 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 print
                 fp.close()
                 continue
+            # output file
+            filename = "%s.%s.txt" % (nid, sid)
+            fp = open(filename, "w")
             #print "XCORR:"
-            for i in range(0, l):
-                fp.write("\n")
-                tr1 = streams[i][0]
-                for j in range(0, l):
-                    tr2 = streams[j][0]
+            for i in range(0, l - 1):
+                id1 = streams[i][0]
+                tr1 = streams[i][1][0]
+                for j in range(i + 1, l):
+                    id2 = streams[j][0]
+                    tr2 = streams[j][1][0]
                     #print '  ' , i, ' x ', j, ' = ',  
                     # check sampling rate for both traces
                     if tr1.stats.sampling_rate != tr2.stats.sampling_rate:
@@ -127,11 +122,8 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     winlen = int(winlen / float(tr1.stats.sampling_rate) / 2.0)
                     shift, coe = xcorr(tr1.data.astype('float32'),
                                        tr2.data.astype('float32'), winlen)
-                    #print "%.4lf" % coe
-                    if j == 0:
-                        fp.write("%.3f" % coe)
-                    else:
-                        fp.write(",%.3f" % coe)
+                    fp.write("%d %d % .3f %d %s %s\n" % (i + 1, j + 1, coe,
+                                                         shift, id1, id2))
             print
             fp.close()
 
