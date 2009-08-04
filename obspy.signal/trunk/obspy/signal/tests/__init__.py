@@ -2,7 +2,7 @@
 
 from obspy.signal import invsim, trigger, util
 from obspy.signal.tests import test_invsim, test_filter, test_rotate, \
-    test_trigger
+    test_trigger, test_util
 import doctest
 import unittest
 
@@ -19,6 +19,7 @@ def suite():
     suite.addTest(test_filter.suite())
     suite.addTest(test_rotate.suite())
     suite.addTest(test_trigger.suite())
+    suite.addTest(test_util.suite())
     return suite
 
 

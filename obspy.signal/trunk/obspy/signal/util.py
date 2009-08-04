@@ -2,7 +2,9 @@
 
 import ctypes as C
 import numpy as N
-import os, doctest, platform
+import os
+import platform
+
 
 if platform.system() == 'Windows':
     lib_name = 'signal.win32.dll'
@@ -32,14 +34,14 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     """
     # 2009-07-16 Moritz
 
-    lib.utl_geo_km.argtypes=[C.c_float,C.c_float,C.c_float,C.c_void_p,C.c_void_p]
+    lib.utl_geo_km.argtypes = [C.c_float, C.c_float, C.c_float, C.c_void_p, C.c_void_p]
     lib.utl_geo_km.restype = C.c_void_p
-    
+
     x = C.c_float(lon)
     y = C.c_float(lat)
-    
+
     lib.utl_geo_km(orig_lon, orig_lat, 0.0, C.byref(x), C.byref(y))
-    
+
     return x.value, y.value
 
 
@@ -60,15 +62,15 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     """
     # 2009-07-24 Moritz
 
-    lib.utl_lonlat.argtypes=[C.c_float, C.c_float, C.c_float, C.c_float,
-                             C.c_void_p,C.c_void_p]
+    lib.utl_lonlat.argtypes = [C.c_float, C.c_float, C.c_float, C.c_float,
+                             C.c_void_p, C.c_void_p]
     lib.utl_lonlat.restype = C.c_void_p
-    
+
     lon = C.c_float()
     lat = C.c_float()
-    
+
     lib.utl_lonlat(orig_lon, orig_lat, x, y, C.byref(lon), C.byref(lat))
-    
+
     return lon.value, lat.value
 
 
@@ -90,19 +92,18 @@ def xcorr(tr1, tr2, window_len):
     @param window_len: Window length of cross correlation in samples
     """
     # 2009-07-10 Moritz
-    lib.X_corr.argtypes=[N.ctypeslib.ndpointer(dtype='float32', ndim=1,
-                                           flags='C_CONTIGUOUS'),
-                     N.ctypeslib.ndpointer(dtype='float32', ndim=1,
-                                           flags='C_CONTIGUOUS'),
-                     C.c_int, C.c_int, C.c_void_p, C.c_void_p]
-    lib.X_corr.restype=C.c_void_p
-    
+    lib.X_corr.argtypes = [
+        N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        C.c_int, C.c_int, C.c_void_p, C.c_void_p]
+    lib.X_corr.restype = C.c_void_p
+
     shift = C.c_int()
     coe_p = C.c_double()
-    
+
     lib.X_corr(tr1, tr2, window_len, len(tr1), len(tr2),
-               C.byref(shift), C.byref(coe_p) )
-    
+               C.byref(shift), C.byref(coe_p))
+
     return shift.value, coe_p.value
 
 
