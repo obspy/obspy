@@ -73,6 +73,12 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt.timestamp, -1000.1)
         dt = UTCDateTime(-1000.1)
 
+    def test_initUTCDateTime(self):
+        dt = UTCDateTime(year=2008, month=1, day=1)
+        self.assertEquals(str(dt), "2008-01-01T00:00:00.000000Z")
+        dt = UTCDateTime(year=2008, julday=1, hour=12, microsecond=5000)
+        self.assertEquals(str(dt), "2008-01-01T12:00:00.005000Z")
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

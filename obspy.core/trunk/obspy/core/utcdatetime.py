@@ -88,12 +88,24 @@ class UTCDateTime(datetime.datetime):
                                                      dt.day, dt.hour,
                                                      dt.minute, dt.second,
                                                      dt.microsecond)
-        elif len(args) == 0:
+        elif len(args) == 0 and len(kwargs) == 0:
             dt = datetime.datetime.utcnow()
             return datetime.datetime.__new__(cls, dt.year, dt.month,
                                              dt.day, dt.hour,
                                              dt.minute, dt.second,
                                              dt.microsecond)
+        # check for julian day kwargs
+        if 'julday' in kwargs and 'year' in kwargs:
+            try:
+                temp = "%4d%03d" % (int(kwargs['year']),
+                                    int(kwargs['julday']))
+                dt = datetime.datetime.strptime(temp, '%Y%j')
+            except:
+                pass
+            else:
+                kwargs['month'] = dt.month
+                kwargs['day'] = dt.day
+                kwargs.pop('julday')
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     def getTimeStamp(self):
