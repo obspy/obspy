@@ -5,8 +5,6 @@ The Filter test suite.
 """
 
 from obspy.signal.util import xcorr
-from pdb import Pdb
-import pdb
 import unittest
 import numpy as N
 
@@ -29,22 +27,33 @@ class UtilTestCase(unittest.TestCase):
         tr2 = tr1.copy()
         shift, corr = xcorr(tr1, tr2, 100)
         self.assertEquals(shift, 0)
-        self.assertEquals(round(corr), 1)
+        self.assertAlmostEquals(corr, 1, 2)
         # example 2 - all samples are different
         tr1 = N.ones(10000).astype('float32')
         tr2 = N.zeros(10000).astype('float32')
         shift, corr = xcorr(tr1, tr2, 100)
         self.assertEquals(shift, 0)
-        self.assertEquals(round(corr), 0)
+        self.assertAlmostEquals(corr, 0, 2)
         # example 3 - shift of 10 samples
         tr1 = N.random.randn(10000).astype('float32')
         tr2 = N.array([0] * 10 + tr1[0:-10].tolist()).astype('float32')
         shift, corr = xcorr(tr1, tr2, 100)
         self.assertEquals(shift, -10)
-        self.assertEquals(round(corr), 1)
+        self.assertAlmostEquals(corr, 1, 2)
         shift, corr = xcorr(tr2, tr1, 100)
         self.assertEquals(shift, 10)
-        self.assertEquals(round(corr), 1)
+        self.assertAlmostEquals(corr, 1, 2)
+        # example 3 - shift of 10 samples
+        tr1 = (N.random.randn(10000) * 100).astype('float32')
+        var = N.sin(N.arange(10000) * 0.1)
+        tr2 = (N.array([0] * 10 + tr1[0:-10].tolist())*0.9)
+        tr2 = (tr2 + var).astype('float32')
+        shift, corr = xcorr(tr1, tr2, 100)
+        self.assertEquals(shift, -10)
+        self.assertAlmostEquals(corr, 1, 2)
+        shift, corr = xcorr(tr2, tr1, 100)
+        self.assertEquals(shift, 10)
+        self.assertAlmostEquals(corr, 1, 2)
 
 
 def suite():
