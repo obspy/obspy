@@ -43,7 +43,7 @@ class UtilTestCase(unittest.TestCase):
         shift, corr = xcorr(tr2, tr1, 100)
         self.assertEquals(shift, 10)
         self.assertAlmostEquals(corr, 1, 2)
-        # example 3 - shift of 10 samples
+        # example 4 - shift of 10 samples + small sine disturbance
         tr1 = (N.random.randn(10000) * 100).astype('float32')
         var = N.sin(N.arange(10000) * 0.1)
         tr2 = (N.array([0] * 10 + tr1[0:-10].tolist())*0.9)
