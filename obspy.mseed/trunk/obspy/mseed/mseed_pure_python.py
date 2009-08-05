@@ -1,10 +1,8 @@
 from conversion_tables import STEIM1_frame_nibbles
 from obspy.core import UTCDateTime
 from struct import unpack
-import StringIO
-import numpy as N
-import os
 import time
+
 
 def get_samplingRate(samp_rate_factor, samp_rate_multiplier):
     """
@@ -97,6 +95,7 @@ def read_MSEED(file_string):
                 cur_structure[5]:
                 cur_structure.extend(temp_list[-1])
                 cur_structure[6] += temp_list[6]
+    import pdb;pdb.set_trace()
 
 def unpack_Steim1(file_string, npts):
     """

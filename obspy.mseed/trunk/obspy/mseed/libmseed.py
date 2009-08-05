@@ -36,8 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile, c_file_p
-from obspy.mseed.headers import MSRecord, MSTraceGroup, MSTrace, HPTMODULUS, \
-    MSFileParam
+from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS
 from struct import unpack
 import ctypes as C
 import math
@@ -60,8 +59,7 @@ else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'libmseed.lin64.so'
     else:
-        # XXX: 2.3 !!!
-        lib_name = 'libmseed-2.2.so'
+        lib_name = 'libmseed-2.3.so'
 clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
                                 lib_name))
 
@@ -97,9 +95,9 @@ class libmseed(object):
         @param filename: Mini-SEED file.
         """
         try:
-            msr = self.readSingleRecordToMSR(filename, dataflag=0)
-            clibmseed.msr_free(C.pointer(msr)) # free allocated memory
-            del msr
+            open_file = open(filename, 'rb')
+            self._getMSStarttime(open_file)
+            open_file.close()
             return True
         except:
             return False
@@ -222,67 +220,6 @@ class libmseed(object):
             assert 0, "\n\nError while reading Mini-SEED file: " + filename
         return mstg
 
-    def readSingleRecordToMSR(self, filename, reclen= -1, dataflag=1,
-                              skipnotdata=1, verbose=0, record_number=0):
-        """
-        Reads Mini-SEED record from file and populates MS Record data structure.
-        
-        @param filename: Mini-SEED file to be read.
-        @param reclen: If reclen is 0 the length of the first record is auto-
-            detected. All subsequent records are then expected to have the 
-            same record length. If reclen is negative the length of every 
-            record is automatically detected. Defaults to -1.
-        @param dataflag: Controls whether data samples are unpacked, defaults 
-            to 1.
-        @param skipnotdata: If true (not zero) any data chunks read that to do 
-            not have valid data record indicators will be skipped. Defaults to 
-            True (1).
-        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
-        @param record_number: Number of the record to be read. The first record
-            has the number 0. Negative numbers will start counting from the end
-            of the file, e.g. -1 is the last complete record.
-        """
-        # Get some information about the file.
-        fileinfo = self._getMSFileInfo(filename)
-        # Calculate offset of the record to be read.
-        if record_number < 0:
-            record_number = fileinfo['number_of_records'] + record_number
-        if record_number < 0 or record_number >= fileinfo['number_of_records']:
-            raise ValueError('Please enter a valid record_number')
-        filepos = record_number * fileinfo['record_length']
-        # init MSRecord structure
-        clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        msr = clibmseed.msr_init(None)
-        # defines return type
-        clibmseed.ms_readmsr_r.restype = C.c_int
-        # Init MSFileParam struct.
-        FileParam = C.pointer(MSFileParam())
-        # Open file and jump to the start of the record to be read.
-        ff = open(filename, 'rb')
-        ff.seek(filepos)
-        fpp = self._convertToCFilePointer(ff)
-        # Populate FileParam structure.
-        FP_chain = FileParam.contents
-        FP_chain.fp = fpp
-        FP_chain.filepos = filepos
-        FP_chain.filename = filename
-        FP_chain.rawrec = None
-        FP_chain.readlen = 256
-        FP_chain.autodet = 1
-        FP_chain.packtype = 0
-        FP_chain.packhdroffset = 0
-        FP_chain.recordcount = 0
-        # Populate the MSRecord structure with the help of libmseed.
-        clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
-                               str(filename), C.c_int(reclen), None, None,
-                               C.c_short(skipnotdata), C.c_short(dataflag),
-                               C.c_short(verbose))
-        # Clean up memory and close all open files.
-        del fpp
-        del FileParam, FP_chain
-        ff.close()
-        return msr
-
     def getFirstRecordHeaderInfo(self, filename):
         """
         Takes a Mini-SEED file and returns header of the first record.
@@ -293,47 +230,60 @@ class libmseed(object):
         
         @param filename: Mini-SEED file string.
         """
-        # read first header only
-        msr = self.readSingleRecordToMSR(filename, dataflag=0)
-        header = {}
-        chain = msr.contents
-        clibmseed.msr_free(C.pointer(msr)) # free allocated memory
-        del msr
-        # header attributes to be read
-        attributes = ('location', 'network', 'station', 'channel')
-        # loop over attributes
-        for _i in attributes:
-            header[_i] = getattr(chain, _i)
-        return header
+        # open file and jump to beginning of the data of interest.
+        mseed_file = open(filename, 'rb')
+        mseed_file.seek(8)
+        # Unpack the information using big endian byte order.
+        unpacked_tuple = unpack('>cccccccccccc', mseed_file.read(12))
+        # Close the file.
+        mseed_file.close()
+        # Return a dictionary containing the necessary information.
+        return \
+            {'station' : ''.join([_i for _i in unpacked_tuple[0:5]]).strip(),
+             'location' : ''.join([_i for _i in unpacked_tuple[5:7]]).strip(),
+             'channel' :''.join([_i for _i in unpacked_tuple[7:10]]).strip(),
+             'network' : ''.join([_i for _i in unpacked_tuple[10:12]]).strip()}
 
     def getStartAndEndTime(self, filename):
         """
-        Returns the start- and endtime of a Mini-SEED file as a tuple
+        Returns the start- and end time of a Mini-SEED file as a tuple
         containing two datetime objects.
         
         This method only reads the first and the last record. Thus it will only
         work correctly for files containing only one trace with all records
-        in the correct order.
+        in the correct order and all records necessarily need to have the same
+        record length.
         
-        The returned endtime is the time of the last datasample and not the
+        The returned end time is the time of the last datasample and not the
         time that the last sample covers.
+        
+        It is written in pure Python to resolve some memory issues present
+        with creating file pointers and passing them to the libmseed.
         
         @param filename: Mini-SEED file string.
         """
-        first_record = self.readSingleRecordToMSR(filename, dataflag=0)
-        # Get the starttime using the libmseed method msr_starttime
-        clibmseed.msr_starttime.restype = C.c_int64
-        starttime = clibmseed.msr_starttime(first_record)
-        starttime = self._convertMSTimeToDatetime(starttime)
-        #Read last record.
-        last_record = self.readSingleRecordToMSR(filename, dataflag=0,
-                                      record_number= -1)
-        # Get the endtime using the libmseed method msr_endtime
-        clibmseed.msr_endtime.restype = C.c_int64
-        endtime = clibmseed.msr_endtime(last_record)
-        endtime = self._convertMSTimeToDatetime(endtime)
-        clibmseed.msr_free(C.pointer(first_record))
-        del first_record
+        # Open the file of interest ad jump to the beginning of the timing
+        # information in the file.
+        mseed_file = open(filename, 'rb')
+        # Get some general information of the file.
+        info = self._getMSFileInfo(filename)
+        # Get the start time.
+        starttime = self._getMSStarttime(mseed_file)
+        # Jump to the last record.
+        mseed_file.seek(info['filesize'] - info['excess_bytes'] - \
+                        info['record_length'])
+        # Starttime of the last record.
+        last_record_starttime = self._getMSStarttime(mseed_file)
+        # Get the number of samples, the sample rate factor and the sample
+        # rate multiplier.
+        mseed_file.seek(30, 1)
+        (npts, sample_rate_factor, sample_rate_multiplier) = \
+            unpack('>Hhh', mseed_file.read(6))
+        # Calculate sample rate.
+        sample_rate = self._calculateSamplingRate(sample_rate_factor, \
+                                                  sample_rate_multiplier)
+        # The time of the last covered sample is now:
+        endtime = last_record_starttime + ((npts - 1) / sample_rate)
         return(starttime, endtime)
 
     def getGapList(self, filename, time_tolerance= -1,
@@ -422,7 +372,7 @@ class libmseed(object):
         print "Total: %d gap(s)" % len(result)
 
     def readMSHeader(self, filename, time_tolerance= -1,
-                   samprate_tolerance= -1, min_gap=None, max_gap=None):
+                   samprate_tolerance= -1):
         """
         Returns trace header information of a given file.
         
@@ -497,8 +447,7 @@ class libmseed(object):
                     quality_count[_j] += 1
         return quality_count
 
-    def getTimingQuality(self, filename, first_record=True,
-                         rl_autodetection= -1):
+    def getTimingQuality(self, filename, first_record=True):
         """
         Reads timing quality and returns a dictionary containing statistics
         about it.
@@ -526,59 +475,62 @@ class libmseed(object):
             does not have a timing quality it will not parse the whole file. If
             False is will parse the whole file anyway and search for a timing
             quality in each record. Defaults to True.
-        @param rl_autodetection: Determines the auto-detection of the record
-            lengths in the file. If 0 only the length of the first record is
-            detected automatically. All subsequent records are then assumed
-            to have the same record length. If -1 the length of each record
-            is automatically detected. Defaults to -1.
         """
-        # Get some information about the file.
-        fileinfo = self._getMSFileInfo(filename)
-        # init MSRecord structure
-        clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
-        msr = clibmseed.msr_init(None)
-        # defines return type
-        clibmseed.ms_readmsr_r.restype = C.c_int
-        # Init MSFileParam struct.
-        FileParam = C.pointer(MSFileParam())
-        # Open file.
-        ff = open(filename, 'rb')
-        # Convert to filepointer
-        fpp = self._convertToCFilePointer(ff)
-        # Populate FileParam structure.
-        FP_chain = FileParam.contents
-        FP_chain.fp = fpp
-        FP_chain.filepos = 0
-        FP_chain.filename = filename
-        FP_chain.rawrec = None
-        FP_chain.readlen = 256
-        FP_chain.autodet = 1
-        FP_chain.packtype = 0
-        FP_chain.packhdroffset = 0
-        FP_chain.recordcount = 0
         # Create Timing Quality list.
         data = []
-        # Loop over each record
-        for _i in xrange(fileinfo['number_of_records']):
-            # Loop over every record.
-            clibmseed.ms_readmsr_r(C.pointer(FileParam), C.pointer(msr),
-                                   str(filename), C.c_int(rl_autodetection),
-                                   None, None, C.c_short(1), C.c_short(0),
-                                   C.c_short(0))
-            # Enclose in try-except block because not all records need to
-            # have Blockette 1001.
-            try:
-                # Append timing quality to list.
-                data.append(float(msr.contents.Blkt1001.contents.timing_qual))
-            except:
-                if first_record:
+        # Open file.
+        mseed_file = open(filename, 'rb')
+        filesize = os.path.getsize(filename)
+        # Loop over all records. After each loop the file pointer is supposed
+        # to be at the beginning of the next record.
+        while True:
+            starting_pointer = mseed_file.tell()
+            # Unpack field 17 and 18 of the fixed section of the data header.
+            mseed_file.seek(44, 1)
+            (beginning_of_data, first_blockette) = unpack('>HH',
+                                                          mseed_file.read(4))
+            # Jump to the first blockette.
+            mseed_file.seek(first_blockette - 48, 1)
+            # Read all blockettes.
+            blockettes = mseed_file.read(beginning_of_data - first_blockette)
+            # Loop over all blockettes and find number 1000 and 1001.
+            offset = 0
+            record_length = None
+            timing_quality = None
+            blockettes_length = len(blockettes)
+            while True:
+                # Double check to avoid infinite loop.
+                if offset >= blockettes_length:
                     break
-        # Clean up and close file.
-        del msr
-        del fpp
-        del FileParam
-        ff.close()
+                (blkt_number, next_blkt) = unpack('>HH',
+                                            blockettes[offset : offset + 4])
+                if blkt_number == 1000:
+                    record_length = 2 ** unpack('>B',
+                                                blockettes[offset + 6])[0]
+                elif blkt_number == 1001:
+                    timing_quality = unpack('>B',
+                                            blockettes[offset + 4])[0]
+                # Leave loop if no more blockettes follow.
+                if next_blkt == 0:
+                    break
+                # New offset.
+                offset = next_blkt - first_blockette
+            # If no Blockette 1000 could be found raise warning.
+            if not record_length:
+                msg = 'No blockette 1000 found to determine record length'
+                raise Exception(msg)
+            end_pointer = starting_pointer + record_length
+            # Set the file pointer to the beginning of the next record.
+            mseed_file.seek(end_pointer)
+            # Leave the loop if first record is set and no timing quality
+            # could be found.
+            if first_record and timing_quality == None:
+                break
+            if timing_quality != None:
+                data.append(timing_quality)
+            # Leave the loop when all records have been processed.
+            if end_pointer >= filesize:
+                break
         # Create new dictionary.
         result = {}
         # Length of the list.
@@ -639,6 +591,7 @@ class libmseed(object):
                            (end.timestamp - start.timestamp) * nr)
         end_record = int((endtime.timestamp - start.timestamp) /
                          (end.timestamp - start.timestamp) * nr) + 1
+        mseed_file = open(filename, 'rb')
         # Loop until the correct start_record is found
         while True:
             # check boundaries
@@ -648,14 +601,17 @@ class libmseed(object):
             elif start_record > nr - 1:
                 start_record = nr - 1
                 break
-            msr = self.readSingleRecordToMSR(filename, dataflag=0,
-                                             record_number=start_record)
-            chain = msr.contents
-            stime = chain.starttime
+            mseed_file.seek(start_record * info['record_length'])
+            stime = self._getMSStarttime(mseed_file)
             # Calculate last covered record.
-            etime = self._convertMSTimeToDatetime(stime + ((chain.samplecnt - \
-                            1) / chain.samprate) * HPTMODULUS)
-            stime = self._convertMSTimeToDatetime(stime)
+            mseed_file.seek(30, 1)
+            (npts, sample_rate_factor, sample_rate_multiplier) = \
+                unpack('>Hhh', mseed_file.read(6))
+            # Calculate sample rate.
+            sample_rate = self._calculateSamplingRate(sample_rate_factor, \
+                                                      sample_rate_multiplier)
+            # The time of the last covered sample is now:
+            etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
             if starttime >= stime and starttime <= etime:
@@ -664,8 +620,6 @@ class libmseed(object):
                 start_record -= 1
             else:
                 start_record += 1
-            clibmseed.msr_free(C.pointer(msr))
-            del msr
         # Loop until the correct end_record is found
         while True:
             # check boundaries
@@ -675,16 +629,17 @@ class libmseed(object):
             elif end_record > nr - 1:
                 end_record = nr - 1
                 break
-            msr = self.readSingleRecordToMSR(filename, dataflag=0,
-                                             record_number=end_record)
-            chain = msr.contents
-            stime = chain.starttime
+            mseed_file.seek(end_record * info['record_length'])
+            stime = self._getMSStarttime(mseed_file)
             # Calculate last covered record.
-            etime = self._convertMSTimeToDatetime(stime + ((chain.samplecnt - \
-                            1) / chain.samprate) * HPTMODULUS)
-            stime = self._convertMSTimeToDatetime(stime)
-            clibmseed.msr_free(C.pointer(msr)) # free allocated memory
-            del msr
+            mseed_file.seek(30, 1)
+            (npts, sample_rate_factor, sample_rate_multiplier) = \
+                unpack('>Hhh', mseed_file.read(6))
+            # Calculate sample rate.
+            sample_rate = self._calculateSamplingRate(sample_rate_factor, \
+                                                      sample_rate_multiplier)
+            # The time of the last covered sample is now:
+            etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
             if endtime >= stime and endtime <= etime:
@@ -694,13 +649,12 @@ class libmseed(object):
             else:
                 end_record += 1
         # Open the file and read the cut file.
-        fh = open(filename, 'rb')
         record_length = info['record_length']
         # Jump to starting location.
-        fh.seek(record_length * start_record, 0)
+        mseed_file.seek(record_length * start_record, 0)
         # Read until end_location.
-        data = fh.read(record_length * (end_record - start_record + 1))
-        fh.close()
+        data = mseed_file.read(record_length * (end_record - start_record + 1))
+        mseed_file.close()
         # Return the cut file string.
         return data
 
@@ -823,6 +777,33 @@ class libmseed(object):
         #                                                    buffer_elements*4),
         #                    dtype='int32',count=buffer_elements)
 
+    def _calculateSamplingRate(self, samp_rate_factor, samp_rate_multiplier):
+        """
+        Calculates the actual sampling rate of the record.
+        
+        This is needed for manual readimg of Mini-SEED headers. See the SEED
+        Manual page 100 for details.
+        
+        @param samp_rate_factor: Field 10 of the fixed header in Mini-SEED.
+        @param samp_rate_multiplier: Field 11 of the fixed header in Mini-SEED.
+        """
+        # Case 1
+        if samp_rate_factor > 0 and samp_rate_multiplier > 0:
+            return samp_rate_factor * float(samp_rate_multiplier)
+        # Case 2
+        elif samp_rate_factor > 0 and samp_rate_multiplier < 0:
+            # Using float is needed to avoid integer division.
+            return - 1 * samp_rate_factor / float(samp_rate_multiplier)
+        # Case 3
+        elif samp_rate_factor < 0 and samp_rate_multiplier > 0:
+            return - 1 * samp_rate_multiplier / float(samp_rate_factor)
+        # Case 4
+        elif samp_rate_factor < 0 and samp_rate_multiplier < 0:
+            return float(1) / (samp_rate_multiplier * samp_rate_factor)
+        else:
+            msg = 'The sampling rate of the record could not be determined.'
+            raise Exception(msg)
+
     def _convertDatetimeToMSTime(self, dt):
         """
         Takes obspy.util.UTCDateTime object and returns an epoch time in ms.
@@ -874,39 +855,160 @@ class libmseed(object):
         for _i in attributes:
             setattr(chain, _i, h[_i])
 
-    def _convertToCFilePointer(self, open_file):
+    def _getMSFileInfo(self, filename, real_name=None):
         """
-        Takes an open file and returns a C file pointer for use in ctypes.
+        Takes a Mini-SEED filename or an open file/StringIO as an argument and
+        returns a dictionary with some basic information about the file.
         
-        @param file: Open file.
-        """
-        if not isinstance(open_file, file):
-            raise TypeError('Needs an open file.')
-        # If not defined, define ctypes arg- and restypes.
-        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-        C.pythonapi.PyFile_AsFile.restype = c_file_p
-        # Convert open python file to C file pointer.
-        return C.pythonapi.PyFile_AsFile(open_file)
-
-    def _getMSFileInfo(self, filename):
-        """
-        Takes a Mini-SEED filename as an argument and returns a dictionary
-        with some basic information about the file.
+        The information returned is: filesize, record_length,
+        number_of_records and excess_bytes (bytes at the end not used by any
+        record).
         
-        @param filename: Mini-SEED file string.
+        If filename is an open file/StringIO the file pointer will not be
+        changed by this method.
+        
+        @param filename: Mini-SEED file string or an already open file.
+        @param real_name: If filename is an open file you need to support the
+            filesystem name of it so that the method is able to determine the
+            file size. Use None if filename is a file string. Defaults to None.
         """
         info = {}
-        info['filesize'] = os.path.getsize(filename)
-        #Open file and get record length using libmseed.
-        msfile = open(filename, 'rb')
-        rec_buffer = msfile.read(512)
-        info['record_length'] = \
-           clibmseed.ms_find_reclen(C.c_char_p(rec_buffer), C.c_int(512), None)
-        #Calculate Number of Records
-        info['number_of_records'] = long(info['filesize'] / \
-                                         info['record_length'])
-        msfile.close()
+        # Filename is a true filename.
+        if isinstance(filename, basestring) and not real_name:
+            info['filesize'] = os.path.getsize(filename)
+            #Open file and get record length using libmseed.
+            mseed_file = open(filename, 'rb')
+            starting_pointer = None
+        # Filename is an open file and real_name is a string that refers to
+        # a file.
+        elif (isinstance(filename, file) or isinstance(filename, StringIO)) \
+                and isinstance(real_name, basestring):
+            # Save file pointer to restore it later on.
+            starting_pointer = filename.tell()
+            mseed_file = filename
+            info['filesize'] = os.path.getsize(real_name)
+        # Otherwise raise error.
+        else:
+            msg = 'filename either needs to be a string with a filename or ' + \
+                  'an open file/StringIO object. If its a filename real_' + \
+                  'name needs to be None, otherwise a string with a filename.'
+            raise TypeError(msg)
+        # Read all blockettes.
+        mseed_file.seek(44)
+        unpacked_tuple = unpack('>HH', mseed_file.read(4))
+        blockettes_offset = unpacked_tuple[1] - 48
+        mseed_file.seek(blockettes_offset, 1)
+        blockettes = mseed_file.read(unpacked_tuple[0] - unpacked_tuple[1])
+        # Loop over blockettes until Blockette 1000 is found.
+        offset = 0
+        while True:
+            two_fields = unpack('>HH', blockettes[offset:offset + 4])
+            if two_fields[0] == 1000:
+                info['record_length'] = 2 ** unpack('>B', blockettes[6])[0]
+                break
+            else:
+                # Only true when no blockette 1000 is present.
+                if two_fields[1] <= 0:
+                    msg = 'Record length could not be determined due to ' + \
+                          'missing blockette 1000'
+                    raise Exception(msg)
+                offset = two_fields[1] - blockettes_offset
+            # To avoid an infinite loop the total offset is checked.
+            if offset >= len(blockettes):
+                msg = 'Record length could not be determined due to ' + \
+                          'missing blockette 1000'
+                raise Exception(msg)
+        # Number of total records.
+        info['number_of_records'] = int(info['filesize'] / \
+                                        info['record_length'])
+        # Excess bytes that do not belong to a record.
+        info['excess_bytes'] = info['filesize'] % info['record_length']
+        if starting_pointer:
+            mseed_file.seek(starting_pointer)
+        else:
+            mseed_file.close()
         return info
+
+    def _getMSStarttime(self, open_file):
+        """
+        Returns the starttime of the given Mini-SEED record and returns a 
+        UTCDateTime object.
+        
+        Due to various possible time correction it is complicated to get the
+        actual start time of a Mini-SEED file. This method hopefully handles
+        all possible cases.
+        
+        It evaluates fields 8, 12 and 16 of the fixed header section and
+        additionally blockettes 500 and 1001 which both contain (the same?)
+        microsecond correction. If both blockettes are available only blockette
+        1001 is used. Not sure if this is the correct way to handle it but
+        I could not find anything in the SEED manual nor an example file.
+        
+        Please see the SEED manual for additional information.
+        
+        @param open_file: Open file or StringIO. The pointer has to be set
+            at the beginning of the record of interst. When the method is
+            done with the calulations it will reset the file pointer to the
+            original state.
+        """
+        # Save the originial state of the file pointer.
+        file_pointer_start = open_file.tell()
+        # Jump to the beginning of field 8 and read the rest of the fixed
+        # header section.
+        open_file.seek(20, 1)
+        # Unpack the starttime, field 12, 16, 17 and 18.
+        unpacked_tuple = unpack('>HHBBBxHxxxxxxBxxxiHH', open_file.read(28))
+        # Use field 17 to calculate how long all blockettes are and read them.
+        blockettes = open_file.read(unpacked_tuple[-2] - 48)
+        # Reset the file_pointer
+        open_file.seek(file_pointer_start, 0)
+        time_correction = 0
+        # Check if bit 1 of field 12 has not been set.
+        if unpacked_tuple[6] & 2 == 0:
+            # If it has not been set the time correction of field 16 still
+            # needs to be applied. The units are in 0.0001 seconds.
+            time_correction += unpacked_tuple[7] * 100
+        # Loop through the blockettes to find blockettes 500 and 1001.
+        offset = 0
+        blkt_500 = 0
+        blkt_1001 = 0
+        while True:
+            # Get blockette number.
+            cur_blockette = unpack('>H', blockettes[offset : offset + 2])
+            if cur_blockette == 1001:
+                blkt_1001 = unpack('>H', blockettes[5])
+                if unpack('>H', blockettes[offset + 2 : offset + 4]) == 0:
+                    break
+            if cur_blockette == 500:
+                blkt_500 = unpack('>H', blockettes[19])
+                if unpack('>H', blockettes[offset + 2 : offset + 4]) == 0:
+                    break
+            next_blockette = unpack('>H',
+                                    blockettes[offset + 2 : offset + 4])[0]
+            # Leave the loop if no further blockettes follow.
+            if next_blockette == 0:
+                break
+            # New offset.
+            offset = next_blockette - 48
+        # Adjust the starrtime. Blockette 1001 will override blkt_500.
+        additional_correction = 0
+        if blkt_500:
+            additional_correction = blkt_500
+        if blkt_1001:
+            additional_correction = blkt_1001
+        # Return a UTCDateTime object with the applied corrections.
+        starttime = UTCDateTime(year=unpacked_tuple[0],
+                        julday=unpacked_tuple[1], hour=unpacked_tuple[2],
+                        minute=unpacked_tuple[3], second=unpacked_tuple[4],
+                        microsecond=unpacked_tuple[5] * 100)
+        # Due to weird bug a difference between positive and negative offsets
+        # is needed.
+        total_correction = time_correction + additional_correction
+        if total_correction < 0:
+            starttime = starttime - abs(total_correction) / 1e6
+        else:
+            starttime = starttime + total_correction / 1e6
+        return starttime
 
     def _isRateTolerable(self, sr1, sr2):
         """
