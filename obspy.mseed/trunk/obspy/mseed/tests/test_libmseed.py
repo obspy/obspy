@@ -5,10 +5,12 @@ The libmseed test suite.
 
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
+from obspy.mseed.libmseed import clibmseed
 from StringIO import StringIO
 import copy
 import inspect
 import numpy as N
+import ctypes as C
 import os
 import random
 import time
@@ -264,6 +266,8 @@ class LibMSEEDTestCase(unittest.TestCase):
                              mseed._convertMSTimeToDatetime(chain.starttime))
             self.assertEqual(end,
                              mseed._convertMSTimeToDatetime(chain.endtime))
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg, chain
 
     def test_getMSStarttime(self):
         """
@@ -278,15 +282,17 @@ class LibMSEEDTestCase(unittest.TestCase):
                            u'timingquality.mseed']
         for _i in mseed_filenames:
             filename = os.path.join(self.path, _i)
-            open_file = open(filename, 'rb')
             # get the start- and end time
-            start = mseed._getMSStarttime(open_file)
+            f = open(filename, 'rb')
+            start = mseed._getMSStarttime(f)
+            f.close()
             # parse the whole file
             mstg = mseed.readFileToTraceGroup(filename, dataflag=0)
             chain = mstg.contents.traces.contents
             self.assertEqual(start,
                              mseed._convertMSTimeToDatetime(chain.starttime))
-            open_file.close()
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg, chain
 
     def test_cutMSFileByRecord(self):
         """

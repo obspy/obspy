@@ -178,6 +178,8 @@ class libmseed(object):
             if _i != numtraces - 1:
                 chain = chain.contents.next
         openfile.close()
+        clibmseed.mst_freegroup(C.pointer(mstg))
+        del mstg
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
                              sampratetol= -1, dataflag=1, skipnotdata=1,
