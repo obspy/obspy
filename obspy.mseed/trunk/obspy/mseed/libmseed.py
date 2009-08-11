@@ -141,7 +141,7 @@ class libmseed(object):
                                                        chain.numsamples)
             msrid = self._MSRId(header)
             last_endtime = trace_list[-1][0]['endtime']
-            if long(last_endtime + delta) == header['starttime'] and \
+            if abs(last_endtime - header['starttime']) <= 1.01*delta and \
                     last_msrid == msrid:
                 # Append to trace
                 trace_list[-1][0]['endtime'] = header['endtime']
@@ -181,6 +181,7 @@ class libmseed(object):
             dataquality, verbose: These are passed directly to the 
             readFileToTraceGroup method.
         """
+        clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
         # Create empty list that will contain all traces.
         trace_list = []
         # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
@@ -194,17 +195,21 @@ class libmseed(object):
         chain = mstg.contents.traces.contents
         numtraces = mstg.contents.numtraces
         # Loop over traces and append to trace_list.
-        for _i in xrange(numtraces):
+        for i in xrange(numtraces):
             header = self._convertMSTToDict(chain)
             # Access data directly as numpy array.
             data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
                                                        chain.numsamples)
             trace_list.append([header, data])
             # Set chain to next trace.
-            if _i != numtraces - 1:
-                chain = chain.next.contents
+            if i != numtraces - 1:
+                next = chain.next.contents
+                clibmseed.mst_free(C.pointer(C.pointer(chain)))
+                chain = next
+        clibmseed.mst_free(C.pointer(C.pointer(chain)))
+        mstg.contents.traces = None # avoid double free
         clibmseed.mst_freegroup(C.pointer(mstg))
-        del chain, mstg
+        del mstg, chain
         return trace_list
 
     def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding= -1,

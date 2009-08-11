@@ -48,7 +48,6 @@ def readMSEED(filename, headonly=False):
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
         header['endtime'] = \
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
-        #import pdb; pdb.set_trace()
         # Append traces.
         if headonly:
             header['npts'] = int( (header['endtime'] - header['starttime']) *
