@@ -234,18 +234,24 @@ class libmseed(object):
         @param verbose: controls verbosity, a value of zero will result in no 
             diagnostic output.
         """
+        try:
+            f = open(outfile, 'wb')
+        except TypeError:
+            f = outfile
         # Populate MSTG Structure
         mstg = self._populateMSTG(trace_list)
-        # Write File and loop over every trace in the MSTraceGroup Structure.
-        numtraces = mstg.contents.numtraces
-        openfile = open(outfile, 'wb')
-        chain = mstg.contents.traces
-        for _i in xrange(numtraces):
-            self._packMSTToFile(chain, openfile, reclen, encoding, byteorder,
-                                flush, verbose)
-            if _i != numtraces - 1:
-                chain = chain.contents.next
-        openfile.close()
+        # Initialize packedsamples pointer for the mst_pack function
+        self.packedsamples = C.c_int()
+        # Callback function for mst_pack to actually write the file
+        def record_handler(record, reclen, _stream):
+            f.write(record[0:reclen])
+        # Define Python callback function for use in C function
+        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
+                                 C.c_void_p)
+        rec_handler = RECHANDLER(record_handler)
+        # Pack mstg into a MSEED file using record_handler as write method
+        clibmseed.mst_packgroup(mstg, rec_handler, None, reclen, encoding, byteorder,
+                                C.byref(self.packedsamples), flush, verbose, None)
         clibmseed.mst_freegroup(C.pointer(mstg))
         del mstg
 
@@ -1101,31 +1107,6 @@ class libmseed(object):
         """
         return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
 
-    def _packMSTToFile(self, mst, outfile, reclen, encoding, byteorder, flush,
-                       verbose):
-        """
-        Takes MS Trace object and writes it to a file
-        """
-        #Allow direclty passing of file pointers, usefull for appending
-        #mseed records on existing mseed files
-        if type(outfile) == file:
-            mseedfile = outfile
-        else:
-            mseedfile = open(outfile, 'wb')
-        #Initialize packedsamples pointer for the mst_pack function
-        self.packedsamples = C.pointer(C.c_int(0))
-        #Callback function for mst_pack to actually write the file
-        def record_handler(record, reclen, _stream):
-            mseedfile.write(record[0:reclen])
-        #Define Python callback function for use in C function
-        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
-                                 C.c_void_p)
-        rec_handler = RECHANDLER(record_handler)
-        #Pack the file into a MiniSEED file
-        clibmseed.mst_pack(mst, rec_handler, None, reclen, encoding, byteorder,
-                           self.packedsamples, flush, verbose, None)
-        if not type(outfile) == file:
-            mseedfile.close()
 
     def _populateMSTG(self, trace_list):
         """
@@ -1165,6 +1146,8 @@ class libmseed(object):
             C.resize(tempdatpoint,
                      clibmseed.ms_samplesize(C.c_char(trace_list[_i][0]\
                                                       ['sampletype'])) * npts)
+            # old segmentationfault try
+            #chain.contents.datasamples = trace_list[_i][1].ctypes.data_as(C.POINTER(C.c_long))
             # The datapoints in the MSTG structure are a pointer to the memory
             # area reserved for tempdatpoint.
             chain.contents.datasamples = C.pointer(tempdatpoint)
