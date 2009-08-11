@@ -11,6 +11,7 @@ import copy
 import inspect
 import numpy as N
 import ctypes as C
+import threading
 import os
 import random
 import time
@@ -74,7 +75,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                                   u'gaps.mseed')
         mseed = libmseed()
         # list of known data samples
-        starttime = [1199145599915000L,1199145604035000L,1199145610215000L,
+        starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
                      1199145618455000L]
         datalist = [[-363, -382, -388, -420, -417, -397, -418, -390, -388],
                     [-427, -416, -393, -430, -426, -407, -401, -422, -439],
@@ -543,6 +544,69 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(info['record_length'], 4096)
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
+
+    def test_readMSTracesViaRecords_thread_safety(self):
+        """
+        XXX: Tests for race conditions.
+        
+        Fails with readMSTracesViaRecords and passes with readMSTraces!
+        """
+        mseed = libmseed()
+        # Use a medium sized file.
+        mseed_file = os.path.join(self.path,
+                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        # Read file into memory.
+        f = open(mseed_file, 'rb')
+        buffer = f.read()
+        f.close()
+        def test_function(_i):
+            temp_file = os.path.join(self.path,
+                                u'temp_file_' + str(_i))
+            # CHANGE FUNCTION TO BE TESTED HERE!
+            setattr(values, str(_i), mseed.readMSTracesViaRecords(temp_file))
+        # Create the same file ten times in a row.
+        for _i in range(10):
+            temp_file = os.path.join(self.path,
+                                u'temp_file_' + str(_i))
+            f = open(temp_file, 'wb')
+            f.write(buffer)
+            f.close()
+        # Create empty class for storing the values. Not a clean way but an
+        # easy one.
+        class StoreValues(object):
+            pass
+        values = StoreValues()
+        # Read the ten files at one and save the output in the just created
+        # class.
+        for _i in range(10):
+            thread = threading.Thread(target=test_function, args=(_i,))
+            thread.start()
+        start = time.time()
+        # Loop until all threads are finished.
+        while True:
+            if threading.activeCount() == 1:
+                break
+            # Avoid infinite loop and leave after 10 seconds which should be
+            # enough for any more or less modern computer.
+            elif time.time() - start >= 10:
+                msg = 'Not all threads finished!'
+                raise Warning(msg)
+                break
+            else:
+                time.sleep(0.1)
+                continue
+        # Compare all values which should be identical.
+        for _i in range(9):
+            self.assertEqual(getattr(values, str(_i))[0][0],
+                             getattr(values, str(_i + 1))[0][0])
+            N.testing.assert_array_equal(getattr(values, str(_i))[0][1],
+                             getattr(values, str(_i + 1))[0][1])
+        # Delete the files.
+        for _i in range(10):
+            temp_file = os.path.join(self.path,
+                                u'temp_file_' + str(_i))
+            os.remove(temp_file)
+
 
 
 def suite():
