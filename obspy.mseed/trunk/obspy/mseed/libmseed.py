@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile, c_file_p
-from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS
+from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS, MSRecord
 from struct import unpack
 import ctypes as C
 import math
@@ -95,12 +95,75 @@ class libmseed(object):
         @param filename: Mini-SEED file.
         """
         try:
-            open_file = open(filename, 'rb')
-            self._getMSStarttime(open_file)
-            open_file.close()
+            f = open(filename, 'rb')
+            self._getMSStarttime(f)
+            f.close()
             return True
         except:
             return False
+
+    def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
+                               verbose=0):
+        """
+        Read Mini-SEED file. Returns a list with header informations and data
+        for each trace in the file.
+        
+        The list returned contains a list for each trace in the file with the
+        lists first element being a header dictionary and its second element
+        containing the data values as a numpy array.
+
+        @param filename: Name of Mini-SEED file.
+        @param reclen, dataflag, skipnotdata, verbose: These are passed
+            directly to the ms_readmsr.
+        """
+        # Initialise list that will contain all traces, first dummy entry
+        # will be removed at the end again
+        trace_list = [[{'endtime':0}, N.array([])]]
+        # Initialize MSRecord structure
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr = clibmseed.msr_init(None)
+        # Loop over records and append to trace_list.
+        # Directly call ms_readmsr
+        while True:
+            errcode = clibmseed.ms_readmsr(
+                C.pointer(msr), str(filename), C.c_int(reclen),
+                None,None,C.c_short(skipnotdata),
+                C.c_short(dataflag), C.c_short(verbose))
+            if errcode != 0:
+                break
+            chain = msr.contents
+            header = self._convertMSRToDict(chain)
+            delta = HPTMODULUS / float(header['samprate'])
+            header['endtime'] = long( header['starttime'] + delta * \
+                                      (header['numsamples']-1) )
+            # Access data directly as numpy array.
+            data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
+                                                       chain.numsamples)
+            msrid = self._MSRId(header)
+            last_endtime = trace_list[-1][0]['endtime']
+            if long(last_endtime + delta) == header['starttime'] and \
+                    last_msrid == msrid:
+                # Append to trace
+                trace_list[-1][0]['endtime'] = header['endtime']
+                trace_list[-1][0]['numsamples'] += header['numsamples']
+                trace_list[-1].append(data)
+                concat_flag = True
+            else:
+                # Concatenate last trace and start a new trace
+                trace_list[-1] = [trace_list[-1][0],
+                                  N.concatenate(trace_list[-1][1:])]
+                trace_list.append([header, data])
+                concat_flag = False
+            last_msrid = msrid
+        # Finish up loop, concatenate trace_list if not already done
+        if concat_flag:
+                trace_list[-1] = [trace_list[-1][0],
+                                  N.concatenate(trace_list[-1][1:])]
+        trace_list.pop(0) # remove first dummy entry of list
+        # Free MSRecord structure
+        clibmseed.ms_readmsr(C.pointer(msr), None, 0, None, None, 0, 0, 0)
+        del msr, chain
+        return trace_list
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
@@ -821,6 +884,21 @@ class libmseed(object):
         @param timestring: Mini-SEED timestring (Epoch time string in ms).
         """
         return UTCDateTime.utcfromtimestamp(timestring / HPTMODULUS)
+
+    def _MSRId(self, header):
+        ids = ['network', 'station', 'location', 'channel',
+                'samprate', 'sampletype']
+        return ".".join([str(header[_i]) for _i in ids])
+
+    def _convertMSRToDict(self, m):
+        h = {}
+        attributes = ('network', 'station', 'location', 'channel',
+                      'dataquality', 'starttime', 'samprate',
+                      'samplecnt', 'numsamples', 'sampletype')
+        # loop over attributes
+        for _i in attributes:
+            h[_i] = getattr(m, _i)
+        return h
 
     def _convertMSTToDict(self, m):
         """

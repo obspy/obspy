@@ -62,6 +62,36 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(timestring, mseed._convertDatetimeToMSTime(
                         mseed._convertMSTimeToDatetime(timestring)))
 
+    def test_readTracesViaRecords(self):
+        """
+        Compares waveform data read by libmseed with an ASCII dump.
+        
+        Checks the first 13 datasamples of each entry in trace_list of 
+        gaps.mseed. The values are assumed to be correct. The values were
+        created using Pitsa.
+        """
+        mseed_file = os.path.join(self.path,
+                                  u'gaps.mseed')
+        mseed = libmseed()
+        # list of known data samples
+        starttime = [1199145599915000L,1199145604035000L,1199145610215000L,
+                     1199145618455000L]
+        datalist = [[-363, -382, -388, -420, -417, -397, -418, -390, -388],
+                    [-427, -416, -393, -430, -426, -407, -401, -422, -439],
+                    [-396, -399, -387, -384, -393, -380, -365, -394, -426],
+                    [-389, -428, -409, -389, -388, -405, -390, -368, -368]]
+        #trace_list = mseed.readMSTracesViaRecords(mseed_file)
+        i = 0
+        trace_list = mseed.readMSTraces(mseed_file)
+        #import pdb;pdb.set_trace()
+        for header, data in trace_list:
+            self.assertEqual('BGLD', header['station'])
+            self.assertEqual('EHE', header['channel'])
+            self.assertEqual(200, header['samprate'])
+            self.assertEqual(starttime[i], header['starttime'])
+            self.assertEqual(datalist[i], data[0:9].tolist())
+            i += 1
+
     def test_readTraces(self):
         """
         Compares waveform data read by libmseed with an ASCII dump.
@@ -69,7 +99,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         Checks the first 13 datasamples when reading the first record of 
         BW.BGLD.__.EHE.D.2008.001 using traces. The values are assumed to
         be correct. The values were created using Pitsa.
-        Only checks relative values.
         """
         mseed_file = os.path.join(self.path,
                                   u'BW.BGLD.__.EHE.D.2008.001.first_record')
@@ -84,9 +113,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(200, header['samprate'])
         self.assertEqual(1199145599915000, header['starttime'])
         data = trace_list[0][1][0:13].tolist()
-        for i in range(len(datalist) - 1):
-            self.assertEqual(datalist[i] - datalist[i + 1],
-                             data[i] - data[i + 1])
+        self.assertEqual(datalist, data)
         mseed_filenames = [u'gaps.mseed', u'qualityflags.mseed',
                            u'test.mseed', u'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]

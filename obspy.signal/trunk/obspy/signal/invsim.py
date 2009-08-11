@@ -360,9 +360,9 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     can be imported from obspy.signal.seismometer
     """
     error = """
-    %s must be either of none or dictionary type. With poles, zeros
-    and gain as dictionary keys, values of poles and zeros are list of
-    complex entries, of gain as float.
+    %s must be either of type None or of type dictionary. The dictionary
+    must contain poles, zeros and gain as keys, values of poles and zeros
+    are iterables of complex entries, the value of gain is a float.
     """
     samp_int = 1 / float(samp_rate)
     try:

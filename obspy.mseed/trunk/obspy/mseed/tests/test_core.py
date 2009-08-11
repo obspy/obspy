@@ -36,12 +36,6 @@ class CoreTestCase(unittest.TestCase):
         for _i in xrange(5):
             self.assertEqual(stream[0].data[_i], testdata[_i])
 
-    def test_writeFileViaLibMSEED(self):
-        """
-        Write file test via L{obspy.mseed.core.writeMSEED}.
-        """
-        pass
-
     def test_readFileViaObsPy(self):
         """
         Read file test via L{obspy.core.Stream}.

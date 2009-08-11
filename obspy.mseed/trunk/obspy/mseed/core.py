@@ -25,7 +25,8 @@ def readMSEED(filename, headonly=False):
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename)
     else:
-        trace_list = __libmseed__.readMSTraces(filename)
+        #trace_list = __libmseed__.readMSTraces(filename)
+        trace_list = __libmseed__.readMSTracesViaRecords(filename)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
@@ -47,6 +48,7 @@ def readMSEED(filename, headonly=False):
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
         header['endtime'] = \
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
+        #import pdb; pdb.set_trace()
         # Append traces.
         if headonly:
             header['npts'] = int( (header['endtime'] - header['starttime']) *
