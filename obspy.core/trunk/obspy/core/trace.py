@@ -4,7 +4,7 @@ from copy import deepcopy
 from numpy import array, NaN, concatenate
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-
+import obspy
 
 class Stats(AttribDict):
     pass
@@ -135,6 +135,12 @@ class Trace(object):
             print msg
             raise
         waveform.plotWaveform(self, **kwargs)
+
+    def write(self, filename, format, **kwargs):
+        """
+        Creates a graph of this L{Trace} object.
+        """
+        obspy.Stream([self]).write(filename, format, **kwargs)
 
     def ltrim(self, starttime):
         """
