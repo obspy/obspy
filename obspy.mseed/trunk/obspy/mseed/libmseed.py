@@ -82,7 +82,7 @@ class libmseed(object):
             clibmseed.mst_freegroup(C.pointer(mstg))
             del mstg
         except:
-            print 'The file could not be read.'
+            raise
 
     def isMSEED(self, filename):
         """
@@ -95,9 +95,9 @@ class libmseed(object):
         @param filename: Mini-SEED file.
         """
         try:
-            f = open(filename, 'rb')
-            self._getMSStarttime(f)
-            f.close()
+            mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg
             return True
         except:
             return False
@@ -122,10 +122,11 @@ class libmseed(object):
         # Initialize MSRecord structure
         clibmseed.msr_init.restype = C.POINTER(MSRecord)
         msr = clibmseed.msr_init(None)
+        msf = C.POINTER(C.c_int)()
         # Loop over records and append to trace_list.
         # Directly call ms_readmsr
         while True:
-            errcode = clibmseed.ms_readmsr(
+            errcode = clibmseed.ms_readmsr_r(C.pointer(msf),
                 C.pointer(msr), str(filename), C.c_int(reclen),
                 None,None,C.c_short(skipnotdata),
                 C.c_short(dataflag), C.c_short(verbose))
@@ -161,7 +162,8 @@ class libmseed(object):
                                   N.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         # Free MSRecord structure
-        clibmseed.ms_readmsr(C.pointer(msr), None, 0, None, None, 0, 0, 0)
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr), 
+                               None, 0, None, None, 0, 0, 0)
         del msr, chain
         return trace_list
 

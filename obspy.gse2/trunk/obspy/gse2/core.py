@@ -12,14 +12,14 @@ def isGSE2(filename):
     """
     # Open file.
     try:
-        fh = open(filename)
+        f = open(filename)
     except:
         return False
     try:
-        data = fh.read(4)
+        data = f.read(4)
     except:
         data = False
-    fh.close()
+    f.close()
     if data == 'WID2':
         return True
     return False

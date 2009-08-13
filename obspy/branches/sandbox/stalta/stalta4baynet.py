@@ -7,6 +7,13 @@ STA/LTA trigger for Baynet. \n E.g file wildcard:
 """
 # 2009-07-23 Moritz; PYTHON2.5 REQUIRED
 
+import sys
+try:
+    i = sys.path.index('/home/beyreuth/research/ffb/obspy/obspy/branches/symlink')
+    sys.path.pop(i)
+except:
+    pass
+sys.path.insert(1,"/baysoft/obspy/obspy/branches/symlink")
 import obspy, sys, numpy
 from matplotlib.mlab import detrend_linear as detrend
 from obspy.signal import recStalta, triggerOnset, seisSim, pazToFreqResp
@@ -35,7 +42,10 @@ station_list = []
 last_endtime, last_id = 0, "--"
 for file in mseed_files:
     print "\n", file,
-    stream = obspy.read(file)
+    try:
+        stream = obspy.read(file)
+    except:
+        continue
     stats = stream[0].stats
     pick_file = "%s_%s_%s.picks" % (stats.starttime.year,
                                     stats.starttime.strftime("%j"),

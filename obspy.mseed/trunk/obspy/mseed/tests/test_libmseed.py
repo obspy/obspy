@@ -63,16 +63,59 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(timestring, mseed._convertDatetimeToMSTime(
                         mseed._convertMSTimeToDatetime(timestring)))
 
-    def test_readTracesViaRecords(self):
+    def test_readMSTracesViaRecords(self):
         """
         Compares waveform data read by libmseed with an ASCII dump.
         
-        Checks the first 13 datasamples of each entry in trace_list of 
-        gaps.mseed. The values are assumed to be correct. The values were
-        created using Pitsa.
+        Checks the first 9 datasamples of each entry in trace_list of 
+        gaps.mseed. The values are assumed to be correct. The first values
+        were created using Pitsa.
         """
-        mseed_file = os.path.join(self.path,
-                                  u'gaps.mseed')
+        mseed_file = os.path.join(self.path, u'gaps.mseed')
+        mseed = libmseed()
+        # list of known data samples
+        starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
+                     1199145618455000L]
+        datalist = [[-363, -382, -388, -420, -417, -397, -418, -390, -388],
+                    [-427, -416, -393, -430, -426, -407, -401, -422, -439],
+                    [-396, -399, -387, -384, -393, -380, -365, -394, -426],
+                    [-389, -428, -409, -389, -388, -405, -390, -368, -368]]
+        #trace_list = mseed.readMSTracesViaRecords(mseed_file)
+        i = 0
+        trace_list = mseed.readMSTracesViaRecords(mseed_file)
+        #import pdb;pdb.set_trace()
+        for header, data in trace_list:
+            self.assertEqual('BGLD', header['station'])
+            self.assertEqual('EHE', header['channel'])
+            self.assertEqual(200, header['samprate'])
+            self.assertEqual(starttime[i], header['starttime'])
+            self.assertEqual(datalist[i], data[0:9].tolist())
+            i += 1
+        del trace_list, header, data
+        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record', 
+                           u'qualityflags.mseed', u'test.mseed', 
+                           u'timingquality.mseed']
+        samprate = [200.0, 200.0, 40.0, 200.0]
+        station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
+        npts = [412, 412, 11947, 41604, 1]
+        for i, _f in enumerate(mseed_filenames):
+            file = os.path.join(self.path, _f)
+            trace_list = mseed.readMSTraces(file)
+            header = trace_list[0][0]
+            self.assertEqual(samprate[i], header['samprate'])
+            self.assertEqual(station[i], header['station'])
+            self.assertEqual(npts[i], len(trace_list[0][1]))
+        del trace_list, header
+
+    def test_readMSTraces(self):
+        """
+        Compares waveform data read by libmseed with an ASCII dump.
+        
+        Checks the first 9 datasamples of each entry in trace_list of 
+        gaps.mseed. The values are assumed to be correct. The first values
+        were created using Pitsa.
+        """
+        mseed_file = os.path.join(self.path, u'gaps.mseed')
         mseed = libmseed()
         # list of known data samples
         starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
@@ -92,42 +135,20 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(starttime[i], header['starttime'])
             self.assertEqual(datalist[i], data[0:9].tolist())
             i += 1
-
-    def test_readTraces(self):
-        """
-        Compares waveform data read by libmseed with an ASCII dump.
-        
-        Checks the first 13 datasamples when reading the first record of 
-        BW.BGLD.__.EHE.D.2008.001 using traces. The values are assumed to
-        be correct. The values were created using Pitsa.
-        """
-        mseed_file = os.path.join(self.path,
-                                  u'BW.BGLD.__.EHE.D.2008.001.first_record')
-        mseed = libmseed()
-        # list of known data samples
-        datalist = [-363, -382, -388, -420, -417, -397, -418, -390, -388, -385,
-                    - 367, -414, -427]
-        trace_list = mseed.readMSTraces(mseed_file)
-        header = trace_list[0][0]
-        self.assertEqual('BGLD', header['station'])
-        self.assertEqual('EHE', header['channel'])
-        self.assertEqual(200, header['samprate'])
-        self.assertEqual(1199145599915000, header['starttime'])
-        data = trace_list[0][1][0:13].tolist()
-        self.assertEqual(datalist, data)
-        mseed_filenames = [u'gaps.mseed', u'qualityflags.mseed',
-                           u'test.mseed', u'timingquality.mseed']
+        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record', 
+                           u'qualityflags.mseed', u'test.mseed', 
+                           u'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
         npts = [412, 412, 11947, 41604, 1]
-        for _i, _f in enumerate(mseed_filenames):
+        for i, _f in enumerate(mseed_filenames):
             file = os.path.join(self.path, _f)
             trace_list = mseed.readMSTraces(file)
             header = trace_list[0][0]
-            self.assertEqual(samprate[_i], header['samprate'])
-            self.assertEqual(station[_i], header['station'])
-            self.assertEqual(npts[_i], len(trace_list[0][1]))
-        del trace_list, header
+            self.assertEqual(samprate[i], header['samprate'])
+            self.assertEqual(station[i], header['station'])
+            self.assertEqual(npts[i], len(trace_list[0][1]))
+        del trace_list, header, data
 
     def test_readHeader(self):
         """
@@ -565,7 +586,7 @@ class LibMSEEDTestCase(unittest.TestCase):
             # CHANGE FUNCTION TO BE TESTED HERE!
             setattr(values, str(_i), mseed.readMSTracesViaRecords(temp_file))
         # Create the same file ten times in a row.
-        for _i in range(10):
+        for _i in xrange(10):
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             f = open(temp_file, 'wb')
@@ -588,21 +609,20 @@ class LibMSEEDTestCase(unittest.TestCase):
                 break
             # Avoid infinite loop and leave after 10 seconds which should be
             # enough for any more or less modern computer.
-            elif time.time() - start >= 10:
+            elif time.time() - start >= 20:
                 msg = 'Not all threads finished!'
                 raise Warning(msg)
                 break
             else:
-                time.sleep(0.1)
                 continue
         # Compare all values which should be identical.
-        for _i in range(9):
+        for _i in xrange(9):
             self.assertEqual(getattr(values, str(_i))[0][0],
                              getattr(values, str(_i + 1))[0][0])
             N.testing.assert_array_equal(getattr(values, str(_i))[0][1],
                              getattr(values, str(_i + 1))[0][1])
         # Delete the files.
-        for _i in range(10):
+        for _i in xrange(10):
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             os.remove(temp_file)
