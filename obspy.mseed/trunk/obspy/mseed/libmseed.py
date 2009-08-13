@@ -94,13 +94,19 @@ class libmseed(object):
         
         @param filename: Mini-SEED file.
         """
-        try:
-            mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
-            clibmseed.mst_freegroup(C.pointer(mstg))
-            del mstg
+        f = open(filename, 'rb')
+        # Read part of the Mini-SEED header.
+        f.seek(6)
+        header = f.read(16)
+        f.close()
+        # Read big- and little endian word order!
+        big_endian = unpack('>cxxxxxxxxxxxxxH', header)
+        little_endian = unpack('>cxxxxxxxxxxxxxH', header)
+        if big_endian[0] in ['D', 'R', 'Q', 'M'] and ((big_endian[1] < 2100 and
+            big_endian[1] > 1900) or (little_endian[0] < 2100 and
+            little_endian[0] > 1900)):
             return True
-        except:
-            return False
+        return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
                                verbose=0):
@@ -128,21 +134,21 @@ class libmseed(object):
         while True:
             errcode = clibmseed.ms_readmsr_r(C.pointer(msf),
                 C.pointer(msr), str(filename), C.c_int(reclen),
-                None,None,C.c_short(skipnotdata),
+                None, None, C.c_short(skipnotdata),
                 C.c_short(dataflag), C.c_short(verbose))
             if errcode != 0:
                 break
             chain = msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])
-            header['endtime'] = long( header['starttime'] + delta * \
-                                      (header['numsamples']-1) )
+            header['endtime'] = long(header['starttime'] + delta * \
+                                      (header['numsamples'] - 1))
             # Access data directly as numpy array.
             data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
                                                        chain.numsamples)
             msrid = self._MSRId(header)
             last_endtime = trace_list[-1][0]['endtime']
-            if abs(last_endtime - header['starttime']) <= 1.01*delta and \
+            if abs(last_endtime - header['starttime']) <= 1.01 * delta and \
                     last_msrid == msrid:
                 # Append to trace
                 trace_list[-1][0]['endtime'] = header['endtime']
@@ -162,7 +168,7 @@ class libmseed(object):
                                   N.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         # Free MSRecord structure
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr), 
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                None, 0, None, None, 0, 0, 0)
         del msr, chain
         return trace_list
