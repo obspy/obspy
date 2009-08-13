@@ -4,16 +4,16 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy.gse2 import tests as gse2tests
-from obspy.imaging import spectogram
+from obspy.imaging import spectrogram
 import inspect
 import obspy
 import os
 import unittest
 
 
-class SpectogramTestCase(unittest.TestCase):
+class SpectrogramTestCase(unittest.TestCase):
     """
-    Test cases for spectogram plotting.
+    Test cases for spectrogram plotting.
     """
     def setUp(self):
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
@@ -31,12 +31,12 @@ class SpectogramTestCase(unittest.TestCase):
         file = os.path.join(path, 'data', 'loc_RJOB20050831023349.z')
         g = obspy.read(file, format='GSE2')
         outfile = os.path.join(self.path, 'spectogram.png')
-        spectogram.spectoGram(g[0].data[0:1000], samp_rate=200.0, log=True,
-                              outfile=outfile)
+        spectrogram.spectroGram(g[0].data[0:1000], samp_rate=200.0, log=True,
+                                outfile=outfile)
 
 
 def suite():
-    return unittest.makeSuite(SpectogramTestCase, 'test')
+    return unittest.makeSuite(SpectrogramTestCase, 'test')
 
 
 if __name__ == '__main__':
