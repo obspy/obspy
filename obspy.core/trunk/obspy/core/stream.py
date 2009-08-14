@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from glob import iglob
 from obspy.core.trace import Trace
 from obspy.core.util import getFormatsAndMethods
 import copy
@@ -7,7 +8,17 @@ import math
 import os
 
 
-def read(filename, format=None, headonly=False):
+def read(pathname, format=None, headonly=False):
+    """
+    Reads files using the given pattern into a L{obspy.core.Stream} object.
+    """
+    st = Stream()
+    for file in iglob(pathname):
+        st += _read(file, format, headonly)
+    return st
+
+
+def _read(filename, format=None, headonly=False):
     """
     Reads a file into a L{obspy.core.Stream} object.
     
@@ -428,14 +439,26 @@ class Stream(object):
         tries to merge them and to create distinct traces within this L{Stream}
         object.  
         """
+        # order matters!
         self.sort()
         traces_dict = {}
-        for trace in self.traces:
-            id = trace.getId()
-            if id not in traces_dict:
-                traces_dict[id] = trace
-                continue
-            else:
-                traces_dict[id] = traces_dict[id] + trace
-        del self.traces[:]
-        self.traces = traces_dict.values()
+        # using pop() and try-except saves memory
+        try:
+            while True:
+                trace = self.traces.pop()
+                id = trace.getId()
+                if id not in traces_dict:
+                    traces_dict[id] = trace
+                else:
+                    traces_dict[id] = traces_dict[id] + trace
+        except IndexError:
+            pass
+        self.traces = []
+        # same here
+        try:
+            while True:
+                id, trace = traces_dict.popitem()
+                self.traces.append(trace)
+        except KeyError:
+            pass
+        self.sort()
