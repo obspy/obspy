@@ -41,8 +41,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
         self.assertAlmostEqual(tr.stats.gse2.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
-        for _i in xrange(13):
-            self.assertEqual(tr.data[_i], testdata[_i])
+        self.assertEqual(tr.data[0:13].tolist(), testdata)
 
     def test_readHeadViaObspy(self):
         """
@@ -100,6 +99,47 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr3.stats.gse2.get('calib'),
                          tr1.stats.gse2.get('calib'))
         N.testing.assert_equal(tr3.data, tr1.data)
+
+    def test_readAndWriteStreamsViaObspy(self):
+        """
+        Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
+        """
+        # setup test
+        tmpfile1 = 'tmp1.gse2'
+        tmpfile2 = 'tmp2.gse2'
+        files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
+                 os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
+        testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
+        # write test file containing multiple GSE2 parts
+        f = open(tmpfile1,'wb')
+        for i in xrange(2):
+            f1 = open(files[i],'rb')
+            f.write(f1.read())
+            f1.close()
+        f.close()
+        # read
+        st1 = read(tmpfile1)
+        st1.verify()
+        self.assertEqual(len(st1), 2)
+        tr11 = st1[0]
+        tr12 = st1[1]
+        self.assertEqual(tr11.stats['station'], 'RNON ')
+        self.assertEqual(tr12.stats['station'], 'RJOB ')
+        self.assertEqual(tr12.data[0:13].tolist(), testdata)
+        # write and read
+        st1.write(tmpfile2,format='GSE2')
+        st2 = read(tmpfile2)
+        st2.verify()
+        self.assertEqual(len(st2), 2)
+        tr21 = st1[0]
+        tr22 = st1[1]
+        self.assertEqual(tr21.stats['station'], 'RNON ')
+        self.assertEqual(tr22.stats['station'], 'RJOB ')
+        self.assertEqual(tr22.data[0:13].tolist(), testdata)
+        N.testing.assert_equal(tr21.data, tr11.data)
+        N.testing.assert_equal(tr22.data, tr12.data)
+        os.remove(tmpfile1)
+        os.remove(tmpfile2)
 
     def test_writeIntegersViaObsPy(self):
         """

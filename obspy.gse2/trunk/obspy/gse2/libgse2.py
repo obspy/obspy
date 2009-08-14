@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #-------------------------------------------------------------------
 # Filename: libgse2.py
 #  Purpose: Python wrapper for gse_functions of Stefan Stange
@@ -142,10 +142,11 @@ gse2head = [_i[0] for _i in HEADER._fields_]
 
 
 def isGse2(f):
+    pos = f.tell()
     widi = f.read(4)
     if widi != 'WID2':
         raise TypeError("File is not in GSE2 format")
-    f.seek(0)
+    f.seek(pos)
 
 
 def writeHeader(f, head):
@@ -183,7 +184,7 @@ def writeHeader(f, head):
     )
 
 
-def read(infile, test_chksum=False):
+def read(f, test_chksum=False):
     """
     Read GSE2 file and return header and data. 
     
@@ -192,22 +193,18 @@ def read(infile, test_chksum=False):
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
     
-    @type file: String
-    @param file: Filename of GSE2 file to read, can also be a file pointer
+    @type f: File Pointer
+    @param f: Open file pointer of GSE2 file to read, opened in binary mode,
+              e.g. f = open('myfile','rb')
     @type test_chksum: Bool
     @param test_chksum: If True: Test Checksum and raise Exception
     @rtype: Dictionary, Numpy.ndarray int32
     @return: Header entries and data as numpy.ndarray of type int32.
     """
-    if type(infile) == file:
-        f = infile
-    else:
-        f = open(infile, "rb")
     isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    #data = (C.c_long * head.n_samps)()
     data = N.zeros(head.n_samps, dtype='int32')
     n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
@@ -218,18 +215,15 @@ def read(infile, test_chksum=False):
     if test_chksum and chksum != chksum2:
         msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
         raise ChksumError(msg % (chksum, chksum2, chksum, chksum2))
-    f.close()
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
     # cleaning up
     del fp, head
-    if not type(infile) == file:
-        f.close()
     return headdict, data
 
 
-def write(headdict, data, outfile, inplace=False):
+def write(headdict, data, f, inplace=False):
     """
     Write GSE2 file, given the header and data.
     
@@ -245,8 +239,9 @@ def write(headdict, data, outfile, inplace=False):
         'samp_rate'} are absolutely necessary
     @type data: Iterable of longs
     @param data: Contains the data.
-    @type outfile: String, File
-    @param outfile: Name of GSE2 file to write, can also be a file pointer
+    @type f: File Pointer
+    @param f: Open file pointer of GSE2 file to write, opened in binary
+              mode, e.g. f = open('myfile','wb')
     @type inplace: Bool
     @param inplace: If True, do compression not on a copy of the data but
     on the data itself --- note this will change the data values and make
@@ -277,10 +272,6 @@ def write(headdict, data, outfile, inplace=False):
         }
     """
     #@requires: headdict dictionary entries datatype, n_samps and samp_rate
-    if type(outfile) == file:
-        f = outfile
-    else:
-        f = open(outfile, "wb")
     fp = C.pythonapi.PyFile_AsFile(f)
     n = len(data)
     lib.buf_init(None)
@@ -310,28 +301,24 @@ def write(headdict, data, outfile, inplace=False):
     f.write("CHK2 %8ld\n\n" % chksum)
     lib.buf_free(None)
     del fp, head
-    if not type(outfile) == file:
-        f.close()
 
-
-def readHead(file):
+def readHead(f):
     """
     Return (and read) only the header of gse2 file as dictionary.
 
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
-    @type file: String
-    @param file: Name of GSE2 file.
+    @type file: File Pointer
+    @param file: Open file pointer of GSE2 file to read, opened in binary
+                 mode, e.g. f = open('myfile','rb')
     @rtype: Dictonary
     @return: Header entries.
     """
-    f = open(file, "rb")
     isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    f.close()
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
@@ -339,25 +326,24 @@ def readHead(file):
     return headdict
 
 
-def getStartAndEndTime(file):
+def getStartAndEndTime(f):
     """
-    Return start and endtime/date of gse2 file
+    Return start and endtime/date of GSE2 file
     
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
-    @type file: String
-    @param file: Name of GSE2 file.
+    @type f: File Pointer
+    @param f: Open file pointer of GSE2 file to read, opened in binary
+              mode, e.g. f = open('myfile','rb')
     @rtype: List
     @return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
         Julian seconds and as date string.
     """
-    f = open(file, "rb")
     isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    f.close()
     seconds = int(head.t_sec)
     microseconds = int(1e6 * (head.t_sec - seconds))
     startdate = UTCDateTime(head.d_year, head.d_mon, head.d_day,

@@ -36,7 +36,8 @@ class LibGSE2TestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'loc_RJOB20050831023349.z')
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        header, data = libgse2.read(gse2file)
+        f = open(gse2file,'rb')
+        header, data = libgse2.read(f)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -48,24 +49,25 @@ class LibGSE2TestCase(unittest.TestCase):
             header['t_min'],
             header['t_sec'])
         )
-        data = data.tolist() # much faster this way
-        for i in xrange(len(datalist) - 1):
-            self.assertEqual(datalist[i] - datalist[i + 1],
-                             data[i] - data[i + 1])
-        #from pylab import plot,array,show;plot(array(data));show()
+        self.assertEqual(data[0:13].tolist(), datalist)
+        f.close()
 
-    def test_readAnWrite(self):
+    def test_readAndWrite(self):
         """
         Writes, reads and compares files created via libgse2.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header, data = libgse2.read(gse2file)
-        temp_file = os.path.join(self.path, 'tmp.gse2')
-        libgse2.write(header, data, temp_file)
-        newheader, newdata = libgse2.read(temp_file)
+        f = open(gse2file,'rb')
+        header, data = libgse2.read(f)
+        f.close()
+        tmp_file = 'tmp.gse2'
+        f = open(tmp_file,'wb')
+        libgse2.write(header, data, f)
+        f.close()
+        newheader, newdata = libgse2.read(open(tmp_file,'rb'))
         self.assertEqual(header, newheader)
         N.testing.assert_equal(data, newdata)
-        os.remove(temp_file)
+        os.remove(tmp_file)
 
     def test_readHeaderInfo(self):
         """
@@ -74,7 +76,7 @@ class LibGSE2TestCase(unittest.TestCase):
         The values can be read from the filename.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header = libgse2.readHead(gse2file)
+        header = libgse2.readHead(open(gse2file,'rb'))
         self.assertEqual('RNON ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -93,7 +95,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         # get the start- and end time
-        times = libgse2.getStartAndEndTime(gse2file)
+        times = libgse2.getStartAndEndTime(open(gse2file,'rb'))
         self.assertEqual(UTCDateTime(2004, 6, 9, 20, 5, 59, 849998), times[0])
         self.assertEqual(UTCDateTime(2004, 6, 9, 20, 6, 59, 849998), times[1])
         self.assertEqual(1086811559.849998, times[2])
@@ -103,9 +105,10 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        self.assertRaises(TypeError, libgse2.read, __file__)
-        self.assertRaises(TypeError, libgse2.getStartAndEndTime, __file__)
-        self.assertRaises(TypeError, libgse2.readHead, __file__)
+        self.assertRaises(TypeError, libgse2.read, open(__file__,'rb'))
+        self.assertRaises(TypeError, libgse2.getStartAndEndTime,
+                          open(__file__,'rb'))
+        self.assertRaises(TypeError, libgse2.readHead, open(__file__,'rb'))
 
 
     def test_maxvalueExceeded(self):
@@ -119,7 +122,9 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        self.assertRaises(OverflowError, libgse2.write, header, data, testfile)
+        f = open(testfile,'wb')
+        self.assertRaises(OverflowError, libgse2.write, header, data, f)
+        f.close()
 
     def test_arrayNotNumpy(self):
         """
@@ -131,11 +136,15 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
+        f = open(testfile,'wb')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
+        f.close()
+        f = open(testfile,'wb')
         data = N.array([2, 26, 1], dtype='f')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
+        f.close()
 
 
 def suite():
