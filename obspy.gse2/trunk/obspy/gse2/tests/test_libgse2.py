@@ -36,7 +36,7 @@ class LibGSE2TestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'loc_RJOB20050831023349.z')
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        f = open(gse2file,'rb')
+        f = open(gse2file, 'rb')
         header, data = libgse2.read(f)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
@@ -57,14 +57,14 @@ class LibGSE2TestCase(unittest.TestCase):
         Writes, reads and compares files created via libgse2.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        f = open(gse2file,'rb')
+        f = open(gse2file, 'rb')
         header, data = libgse2.read(f)
         f.close()
         tmp_file = 'tmp.gse2'
-        f = open(tmp_file,'wb')
+        f = open(tmp_file, 'wb')
         libgse2.write(header, data, f)
         f.close()
-        newheader, newdata = libgse2.read(open(tmp_file,'rb'))
+        newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
         self.assertEqual(header, newheader)
         N.testing.assert_equal(data, newdata)
         os.remove(tmp_file)
@@ -76,7 +76,7 @@ class LibGSE2TestCase(unittest.TestCase):
         The values can be read from the filename.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header = libgse2.readHead(open(gse2file,'rb'))
+        header = libgse2.readHead(open(gse2file, 'rb'))
         self.assertEqual('RNON ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -95,7 +95,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         # get the start- and end time
-        times = libgse2.getStartAndEndTime(open(gse2file,'rb'))
+        times = libgse2.getStartAndEndTime(open(gse2file, 'rb'))
         self.assertEqual(UTCDateTime(2004, 6, 9, 20, 5, 59, 849998), times[0])
         self.assertEqual(UTCDateTime(2004, 6, 9, 20, 6, 59, 849998), times[1])
         self.assertEqual(1086811559.849998, times[2])
@@ -105,11 +105,10 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        self.assertRaises(TypeError, libgse2.read, open(__file__,'rb'))
+        self.assertRaises(TypeError, libgse2.read, open(__file__, 'rb'))
         self.assertRaises(TypeError, libgse2.getStartAndEndTime,
-                          open(__file__,'rb'))
-        self.assertRaises(TypeError, libgse2.readHead, open(__file__,'rb'))
-
+                          open(__file__, 'rb'))
+        self.assertRaises(TypeError, libgse2.readHead, open(__file__, 'rb'))
 
     def test_maxvalueExceeded(self):
         """
@@ -122,9 +121,10 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        f = open(testfile,'wb')
+        f = open(testfile, 'wb')
         self.assertRaises(OverflowError, libgse2.write, header, data, f)
         f.close()
+        os.remove(testfile)
 
     def test_arrayNotNumpy(self):
         """
@@ -136,15 +136,16 @@ class LibGSE2TestCase(unittest.TestCase):
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        f = open(testfile,'wb')
+        f = open(testfile, 'wb')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
         f.close()
-        f = open(testfile,'wb')
+        f = open(testfile, 'wb')
         data = N.array([2, 26, 1], dtype='f')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
         f.close()
+        os.remove(testfile)
 
 
 def suite():
