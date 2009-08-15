@@ -178,7 +178,9 @@ class _StationMapperClient(_BaseRESTClient):
         60077000.0
         >>> a['sensitivity']
         2516800000.0
-
+        >>> a['name']
+        'Streckeisen STS-2/N seismometer'
+        
         @param network_id: Network id, e.g. 'BW'.
         @param station_id: Station id, e.g. 'RJOB'.
         @param location_id: Location id, e.g. ''.
@@ -202,8 +204,12 @@ class _StationMapperClient(_BaseRESTClient):
         # request station resource
         res = self.client.station.getXMLResource(xml_doc['resource_name'])
         base_node = res.station_control_header
+        dict_node = res.abbreviation_dictionary_control_header
         # search for nodes with correct channel and location code
         if channel_id or location_id:
+            xpath_expr = "channel_identifier[channel_identifier='" + \
+                channel_id + "' and location_identifier='" + location_id + "'"
+            channel_node = base_node.xpath()
             # fetch next following response_poles_and_zeros node
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel_id + "' and location_identifier='" + location_id + \
@@ -218,8 +224,14 @@ class _StationMapperClient(_BaseRESTClient):
             sensitivity_node = base_node.xpath(xpath_expr)[0]
         else:
             # just take first existing nodes
+            channel_node = base_node.channel_identifier[0]
             paz_node = base_node.response_poles_and_zeros[0]
             sensitivity_node = base_node.channel_sensitivity_gain[-1]
+        # instrument name
+        # XXX: this probably changes with a newer XSEED format
+        xpath_expr = "generic_abbreviation[abbreviation_lookup_code='" + \
+            str(channel_node.instrument_identifier) + "']"
+        name = dict_node.xpath(xpath_expr)[0].abbreviation_description
         # poles
         poles_real = paz_node.complex_pole.real_pole[:]
         poles_imag = paz_node.complex_pole.imaginary_pole[:]
@@ -235,7 +247,7 @@ class _StationMapperClient(_BaseRESTClient):
         # sensitivity
         sensitivity = sensitivity_node.sensitivity_gain
         return {'poles': poles, 'zeros': zeros, 'gain': gain,
-                'sensitivity': sensitivity}
+                'sensitivity': sensitivity, 'name': name}
 
 
 class _EventMapperClient(_BaseRESTClient):
