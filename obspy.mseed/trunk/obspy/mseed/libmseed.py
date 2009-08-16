@@ -698,8 +698,9 @@ class libmseed(object):
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise. 
-            # to cover values between records etime may have one sample more
-            if starttime >= stime and starttime < (etime + 1. / sample_rate):
+            # also watch for time values between records!
+            sample = 1. / sample_rate
+            if starttime > (stime - sample) and starttime < (etime + sample):
                 break
             elif starttime <= stime:
                 start_record -= 1
@@ -727,8 +728,9 @@ class libmseed(object):
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
-            # to cover values between records stime may have one sample less
-            if endtime > (stime - 1. / sample_rate) and endtime <= etime:
+            # also watch for time values between records!
+            sample = 1. / sample_rate
+            if endtime > (stime - sample) and endtime < (etime + sample):
                 break
             elif endtime <= stime:
                 end_record -= 1
