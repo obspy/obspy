@@ -10,12 +10,13 @@ import ctypes as C
 
 
 def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
-                location_id='', channel_id='EHE', phase='P',
+                location_id='', channel_id='EHZ', phase='P',
                 time_window=(-1, 6), winlen=10.0):
     """
     """
     # get all events between start and end time
-    client = Client("http://admin:admin@teide.geophysik.uni-muenchen.de:8080")
+    client = Client("http://teide.geophysik.uni-muenchen.de:8080",
+                    user="admin", password="admin")
     event_list = client.event.getList(datetime=(starttime, endtime),
                                       localisation_method='manual')
 
@@ -78,8 +79,6 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     msg = "!!! Error fetching waveform for %s.%s.%s.%s for %s"
                     print msg % (nid, sid, location_id, channel_id, dt)
                     continue
-                # trim to time window
-                stream.trim(dt + time_window[0], dt + time_window[1])
                 for trace in stream:
                     # calculate zero mean
                     trace.data = trace.data - trace.data.mean()
@@ -111,12 +110,10 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     if tr1.stats.sampling_rate != tr2.stats.sampling_rate:
                         print
                         print "!!! Sampling rate are not equal!"
-                        fp.close()
                         continue
                     if tr1.stats.npts != tr2.stats.npts:
                         print
                         print "!!! Number of samples are not equal!"
-                        fp.close()
                         continue
                     # divide by 2.0 as in eventcluster.c line 604
                     winlen = int(winlen / float(tr1.stats.sampling_rate) / 2.0)
