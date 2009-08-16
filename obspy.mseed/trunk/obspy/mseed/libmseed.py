@@ -37,6 +37,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS, MSRecord
+from obspy.mseed.headers import MSFileParam
 from struct import unpack
 import ctypes as C
 import math
@@ -327,6 +328,131 @@ class libmseed(object):
              'location' : ''.join([_i for _i in unpacked_tuple[5:7]]).strip(),
              'channel' :''.join([_i for _i in unpacked_tuple[7:10]]).strip(),
              'network' : ''.join([_i for _i in unpacked_tuple[10:12]]).strip()}
+
+
+    def readSingleRecordToMSR(self, filename, reclen= -1, dataflag=1,
+                              skipnotdata=1, verbose=0, record_number=0):
+        """
+        Reads Mini-SEED record from file and populates MS Record data structure.
+        
+        @param filename: Mini-SEED file to be read.
+        @param reclen: If reclen is 0 the length of the first record is auto-
+            detected. All subsequent records are then expected to have the 
+            same record length. If reclen is negative the length of every 
+            record is automatically detected. Defaults to -1.
+        @param dataflag: Controls whether data samples are unpacked, defaults 
+            to 1.
+        @param skipnotdata: If true (not zero) any data chunks read that to do 
+            not have valid data record indicators will be skipped. Defaults to 
+            True (1).
+        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        @param record_number: Number of the record to be read. The first record
+            has the number 0. Negative numbers will start counting from the end
+            of the file, e.g. -1 is the last complete record.
+        """
+        # Get some information about the file.
+        fileinfo = self._getMSFileInfo(filename)
+        # Calculate offset of the record to be read.
+        if record_number < 0:
+            record_number = fileinfo['number_of_records'] + record_number
+        if record_number < 0 or record_number >= fileinfo['number_of_records']:
+            raise ValueError('Please enter a valid record_number')
+        filepos = record_number * fileinfo['record_length']
+        # init MSRecord structure
+        clibmseed.msr_init.restype = C.POINTER(MSRecord)
+        msr = clibmseed.msr_init(None)
+        # defines return type
+        clibmseed.ms_readmsr_r.restype = C.c_int
+        # Init null pointer, this pointer is needed for deallocation
+        msf = C.POINTER(C.c_int)()
+        # Dummy-read/read the first record
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               str(filename), C.c_int(reclen), None, None,
+                               C.c_short(skipnotdata), C.c_short(dataflag),
+                               C.c_short(verbose))
+        if record_number != 0:
+            # Parse msf structure in order to seek file pointer to special position
+            mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
+            C.pythonapi.PyFile_FromFile.restype = C.py_object
+            closefn = C.CFUNCTYPE(C.c_int, C.c_int)
+            def close(f):
+                return 1
+            closeCallback = closefn(close)
+            f = C.pythonapi.PyFile_FromFile(mf.contents.fp.contents.value,
+                                            str(filename),'rb',closeCallback)
+            f.seek(filepos)
+            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                                   str(filename), C.c_int(reclen), None, None,
+                                   C.c_short(skipnotdata), C.c_short(dataflag),
+                                   C.c_short(verbose))
+            f.close()
+            del mf
+            return msr, msf # need both for deallocation
+        return msr, msf # need both for deallocation
+
+
+    def getFirstRecordHeaderInfo2(self, filename):
+        """
+        Takes a Mini-SEED file and returns header of the first record.
+        Method using ms_readmsr_r.
+        
+        Returns a dictionary containing some header information from the first
+        record of the Mini-SEED file only. It returns the location, network,
+        station and channel information.
+        
+        @param filename: Mini-SEED file string.
+        """
+        # read first header only
+        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
+        header = {}
+        # header attributes to be read
+        attributes = ('location', 'network', 'station', 'channel')
+        # loop over attributes
+        for _i in attributes:
+            header[_i] = getattr(msr.contents, _i)
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        del msr, msf
+        return header
+
+
+    def getStartAndEndTime2(self, filename):
+        """
+        Returns the start- and endtime of a Mini-SEED file as a tuple
+        containing two datetime objects.
+        Method using ms_readmsr_r
+        
+        This method only reads the first and the last record. Thus it will only
+        work correctly for files containing only one trace with all records
+        in the correct order.
+        
+        The returned endtime is the time of the last datasample and not the
+        time that the last sample covers.
+        
+        @param filename: Mini-SEED file string.
+        """
+        # Get the starttime using the libmseed method msr_starttime
+        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
+        clibmseed.msr_starttime.restype = C.c_int64
+        starttime = clibmseed.msr_starttime(msr)
+        starttime = self._convertMSTimeToDatetime(starttime)
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        del msr, msf
+        # Get the endtime using the libmseed method msr_endtime
+        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0,
+                                              record_number= -1)
+        clibmseed.msr_endtime.restype = C.c_int64
+        endtime = clibmseed.msr_endtime(msr)
+        endtime = self._convertMSTimeToDatetime(endtime)
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        del msr, msf
+        return starttime, endtime
+
 
     def getStartAndEndTime(self, filename):
         """
@@ -912,6 +1038,21 @@ class libmseed(object):
         ids = ['network', 'station', 'location', 'channel',
                 'samprate', 'sampletype']
         return ".".join([str(header[_i]) for _i in ids])
+
+    def _convertToCFilePointer(self, f):
+        """
+        Takes an open file and returns a C file pointer for use in ctypes.
+        
+        @param f: Open file.
+        """
+        if not isinstance(f, file):
+            raise TypeError('Needs an open file.')
+        # If not defined, define ctypes arg- and restypes.
+        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+        #C.pythonapi.PyFile_AsFile.restype = c_file_p
+        C.pythonapi.PyFile_AsFile.restype = C.POINTER(C.c_long)
+        # Convert open python file to C file pointer.
+        return C.pythonapi.PyFile_AsFile(f)
 
     def _convertMSRToDict(self, m):
         h = {}

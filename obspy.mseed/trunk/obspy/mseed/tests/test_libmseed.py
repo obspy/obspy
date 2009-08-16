@@ -293,6 +293,62 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['station'], 'RJOB')
         self.assertEqual(header['channel'], 'EHZ')
 
+    def test_readFirstHeaderInfo2(self):
+        """
+        Reads and compares header info from the first record.
+        Tests method using ms_readmsr_r. Multiple readings in order to see
+        if memory leaks arrise.
+        
+        The values can be read from the filename.
+        """
+        mseed = libmseed()
+        # Example 1
+        filename = os.path.join(self.path,
+                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        header = mseed.getFirstRecordHeaderInfo2(filename)
+        self.assertEqual(header['location'], '')
+        self.assertEqual(header['network'], 'BW')
+        self.assertEqual(header['station'], 'BGLD')
+        # Example 2
+        filename = os.path.join(self.path, u'BW.RJOB.__.EHZ.D.2009.056')
+        header = mseed.getFirstRecordHeaderInfo2(filename)
+        self.assertEqual(header['network'], 'BW')
+        self.assertEqual(header['station'], 'RJOB')
+        self.assertEqual(header['channel'], 'EHZ')
+        # Example 3 again for leak checking
+        filename = os.path.join(self.path,
+                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        header = mseed.getFirstRecordHeaderInfo2(filename)
+        self.assertEqual(header['location'], '')
+        self.assertEqual(header['network'], 'BW')
+        self.assertEqual(header['station'], 'BGLD')
+        del header
+
+    def test_getStartAndEndTime2(self):
+        """
+        Tests getting the start- and end time of a file.
+        
+        The values are compared with the readFileToTraceGroup() method which 
+        parses the whole file. This will only work for files with only one
+        trace and without any gaps or overlaps.
+        """
+        mseed = libmseed()
+        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_10_percent',
+                           u'test.mseed', u'timingquality.mseed']
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            # get the start- and end time
+            (start, end) = mseed.getStartAndEndTime2(filename)
+            # parse the whole file
+            mstg = mseed.readFileToTraceGroup(filename, dataflag=0)
+            chain = mstg.contents.traces.contents
+            self.assertEqual(start,
+                             mseed._convertMSTimeToDatetime(chain.starttime))
+            self.assertEqual(end,
+                             mseed._convertMSTimeToDatetime(chain.endtime))
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg, chain
+
     def test_getStartAndEndTime(self):
         """
         Tests getting the start- and end time of a file.
@@ -560,39 +616,38 @@ class LibMSEEDTestCase(unittest.TestCase):
 
     def test_readMSTracesViaRecords_thread_safety(self):
         """
-        XXX: Tests for race conditions.
+        Tests for race conditions. Reading n_threads (currently 30) times
+        the same mseed file in parallel and compare the results which must
+        be all the same.
         
         Fails with readMSTracesViaRecords and passes with readMSTraces!
         """
+        n_threads = 30
         mseed = libmseed()
         # Use a medium sized file.
-        mseed_file = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        mseed_file = os.path.join(self.path, u'test.mseed')
         # Read file into memory.
         f = open(mseed_file, 'rb')
         buffer = f.read()
         f.close()
-        def test_function(_i):
+        def test_function(_i,values):
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             # CHANGE FUNCTION TO BE TESTED HERE!
-            setattr(values, str(_i), mseed.readMSTracesViaRecords(temp_file))
-        # Create the same file ten times in a row.
-        for _i in xrange(10):
+            values[_i] = mseed.readMSTracesViaRecords(temp_file)
+        # Create the same file twenty times in a row.
+        for _i in xrange(n_threads):
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             f = open(temp_file, 'wb')
             f.write(buffer)
             f.close()
-        # Create empty class for storing the values. Not a clean way but an
-        # easy one.
-        class StoreValues(object):
-            pass
-        values = StoreValues()
+        # Create empty dict for storing the values
+        values = {}
         # Read the ten files at one and save the output in the just created
         # class.
-        for _i in range(10):
-            thread = threading.Thread(target=test_function, args=(_i,))
+        for _i in xrange(n_threads):
+            thread = threading.Thread(target=test_function, args=(_i,values))
             thread.start()
         start = time.time()
         # Loop until all threads are finished.
@@ -601,24 +656,23 @@ class LibMSEEDTestCase(unittest.TestCase):
                 break
             # Avoid infinite loop and leave after 10 seconds which should be
             # enough for any more or less modern computer.
-            elif time.time() - start >= 20:
+            elif time.time() - start >= 10:
                 msg = 'Not all threads finished!'
                 raise Warning(msg)
                 break
             else:
                 continue
-        # Compare all values which should be identical.
-        for _i in xrange(9):
-            self.assertEqual(getattr(values, str(_i))[0][0],
-                             getattr(values, str(_i + 1))[0][0])
-            N.testing.assert_array_equal(getattr(values, str(_i))[0][1],
-                             getattr(values, str(_i + 1))[0][1])
-        # Delete the files.
-        for _i in xrange(10):
+        # Compare all values which should be identical and clean up files
+        for _i in xrange(n_threads-1):
+            self.assertEqual(values[_i][0][0],
+                             values[_i+1][0][0])
+            N.testing.assert_array_equal(values[_i][0][1],
+                                         values[_i+1][0][1])
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             os.remove(temp_file)
-
+        temp_file = os.path.join(self.path,u'temp_file_'+str(_i+1))
+        os.remove(temp_file)
 
 
 def suite():

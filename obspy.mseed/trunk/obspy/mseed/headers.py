@@ -317,8 +317,8 @@ class MSFileParam_s(C.Structure):
     pass
 
 MSFileParam_s._fields_ = [
-
-  ('fp', c_file_p),
+  #('fp', c_file_p),
+  ('fp', C.POINTER(C.c_int)),
   ('rawrec', C.c_char_p),
   ('filename', C.c_char * 512),
   ('autodet', C.c_int),
