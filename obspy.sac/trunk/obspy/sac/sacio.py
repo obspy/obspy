@@ -112,6 +112,8 @@ True
 
 import array,os,string
 from sacutil import *
+import time, copy
+from obspy.core import UTCDateTime
 #from obspy import parser
 
 
@@ -130,7 +132,7 @@ class ReadSac(object):
 
     def __init__(self,filen=False):
         self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,   \
-                      'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8, 't0':10,\
+                      'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8,'int1':9,'t0':10,\
                       't1':11,'t2':12,'t3':13,'t4':14,'t5':15,'t6':16,\
                       't7':17,'t8':18,'t9':19,'f':20,'stla':31,'stlo':32,    \
                       'stel':33,'stdp':34,'evla':35,'evlo':36,'evdp':38,'mag':39, \
@@ -154,15 +156,13 @@ class ReadSac(object):
                       'kt9':14,'kf':15,'kuser0':16,'kuser1':17,\
                       'kuser2':18,'kcmpnm':19,'knetwk':20,\
                       'kdatrd':21,'kinst':22}
-
-        self.hf = self.hi = self.hs = None
-        
+        self.InitArrays()
         if filen:
             self.__call__(filen)
 
-
     def __call__(self,filename):
         self.ReadSacFile(filename)
+
 
     def InitArrays(self):
         """
@@ -181,19 +181,59 @@ class ReadSac(object):
         # allocate the array for header floats
         self.hf = array.array('f')
         for _i in xrange(70):
-            self.hf.append(-9e99)
+            self.hf.append(-12345.0)
         #
         # allocate the array for header ints
         self.hi = array.array('l')
         for _i in xrange(40):
-            self.hi.append(long(-1e9))
+            self.hi.append(long(-12345))
         #
         # allocate the array for header characters
         self.hs = array.array('c')
-        for _i in xrange(192):
-            self.hs.append(' ')
+        self.hs.fromstring('-12345  ')
+        self.hs.fromstring('-12345          ')
+        for _i in xrange(21):
+            self.hs.fromstring('-12345  ')
+
+        self.seis = array.array('f') # allocate the array for the points
 
 
+    def fromarray(self,trace,begin=0.0,delta=1.0,distkm=0):
+        """create a sac-file from an array.array instance
+        >>> t=ReadSac()
+        >>> b = array.array('f',xrange(10))
+        >>> t.fromarray(b)
+        >>> t.GetHvalue('npts')
+        10
+        """
+        if not isinstance(trace,array.array):
+            raise SacError("input needs to be of instance array.array")
+        else:
+            self.seis = copy.copy(trace)
+        ### set a few values that are required to create a valid SAC-file
+        self.SetHvalue('int1',2)
+        self.SetHvalue('cmpaz',0)
+        self.SetHvalue('cmpinc',0)
+        self.SetHvalue('nvhdr',6)
+        self.SetHvalue('leven',1)
+        self.SetHvalue('lpspol',1)
+        self.SetHvalue('lcalda',0)
+        self.SetHvalue('nzyear',1970)
+        self.SetHvalue('nzjday',1)
+        self.SetHvalue('nzhour',0)
+        self.SetHvalue('nzmin',0)
+        self.SetHvalue('nzsec',0)
+        self.SetHvalue('kcmpnm','Z')
+        self.SetHvalue('evla',0)
+        self.SetHvalue('evlo',0)
+        self.SetHvalue('iftype',1)
+        
+        self.SetHvalue('npts',len(trace))
+        self.SetHvalue('delta',delta)
+        self.SetHvalue('b',begin)
+        self.SetHvalue('dist',distkm)
+
+        
     def GetHvalue(self,item):
         """Get a header value using the header arrays: GetHvalue("npts")
         Return value is 1 if no problems occurred, zero otherwise."""
@@ -406,7 +446,11 @@ class ReadSac(object):
                         self.hf = self.hi = self.hs = self.seis = None
                         f.close()
                         raise SacIOError("Cannot read any or only some data points: ",e)
-
+                    else:
+                        try:
+                            self.date = self.get_date()
+                        except SacError:
+                            pass
 
 
 
@@ -474,7 +518,7 @@ class ReadSac(object):
                 raise SacError(e)
 
 
-    def WriteSaxXY(self,ofname):
+    def WriteSacXY(self,ofname):
         pass
 
 
@@ -600,6 +644,31 @@ class ReadSac(object):
         self.ReadSacHeader(thePath)
         #
         self.IsSACfile(thePath)
+
+
+
+    def get_date(self):
+        """if date header values are set calculate date in julian seconds
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac(file)
+        >>> t.date
+        269596800.0
+        """
+        try:
+            year = self.GetHvalue('nzyear')
+            yday = self.GetHvalue('nzjday')
+            hour = self.GetHvalue('nzhour')
+            mint = self.GetHvalue('nzmin')
+            sec  = self.GetHvalue('nzsec')
+            msec = self.GetHvalue('nzmsec')
+            microsec = msec*1000 
+            mon = time.strptime(`year`+" "+`yday`,"%Y %j").tm_mon
+            mday = time.strptime(`year`+" "+`yday`,"%Y %j").tm_mday
+            t = UTCDateTime(year,mon,mday,hour,mint,sec,microsec)
+        except:
+            raise SacError("Cannot calculate date")
+        else:
+            return t.timestamp
 
 
     #def get_attr(self):
