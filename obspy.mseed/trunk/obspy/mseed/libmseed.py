@@ -730,7 +730,7 @@ class libmseed(object):
             # otherwise.
             # also watch for time values between records!
             sample = 1. / sample_rate
-            if endtime >= stime and endtime < (etime + sample):
+            if endtime > (stime - sample) and endtime <= etime:
                 break
             elif endtime <= stime:
                 end_record -= 1
