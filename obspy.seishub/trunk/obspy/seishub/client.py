@@ -208,8 +208,8 @@ class _StationMapperClient(_BaseRESTClient):
         # search for nodes with correct channel and location code
         if channel_id or location_id:
             xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel_id + "' and location_identifier='" + location_id + "'"
-            channel_node = base_node.xpath()
+                channel_id + "' and location_identifier='" + location_id + "']"
+            channel_node = base_node.xpath(xpath_expr)[0]
             # fetch next following response_poles_and_zeros node
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel_id + "' and location_identifier='" + location_id + \
