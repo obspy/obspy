@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime, Stream, Trace, read
-from obspy.core.util import libc
-from obspy.mseed.core import readMSEED
-from obspy.mseed import libmseed
-import numpy as N, ctypes as C
-import inspect, os, unittest
+from obspy.core import read
+import inspect
+import os
+import time
+import unittest
 
 
 class MemoryTestCase(unittest.TestCase):
@@ -24,26 +23,11 @@ class MemoryTestCase(unittest.TestCase):
                         is freed like in test_readMSTraces1 by the __del__
                         method of trace.
     """
-    #test_readMSTraces1: Shows the current way how to free memory, this is
-    #                    now done when a obspy.trace is deleted
-    #test_readMSTraces2: Delete the memory and access the data later. Of
-    #                    course this results in a 'Segmentation Fault'
-    #test_readMSTraces3: This happens when you do NOT free the memory.
-    #                    libmseed will exit with the error: 
-    #                    'Error: mst_addmsr(): Cannot allocate memory'
-
-    #Run the tests by one of the following commands:
-    #$ python mseed/tests/test_memory.py MemoryTestCase.test_readMemory
-    #$ python mseed/tests/test_memory.py MemoryTestCase.test_readMSTraces1
-    #$ python mseed/tests/test_memory.py MemoryTestCase.test_readMSTraces2
-    #EXITS WITH Segmentation fault
-    #$ python mseed/tests/test_memory.py MemoryTestCase.test_readMSTraces3
-    #EXITS WITH Error: mst_addmsr(): Cannot allocate memory
-    #"""
     def setUp(self):
         # Directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.file = os.path.join(self.path, 'data', 'BW.BGLD..EHE.D.2008.001')
+        self.file = os.path.join(self.path, 'data',
+                                 'BW.RJOB.__.EHZ.D.2009.056')
 
     def tearDown(self):
         pass
@@ -52,53 +36,17 @@ class MemoryTestCase(unittest.TestCase):
         """
         Read file test via L{obspy.core.Stream}.
         """
-        for i in xrange(100):
+        for _ in xrange(200):
+            start = time.time()
             stream = read(self.file)
             stream.verify()
-            for tr in stream:
-                self.assertAlmostEqual(tr.data.mean(),-393.66969706930229)
-                self.assertEqual(tr.stats.network, 'BW')
-                self.assertEqual(tr.stats['station'], 'BGLD')
-                self.assertEqual(tr.stats.get('npts'), 17280322)
-            print '.',
+            tr = stream[0]
+            self.assertAlmostEqual(tr.data.mean(), 201.55502749647832)
+            self.assertEqual(tr.stats.network, 'BW')
+            self.assertEqual(tr.stats['station'], 'RJOB')
+            self.assertEqual(tr.stats.get('npts'), 9380474)
+            print "%.2fs" % (time.time() - start),
 
-    #def test_readMSTraces1(self):
-    #    """
-    #    Memory is freed by libc.so.6, therefor no allocation problems
-    #    """
-    #    mseed = libmseed()
-    #    for i in xrange(100):
-    #        trace_list = self.readMSTraces(self.file)
-    #        for trace in trace_list:
-    #            print trace[1].max(),
-    #            libc.free(trace[2])
-
-    #def test_readMSTraces2(self):
-    #    """
-    #    Memory is freed by libc.so.6, but accessed afterwards:
-    #    'Segmentation fault'
-    #    """
-    #    mseed = libmseed()
-    #    for i in xrange(100):
-    #        trace_list = self.readMSTraces(self.file)
-    #        for trace in trace_list:
-    #            libc.free(trace[2])
-    #            print self.__doc__
-    #            print trace[1].max(),
-
-    #def test_readMSTraces3(self):
-    #    """
-    #    Memory is NOT freed, test exits on iteration ~21 with::
-    #    'Error: mst_addmsr(): Cannot allocate memory'
-    #    """
-    #    mseed = libmseed()
-    #    for i in xrange(100):
-    #        trace_list = self.readMSTraces(self.file)
-    #        for trace in trace_list:
-    #            _max = trace[1].max()
-    #            if i == 10:
-    #                print self.__doc__
-    #        print '.',
 
 def suite():
     return unittest.makeSuite(MemoryTestCase, 'test')
