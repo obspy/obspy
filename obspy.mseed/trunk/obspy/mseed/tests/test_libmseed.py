@@ -92,8 +92,8 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(datalist[i], data[0:9].tolist())
             i += 1
         del trace_list, header, data
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record', 
-                           u'qualityflags.mseed', u'test.mseed', 
+        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record',
+                           u'qualityflags.mseed', u'test.mseed',
                            u'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
@@ -135,8 +135,8 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(starttime[i], header['starttime'])
             self.assertEqual(datalist[i], data[0:9].tolist())
             i += 1
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record', 
-                           u'qualityflags.mseed', u'test.mseed', 
+        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record',
+                           u'qualityflags.mseed', u'test.mseed',
                            u'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
@@ -351,33 +351,25 @@ class LibMSEEDTestCase(unittest.TestCase):
         times will be read
         """
         mseed = libmseed()
-        original_filename = os.path.join(self.path, \
-                                         u'BW.BGLD.__.EHE.D.2008.001')
-        # Compare a cut file with the a manually cut file.
-        filename = original_filename + '.first_record'
-        (_, end) = mseed.getStartAndEndTime(filename)
-        data = mseed.cutMSFileByRecords(original_filename + \
-                                        '.first_10_percent', endtime=end)
-        data2 = open(filename, 'rb').read()
-        self.assertEqual(data, data2)
-        # Cut only first record
-        (start, _) = mseed.getStartAndEndTime(original_filename \
-                                              + '.first_10_percent')
-        data = mseed.cutMSFileByRecords(original_filename + \
-                                        '.first_10_percent', endtime=start + 1)
-        data2 = open(filename, 'rb').read()
-        self.assertEqual(data, data2)
-        # cuts nothing if end time equals start time
-        (start, _) = mseed.getStartAndEndTime(original_filename + \
-                                              '.first_10_percent')
-        data = mseed.cutMSFileByRecords(original_filename + \
-                                        '.first_10_percent', endtime=start)
+        temp = os.path.join(self.path, u'BW.BGLD.__.EHE.D.2008.001')
+        first_record_file = temp + '.first_record'
+        first_record_data = open(first_record_file, 'rb').read()
+        data_file = temp + '.first_10_percent'
+        # Cut first record using end time
+        (_, end) = mseed.getStartAndEndTime(first_record_file)
+        data = mseed.cutMSFileByRecords(data_file, endtime=end)
+        self.assertEqual(data, first_record_data)
+        # Cut first record using start time
+        (start, _) = mseed.getStartAndEndTime(first_record_file)
+        data = mseed.cutMSFileByRecords(data_file, endtime=start + 1)
+        self.assertEqual(data, first_record_data)
+        # Cuts nothing if end time equals start time
+        (start, _) = mseed.getStartAndEndTime(data_file)
+        data = mseed.cutMSFileByRecords(data_file, endtime=start)
         self.assertEqual(data, '')
-        # cuts nothing if start time equals end time
-        (_, end) = mseed.getStartAndEndTime(original_filename + \
-                                            '.first_10_percent')
-        data = mseed.cutMSFileByRecords(original_filename + \
-                                        '.first_10_percent', starttime=end)
+        # Cuts nothing if start time equals end time
+        (_, end) = mseed.getStartAndEndTime(data_file)
+        data = mseed.cutMSFileByRecords(data_file, starttime=end)
         self.assertEqual(data, '')
 
     def test_mergeAndCutMSFiles(self):

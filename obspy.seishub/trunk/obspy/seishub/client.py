@@ -3,17 +3,28 @@
 from lxml import objectify
 from obspy.core.util import NamedTemporaryFile
 import obspy
-import urllib
+import sys
+import urllib2
 
 
 class Client(object):
     """
     """
-    def __init__(self, base_url="http://admin:admin@teide.geophysik.uni-muenchen.de:8080"):
+    def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
+                 user="admin", password="admin", timeout=10):
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
         self.event = _EventMapperClient(self)
+        self.timeout = timeout
+        # Create an OpenerDirector for Basic HTTP Authentication
+        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr.add_password(None, base_url, user, password)
+        auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib2.build_opener(auth_handler)
+        # install globally
+        urllib2.install_opener(opener)
+
 
     def _fetch(self, url, *args, **kwargs):
         remoteaddr = self.base_url + url + '?'
@@ -28,7 +39,16 @@ class Client(object):
                 remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
             else:
                 remoteaddr += str(key) + '=' + str(value) + '&'
-        doc = urllib.urlopen(remoteaddr).read()
+        try:
+            # timeout exists only for Python >= 2.6
+            if sys.hexversion < 0x02060000:
+                response = urllib2.urlopen(remoteaddr).read()
+            else:
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        except:
+            import pdb;pdb.set_trace()
+        doc = response.read()
+
         return doc
 
     def _objectify(self, url, *args, **kwargs):

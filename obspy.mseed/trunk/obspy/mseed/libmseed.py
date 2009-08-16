@@ -8,10 +8,10 @@
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Class for handling Mini-SEED files.
+Class for handling MiniSEED files.
 
-Contains wrappers for libmseed - The Mini-SEED library. The C library is
-interfaced via python-ctypes. Currently only supports Mini-SEED files with
+Contains wrappers for libmseed - The MiniSEED library. The C library is
+interfaced via python-ctypes. Currently only supports MiniSEED files with
 integer data values.
 
 
@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile, c_file_p
+from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS, MSRecord
 from struct import unpack
 import ctypes as C
@@ -66,14 +66,14 @@ clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
 
 class libmseed(object):
     """
-    Class for handling Mini-SEED files.
+    Class for handling MiniSEED files.
     """
 
     def printFileInformation(self, filename):
         """
         Prints some informations about the file.
         
-        @param filename: Mini-SEED file.
+        @param filename: MiniSEED file.
         """
         try:
             #Read Trace Group
@@ -86,16 +86,16 @@ class libmseed(object):
 
     def isMSEED(self, filename):
         """
-        Tests whether a file is a Mini-SEED file or not.
+        Tests whether a file is a MiniSEED file or not.
         
         Returns True on success or False otherwise.
         This method will just read the first record and not the whole file.
-        Thus it cannot be used to validate a Mini-SEED file.
+        Thus it cannot be used to validate a MiniSEED file.
         
-        @param filename: Mini-SEED file.
+        @param filename: MiniSEED file.
         """
         f = open(filename, 'rb')
-        # Read part of the Mini-SEED header.
+        # Read part of the MiniSEED header.
         f.seek(6)
         header = f.read(16)
         f.close()
@@ -111,14 +111,14 @@ class libmseed(object):
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
                                verbose=0):
         """
-        Read Mini-SEED file. Returns a list with header informations and data
+        Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
         
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
         containing the data values as a numpy array.
 
-        @param filename: Name of Mini-SEED file.
+        @param filename: Name of MiniSEED file.
         @param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
         """
@@ -177,14 +177,14 @@ class libmseed(object):
                      sampratetol= -1, dataflag=1, skipnotdata=1,
                      dataquality=1, verbose=0):
         """
-        Read Mini-SEED file. Returns a list with header informations and data
+        Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
         
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
         containing the data values as a numpy array.
 
-        @param filename: Name of Mini-SEED file.
+        @param filename: Name of MiniSEED file.
         @param reclen, timetol, sampratetol, dataflag, skipnotdata,
             dataquality, verbose: These are passed directly to the 
             readFileToTraceGroup method.
@@ -192,7 +192,7 @@ class libmseed(object):
         clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
         # Create empty list that will contain all traces.
         trace_list = []
-        # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
+        # Creates MSTraceGroup Structure and feed it with the MiniSEED data.
         mstg = self.readFileToTraceGroup(str(filename), reclen=reclen,
                                          timetol=timetol,
                                          sampratetol=sampratetol,
@@ -231,7 +231,7 @@ class libmseed(object):
             which must be expressible as 2 raised to the power of X where X is
             between (and including) 8 to 20. -1 defaults to 4096
         @param encoding: should be set to one of the following supported
-            Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
+            MiniSEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
             DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
             and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
         @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
@@ -267,9 +267,9 @@ class libmseed(object):
                              sampratetol= -1, dataflag=1, skipnotdata=1,
                              dataquality=1, verbose=0):
         """
-        Reads Mini-SEED data from file. Returns MSTraceGroup structure.
+        Reads MiniSEED data from file. Returns MSTraceGroup structure.
         
-        @param filename: Name of Mini-SEED file.
+        @param filename: Name of MiniSEED file.
         @param reclen: If reclen is 0 the length of the first record is auto-
             detected. All subsequent records are then expected to have the
             same record length. If reclen is negative the length of every
@@ -301,18 +301,18 @@ class libmseed(object):
             C.c_short(dataquality), C.c_short(skipnotdata),
             C.c_short(dataflag), C.c_short(verbose))
         if errcode != 0:
-            assert 0, "\n\nError while reading Mini-SEED file: " + filename
+            assert 0, "\n\nError while reading MiniSEED file: " + filename
         return mstg
 
     def getFirstRecordHeaderInfo(self, filename):
         """
-        Takes a Mini-SEED file and returns header of the first record.
+        Takes a MiniSEED file and returns header of the first record.
         
         Returns a dictionary containing some header information from the first
-        record of the Mini-SEED file only. It returns the location, network,
+        record of the MiniSEED file only. It returns the location, network,
         station and channel information.
         
-        @param filename: Mini-SEED file string.
+        @param filename: MiniSEED file string.
         """
         # open file and jump to beginning of the data of interest.
         mseed_file = open(filename, 'rb')
@@ -330,7 +330,7 @@ class libmseed(object):
 
     def getStartAndEndTime(self, filename):
         """
-        Returns the start- and end time of a Mini-SEED file as a tuple
+        Returns the start- and end time of a MiniSEED file as a tuple
         containing two datetime objects.
         
         This method only reads the first and the last record. Thus it will only
@@ -344,7 +344,7 @@ class libmseed(object):
         It is written in pure Python to resolve some memory issues present
         with creating file pointers and passing them to the libmseed.
         
-        @param filename: Mini-SEED file string.
+        @param filename: MiniSEED file string.
         """
         # Open the file of interest ad jump to the beginning of the timing
         # information in the file.
@@ -484,10 +484,10 @@ class libmseed(object):
 
     def getDataQualityFlagsCount(self, filename):
         """
-        Counts all data quality flags of the given Mini-SEED file.
+        Counts all data quality flags of the given MiniSEED file.
         
         This method will count all set data quality flag bits in the fixed
-        section of the data header in a Mini-SEED file and returns the total
+        section of the data header in a MiniSEED file and returns the total
         count for each flag type.
         
         Data quality flags:
@@ -503,7 +503,7 @@ class libmseed(object):
         This will only work correctly if each record in the file has the same
         record length.
         
-        @param filename: Mini-SEED file name.
+        @param filename: MiniSEED file name.
         @return: List of all flag counts.
         """
         # Get record length of the file.
@@ -552,7 +552,7 @@ class libmseed(object):
         The median is calculating by either taking the middle value or, with an
         even numbers of values, the average between the two middle values.
         
-        @param filename: Mini-SEED file to be parsed.
+        @param filename: MiniSEED file to be parsed.
         @param first_record: Determines whether all records are assumed to 
             either have a timing quality in Blockette 1001 or not depending on
             whether the first records has one. If True and the first records
@@ -635,9 +635,9 @@ class libmseed(object):
 
     def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
         """
-        Cuts a Mini-SEED file by cutting at records.
+        Cuts a MiniSEED file by cutting at records.
         
-        The method takes a Mini-SEED file and tries to match it as good as
+        The method takes a MiniSEED file and tries to match it as good as
         possible to the supplied time range. It will simply cut off records
         that are not within the time range. The record that covers the
         start time will be the first record and the one that covers the 
@@ -652,9 +652,9 @@ class libmseed(object):
         
         @return: Byte string containing the cut file.
         
-        @param filename: File string of the Mini-SEED file to be cut.
-        @param starttime: obspy.util.UTCDateTime object.
-        @param endtime: obspy.util.UTCDateTime object.
+        @param filename: File string of the MiniSEED file to be cut.
+        @param starttime: L{obspy.core.UTCDateTime} object.
+        @param endtime: L{obspy.core.UTCDateTime} object.
         """
         # Read the start and end time of the file.
         (start, end) = self.getStartAndEndTime(filename)
@@ -697,8 +697,9 @@ class libmseed(object):
             # The time of the last covered sample is now:
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
-            # otherwise.
-            if starttime >= stime and starttime <= etime:
+            # otherwise. 
+            # to cover values between records etime may have one sample more
+            if starttime >= stime and starttime < (etime + 1. / sample_rate):
                 break
             elif starttime <= stime:
                 start_record -= 1
@@ -726,7 +727,8 @@ class libmseed(object):
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
-            if endtime >= stime and endtime <= etime:
+            # to cover values between records stime may have one sample less
+            if endtime > (stime - 1. / sample_rate) and endtime <= etime:
                 break
             elif endtime <= stime:
                 end_record -= 1
@@ -744,7 +746,7 @@ class libmseed(object):
 
     def mergeAndCutMSFiles(self, file_list, starttime=None, endtime=None):
         """
-        This method takes several Mini-SEED files and returns one merged file.
+        This method takes several MiniSEED files and returns one merged file.
         
         It is also possible to specify a start- and a endtime and all records
         that are out of bounds will be cut.
@@ -757,10 +759,10 @@ class libmseed(object):
         the produced output will not be correct. All files also have to be from
         the same source.
         
-        @param file_list: A list containing Mini-SEED filename strings.
+        @param file_list: A list containing MiniSEED filename strings.
         @param outfile: String of the file to be created.
-        @param starttime: obspy.util.UTCDateTime object.
-        @param endtime: obspy.util.UTCDateTime object.
+        @param starttime: L{obspy.core.UTCDateTime} object.
+        @param endtime: L{obspy.core.UTCDateTime} object.
         @return: Byte string containing the merged and cut file.
         """
         # Copy file_list to not alter the provided list.
@@ -865,11 +867,11 @@ class libmseed(object):
         """
         Calculates the actual sampling rate of the record.
         
-        This is needed for manual readimg of Mini-SEED headers. See the SEED
+        This is needed for manual readimg of MiniSEED headers. See the SEED
         Manual page 100 for details.
         
-        @param samp_rate_factor: Field 10 of the fixed header in Mini-SEED.
-        @param samp_rate_multiplier: Field 11 of the fixed header in Mini-SEED.
+        @param samp_rate_factor: Field 10 of the fixed header in MiniSEED.
+        @param samp_rate_multiplier: Field 11 of the fixed header in MiniSEED.
         """
         # Case 1
         if samp_rate_factor > 0 and samp_rate_multiplier > 0:
@@ -898,9 +900,9 @@ class libmseed(object):
 
     def _convertMSTimeToDatetime(self, timestring):
         """
-        Takes Mini-SEED timestring and returns a obspy.util.UTCDateTime object.
+        Takes MiniSEED timestring and returns a obspy.util.UTCDateTime object.
         
-        @param timestring: Mini-SEED timestring (Epoch time string in ms).
+        @param timestring: MiniSEED timestring (Epoch time string in ms).
         """
         return UTCDateTime.utcfromtimestamp(timestring / HPTMODULUS)
 
@@ -956,7 +958,7 @@ class libmseed(object):
 
     def _getMSFileInfo(self, filename, real_name=None):
         """
-        Takes a Mini-SEED filename or an open file/StringIO as an argument and
+        Takes a MiniSEED filename or an open file/StringIO as an argument and
         returns a dictionary with some basic information about the file.
         
         The information returned is: filesize, record_length,
@@ -966,7 +968,7 @@ class libmseed(object):
         If filename is an open file/StringIO the file pointer will not be
         changed by this method.
         
-        @param filename: Mini-SEED file string or an already open file.
+        @param filename: MiniSEED file string or an already open file.
         @param real_name: If filename is an open file you need to support the
             filesystem name of it so that the method is able to determine the
             file size. Use None if filename is a file string. Defaults to None.
@@ -1030,11 +1032,11 @@ class libmseed(object):
 
     def _getMSStarttime(self, open_file):
         """
-        Returns the starttime of the given Mini-SEED record and returns a 
+        Returns the starttime of the given MiniSEED record and returns a 
         UTCDateTime object.
         
         Due to various possible time correction it is complicated to get the
-        actual start time of a Mini-SEED file. This method hopefully handles
+        actual start time of a MiniSEED file. This method hopefully handles
         all possible cases.
         
         It evaluates fields 8, 12 and 16 of the fixed header section and

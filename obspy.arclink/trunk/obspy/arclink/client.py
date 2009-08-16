@@ -19,7 +19,8 @@ class Client(Telnet):
                  user="Anonymous", institution="Anonymous", debug=False):
         self.user = user
         self.institution = institution
-        if sys.hexversion < 0x020600F0:
+        # timeout exists only for Python >= 2.6
+        if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
         else:
             Telnet.__init__(self, host, port, timeout)
