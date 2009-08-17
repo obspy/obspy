@@ -15,7 +15,7 @@ class Blockette011(Blockette):
     Sample:
     0110054004AAK  000003ANMO 000007ANTO 000010BJI  000012
     """
-    
+
     id = 11
     name = "Volume Station Header Index"
     fields = [
@@ -24,5 +24,5 @@ class Blockette011(Blockette):
         MultipleLoop("Station identifier", "Number of stations", [
             FixedString(4, "Station identifier code", 5),
             Integer(5, "Sequence number of station header", 6, ignore=True)
-        ])
+        ], repeat_title=True)
     ]

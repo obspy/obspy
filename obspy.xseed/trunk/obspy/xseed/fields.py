@@ -155,6 +155,7 @@ class FixedString(Field):
         self.length = length
         self.flags = flags
         self.default = ' ' * length
+        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def read(self, data):
         return data.read(self.length).strip()
@@ -185,6 +186,7 @@ class VariableString(Field):
         self.max_length = max_length
         self.flags = flags
         self.default = ' ' * min_length
+        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def read(self, data):
         data = self._read(data)
@@ -236,6 +238,15 @@ class MultipleLoop(Field):
         self.index_field = utils.toAttribute(index_field)
         self.length = 0
         self.data_fields = data_fields
+        # Currently used only in Blockette 11 to pass XSD validation.
+        # Results in:
+        #<station_identifier>
+        # <station_identifier_code>ALTM</station_identifier_code>
+        #</station_identifier>
+        #<station_identifier>
+        # <station_identifier_code>ALTM</station_identifier_code>
+        #</station_identifier>
+        self.repeat_title = kwargs.get('repeat_title', False)
 
     def getSubFields(self):
         temp = []
@@ -258,6 +269,7 @@ class SimpleLoop(Field):
         self.index_field = utils.toAttribute(index_field)
         self.length = 0
         self.data_field = data_field
+        self.seperate_tags = kwargs.get('seperate_tags', False)
 
     def getSubFields(self):
         temp = []

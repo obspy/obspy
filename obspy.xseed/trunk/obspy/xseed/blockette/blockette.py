@@ -153,6 +153,7 @@ class Blockette:
         """
         xml = xml.getchildren()
         xml_fields = [_i.tag for _i in xml]
+        no_index = False
         for field in self.fields:
             # Check if field is in the supplied XML tree.
             try:
@@ -160,6 +161,8 @@ class Blockette:
             except:
                 if field.optional or isinstance(field, MultipleLoop):
                     continue
+                if field.optional_if_empty:
+                    no_index = True
                 else:
                     msg = 'Not all necessary fields found for Blockette %i'\
                                     % self.id
@@ -179,13 +182,32 @@ class Blockette:
             # If its a string leave it being a string.
             if isinstance(field, VariableString) or \
                                         isinstance(field, FixedString):
+                if field.optional_if_empty and no_index:
+                    setattr(self, field.attribute_name, '')
+                    continue
                 xml_text = xml[index_nr].text
                 if not xml_text:
                     xml_text = ''
                 setattr(self, field.attribute_name, xml_text)
-            # Implement MultipleLoop which currently is the only supported
-            # loop.
-            if isinstance(field, MultipleLoop):
+            if isinstance(field, MultipleFlatLoop):
+                xml_field = xml[index_nr].getchildren()
+                if len(xml_field) == 0:
+                    for data_field in field.data_fields:
+                        setattr(self, data_field.attribute_name, 0)
+                    continue
+                if len(xml_field) % len(field.data_fields) != 0:
+                    msg = 'Ooops...something went wrong!'
+                    raise BlocketteParserException(msg)
+                # Set lists.
+                for data_field in field.data_fields:
+                    setattr(self, data_field.attribute_name, [])
+                # Fill the lists.
+                index_nr = 0
+                for _i in xrange(len(xml_field)):
+                        getattr(self, field.data_fields[index_nr % \
+                            len(xml_field)]).append(xml_field[index_nr])
+                        index_nr += 1
+            elif isinstance(field, MultipleLoop):
                 xml_childs = xml[index_nr].getchildren()
                 xml_child_fields = [_i.tag for _i in xml_childs]
                 # Loop over all data fields.
@@ -196,8 +218,7 @@ class Blockette:
                         if sub_field.optional:
                             continue
                         else:
-                            print sub_field.attribute_name
-                            print xml_child_fields
+                            import pdb;pdb.set_trace()
                             msg = 'Not all necessary fields found for ' + \
                                   'Blockette %i' % self.id
                             raise BlocketteParserException(msg)
@@ -223,6 +244,17 @@ class Blockette:
                                 xml_text = ''
                             getattr(self, sub_field.attribute_name).append(\
                                     xml_text)
+            if isinstance(field, SimpleLoop):
+                xml_text = xml[index_nr].text
+                if field.seperate_tags:
+                    setattr(self, field.attribute_name, [])
+                    # It is necessary to loop over all xml fields.
+                    for xml_field in xml:
+                        if xml_field.tag == field.attribute_name:
+                            getattr(self,
+                                field.attribute_name).append(xml_field.text)
+                if not field.seperate_tags:
+                    setattr(self, field.attribute_name, xml_text.split(' '))
 
     def getXML(self, show_optional=False):
         """
@@ -248,6 +280,8 @@ class Blockette:
                 # get number of entries
                 number_of_elements = int(getattr(self, field.index_field))
                 if number_of_elements == 0:
+                    # Write empty tag and continue.
+                    SubElement(doc, field.field_name).text = ''
                     continue
                 # test if attributes of subfields are set
                 for subfield in field.data_fields:
@@ -288,10 +322,13 @@ class Blockette:
                         msg = "Attribute %s in Blockette %s does not exist!"
                         msg = msg % (subfield.name, self.blockette_id)
                         raise Exception(msg)
-                # XML looping element 
-                root = SubElement(doc, field.field_name)
+                if not field.repeat_title:
+                    # XML looping element
+                    root = SubElement(doc, field.field_name)
                 # cycle through all fields
                 for i in range(0, number_of_elements):
+                    if field.repeat_title:
+                        root = SubElement(doc, field.field_name)
                     # cycle through fields
                     for subfield in field.data_fields:
                         if subfield.ignore:
@@ -317,16 +354,25 @@ class Blockette:
                     msg = msg % (field.attribute_name, self.blockette_id)
                     raise Exception(msg)
                 results = getattr(self, field.attribute_name)
-                # root of looping element
                 subfield = field.data_field
-                elements = []
-                for subresult in results:
-                    if isinstance(subfield, Float):
-                        subresult = subfield.write(subresult)
-                    #SubElement(doc, field.field_name).text = unicode(subresult)
-                    elements.append(unicode(subresult))
-                SubElement(doc, field.field_name).text = ' '.join(elements)
+                if not field.seperate_tags:
+                    # root of looping element
+                    elements = []
+                    for subresult in results:
+                        if isinstance(subfield, Float):
+                            subresult = subfield.write(subresult)
+                        #SubElement(doc, field.field_name).text = unicode(subresult)
+                        elements.append(unicode(subresult))
+                    SubElement(doc, field.field_name).text = ' '.join(elements)
+                else:
+                    # root of looping element
+                    for subresult in results:
+                        SubElement(doc, field.field_name).text = subresult
             else:
+                if isinstance(field, VariableString):
+                    if field.optional_if_empty and \
+                            len(getattr(self, field.attribute_name)) == 0:
+                        continue
                 # check if ignored
                 if field.ignore:
                     continue

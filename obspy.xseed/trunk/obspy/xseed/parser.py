@@ -311,11 +311,16 @@ class SEEDParser:
                     utils.toXMLTag('Abbreviation Dictionary Control Header'))
         for blockette in self.abbreviations:
             root.append(blockette.getXML())
-        # All stations blockettes in one root Element:
-        root = SubElement(doc, utils.toXMLTag('Station Control Header'))
+        # All blockettes for one station in one root element:
         for station in self.stations:
+            root = SubElement(doc, utils.toXMLTag('Station Control Header'))
             for blockette in station:
                 root.append(blockette.getXML())
+        # To pass the XSD scheme test an empty timespan control header is added
+        # to the end of the file.
+        root = SubElement(doc, utils.toXMLTag('Timespan Control Header'))
+        # Also no data is present in all supported SEED files.
+        root = SubElement(doc, utils.toXMLTag('Data Records'))
         # Delete Blockettes 11 and 12.
         del self.volume[-1]
         del self.volume[-2]
@@ -484,11 +489,13 @@ class SEEDParser:
             self.temp['abbreviations'].append(\
                     self._parseXMLBlockette(blockette, 'A'))
         # Append all stations into seperate list items.
-        for blockette in headers[2].getchildren():
-            if int(blockette.values()[0]) == 50:
-                self.temp['stations'].append([])
-            self.temp['stations'][-1].append(\
-                    self._parseXMLBlockette(blockette, 'S'))
+        for control_header in headers[2:]:
+            if not control_header.tag == 'station_control_header':
+                continue
+            self.temp['stations'].append([])
+            for blockette in control_header.getchildren():
+                self.temp['stations'][-1].append(\
+                                    self._parseXMLBlockette(blockette, 'S'))
         # Update internal values.
         self._updateInternalSEEDStructure()
 

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from glob import glob
-import os
-import inspect
 from StringIO import StringIO
+from glob import glob
+from lxml import etree
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import SEEDParser, SEEDParserException
+import inspect
+import os
 import unittest
 
 
@@ -163,7 +164,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertEqual(parser1.getSEED(), parser2.getSEED())
             del parser1, parser2
 
-    def test_createReadAndWriteXSEED(self):
+    def test_createReadAssertAndWriteXSEED(self):
         """
         This test takes some SEED files, reads them to a SEEDParser object
         and converts them back to SEED once. This is done to avoid any
@@ -174,9 +175,18 @@ class ParserTestCase(unittest.TestCase):
         
         Finally the resulting SEED gets converted to XSEED and back to SEED
         and the two SEED strings are then evaluated to be identical.
+        
+        This tests also checks for XML validity using the a xsd-file.
         """
         # Get all filenames.
         BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
+        # Path to xsd-file.
+        xsd_path = os.path.join(self.path, 'xml-seed.xsd')
+        # Prepare validator.
+        f = open(xsd_path, 'r')
+        xmlschema_doc = etree.parse(f)
+        f.close()
+        xmlschema = etree.XMLSchema(xmlschema_doc)
         # Loop over all files.
         for file in BW_SEED_files:
             parser1 = SEEDParser()
@@ -192,6 +202,10 @@ class ParserTestCase(unittest.TestCase):
             parser2.parse(StringIO(original_seed))
             xseed_string = parser2.getXSEED()
             del parser2
+            # Validate XSEED.
+            doc = etree.parse(StringIO(xseed_string))
+            self.assertTrue(xmlschema.validate(doc))
+            del doc
             parser3 = SEEDParser()
             parser3.parseXSEED(StringIO(xseed_string))
             new_seed = parser3.getSEED()
