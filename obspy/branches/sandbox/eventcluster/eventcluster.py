@@ -11,14 +11,18 @@ import ctypes as C
 
 def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 location_id='', channel_id='EHZ', phase='P',
-                time_window=(-1, 6), winlen=10.0):
+                time_window=(-1, 6), winlen=10.0, method='manual'):
     """
+    @param method: 'manual' or 'auto' or None.
     """
     # get all events between start and end time
     client = Client("http://teide.geophysik.uni-muenchen.de:8080",
                     user="admin", password="admin")
-    event_list = client.event.getList(datetime=(starttime, endtime),
-                                      localisation_method='manual')
+    if method != None:
+        event_list = client.event.getList(datetime=(starttime, endtime),
+                                          localisation_method=method)
+    else:
+        event_list = client.event.getList(datetime=(starttime, endtime))
 
     print "Fetching events ..."
     networks = {}
