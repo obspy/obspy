@@ -39,14 +39,11 @@ class Client(object):
                 remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
             else:
                 remoteaddr += str(key) + '=' + str(value) + '&'
-        try:
-            # timeout exists only for Python >= 2.6
-            if sys.hexversion < 0x02060000:
-                response = urllib2.urlopen(remoteaddr).read()
-            else:
-                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
-        except:
-            import pdb;pdb.set_trace()
+        # timeout exists only for Python >= 2.6
+        if sys.hexversion < 0x02060000:
+            response = urllib2.urlopen(remoteaddr)
+        else:
+            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
 
         return doc
