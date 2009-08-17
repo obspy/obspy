@@ -115,7 +115,7 @@ class _WaveformMapperClient(object):
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
         if not data:
-            return None
+            raise Exception("No waveform data available")
         tf = NamedTemporaryFile()
         try:
             tf.write(data)

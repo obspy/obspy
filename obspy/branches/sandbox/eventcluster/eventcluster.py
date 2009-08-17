@@ -11,22 +11,19 @@ import ctypes as C
 
 def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 location_id='', channel_id='EHZ', phase='P',
-                time_window=(-1, 6), method='manual'):
+                time_window=(-1, 6), method='manual', merge=True):
     """
     @param method: 'manual' or 'auto' or None.
     """
-    wildcard = "%s.%s.%s.%s" % (network_id, station_id, 
+    wildcard = "%s.%s.%s.%s" % (network_id, station_id,
                                 location_id, channel_id)
     # PAZ of instrument to simulate, 2.0Hz corner-frequency, 0.707 damping
     inst = cornFreq2Paz(2.0)
     # get all events between start and end time
     client = Client("http://teide.geophysik.uni-muenchen.de:8080",
                     user="admin", password="admin")
-    if method != None:
-        event_list = client.event.getList(datetime=(starttime, endtime),
-                                          localisation_method=method)
-    else:
-        event_list = client.event.getList(datetime=(starttime, endtime))
+    event_list = client.event.getList(datetime=(starttime, endtime),
+                                      localisation_method=method)
 
     print "Fetching events ..."
     networks = {}
@@ -51,7 +48,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
             lid = pick.waveform.attrib['locationCode']
             pid = '%s.%s.%s.%s' % (nid, sid, lid, cid)
             print "    PICK: %s - %s - %s" % (pid, phase, dt)
-            if not fnmatch.filter([pid],wildcard):
+            if not fnmatch.filter([pid], wildcard):
                 continue
             # generate station/network list
             networks.setdefault(nid, {})
@@ -88,6 +85,8 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     msg = "!!! Error fetching waveform for %s.%s.%s.%s for %s"
                     print msg % (nid, sid, location_id, channel_id, dt)
                     continue
+                if merge:
+                    stream.merge()
                 for trace in stream:
                     # calculate zero mean
                     trace.data = trace.data - trace.data.mean()
@@ -107,14 +106,13 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
             # output file
             filename = "%s.%s.txt" % (nid, sid)
             fp = open(filename, "w")
-            print "XCORR:"
+            # xcorr
             for i in range(0, l - 1):
                 id1 = streams[i][0]
                 tr1 = streams[i][1][0]
                 for j in range(i + 1, l):
                     id2 = streams[j][0]
                     tr2 = streams[j][1][0]
-                    #print '  ' , i, ' x ', j, ' = ',  
                     # check sampling rate for both traces
                     if tr1.stats.sampling_rate != tr2.stats.sampling_rate:
                         print
@@ -125,20 +123,19 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                         print "!!! Number of samples are not equal!"
                         continue
                     # divide by 2.0 as in eventcluster.c line 604
-                    winlen = int(tr1.stats.npts / 2.0)
-                    shift, coe = xcorr(tr1.data.astype('float32'),
-                                       tr2.data.astype('float32'), winlen)
-                    fp.write("%d %d % .3f %d %s %s\n" % (i + 1, j + 1, coe,
-                                                         shift, id1, id2))
+                    # remove last sample if npts is an odd number
+                    delta = -1 * (tr1.stats.npts % 2)
+                    winlen = int((tr1.stats.npts - delta) / 2.0)
+                    shift, coe = xcorr(tr1.data[:delta].astype('float32'),
+                                       tr2.data[:delta].astype('float32'),
+                                       winlen)
+                    fp.write("%d %d %.3f %d %s %s\n" % (i + 1, j + 1, coe,
+                                                        shift, id1, id2))
             print
             fp.close()
 
 
 start = UTCDateTime(2007, 9, 20)
 end = UTCDateTime(2007, 11, 20) - 1
-xcorrEvents(start, end, network_id='BW', station_id='RNON',
-            time_window=(-0.5, 2.493))
-
-# XXX RJOB does not work, no data and no error in client.waveform.getWaveform
-# XXX Samplewise specification is too complicated, e.g. time_window=(-0.5,
-# 2.493) for 300 samples?!
+xcorrEvents(start, end, network_id='BW', station_id='MANZ',
+            time_window=(-0.5, 2.5))
