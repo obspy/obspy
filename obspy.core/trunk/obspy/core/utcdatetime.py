@@ -141,12 +141,8 @@ class UTCDateTime(datetime.datetime):
             >>> a = UTCDateTime(0.0)
             >>> a
             UTCDateTime(1970, 1, 1, 0, 0)
-            >>> a + 1
-            UTCDateTime(1970, 1, 1, 0, 0, 1)
             >>> a + 1.123456
             UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
-            >>> a + 60 * 60 * 24 * 31 + 0.1
-            UTCDateTime(1970, 2, 1, 0, 0, 0, 100000)
             >>> UTCDateTime(0.5) + UTCDateTime(10.5)
             11.0
         
@@ -160,12 +156,15 @@ class UTCDateTime(datetime.datetime):
                 return UTCDateTime(dt)
             elif isinstance(arg, float):
                 sec = int(arg)
-                msec = int((arg % 1) * 1000000)
+                msec = int((arg - sec) * 1000000)
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__add__(self, td)
                 return UTCDateTime(dt)
             elif isinstance(arg, UTCDateTime):
                 return self.timestamp + arg.timestamp
+            else:
+                dt = datetime.datetime.__add__(self, arg)
+                return UTCDateTime(dt)
         else:
             dt = datetime.datetime.__add__(self, *args, **kwargs)
             return UTCDateTime(dt)
@@ -206,6 +205,9 @@ class UTCDateTime(datetime.datetime):
                 return UTCDateTime(dt)
             elif isinstance(arg, UTCDateTime):
                 return self.timestamp - arg.timestamp
+            else:
+                dt = datetime.datetime.__sub__(self, arg)
+                return UTCDateTime(dt)
         else:
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
             return UTCDateTime(dt)

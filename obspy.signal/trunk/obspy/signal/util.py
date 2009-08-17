@@ -95,7 +95,8 @@ def xcorr(tr1, tr2, window_len):
     lib.X_corr.argtypes = [
         N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_int, C.c_void_p, C.c_void_p]
+        C.c_int, C.c_int, C.c_int, 
+        C.POINTER(C.c_int), C.POINTER(C.c_double)]
     lib.X_corr.restype = C.c_void_p
 
     shift = C.c_int()

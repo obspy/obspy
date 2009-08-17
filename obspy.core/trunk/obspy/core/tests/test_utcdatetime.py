@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import UTCDateTime
+import datetime
 import copy
 import unittest
 
@@ -56,6 +57,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt2.timestamp, 1240561632.0050001)
         self.assertEquals(dt.timestamp, 1240561700.0050001)
 
+    def test_add(self):
+        a = UTCDateTime(0.0)
+        self.assertEquals(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + 1.123456, 
+                          UTCDateTime(1970, 1, 1, 0, 0, 1, 123456))
+        self.assertEquals(a + 60 * 60 * 24 * 31 + 0.1,
+                          UTCDateTime(1970, 2, 1, 0, 0, 0, 100000))
+        self.assertEquals(a + -0.5,
+                          UTCDateTime(1969, 12, 31, 23, 59, 59, 500000))
+        self.assertEquals(UTCDateTime(0.5)+ UTCDateTime(10.5),
+                          11.0)
+        td = datetime.timedelta(seconds=1)
+        self.assertEquals(a + td, UTCDateTime(1970, 1, 1, 0, 0, 1))
+
     def test_sub(self):
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
@@ -66,6 +81,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         end = UTCDateTime(-1000.5)
         self.assertAlmostEquals(end - start, -1000.5)
+        td = datetime.timedelta(seconds=1)
+        self.assertEquals(start - td, UTCDateTime(1969, 12, 31, 23, 59, 59))
 
     def test_negativeTimestamp(self):
         dt = UTCDateTime(-1000.1)

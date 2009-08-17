@@ -2,19 +2,23 @@
 
 from obspy.core import UTCDateTime
 from obspy.seishub.client import Client
-from obspy.signal import seisSim
+from obspy.signal import seisSim, cornFreq2Paz
 from obspy.signal.util import xcorr
-import os
+import os, fnmatch
 import numpy as N
 import ctypes as C
 
 
 def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                 location_id='', channel_id='EHZ', phase='P',
-                time_window=(-1, 6), winlen=10.0, method='manual'):
+                time_window=(-1, 6), method='manual'):
     """
     @param method: 'manual' or 'auto' or None.
     """
+    wildcard = "%s.%s.%s.%s" % (network_id, station_id, 
+                                location_id, channel_id)
+    # PAZ of instrument to simulate, 2.0Hz corner-frequency, 0.707 damping
+    inst = cornFreq2Paz(2.0)
     # get all events between start and end time
     client = Client("http://teide.geophysik.uni-muenchen.de:8080",
                     user="admin", password="admin")
@@ -37,7 +41,6 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
         streams = []
         for pick in pick_list:
             temp = {}
-            # XXX: ignoring location code for now
             try:
                 dt = UTCDateTime(str(pick.time.value))
             except:
@@ -46,8 +49,10 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
             nid = pick.waveform.attrib['networkCode'] or 'BW'
             cid = pick.waveform.attrib['channelCode']
             lid = pick.waveform.attrib['locationCode']
-            print "    PICK: %s.%s.%s.%s - %s - %s" % (nid, sid, lid, cid,
-                                                       phase, dt)
+            pid = '%s.%s.%s.%s' % (nid, sid, lid, cid)
+            print "    PICK: %s - %s - %s" % (pid, phase, dt)
+            if not fnmatch.filter([pid],wildcard):
+                continue
             # generate station/network list
             networks.setdefault(nid, {})
             networks[nid].setdefault(sid, [])
@@ -88,7 +93,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     trace.data = trace.data - trace.data.mean()
                     # instrument correction
                     trace.data = seisSim(trace.data, trace.stats.sampling_rate,
-                                         paz, inst_sim=None, water_level=50.0)
+                                         paz, inst_sim=inst, water_level=50.0)
                     print '    Got Trace:', trace
                 # append
                 streams.append((id, stream))
@@ -102,7 +107,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
             # output file
             filename = "%s.%s.txt" % (nid, sid)
             fp = open(filename, "w")
-            #print "XCORR:"
+            print "XCORR:"
             for i in range(0, l - 1):
                 id1 = streams[i][0]
                 tr1 = streams[i][1][0]
@@ -120,7 +125,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                         print "!!! Number of samples are not equal!"
                         continue
                     # divide by 2.0 as in eventcluster.c line 604
-                    winlen = int(winlen / float(tr1.stats.sampling_rate) / 2.0)
+                    winlen = int(tr1.stats.npts / 2.0)
                     shift, coe = xcorr(tr1.data.astype('float32'),
                                        tr2.data.astype('float32'), winlen)
                     fp.write("%d %d % .3f %d %s %s\n" % (i + 1, j + 1, coe,
@@ -129,6 +134,11 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
             fp.close()
 
 
-start = UTCDateTime(2009, 7, 1)
-end = UTCDateTime(2009, 8, 1) - 1
-xcorrEvents(start, end)
+start = UTCDateTime(2007, 9, 20)
+end = UTCDateTime(2007, 11, 20) - 1
+xcorrEvents(start, end, network_id='BW', station_id='RNON',
+            time_window=(-0.5, 2.493))
+
+# XXX RJOB does not work, no data and no error in client.waveform.getWaveform
+# XXX Samplewise specification is too complicated, e.g. time_window=(-0.5,
+# 2.493) for 300 samples?!
