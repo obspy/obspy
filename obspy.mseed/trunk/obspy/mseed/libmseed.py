@@ -801,6 +801,7 @@ class libmseed(object):
         end_record = int((endtime - start) / (end - start) * nr) + 1
         fh = open(filename, 'rb')
         # Loop until the correct start_record is found
+        delta = 0
         while True:
             # check boundaries
             if start_record < 0:
@@ -817,16 +818,23 @@ class libmseed(object):
             # Calculate sample rate.
             sample_rate = self._calculateSamplingRate(sr_factor, sr_multiplier)
             # Calculate time of the first sample of new record
-            etime = stime + (npts / sample_rate)
+            etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise. 
-            if starttime >= stime and starttime < etime:
+            if starttime >= stime and starttime <= etime:
                 break
-            elif starttime <= stime:
-                start_record -= 1
-            else:
+            elif delta == -1 and starttime > etime:
+                break
+            elif delta == 1 and starttime < stime:
                 start_record += 1
+                break
+            elif starttime < stime:
+                delta = -1
+            else:
+                delta = 1
+            start_record += delta
         # Loop until the correct end_record is found
+        delta = 0
         while True:
             # check boundaries
             if end_record < 0:
@@ -846,14 +854,18 @@ class libmseed(object):
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
-            # also watch for time values between records!
-            sample = 1. / sample_rate
-            if endtime > (stime - sample) and endtime <= etime:
+            if endtime >= stime and endtime <= etime:
                 break
-            elif endtime <= stime:
-                end_record -= 1
-            else:
+            elif delta == -1 and endtime > etime:
                 end_record += 1
+                break
+            elif delta == 1 and endtime < stime:
+                break
+            elif endtime < stime:
+                delta = -1
+            else:
+                delta = 1
+            end_record += delta
         # Open the file and read the cut file.
         record_length = info['record_length']
         # Jump to starting location.

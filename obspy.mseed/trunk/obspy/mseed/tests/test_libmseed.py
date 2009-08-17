@@ -436,8 +436,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         data = mseed.cutMSFileByRecords(file, endtime=end)
         self.assertEqual(data, record1)
         # Cut first two records using start time with rounding error
-        start = UTCDateTime(2008, 1, 1, 0, 0, 1, 974999)
-        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 970001)
+        start = start2 - 0.000001
+        end = start2 + 0.000001
         data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
         self.assertEqual(data, record1 + record2)
         # Cut second record without rounding error
