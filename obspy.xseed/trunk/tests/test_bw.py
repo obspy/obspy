@@ -29,7 +29,7 @@ for root, dirs, files in os.walk(input_base):
     if not os.path.isdir(output_base + os.sep + root):
         os.mkdir(output_base + os.sep + root)
     # generate file list
-    filelist = [os.path.join(root,fi) for fi in files if '.svn' not in fi]
+    filelist = [os.path.join(root, fi) for fi in files if '.svn' not in fi]
     for filename in filelist:
         print filename
         try:
@@ -39,16 +39,17 @@ for root, dirs, files in os.walk(input_base):
             # try to parse
             sp.parseSEEDFile(filename)
             # generate a XML file and validate it with a given schema
-            xml = sp.getXML()
-            doc = etree.parse(StringIO.StringIO(xml))
-            xmlschema.assertValid(doc)
-            fp = open('output' + os.sep + filename + '.xml','w')
+            xml = sp.getXSEED()
+            #doc = etree.parse(StringIO.StringIO(xml))
+            #xmlschema.assertValid(doc)
+            fp = open('output' + os.sep + filename + '.xml', 'w')
             fp.write(xml)
             fp.close()
-        except:
+        except Exception, e:
+            raise
             sp = SEEDParser(strict=True, debug=True)
             sp.parseSEEDFile(filename)
-            fp = open('output' + os.sep + 'error.xml','w')
-            fp.write(sp.getXML())
+            fp = open('output' + os.sep + 'error.xml', 'w')
+            fp.write(sp.getXSEED())
             fp.close()
             raise

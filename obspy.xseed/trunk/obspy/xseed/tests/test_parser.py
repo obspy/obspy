@@ -181,9 +181,7 @@ class ParserTestCase(unittest.TestCase):
         for file in BW_SEED_files:
             parser1 = SEEDParser()
             # Parse the file.
-            f = open(file)
             parser1.parseSEEDFile(file)
-            f.close()
             # Convert to SEED once to avoid any issues seen in
             # test_readAndWriteSEED.
             original_seed = parser1.getSEED()
@@ -199,6 +197,7 @@ class ParserTestCase(unittest.TestCase):
             new_seed = parser3.getSEED()
             self.assertEqual(original_seed, new_seed)
             del parser3, original_seed, new_seed
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
