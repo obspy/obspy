@@ -4,7 +4,7 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement
 from obspy.xseed import utils
 from obspy.xseed.fields import Integer, MultipleLoop, SimpleLoop, Float, \
-    MultipleFlatLoop
+    MultipleFlatLoop, VariableString, FixedString
 
 
 class BlocketteLengthException(Exception):
@@ -13,20 +13,27 @@ class BlocketteLengthException(Exception):
     """
     pass
 
+class BlocketteParserException(Exception):
+    """
+    General Blockette Parser Exception.
+    """
+    pass
+
+
 
 class Blockette:
     """
     General blockette handling.
     """
-    
+
     # default field for each blockette
     fields = []
     default_fields = [
         Integer(1, "Blockette type", 3),
         Integer(2, "Length of blockette", 4, optional=True)
     ]
-    
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, **kwargs):
         self.verify = kwargs.get('verify', True)
         self.debug = kwargs.get('debug', False)
         self.strict = kwargs.get('strict', False)
@@ -39,13 +46,13 @@ class Blockette:
         if self.debug:
             print "----"
             print str(self)
-    
+
     def __str__(self):
         """
         String representation of this blockette.
         """
         return self.blockette_id
-    
+
     def parse(self, data, expected_length=0):
         """
         Parse given data for blockette fields and create attributes.
@@ -60,28 +67,28 @@ class Blockette:
             data = StringIO(data)
         start_pos = data.tell()
         if self.debug:
-            temp=data.read(expected_length)
+            temp = data.read(expected_length)
             print '  DATA:', temp
-            data.seek(-expected_length,1)
+            data.seek(-expected_length, 1)
         blockette_fields = self.default_fields + self.fields
         for field in blockette_fields:
             # blockette length reached -> break with warning, because fields 
             # still exist
-            if data.tell()-start_pos >= expected_length:
+            if data.tell() - start_pos >= expected_length:
                 if not self.strict and not self.verify:
                     break
                 if isinstance(field, MultipleLoop) or \
                    isinstance(field, SimpleLoop):
                     break
                 msg = "End of blockette " + self.blockette_id + " reached " + \
-                      "without parsing all expected fields, here: "+ str(field)
+                      "without parsing all expected fields, here: " + str(field)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:
                     print('WARN: ' + msg)
                 break
             # check version
-            if field.version and field.version>self.version:
+            if field.version and field.version > self.version:
                 continue
             if isinstance(field, MultipleLoop) or \
                isinstance(field, MultipleFlatLoop):
@@ -120,31 +127,106 @@ class Blockette:
                         print('    ' + str(subfield) + ': ' + str(text))
             else:
                 text = field.read(data)
-                if field.id==2:
+                if field.id == 2:
                     expected_length = text
                 # set attribute
                 setattr(self, field.attribute_name, text)
                 # debug
                 if self.debug:
-                    print('  ' + str(field) + ': '  + str(text))
+                    print('  ' + str(field) + ': ' + str(text))
         # verify or strict tests
         if self.verify or self.strict:
             end_pos = data.tell()
-            blockette_length = end_pos-start_pos
+            blockette_length = end_pos - start_pos
             if expected_length != blockette_length:
                 msg = 'Wrong size of Blockette %s (%d of %d) in sequence %06d'
-                msg = msg  % (self.blockette_id, blockette_length, 
+                msg = msg % (self.blockette_id, blockette_length,
                               expected_length, self.record_id or 0)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:
                     print('WARN: ' + msg)
-    
-    def getXML(self, abbrev_dict={}, show_optional=False):
+
+    def parseXML(self, xml):
+        """
+        Reads lxml etree and fills the blockette with the values of it.
+        """
+        xml = xml.getchildren()
+        xml_fields = [_i.tag for _i in xml]
+        for field in self.fields:
+            # Check if field is in the supplied XML tree.
+            try:
+                index_nr = xml_fields.index(field.attribute_name)
+            except:
+                if field.optional or isinstance(field, MultipleLoop):
+                    continue
+                else:
+                    msg = 'Not all necessary fields found for Blockette %i'\
+                                    % self.id
+                    raise BlocketteParserException(msg)
+            # If field is a Float or Integer convert the XML to a float or int
+            # and write it into the blockette.
+            if isinstance(field, Float):
+                xml_text = xml[index_nr].text
+                if not xml_text:
+                    xml_text = 0
+                setattr(self, field.attribute_name, float(xml_text))
+            if isinstance(field, Integer):
+                xml_text = xml[index_nr].text
+                if not xml_text:
+                    xml_text = 0
+                setattr(self, field.attribute_name, int(xml_text))
+            # If its a string leave it being a string.
+            if isinstance(field, VariableString) or \
+                                        isinstance(field, FixedString):
+                xml_text = xml[index_nr].text
+                if not xml_text:
+                    xml_text = ''
+                setattr(self, field.attribute_name, xml_text)
+            # Implement MultipleLoop which currently is the only supported
+            # loop.
+            if isinstance(field, MultipleLoop):
+                xml_childs = xml[index_nr].getchildren()
+                xml_child_fields = [_i.tag for _i in xml_childs]
+                # Loop over all data fields.
+                for sub_field in field.data_fields:
+                    setattr(self, sub_field.attribute_name, [])
+                    # Check if all necessary attributes are set.
+                    if not sub_field.attribute_name in xml_child_fields:
+                        if sub_field.optional:
+                            continue
+                        else:
+                            print sub_field.attribute_name
+                            print xml_child_fields
+                            msg = 'Not all necessary fields found for ' + \
+                                  'Blockette %i' % self.id
+                            raise BlocketteParserException(msg)
+                    for child_field in xml_childs:
+                        if not child_field.tag == sub_field.attribute_name:
+                            continue
+                        # Check whether it's a Float, an Integer or a String.
+                        if isinstance(sub_field, Float):
+                            xml_text = child_field.text
+                            if not xml_text:
+                                xml_text = 0
+                            getattr(self, sub_field.attribute_name).append(\
+                                    float(xml_text))
+                        elif isinstance(sub_field, Integer):
+                            xml_text = child_field.text
+                            if not xml_text:
+                                xml_text = 0
+                            getattr(self, sub_field.attribute_name).append(\
+                                    int(xml_text))
+                        else:
+                            xml_text = child_field.text
+                            if not xml_text:
+                                xml_text = ''
+                            getattr(self, sub_field.attribute_name).append(\
+                                    xml_text)
+
+    def getXML(self, show_optional=False):
         """
         Returns a XML document representing this blockette.
-        
-        The 'optional' flag will return optional elements too.
         """
         # root element
         doc = Element(self.blockette_name, blockette=self.blockette_id)
@@ -152,7 +234,7 @@ class Blockette:
         blockette_fields = self.fields
         for field in blockette_fields:
             # check version
-            if field.version and field.version>self.version:
+            if field.version and field.version > self.version:
                 continue
             # skip if optional
             if not show_optional and field.optional:
@@ -263,13 +345,17 @@ class Blockette:
                 se = SubElement(doc, field.field_name)
                 se.text = unicode(result).strip()
         return doc
-    
+
     def getSEEDString(self):
+        """
+        Converts the blockette to a valid SEED string and returns it.
+        """
         data = ''
         # cycle trough all fields
         for field in self.fields:
             # check version
-            if field.version and field.version>self.version:
+            if field.version and field.version > self.version:
+                print 'ACHTUNG!'
                 continue
             if isinstance(field, MultipleLoop) or \
                isinstance(field, MultipleFlatLoop):
@@ -326,4 +412,4 @@ class Blockette:
                     result = getattr(self, field.attribute_name)
                 data = data + field.write(result)
         # add blockette id and length
-        return '%03d%04d%s' % (self.id, len(data)+7, data)
+        return '%03d%04d%s' % (self.id, len(data) + 7, data)

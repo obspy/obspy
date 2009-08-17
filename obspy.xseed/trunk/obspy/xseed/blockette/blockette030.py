@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
-from obspy.xseed.fields import Integer, VariableString, SimpleLoop
+from obspy.xseed.blockette import Blockette
+from obspy.xseed.fields import Integer, VariableString, MultipleLoop
 
 
 class Blockette030(Blockette):
@@ -22,7 +22,7 @@ class Blockette030(Blockette):
     0300086CDSN Gain-Ranged Format~000200104M0~W2 D0-13 A-8191~D1415~
     P0:#0,1:#2,2:#4,3:#7~
     """
-    
+
     id = 30
     name = "Data Format Dictionary"
     fields = [
@@ -31,6 +31,6 @@ class Blockette030(Blockette):
         Integer(5, "Data family type", 3),
         Integer(6, "Number of decoder keys", 2),
         # REPEAT field 7 for the Number of decoder keys:
-        SimpleLoop("Number of decoder keys", 
-            VariableString(7, "Decoder keys", flags='UNLPS')),
+        MultipleLoop("Decoder keys", "Number of decoder keys",
+            [VariableString(7, "Decoder keys", flags='UNLPS')]),
     ]
