@@ -125,7 +125,7 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     # divide by 2.0 as in eventcluster.c line 604
                     # remove last sample if npts is an odd number
                     delta = -1 * (tr1.stats.npts % 2)
-                    winlen = int((tr1.stats.npts - delta) / 2.0)
+                    winlen = int((tr1.stats.npts + delta) / 2.0)
                     shift, coe = xcorr(tr1.data[:delta].astype('float32'),
                                        tr2.data[:delta].astype('float32'),
                                        winlen)
