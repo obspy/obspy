@@ -408,24 +408,57 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         temp = os.path.join(self.path, u'BW.BGLD.__.EHE.D.2008.001')
-        first_record_file = temp + '.first_record'
-        first_record_data = open(first_record_file, 'rb').read()
-        data_file = temp + '.first_10_percent'
-        # Cut first record using end time
-        (_, end) = mseed.getStartAndEndTime(first_record_file)
-        data = mseed.cutMSFileByRecords(data_file, endtime=end)
-        self.assertEqual(data, first_record_data)
-        # Cut first record using start time
-        (start, _) = mseed.getStartAndEndTime(first_record_file)
-        data = mseed.cutMSFileByRecords(data_file, endtime=start + 1)
-        self.assertEqual(data, first_record_data)
-        # Cuts nothing if end time equals start time
-        (start, _) = mseed.getStartAndEndTime(data_file)
-        data = mseed.cutMSFileByRecords(data_file, endtime=start)
+        file = temp + '.first_10_percent'
+        # initialize first record
+        file1 = temp + '.first_record'
+        start1, end1 = mseed.getStartAndEndTime(file1)
+        self.assertEqual(start1, UTCDateTime(2007, 12, 31, 23, 59, 59, 915000))
+        self.assertEqual(end1, UTCDateTime(2008, 1, 1, 0, 0, 1, 970000))
+        record1 = open(file1, 'rb').read()
+        # initialize second record
+        file2 = temp + '.second_record'
+        start2, end2 = mseed.getStartAndEndTime(file2)
+        self.assertEqual(start2, UTCDateTime(2008, 1, 1, 0, 0, 1, 975000))
+        self.assertEqual(end2, UTCDateTime(2008, 1, 1, 0, 0, 4, 30000))
+        record2 = open(file2, 'rb').read()
+        # initialize third record
+        file3 = temp + '.third_record'
+        start3, end3 = mseed.getStartAndEndTime(file3)
+        self.assertEqual(start3, UTCDateTime(2008, 1, 1, 0, 0, 4, 35000))
+        self.assertEqual(end3, UTCDateTime(2008, 1, 1, 0, 0, 6, 90000))
+        record3 = open(file3, 'rb').read()
+        # Cut first record using fixed start and end time
+        data = mseed.cutMSFileByRecords(file, starttime=start1, endtime=end1)
+        self.assertEqual(data, record1)
+        # Cut first record using end time with rounding error and no given
+        # start time
+        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 969999)
+        data = mseed.cutMSFileByRecords(file, endtime=end)
+        self.assertEqual(data, record1)
+        # Cut first two records using start time with rounding error
+        start = UTCDateTime(2008, 1, 1, 0, 0, 1, 974999)
+        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 970001)
+        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
+        self.assertEqual(data, record1 + record2)
+        # Cut second record without rounding error
+        start = UTCDateTime(2008, 1, 1, 0, 0, 1, 975000)
+        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 975001)
+        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
+        self.assertEqual(data, record2)
+        # Cut first three records using times between records
+        start = end1 + 0.0025
+        end = start3 - 0.0025
+        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
+        self.assertEqual(data, record1 + record2 + record3)
+        # Cut nothing if end time is equal or less than start time
+        data = mseed.cutMSFileByRecords(file1, endtime=start1)
         self.assertEqual(data, '')
-        # Cuts nothing if start time equals end time
-        (_, end) = mseed.getStartAndEndTime(data_file)
-        data = mseed.cutMSFileByRecords(data_file, starttime=end)
+        data = mseed.cutMSFileByRecords(file1, endtime=start1 - 1)
+        self.assertEqual(data, '')
+        # Cut nothing if start time is equal or more than end time
+        data = mseed.cutMSFileByRecords(file1, starttime=end1)
+        self.assertEqual(data, '')
+        data = mseed.cutMSFileByRecords(file1, starttime=end1 + 1)
         self.assertEqual(data, '')
 
     def test_mergeAndCutMSFiles(self):
@@ -630,7 +663,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         f = open(mseed_file, 'rb')
         buffer = f.read()
         f.close()
-        def test_function(_i,values):
+        def test_function(_i, values):
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             # CHANGE FUNCTION TO BE TESTED HERE!
@@ -647,7 +680,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Read the ten files at one and save the output in the just created
         # class.
         for _i in xrange(n_threads):
-            thread = threading.Thread(target=test_function, args=(_i,values))
+            thread = threading.Thread(target=test_function, args=(_i, values))
             thread.start()
         start = time.time()
         # Loop until all threads are finished.
@@ -663,15 +696,15 @@ class LibMSEEDTestCase(unittest.TestCase):
             else:
                 continue
         # Compare all values which should be identical and clean up files
-        for _i in xrange(n_threads-1):
+        for _i in xrange(n_threads - 1):
             self.assertEqual(values[_i][0][0],
-                             values[_i+1][0][0])
+                             values[_i + 1][0][0])
             N.testing.assert_array_equal(values[_i][0][1],
-                                         values[_i+1][0][1])
+                                         values[_i + 1][0][1])
             temp_file = os.path.join(self.path,
                                 u'temp_file_' + str(_i))
             os.remove(temp_file)
-        temp_file = os.path.join(self.path,u'temp_file_'+str(_i+1))
+        temp_file = os.path.join(self.path, u'temp_file_' + str(_i + 1))
         os.remove(temp_file)
 
 

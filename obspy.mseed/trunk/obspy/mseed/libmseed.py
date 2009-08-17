@@ -379,7 +379,7 @@ class libmseed(object):
                 return 1
             closeCallback = closefn(close)
             f = C.pythonapi.PyFile_FromFile(mf.contents.fp.contents.value,
-                                            str(filename),'rb',closeCallback)
+                                            str(filename), 'rb', closeCallback)
             f.seek(filepos)
             clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                    str(filename), C.c_int(reclen), None, None,
@@ -797,11 +797,9 @@ class libmseed(object):
         # Guess the most likely records that cover start- and end time.
         info = self._getMSFileInfo(filename)
         nr = info['number_of_records']
-        start_record = int((starttime.timestamp - start.timestamp) /
-                           (end.timestamp - start.timestamp) * nr)
-        end_record = int((endtime.timestamp - start.timestamp) /
-                         (end.timestamp - start.timestamp) * nr) + 1
-        mseed_file = open(filename, 'rb')
+        start_record = int((starttime - start) / (end - start) * nr)
+        end_record = int((endtime - start) / (end - start) * nr) + 1
+        fh = open(filename, 'rb')
         # Loop until the correct start_record is found
         while True:
             # check boundaries
@@ -811,22 +809,18 @@ class libmseed(object):
             elif start_record > nr - 1:
                 start_record = nr - 1
                 break
-            mseed_file.seek(start_record * info['record_length'])
-            stime = self._getMSStarttime(mseed_file)
+            fh.seek(start_record * info['record_length'])
+            stime = self._getMSStarttime(fh)
             # Calculate last covered record.
-            mseed_file.seek(30, 1)
-            (npts, sample_rate_factor, sample_rate_multiplier) = \
-                unpack('>Hhh', mseed_file.read(6))
+            fh.seek(30, 1)
+            (npts, sr_factor, sr_multiplier) = unpack('>Hhh', fh.read(6))
             # Calculate sample rate.
-            sample_rate = self._calculateSamplingRate(sample_rate_factor, \
-                                                      sample_rate_multiplier)
-            # The time of the last covered sample is now:
-            etime = stime + ((npts - 1) / sample_rate)
+            sample_rate = self._calculateSamplingRate(sr_factor, sr_multiplier)
+            # Calculate time of the first sample of new record
+            etime = stime + (npts / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise. 
-            # also watch for time values between records!
-            sample = 1. / sample_rate
-            if starttime >= stime and starttime < (etime + 1.1 * sample):
+            if starttime >= stime and starttime < etime:
                 break
             elif starttime <= stime:
                 start_record -= 1
@@ -841,22 +835,20 @@ class libmseed(object):
             elif end_record > nr - 1:
                 end_record = nr - 1
                 break
-            mseed_file.seek(end_record * info['record_length'])
-            stime = self._getMSStarttime(mseed_file)
+            fh.seek(end_record * info['record_length'])
+            stime = self._getMSStarttime(fh)
             # Calculate last covered record.
-            mseed_file.seek(30, 1)
-            (npts, sample_rate_factor, sample_rate_multiplier) = \
-                unpack('>Hhh', mseed_file.read(6))
+            fh.seek(30, 1)
+            (npts, sr_factor, sr_multiplier) = unpack('>Hhh', fh.read(6))
             # Calculate sample rate.
-            sample_rate = self._calculateSamplingRate(sample_rate_factor, \
-                                                      sample_rate_multiplier)
+            sample_rate = self._calculateSamplingRate(sr_factor, sr_multiplier)
             # The time of the last covered sample is now:
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
             # otherwise.
             # also watch for time values between records!
             sample = 1. / sample_rate
-            if endtime > (stime - 1.1 * sample) and endtime <= etime:
+            if endtime > (stime - sample) and endtime <= etime:
                 break
             elif endtime <= stime:
                 end_record -= 1
@@ -865,10 +857,10 @@ class libmseed(object):
         # Open the file and read the cut file.
         record_length = info['record_length']
         # Jump to starting location.
-        mseed_file.seek(record_length * start_record, 0)
+        fh.seek(record_length * start_record, 0)
         # Read until end_location.
-        data = mseed_file.read(record_length * (end_record - start_record + 1))
-        mseed_file.close()
+        data = fh.read(record_length * (end_record - start_record + 1))
+        fh.close()
         # Return the cut file string.
         return data
 
