@@ -370,26 +370,25 @@ class libmseed(object):
                                str(filename), C.c_int(reclen), None, None,
                                C.c_short(skipnotdata), C.c_short(dataflag),
                                C.c_short(verbose))
-        if record_number != 0:
-            # Parse msf structure in order to seek file pointer to special position
-            mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-            C.pythonapi.PyFile_FromFile.restype = C.py_object
-            closefn = C.CFUNCTYPE(C.c_int, C.c_int)
-            def close(f):
-                return 1
-            closeCallback = closefn(close)
-            f = C.pythonapi.PyFile_FromFile(mf.contents.fp.contents.value,
-                                            str(filename), 'rb', closeCallback)
-            f.seek(filepos)
-            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                                   str(filename), C.c_int(reclen), None, None,
-                                   C.c_short(skipnotdata), C.c_short(dataflag),
-                                   C.c_short(verbose))
-            f.close()
-            del mf
-            return msr, msf # need both for deallocation
+        if record_number == 0:
+            return msr, msf
+        # Parse msf structure in order to seek file pointer to special position
+        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
+        C.pythonapi.PyFile_FromFile.restype = C.py_object
+        closefn = C.CFUNCTYPE(C.c_int, C.c_int)
+        def close(f):
+            return 1
+        closeCallback = closefn(close)
+        f = C.pythonapi.PyFile_FromFile(mf.contents.fp.contents.value,
+                                        str(filename), 'rb', closeCallback)
+        f.seek(filepos)
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               str(filename), C.c_int(reclen), None, None,
+                               C.c_short(skipnotdata), C.c_short(dataflag),
+                               C.c_short(verbose))
+        f.close()
+        del mf
         return msr, msf # need both for deallocation
-
 
     def getFirstRecordHeaderInfo2(self, filename):
         """

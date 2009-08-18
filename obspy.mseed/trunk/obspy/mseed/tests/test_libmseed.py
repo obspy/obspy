@@ -655,10 +655,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         
         Fails with readMSTracesViaRecords and passes with readMSTraces!
         """
-        n_threads = 30
+        n_threads = 3
         mseed = libmseed()
         # Use a medium sized file.
-        mseed_file = os.path.join(self.path, u'test.mseed')
+        mseed_file = os.path.join(self.path,
+                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         # Read file into memory.
         f = open(mseed_file, 'rb')
         buffer = f.read()
@@ -694,6 +695,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                 raise Warning(msg)
                 break
             else:
+                time.sleep(0.1)
                 continue
         # Compare all values which should be identical and clean up files
         for _i in xrange(n_threads - 1):

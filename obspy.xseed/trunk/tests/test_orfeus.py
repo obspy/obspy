@@ -37,8 +37,6 @@ for root, dirs, files in os.walk(input_base):
         print filename
         # Cheap hack to leave the Spanish networks out as they do not work
         # currently.
-        if filename.find('.ES_') != -1:
-            continue
         try:
             sp = SEEDParser(strict=True)
             # try to parse

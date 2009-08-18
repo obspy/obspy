@@ -117,7 +117,8 @@ class SEEDParser:
         while record:
             record_continuation = (record[7] == CONTINUE_FROM_LAST_RECORD)
             same_record_type = (record[6] == record_type)
-            # 
+            if record_type == 'S' and record[0:3] != '050':
+                record_continuation = True
             if record_continuation and same_record_type:
                 # continued record
                 merged_data += record[8:]
@@ -183,12 +184,12 @@ class SEEDParser:
         This method takes any merged SEED record and writes its blockettes
         in the corresponding dictionary entry of self.temp.
         """
+        if not data:
+            return
         # Create StringIO for easier access.
         data = StringIO(data)
         # Do not do anything if no data is passed or if a time series header
         # is passed.
-        if not data:
-            return
         if record_type not in HEADERS:
             return
         # Set standard values.

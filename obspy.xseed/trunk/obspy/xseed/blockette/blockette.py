@@ -441,10 +441,7 @@ class Blockette:
                 for i in range(0, number_of_elements):
                     # cycle through fields
                     for subfield in field.data_fields:
-                        try:
-                            result = getattr(self, subfield.attribute_name)[i]
-                        except:
-                            import pdb;pdb.set_trace()
+                        result = getattr(self, subfield.attribute_name)[i]
                         data = data + subfield.write(result)
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set
