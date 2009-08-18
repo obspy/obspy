@@ -30,12 +30,15 @@ class Blockette052(Blockette):
         Float(15, "Dip", 5, mask='%+2.1f'),
         Integer(16, "Data format identifier code", 4),
         # The typo is intentional for XSEED 1.0 compatibility.
-        Integer(17, "Data recored length", 2),
+        Integer(17, "Data recored length", 2, xseed_version='1.0'),
+        Integer(17, "Data record length", 2, xseed_version='1.1'),
         Float(18, "Sample rate", 10, mask='%1.4e'),
         Float(19, "Max clock drift", 10, mask='%1.4e'),
         Integer(20, "Number of comments", 4),
         VariableString(21, "Channel flags", 0, 26, 'U'),
         VariableString(22, "Start date", 1, 22, 'T'),
-        VariableString(23, "End date", 0, 22, 'T', optional_if_empty=True),
+        VariableString(23, "End date", 0, 22, 'T', optional_if_empty=True,
+                       xseed_version='1.0'),
+        VariableString(23, "End date", 0, 22, 'T', xseed_version='1.1'),
         FixedString(24, "Update flag", 1)
     ]

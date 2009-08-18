@@ -43,6 +43,7 @@ class Blockette:
         self.parsed = False
         self.blockette_id = "%03d" % self.id
         self.blockette_name = utils.toXMLTag(self.name)
+        self.xseed_version = kwargs.get('xseed_version', '1.0')
         if self.debug:
             print "----"
             print str(self)
@@ -72,6 +73,10 @@ class Blockette:
             data.seek(-expected_length, 1)
         blockette_fields = self.default_fields + self.fields
         for field in blockette_fields:
+            # Check for wanted xseed_version
+            if field.xseed_version and \
+               field.xseed_version != self.xseed_version:
+                continue
             # blockette length reached -> break with warning, because fields 
             # still exist
             if data.tell() - start_pos >= expected_length:
@@ -155,6 +160,10 @@ class Blockette:
         xml_fields = [_i.tag for _i in xml]
         no_index = False
         for field in self.fields:
+            # Check for wanted xseed_version
+            if field.xseed_version and \
+               field.xseed_version != self.xseed_version:
+                continue
             # Check if field is in the supplied XML tree.
             try:
                 index_nr = xml_fields.index(field.attribute_name)
@@ -267,6 +276,10 @@ class Blockette:
         for field in blockette_fields:
             # check version
             if field.version and field.version > self.version:
+                continue
+            # Check for wanted xseed_version
+            if field.xseed_version and \
+               field.xseed_version != self.xseed_version:
                 continue
             # skip if optional
             if not show_optional and field.optional:
@@ -403,6 +416,10 @@ class Blockette:
             if field.version and field.version > self.version:
                 print 'ACHTUNG!'
                 continue
+            # Check for wanted xseed_version
+            if field.xseed_version and \
+               field.xseed_version != self.xseed_version:
+                continue
             if isinstance(field, MultipleLoop) or \
                isinstance(field, MultipleFlatLoop):
                 # test if index attribute is set
@@ -424,7 +441,10 @@ class Blockette:
                 for i in range(0, number_of_elements):
                     # cycle through fields
                     for subfield in field.data_fields:
-                        result = getattr(self, subfield.attribute_name)[i]
+                        try:
+                            result = getattr(self, subfield.attribute_name)[i]
+                        except:
+                            import pdb;pdb.set_trace()
                         data = data + subfield.write(result)
             elif isinstance(field, SimpleLoop):
                 # test if index attribute is set

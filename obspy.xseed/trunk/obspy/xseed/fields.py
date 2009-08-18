@@ -24,12 +24,14 @@ class Field:
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
+        self.xseed_version = kwargs.get('xseed_version', None)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
             self.field_id = None
         self.field_name = utils.toXMLTag(self.name)
         self.attribute_name = utils.toAttribute(self.name)
+        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def __str__(self):
         if self.id:

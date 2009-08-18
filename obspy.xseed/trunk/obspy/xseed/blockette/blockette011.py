@@ -24,5 +24,9 @@ class Blockette011(Blockette):
         MultipleLoop("Station identifier", "Number of stations", [
             FixedString(4, "Station identifier code", 5),
             Integer(5, "Sequence number of station header", 6, ignore=True)
-        ], repeat_title=True)
+        ], repeat_title=True, xseed_version='1.0'),
+        MultipleLoop("Station identifier", "Number of stations", [
+            FixedString(4, "Station identifier code", 5),
+            Integer(5, "Sequence number of station header", 6, ignore=True)
+        ], xseed_version='1.1')
     ]
