@@ -102,12 +102,13 @@ class libmseed(object):
         f.close()
         # Read big- and little endian word order!
         big_endian = unpack('>cxxxxxxxxxxxxxH', header)
-        little_endian = unpack('>cxxxxxxxxxxxxxH', header)
-        if big_endian[0] in ['D', 'R', 'Q', 'M'] and ((big_endian[1] < 2100 and
-            big_endian[1] > 1900) or (little_endian[0] < 2100 and
-            little_endian[0] > 1900)):
-            return True
-        return False
+        #little_endian = unpack('>cxxxxxxxxxxxxxH', header)
+        if big_endian[0] not in ['D', 'R', 'Q', 'M', 'V']:
+            return False
+        #if ((big_endian[1] < 2100 and big_endian[1] > 1900) or
+        #    (little_endian[0] < 2100 and little_endian[0] > 1900)):
+        #    return True
+        return True
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
                                verbose=0):

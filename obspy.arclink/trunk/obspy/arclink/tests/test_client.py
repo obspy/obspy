@@ -5,6 +5,8 @@ The obspy.arclink.client test suite.
 
 from obspy.arclink import Client
 from obspy.core.utcdatetime import UTCDateTime
+import obspy
+import os
 import unittest
 
 
@@ -40,7 +42,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(trace2.stats.location, '')
         self.assertEquals(trace2.stats.channel, 'EHE')
 
-    def test_getMissingWaveform(self):
+    def test_getNotExistingWaveform(self):
         """
         """
         client = Client()
@@ -67,6 +69,45 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(result['BW']['code'], 'BW')
         self.assertEquals(result['BW']['type'], 'SP/BB')
         self.assertEquals(result['BW']['institutions'], u'Uni München')
+
+    def test_saveWaveform(self):
+        """
+        """
+        client = Client()
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        # MiniSEED
+        client.saveWaveform('test.mseed', 'BW', 'MANZ', '', 'EHZ', start, end)
+        stats = os.stat('test.mseed')
+        st = obspy.read('test.mseed')
+        self.assertEquals(stats.st_size, 1024)
+        # ArcLink cuts on record base
+        self.assertTrue(st[0].stats.starttime <= start)
+        self.assertTrue(st[0].stats.endtime >= end)
+        self.assertEquals(st[0].stats.network, 'BW')
+        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.location, '')
+        self.assertEquals(st[0].stats.channel, 'EHZ')
+        os.remove('test.mseed')
+        # Full SEED
+        client.saveWaveform('test.fseed', 'BW', 'MANZ', '', 'EHZ', start, end,
+                            format='FSEED')
+        stats = os.stat('test.fseed')
+        st = obspy.read('test.fseed')
+        self.assertEquals(stats.st_size, 20480)
+        # ArcLink cuts on record base
+        self.assertTrue(st[0].stats.starttime <= start)
+        self.assertTrue(st[0].stats.endtime >= end)
+        self.assertEquals(st[0].stats.network, 'BW')
+        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.location, '')
+        self.assertEquals(st[0].stats.channel, 'EHZ')
+        os.remove('test.fseed')
+        # XSEED is not yet supported by ArcLink!
+        #client.saveWaveform('test.xseed', 'BW', 'MANZ', '', 'EHZ', start, end,
+        #                    format='XSEED')
+        #os.remove('test.xseed')
 
 
 def suite():

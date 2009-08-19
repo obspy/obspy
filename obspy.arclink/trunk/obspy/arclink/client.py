@@ -103,8 +103,34 @@ class Client(Telnet):
         self._bye()
         return data
 
+    def saveWaveform(self, filename, network_id, station_id, location_id,
+                     channel_id, start_datetime, end_datetime, format="MSEED"):
+        """
+        Writes a fetched waveform into a file.
+        
+        @param filename: String containing the filename.
+        @param network_id: Network code, e.g. 'BW'.
+        @param station_id: Station code, e.g. 'MANZ'.
+        @param location_id: Location code, e.g. '01'.
+        @param channel_id: Channel code, e.g. 'EHE'.
+        @param start_datetime: start time as L{obspy.UTCDateTime} object.
+        @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @param format: 'FSEED', 'MSEED', or 'XSEED'.
+        @return: L{obspy.Stream} object.
+        """
+        rtype = 'REQUEST WAVEFORM format=%s' % format
+        # adding one second to start and end time to ensure right date times
+        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                       (end_datetime + 1).formatArcLink(),
+                                       network_id, station_id, channel_id,
+                                       location_id)
+        data = self._fetch(rtype, [rdata])
+        fh = open(filename, "wb")
+        fh.write(data)
+        fh.close()
+
     def getWaveform(self, network_id, station_id, location_id, channel_id,
-                    start_datetime, end_datetime):
+                    start_datetime, end_datetime, format="MSEED"):
         """
         Gets a L{obspy.Stream} object.
         
@@ -114,9 +140,10 @@ class Client(Telnet):
         @param channel_id: Channel code, e.g. 'EHE'.
         @param start_datetime: start time as L{obspy.UTCDateTime} object.
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @param format: 'FSEED', 'MSEED', or 'XSEED'.
         @return: L{obspy.Stream} object.
         """
-        rtype = 'REQUEST WAVEFORM format=MSEED'
+        rtype = 'REQUEST WAVEFORM format=%s' % format
         # adding one second to start and end time to ensure right date times
         rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
                                        (end_datetime + 1).formatArcLink(),
