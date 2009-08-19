@@ -24,4 +24,4 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 __author__ = """Robert Barsch <barsch@lmu.de>"""
 __docformat__ = 'plaintext'
 
-from parser import SEEDParser
+from parser import SEEDParser, Parser
