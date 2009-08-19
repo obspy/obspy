@@ -688,9 +688,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         while True:
             if threading.activeCount() == 1:
                 break
-            # Avoid infinite loop and leave after 10 seconds which should be
-            # enough for any more or less modern computer.
-            elif time.time() - start >= 10:
+            # Avoid infinite loop and leave after 120 seconds 
+            # such a long time is needed for debugging with valgrind
+            elif time.time() - start >= 120:
                 msg = 'Not all threads finished!'
                 raise Warning(msg)
                 break

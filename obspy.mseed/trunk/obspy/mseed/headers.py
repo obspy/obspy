@@ -6,6 +6,20 @@ Defines the libmseed structures and blockettes.
 import ctypes as C
 from obspy.core.util import c_file_p
 
+# Figure out Py_ssize_t (PEP 353).
+#
+# Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
+# ctypes.c_int for earlier versions.
+#
+#http://svn.python.org/projects/ctypes/trunk/ctypeslib/ctypeslib/contrib/pythonhdr.py
+if hasattr(C.pythonapi, 'Py_InitModule4'):
+    Py_ssize_t = C.c_int
+elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
+    Py_ssize_t = C.c_int64
+else:
+    raise TypeError("Cannot determine type of Py_ssize_t")
+
+
 # SEED binary time
 class BTime(C.Structure):
     _fields_ = [
@@ -317,8 +331,8 @@ class MSFileParam_s(C.Structure):
     pass
 
 MSFileParam_s._fields_ = [
-  #('fp', c_file_p),
-  ('fp', C.POINTER(C.c_int)),
+  #('fp', C.POINTER(C.C.c_int)),
+  ('fp', C.POINTER(Py_ssize_t)),
   ('rawrec', C.c_char_p),
   ('filename', C.c_char * 512),
   ('autodet', C.c_int),
@@ -329,3 +343,4 @@ MSFileParam_s._fields_ = [
   ('recordcount', C.c_int),
 ]
 MSFileParam = MSFileParam_s
+

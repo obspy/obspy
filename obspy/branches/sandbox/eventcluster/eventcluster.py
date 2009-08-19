@@ -2,7 +2,7 @@
 
 from obspy.core import UTCDateTime
 from obspy.seishub.client import Client
-from obspy.signal import seisSim, cornFreq2Paz
+from obspy.signal import seisSim, cornFreq2Paz, bandpassZPHSH
 from obspy.signal.util import xcorr
 import os, fnmatch
 import numpy as N
@@ -91,8 +91,11 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
                     # calculate zero mean
                     trace.data = trace.data - trace.data.mean()
                     # instrument correction
-                    trace.data = seisSim(trace.data, trace.stats.sampling_rate,
-                                         paz, inst_sim=inst, water_level=50.0)
+                    #trace.data = seisSim(trace.data, trace.stats.sampling_rate,
+                    #                     paz, inst_sim=inst, water_level=50.0)
+                    trace.data = bandpassZPHSH(trace.data,2.0,20.0,
+                                               df=trace.stats.sampling_rate,
+                                               corners=4)
                     print '    Got Trace:', trace
                 # append
                 streams.append((id, stream))
@@ -137,5 +140,5 @@ def xcorrEvents(starttime, endtime, network_id='*', station_id='*',
 
 start = UTCDateTime(2007, 9, 20)
 end = UTCDateTime(2007, 11, 20) - 1
-xcorrEvents(start, end, network_id='BW', station_id='MANZ',
+xcorrEvents(start, end, network_id='BW', station_id='RNON',
             time_window=(-0.5, 2.5))

@@ -37,7 +37,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS, MSRecord
-from obspy.mseed.headers import MSFileParam
+from obspy.mseed.headers import MSFileParam, Py_ssize_t
 from struct import unpack
 import ctypes as C
 import math
@@ -64,6 +64,68 @@ else:
 clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
                                 lib_name))
 
+#
+# Declare function of libmseed library, argument parsing
+#
+clibmseed.mst_init.artypes = [C.POINTER(MSTrace)]
+clibmseed.mst_init.restype = C.POINTER(MSTrace)
+
+clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
+clibmseed.mst_free.restype = C.c_void_p
+
+clibmseed.mst_initgroup.artypes = [C.POINTER(MSTraceGroup)]
+clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
+
+clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
+clibmseed.mst_freegroup.restype = C.c_void_p
+
+clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
+clibmseed.msr_init.restype = C.POINTER(MSRecord)
+
+clibmseed.mst_printtracelist.argtypes = [C.POINTER(MSTraceGroup), C.c_int, C.c_int,
+                                         C.c_int]
+clibmseed.mst_printtracelist.restype = C.c_void_p
+
+clibmseed.ms_readmsr_r.argtypes = [C.POINTER(C.POINTER(MSFileParam)), 
+                                   C.POINTER(C.POINTER(MSRecord)), C.c_char_p, C.c_int,
+                                   C.POINTER(Py_ssize_t), C.POINTER(C.c_int), 
+                                   C.c_short, C.c_short, C.c_short]
+clibmseed.ms_readmsr_r.restypes = C.c_int
+
+clibmseed.ms_readtraces.argtypes = [C.POINTER(C.POINTER(MSTraceGroup)),
+                                    C.c_char_p, C.c_int, C.c_double,
+                                    C.c_double, C.c_short, C.c_short,
+                                    C.c_short, C.c_short]
+clibmseed.ms_readtraces.restype = C.c_int
+
+clibmseed.msr_starttime.artypes = [C.POINTER(MSRecord)]
+clibmseed.msr_starttime.restype = C.c_int64
+
+clibmseed.msr_endtime.artypes = [C.POINTER(MSRecord)]
+clibmseed.msr_endtime.restype = C.c_int64
+
+clibmseed.mst_packgroup.artypes = [C.POINTER(C.POINTER(MSTraceGroup)),
+                                   C.CFUNCTYPE(C.c_char_p,C.c_int,C.c_void_p),
+                                   C.c_void_p, C.c_int, C.c_short,
+                                   C.c_short, C.POINTER(C.c_int), 
+                                   C.c_short, C.c_short,
+                                   C.POINTER(MSRecord)]
+clibmseed.mst_packgroup.restype = C.c_int
+
+PyFile_FromFile = C.pythonapi.PyFile_FromFile
+PyFile_FromFile.artypes = [Py_ssize_t, C.c_char_p, C.c_char_p,
+                           C.CFUNCTYPE(C.c_int, Py_ssize_t)]
+PyFile_FromFile.restype = C.py_object
+
+
+#
+# Python callback functions for C
+#
+def close(f):
+    return 1
+closeCallback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(close)
+
+
 
 class libmseed(object):
     """
@@ -80,7 +142,6 @@ class libmseed(object):
             #Read Trace Group
             mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
             clibmseed.mst_printtracelist(mstg, 1, 1, 1)
-            clibmseed.mst_freegroup(C.pointer(mstg))
             del mstg
         except:
             raise
@@ -128,16 +189,14 @@ class libmseed(object):
         # will be removed at the end again
         trace_list = [[{'endtime':0}, N.array([])]]
         # Initialize MSRecord structure
-        clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        msr = clibmseed.msr_init(None)
-        msf = C.POINTER(C.c_int)()
+        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
+        msf = C.POINTER(MSFileParam)() # null pointer
         # Loop over records and append to trace_list.
         # Directly call ms_readmsr
         while True:
             errcode = clibmseed.ms_readmsr_r(C.pointer(msf),
-                C.pointer(msr), str(filename), C.c_int(reclen),
-                None, None, C.c_short(skipnotdata),
-                C.c_short(dataflag), C.c_short(verbose))
+                C.pointer(msr), filename, reclen,
+                None, None, skipnotdata, dataflag, verbose)
             if errcode != 0:
                 break
             chain = msr.contents
@@ -191,7 +250,6 @@ class libmseed(object):
             dataquality, verbose: These are passed directly to the 
             readFileToTraceGroup method.
         """
-        clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
         # Create empty list that will contain all traces.
         trace_list = []
         # Creates MSTraceGroup Structure and feed it with the MiniSEED data.
@@ -256,12 +314,16 @@ class libmseed(object):
         def record_handler(record, reclen, _stream):
             f.write(record[0:reclen])
         # Define Python callback function for use in C function
-        RECHANDLER = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
-                                 C.c_void_p)
-        rec_handler = RECHANDLER(record_handler)
+        recHandler = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
+                         C.c_void_p)(record_handler)
+
         # Pack mstg into a MSEED file using record_handler as write method
-        clibmseed.mst_packgroup(mstg, rec_handler, None, reclen, encoding, byteorder,
-                                C.byref(self.packedsamples), flush, verbose, None)
+        num_traces = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
+                                             encoding, byteorder,
+                                             C.byref(self.packedsamples),
+                                             flush, verbose, None)
+        if num_traces == -1:
+            raise Exception('Error in mst_packgroup')
         clibmseed.mst_freegroup(C.pointer(mstg))
         del mstg
 
@@ -290,20 +352,13 @@ class libmseed(object):
         @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
         """
         # Creates MSTraceGroup Structure
-        clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
-        clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
         mstg = clibmseed.mst_initgroup(None)
-        # Define return types for C functions. Results in Segmentation
-        # fault when trying to free this memory
-        #mstg = C.pointer(MSTraceGroup())
         # Uses libmseed to read the file and populate the MSTraceGroup
         errcode = clibmseed.ms_readtraces(
-            C.pointer(mstg), str(filename), C.c_int(reclen),
-            C.c_double(timetol), C.c_double(sampratetol),
-            C.c_short(dataquality), C.c_short(skipnotdata),
-            C.c_short(dataflag), C.c_short(verbose))
+            C.pointer(mstg), filename, reclen, timetol, sampratetol,
+            dataquality, skipnotdata, dataflag, verbose)
         if errcode != 0:
-            assert 0, "\n\nError while reading MiniSEED file: " + filename
+            raise Exception("Error in ms_readtraces")
         return mstg
 
     def getFirstRecordHeaderInfo(self, filename):
@@ -360,33 +415,24 @@ class libmseed(object):
             raise ValueError('Please enter a valid record_number')
         filepos = record_number * fileinfo['record_length']
         # init MSRecord structure
-        clibmseed.msr_init.restype = C.POINTER(MSRecord)
-        msr = clibmseed.msr_init(None)
+        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         # defines return type
-        clibmseed.ms_readmsr_r.restype = C.c_int
         # Init null pointer, this pointer is needed for deallocation
-        msf = C.POINTER(C.c_int)()
+        msf = C.POINTER(MSFileParam)()
         # Dummy-read/read the first record
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), C.c_int(reclen), None, None,
-                               C.c_short(skipnotdata), C.c_short(dataflag),
-                               C.c_short(verbose))
+                               str(filename), reclen, None, None,
+                               skipnotdata, dataflag, verbose)
         if record_number == 0:
             return msr, msf
         # Parse msf structure in order to seek file pointer to special position
         mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-        C.pythonapi.PyFile_FromFile.restype = C.py_object
-        closefn = C.CFUNCTYPE(C.c_int, C.c_int)
-        def close(f):
-            return 1
-        closeCallback = closefn(close)
-        f = C.pythonapi.PyFile_FromFile(mf.contents.fp.contents.value,
-                                        str(filename), 'rb', closeCallback)
+        f = PyFile_FromFile(mf.contents.fp.contents.value,
+                            str(filename), 'rb', closeCallback)
         f.seek(filepos)
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), C.c_int(reclen), None, None,
-                               C.c_short(skipnotdata), C.c_short(dataflag),
-                               C.c_short(verbose))
+                               filename, reclen, None, None,
+                               skipnotdata, dataflag, verbose)
         f.close()
         del mf
         return msr, msf # need both for deallocation
@@ -434,7 +480,6 @@ class libmseed(object):
         """
         # Get the starttime using the libmseed method msr_starttime
         msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
-        clibmseed.msr_starttime.restype = C.c_int64
         starttime = clibmseed.msr_starttime(msr)
         starttime = self._convertMSTimeToDatetime(starttime)
         # Deallocate msr and msf memory
@@ -444,7 +489,6 @@ class libmseed(object):
         # Get the endtime using the libmseed method msr_endtime
         msr, msf = self.readSingleRecordToMSR(filename, dataflag=0,
                                               record_number= -1)
-        clibmseed.msr_endtime.restype = C.c_int64
         endtime = clibmseed.msr_endtime(msr)
         endtime = self._convertMSTimeToDatetime(endtime)
         # Deallocate msr and msf memory
@@ -1043,21 +1087,6 @@ class libmseed(object):
                 'samprate', 'sampletype']
         return ".".join([str(header[_i]) for _i in ids])
 
-    def _convertToCFilePointer(self, f):
-        """
-        Takes an open file and returns a C file pointer for use in ctypes.
-        
-        @param f: Open file.
-        """
-        if not isinstance(f, file):
-            raise TypeError('Needs an open file.')
-        # If not defined, define ctypes arg- and restypes.
-        C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-        #C.pythonapi.PyFile_AsFile.restype = c_file_p
-        C.pythonapi.PyFile_AsFile.restype = C.POINTER(C.c_long)
-        # Convert open python file to C file pointer.
-        return C.pythonapi.PyFile_AsFile(f)
-
     def _convertMSRToDict(self, m):
         h = {}
         attributes = ('network', 'station', 'location', 'channel',
@@ -1278,9 +1307,6 @@ class libmseed(object):
         @param numtraces: Number of traces in the structure. No function so
             far.
         """
-        # Define return types for C functions.
-        clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
-        clibmseed.mst_init.restype = C.POINTER(MSTrace)
         # Init MSTraceGroup
         mstg = clibmseed.mst_initgroup(None)
         # Set numtraces.

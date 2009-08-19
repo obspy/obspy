@@ -2,7 +2,7 @@
 
 from obspy.core import Stream, Trace
 from obspy.mseed import libmseed
-
+import sys
 
 def isMSEED(filename):
     """
@@ -25,8 +25,11 @@ def readMSEED(filename, headonly=False):
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename)
     else:
-        #trace_list = __libmseed__.readMSTraces(filename)
-        trace_list = __libmseed__.readMSTracesViaRecords(filename)
+        if sys.platform == 'win32': 
+            trace_list = __libmseed__.readMSTracesViaRecords(filename)
+        else:
+            #10% faster, problem with windows
+            trace_list = __libmseed__.readMSTraces(filename) 
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
