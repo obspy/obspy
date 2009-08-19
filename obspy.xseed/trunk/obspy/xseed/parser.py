@@ -45,12 +45,16 @@ class SEEDParserException(Exception):
     pass
 
 
-class SEEDParser:
+class Parser(object):
     """
-    The SEED parser class parses dataless or full SEED volumes.
+    The XML-SEED parser class parses dataless or full SEED volumes.
     
     The SEED file format description can be found at
-    @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf
+    @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
+    
+    The XML-SEED format was proposed in
+    @see: http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml,
+    @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
     def __init__(self, verify=True, debug=False, strict=False):
@@ -522,3 +526,8 @@ class SEEDParser:
         elif blockette_id != 0:
             msg = "Unknown blockette type %d found" % blockette_id
             raise SEEDParserException(msg)
+
+
+# should be removed soon!
+class SEEDParser(Parser):
+    pass
