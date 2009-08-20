@@ -49,7 +49,7 @@ else:
     else:
         lib_name = 'gse_functions.so'
 
-lib = C.CDLL(os.path.join(os.path.dirname(__file__), lib_name))
+lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
 
 # Exception type for mismatching checksums
 class ChksumError(StandardError):
@@ -69,9 +69,9 @@ lib.read_header.argtypes = [c_file_p, C.c_void_p]
 lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
-lib.decomp_6b.argtypes = [c_file_p, C.c_int, 
+lib.decomp_6b.argtypes = [c_file_p, C.c_int,
                           N.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                flags='C_CONTIGUOUS'),]
+                                                flags='C_CONTIGUOUS'), ]
 lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
