@@ -86,9 +86,9 @@ clibmseed.mst_printtracelist.argtypes = [C.POINTER(MSTraceGroup), C.c_int, C.c_i
                                          C.c_int]
 clibmseed.mst_printtracelist.restype = C.c_void_p
 
-clibmseed.ms_readmsr_r.argtypes = [C.POINTER(C.POINTER(MSFileParam)), 
+clibmseed.ms_readmsr_r.argtypes = [C.POINTER(C.POINTER(MSFileParam)),
                                    C.POINTER(C.POINTER(MSRecord)), C.c_char_p, C.c_int,
-                                   C.POINTER(Py_ssize_t), C.POINTER(C.c_int), 
+                                   C.POINTER(Py_ssize_t), C.POINTER(C.c_int),
                                    C.c_short, C.c_short, C.c_short]
 clibmseed.ms_readmsr_r.restypes = C.c_int
 
@@ -105,9 +105,9 @@ clibmseed.msr_endtime.artypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
 clibmseed.mst_packgroup.artypes = [C.POINTER(C.POINTER(MSTraceGroup)),
-                                   C.CFUNCTYPE(C.c_char_p,C.c_int,C.c_void_p),
+                                   C.CFUNCTYPE(C.c_char_p, C.c_int, C.c_void_p),
                                    C.c_void_p, C.c_int, C.c_short,
-                                   C.c_short, C.POINTER(C.c_int), 
+                                   C.c_short, C.POINTER(C.c_int),
                                    C.c_short, C.c_short,
                                    C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
@@ -151,25 +151,59 @@ class libmseed(object):
         Tests whether a file is a MiniSEED file or not.
         
         Returns True on success or False otherwise.
-        This method will just read the first record and not the whole file.
-        Thus it cannot be used to validate a MiniSEED file.
+        
+        This method only reads the first seven bytes of the file and checks
+        whether its a MiniSEED or fullSEED file.
+        
+        It also is true for fullSEED files because libmseed can read the data
+        part of fullSEED files. If the method finds a fullSEED file it also
+        checks if it has a data part and returns False otherwise.
+        
+        Thus it cannot be used to validate a MiniSEED or SEED file.
         
         @param filename: MiniSEED file.
         """
         f = open(filename, 'rb')
-        # Read part of the MiniSEED header.
-        f.seek(6)
-        header = f.read(16)
-        f.close()
-        # Read big- and little endian word order!
-        big_endian = unpack('>cxxxxxxxxxxxxxH', header)
-        #little_endian = unpack('>cxxxxxxxxxxxxxH', header)
-        if big_endian[0] not in ['D', 'R', 'Q', 'M', 'V']:
+        header = f.read(7)
+        if not header[0:6].isdigit:
+            f.close()
             return False
-        #if ((big_endian[1] < 2100 and big_endian[1] > 1900) or
-        #    (little_endian[0] < 2100 and little_endian[0] > 1900)):
-        #    return True
-        return True
+        # Check for any valid control header types.
+        if header[6] in ['D', 'R', 'Q', 'M']:
+            f.close()
+            return True
+        # If it is a fullSEED record parse the whole file and check whether
+        # it has has a data record.
+        if header[6] == 'V':
+            f.seek(1, 1)
+            _i = 0
+            # Check if one of the first three blockettes is blockette ten.
+            while True:
+                if f.read(3) == '010':
+                    break
+                f.seek(int(file.read(4)) - 7, 1)
+                _i += 1
+                if _i == 3:
+                    f.close()
+                    return False
+            # Get record length.
+            f.seek(8, 1)
+            record_length = pow(2, int(f.read(2)))
+            file_size = os.path.getsize(filename)
+            # Jump to the second record.
+            f.seek(record_length + 6)
+            # Loop over all records and return True if one record is a data
+            # record
+            while f.tell() < file_size:
+                xx = f.read(1)
+                if xx in ['D', 'R', 'Q', 'M']:
+                    f.close()
+                    return True
+                f.seek(record_length - 1, 1)
+            f.close()
+            return False
+        f.close()
+        return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
                                verbose=0):
@@ -385,7 +419,7 @@ class libmseed(object):
              'network' : ''.join([_i for _i in unpacked_tuple[10:12]]).strip()}
 
 
-    def readSingleRecordToMSR(self, filename, ms_p=(None,None),
+    def readSingleRecordToMSR(self, filename, ms_p=(None, None),
                               reclen= -1, dataflag=1, skipnotdata=1,
                               verbose=0, record_number=0):
         """
@@ -423,10 +457,10 @@ class libmseed(object):
         if record_number < 0 or record_number >= fileinfo['number_of_records']:
             raise ValueError('Please enter a valid record_number')
         filepos = record_number * fileinfo['record_length']
-        if isinstance(ms_p[0],C.POINTER(MSRecord)) and \
-                isinstance(ms_p[1],C.POINTER(MSFileParam)):
+        if isinstance(ms_p[0], C.POINTER(MSRecord)) and \
+                isinstance(ms_p[1], C.POINTER(MSFileParam)):
             msr, msf = ms_p
-        elif ms_p == (None,None):
+        elif ms_p == (None, None):
             # Init MSRecord structure
             msr = clibmseed.msr_init(None)
             # Init null pointer, this pointer is needed for deallocation
@@ -500,7 +534,7 @@ class libmseed(object):
         starttime = clibmseed.msr_starttime(msr)
         starttime = self._convertMSTimeToDatetime(starttime)
         # Get the endtime using the libmseed method msr_endtime
-        msr, msf = self.readSingleRecordToMSR(filename, ms_p = (msr,msf), 
+        msr, msf = self.readSingleRecordToMSR(filename, ms_p=(msr, msf),
                                               dataflag=0, record_number= -1)
         endtime = clibmseed.msr_endtime(msr)
         endtime = self._convertMSTimeToDatetime(endtime)
