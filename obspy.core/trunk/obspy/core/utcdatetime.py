@@ -131,6 +131,29 @@ class UTCDateTime(datetime.datetime):
 
     datetime = property(getDateTime)
 
+    def getDate(self):
+        """
+        Converts current UTCDateTime to a Python L{datetime.date} object.
+
+        @rtype: date
+        @return: Python date object of current UTCDateTime
+        """
+        return datetime.date(self.year, self.month, self.day)
+
+    date = property(getDate)
+
+    def getTime(self):
+        """
+        Converts current UTCDateTime to a Python L{datetime.time} object.
+
+        @rtype: time
+        @return: Python time object of current UTCDateTime
+        """
+        return datetime.time(self.hour, self.minute, self.second,
+                             self.microsecond)
+
+    time = property(getTime)
+
     def __add__(self, *args, **kwargs):
         """
         Adds seconds and microseconds to current L{UTCDateTime} object.
