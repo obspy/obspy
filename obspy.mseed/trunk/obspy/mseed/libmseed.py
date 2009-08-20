@@ -36,102 +36,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from obspy.mseed.headers import MSTraceGroup, MSTrace, HPTMODULUS, MSRecord
-from obspy.mseed.headers import MSFileParam, Py_ssize_t
+from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
+    PyFile_FromFile, HPTMODULUS, MSRecord
 from struct import unpack
 import ctypes as C
 import math
 import numpy as N
 import os
-import platform
 import sys
-
-
-# Use different shared libmseed library depending on the platform.
-# 32 bit Windows.
-if sys.platform == 'win32':
-    lib_name = 'libmseed-2.3.win32.dll'
-# 32 bit OSX, tested with 10.5.6
-elif sys.platform == 'darwin':
-    lib_name = 'libmseed.dylib'
-# 32 and 64 bit UNIX
-#XXX Check glibc version by platform.libc_ver()
-else:
-    if platform.architecture()[0] == '64bit':
-        lib_name = 'libmseed.lin64.so'
-    else:
-        lib_name = 'libmseed-2.3.so'
-clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'libmseed',
-                                lib_name))
-
-#
-# Declare function of libmseed library, argument parsing
-#
-clibmseed.mst_init.artypes = [C.POINTER(MSTrace)]
-clibmseed.mst_init.restype = C.POINTER(MSTrace)
-
-clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
-clibmseed.mst_free.restype = C.c_void_p
-
-clibmseed.mst_initgroup.artypes = [C.POINTER(MSTraceGroup)]
-clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
-
-clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
-clibmseed.mst_freegroup.restype = C.c_void_p
-
-clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
-clibmseed.msr_init.restype = C.POINTER(MSRecord)
-
-clibmseed.mst_printtracelist.argtypes = [C.POINTER(MSTraceGroup), C.c_int, C.c_int,
-                                         C.c_int]
-clibmseed.mst_printtracelist.restype = C.c_void_p
-
-clibmseed.ms_readmsr_r.argtypes = [C.POINTER(C.POINTER(MSFileParam)),
-                                   C.POINTER(C.POINTER(MSRecord)), C.c_char_p, C.c_int,
-                                   C.POINTER(Py_ssize_t), C.POINTER(C.c_int),
-                                   C.c_short, C.c_short, C.c_short]
-clibmseed.ms_readmsr_r.restypes = C.c_int
-
-clibmseed.ms_readtraces.argtypes = [C.POINTER(C.POINTER(MSTraceGroup)),
-                                    C.c_char_p, C.c_int, C.c_double,
-                                    C.c_double, C.c_short, C.c_short,
-                                    C.c_short, C.c_short]
-clibmseed.ms_readtraces.restype = C.c_int
-
-clibmseed.msr_starttime.artypes = [C.POINTER(MSRecord)]
-clibmseed.msr_starttime.restype = C.c_int64
-
-clibmseed.msr_endtime.artypes = [C.POINTER(MSRecord)]
-clibmseed.msr_endtime.restype = C.c_int64
-
-clibmseed.mst_packgroup.artypes = [C.POINTER(C.POINTER(MSTraceGroup)),
-                                   C.CFUNCTYPE(C.c_char_p, C.c_int, C.c_void_p),
-                                   C.c_void_p, C.c_int, C.c_short,
-                                   C.c_short, C.POINTER(C.c_int),
-                                   C.c_short, C.c_short,
-                                   C.POINTER(MSRecord)]
-clibmseed.mst_packgroup.restype = C.c_int
-
-PyFile_FromFile = C.pythonapi.PyFile_FromFile
-PyFile_FromFile.artypes = [Py_ssize_t, C.c_char_p, C.c_char_p,
-                           C.CFUNCTYPE(C.c_int, Py_ssize_t)]
-PyFile_FromFile.restype = C.py_object
-
-
-#
-# Python callback functions for C
-#
-def yes_(f):
-    return 1
-yes = C.CFUNCTYPE(C.c_int, Py_ssize_t)(yes_)
-
 
 
 class libmseed(object):
     """
     Class for handling MiniSEED files.
     """
-
     def printFileInformation(self, filename):
         """
         Prints some informations about the file.
@@ -205,8 +123,8 @@ class libmseed(object):
         f.close()
         return False
 
-    def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1, skipnotdata=1,
-                               verbose=0):
+    def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
+                               skipnotdata=1, verbose=0):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -227,6 +145,7 @@ class libmseed(object):
         msf = C.POINTER(MSFileParam)() # null pointer
         # Loop over records and append to trace_list.
         # Directly call ms_readmsr
+        last_msrid = None
         while True:
             errcode = clibmseed.ms_readmsr_r(C.pointer(msf),
                 C.pointer(msr), filename, reclen,
@@ -423,9 +342,9 @@ class libmseed(object):
                               reclen= -1, dataflag=1, skipnotdata=1,
                               verbose=0, record_number=0):
         """
-        Reads Mini-SEED record from file and populates MS Record data structure.
+        Reads MiniSEED record from file and populates MS Record data structure.
         
-        @param filename: Mini-SEED file to be read.
+        @param filename: MiniSEED file to be read.
         @param ms_p: Use existing LP_MSRecord (msr) and LP_MSFileParam (msf)
             structures given by ms_p=(msr,msf), e.g. returned
             by this function. Given an existing msr and msf the function is
@@ -479,7 +398,7 @@ class libmseed(object):
         # Parse msf structure in order to seek file pointer to special position
         mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
         f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(filename), 'rb', yes)
+                            str(filename), 'rb', _PyFile_callback)
         f.seek(filepos)
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                filename, reclen, None, None,
@@ -490,14 +409,14 @@ class libmseed(object):
 
     def getFirstRecordHeaderInfo2(self, filename):
         """
-        Takes a Mini-SEED file and returns header of the first record.
+        Takes a MiniSEED file and returns header of the first record.
         Method using ms_readmsr_r.
         
         Returns a dictionary containing some header information from the first
-        record of the Mini-SEED file only. It returns the location, network,
+        record of the MiniSEED file only. It returns the location, network,
         station and channel information.
         
-        @param filename: Mini-SEED file string.
+        @param filename: MiniSEED file string.
         """
         # read first header only
         msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
@@ -516,7 +435,7 @@ class libmseed(object):
 
     def getStartAndEndTime2(self, filename):
         """
-        Returns the start- and endtime of a Mini-SEED file as a tuple
+        Returns the start- and endtime of a MiniSEED file as a tuple
         containing two datetime objects.
         Method using ms_readmsr_r
         
@@ -527,7 +446,7 @@ class libmseed(object):
         The returned endtime is the time of the last datasample and not the
         time that the last sample covers.
         
-        @param filename: Mini-SEED file string.
+        @param filename: MiniSEED file string.
         """
         # Get the starttime using the libmseed method msr_starttime
         msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
@@ -543,7 +462,6 @@ class libmseed(object):
                                None, 0, None, None, 0, 0, 0)
         del msr, msf
         return starttime, endtime
-
 
     def getStartAndEndTime(self, filename):
         """
@@ -1213,8 +1131,8 @@ class libmseed(object):
             info['filesize'] = os.path.getsize(real_name)
         # Otherwise raise error.
         else:
-            msg = 'filename either needs to be a string with a filename or ' + \
-                  'an open file/StringIO object. If its a filename real_' + \
+            msg = 'filename either needs to be a string with a filename ' + \
+                  'or a file/StringIO object. If its a filename real_' + \
                   'name needs to be None, otherwise a string with a filename.'
             raise TypeError(msg)
         # Read all blockettes.
@@ -1377,7 +1295,8 @@ class libmseed(object):
                      clibmseed.ms_samplesize(C.c_char(trace_list[_i][0]\
                                                       ['sampletype'])) * npts)
             # old segmentationfault try
-            #chain.contents.datasamples = trace_list[_i][1].ctypes.data_as(C.POINTER(C.c_long))
+            # chain.contents.datasamples = \
+            # trace_list[_i][1].ctypes.data_as(C.POINTER(C.c_long))
             # The datapoints in the MSTG structure are a pointer to the memory
             # area reserved for tempdatpoint.
             chain.contents.datasamples = C.pointer(tempdatpoint)

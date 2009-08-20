@@ -6,6 +6,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import obspy
 
+
 class Stats(AttribDict):
     pass
 
@@ -22,8 +23,7 @@ class Trace(object):
     @param header: Dictionary containing header fields
     @param address: Address of data to be freed when trace is deleted
     """
-    def __init__(self, data=array([]), header={}, address=None):
-        #self.address = address
+    def __init__(self, data=array([]), header={}):
         self.stats = Stats()
         self.stats.update(header)
         for key, value in header.iteritems():
@@ -36,10 +36,6 @@ class Trace(object):
         for default in ['station', 'network', 'location', 'channel']:
             self.stats.setdefault(default, '')
 
-    #def __del__(self):
-    #    if self.address:
-    #        libc.free(self.address)
-
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
               "%(starttime)s - %(endtime)s | " + \
@@ -49,6 +45,9 @@ class Trace(object):
     def __len__(self):
         """
         Returns the number of data samples of a L{Trace} object.
+        
+        @rtype: int 
+        @return: Number of data samples.
         """
         return len(self.data)
 
@@ -57,7 +56,8 @@ class Trace(object):
     def __getitem__(self, index):
         """ 
         __getitem__ method of L{Trace} object.
-          
+        
+        @rtype: list 
         @return: List of data points 
         """
         return self.data[index]
@@ -67,8 +67,8 @@ class Trace(object):
         Adds a Trace object to this Trace
         
         It will automatically append the data by interpolating overlaps or
-        filling gaps with NaN samples. Sampling rate and Trace ID must be 
-        the same.
+        filling gaps with NaN samples. Sampling rate and Trace ID must be the
+        same.
         """
         if not isinstance(trace, Trace):
             raise TypeError
@@ -122,6 +122,8 @@ class Trace(object):
     def getId(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
+
+    id = property(getId)
 
     def plot(self, **kwargs):
         """
