@@ -133,8 +133,9 @@ def plotWaveform(stream_object, outfile=None, format=None,
     # Setup figure and axes
     plt.figure(num=None, figsize=(float(size[0]) / dpi,
                      float(size[1]) / dpi))
-    suptitle = '%s - %s' % (UTCDateTime(starttime).strftime('%x %X'),
-                           UTCDateTime(endtime).strftime('%x %X'))
+    pattern = '%Y-%m-%d %H:%M:%S'
+    suptitle = '%s  -  %s' % (UTCDateTime(starttime).strftime(pattern),
+                              UTCDateTime(endtime).strftime(pattern))
     plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
                  horizontalalignment='left')
     # Determine range for the y axis. This will ensure that at least 98% of all
