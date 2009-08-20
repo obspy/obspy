@@ -10,18 +10,17 @@ class SEEDTypeException(Exception):
     pass
 
 
-class Field:
+class Field(object):
     """
     General SEED field.
     """
-
     def __init__(self, id, name, *args, **kwargs):
         self.id = id
-
         self.name = name
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
         self.optional = kwargs.get('optional', False)
+        self.optional_if_empty = kwargs.get('optional_if_empty', False)
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
         self.xseed_version = kwargs.get('xseed_version', None)
@@ -31,7 +30,6 @@ class Field:
             self.field_id = None
         self.field_name = utils.toXMLTag(self.name)
         self.attribute_name = utils.toAttribute(self.name)
-        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def __str__(self):
         if self.id:
@@ -80,7 +78,9 @@ class Field:
 
 
 class Integer(Field):
-
+    """
+    An integer field.
+    """
     def __init__(self, id, name, length, **kwargs):
         Field.__init__(self, id, name, **kwargs)
         self.length = length
@@ -91,10 +91,8 @@ class Integer(Field):
         try:
             temp = int(temp)
         except:
-            if self.strict:
-                msg = "No integer value found for %s." % self.field_name
-                raise SEEDTypeException(msg)
-            temp = 0
+            msg = "No integer value found for %s." % self.field_name
+            raise SEEDTypeException(msg)
         return temp
 
     def write(self, data):
@@ -116,7 +114,6 @@ class Float(Field):
     """
     A float number with a fixed length and output mask.
     """
-
     def __init__(self, id, name, length, **kwargs):
         Field.__init__(self, id, name, **kwargs)
         self.length = length
@@ -153,7 +150,9 @@ class Float(Field):
 
 
 class FixedString(Field):
-
+    """
+    An string field with a fixed width.
+    """
     def __init__(self, id, name, length, flags='', **kwargs):
         Field.__init__(self, id, name, **kwargs)
         self.length = length
@@ -234,7 +233,9 @@ class VariableString(Field):
 
 
 class MultipleLoop(Field):
-
+    """
+    A loop over multiple elements.
+    """
     def __init__(self, name, index_field, data_fields, **kwargs):
         Field.__init__(self, None, name, **kwargs)
         if not isinstance(data_fields, list):
@@ -243,18 +244,12 @@ class MultipleLoop(Field):
         self.length = 0
         self.data_fields = data_fields
         # Currently used only in Blockette 11 to pass XSD validation.
-        # Results in:
-        #<station_identifier>
-        # <station_identifier_code>ALTM</station_identifier_code>
-        #</station_identifier>
-        #<station_identifier>
-        # <station_identifier_code>ALTM</station_identifier_code>
-        #</station_identifier>
         self.repeat_title = kwargs.get('repeat_title', False)
+        self.seperate_tags = kwargs.get('seperate_tags', False)
 
     def getSubFields(self):
         temp = []
-        for _i in range(0, self.length):
+        for _i in xrange(0, self.length):
             temp2 = []
             for field in self.data_fields:
                 temp2.append(field)
@@ -263,11 +258,16 @@ class MultipleLoop(Field):
 
 
 class MultipleFlatLoop(MultipleLoop):
+    """
+    A loop over multiple elements handled a bit different as MultipleLoop.
+    """
     pass
 
 
 class SimpleLoop(Field):
-
+    """
+    A loop over a single elements.
+    """
     def __init__(self, index_field, data_field, **kwargs):
         Field.__init__(self, None, data_field.name, **kwargs)
         self.index_field = utils.toAttribute(index_field)
@@ -277,6 +277,6 @@ class SimpleLoop(Field):
 
     def getSubFields(self):
         temp = []
-        for _i in range(0, self.length):
+        for _i in xrange(0, self.length):
             temp.append(self.data_field)
         return temp

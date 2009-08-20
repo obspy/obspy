@@ -383,7 +383,7 @@ class Parser(object):
                 return_records.append(record)
                 record = ''
                 rec_len = 0
-            blockette_str = blockette.getSEEDString()
+            blockette_str = blockette.getSEED()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.

@@ -13,6 +13,7 @@ class BlocketteLengthException(Exception):
     """
     pass
 
+
 class BlocketteParserException(Exception):
     """
     General Blockette Parser Exception.
@@ -20,12 +21,10 @@ class BlocketteParserException(Exception):
     pass
 
 
-
-class Blockette:
+class Blockette(object):
     """
     General blockette handling.
     """
-
     # default field for each blockette
     fields = []
     default_fields = [
@@ -37,16 +36,27 @@ class Blockette:
         self.verify = kwargs.get('verify', True)
         self.debug = kwargs.get('debug', False)
         self.strict = kwargs.get('strict', False)
-        self.version = kwargs.get('version', 2.4)
         self.record_type = kwargs.get('record_type', None)
         self.record_id = kwargs.get('record_id', None)
         self.parsed = False
         self.blockette_id = "%03d" % self.id
         self.blockette_name = utils.toXMLTag(self.name)
-        self.xseed_version = kwargs.get('xseed_version', '1.0')
         if self.debug:
             print "----"
             print str(self)
+        # set default fields using versions
+        XSEED_version = kwargs.get('xseed_version', '1.0')
+        SEED_version = kwargs.get('version', 2.4)
+        self.blockette_fields = []
+        for field in self.fields:
+            # Check XML-SEED version
+            if field.xseed_version and field.xseed_version != XSEED_version:
+                continue
+            # Check SEED version
+            if field.version and field.version > SEED_version:
+                continue
+            self.blockette_fields.append(field)
+
 
     def __str__(self):
         """
@@ -61,22 +71,16 @@ class Blockette:
         # parse only once per Blockette
         if self.parsed:
             raise Exception('Blockette should be parsed only once.')
-        self.parsed = True
         # convert to stream for test issues
         if isinstance(data, basestring):
             expected_length = len(data)
             data = StringIO(data)
         start_pos = data.tell()
         if self.debug:
-            temp = data.read(expected_length)
-            print '  DATA:', temp
+            print '  DATA:', data.read(expected_length)
             data.seek(-expected_length, 1)
-        blockette_fields = self.default_fields + self.fields
+        blockette_fields = self.default_fields + self.blockette_fields
         for field in blockette_fields:
-            # Check for wanted xseed_version
-            if field.xseed_version and \
-               field.xseed_version != self.xseed_version:
-                continue
             # blockette length reached -> break with warning, because fields 
             # still exist
             if data.tell() - start_pos >= expected_length:
@@ -92,11 +96,11 @@ class Blockette:
                 else:
                     print('WARN: ' + msg)
                 break
-            # check version
-            if field.version and field.version > self.version:
-                continue
+            # ok lets look into the fields
             if isinstance(field, MultipleLoop) or \
-               isinstance(field, MultipleFlatLoop):
+               isinstance(field, MultipleFlatLoop) or \
+               isinstance(field, SimpleLoop):
+                # we got a loop
                 index_field = field.index_field
                 # test if index attribute is set
                 if not hasattr(self, index_field):
@@ -104,6 +108,8 @@ class Blockette:
                 # set length
                 field.length = int(getattr(self, index_field))
                 for subfields in field.getSubFields():
+                    if not isinstance(subfields, list):
+                        subfields = [subfields]
                     for subfield in subfields:
                         text = subfield.read(data)
                         # set attribute
@@ -112,33 +118,24 @@ class Blockette:
                         setattr(self, subfield.attribute_name, temp)
                         # debug
                         if self.debug:
-                            print('    ' + str(subfield) + ': ' + str(text))
-            elif isinstance(field, SimpleLoop):
-                index_field = field.index_field
-                # test if index attribute is set
-                if not hasattr(self, index_field):
-                    raise Exception('Field %s missing' % index_field)
-                # set length
-                field.length = int(getattr(self, index_field))
-                # set attributes
-                for subfield in field.getSubFields():
-                    text = subfield.read(data)
-                    # attribute
-                    temp = getattr(self, subfield.attribute_name, [])
-                    temp.append(text)
-                    setattr(self, subfield.attribute_name, temp)
-                    # debug
-                    if self.debug:
-                        print('    ' + str(subfield) + ': ' + str(text))
+                            print('  %s: %s' % (subfield, text))
             else:
-                text = field.read(data)
+                # we got a normal SEED field
+                try:
+                    text = field.read(data)
+                except:
+                    if self.strict:
+                        raise
+                    text = field.default
                 if field.id == 2:
                     expected_length = text
                 # set attribute
                 setattr(self, field.attribute_name, text)
                 # debug
                 if self.debug:
-                    print('  ' + str(field) + ': ' + str(text))
+                    print('  %s: %s' % (field, text))
+        # set blockette as parsed
+        self.parsed = True
         # verify or strict tests
         if self.verify or self.strict:
             end_pos = data.tell()
@@ -159,11 +156,7 @@ class Blockette:
         xml = xml.getchildren()
         xml_fields = [_i.tag for _i in xml]
         no_index = False
-        for field in self.fields:
-            # Check for wanted xseed_version
-            if field.xseed_version and \
-               field.xseed_version != self.xseed_version:
-                continue
+        for field in self.blockette_fields:
             # Check if field is in the supplied XML tree.
             try:
                 index_nr = xml_fields.index(field.attribute_name)
@@ -272,15 +265,7 @@ class Blockette:
         # root element
         doc = Element(self.blockette_name, blockette=self.blockette_id)
         # default field for each blockette
-        blockette_fields = self.fields
-        for field in blockette_fields:
-            # check version
-            if field.version and field.version > self.version:
-                continue
-            # Check for wanted xseed_version
-            if field.xseed_version and \
-               field.xseed_version != self.xseed_version:
-                continue
+        for field in self.blockette_fields:
             # skip if optional
             if not show_optional and field.optional:
                 continue
@@ -307,7 +292,7 @@ class Blockette:
                 # XML looping element 
                 elements = []
                 # cycle through all fields
-                for i in range(0, number_of_elements):
+                for i in xrange(0, number_of_elements):
                     # cycle through fields
                     for subfield in field.data_fields:
                         if subfield.ignore:
@@ -339,7 +324,7 @@ class Blockette:
                     # XML looping element
                     root = SubElement(doc, field.field_name)
                 # cycle through all fields
-                for i in range(0, number_of_elements):
+                for i in xrange(0, number_of_elements):
                     if field.repeat_title:
                         root = SubElement(doc, field.field_name)
                     # cycle through fields
@@ -374,7 +359,6 @@ class Blockette:
                     for subresult in results:
                         if isinstance(subfield, Float):
                             subresult = subfield.write(subresult)
-                        #SubElement(doc, field.field_name).text = unicode(subresult)
                         elements.append(unicode(subresult))
                     SubElement(doc, field.field_name).text = ' '.join(elements)
                 else:
@@ -405,74 +389,53 @@ class Blockette:
                 se.text = unicode(result).strip()
         return doc
 
-    def getSEEDString(self):
+    def getSEED(self):
         """
         Converts the blockette to a valid SEED string and returns it.
         """
         data = ''
-        # cycle trough all fields
-        for field in self.fields:
-            # check version
-            if field.version and field.version > self.version:
-                print 'ACHTUNG!'
-                continue
-            # Check for wanted xseed_version
-            if field.xseed_version and \
-               field.xseed_version != self.xseed_version:
-                continue
+        for field in self.blockette_fields:
+            # look into all fields
             if isinstance(field, MultipleLoop) or \
-               isinstance(field, MultipleFlatLoop):
-                # test if index attribute is set
-                if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!"
-                    msg = msg % (field.index_field, self.blockette_id)
-                    raise Exception(msg)
-                # get number of entries
-                number_of_elements = int(getattr(self, field.index_field))
-                if number_of_elements == 0:
+               isinstance(field, MultipleFlatLoop) or \
+               isinstance(field, SimpleLoop):
+                # we got a loop
+                try:
+                    number_of_elements = int(getattr(self, field.index_field))
+                except:
+                    msg = "Missing attribute %s in Blockette %s"
+                    raise Exception(msg % (field.index_field, self))
+                if not number_of_elements:
                     continue
-                # test if attributes of subfields are set
-                for subfield in field.data_fields:
-                    if not hasattr(self, subfield.attribute_name):
-                        msg = "Attribute %s in Blockette %s does not exist!"
-                        msg = msg % (subfield.name, self.blockette_id)
-                        raise Exception(msg)
-                # cycle through all fields
-                for i in range(0, number_of_elements):
-                    # cycle through fields
-                    for subfield in field.data_fields:
-                        result = getattr(self, subfield.attribute_name)[i]
-                        data = data + subfield.write(result)
-            elif isinstance(field, SimpleLoop):
-                # test if index attribute is set
-                if not hasattr(self, field.index_field):
-                    msg = "Attribute %s in Blockette %s does not exist!"
-                    msg = msg % (field.index_field, self.blockette_id)
-                    raise Exception(msg)
-                # get number of entries
-                number_of_elements = int(getattr(self, field.index_field))
-                if number_of_elements == 0:
-                    continue
-                # check if attribute exists
-                if not hasattr(self, field.attribute_name):
-                    msg = "Attribute %s in Blockette %s does not exist!"
-                    msg = msg % (field.attribute_name, self.blockette_id)
-                    raise Exception(msg)
-                results = getattr(self, field.attribute_name)
-                subfield = field.data_field
-                # root of looping element
-                for result in results:
-                    data = data + subfield.write(result)
+                if isinstance(field, SimpleLoop):
+                    try:
+                        results = getattr(self, field.attribute_name)
+                    except:
+                        msg = "Missing attribute %s in Blockette %s"
+                        raise Exception(msg % (field.attribute_name, self))
+                    subfield = field.data_field
+                    # root of looping element
+                    for result in results:
+                        data += subfield.write(result)
+                else:
+                    for i in xrange(0, number_of_elements):
+                        for subfield in field.data_fields:
+                            try:
+                                result = getattr(self,
+                                                 subfield.attribute_name)[i]
+                            except:
+                                msg = "Missing attribute %s in Blockette %s"
+                                raise Exception(msg % (subfield.name, self))
+                            data += subfield.write(result)
             else:
-                # check if attribute exists
-                if not hasattr(self, field.attribute_name):
+                # we got a normal SEED field
+                try:
+                    result = getattr(self, field.attribute_name)
+                except:
                     if self.strict:
                         msg = "Missing attribute %s in Blockette %s"
-                        msg = msg % (field.attribute_name, self.blockette_id)
-                        raise Exception(msg)
+                        raise Exception(msg % (field.attribute_name, self))
                     result = field.default
-                else:
-                    result = getattr(self, field.attribute_name)
-                data = data + field.write(result)
+                data += field.write(result)
         # add blockette id and length
         return '%03d%04d%s' % (self.id, len(data) + 7, data)
