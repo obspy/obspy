@@ -91,8 +91,10 @@ class Integer(Field):
         try:
             temp = int(temp)
         except:
-            msg = "No integer value found for %s." % self.field_name
-            raise SEEDTypeException(msg)
+            if self.strict:
+                msg = "No integer value found for %s." % self.field_name
+                raise SEEDTypeException(msg)
+            temp = 0
         return temp
 
     def write(self, data):

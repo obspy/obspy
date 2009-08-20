@@ -121,7 +121,7 @@ class Parser(object):
         while record:
             record_continuation = (record[7] == CONTINUE_FROM_LAST_RECORD)
             same_record_type = (record[6] == record_type)
-            if record_type == 'S' and record[0:3] != '050':
+            if record_type == 'S' and record[8:11] != '050':
                 record_continuation = True
             if record_continuation and same_record_type:
                 # continued record
