@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, MultipleLoop, SimpleLoop
+from obspy.xseed.fields import Integer, Loop
 
 
 class Blockette060(Blockette):
@@ -43,11 +43,11 @@ class Blockette060(Blockette):
     fields = [
         Integer(3, "Number of stages", 2),
         #REPEAT field 4, with appropriate fields 5 and 6, for each filter stage
-        MultipleLoop("FIR Coefficient", "Number of stages", [
+        Loop("FIR Coefficient", "Number of stages", [
             Integer(4, "Stage sequence number", 2),
             Integer(5, "Number of responses", 2),
             #REPEAT field 6, one for each response within each stage:
-            SimpleLoop("Number of responses",
-                Integer(6, "Response lookup key", 4)),
+            Loop("Response lookup key", "Number of responses", [
+                Integer(6, "Response lookup key", 4)], omit_tag=True),
         ]),
     ]

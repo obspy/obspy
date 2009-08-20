@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, SimpleLoop
+from obspy.xseed.fields import Integer, VariableString, Loop
 
 
 class Blockette030(Blockette):
@@ -31,7 +31,6 @@ class Blockette030(Blockette):
         Integer(5, "Data family type", 3),
         Integer(6, "Number of decoder keys", 2),
         # REPEAT field 7 for the Number of decoder keys:
-        SimpleLoop("Number of decoder keys",
-            VariableString(7, "Decoder keys", flags='UNLPS'),
-            seperate_tags=True),
+        Loop("Decoder keys", "Number of decoder keys", [
+            VariableString(7, "Decoder keys", flags='UNLPS')], omit_tag=True),
     ]

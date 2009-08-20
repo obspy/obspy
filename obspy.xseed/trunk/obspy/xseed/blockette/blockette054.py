@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
-from obspy.xseed.fields import Float, Integer, FixedString, MultipleFlatLoop
+from obspy.xseed.blockette import Blockette
+from obspy.xseed.fields import Float, Integer, FixedString, Loop
 
 
 class Blockette054(Blockette):
@@ -31,7 +31,7 @@ class Blockette054(Blockette):
     (which are asymmetric) should be written with the largest values near the 
     beginning of the coefficient list.
     """
-    
+
     id = 54
     name = "Response Coefficients"
     fields = [
@@ -41,14 +41,14 @@ class Blockette054(Blockette):
         Integer(6, "Signal output units", 3),
         Integer(7, "Number of numerators", 4),
         # REPEAT fields 8 — 9 for the Number of numerators:
-        MultipleFlatLoop('Numerators', "Number of numerators", [
+        Loop('Numerators', "Number of numerators", [
             Float(8, "Numerator coefficient", 12, mask='%+1.5e'),
             Float(9, "Numerator error", 12, mask='%+1.5e')
-        ]),
+        ], flat=True),
         Integer(10, "Number of denominators", 4),
         # REPEAT fields 11 — 12 for the Number of denominators:
-        MultipleFlatLoop('Denominators', "Number of denominators", [
+        Loop('Denominators', "Number of denominators", [
             Float(11, "Denominator coefficient", 12, mask='%+1.5e'),
             Float(12, "Denominator error", 12, mask='%+1.5e')
-        ])
+        ], flat=True)
     ]

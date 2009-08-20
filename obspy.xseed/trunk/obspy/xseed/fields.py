@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import re
-
 from obspy.core.util import formatScientific
 from obspy.xseed import utils
+import re
 
 
 class SEEDTypeException(Exception):
@@ -232,7 +231,7 @@ class VariableString(Field):
         return result
 
 
-class MultipleLoop(Field):
+class Loop(Field):
     """
     A loop over multiple elements.
     """
@@ -246,6 +245,8 @@ class MultipleLoop(Field):
         # Currently used only in Blockette 11 to pass XSD validation.
         self.repeat_title = kwargs.get('repeat_title', False)
         self.seperate_tags = kwargs.get('seperate_tags', False)
+        self.omit_tag = kwargs.get('omit_tag', False)
+        self.flat = kwargs.get('flat', False)
 
     def getSubFields(self):
         temp = []
@@ -254,29 +255,4 @@ class MultipleLoop(Field):
             for field in self.data_fields:
                 temp2.append(field)
             temp.append(temp2)
-        return temp
-
-
-class MultipleFlatLoop(MultipleLoop):
-    """
-    A loop over multiple elements handled a bit different as MultipleLoop.
-    """
-    pass
-
-
-class SimpleLoop(Field):
-    """
-    A loop over a single elements.
-    """
-    def __init__(self, index_field, data_field, **kwargs):
-        Field.__init__(self, None, data_field.name, **kwargs)
-        self.index_field = utils.toAttribute(index_field)
-        self.length = 0
-        self.data_field = data_field
-        self.seperate_tags = kwargs.get('seperate_tags', False)
-
-    def getSubFields(self):
-        temp = []
-        for _i in xrange(0, self.length):
-            temp.append(self.data_field)
         return temp

@@ -46,12 +46,12 @@ class ParserTestCase(unittest.TestCase):
         # create a valid blockette 010 with record length 256
         b010 = "0100018 2.408~~~~~"
         blockette = Blockette010(strict=True)
-        blockette.parse(b010)
+        blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # create a valid blockette 054
         b054 = "0540240A0400300300000009" + ("+1.58748E-03" * 18)
         blockette = Blockette054(strict=True)
-        blockette.parse(b054)
+        blockette.parseSEED(b054)
         self.assertEquals(b054, blockette.getSEED())
         # combine data
         data = "000001V " + b010 + (' ' * 230)
@@ -67,7 +67,7 @@ class ParserTestCase(unittest.TestCase):
         # create a valid blockette 010 with record length 256
         b010 = "0100018 2.408~~~~~"
         blockette = Blockette010(strict=True)
-        blockette.parse(b010)
+        blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # create a valid blockette 054
         b054 = "0540960A0400300300000039"
@@ -75,12 +75,12 @@ class ParserTestCase(unittest.TestCase):
         for i in range(0, 78):
             nr = nr + "+1.000%02dE-03" % i # 960 chars
         blockette = Blockette054(strict=True)
-        blockette.parse(b054 + nr)
+        blockette.parseSEED(b054 + nr)
         self.assertEquals(b054 + nr, blockette.getSEED())
         # create a blockette 052
         b051 = '05100271999,123~~0001000000'
         blockette = Blockette051(strict=True)
-        blockette.parse(b051)
+        blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
         data = "000001V " + b010 + (' ' * 230)
         data += "000002S " + b054 + nr[0:224] # 256-8-24 = 224

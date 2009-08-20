@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Float, Integer, VariableString, MultipleFlatLoop
-from obspy.xseed.fields import FixedString
+from obspy.xseed.fields import FixedString, Float, Integer, VariableString, \
+    Loop
 
 
 class Blockette061(Blockette):
-    """Blockette 061: FIR Response Blockette.
+    """
+    Blockette 061: FIR Response Blockette.
     
     The FIR blockette is used to specify FIR (Finite Impulse Response) digital 
     filter coefficients. It is an alternative to blockette [54] when 
@@ -28,6 +29,6 @@ class Blockette061(Blockette):
         Integer(7, "Signal Out Units", 3),
         Integer(8, "Number of Coefficients", 4),
         #REPEAT field 9 for the Number of Coefficients
-        MultipleFlatLoop("FIR Coefficient", "Number of Coefficients",
-            [Float(9, "FIR Coefficient", 14, mask='%+1.7e')]),
+        Loop("FIR Coefficient", "Number of Coefficients", [
+            Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]

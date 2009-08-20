@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, MultipleLoop
+from obspy.xseed.fields import Integer, VariableString, Loop
 
 
 class Blockette012(Blockette):
@@ -23,7 +23,7 @@ class Blockette012(Blockette):
     fields = [
         Integer(3, "Number of spans in table", 4),
         # REPEAT fields 4 — 6 for the Number of spans in table:
-        MultipleLoop("Timespan", "Number of spans in table", [
+        Loop("Timespan", "Number of spans in table", [
             VariableString(4, "Beginning of span", 1, 22, 'T'),
             VariableString(5, "End of span", 1, 22, 'T'),
             Integer(6, "Sequence number of time span header", 6, ignore=True)

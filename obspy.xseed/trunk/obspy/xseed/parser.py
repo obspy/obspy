@@ -240,7 +240,7 @@ class Parser(object):
                                                 strict=self.strict,
                                                 version=self.version,
                                                 record_type=record_type)
-                blockette_obj.parse(data, blockette_length)
+                blockette_obj.parseSEED(data, blockette_length)
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:

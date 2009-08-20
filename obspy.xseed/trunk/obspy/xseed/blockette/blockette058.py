@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette 
-from obspy.xseed.fields import Float, Integer, VariableString, MultipleLoop
+from obspy.xseed.fields import Float, Integer, VariableString, Loop
 
 
 class Blockette058(Blockette):
@@ -32,7 +32,7 @@ class Blockette058(Blockette):
         Float(5, "Frequency", 12, mask='%+1.5e'),
         Integer(6, "Number of history values", 2),
         # REPEAT fields 7 — 9 for the Number of history values:
-        MultipleLoop('History', "Number of history values", [ 
+        Loop('History', "Number of history values", [ 
             Float(7, "Sensitivity for calibration", 12, mask='%+1.5e'),
             Float(8, "Frequency of calibration sensitivity", 12, mask='%+1.5e'),
             VariableString(9, "Time of above calibration", 1, 22 , 'T')

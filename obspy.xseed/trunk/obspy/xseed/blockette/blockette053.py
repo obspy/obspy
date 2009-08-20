@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.xseed.blockette import Blockette 
-from obspy.xseed.fields import Float, Integer, FixedString, MultipleLoop
+from obspy.xseed.fields import Float, Integer, FixedString, Loop
 
 
 class Blockette053(Blockette):
@@ -29,7 +29,7 @@ class Blockette053(Blockette):
         Float(8, "Normalization frequency", 12, mask='%+1.5e'),
         Integer(9, "Number of complex zeros", 3),
         # REPEAT fields 10 — 13 for the Number of complex zeros:
-        MultipleLoop('Complex zero', "Number of complex zeros", [
+        Loop('Complex zero', "Number of complex zeros", [
             Float(10, "Real zero", 12, mask='%+1.5e'),
             Float(11, "Imaginary zero", 12, mask='%+1.5e'),
             Float(12, "Real zero error", 12, mask='%+1.5e'),
@@ -37,7 +37,7 @@ class Blockette053(Blockette):
         ]),
         Integer(14, "Number of complex poles", 3),
         # REPEAT fields 15 — 18 for the Number of complex poles:
-        MultipleLoop('Complex pole', "Number of complex poles", [
+        Loop('Complex pole', "Number of complex poles", [
             Float(15, "Real pole", 12, mask='%+1.5e'),
             Float(16, "Imaginary pole", 12, mask='%+1.5e'),
             Float(17, "Real pole error", 12, mask='%+1.5e'),

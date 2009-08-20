@@ -16,7 +16,7 @@ class BlocketteTestCase(unittest.TestCase):
         # create a blockette 054 which is way to long
         b054 = "0540240A0400300300000020" + ("+1.58748E-03" * 40)
         blockette = Blockette054(strict=True)
-        self.assertRaises(BlocketteLengthException, blockette.parse, b054)
+        self.assertRaises(BlocketteLengthException, blockette.parseSEED, b054)
 
 
 def suite():
