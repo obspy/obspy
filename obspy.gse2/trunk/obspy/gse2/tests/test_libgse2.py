@@ -105,10 +105,13 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        self.assertRaises(TypeError, libgse2.read, open(__file__, 'rb'))
-        self.assertRaises(TypeError, libgse2.getStartAndEndTime,
-                          open(__file__, 'rb'))
-        self.assertRaises(TypeError, libgse2.readHead, open(__file__, 'rb'))
+        f = open(os.path.join(self.path, 'loc_RNON20040609200559.z'),'rb')
+        pos = f.tell()
+        self.assertEqual(None, libgse2.isGse2(f))
+        self.assertEqual(pos,f.tell())
+        f.seek(10)
+        self.assertRaises(TypeError, libgse2.isGse2, f)
+        self.assertEqual(10,f.tell())
 
     def test_maxvalueExceeded(self):
         """

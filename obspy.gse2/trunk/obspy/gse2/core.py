@@ -13,12 +13,9 @@ def isGSE2(filename):
     # Open file.
     try:
         f = open(filename)
-    except:
-        return False
-    try:
         data = f.read(4)
     except:
-        data = False
+        return False
     f.close()
     if data == 'WID2':
         return True

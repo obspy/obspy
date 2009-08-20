@@ -259,7 +259,7 @@ class MSRecord_s(C.Structure):
     pass
 
 MSRecord_s._fields_ = [
-    ('record', C.POINTER(C.c_char)),                  # Mini-SEED record
+    ('record', C.POINTER(C.c_char)),        # Mini-SEED record
     ('reclen', C.c_int),                    # Length of Mini-SEED record in bytes
     # Pointers to SEED data record structures
     ('fsdh', C.POINTER(fsdh_s)),            # Fixed Section of Data Header

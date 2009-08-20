@@ -121,9 +121,9 @@ PyFile_FromFile.restype = C.py_object
 #
 # Python callback functions for C
 #
-def close(f):
+def yes_(f):
     return 1
-closeCallback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(close)
+yes = C.CFUNCTYPE(C.c_int, Py_ssize_t)(yes_)
 
 
 
@@ -316,13 +316,12 @@ class libmseed(object):
         # Define Python callback function for use in C function
         recHandler = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
                          C.c_void_p)(record_handler)
-
         # Pack mstg into a MSEED file using record_handler as write method
-        num_traces = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
-                                             encoding, byteorder,
-                                             C.byref(self.packedsamples),
-                                             flush, verbose, None)
-        if num_traces == -1:
+        errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
+                                          encoding, byteorder,
+                                          C.byref(self.packedsamples),
+                                          flush, verbose, None)
+        if errcode == -1:
             raise Exception('Error in mst_packgroup')
         clibmseed.mst_freegroup(C.pointer(mstg))
         del mstg
@@ -386,12 +385,17 @@ class libmseed(object):
              'network' : ''.join([_i for _i in unpacked_tuple[10:12]]).strip()}
 
 
-    def readSingleRecordToMSR(self, filename, reclen= -1, dataflag=1,
-                              skipnotdata=1, verbose=0, record_number=0):
+    def readSingleRecordToMSR(self, filename, ms_p=(None,None),
+                              reclen= -1, dataflag=1, skipnotdata=1,
+                              verbose=0, record_number=0):
         """
         Reads Mini-SEED record from file and populates MS Record data structure.
         
         @param filename: Mini-SEED file to be read.
+        @param ms_p: Use existing LP_MSRecord (msr) and LP_MSFileParam (msf)
+            structures given by ms_p=(msr,msf), e.g. returned
+            by this function. Given an existing msr and msf the function is
+            much faster.
         @param reclen: If reclen is 0 the length of the first record is auto-
             detected. All subsequent records are then expected to have the 
             same record length. If reclen is negative the length of every 
@@ -405,6 +409,11 @@ class libmseed(object):
         @param record_number: Number of the record to be read. The first record
             has the number 0. Negative numbers will start counting from the end
             of the file, e.g. -1 is the last complete record.
+        @rtype: LP_MSRecord, LP_MSFileParam
+        @required: LP_MSRecord (msr), LP_MSFileParam (msf) need to be deallocated
+            with the function call:
+            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                                   None, 0, None, None, 0, 0, 0)
         """
         # Get some information about the file.
         fileinfo = self._getMSFileInfo(filename)
@@ -414,21 +423,29 @@ class libmseed(object):
         if record_number < 0 or record_number >= fileinfo['number_of_records']:
             raise ValueError('Please enter a valid record_number')
         filepos = record_number * fileinfo['record_length']
-        # init MSRecord structure
-        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
-        # defines return type
-        # Init null pointer, this pointer is needed for deallocation
-        msf = C.POINTER(MSFileParam)()
-        # Dummy-read/read the first record
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), reclen, None, None,
-                               skipnotdata, dataflag, verbose)
-        if record_number == 0:
-            return msr, msf
+        if isinstance(ms_p[0],C.POINTER(MSRecord)) and \
+                isinstance(ms_p[1],C.POINTER(MSFileParam)):
+            msr, msf = ms_p
+        elif ms_p == (None,None):
+            # Init MSRecord structure
+            msr = clibmseed.msr_init(None)
+            # Init null pointer, this pointer is needed for deallocation
+            msf = C.POINTER(MSFileParam)()
+            # Dummy-read/read the first record
+            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                                   str(filename), reclen, None, None,
+                                   skipnotdata, dataflag, verbose)
+            #import pdb;pdb.set_trace()
+            if record_number == 0:
+                return msr, msf
+        else:
+            cmd = 'Given ms_p arguments are not of type (LP_MSRecord, \
+                   LP_MSFileParam)'
+            raise Exception(cmd)
         # Parse msf structure in order to seek file pointer to special position
         mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
         f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(filename), 'rb', closeCallback)
+                            str(filename), 'rb', yes)
         f.seek(filepos)
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                filename, reclen, None, None,
@@ -482,13 +499,9 @@ class libmseed(object):
         msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
         starttime = clibmseed.msr_starttime(msr)
         starttime = self._convertMSTimeToDatetime(starttime)
-        # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, 0, None, None, 0, 0, 0)
-        del msr, msf
         # Get the endtime using the libmseed method msr_endtime
-        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0,
-                                              record_number= -1)
+        msr, msf = self.readSingleRecordToMSR(filename, ms_p = (msr,msf), 
+                                              dataflag=0, record_number= -1)
         endtime = clibmseed.msr_endtime(msr)
         endtime = self._convertMSTimeToDatetime(endtime)
         # Deallocate msr and msf memory

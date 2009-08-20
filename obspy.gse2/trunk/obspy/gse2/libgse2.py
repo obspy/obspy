@@ -144,9 +144,9 @@ gse2head = [_i[0] for _i in HEADER._fields_]
 def isGse2(f):
     pos = f.tell()
     widi = f.read(4)
+    f.seek(pos)
     if widi != 'WID2':
         raise TypeError("File is not in GSE2 format")
-    f.seek(pos)
 
 
 def writeHeader(f, head):
@@ -201,7 +201,6 @@ def read(f, test_chksum=False):
     @rtype: Dictionary, Numpy.ndarray int32
     @return: Header entries and data as numpy.ndarray of type int32.
     """
-    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
@@ -315,7 +314,6 @@ def readHead(f):
     @rtype: Dictonary
     @return: Header entries.
     """
-    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
@@ -340,7 +338,6 @@ def getStartAndEndTime(f):
     @return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
         Julian seconds and as date string.
     """
-    isGse2(f)
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
