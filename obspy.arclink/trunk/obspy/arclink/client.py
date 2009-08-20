@@ -9,14 +9,19 @@ import sys
 import time
 
 
+class ArcLinkException(Exception):
+    pass
+
+
 class Client(Telnet):
     """
     """
     status_timeout = 1
     status_delay = 0.1
 
-    def __init__(self, host="webdc.eu", port=18001, timeout=None,
-                 user="Anonymous", institution="Anonymous", debug=False):
+    def __init__(self, host="webdc.eu", port=18001,
+                 timeout=20, user="Anonymous", institution="Anonymous",
+                 debug=False):
         self.user = user
         self.institution = institution
         # timeout exists only for Python >= 2.6
@@ -84,7 +89,13 @@ class Client(Telnet):
                 break
             time.sleep(self.status_delay)
         if 'id="NODATA" status="NODATA"' in xml_doc:
-            return ''
+            self.writeln('PURGE %d' % req_id)
+            self._bye()
+            raise ArcLinkException('No data available')
+        if '<line content' not in xml_doc:
+            self.writeln('PURGE %d' % req_id)
+            self._bye()
+            raise ArcLinkException('No content')
         self.writeln('DOWNLOAD %d' % req_id)
         length = int(self.readln())
         data = ''
@@ -140,7 +151,8 @@ class Client(Telnet):
         @param channel_id: Channel code, e.g. 'EHE'.
         @param start_datetime: start time as L{obspy.UTCDateTime} object.
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @param format: 'FSEED', 'MSEED', or 'XSEED'.
+        @param format: 'FSEED' or 'MSEED' ('XSEED' is documented, but not yet 
+            implemented in ArcLink).
         @return: L{obspy.Stream} object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
@@ -163,6 +175,31 @@ class Client(Telnet):
         # trim stream
         stream.trim(start_datetime, end_datetime)
         return stream
+
+    def saveResponse(self, filename, network_id, station_id, location_id,
+                     channel_id, start_datetime, end_datetime, format='SEED'):
+        """
+        Writes a response information into a file.
+        
+        @param network_id: Network code, e.g. 'BW'.
+        @param station_id: Station code, e.g. 'MANZ'.
+        @param location_id: Location code, e.g. '01'.
+        @param channel_id: Channel code, e.g. 'EHE'.
+        @param start_datetime: start time as L{obspy.UTCDateTime} object.
+        @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @param format: 'SEED' ('XSEED' is documented, but not yet implemented 
+            in ArcLink).
+        """
+        rtype = 'REQUEST RESPONSE format=%s' % format
+        # adding one second to start and end time to ensure right date times
+        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                       (end_datetime + 1).formatArcLink(),
+                                       network_id, station_id, channel_id,
+                                       location_id)
+        data = self._fetch(rtype, [rdata])
+        fh = open(filename, "wb")
+        fh.write(data)
+        fh.close()
 
     def getNetworks(self, start_datetime, end_datetime):
         """

@@ -20,8 +20,7 @@ import time
 import unittest
 
 
-_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed',
-         'arclink']
+_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed']
 modules = ['obspy.%s.tests' % d for d in _dirs]
 
 

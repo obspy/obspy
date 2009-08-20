@@ -4,6 +4,7 @@ The obspy.arclink.client test suite.
 """
 
 from obspy.arclink import Client
+from obspy.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 import obspy
 import os
@@ -49,13 +50,13 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        stream = client.getWaveform('AA', 'AAAAA', '', '*', start, end)
-        self.assertEquals(len(stream), 0)
+        self.assertRaises(ArcLinkException, client.getWaveform, 'AA', 'AAAAA',
+                          '', '*', start, end)
         # example 2
         start = UTCDateTime(1008, 1, 1)
         end = start + 1
-        stream = client.getWaveform('BW', 'MANZ', '', '*', start, end)
-        self.assertEquals(len(stream), 0)
+        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
+                          '', '*', start, end)
 
     def test_getNetworks(self):
         """
@@ -68,13 +69,12 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('BW' in result.keys())
         self.assertEquals(result['BW']['code'], 'BW')
         self.assertEquals(result['BW']['type'], 'SP/BB')
-        self.assertEquals(result['BW']['institutions'], u'Uni München')
+        self.assertEquals(result['BW']['institutions'][0:3], u'Uni')
 
     def test_saveWaveform(self):
         """
         """
         client = Client()
-        # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         # MiniSEED
@@ -95,7 +95,8 @@ class ClientTestCase(unittest.TestCase):
                             format='FSEED')
         stats = os.stat('test.fseed')
         st = obspy.read('test.fseed')
-        self.assertEquals(stats.st_size, 20480)
+        self.assertTrue(stats.st_size > 1024)
+        self.assertEquals(open('test.fseed').read(8), "000001V ")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -104,10 +105,17 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.location, '')
         self.assertEquals(st[0].stats.channel, 'EHZ')
         os.remove('test.fseed')
-        # XSEED is not yet supported by ArcLink!
-        #client.saveWaveform('test.xseed', 'BW', 'MANZ', '', 'EHZ', start, end,
-        #                    format='XSEED')
-        #os.remove('test.xseed')
+
+    def test_saveResponse(self):
+        """
+        """
+        client = Client()
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        # Dataless SEED
+        client.saveResponse('test.dseed', 'BW', 'MANZ', '', 'EHZ', start, end)
+        self.assertEquals(open('test.dseed').read(8), "000001V ")
+        os.remove('test.dseed')
 
 
 def suite():
