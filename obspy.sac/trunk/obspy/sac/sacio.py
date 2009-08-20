@@ -319,7 +319,7 @@ class ReadSac(object):
             sizecheck = st[6] - (632 + 4 * npts)
             # size check info
             if sizecheck != 0:
-                raise SacError("File-size and theoretical size inconsistent!")
+                raise SacError("File-size and theoretical size inconsistent: %s"%name)
         if lenchk:
             if npts != len(self.seis):
                 raise SacError("Number of points in header and length of trace inconsistent!")
@@ -448,7 +448,7 @@ class ReadSac(object):
                         raise SacIOError("Cannot read any or only some data points: ",e)
                     else:
                         try:
-                            self.date = self.get_date()
+                            self.date = self._get_date_()
                         except SacError:
                             pass
 
@@ -532,6 +532,7 @@ class ReadSac(object):
             raise SacIOError("Cannot open file: ",ofname)
         else:
             try:
+                self._chck_header_()
                 self.hf.tofile(f)
                 self.hi.tofile(f)
                 self.hs.tofile(f)
@@ -567,7 +568,8 @@ class ReadSac(object):
         #
         nzyear = self.GetHvalue('nzyear')
         nzjday = self.GetHvalue('nzjday')
-        [month, date, ok] = self.monthdate(nzyear, nzjday)
+        month = time.strptime(`nzyear`+" "+`nzjday`,"%Y %j").tm_mon
+        date = time.strptime(`nzyear`+" "+`nzjday`,"%Y %j").tm_mday
         print '%s %2.2d/%2.2d/%d (%d) %d:%d:%d.%d' % ('\nReference Time = ',    \
                                                       month, date, \
                                                       self.GetHvalue('nzyear'), \
@@ -647,7 +649,7 @@ class ReadSac(object):
 
 
 
-    def get_date(self):
+    def _get_date_(self):
         """if date header values are set calculate date in julian seconds
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
@@ -671,6 +673,16 @@ class ReadSac(object):
             return t.timestamp
 
 
+    def _chck_header_(self):
+        """if trace changed since read, adapt header values"""
+        if not isinstance(self.seis,array.array):
+            self.seis = array.array('f',self.seis)
+        self.SetHvalue('npts',len(self.seis))
+        self.SetHvalue('depmin',min(self.seis))
+        self.SetHvalue('depmax',max(self.seis))
+        self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
+        
+
     #def get_attr(self):
     #    """added for compatibility reasons with other obspy
     #    modules (e.g. gseparser)
@@ -682,27 +694,6 @@ class ReadSac(object):
     #        self.df = 1./self.GetHvalue('delta')
     #    except:
     #        return 0
-    #    try:
-    #        self.channel = self.GetHvalue('kcmpnm')
-    #        self.station = self.GetHvalue('kstnm')
-    #        year = self.GetHvalue('nzyear')
-    #        yday = self.GetHvalue('nzjday')
-    #        hour = self.GetHvalue('nzhour')
-    #        mint = self.GetHvalue('nzmin')
-    #        sec  = self.GetHvalue('nzsec')
-    #        msec = self.GetHvalue('nzmsec')
-    #        sec = sec + 0.001*msec
-    #        mon, day, ok=self.monthdate(year,yday)
-    #        date = "%04d%02d%02d%02d%02d%02d" % (year,mon,day,hour,mint,sec)
-    #        if date.find('-12345') != -1:
-    #            date = "19700101000000"
-    #    except:
-    #        print "One of the following header values is not set:"
-    #        print "kcmpnm, npts, delta, kstnm, nzyear, nzjday, nzhour"
-    #        print "nzmin, nzsec, nzmsec"
-    #        print "Please check your SAC-data and try again"
-    #        return 0
-    #    self.julsec = self.date_to_julsec('%Y%m%d%H%M%S',date)
     #    self.trace = self.seis.tolist()
     #    # consistency check
     #    if not self.is_attr('trace',list,None,assertation=True): return 0
