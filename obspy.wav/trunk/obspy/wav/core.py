@@ -25,23 +25,24 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from obspy.core import Trace
+from obspy.core import Trace, Stream
 import numpy as N
-import struct, wave, os
+import struct
+import wave
+import os
 
 
 def isWAV(filename):
     # read WAV file
     try:
-        w = wave.open(filename, 'rb')
-        (_nchannel, width, _rate, _len, _comptype, _compname) = w.getparams()
-        w.close()
+        fh = wave.open(filename, 'rb')
+        (_nchannel, width, _rate, _len, _comptype, _compname) = fh.getparams()
+        fh.close()
     except:
         return False
     if width == 1 or width == 2:
         return True
-    else:
-        return False
+    return False
 
 
 def readWAV(filename, headonly=False, **kwargs):
@@ -50,47 +51,48 @@ def readWAV(filename, headonly=False, **kwargs):
     
     Currently supports unsigned char and short integer data values. This
     should cover most WAV files.
-
-    @params filename: Name of WAV file to read.
+    
+    @param filename: Name of WAV file to read.
     """
     # read WAV file
-    w = wave.open(filename, 'rb')
+    fh = wave.open(filename, 'rb')
     # header information
-    (nchannel, width, rate, length, _comptype, _compname) = w.getparams()
+    (nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
-        return Trace(header=header)
-    #
+        return Stream([Trace(header=header)])
+    # set format
     if width == 1:
         format = 'B'
     elif width == 2:
         format = 'h'
     else:
         raise TypeError("Unsupported Format Type, string length %d" % length)
-    data = struct.unpack("%d%s" % (length * nchannel, format), w.readframes(length))
-    w.close()
-    return Trace(header=header, data=N.array(data))
+    data = struct.unpack("%d%s" % (length * nchannel, format),
+                         fh.readframes(length))
+    fh.close()
+    return Stream([Trace(header=header, data=N.array(data))])
 
 
 def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     """
-    Write audio WAV file. The seismogram is queezed to audible frequencies.
+    Write audio WAV file. The seismogram is squeezed to audible frequencies.
     
-    The resulting wav sound file is as a result really short. The data
+    The resulting WAV sound file is as a result really short. The data
     are written uncompressed as unsigned char.
     
     @requires: The attributes self.stats.npts = number of samples; 
         self.data = array of data samples.
     @param filename: Name of WAV file to write.
-    @param framerate: Samplerate of wav file to use. This this will
+    @param framerate: Sample rate of WAV file to use. This this will
         squeeze the seismogram, DEFAULT=7000. 
     """
     i = 0
+    base , ext = os.path.splitext(filename)
     for trace in stream_object:
         # write WAV file
         if i != 0:
-            base ,ext = os.path.splitext(filename)
-            filename = "%s%02d%s" % (base,i,ext)
+            filename = "%s%02d%s" % (base, i, ext)
         w = wave.open(filename, 'wb')
         trace.stats.npts = len(trace.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)

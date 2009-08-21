@@ -36,11 +36,11 @@ class TraceTestCase(unittest.TestCase):
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
         trace.stats.endtime = end
         # verify
-        trace.verify()
+        trace._verify()
         # ltrim 100 samples
         tr = deepcopy(trace)
         tr.ltrim(0.5)
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[0:5], [100, 101, 102, 103, 104])
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
@@ -50,7 +50,7 @@ class TraceTestCase(unittest.TestCase):
         # ltrim 202 samples
         tr = deepcopy(trace)
         tr.ltrim(1.010)
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -60,7 +60,7 @@ class TraceTestCase(unittest.TestCase):
         # ltrim to UTCDateTime
         tr = deepcopy(trace)
         tr.ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -71,25 +71,25 @@ class TraceTestCase(unittest.TestCase):
         # negative start time
         tr = deepcopy(trace)
         tr.ltrim(UTCDateTime(1999))
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         tr.ltrim(-100)
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         # start time > end time
         tr.ltrim(UTCDateTime(2001))
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         tr.ltrim(5.1)
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         # start time == end time
         tr.ltrim(5)
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
 
@@ -105,11 +105,11 @@ class TraceTestCase(unittest.TestCase):
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
         trace.stats.endtime = end
         # verify
-        trace.verify()
+        trace._verify()
         # rtrim 100 samples
         tr = deepcopy(trace)
         tr.rtrim(0.5)
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[-5:], [895, 896, 897, 898, 899])
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
@@ -119,7 +119,7 @@ class TraceTestCase(unittest.TestCase):
         # rtrim 202 samples
         tr = deepcopy(trace)
         tr.rtrim(1.010)
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -129,7 +129,7 @@ class TraceTestCase(unittest.TestCase):
         # rtrim 1 minute via UTCDateTime
         tr = deepcopy(trace)
         tr.rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -140,26 +140,26 @@ class TraceTestCase(unittest.TestCase):
         # negative end time
         tr = deepcopy(trace)
         tr.rtrim(UTCDateTime(1999))
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         tr.rtrim(-100)
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         # end time > start time
         tr.rtrim(UTCDateTime(2001))
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         tr.rtrim(5.1)
-        tr.verify()
+        tr._verify()
         self.assertEquals(trace.stats, tr.stats)
         self.assertEquals(trace.data, tr.data)
         # end time == start time
         # returns one sample!
         tr.rtrim(4.995)
-        tr.verify()
+        tr._verify()
         self.assertEquals(tr.data, [0])
         self.assertEquals(len(tr.data), 1)
         self.assertEquals(tr.stats.npts, 1)
@@ -179,10 +179,10 @@ class TraceTestCase(unittest.TestCase):
         end = UTCDateTime(2000, 1, 1, 0, 0, 5, 0)
         trace.stats.endtime = end
         # verify
-        trace.verify()
+        trace._verify()
         # rtrim 100 samples
         trace.trim(0.5, 0.5)
-        trace.verify()
+        trace._verify()
         self.assertEquals(trace.data[-5:], [896, 897, 898, 899, 900])
         self.assertEquals(trace.data[0:5], [100, 101, 102, 103, 104])
         self.assertEquals(len(trace.data), 801)
@@ -206,8 +206,8 @@ class TraceTestCase(unittest.TestCase):
         tr2.stats.starttime = start + 10
         tr2.stats.endtime = start + 14.995
         # verify
-        tr1.verify()
-        tr2.verify()
+        tr1._verify()
+        tr2._verify()
         # add
         trace = tr1 + tr2
         # stats
@@ -224,7 +224,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace[2000], 999)
         self.assertEquals(trace[2999], 0)
         # verify
-        trace.verify()
+        trace._verify()
 
     def test_addTraceWithOverlap(self):
         """
@@ -241,8 +241,8 @@ class TraceTestCase(unittest.TestCase):
         tr2.stats.starttime = start + 4
         tr2.stats.endtime = start + 8.995
         # verify
-        tr1.verify()
-        tr2.verify()
+        tr1._verify()
+        tr2._verify()
         # add
         trace = tr1 + tr2
         # stats
@@ -259,7 +259,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace[1000], 799)
         self.assertEquals(trace[1799], 0)
         # verify
-        trace.verify()
+        trace._verify()
 
     def test_addSameTrace(self):
         """
@@ -272,14 +272,14 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.starttime = start
         tr1.stats.endtime = start + 5
         # verify
-        tr1.verify()
+        tr1._verify()
         # add
         trace = tr1 + tr1
         # should return exact the same values
         self.assertEquals(trace.stats, tr1.stats)
         self.assertEquals(trace.data, tr1.data)
         # verify
-        trace.verify()
+        trace._verify()
 
     def test_addTraceWithinTrace(self):
         """
@@ -296,8 +296,8 @@ class TraceTestCase(unittest.TestCase):
         tr2.stats.starttime = start + 1
         tr2.stats.endtime = start + 2
         # verify
-        tr1.verify()
-        tr2.verify()
+        tr1._verify()
+        tr2._verify()
         # add
         trace = tr1 + tr2
         # should return exact the same values like trace 1
@@ -309,7 +309,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace.stats, tr1.stats)
         self.assertEquals(trace.data, tr1.data)
         # verify
-        trace.verify()
+        trace._verify()
 
 
 def suite():

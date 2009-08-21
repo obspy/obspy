@@ -47,7 +47,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
-        tr = obspy.read(self.file,headonly=True)[0]
+        tr = obspy.read(self.file, headonly=True)[0]
         self.assertEqual(tr.stats.npts, 2599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
         self.assertEqual(str(tr.data), '[]')

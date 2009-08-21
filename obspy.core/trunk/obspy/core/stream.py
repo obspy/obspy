@@ -48,6 +48,7 @@ def _read(filename, format=None, headonly=False):
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     else:
+        # format given
         try:
             format_index = [_i[0] for _i in formats].index(format.upper())
             fileformat = formats[format_index]
@@ -55,12 +56,10 @@ def _read(filename, format=None, headonly=False):
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     if headonly:
-        temp_object = fileformat[2](filename, headonly=True)
+        stream = fileformat[2](filename, headonly=True)
     else:
-        temp_object = fileformat[2](filename)
-    if isinstance(temp_object, Trace):
-        return Stream(traces=[temp_object])
-    return temp_object
+        stream = fileformat[2](filename)
+    return stream
 
 
 class Stream(object):
@@ -104,6 +103,8 @@ class Stream(object):
         """
         return len(self.traces)
 
+    count = __len__
+
     def __str__(self):
         """
         __str__ method of obspy.Stream objects.
@@ -124,10 +125,6 @@ class Stream(object):
         """
         return self.traces[index]
 
-    #def __del__(self):
-    #    for trace in self.traces:
-    #        del trace
-
     def append(self, trace, reference=False):
         """
         This method appends a single Trace object to the Stream object.
@@ -145,15 +142,9 @@ class Stream(object):
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
 
-    def count(self):
-        """
-        Returns the number of Traces in the Stream object.
-        """
-        return len(self.traces)
-
     def extend(self, trace_list, reference=False):
         """
-        This method will extend the traces attribut of the Stream object with
+        This method will extend the traces attribute of the Stream object with
         a list of Trace objects.
         
         @param trace_list: list of obspy.Trace objects.
@@ -194,7 +185,7 @@ class Stream(object):
             value is assumed to be in seconds. Defaults to None.
         """
         gap_list = []
-        for _i in range(len(self.traces) - 1):
+        for _i in xrange(len(self.traces) - 1):
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
@@ -242,11 +233,10 @@ class Stream(object):
             # Make sure each item in the list is a trace.
             for _i in object:
                 if not isinstance(_i, Trace):
-                    msg = 'Only accepts a Trace object or a list of Trace ' + \
-                           'objects.'
+                    msg = 'Trace object or a list of Trace objects expected!'
                     raise TypeError(msg)
             # Insert each item of the list.
-            for _i in range(len(object)):
+            for _i in xrange(len(object)):
                 if not reference:
                     self.traces.insert(index + _i, copy.deepcopy(object[_i]))
                 else:
@@ -260,7 +250,7 @@ class Stream(object):
         Creates a graph of ObsPy Stream object. It either saves the image
         directly to the file system or returns an binary image string.
         
-        For all color values you can use legit html names, html hex strings
+        For all color values you can use valid HTML names, HTML hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
         R , G , B are in the range [0,1]. You can also use single letters for
         basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
@@ -321,7 +311,7 @@ class Stream(object):
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
         
-        @param index: Index of the Trace object to be removed.
+        @param index: Index of the Trace object to be returned and removed.
         """
         temp_trace = self.traces[index]
         del(self.traces)[index]
@@ -393,6 +383,7 @@ class Stream(object):
 
     def write(self, filename, format, **kwargs):
         """
+        Saves stream into a file.
         """
         formats = getFormatsAndMethods()
         try:
@@ -424,18 +415,18 @@ class Stream(object):
         for trace in self:
             trace.rtrim(endtime)
 
-    def verify(self):
+    def _verify(self):
         """
         Verifies all L{Trace} objects in this L{Stream}.
         """
         for trace in self:
-            trace.verify()
+            trace._verify()
 
     def merge(self):
         """
         Merges L{Trace} objects with same IDs.
         
-        Gaps an overlaps are usually separated in distinct traces. This method
+        Gaps and overlaps are usually separated in distinct traces. This method
         tries to merge them and to create distinct traces within this L{Stream}
         object.  
         """

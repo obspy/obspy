@@ -410,10 +410,10 @@ class StreamTestCase(unittest.TestCase):
         for i in range(0, 4):
             self.assertEquals(stream[i].stats.sampling_rate, 200)
             self.assertEquals(stream[i].getId(), 'BW.BGLD..EHE')
-        stream.verify()
+        stream._verify()
         # merge it
         stream.merge()
-        stream.verify()
+        stream._verify()
         self.assertEquals(len(stream), 1)
         self.assertEquals(len(stream[0]), (end - start) * 200 + 1)
         self.assertEquals(stream[0].stats.starttime, start)

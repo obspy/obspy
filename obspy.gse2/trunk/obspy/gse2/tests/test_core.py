@@ -31,7 +31,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # read
         st = read(gse2file)
-        st.verify()
+        st._verify()
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
         self.assertEqual(tr.stats.npts, 12000)
@@ -49,7 +49,7 @@ class CoreTestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         # read
-        st = read(gse2file,headonly=True)
+        st = read(gse2file, headonly=True)
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
         self.assertEqual(tr.stats.npts, 12000)
@@ -69,7 +69,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
         # read trace
         st1 = read(gse2file)
-        st1.verify()
+        st1._verify()
         tr1 = st1[0]
         # write comparison trace
         st2 = Stream()
@@ -81,7 +81,7 @@ class CoreTestCase(unittest.TestCase):
         # read comparison trace
         st3 = read(tempfile)
         os.remove(tempfile)
-        st3.verify()
+        st3._verify()
         tr3 = st3[0]
         # check if equal
         self.assertEqual(tr3.stats['station'], tr1.stats['station'])
@@ -111,15 +111,15 @@ class CoreTestCase(unittest.TestCase):
                  os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # write test file containing multiple GSE2 parts
-        f = open(tmpfile1,'wb')
+        f = open(tmpfile1, 'wb')
         for i in xrange(2):
-            f1 = open(files[i],'rb')
+            f1 = open(files[i], 'rb')
             f.write(f1.read())
             f1.close()
         f.close()
         # read
         st1 = read(tmpfile1)
-        st1.verify()
+        st1._verify()
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]
         tr12 = st1[1]
@@ -127,9 +127,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr12.stats['station'], 'RJOB ')
         self.assertEqual(tr12.data[0:13].tolist(), testdata)
         # write and read
-        st1.write(tmpfile2,format='GSE2')
+        st1.write(tmpfile2, format='GSE2')
         st2 = read(tmpfile2)
-        st2.verify()
+        st2._verify()
         self.assertEqual(len(st2), 2)
         tr21 = st1[0]
         tr22 = st1[1]
@@ -155,15 +155,15 @@ class CoreTestCase(unittest.TestCase):
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
-        tr.verify()
+        tr._verify()
         st = Stream([tr])
-        st.verify()
+        st._verify()
         # write
         st.write(tempfile, format="GSE2")
         # read again
         stream = read(tempfile)
         os.remove(tempfile)
-        stream.verify()
+        stream._verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
 

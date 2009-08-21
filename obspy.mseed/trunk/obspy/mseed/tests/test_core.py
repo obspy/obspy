@@ -26,7 +26,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [2787, 2776, 2774, 2780, 2783]
         # read
         stream = readMSEED(testfile)
-        stream.verify()
+        stream._verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(stream[0].stats.get('location'), '00')
@@ -44,7 +44,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [2787, 2776, 2774, 2780, 2783]
         # without given format -> auto detect file format
         stream = read(testfile)
-        stream.verify()
+        stream._verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(stream[0].stats.npts, 11947)
@@ -52,7 +52,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(stream[0].data[_i], testdata[_i])
         # with given format
         stream = read(testfile, format='MSEED')
-        stream.verify()
+        stream._verify()
         self.assertEqual(stream[0].stats.get('location'), '00')
         self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
         self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
@@ -62,7 +62,7 @@ class CoreTestCase(unittest.TestCase):
         gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
         stream = read(gapfile)
-        stream.verify()
+        stream._verify()
         self.assertEqual(4, len(stream.traces))
         for _i in stream.traces:
             self.assertEqual(True, isinstance(_i, Trace))
@@ -72,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         Read file test via L{obspy.core.Stream}.
         """
         testfile = os.path.join(self.path, 'data', 'test.mseed')
-        stream = read(testfile,headonly=True,format='MSEED')
+        stream = read(testfile, headonly=True, format='MSEED')
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(str(stream[0].data), '[]')
@@ -80,11 +80,11 @@ class CoreTestCase(unittest.TestCase):
         #
         gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
-        stream = read(gapfile,headonly=True)
+        stream = read(gapfile, headonly=True)
         self.assertEqual(4, len(stream.traces))
         for _i in stream.traces:
             self.assertEqual(True, isinstance(_i, Trace))
-            self.assertEqual(str(_i.data),'[]')
+            self.assertEqual(str(_i.data), '[]')
 
     def test_writeIntegersViaObsPy(self):
         """
@@ -100,15 +100,15 @@ class CoreTestCase(unittest.TestCase):
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
-        tr.verify()
+        tr._verify()
         st = Stream([tr])
-        st.verify()
+        st._verify()
         # write
         st.write(tempfile, format="MSEED")
         # read again
         stream = read(tempfile)
         os.remove(tempfile)
-        stream.verify()
+        stream._verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
 

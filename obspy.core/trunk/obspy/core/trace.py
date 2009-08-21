@@ -18,7 +18,6 @@ class Trace(object):
     This class contains information about a single trace.
     
     @type data: Numpy ndarray 
-    @ivar data: Data samples 
     @param data: Numpy ndarray of data samples
     @param header: Dictionary containing header fields
     @param address: Address of data to be freed when trace is deleted
@@ -67,8 +66,8 @@ class Trace(object):
         Adds a Trace object to this Trace
         
         It will automatically append the data by interpolating overlaps or
-        filling gaps with NaN samples. Sampling rate and Trace ID must be the
-        same.
+        filling gaps with numpy.NaN samples. Sampling rate and Trace ID must 
+        be the same.
         """
         if not isinstance(trace, Trace):
             raise TypeError
@@ -134,13 +133,12 @@ class Trace(object):
         except:
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Trace objects."
-            print msg
-            raise
+            raise Exception(msg)
         waveform.plotWaveform(self, **kwargs)
 
     def write(self, filename, format, **kwargs):
         """
-        Creates a graph of this L{Trace} object.
+        Saves trace into a file.
         """
         obspy.Stream([self]).write(filename, format, **kwargs)
 
@@ -195,7 +193,7 @@ class Trace(object):
         self.ltrim(starttime)
         self.rtrim(endtime)
 
-    def verify(self):
+    def _verify(self):
         """
         Verifies this L{Trace} object with saved stats values.
         """
