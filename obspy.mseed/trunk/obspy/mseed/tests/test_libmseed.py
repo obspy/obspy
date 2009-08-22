@@ -5,6 +5,7 @@ The libmseed test suite.
 
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
+from obspy.mseed.headers import PyFile_FromFile
 from obspy.mseed.libmseed import clibmseed
 from StringIO import StringIO
 import copy
@@ -646,6 +647,59 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(info['record_length'], 4096)
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
+
+    def test_ctypesArgtypes(self):
+        """
+        Test that ctypes argtypes are set for type checking
+        """
+        from obspy.mseed.headers import MSRecord
+        ArgumentError = C.ArgumentError
+        cl = clibmseed
+        args = [C.pointer(C.pointer(C.c_int())),'a', 1,1.5,1,0,0,0,0]
+        self.assertRaises(ArgumentError,cl.ms_readtraces,*args)
+        self.assertRaises(TypeError,cl.ms_readtraces,*args[:-1])
+        self.assertRaises(ArgumentError,cl.ms_readmsr_r,*args)
+        self.assertRaises(TypeError,cl.ms_readmsr_r,*args[:-1])
+        self.assertRaises(ArgumentError,cl.mst_printtracelist,*args[:5])
+        self.assertRaises(ArgumentError,PyFile_FromFile,*args[:5])
+        args.append(1) # 10 argument function
+        self.assertRaises(ArgumentError,cl.mst_packgroup,*args)
+        args = ['hallo'] # one argument functions
+        self.assertRaises(ArgumentError,cl.msr_starttime,*args)
+        self.assertRaises(ArgumentError,cl.msr_endtime,*args)
+        self.assertRaises(ArgumentError,cl.mst_init,*args)
+        self.assertRaises(ArgumentError,cl.mst_free,*args)
+        self.assertRaises(ArgumentError,cl.mst_initgroup,*args)
+        self.assertRaises(ArgumentError,cl.mst_freegroup,*args)
+        self.assertRaises(ArgumentError,cl.msr_init,*args)
+
+    def test_readSingleRecordToMSR(self):
+        """
+        Tests readSingleRecordtoMSR against start and endtimes.
+
+        Reference start and entimes are optained from the tracegroup.
+        Both cases, with and without ms_p argument are tested.
+        """
+        mseed = libmseed()
+        filename = os.path.join(self.path,
+                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        start, end = [1199145599915000L,1199151207890000L]
+        # start and endtime with ms_p argument
+        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0)
+        self.assertEqual(start, clibmseed.msr_starttime(msr))
+        msr, msf = mseed.readSingleRecordToMSR(filename, ms_p=(msr, msf),
+                                                  dataflag=0, record_number= -1)
+        self.assertEqual(end, clibmseed.msr_endtime(msr))
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        # endtime without ms_p argument
+        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0, record_number= -1)
+        self.assertEqual(end, clibmseed.msr_endtime(msr) )
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        del msr, msf # for valgrind
 
     def test_readMSTracesViaRecords_thread_safety(self):
         """

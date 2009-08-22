@@ -267,8 +267,8 @@ class libmseed(object):
         def record_handler(record, reclen, _stream):
             f.write(record[0:reclen])
         # Define Python callback function for use in C function
-        recHandler = C.CFUNCTYPE(None, C.POINTER(C.c_char), C.c_int,
-                         C.c_void_p)(record_handler)
+        recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
+                                 C.c_void_p)(record_handler)
         # Pack mstg into a MSEED file using record_handler as write method
         errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                           encoding, byteorder,

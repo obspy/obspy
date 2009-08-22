@@ -368,13 +368,13 @@ MSFileParam = MSFileParam_s
 
 
 # Declare function of libmseed library, argument parsing
-clibmseed.mst_init.artypes = [C.POINTER(MSTrace)]
+clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 clibmseed.mst_init.restype = C.POINTER(MSTrace)
 
 clibmseed.mst_free.argtypes = [C.POINTER(C.POINTER(MSTrace))]
 clibmseed.mst_free.restype = C.c_void_p
 
-clibmseed.mst_initgroup.artypes = [C.POINTER(MSTraceGroup)]
+clibmseed.mst_initgroup.argtypes = [C.POINTER(MSTraceGroup)]
 clibmseed.mst_initgroup.restype = C.POINTER(MSTraceGroup)
 
 clibmseed.mst_freegroup.argtypes = [C.POINTER(C.POINTER(MSTraceGroup))]
@@ -398,21 +398,23 @@ clibmseed.ms_readtraces.argtypes = [
     C.c_double, C.c_short, C.c_short, C.c_short, C.c_short]
 clibmseed.ms_readtraces.restype = C.c_int
 
-clibmseed.msr_starttime.artypes = [C.POINTER(MSRecord)]
+clibmseed.msr_starttime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_starttime.restype = C.c_int64
 
-clibmseed.msr_endtime.artypes = [C.POINTER(MSRecord)]
+clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
-clibmseed.mst_packgroup.artypes = [
-    C.POINTER(C.POINTER(MSTraceGroup)),
-    C.CFUNCTYPE(C.c_char_p, C.c_int, C.c_void_p), C.c_void_p, C.c_int,
-    C.c_short, C.c_short, C.POINTER(C.c_int), C.c_short, C.c_short,
-    C.POINTER(MSRecord)]
+# tricky, C.POINTER(C.c_char) is a pointer to single character fields
+# this is completely differenct to C.c_char_p which is a string
+clibmseed.mst_packgroup.argtypes = [
+    C.POINTER(MSTraceGroup),
+    C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), 
+    C.c_short, C.c_short, C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
 
 PyFile_FromFile = C.pythonapi.PyFile_FromFile
-PyFile_FromFile.artypes = [
+PyFile_FromFile.argtypes = [
     Py_ssize_t, C.c_char_p, C.c_char_p, C.CFUNCTYPE(C.c_int, Py_ssize_t)]
 PyFile_FromFile.restype = C.py_object
 
