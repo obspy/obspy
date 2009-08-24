@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.imaging import beachball
-from obspy.imaging.tests import test_beachball, test_spectrogram, test_waveform
+from obspy.imaging.tests import test_beachball, test_spectrogram
 import doctest
 import unittest
 
@@ -9,7 +9,6 @@ import unittest
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_beachball.suite())
-    suite.addTest(test_waveform.suite())
     suite.addTest(test_spectrogram.suite())
     try:
         suite.addTest(doctest.DocTestSuite(beachball))

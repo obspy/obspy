@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from numpy import isnan
+from numpy import isnan, array
+from numpy.ma import is_masked
 from obspy.core import UTCDateTime, Trace
 import unittest
 
@@ -20,7 +21,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the __len__ and count methods of the L{Trace} class.
         """
-        trace = Trace(data=range(0, 1000))
+        trace = Trace(data=array(range(0, 1000)))
         self.assertEquals(len(trace), 1000)
         self.assertEquals(trace.count(), 1000)
 
@@ -214,13 +215,13 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace.stats.starttime, start)
         self.assertEquals(trace.stats.endtime, start + 14.995)
         self.assertEquals(trace.stats.sampling_rate, 200)
-        self.assertEquals(trace.stats.npts, 3000)
+        self.assertEquals(trace.stats.npts, 2000)
         # data
-        self.assertEquals(len(trace), 3000)
+        self.assertEquals(len(trace), 2000)
         self.assertEquals(trace[0], 0)
         self.assertEquals(trace[999], 999)
-        self.assertTrue(isnan(trace[1000]))
-        self.assertTrue(isnan(trace[1999]))
+        self.assertTrue(is_masked(trace[1000]))
+        self.assertTrue(is_masked(trace[1999]))
         self.assertEquals(trace[2000], 999)
         self.assertEquals(trace[2999], 0)
         # verify

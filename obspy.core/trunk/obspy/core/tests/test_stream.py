@@ -415,7 +415,7 @@ class StreamTestCase(unittest.TestCase):
         stream.merge()
         stream._verify()
         self.assertEquals(len(stream), 1)
-        self.assertEquals(len(stream[0]), (end - start) * 200 + 1)
+        self.assertEquals(len(stream[0]), stream[0].data.count())
         self.assertEquals(stream[0].stats.starttime, start)
         self.assertEquals(stream[0].stats.endtime, end)
         self.assertEquals(stream[0].stats.sampling_rate, 200)

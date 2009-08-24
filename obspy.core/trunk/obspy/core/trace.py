@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from numpy import array, NaN, concatenate
+from numpy import array, NaN, concatenate, isnan
+from numpy.ma import masked_array, is_masked
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import obspy
@@ -48,6 +49,8 @@ class Trace(object):
         @rtype: int 
         @return: Number of data samples.
         """
+        if is_masked(self.data):
+            return self.data.count()
         return len(self.data)
 
     count = __len__
@@ -107,15 +110,17 @@ class Trace(object):
             samples = (array(lt.data[lend:]) + array(rt.data[0:delta])) / 2
             out.data = concatenate([ldata, samples, rdata])
             out.stats.endtime = rt.stats.endtime
-            out.stats.npts = len(out.data)
+            out.stats.npts = out.data.size
         else:
             # gap
             out = deepcopy(lt)
             # get number of missing samples
             nans = array([NaN] * delta)
             out.data = concatenate([lt.data, nans, rt.data])
+            # Create masked array.
+            out.data = masked_array(out.data, isnan(out.data))
             out.stats.endtime = rt.stats.endtime
-            out.stats.npts = len(out.data)
+            out.stats.npts = out.data.count()
         return out
 
     def getId(self):
@@ -197,7 +202,7 @@ class Trace(object):
         """
         Verifies this L{Trace} object with saved stats values.
         """
-        if len(self.data) != self.stats.npts:
+        if len(self) != self.stats.npts:
             msg = "ntps(%d) differs from data size(%d)"
             raise Exception(msg % (self.stats.npts, len(self.data)))
         delta = self.stats.endtime - self.stats.starttime

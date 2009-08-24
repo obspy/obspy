@@ -28,6 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
+from copy import deepcopy
+from math import ceil
+from numpy import isfinite
+from numpy.ma import is_masked
 from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
 import matplotlib.pyplot as plt
@@ -73,15 +77,16 @@ def plotWaveform(stream_object, outfile=None, format=None,
     @param dpi: Dots per inch of the output file. This also affects the
         size of most elements in the graph (text, linewidth, ...).
         Defaults to 100.
-    @param color: Color of the graph. If the supplied parameter is a
-        2-tupel containing two html hex string colors a gradient between
-        the two colors will be applied to the graph.
+    @param color: Color of the graph.
         Defaults to 'k' (black).
     @param bgcolor: Background color of the graph. No gradients are supported
         for the background.
         Defaults to 'w' (white).
     @param facecolor: Background color for the all background except behind
         the graphs.
+        This will affect the default  matplotlib backend only when saving to a
+        file. This behaviour might change depending on what backend you are
+        using.
         Defaults to 'w' (white).
     @param transparent: Make all backgrounds transparent (True/False). This
         will overwrite the bgcolor and face_color attributes.
@@ -109,147 +114,33 @@ def plotWaveform(stream_object, outfile=None, format=None,
         temp_width = 800
     else:
         temp_width = size[0]
+    # Calculate the start-and the endtime and convert them to UNIX timestamps.
+    if not starttime:
+        starttime = min([trace.stats.starttime for \
+                         trace in stream_object]).timestamp
+    else:
+        starttime = starttime.timestamp
+    if not endtime:
+        endtime = max([trace.stats.endtime for \
+                       trace in stream_object]).timestamp
+    else:
+        endtime = endtime.timestamp
     # Turn interactive mode off or otherwise only the first plot will be fast.
     plt.ioff()
-    # Get a list with minimum and maximum values.
-    if not minmaxlist:
-        minmaxlist = _getMinMaxList(stream_object=stream_object,
-                                                width=temp_width,
-                                                starttime=starttime,
-                                                endtime=endtime)
-    # Number of plots.
-    minmax_items = len(minmaxlist) - 2
-    # Determine the size of the picture. Each plot will get 250 px in height.
-    if not size:
-        size = (800, minmax_items * 250)
-    starttime = minmaxlist[0]
-    endtime = minmaxlist[1]
-    minmaxlist = minmaxlist[2:]
-    # Get all stats attributes any make a new list.
-    stats_list = []
-    for _i in minmaxlist:
-        stats_list.append(_i.pop())
-    length = len(minmaxlist[0])
-    # Setup figure and axes
-    plt.figure(num=None, figsize=(float(size[0]) / dpi,
-                     float(size[1]) / dpi))
-    pattern = '%Y-%m-%d %H:%M:%S'
-    suptitle = '%s  -  %s' % (UTCDateTime(starttime).strftime(pattern),
-                              UTCDateTime(endtime).strftime(pattern))
-    plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
-                 horizontalalignment='left')
-    # Determine range for the y axis. This will ensure that at least 98% of all
-    # values are fully visible.
-    # This also assures that all subplots have the same scale on the y-axis.
-    minlist = []
-    maxlist = []
-    for _i in minmaxlist:
-        minlist.extend([j[0] for j in _i])
-        maxlist.extend([j[1] for j in _i])
-    minlist.sort()
-    maxlist.sort()
-    miny = minlist[0]
-    maxy = maxlist[-1]
-    # Determines the 2 and 98 percent quantiles of min and max values.
-    eighty_nine_miny = minlist[int(int(length * 0.02))]
-    eighty_nine_maxy = maxlist[int(int(length * 0.98))]
-    # Calculate 98%-range.
-    yrange = eighty_nine_maxy - eighty_nine_miny
-    # If the outer two percent are more than 10 times bigger discard them.
-    if miny + 10 * yrange < maxy:
-        miny = eighty_nine_miny
-        maxy = eighty_nine_maxy
+    # Get the maximum possible frequency.
+    max_freq = max([trace.stats.sampling_rate for trace in stream_object])
+    # Now decide whether to use a min-max approach and plot vertical lines
+    # or just plot the data as it comes. It currently uses the min-max approach
+    # if the biggest Trace has more then 500000 samples in the timeframe to
+    # plot.
+    if (endtime - starttime) * max_freq > 500000:
+        _minMaxApproach(stream_object , size, starttime, endtime,
+               dpi, color, bgcolor, minmaxlist,
+               number_of_ticks, tick_format, tick_rotation, temp_width)
     else:
-        yrange = maxy - miny
-    miny = miny - (yrange * 0.1)
-    maxy = maxy + (yrange * 0.1)
-    # Now we need to calculate the average values of all Traces and create a
-    # list with it
-    average_list = []
-    for _i in minmaxlist:
-        average_list.append(sum([(_j[0] + _j[1]) / 2 for _j in _i]) / len(_i))
-    # The next step is to find the maximum distance from the average values in
-    # the yrange and store it.
-    max_range = 0
-    for _i in average_list:
-        max_value = abs(maxy - _i)
-        min_value = abs(_i - miny)
-        if max_value > max_range:
-            max_range = max_value
-        if min_value > max_range:
-            max_range = min_value
-    # Create the location of the ticks.
-    tick_location = []
-    x_range = endtime - starttime
-    if number_of_ticks > 1:
-        for _i in xrange(number_of_ticks):
-            tick_location.append(starttime + _i * x_range / (number_of_ticks - 1))
-    elif number_of_ticks == 1:
-        tick_location.append(starttime + x_range / 2)
-    # Create tick names
-    tick_names = [UTCDateTime(_i).strftime(tick_format) for _i in \
-                  tick_location]
-    if number_of_ticks > 1:
-        # Adjust first tick to be visible.
-        tick_location[0] = tick_location[0] + 0.5 * x_range / size[0]
-    # If color gradient is wanted calculate the start- and endcolors.
-    if type(color) == type((1, 2)):
-        #Convert hex values to integers
-        r1 = int(color[0][1:3], 16)
-        r2 = int(color[1][1:3], 16)
-        delta_r = (float(r2) - float(r1)) / length
-        g1 = int(color[0][3:5], 16)
-        g2 = int(color[1][3:5], 16)
-        delta_g = (float(g2) - float(g1)) / length
-        b1 = int(color[0][5:], 16)
-        b2 = int(color[1][5:], 16)
-        delta_b = (float(b2) - float(b1)) / length
-    # Loop over all items in minmaxlist.
-    for _j in range(minmax_items):
-        plt.subplot(minmax_items, 1, _j + 1, axisbg=bgcolor)
-        # Make title
-        cur_stats = stats_list[_j]
-        title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
-            cur_stats.station, cur_stats.location, cur_stats.channel,
-            cur_stats.sampling_rate,
-            int((endtime - starttime) * cur_stats.sampling_rate))
-        plt.title(title_text, horizontalalignment='left',
-                  fontsize='small', verticalalignment='center')
-        # Set axes and disable ticks on the y axis.
-        cur_min_y = average_list[_j] - max_range
-        cur_max_y = average_list[_j] + max_range
-        plt.ylim(cur_min_y, cur_max_y)
-        plt.xlim(starttime, endtime)
-        plt.yticks([])
-        plt.xticks(tick_location, tick_names, rotation=tick_rotation,
-                   fontsize='small')
-        # Clone color for looping.
-        loop_color = color
-        # Draw horizontal lines.
-        for _i in range(len(minmaxlist[_j])):
-            #Make gradient if color is a 2-tupel.
-            if type(loop_color) == type((1, 2)):
-                new_r = hex(int(r1 + delta_r * _i))[2:]
-                new_g = hex(int(g1 + delta_g * _i))[2:]
-                new_b = hex(int(b1 + delta_b * _i))[2:]
-                if len(new_r) == 1:
-                    new_r = '0' + new_r
-                if len(new_g) == 1:
-                    new_g = '0' + new_g
-                if len(new_b) == 1:
-                    new_b = '0' + new_b
-                #Create color string
-                bar_color = '#' + new_r + new_g + new_b
-            else:
-                bar_color = color
-            #Calculate relative values needed for drawing the lines.
-            yy = (float(minmaxlist[_j][_i][0]) - cur_min_y) / \
-                                                    (cur_max_y - cur_min_y)
-            xx = (float(minmaxlist[_j][_i][1]) - cur_min_y) / \
-                                                    (cur_max_y - cur_min_y)
-            #Draw actual data lines.
-            plt.axvline(x=minmaxlist[_j][_i][2], ymin=yy, ymax=xx,
-                        color=bar_color)
+        _straightPlottingApproach(stream_object , size, starttime, endtime,
+               dpi, color, bgcolor,
+               number_of_ticks, tick_format, tick_rotation)
     #Save file.
     if outfile:
         #If format is set use it.
@@ -270,6 +161,262 @@ def plotWaveform(stream_object, outfile=None, format=None,
             return imgdata.read()
         else:
             plt.show()
+
+def _minMaxApproach(stream_object , size, starttime, endtime, dpi, color,
+                   bgcolor, minmaxlist,
+                   number_of_ticks, tick_format, tick_rotation, temp_width):
+    """
+    Calculates a list containing minima and maxima values for each delta
+    element and draws a horizontal line for each pair.
+    
+    Very useful for large datasets.
+    """
+    # Get a list with minimum and maximum values.
+    if not minmaxlist:
+        minmaxlist = _getMinMaxList(stream_object=stream_object,
+                                                width=temp_width,
+                                                starttime=starttime,
+                                                endtime=endtime)
+    # Number of plots.
+    minmax_items = len(minmaxlist) - 2
+    # Determine the size of the picture. Each plot will get 250 px in height.
+    if not size:
+        size = (800, minmax_items * 250)
+    minmaxlist = minmaxlist[2:]
+    # Get all stats attributes any make a new list.
+    stats_list = []
+    for _i in minmaxlist:
+        stats_list.append(_i.pop())
+    # Setup plot.
+    _setupPlot(size, dpi, starttime, endtime)
+    # Determine range for the y axis. This will ensure that at least 98% of all
+    # values are fully visible.
+    # This also assures that all subplots have the same scale on the y-axis.
+    minlist = []
+    maxlist = []
+    for _i in minmaxlist:
+        minlist.append([j[0] for j in _i])
+        maxlist.append([j[1] for j in _i])
+    list_length = len(minlist)
+    for _i in xrange(list_length):
+        # Sort the lists for each plot.
+        minlist[_i].sort()
+        maxlist[_i].sort()
+        # Check if the ranges from the 3 and 97 % percent quantiles are much
+        # smaller then the total range. If so throw away everything below
+        # or above the quantiles.
+        if (minlist[_i][int(0.97 * list_length)] - minlist[_i][int(0.03 * \
+           list_length)]) > 25 * (minlist[_i][-1] - minlist[_i][0]):
+            minlist[_i] = minlist[_i][int(0.03 * list_length)]
+        else:
+            minlist[_i] = minlist[_i][0]
+        if (maxlist[_i][int(0.97 * list_length)] - maxlist[_i][int(0.03 * \
+           list_length)]) > 25 * (maxlist[_i][-1] - maxlist[_i][0]):
+            maxlist[_i] = maxlist[_i][int(0.03 * list_length)]
+        else:
+            maxlist[_i] = maxlist[_i][-1]
+    # Now we need to calculate the average values of all Traces and create a
+    # list with it
+    average_list = []
+    for _i in minmaxlist:
+        average_list.append(sum([(_j[0] + _j[1]) / 2 for _j in _i]) / len(_i))
+    # The next step is to find the maximum distance from the average values in
+    # the yrange and store it.
+    half_max_range = 0
+    for _i in xrange(list_length):
+        if average_list[_i] - minlist[_i] > half_max_range:
+            half_max_range = average_list[_i] - minlist[_i]
+        if maxlist[_i] - average_list[_i] > half_max_range:
+            half_max_range = maxlist[_i] - average_list[_i]
+    # Add ten percent on each side.
+    half_max_range += half_max_range * 0.2
+    # Create the location of the ticks.
+    tick_location = []
+    x_range = endtime - starttime
+    if number_of_ticks > 1:
+        for _i in xrange(number_of_ticks):
+            tick_location.append(starttime + _i * x_range / \
+                                                        (number_of_ticks - 1))
+    elif number_of_ticks == 1:
+        tick_location.append(starttime + x_range / 2)
+    # Create tick names
+    tick_names = [UTCDateTime(_i).strftime(tick_format) for _i in \
+                  tick_location]
+    if number_of_ticks > 1:
+        # Adjust first tick to be visible.
+        tick_location[0] = tick_location[0] + 0.5 * x_range / size[0]
+    # Loop over all items in minmaxlist.
+    for _j in range(minmax_items):
+        cur_stats = stats_list[_j]
+        # Calculate the number of samples in the current plot. To do this
+        # loop over all traces in the stream_object, check if they are in the
+        # current trace, calculate their samplecount in the timeframe to plot
+        # and add it to the number of points.
+        npts = 0
+        for _i in xrange(len(stream_object)):
+            # Check if it is actually in the plot.
+            if stream_object[_i].stats.network != cur_stats.network or\
+            stream_object[_i].stats.location != cur_stats.location or\
+            stream_object[_i].stats.station != cur_stats.station or\
+            stream_object[_i].stats.channel != cur_stats.channel:
+                continue
+            # A different approach is needed whether the data values are
+            # masked arrays or not.
+            if is_masked(stream_object[_i].data):
+                npts += _getSamplesFromMaskedTrace(stream_object[_i].data,
+                        starttime, endtime,
+                        stream_object[_i].stats.starttime.timestamp,
+                        stream_object[_i].stats.endtime.timestamp,
+                        stream_object[_i].stats.sampling_rate)
+            else:
+                npts += _getSamplesFromTimes(stream_object[_i].data,
+                        starttime, endtime,
+                        stream_object[_i].stats.starttime.timestamp,
+                        stream_object[_i].stats.endtime.timestamp,
+                        stream_object[_i].stats.sampling_rate)
+        # Make title
+        title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
+            cur_stats.station, cur_stats.location, cur_stats.channel,
+            cur_stats.sampling_rate, npts)
+        # Set axes and disable ticks on the y axis.
+        cur_min_y = average_list[_j] - half_max_range
+        cur_max_y = average_list[_j] + half_max_range
+        bar_color = color
+        yticks_location = [int(average_list[_j] - 0.8 * half_max_range),
+                           int(average_list[_j]),
+                           int(average_list[_j] + 0.8 * half_max_range)]
+        # Setup up the figure for the current Trace.
+        _setupFigure(_j, minmax_items, bgcolor, cur_min_y, cur_max_y,
+                     title_text, tick_location, tick_names,
+                     tick_rotation, yticks_location)
+        # Draw horizontal lines.
+        for _i in range(len(minmaxlist[_j])):
+            bar_color = color
+            #Calculate relative values needed for drawing the lines.
+            yy = (float(minmaxlist[_j][_i][0]) - cur_min_y) / \
+                                                    (cur_max_y - cur_min_y)
+            xx = (float(minmaxlist[_j][_i][1]) - cur_min_y) / \
+                                                    (cur_max_y - cur_min_y)
+            # Set the x-range.
+            plt.xlim(starttime, endtime)
+            #Draw actual data lines.
+            plt.axvline(x=minmaxlist[_j][_i][2], ymin=yy, ymax=xx,
+                        color=bar_color)
+
+def _straightPlottingApproach(stream_object , size, starttime, endtime,
+               dpi, color, bgcolor,
+               number_of_ticks, tick_format, tick_rotation):
+    """
+    Just plots the data samples in the stream_object. Useful for smaller
+    datasets up to around 1000000 samples (depending on your computer).
+    
+    Slow and high memory consumption for large datasets.
+    """
+    # Copy the stream object and merge it for easier plotting. The copy is
+    # needed to not alter the original stream object.
+    stream_object = deepcopy(stream_object)
+    stream_object.merge()
+    stream_object.trim(UTCDateTime(starttime), UTCDateTime(endtime))
+    number_of_plots = len(stream_object)
+    # Set default size if no size was given.
+    if not size:
+        size = (800, number_of_plots * 250)
+    # Setup plot.
+    _setupPlot(size, dpi, starttime, endtime)
+    # Get a list of max, min and average values for all traces.
+    minlist = [_j.data.min() for _j in stream_object]
+    maxlist = [_j.data.max() for _j in stream_object]
+    average_list = [_j.data.mean() for _j in stream_object]
+    # The next step is to find the maximum distance from the average values in
+    # the yrange and store it.
+    half_max_range = 0
+    for _i in xrange(len(stream_object)):
+        if average_list[_i] - minlist[_i] > half_max_range:
+            half_max_range = average_list[_i] - minlist[_i]
+        if maxlist[_i] - average_list[_i] > half_max_range:
+            half_max_range = maxlist[_i] - average_list[_i]
+    # Add ten percent on each side.
+    half_max_range += half_max_range * 0.2
+    # Create tick names. These are the same for each plot
+    time_range = endtime - starttime
+    tick_names = [UTCDateTime(starttime + time_range * _i / \
+                              (number_of_ticks - 1)).strftime(tick_format) \
+                              for _i in range(number_of_ticks)]
+    for _j in xrange(number_of_plots):
+        cur_stats = stream_object[_j].stats
+        #All plots are centered on the mean value of the data values.
+        cur_mean = stream_object[_j].data.mean()
+        cur_min_y = cur_mean - half_max_range
+        cur_max_y = cur_mean + half_max_range
+        # Make title
+        title_text = '%s.%s.%s.%s, %s Hz, %s samples' % (cur_stats.network,
+            cur_stats.station, cur_stats.location, cur_stats.channel,
+            cur_stats.sampling_rate, cur_stats.npts)
+        # Get the yticks and the yrange.
+        yticks_location = [int(cur_mean - 0.8 * half_max_range) , int(cur_mean),
+                           int(cur_mean + 0.8 * half_max_range)]
+        # Determine the xrange. This is necessary because trim and merge
+        # on obspy.Trace object does not add NaNs at the beginning or the
+        # end.
+        cur_starttime = stream_object[_j].stats.starttime.timestamp
+        cur_endtime = stream_object[_j].stats.endtime.timestamp
+        if cur_starttime == starttime:
+            cur_x_min = 0
+        else:
+            cur_x_min = int(-(cur_starttime - starttime) * \
+                                    stream_object[_j].stats.sampling_rate)
+        if cur_endtime == endtime:
+            cur_x_max = stream_object[_j].data.size - 1
+        else :
+            cur_x_max = int(stream_object[_j].data.size - 1 + (endtime - \
+                        cur_endtime) * stream_object[_j].stats.sampling_rate)
+        # Create the location of the xticks.
+        tick_location = []
+        x_range = cur_x_max - cur_x_min
+        if number_of_ticks > 1:
+            for _i in xrange(number_of_ticks - 1):
+                tick_location.append(cur_x_min + _i * x_range / \
+                                                        (number_of_ticks - 1))
+            tick_location.append(cur_x_max)
+        elif number_of_ticks == 1:
+            tick_location.append(cur_x_min + x_range / 2)
+        # Setup up the figure for the current Trace.
+        _setupFigure(_j, number_of_plots, bgcolor, cur_min_y, cur_max_y,
+                     title_text, tick_location, tick_names,
+                     tick_rotation, yticks_location)
+        # Set the xrange.
+        plt.xlim(cur_x_min, cur_x_max)
+        # Plot the data, disable automatic scaling and set the color. Also
+        # enable antialiasing. Otherwise the plots are just plain awful.
+        plt.plot(stream_object[_j].data, scalex=False, scaley=False,
+                 color=color, aa=True)
+
+def _setupPlot(size, dpi, starttime, endtime):
+    """
+    The design and look of the whole plot to be produces.
+    """
+    # Setup figure and axes
+    plt.figure(num=None, figsize=(float(size[0]) / dpi,
+                     float(size[1]) / dpi))
+    pattern = '%Y-%m-%d %H:%M:%S'
+    suptitle = '%s  -  %s' % (UTCDateTime(starttime).strftime(pattern),
+                              UTCDateTime(endtime).strftime(pattern))
+    plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
+                 horizontalalignment='left')
+
+def _setupFigure(_j, minmax_items, bgcolor, cur_min_y, cur_max_y, title_text,
+                 tick_location, tick_names, tick_rotation,
+                 yticks_location):
+    """
+    The setup of the plot of each individual Trace.
+    """
+    plt.subplot(minmax_items, 1, _j + 1, axisbg=bgcolor)
+    plt.title(title_text, horizontalalignment='left', fontsize='small',
+              verticalalignment='center')
+    plt.ylim(cur_min_y, cur_max_y)
+    plt.yticks(yticks_location, fontsize='small')
+    plt.xticks(tick_location, tick_names, rotation=tick_rotation,
+               fontsize='small')
 
 def _getMinMaxList(stream_object, width, starttime=None,
                    endtime=None):
@@ -298,6 +445,8 @@ def _getMinMaxList(stream_object, width, starttime=None,
         is supplied the endtime of the file will be used.
         Defaults to None.
     """
+    plot_starttime = starttime
+    plot_endtime = endtime
     # Sort stream
     stream_object.sort()
     all_traces = stream_object.traces
@@ -317,26 +466,14 @@ def _getMinMaxList(stream_object, width, starttime=None,
                 sorted_trace_list[-1].append(all_traces[_i])
             else:
                 sorted_trace_list.append([all_traces[_i]])
-    # Calulate start- and endtime and other parameters important for the whole
-    # minmaxlist.
-    # Get start- and endtime and convert them to UNIX timestamp.
-    if not starttime:
-        plot_starttime = min([_i[0].stats['starttime'] for _i in \
-                         sorted_trace_list]).timestamp
-    else:
-        plot_starttime = starttime.timestamp
-    if not endtime:
-        # The endtime of the last trace in the previously sorted list is
-        # supposed to be the endtime of the plot.
-        plot_endtime = max([_i[-1].stats['endtime'] for _i in \
-                         sorted_trace_list]).timestamp
-    else:
-        plot_endtime = endtime.timestamp
     # Calculate time for one pixel.
     stepsize = (plot_endtime - plot_starttime) / width
     # First two items are start- and endtime.
     full_minmaxlist = [plot_starttime, plot_endtime]
     for traces in sorted_trace_list:
+        # Create a list with the true sample count (including masked elements)
+        # for faster access in the following loops.
+        npts_list = [_i.data.size for _i in traces]
         # Reset loop times
         starttime = plot_starttime
         endtime = plot_endtime
@@ -346,11 +483,14 @@ def _getMinMaxList(stream_object, width, starttime=None,
             pixel_endtime = starttime + stepsize
             maxlist = []
             minlist = []
+            # Helper index to be able to index the npts_list.
+            cur_trace_count = -1
             # Inner Loop over all traces.
             for _i in traces:
+                cur_trace_count += 1
                 a_stime = _i.stats['starttime'].timestamp
                 a_etime = _i.stats['endtime'].timestamp
-                npts = _i.stats['npts']
+                npts = npts_list[cur_trace_count]
                 # If the starttime is bigger than the endtime of the current
                 # trace delete the item from the list.
                 if starttime > a_etime:
@@ -387,6 +527,9 @@ def _getMinMaxList(stream_object, width, starttime=None,
                                                npts].max())
                         minlist.append(_i.data[int(start) : \
                                                npts].min())
+            # Remove all NaNs from min-and maxlist.
+            minlist = [_i for _i in minlist if isfinite(_i)]
+            maxlist = [_i for _i in maxlist if isfinite(_i)]
             # If empty list do nothing.
             if minlist == []:
                 pass
@@ -400,3 +543,38 @@ def _getMinMaxList(stream_object, width, starttime=None,
         minmaxlist.append(traces[0].stats)
         full_minmaxlist.append(minmaxlist)
     return full_minmaxlist
+
+def _getSamplesFromTimes(data, starttime, endtime, cur_starttime, cur_endtime,
+                         sampling_rate):
+    """
+    Helper method to calculate the number of samples with sampling rate and
+    samples from cur_starttime till cur_starttime that are in the timeframe
+    from starttime to endtime.
+    """
+    # If out of bounds return 0.
+    if starttime > cur_endtime or endtime < cur_starttime:
+        return 0
+    # Fix times.
+    if starttime < cur_starttime:
+        starttime = cur_starttime
+    if endtime > cur_endtime:
+        endtime = cur_endtime
+    return data[int((starttime - cur_starttime) * sampling_rate) : \
+                int(ceil((endtime - cur_starttime) * sampling_rate) + 1)].size
+
+def _getSamplesFromMaskedTrace(data, starttime, endtime, cur_starttime,
+                               cur_endtime, sampling_rate):
+    """
+    Does the same as _getSamplesFromTimes but works for masked arrays.
+    """
+    # If out of bounds return 0.
+    if starttime > cur_endtime or endtime < cur_starttime:
+        return 0
+    # Fix times.
+    if starttime < cur_starttime:
+        starttime = cur_starttime
+    if endtime > cur_endtime:
+        endtime = cur_endtime
+    # Use the count method of masked arrays to not count the masked elements.
+    return data[int((starttime - cur_starttime) * sampling_rate) : \
+                int(ceil((endtime - cur_starttime) * sampling_rate) + 1)].count()
