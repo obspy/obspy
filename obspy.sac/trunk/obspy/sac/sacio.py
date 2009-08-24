@@ -58,63 +58,20 @@ Convenience:
 
     IsSACfile         - test if valid binary SAC file
     IsXYSACfile       - test if valid XY SAC file
-    PrintIValue       - print integer header values
-    PrintFValue       - print float header values
-    PrintSValue       - print integer header values
     ListStdValues     - print common header values
     GetHvalueFromFile - access to specific header item in specified file
     SetHvalueInFile   - change specific header item in specified file
     IsValidSacFile    - test for valid binary SAC file (wraps 'IsSACfile')
 
-date handling:
-
-    is_leap_year      - decide whether leap year
-    ndaysinyear       - calculate number of days in year
-    doy               - calculate yearday
-    monthday          - calculate day of month
-    yd2seconds        - calculate number of seconds since 1970
-    dt2seconds        - calculate number of seconds since 1970
-
+    
 #################### TESTS ########################################
     
->>> t=ReadSac()
->>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
->>> t.ReadSacFile(file)
->>> t.GetHvalue('npts')
-100
->>> t.SetHvalue("kstnm","spiff")
->>> t.GetHvalue('kstnm')
-'spiff   '
->>> t.WriteSacBinary('test2.sac')
->>> os.path.exists('test2.sac')
-True
->>> t.ReadSacHeader('test2.sac')
->>> (t.hf != None)
-True
->>> t.SetHvalue("kstnm","spoff")
->>> t.GetHvalue('kstnm')
-'spoff   '
->>> t.WriteSacHeader('test2.sac')
->>> t.SetHvalueInFile('test2.sac',"kcmpnm",'Z')
->>> t.GetHvalueFromFile('test2.sac',"kcmpnm")
-'Z       '
->>> t.IsValidSacFile('test2.sac')
->>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
->>> t.ReadXYSacFile(file)
->>> t.GetHvalue('npts')
-100
->>> t.WriteSacBinary('testbin.sac')
->>> os.path.exists('testbin.sac')
-True
->>> os.remove('test2.sac')
->>> os.remove('testbin.sac')
 """    
 
 import array,os,string
 from sacutil import *
 import time, copy
 from obspy.core import UTCDateTime
-#from obspy import parser
 
 
 class SacError(Exception):
@@ -125,7 +82,6 @@ class SacIOError(Exception):
     pass
 
     
-#class ReadSac(PyTutil,parser.Parser):
 class ReadSac(object):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
@@ -263,7 +219,11 @@ class ReadSac(object):
 
     def SetHvalue(self,item,value):
         """Set a header value using the header arrays: SetHvalue("npts",2048)
-        Return value is 1 if no problems occurred, zero otherwise."""
+        >>> t = ReadSac()
+        >>> t.SetHvalue("kstnm","spiff")
+        >>> t.GetHvalue('kstnm')
+        'spiff   '
+        """
         #
         # it's trivial to search each dictionary with the key and return
         #   the value that matches the key
@@ -333,10 +293,14 @@ class ReadSac(object):
 
     def ReadSacHeader(self,fname):
         """\nRead a header value into the header arrays 
-        \tok = ReadSacHeader(thePath)
         The header is split into three arrays - floats, ints, and strings
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
-        #
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac()
+        >>> t.ReadSacHeader(file)
+        >>> t.GetHvalue('npts')
+        100
+        """
+        
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
@@ -368,6 +332,11 @@ class ReadSac(object):
                     self.hf = self.hi = self.hs = None
                     f.close()
                     raise SacError(e)
+                else:
+                    try:
+                        self._get_date_()
+                    except SacError:
+                        pass
 
 
     def WriteSacHeader(self,fname):
@@ -375,6 +344,16 @@ class ReadSac(object):
         \tok = WriteSacHeader(thePath)
         The header is split into three arrays - floats, ints, and strings
         The "ok" value is one if no problems occurred, zero otherwise.\n
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac(file)
+        >>> t.WriteSacBinary('test2.sac')
+        >>> u = ReadSac()
+        >>> u.ReadSacHeader('test2.sac')
+        >>> u.SetHvalue('kstnm','spoff   ')
+        >>> u.WriteSacHeader('test2.sac')
+        >>> u.GetHvalueFromFile('test2.sac',"kstnm")
+        'spoff   '
+        >>> os.remove('test2.sac')
         """
         #--------------------------------------------------------------
         # open the file
@@ -398,10 +377,14 @@ class ReadSac(object):
 
     def ReadSacFile(self,fname):
         """\nRead read in the header and data in a SAC file 
-        \tok = ReadSacFile(thePath)
         The header is split into three arrays - floats, ints, and strings and the
         data points are returned in the array seis
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
+        >>> t=ReadSac()
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t.ReadSacFile(file)
+        >>> t.GetHvalue('npts')
+        100
+        """
         self.seis = array.array('f') # allocate the array for the points
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
@@ -448,19 +431,24 @@ class ReadSac(object):
                         raise SacIOError("Cannot read any or only some data points: ",e)
                     else:
                         try:
-                            self.date = self._get_date_()
+                            self._get_date_()
                         except SacError:
                             pass
 
 
 
     def ReadXYSacFile(self,fname):
-        """\nRead a SAC XY file (not tested much) 
-        \tok = ReadSXYSacFile(thePath)
-        The header is split into three arrays - floats, ints, and strings.
-        The data are in two floating point arrays x and y.
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
-        #
+        """\nRead a SAC XY file (not tested much)
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
+        >>> t = ReadSac()
+        >>> t.ReadXYSacFile(file)
+        >>> t.GetHvalue('npts')
+        100
+        >>> t.WriteSacBinary('testbin.sac')
+        >>> os.path.exists('testbin.sac')
+        True
+        >>> os.remove('testbin.sac')
+        """
         self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('l') # allocate the array for header ints
@@ -516,6 +504,11 @@ class ReadSac(object):
             except SacError,e:
                 f.close()
                 raise SacError(e)
+            else:
+                try:
+                    self._get_date_()
+                except SacError:
+                    pass
 
 
     def WriteSacXY(self,ofname):
@@ -524,8 +517,13 @@ class ReadSac(object):
 
     def WriteSacBinary(self,ofname):
         """\nWrite a SAC file using the head arrays and array seis 
-        \tWriteSacBinary(thePath)
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t=ReadSac(file)
+        >>> t.WriteSacBinary('test2.sac')
+        >>> os.stat('test2.sac')[6] == os.stat(file)[6]
+        True
+        >>> os.remove('test2.sac')
+        """
         try:
             f = open(ofname,'wb+')
         except IOError:
@@ -614,7 +612,15 @@ class ReadSac(object):
     def GetHvalueFromFile(self, thePath,theItem):
         """\nQuick access to a specific header item in a specified file.
         GetHvalueFromFile(thePath,theItem)
-        returns -12345 if a problem occurred.\n"""
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac(file)
+        >>> t.WriteSacBinary('test2.sac')
+        >>> u = ReadSac()
+        >>> u.SetHvalueInFile('test2.sac','kstnm','heinz   ')
+        >>> u.GetHvalueFromFile('test2.sac','kstnm')
+        'heinz   '
+        >>> os.remove('test2.sac')
+        """
         #
         #  Read in the Header
         #
@@ -626,7 +632,16 @@ class ReadSac(object):
     def SetHvalueInFile(self, thePath,theItem,theValue):
         """\nQuick access to change a specific header item in a specified file.
         SetHvalueFromFile(thePath,theItem, theValue)
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac(file)
+        >>> t.WriteSacBinary('test2.sac')
+        >>> u = ReadSac()
+        >>> u.SetHvalueInFile('test2.sac','kstnm','heinz   ')
+        >>> u.GetHvalueFromFile('test2.sac','kstnm')
+        'heinz   '
+        >>> os.remove('test2.sac')
+        """
+
         #
         #  Read in the Header
         #
@@ -653,24 +668,30 @@ class ReadSac(object):
         """if date header values are set calculate date in julian seconds
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
-        >>> t.date
+        >>> t.starttime.timestamp
         269596800.0
+        >>> t.endtime.timestamp - t.starttime.timestamp
+        100.0
         """
+        ### if any of the time-header values are still set to
+        ### -12345 then UTCDateTime raises an exception and
+        ### starttime is set to 0.0
         try:
-            year = self.GetHvalue('nzyear')
-            yday = self.GetHvalue('nzjday')
-            hour = self.GetHvalue('nzhour')
-            mint = self.GetHvalue('nzmin')
-            sec  = self.GetHvalue('nzsec')
-            msec = self.GetHvalue('nzmsec')
-            microsec = msec*1000 
-            mon = time.strptime(`year`+" "+`yday`,"%Y %j").tm_mon
-            mday = time.strptime(`year`+" "+`yday`,"%Y %j").tm_mday
-            t = UTCDateTime(year,mon,mday,hour,mint,sec,microsec)
+            self.starttime = UTCDateTime(year=self.GetHvalue('nzyear'),
+                                         julday=self.GetHvalue('nzjday'),
+                                         hour=self.GetHvalue('nzhour'),
+                                         minute=self.GetHvalue('nzmin'),
+                                         second=self.GetHvalue('nzsec'),
+                                         microsecond=self.GetHvalue('nzmsec') * 1000)
+            self.endtime = self.starttime + \
+                           self.GetHvalue('npts')*float(self.GetHvalue('delta'))
         except:
-            raise SacError("Cannot calculate date")
-        else:
-            return t.timestamp
+            try:
+                self.starttime = UTCDateTime(0.0)
+                self.endtime = self.starttime + \
+                               self.GetHvalue('npts')*float(self.GetHvalue('delta'))
+            except:
+                raise SacError("Cannot calculate date")
 
 
     def _chck_header_(self):
@@ -683,28 +704,6 @@ class ReadSac(object):
         self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
         
 
-    #def get_attr(self):
-    #    """added for compatibility reasons with other obspy
-    #    modules (e.g. gseparser)
-    #    
-    #    """
-    #    # check if important header-values are defined
-    #    try:
-    #        self.npts = self.GetHvalue('npts')
-    #        self.df = 1./self.GetHvalue('delta')
-    #    except:
-    #        return 0
-    #    self.trace = self.seis.tolist()
-    #    # consistency check
-    #    if not self.is_attr('trace',list,None,assertation=True): return 0
-    #    if not self.is_attr('df',float,200.): return 0
-    #    if not self.is_attr('station',str,'FUR     ',length=8): return 0
-    #    if not self.is_attr('channel',str,'SHZ     ',length=8): return 0
-    #    if not self.is_attr('julsec',float,0.0): return 0
-    #    if not self.is_attr('npts',int,len(self.trace),assertation=True): return 0
-    #    return 1
-
-
 
 if __name__ == "__main__":
     import doctest
@@ -712,6 +711,4 @@ if __name__ == "__main__":
     import os.path
     if os.path.isfile('test2.sac'):
         os.remove('test2.sac')
-    if os.path.isfile('testbin.sac'):
-        os.remove('testbin.sac')
         

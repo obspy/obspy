@@ -21,6 +21,7 @@ class SacioTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+
     def test_Write(self):
         """
         Tests for sacio, writing artificial seismograms
@@ -28,20 +29,26 @@ class SacioTestCase(unittest.TestCase):
         data = array.array('f', [ 1.1, -1.2, 1.3, -1.4, 1.5,
                                  - 1.6, 1.7, -1.8, 1.9, -2.0])
         t = sacio.ReadSac()
-        t.InitArrays()
-        t.seis = data
-        t.SetHvalue("kstnm", "RJOB")
-        t.SetHvalue("npts", len(data)) # set the number of data points
-        t.SetHvalue('nvhdr', 1)  # SAC version needed 0<version<20
-        t.SetHvalue('delta', 200) # sampling rate
+        t.fromarray(data)
         t.WriteSacBinary('test.sac')
-        u = sacio.ReadSac()
-        u.ReadSacFile('test.sac')
+        u = sacio.ReadSac('test.sac')
         for _k in ["kstnm", "npts", "nvhdr", "delta"]:
             self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
-        self.assertEqual(t.GetHvalue("kstnm"), "RJOB    ")
+        self.assertEqual(t.GetHvalue("kstnm"), "-12345  ")
         self.assertEqual(t.seis, u.seis)
         os.remove('test.sac')
+
+
+    def test_Date(self):
+        """
+        Test for sacio '_get_date_'-function to calculate timestamp
+        """
+        fn = os.path.join(os.path.dirname(__file__),'data','test.sac')
+        t = sacio.ReadSac(fn)
+        self.assertEqual(t.starttime.timestamp,269596800.0)
+        diff = t.GetHvalue('npts')
+        self.assertEqual(int(t.endtime.timestamp-t.starttime.timestamp),diff)
+        
 
     def test_readWrite(self):
         """
@@ -69,6 +76,7 @@ class SacioTestCase(unittest.TestCase):
         t.IsValidSacFile('test2.sac')
         os.remove('test2.sac')
 
+
     def test_readWriteXY(self):
         t = sacio.ReadSac()
         t.ReadXYSacFile(os.path.join(self.path, 'testxy.sac'))
@@ -76,6 +84,7 @@ class SacioTestCase(unittest.TestCase):
         t.WriteSacBinary('testbin.sac')
         self.assertEqual(os.path.exists('testbin.sac'), True)
         os.remove('testbin.sac')
+
 
     def test_isSAC(self):
         """
