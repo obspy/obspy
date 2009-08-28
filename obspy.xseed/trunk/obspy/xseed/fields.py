@@ -366,11 +366,15 @@ class Loop(Field):
     def getXML(self, blockette, pos=0):
         """
         """
+        if self.ignore:
+            return []
         try:
             self.length = int(getattr(blockette, self.index_field))
         except:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
+        if self.length == 0 and self.optional:
+            return []
         # loop over number of entries
         root = Element(self.field_name)
         for _i in xrange(0, self.length):
@@ -411,6 +415,8 @@ class Loop(Field):
         except:
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
+        if self.length == 0:
+            return
         # loop type
         if self.flat:
             # flat loop: one or multiple fields are within one parent tag
