@@ -32,6 +32,8 @@ for root, dirs, files in os.walk(input_base):
     filelist = [os.path.join(root, fi) for fi in files if '.svn' not in fi]
     for filename in filelist:
         print filename
+        if 'BW' not in filename:
+            continue
         try:
             # can't enable strict, cause files are faulty!
             # sp = SEEDParser(strict = True)
@@ -40,11 +42,11 @@ for root, dirs, files in os.walk(input_base):
             sp.parseSEEDFile(filename)
             # generate a XML file and validate it with a given schema
             xml = sp.getXSEED()
-            doc = etree.parse(StringIO.StringIO(xml))
-            xmlschema.assertValid(doc)
             fp = open('output' + os.sep + filename + '.xml', 'w')
             fp.write(xml)
             fp.close()
+            doc = etree.parse(StringIO.StringIO(xml))
+            xmlschema.assertValid(doc)
         except Exception, e:
             raise
             sp = SEEDParser(strict=True, debug=True)

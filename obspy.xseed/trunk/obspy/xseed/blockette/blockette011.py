@@ -27,6 +27,6 @@ class Blockette011(Blockette):
         ], repeat_title=True, xseed_version='1.0'),
         Loop("Station identifier", "Number of stations", [
             FixedString(4, "Station identifier code", 5),
-            Integer(5, "Sequence number of station header", 6, ignore=True)
+            Integer(5, "Sequence number of station header", 6)
         ], xseed_version='1.1')
     ]

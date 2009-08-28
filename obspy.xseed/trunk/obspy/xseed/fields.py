@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from lxml.etree import Element, SubElement
 from obspy.core.util import formatScientific
 from obspy.xseed import utils
 import re
@@ -14,21 +15,23 @@ class Field(object):
     General SEED field.
     """
     def __init__(self, id, name, *args, **kwargs):
+        # default
         self.id = id
         self.name = name
+        self.xseed_version = kwargs.get('xseed_version', None)
+        self.optional_if_empty = kwargs.get('optional_if_empty', False)
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
-        self.optional = kwargs.get('optional', False)
-        self.optional_if_empty = kwargs.get('optional_if_empty', False)
-        self.ignore = kwargs.get('ignore', False)
-        self.strict = kwargs.get('strict', False)
-        self.xseed_version = kwargs.get('xseed_version', None)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
             self.field_id = None
         self.field_name = utils.toXMLTag(self.name)
         self.attribute_name = utils.toAttribute(self.name)
+        # options
+        self.optional = kwargs.get('optional', False)
+        self.ignore = kwargs.get('ignore', False)
+        self.strict = kwargs.get('strict', False)
 
     def __str__(self):
         if self.id:
@@ -74,6 +77,89 @@ class Field(object):
             msg = "Can't convert string %s with flags %s" % (s, flags)
             raise SEEDTypeException(msg)
         return sn
+
+    def parseSEED(self, blockette, data):
+        """
+        """
+        try:
+            text = self.read(data)
+        except:
+            if blockette.strict:
+                raise
+            # default value if not set
+            text = self.default
+        # check if already exists
+        if hasattr(blockette, self.attribute_name):
+            temp = getattr(blockette, self.attribute_name)
+            if not isinstance(temp, list):
+                temp = [temp]
+            temp.append(text)
+            text = temp
+        setattr(blockette, self.attribute_name, text)
+        self.data = text
+        # debug
+        if blockette.debug:
+            print('  %s: %s' % (self, text))
+
+    def getSEED(self, blockette, pos=0):
+        """
+        """
+        try:
+            result = getattr(blockette, self.attribute_name)
+        except:
+            if blockette.strict:
+                msg = "Missing attribute %s in Blockette %s"
+                raise Exception(msg % (self.name, blockette))
+            result = self.default
+        # watch for multiple entries
+        if isinstance(result, list):
+            result = result[pos]
+        return self.write(result)
+
+    def getXML(self, blockette, pos=0):
+        """
+        """
+        if self.ignore:
+            return []
+        try:
+            result = getattr(blockette, self.attribute_name)
+        except:
+            if blockette.strict:
+                msg = "Missing attribute %s in Blockette %s"
+                raise Exception(msg % (self.name, blockette))
+            result = self.default
+        # watch for multiple entries
+        if isinstance(result, list):
+            result = result[pos]
+        # optional if empty
+        if self.optional_if_empty and len(result) == 0:
+            return []
+        # reformat float
+        if isinstance(self, Float):
+            result = self.write(result)
+        # create XML element
+        node = Element(self.field_name)
+        node.text = unicode(result).strip()
+        return [node]
+
+    def parseXML(self, blockette, xml_doc, pos=0):
+        """
+        """
+#        if field.optional_if_empty and no_index:
+#            setattr(self, field.attribute_name, '')
+#            continue
+        try:
+            text = xml_doc.xpath(self.attribute_name + "/text()")[pos]
+        except:
+            return
+        # check if already exists
+        if hasattr(blockette, self.attribute_name):
+            temp = getattr(blockette, self.attribute_name)
+            if not isinstance(temp, list):
+                temp = [temp]
+            temp.append(text)
+            text = temp
+        setattr(blockette, self.attribute_name, text)
 
 
 class Integer(Field):
@@ -157,7 +243,6 @@ class FixedString(Field):
         self.length = length
         self.flags = flags
         self.default = ' ' * length
-        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def read(self, data):
         return data.read(self.length).strip()
@@ -188,7 +273,6 @@ class VariableString(Field):
         self.max_length = max_length
         self.flags = flags
         self.default = ' ' * min_length
-        self.optional_if_empty = kwargs.get('optional_if_empty', False)
 
     def read(self, data):
         data = self._read(data)
@@ -237,22 +321,131 @@ class Loop(Field):
     """
     def __init__(self, name, index_field, data_fields, **kwargs):
         Field.__init__(self, None, name, **kwargs)
+        # initialize + default values
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
+        self.data_fields = data_fields
         self.index_field = utils.toAttribute(index_field)
         self.length = 0
-        self.data_fields = data_fields
-        # Currently used only in Blockette 11 to pass XSD validation.
+        # loop types
         self.repeat_title = kwargs.get('repeat_title', False)
         self.seperate_tags = kwargs.get('seperate_tags', False)
         self.omit_tag = kwargs.get('omit_tag', False)
         self.flat = kwargs.get('flat', False)
 
-    def getSubFields(self):
-        temp = []
+    def parseSEED(self, blockette, data):
+        """
+        """
+        try:
+            self.length = int(getattr(blockette, self.index_field))
+        except:
+            msg = "Missing attribute %s in Blockette %s"
+            raise Exception(msg % (self.index_field, blockette))
+        # loop over number of entries
         for _i in xrange(0, self.length):
-            temp2 = []
+            # loop over data fields within one entry
             for field in self.data_fields:
-                temp2.append(field)
-            temp.append(temp2)
-        return temp
+                field.parseSEED(blockette, data)
+
+    def getSEED(self, blockette):
+        """
+        """
+        try:
+            self.length = int(getattr(blockette, self.index_field))
+        except:
+            msg = "Missing attribute %s in Blockette %s"
+            raise Exception(msg % (self.index_field, blockette))
+        # loop over number of entries
+        data = ''
+        for i in xrange(0, self.length):
+            # loop over data fields within one entry
+            for field in self.data_fields:
+                data += field.getSEED(blockette, i)
+        return data
+
+    def getXML(self, blockette, pos=0):
+        """
+        """
+        try:
+            self.length = int(getattr(blockette, self.index_field))
+        except:
+            msg = "Missing attribute %s in Blockette %s"
+            raise Exception(msg % (self.index_field, blockette))
+        # loop over number of entries
+        root = Element(self.field_name)
+        for _i in xrange(0, self.length):
+            # loop over data fields within one entry
+            for field in self.data_fields:
+                node = field.getXML(blockette, _i)
+                root.extend(node)
+        # format output for requested loop type
+        if self.flat:
+            # flat loop: one or multiple fields are within one parent tag
+            # e.g. <root>item1 item2 item1 item2</root>
+            root.text = ' '.join([i.text for i in root.getchildren()])
+            root[:] = []
+            return [root]
+        elif self.omit_tag:
+            # loop omitting the parent tag: fields are at the same level
+            # e.g. <item1/><item2/><item1/><item2/>
+            return root.getchildren()
+        elif self.repeat_title:
+            # parent tag is repeated over every child tag
+            # e.g. <parent><item1/></parent><parent><item2/></parent>
+            children = root.getchildren()
+            root = Element(self.field_name)
+            for child in children:
+                se = SubElement(root, self.field_name)
+                se.append(child)
+            return root.getchildren()
+        elif self.seperate_tags:
+            # XXX
+            import pdb;pdb.set_trace()
+        else:
+            # standard loop
+            return [root]
+
+    def parseXML(self, blockette, xml_doc, pos=0):
+        try:
+            self.length = int(getattr(blockette, self.index_field))
+        except:
+            msg = "Missing attribute %s in Blockette %s"
+            raise Exception(msg % (self.index_field, blockette))
+        # loop type
+        if self.flat:
+            # flat loop: one or multiple fields are within one parent tag
+            # e.g. <root>item1 item2 item1 item2</root>
+            text = xml_doc.xpath(self.attribute_name + '/text()')[0].split()
+            if not text:
+                return
+            # loop over number of entries
+            for _i in xrange(0, self.length):
+                # loop over data fields within one entry
+                for field in self.data_fields:
+                    temp = getattr(blockette, field.attribute_name, [])
+                    temp.append(text.pop(0))
+                    setattr(blockette, field.attribute_name, temp)
+            return
+        elif self.omit_tag:
+            # loop omitting the parent tag: fields are at the same level
+            # e.g. <item1/><item2/><item1/><item2/>
+            root = Element(self.attribute_name)
+            root.extend(xml_doc)
+        elif self.repeat_title:
+            # parent tag is repeated over every child tag
+            # e.g. <parent><item1/></parent><parent><item2/></parent>
+            root = Element(self.attribute_name)
+            root.extend(xml_doc.xpath(self.attribute_name + '/*'))
+        elif self.seperate_tags:
+            # parent tag is repeated over every child tag
+            # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
+            import pdb;pdb.set_trace()
+        else:
+            # standard loop
+            root = xml_doc.xpath(self.attribute_name)[pos]
+
+        # loop over number of entries
+        for i in xrange(0, self.length):
+            # loop over data fields within one entry
+            for field in self.data_fields:
+                field.parseXML(blockette, root, i)
