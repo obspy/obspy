@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from glob import iglob
 from obspy.xseed.blockette import Blockette054
 from obspy.xseed.blockette.blockette import BlocketteLengthException
 import doctest
-import os
 import unittest
 
 
@@ -22,26 +22,8 @@ class BlocketteTestCase(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(BlocketteTestCase, 'test'))
-    docpath = 'doctests' + os.path.sep
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette010.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette011.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette012.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette030.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette031.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette032.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette033.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette034.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette041.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette043.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette050.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette051.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette052.txt'))
-    suite.addTest(doctest.DocFileSuite(docpath + 'blockette053.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette054.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette057.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette058.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette059.txt'))
-#    suite.addTest(doctest.DocFileSuite(docpath + 'blockette061.txt'))
+    for file in iglob('doctests/*.txt'):
+        suite.addTest(doctest.DocFileSuite(file))
     return suite
 
 

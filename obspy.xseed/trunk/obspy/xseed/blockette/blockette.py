@@ -44,15 +44,16 @@ class Blockette(object):
             print "----"
             print str(self)
         # filter versions specific fields
-        XSEED_version = kwargs.get('xseed_version', '1.0')
-        SEED_version = kwargs.get('version', 2.4)
+        self.XSEED_version = kwargs.get('xseed_version', '1.0')
+        self.SEED_version = kwargs.get('version', 2.4)
         self.blockette_fields = []
         for field in self.fields:
             # Check XML-SEED version
-            if field.xseed_version and field.xseed_version != XSEED_version:
+            if field.xseed_version and \
+               field.xseed_version != self.XSEED_version:
                 continue
             # Check SEED version
-            if field.version and field.version > SEED_version:
+            if field.version and field.version > self.SEED_version:
                 continue
             self.blockette_fields.append(field)
 
@@ -73,7 +74,7 @@ class Blockette(object):
         start_pos = data.tell()
         # debug
         if self.debug:
-            print '  DATA:', data.read(expected_length)
+            print ' DATA:', data.read(expected_length)
             data.seek(-expected_length, 1)
         blockette_fields = self.default_fields + self.blockette_fields
         # loop over all blockette fields

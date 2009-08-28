@@ -26,9 +26,7 @@ class Blockette050(Blockette):
         Integer(11, "word order 32bit", 4),
         Integer(12, "word order 16bit", 2),
         VariableString(13, "Start effective date", 1, 22, 'T'),
-        # optional_if_empty: It will not appear in the XSEED if it is empty!
-        VariableString(14, "End effective date", 0, 22, 'T',
-                       optional_if_empty=True),
+        VariableString(14, "End effective date", 0, 22, 'T', optional=True),
         FixedString(15, "Update flag", 1),
         FixedString(16, "Network Code", 2, 'ULN', version=2.3)
     ]

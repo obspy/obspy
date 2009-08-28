@@ -37,7 +37,7 @@ class Blockette052(Blockette):
         Integer(20, "Number of comments", 4),
         VariableString(21, "Channel flags", 0, 26, 'U'),
         VariableString(22, "Start date", 1, 22, 'T'),
-        VariableString(23, "End date", 0, 22, 'T', optional_if_empty=True,
+        VariableString(23, "End date", 0, 22, 'T', optional=True,
                        xseed_version='1.0'),
         VariableString(23, "End date", 0, 22, 'T', xseed_version='1.1'),
         FixedString(24, "Update flag", 1)

@@ -6,7 +6,8 @@ from lxml import etree
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette054 import Blockette054
-from obspy.xseed.parser import SEEDParser, SEEDParserException
+from obspy.xseed.parser import Parser, SEEDParserException
+from obspy.xseed.utils import compareSEED
 import inspect
 import os
 import unittest
@@ -27,16 +28,16 @@ class ParserTestCase(unittest.TestCase):
         A SEED Volume must start with a Volume Index Control Header.
         """
         data = "000001S 0510019~~0001000000"
-        parser = SEEDParser(strict=True)
-        self.assertRaises(SEEDParserException, parser.parse, StringIO(data))
+        sp = Parser(strict=True)
+        self.assertRaises(SEEDParserException, sp.parseSEED, StringIO(data))
 
     def test_invalidStartBlockette(self):
         """
         A SEED Volume must start with Blockette 010.
         """
         data = "000001V 0510019~~0001000000"
-        parser = SEEDParser(strict=True)
-        self.assertRaises(SEEDParserException, parser.parse, StringIO(data))
+        sp = Parser(strict=True)
+        self.assertRaises(SEEDParserException, sp.parseSEED, StringIO(data))
 
     def test_blocketteStartsAfterRecord(self):
         """
@@ -58,8 +59,8 @@ class ParserTestCase(unittest.TestCase):
         data += "000002S " + b054 + (' ' * 8)
         data += "000003S*" + b054 + (' ' * 8)
         # read records
-        parser = SEEDParser(strict=True)
-        parser.parse(StringIO(data))
+        parser = Parser(strict=True)
+        parser.parseSEED(StringIO(data))
 
     def test_multipleContinuedStationControlHeader(self):
         """
@@ -94,8 +95,8 @@ class ParserTestCase(unittest.TestCase):
         data += "000009S*" + nr[720:] + ' ' * 32 # 32 spaces left
         self.assertEqual(len(data), 256 * 9)
         # read records
-        parser = SEEDParser(strict=True)
-        parser.parse(StringIO(data))
+        parser = Parser(strict=True)
+        parser.parseSEED(StringIO(data))
         # check results
         self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
         self.assertEquals(len(parser.blockettes[10]), 1)
@@ -123,50 +124,30 @@ class ParserTestCase(unittest.TestCase):
         BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
         # Loop over all files.
         for file in BW_SEED_files:
-            parser = SEEDParser()
+            parser = Parser()
             f = open(file, 'r')
             # Original SEED file.
             original_seed = f.read()
             f.seek(0)
             # Parse and write the data.
-            parser.parse(f)
+            parser.parseSEED(f)
             f.close()
             new_seed = parser.getSEED()
-            # Modify original SEED as described in the docstring.
-            # Exchanging zero with space is valid in this case.
-            original_seed = original_seed.replace('02.3', ' 2.4', 1)
-            # Add the extra ~ in Blockette 10
-            blkt_length = int(original_seed[11:15])
-            original_seed = original_seed[: (8 + blkt_length)] + '~' + \
-                        original_seed[(8 + blkt_length):]
-            original_seed = original_seed[:11] + '%04i' % (blkt_length + 1) + \
-                                            original_seed[15:]
-            original_seed = original_seed[:3000] + original_seed[3001:]
-            # The first two records are totally identical now.
-            self.assertEqual(original_seed[0:8192], new_seed[0:8192])
-            # The station records are not totally identical due to some number
-            # formating options. This is not a fault in the way this class
-            # writes SEED. To still be able to compare them two crude
-            # symbol replacements are made first. Then both strings are read
-            # again and written again comparing the result.
-            # This hopefully assures that original and new files are identical.
-            m_original_seed = original_seed.replace('0', '+').replace(' ', '+')
-            m_new_seed = new_seed.replace('0', '+').replace(' ', '+')
-            # Compare both strings!
-            self.assertEqual(m_original_seed, m_new_seed)
+            # compare both SEED strings
+            compareSEED(original_seed, new_seed)
             del parser
-            parser1 = SEEDParser()
-            parser2 = SEEDParser()
+            parser1 = Parser()
+            parser2 = Parser()
             original_seed = StringIO(original_seed)
             new_seed = StringIO(new_seed)
-            parser1.parse(original_seed)
-            parser2.parse(new_seed)
+            parser1.parseSEED(original_seed)
+            parser2.parseSEED(new_seed)
             self.assertEqual(parser1.getSEED(), parser2.getSEED())
             del parser1, parser2
 
     def test_createReadAssertAndWriteXSEED(self):
         """
-        This test takes some SEED files, reads them to a SEEDParser object
+        This test takes some SEED files, reads them to a Parser object
         and converts them back to SEED once. This is done to avoid any
         formating issues as seen in test_readAndWriteSEED.
         
@@ -189,7 +170,7 @@ class ParserTestCase(unittest.TestCase):
         xmlschema = etree.XMLSchema(xmlschema_doc)
         # Loop over all files.
         for file in BW_SEED_files:
-            parser1 = SEEDParser()
+            parser1 = Parser()
             # Parse the file.
             parser1.parseSEEDFile(file)
             # Convert to SEED once to avoid any issues seen in
@@ -198,15 +179,15 @@ class ParserTestCase(unittest.TestCase):
             del parser1
             # Now read the file, parse it, write XSEED, read XSEED and write
             # SEED again. The output should be totally identical.
-            parser2 = SEEDParser()
-            parser2.parse(StringIO(original_seed))
+            parser2 = Parser()
+            parser2.parseSEED(StringIO(original_seed))
             xseed_string = parser2.getXSEED()
             del parser2
             # Validate XSEED.
             doc = etree.parse(StringIO(xseed_string))
             self.assertTrue(xmlschema.validate(doc))
             del doc
-            parser3 = SEEDParser()
+            parser3 = Parser()
             parser3.parseXSEED(StringIO(xseed_string))
             new_seed = parser3.getSEED()
             self.assertEqual(original_seed, new_seed)

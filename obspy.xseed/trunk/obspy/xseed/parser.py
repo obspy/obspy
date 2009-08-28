@@ -74,10 +74,10 @@ class Parser(object):
         if self.debug:
             print 'FILENAME:', filename
         fp = open(filename)
-        self.parse(fp)
+        self.parseSEED(fp)
         fp.close()
 
-    def parse(self, data):
+    def parseSEED(self, data):
         """
         Parses through a whole SEED volume. It will always parse the whole
         file and skip any time span data.
@@ -127,8 +127,7 @@ class Parser(object):
                 # continued record
                 merged_data += record[8:]
             else:
-                self._parseMergedData(merged_data.strip(),
-                                      record_type)
+                self._parseMergedData(merged_data.strip(), record_type)
                 # first or new type of record
                 record_type = record[6]
                 merged_data = record[8:]
@@ -143,8 +142,7 @@ class Parser(object):
                 print record[0:8]
             record = data.read(self.record_length)
         # Use parse once again.
-        self._parseMergedData(merged_data.strip(),
-                              record_type)
+        self._parseMergedData(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
         self._updateInternalSEEDStructure()
 
@@ -244,6 +242,7 @@ class Parser(object):
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
+                continue
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
 
@@ -477,33 +476,6 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    def parseXSEED(self, data):
-        """
-        Returns an XSEED string.
-        """
-        data.seek(0)
-        headers = xmlparse(data).getroot().getchildren()
-        # Set all temporary attributes.
-        self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
-        # Parse volume which is assumed to be the first header. Only parse
-        # blockette 10 and discard the rest.
-        self.temp['volume'].append(\
-                    self._parseXMLBlockette(headers[0].getchildren()[0], 'V'))
-        # Append all abbreviations.
-        for blockette in headers[1].getchildren():
-            self.temp['abbreviations'].append(\
-                    self._parseXMLBlockette(blockette, 'A'))
-        # Append all stations into seperate list items.
-        for control_header in headers[2:]:
-            if not control_header.tag == 'station_control_header':
-                continue
-            self.temp['stations'].append([])
-            for blockette in control_header.getchildren():
-                self.temp['stations'][-1].append(\
-                                    self._parseXMLBlockette(blockette, 'S'))
-        # Update internal values.
-        self._updateInternalSEEDStructure()
-
     def _parseXMLBlockette(self, XML_blockette, record_type):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
@@ -527,7 +499,39 @@ class Parser(object):
             msg = "Unknown blockette type %d found" % blockette_id
             raise SEEDParserException(msg)
 
+    def parseXSEEDFile(self, filename):
+        """
+        Read and parse the given XML-SEED file.
+        """
+        if self.debug:
+            print 'FILENAME:', filename
+        fp = open(filename)
+        self.parseXSEED(fp)
+        fp.close()
 
-# should be removed soon!
-class SEEDParser(Parser):
-    pass
+    def parseXSEED(self, data):
+        """
+        Parse a XML-SEED string.
+        """
+        data.seek(0)
+        headers = xmlparse(data).getroot().getchildren()
+        # Set all temporary attributes.
+        self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
+        # Parse volume which is assumed to be the first header. Only parse
+        # blockette 10 and discard the rest.
+        self.temp['volume'].append(\
+                    self._parseXMLBlockette(headers[0].getchildren()[0], 'V'))
+        # Append all abbreviations.
+        for blockette in headers[1].getchildren():
+            self.temp['abbreviations'].append(\
+                    self._parseXMLBlockette(blockette, 'A'))
+        # Append all stations into seperate list items.
+        for control_header in headers[2:]:
+            if not control_header.tag == 'station_control_header':
+                continue
+            self.temp['stations'].append([])
+            for blockette in control_header.getchildren():
+                self.temp['stations'][-1].append(\
+                                    self._parseXMLBlockette(blockette, 'S'))
+        # Update internal values.
+        self._updateInternalSEEDStructure()

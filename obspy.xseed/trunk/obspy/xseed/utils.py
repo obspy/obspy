@@ -100,3 +100,37 @@ def DateTime2Iso(t):
     elif isinstance(t, datetime.date):
         return t.isoformat()
     raise Exception("Invalid python date object: " + str(t))
+
+
+def compareSEED(seed1, seed2):
+    """
+    """
+    # length should be the same
+    assert len(seed1) == len(seed2)
+    # version string is always ' 2.4' for output
+    if seed1[15:19] == ' 2.3':
+        seed1 = seed1.replace(' 2.3', ' 2.4', 1)
+    if seed1[15:19] == '02.3':
+        seed1 = seed1.replace('02.3', ' 2.4', 1)
+    # check for missing '~' in blockette 10 (faulty dataless from BW network)
+    l = int(seed1[11:15])
+    temp = seed1[0:(l + 8)]
+    if temp.count('~') == 4:
+        # added a '~' and remove a space before the next record
+        # record length for now 4096
+        seed1 = seed1[0:11] + '%04i' % (l + 1) + seed1[15:(l + 8)] + '~' + \
+                seed1[(l + 8):4095] + seed1[4096:]
+    # check each byte
+    for i in xrange(0, len(seed1)):
+        if seed1[i] == seed2[i]:
+            continue
+        temp = seed1[i] + seed2[i]
+        if temp == '0+':
+            continue
+        if temp == '0 ':
+            continue
+        if temp == ' +':
+            continue
+        import pdb;pdb.set_trace()
+
+

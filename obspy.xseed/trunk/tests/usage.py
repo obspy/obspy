@@ -4,12 +4,12 @@ Simple usage example.
 """
 
 from lxml import etree
-from obspy.xseed import SEEDParser
+from obspy.xseed import Parser
 import StringIO
 
 
 # parse SEED file
-parser = SEEDParser(verify=True, strict=False, debug=False)
+parser = Parser(verify=True, strict=False, debug=False)
 parser.parseSEEDFile('data/bw/dataless.seed.BW_ZUGS')
 xml_doc = parser.getXML()
 

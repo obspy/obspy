@@ -19,7 +19,6 @@ class Field(object):
         self.id = id
         self.name = name
         self.xseed_version = kwargs.get('xseed_version', None)
-        self.optional_if_empty = kwargs.get('optional_if_empty', False)
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
         if self.id:
@@ -83,9 +82,9 @@ class Field(object):
         """
         try:
             text = self.read(data)
-        except:
+        except Exception, e:
             if blockette.strict:
-                raise
+                raise e
             # default value if not set
             text = self.default
         # check if already exists
@@ -114,12 +113,18 @@ class Field(object):
         # watch for multiple entries
         if isinstance(result, list):
             result = result[pos]
+        # debug
+        if blockette.debug:
+            print('  %s: %s' % (self, result))
         return self.write(result)
 
     def getXML(self, blockette, pos=0):
         """
         """
         if self.ignore:
+            # debug
+            if blockette.debug:
+                print('  %s: ignored')
             return []
         try:
             result = getattr(blockette, self.attribute_name)
@@ -132,7 +137,10 @@ class Field(object):
         if isinstance(result, list):
             result = result[pos]
         # optional if empty
-        if self.optional_if_empty and len(result) == 0:
+        if self.optional and len(result) == 0:
+            # debug
+            if blockette.debug:
+                print('  %s: skipped because optional')
             return []
         # reformat float
         if isinstance(self, Float):
@@ -140,17 +148,21 @@ class Field(object):
         # create XML element
         node = Element(self.field_name)
         node.text = unicode(result).strip()
+        # debug
+        if blockette.debug:
+            print('  %s: %s' % (self, [node]))
         return [node]
 
     def parseXML(self, blockette, xml_doc, pos=0):
         """
         """
-#        if field.optional_if_empty and no_index:
-#            setattr(self, field.attribute_name, '')
-#            continue
         try:
             text = xml_doc.xpath(self.attribute_name + "/text()")[pos]
         except:
+            setattr(blockette, self.attribute_name, self.default)
+            # debug
+            if blockette.debug:
+                print('  %s: set to default value %s' % (self, self.default))
             return
         # check if already exists
         if hasattr(blockette, self.attribute_name):
@@ -160,6 +172,9 @@ class Field(object):
             temp.append(text)
             text = temp
         setattr(blockette, self.attribute_name, text)
+        # debug
+        if blockette.debug:
+            print('  %s: %s' % (self, text))
 
 
 class Integer(Field):
@@ -176,6 +191,8 @@ class Integer(Field):
         try:
             temp = int(temp)
         except:
+            if not self.strict:
+                return self.default
             msg = "No integer value found for %s." % self.field_name
             raise SEEDTypeException(msg)
         return temp
@@ -329,7 +346,6 @@ class Loop(Field):
         self.length = 0
         # loop types
         self.repeat_title = kwargs.get('repeat_title', False)
-        self.seperate_tags = kwargs.get('seperate_tags', False)
         self.omit_tag = kwargs.get('omit_tag', False)
         self.flat = kwargs.get('flat', False)
 
@@ -375,6 +391,17 @@ class Loop(Field):
             raise Exception(msg % (self.index_field, blockette))
         if self.length == 0 and self.optional:
             return []
+        if self.repeat_title:
+            # parent tag is repeated over every child tag
+            # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
+            root = Element(self.field_name)
+            for _i in xrange(0, self.length):
+                se = SubElement(root, self.field_name)
+                # loop over data fields within one entry
+                for field in self.data_fields:
+                    node = field.getXML(blockette, _i)
+                    se.extend(node)
+            return root.getchildren()
         # loop over number of entries
         root = Element(self.field_name)
         for _i in xrange(0, self.length):
@@ -393,18 +420,6 @@ class Loop(Field):
             # loop omitting the parent tag: fields are at the same level
             # e.g. <item1/><item2/><item1/><item2/>
             return root.getchildren()
-        elif self.repeat_title:
-            # parent tag is repeated over every child tag
-            # e.g. <parent><item1/></parent><parent><item2/></parent>
-            children = root.getchildren()
-            root = Element(self.field_name)
-            for child in children:
-                se = SubElement(root, self.field_name)
-                se.append(child)
-            return root.getchildren()
-        elif self.seperate_tags:
-            # XXX
-            import pdb;pdb.set_trace()
         else:
             # standard loop
             return [root]
@@ -439,13 +454,9 @@ class Loop(Field):
             root.extend(xml_doc)
         elif self.repeat_title:
             # parent tag is repeated over every child tag
-            # e.g. <parent><item1/></parent><parent><item2/></parent>
+            # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
             root = Element(self.attribute_name)
             root.extend(xml_doc.xpath(self.attribute_name + '/*'))
-        elif self.seperate_tags:
-            # parent tag is repeated over every child tag
-            # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
-            import pdb;pdb.set_trace()
         else:
             # standard loop
             root = xml_doc.xpath(self.attribute_name)[pos]

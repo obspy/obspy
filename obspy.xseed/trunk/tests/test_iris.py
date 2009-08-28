@@ -4,8 +4,7 @@ Checks all BB dataless SEED files archived by IRIS.
 """
 
 from lxml import etree
-from obspy.xseed import SEEDParser
-import StringIO
+from obspy.xseed import Parser
 import os
 
 
@@ -21,9 +20,6 @@ if not os.path.isdir(output_base + os.sep + "data"):
 if not os.path.isdir(output_base + os.sep + input_base):
     os.mkdir(output_base + os.sep + input_base)
 
-# Count all wrong validations.
-validation_count = 0
-
 for root, dirs, files in os.walk(input_base):
     # skip empty or SVN directories
     if not files or '.svn' in root:
@@ -35,27 +31,14 @@ for root, dirs, files in os.walk(input_base):
     filelist = [os.path.join(root, fi) for fi in files if '.svn' not in fi]
     for filename in filelist:
         print filename
-        # Cheap hack to leave the Spanish networks out as they do not work
-        # currently.
-        try:
-            sp = SEEDParser(strict=True)
-            # try to parse
-            sp.parseSEEDFile(filename)
-            # generate a XML file and validate it with a given schema
-            xml = sp.getXSEED()
-            doc = etree.parse(StringIO.StringIO(xml))
-            if not xmlschema.validate(doc):
-                validation_count += 1
-                print 'Wrong XSEED for:', filename
-            fp = open('output' + os.sep + filename + '.xml', 'w')
-            fp.write(xml)
-            fp.close()
-        except:
-            sp = SEEDParser(strict=True, debug=True)
-            sp.parseSEEDFile(filename)
-            fp = open('output' + os.sep + 'error.xml', 'w')
-            fp.write(sp.getXSEED())
-            fp.close()
-            raise
-
-print 'Number of not correctly validated files:', validation_count
+        sp = Parser(strict=True)
+        # try to parse
+        sp.parseSEEDFile(filename)
+        # generate a XML file and validate it with a given schema
+        xml = sp.getXSEED()
+        out = 'output' + os.sep + filename + '.xml'
+        fp = open(out, 'w')
+        fp.write(xml)
+        fp.close()
+        doc = etree.parse(out)
+        xmlschema.assertValid(doc)
