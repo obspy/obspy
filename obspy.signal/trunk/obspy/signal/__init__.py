@@ -28,5 +28,5 @@ from filter import *
 from rotate import *
 from trigger import *
 from invsim import cosTaper, detrend, cornFreq2Paz
-from invsim import pazToFreqResp, pazToFreqResp2, seisSim, specInv
+from invsim import pazToFreqResp, seisSim, specInv
 import seismometer
