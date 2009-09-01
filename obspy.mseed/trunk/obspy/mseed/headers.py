@@ -404,6 +404,9 @@ clibmseed.msr_starttime.restype = C.c_int64
 clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
+clibmseed.ms_find_reclen.argtypes = [C.c_char_p, C.c_int, C.POINTER(C.c_int)]
+clibmseed.ms_find_reclen.restype = C.c_int
+
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely differenct to C.c_char_p which is a string
 clibmseed.mst_packgroup.argtypes = [

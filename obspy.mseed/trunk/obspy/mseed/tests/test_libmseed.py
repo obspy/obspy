@@ -293,62 +293,15 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'RJOB')
         self.assertEqual(header['channel'], 'EHZ')
-
-    def test_readFirstHeaderInfo2(self):
-        """
-        Reads and compares header info from the first record.
-        Tests method using ms_readmsr_r. Multiple readings in order to see
-        if memory leaks arrise.
-        
-        The values can be read from the filename.
-        """
-        mseed = libmseed()
-        # Example 1
-        filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        header = mseed.getFirstRecordHeaderInfo2(filename)
-        self.assertEqual(header['location'], '')
-        self.assertEqual(header['network'], 'BW')
-        self.assertEqual(header['station'], 'BGLD')
-        # Example 2
-        filename = os.path.join(self.path, u'BW.RJOB.__.EHZ.D.2009.056')
-        header = mseed.getFirstRecordHeaderInfo2(filename)
-        self.assertEqual(header['network'], 'BW')
-        self.assertEqual(header['station'], 'RJOB')
-        self.assertEqual(header['channel'], 'EHZ')
         # Example 3 again for leak checking
         filename = os.path.join(self.path,
                                 u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        header = mseed.getFirstRecordHeaderInfo2(filename)
+        header = mseed.getFirstRecordHeaderInfo(filename)
         self.assertEqual(header['location'], '')
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         del header
 
-    def test_getStartAndEndTime2(self):
-        """
-        Tests getting the start- and end time of a file.
-        
-        The values are compared with the readFileToTraceGroup() method which 
-        parses the whole file. This will only work for files with only one
-        trace and without any gaps or overlaps.
-        """
-        mseed = libmseed()
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_10_percent',
-                           u'test.mseed', u'timingquality.mseed']
-        for _i in mseed_filenames:
-            filename = os.path.join(self.path, _i)
-            # get the start- and end time
-            (start, end) = mseed.getStartAndEndTime2(filename)
-            # parse the whole file
-            mstg = mseed.readFileToTraceGroup(filename, dataflag=0)
-            chain = mstg.contents.traces.contents
-            self.assertEqual(start,
-                             mseed._convertMSTimeToDatetime(chain.starttime))
-            self.assertEqual(end,
-                             mseed._convertMSTimeToDatetime(chain.endtime))
-            clibmseed.mst_freegroup(C.pointer(mstg))
-            del mstg, chain
 
     def test_getStartAndEndTime(self):
         """
@@ -374,6 +327,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                              mseed._convertMSTimeToDatetime(chain.endtime))
             clibmseed.mst_freegroup(C.pointer(mstg))
             del mstg, chain
+
 
     def test_getMSStarttime(self):
         """
@@ -482,8 +436,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Randomize list.
         file_list.sort(key=lambda _x: random.random())
         # Get the needed start- and endtime.
-        info = mseed._getMSFileInfo(filename)
         open_file = open(filename, 'rb')
+        info = mseed._getMSFileInfo(open_file, filename)
         open_file.seek(info['record_length'])
         starttime = mseed._getMSStarttime(open_file)
         open_file.seek(9 * info['record_length'])
@@ -576,33 +530,6 @@ class LibMSEEDTestCase(unittest.TestCase):
             isMSEED = mseed.isMSEED(filename)
             self.assertFalse(isMSEED)
 
-    def test_calculateSamplingRate(self):
-        """
-        Tests calulating the sample rate using the examples in the SEED manual
-        page 100. The sample rate always should be a float.
-        """
-        mseed = libmseed()
-        self.assertEqual(mseed._calculateSamplingRate(33, 10), 330)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(33, 10), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(330, 1), 330)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(330, 1), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(3306, -10), 330.6)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(3306, -10), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(-60, 1), float(1) / 60)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(-60, 1), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(1, -10), 0.1)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(1, -10), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(-10, 1), 0.1)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(-10, 1), \
-                                   float))
-        self.assertEqual(mseed._calculateSamplingRate(-1, -10), 0.1)
-        self.assertTrue(isinstance(mseed._calculateSamplingRate(-1, -10), \
-                                   float))
 
     def test_getMSFileInfo(self):
         """
@@ -612,7 +539,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path,
                                 u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         # Simply reading the file.
-        info = mseed._getMSFileInfo(filename)
+        f = open(filename, 'rb')
+        info = mseed._getMSFileInfo(f, filename)
+        f.close()
         self.assertEqual(info['filesize'], 2201600)
         self.assertEqual(info['record_length'], 512)
         self.assertEqual(info['number_of_records'], 4300)
@@ -642,7 +571,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(open_file_string.tell(), 111)
         # One more file containing two records.
         filename = os.path.join(self.path, u'test.mseed')
-        info = mseed._getMSFileInfo(filename)
+        f = open(filename, 'rb')
+        info = mseed._getMSFileInfo(f, filename)
+        f.close()
         self.assertEqual(info['filesize'], 8192)
         self.assertEqual(info['record_length'], 4096)
         self.assertEqual(info['number_of_records'], 2)
@@ -662,6 +593,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertRaises(TypeError,cl.ms_readmsr_r,*args[:-1])
         self.assertRaises(ArgumentError,cl.mst_printtracelist,*args[:5])
         self.assertRaises(ArgumentError,PyFile_FromFile,*args[:5])
+        self.assertRaises(ArgumentError,cl.ms_find_reclen,*args[:4])
         args.append(1) # 10 argument function
         self.assertRaises(ArgumentError,cl.mst_packgroup,*args)
         args = ['hallo'] # one argument functions
