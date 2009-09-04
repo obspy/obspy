@@ -88,10 +88,28 @@ class Client(Telnet):
                 self.read_until('\r\n')
                 break
             time.sleep(self.status_delay)
-        if 'id="NODATA" status="NODATA"' in xml_doc:
+        # check for errors
+        # XXX: not everything implemented yet
+        #     = OK - request sucessfully processed, data available
+        #     = NODATA - no processing errors, but data not available
+        #     = WARN - processing errors, some downloadable data available
+        #     = ERROR - processing errors, no downloadable data available
+        #     = RETRY - temporarily no data available
+        #     = DENIED - access to data denied for the user
+        #     = CANCEL - processing cancelled (eg., by operator)
+        #     = MESSAGE <any_string> - error message in case of WARN or
+        #           ERROR, but can be used regardless of status (the last 
+        #           message is shown in STATUS response)
+        #     = SIZE <n> - data size. In case of volume, it must be the 
+        #           exact size of downloadable product.
+        if 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
+            # error or no data
             self.writeln('PURGE %d' % req_id)
             self._bye()
-            raise ArcLinkException('No data available')
+            # parse XML for error message
+            xml_doc = objectify.fromstring(xml_doc[:-3])
+            raise ArcLinkException(xml_doc.request.volume.line.get('message'))
+        # XXX: safeguard as long not all status messages are covered 
         if '<line content' not in xml_doc:
             self.writeln('PURGE %d' % req_id)
             self._bye()

@@ -58,6 +58,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
                           '', '*', start, end)
 
+    def test_getWaveformWrongPattern(self):
+        """
+        """
+        client = Client()
+        # example 1
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MAN*',
+                          '', '*', start, end)
+
     def test_getNetworks(self):
         """
         """
