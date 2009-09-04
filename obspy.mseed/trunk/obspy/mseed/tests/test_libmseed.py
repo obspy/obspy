@@ -5,7 +5,7 @@ The libmseed test suite.
 
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
-from obspy.mseed.headers import PyFile_FromFile
+from obspy.mseed.headers import PyFile_FromFile, MSFileParam, _PyFile_callback
 from obspy.mseed.libmseed import clibmseed
 from StringIO import StringIO
 import copy
@@ -329,31 +329,6 @@ class LibMSEEDTestCase(unittest.TestCase):
             del mstg, chain
 
 
-    def test_getMSStarttime(self):
-        """
-        Tests getting the starttime of a record.
-        
-        The values are compared with the readFileToTraceGroup() method which 
-        parses the whole file.
-        """
-        mseed = libmseed()
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_10_percent',
-                           u'gaps.mseed', u'qualityflags.mseed', u'test.mseed',
-                           u'timingquality.mseed']
-        for _i in mseed_filenames:
-            filename = os.path.join(self.path, _i)
-            # get the start- and end time
-            f = open(filename, 'rb')
-            start = mseed._getMSStarttime(f)
-            f.close()
-            # parse the whole file
-            mstg = mseed.readFileToTraceGroup(filename, dataflag=0)
-            chain = mstg.contents.traces.contents
-            self.assertEqual(start,
-                             mseed._convertMSTimeToDatetime(chain.starttime))
-            clibmseed.mst_freegroup(C.pointer(mstg))
-            del mstg, chain
-
     def test_cutMSFileByRecord(self):
         """
         Tests file cutting on a record basis. 
@@ -438,11 +413,23 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Get the needed start- and endtime.
         open_file = open(filename, 'rb')
         info = mseed._getMSFileInfo(open_file, filename)
-        open_file.seek(info['record_length'])
-        starttime = mseed._getMSStarttime(open_file)
-        open_file.seek(9 * info['record_length'])
-        endtime = mseed._getMSStarttime(open_file)
         open_file.close()
+        # Init MSRecord and MSFileParam structure
+        msr = clibmseed.msr_init(None)
+        msf = C.POINTER(MSFileParam)()
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               filename, -1, None, None, 1, 0, 0)
+        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
+        f = PyFile_FromFile(mf.contents.fp.contents.value, str(filename),
+                            'rb', _PyFile_callback)
+        f.seek(info['record_length'])
+        starttime = mseed.getStartFromMSF(filename,msr,msf)
+        f.seek(9 * info['record_length'])
+        endtime = mseed.getStartFromMSF(filename,msr,msf)
+        # Deallocate msr and msf memory
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, 0, None, None, 0, 0, 0)
+        del msf, msr
         # Create the merged file<
         data = mseed.mergeAndCutMSFiles(file_list, starttime, endtime)
         # Compare the file to the desired output.

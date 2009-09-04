@@ -94,10 +94,19 @@ def cornFreq2Paz(fc, damp=0.707):
 
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
-    Convert Poles and Zeros (PAZ) to frequency response. Fast version which
-    uses scipy. For understanding the source code, take a look at 
-    pazToFreqResp3. The output contains the frequency zero which is the offset 
-    of the trace.
+    Convert Poles and Zeros (PAZ) to frequency response. The output
+    contains the frequency zero which is the offset of the trace.
+
+    @note: In order to plot/calculate the phase you need to multiply the
+        complex part by -1. This results from the different definition of
+        the fourier transform and the phase. The numpy.fft is defined as
+        A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
+        signal is defined A(jw) = | A(jw) | e^{j\phi}. That is in order to
+        calculate the phase the complex conjugate of the signal needs to be
+        taken. E.g. phi = angle(f,conj(h),deg=True)
+        As the range of phi is from -pi to pi you could add 2*pi to the
+        negative values in order to get a plot from [0, 2pi]:
+        where(phi<0,phi+2*pi,phi); plot(f,phi)
     
     @type poles: List of complex numbers
     @param poles: The poles of the transfer function
@@ -118,7 +127,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     # start at zero to get zero for offset/ DC of fft
     f = N.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
     _w, h = S.signal.freqs(a, b, f * 2 * N.pi)
-    h = N.conj(h)
+    h = N.conj(h) # like in PITSA paz2Freq (insdeconv.c) last line
     h[-1] = h[-1].real + 0.0j
     if freq:
         return h, f

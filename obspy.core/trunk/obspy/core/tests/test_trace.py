@@ -312,10 +312,8 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace._verify()
 
-
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
-
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

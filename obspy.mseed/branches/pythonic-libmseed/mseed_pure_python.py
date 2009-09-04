@@ -3,7 +3,89 @@ from obspy.core import UTCDateTime
 from struct import unpack
 import time
 
-def getTimingQuality2(self, filename, first_record=True):
+def _getMSStarttime(self, open_file):
+    """
+    Returns the starttime of the given MiniSEED record and returns a 
+    UTCDateTime object.
+    
+    Due to various possible time correction it is complicated to get the
+    actual start time of a MiniSEED file. This method hopefully handles
+    all possible cases.
+    
+    It evaluates fields 8, 12 and 16 of the fixed header section and
+    additionally blockettes 500 and 1001 which both contain (the same?)
+    microsecond correction. If both blockettes are available only blockette
+    1001 is used. Not sure if this is the correct way to handle it but
+    I could not find anything in the SEED manual nor an example file.
+    
+    Please see the SEED manual for additional information.
+    
+    @param open_file: Open file or StringIO. The pointer has to be set
+        at the beginning of the record of interst. When the method is
+        done with the calulations it will reset the file pointer to the
+        original state.
+    """
+    # Save the originial state of the file pointer.
+    file_pointer_start = open_file.tell()
+    # Jump to the beginning of field 8 and read the rest of the fixed
+    # header section.
+    open_file.seek(20, 1)
+    # Unpack the starttime, field 12, 16, 17 and 18.
+    unpacked_tuple = unpack('>HHBBBxHxxxxxxBxxxiHH', open_file.read(28))
+    # Use field 17 to calculate how long all blockettes are and read them.
+    blockettes = open_file.read(unpacked_tuple[-2] - 48)
+    # Reset the file_pointer
+    open_file.seek(file_pointer_start, 0)
+    time_correction = 0
+    # Check if bit 1 of field 12 has not been set.
+    if unpacked_tuple[6] & 2 == 0:
+        # If it has not been set the time correction of field 16 still
+        # needs to be applied. The units are in 0.0001 seconds.
+        time_correction += unpacked_tuple[7] * 100
+    # Loop through the blockettes to find blockettes 500 and 1001.
+    offset = 0
+    blkt_500 = 0
+    blkt_1001 = 0
+    while True:
+        # Get blockette number.
+        cur_blockette = unpack('>H', blockettes[offset : offset + 2])
+        if cur_blockette == 1001:
+            blkt_1001 = unpack('>H', blockettes[5])
+            if unpack('>H', blockettes[offset + 2 : offset + 4]) == 0:
+                break
+        if cur_blockette == 500:
+            blkt_500 = unpack('>H', blockettes[19])
+            if unpack('>H', blockettes[offset + 2 : offset + 4]) == 0:
+                break
+        next_blockette = unpack('>H',
+                                blockettes[offset + 2 : offset + 4])[0]
+        # Leave the loop if no further blockettes follow.
+        if next_blockette == 0:
+            break
+        # New offset.
+        offset = next_blockette - 48
+    # Adjust the starrtime. Blockette 1001 will override blkt_500.
+    additional_correction = 0
+    if blkt_500:
+        additional_correction = blkt_500
+    if blkt_1001:
+        additional_correction = blkt_1001
+    # Return a UTCDateTime object with the applied corrections.
+    starttime = UTCDateTime(year=unpacked_tuple[0],
+                    julday=unpacked_tuple[1], hour=unpacked_tuple[2],
+                    minute=unpacked_tuple[3], second=unpacked_tuple[4],
+                    microsecond=unpacked_tuple[5] * 100)
+    # Due to weird bug a difference between positive and negative offsets
+    # is needed.
+    total_correction = time_correction + additional_correction
+    if total_correction < 0:
+        starttime = starttime - abs(total_correction) / 1e6
+    else:
+        starttime = starttime + total_correction / 1e6
+    return starttime
+
+
+def getTimingQuality(self, filename, first_record=True):
     """
     Reads timing quality and returns a dictionary containing statistics
     about it.
