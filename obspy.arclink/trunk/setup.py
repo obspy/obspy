@@ -43,7 +43,7 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=True,
+    zip_safe=False,
     install_requires=[
         'obspy.core',
         'obspy.mseed',
