@@ -18,7 +18,10 @@ class Client(Telnet):
     """
     status_timeout = 1
     status_delay = 0.1
-
+    # possible mirrors listed in webdc.eu, content of all is restricted
+    # ODC Server  bhlsa03.knmi.nl:18001 
+    # INGV Server discovery1.rm.ingv.it:18001 
+    # IPGP Server geosrt2.ipgp.fr:18001 
     def __init__(self, host="webdc.eu", port=18001,
                  timeout=20, user="Anonymous", institution="Anonymous",
                  debug=False):
@@ -193,6 +196,61 @@ class Client(Telnet):
         # trim stream
         stream.trim(start_datetime, end_datetime)
         return stream
+
+    def getPAZ(self, network_id, station_id, location_id,
+                    channel_id, start_datetime, end_datetime):
+        """
+        Returns poles, zeros, gain and sensitivity as dictionary.
+        
+        @param network_id: Network code, e.g. 'BW'.
+        @param station_id: Station code, e.g. 'MANZ'.
+        @param location_id: Location code, e.g. '01'.
+        @param channel_id: Channel code, e.g. 'EHE'.
+        @param start_datetime: start time as L{obspy.UTCDateTime} object.
+        @param end_datetime: end time as L{obspy.UTCDateTime} object.
+        @return: dictionary containing PAZ information
+        """
+        rtype = 'REQUEST INVENTORY instruments=true'
+        rdata = "%s %s %s %s %s %s" % (start_datetime.formatArcLink(),
+                             end_datetime.formatArcLink(),
+                             network_id,
+                             location_id,
+                             station_id,
+                             channel_id)
+        # fetch plain xml document
+        xml_doc = self._fetch(rtype, [rdata])
+        # generate object by using XML schema
+        xml_doc = objectify.fromstring(xml_doc)# self.inventory_parser)
+        paz = {}
+        if not xml_doc.countchildren():
+            return paz
+        if len(xml_doc.resp_paz) > 1:
+            raise ArcLinkException('Currently support only parsing of'
+                'single network and station BW MANZ')
+        resp_paz = xml_doc.resp_paz[0]
+        # parsing gain
+        paz['gain'] = float(resp_paz.attrib['norm_fac'])
+        # parsing zeros
+        paz['zeros'] = []
+        for zeros in str(resp_paz.zeros).strip().split():
+            i = eval(zeros)
+            paz['zeros'].append(i[0] + i[1]*1j) 
+        if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
+            raise ArcLinkException('Could not parse all zeros')
+        # parsing poles
+        paz['poles'] = []
+        for poles in str(resp_paz.poles).strip().split():
+            i = eval(poles)
+            paz['poles'].append(i[0] + i[1]*1j) 
+        if len(paz['poles']) != int(resp_paz.attrib['npoles']):
+            raise ArcLinkException('Could not parse all poles')
+        # parsing sensitivity
+        component = xml_doc.network.station.seis_stream.component
+        if len(component) > 1:
+            raise ArcLinkException('Currently support only parsing of'
+                'single channel, e.g. EHZ')
+        paz['sensitivity'] = float(component[0].attrib['gain'])
+        return paz
 
     def saveResponse(self, filename, network_id, station_id, location_id,
                      channel_id, start_datetime, end_datetime, format='SEED'):

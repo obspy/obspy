@@ -116,6 +116,31 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.channel, 'EHZ')
         os.remove('test.fseed')
 
+    def test_getPAZ(self):
+        """
+        Test for the Client.getPAZ function. As reference the EHZ channel
+        of MANZ is taken, the result is compared to the entries of the
+        local response file of the bavarian network.
+        """
+        zeros = [0j,0j]
+        poles = [-3.700400E-02 +3.701600E-02j, -3.700400E-02 -3.701600E-02j,
+                 -2.513300E+02 +0.000000E+00j, -1.310400E+02 -4.672900E+02j, 
+                 -1.310400E+02 +4.672900E+02j]
+        gain = 6.0077E+07
+        sensitivity = 2.516800E+09
+        #
+        client = Client()
+        start = UTCDateTime(2009, 1, 1)
+        end = start + 1
+        # poles and zeros
+        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
+        self.assertEqual(gain, paz['gain'])
+        self.assertEqual(poles, paz['poles'])
+        self.assertEqual(zeros, paz['zeros'])
+        # can only compare dezimal places
+        self.assertAlmostEqual(sensitivity/1e9, paz['sensitivity']/1e9, places=4)
+    
+    
     def test_saveResponse(self):
         """
         """
