@@ -220,7 +220,7 @@ class Client(Telnet):
         # fetch plain xml document
         xml_doc = self._fetch(rtype, [rdata])
         # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc)# self.inventory_parser)
+        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
         paz = {}
         if not xml_doc.countchildren():
             return paz
@@ -233,15 +233,17 @@ class Client(Telnet):
         # parsing zeros
         paz['zeros'] = []
         for zeros in str(resp_paz.zeros).strip().split():
-            i = eval(zeros)
-            paz['zeros'].append(i[0] + i[1]*1j) 
+            temp = zeros.split(',')
+            i = complex(float(temp[0][1:]), float(temp[1][:-1]))
+            paz['zeros'].append(i)
         if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
             raise ArcLinkException('Could not parse all zeros')
         # parsing poles
         paz['poles'] = []
         for poles in str(resp_paz.poles).strip().split():
-            i = eval(poles)
-            paz['poles'].append(i[0] + i[1]*1j) 
+            temp = poles.split(',')
+            i = complex(float(temp[0][1:]), float(temp[1][:-1]))
+            paz['poles'].append(i)
         if len(paz['poles']) != int(resp_paz.attrib['npoles']):
             raise ArcLinkException('Could not parse all poles')
         # parsing sensitivity
