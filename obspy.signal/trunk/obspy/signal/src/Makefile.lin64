@@ -8,14 +8,14 @@ DEPENDS = \
 	xcorr.o \
 	recstalta.o
 
-CFLAGS = -g -O3 
+CFLAGS = -m64 -g -O2 -fPIC
 CC = gcc
 
 signal.so: $(DEPENDS)
-	$(CC) $(CFLAGS) -shared -lm -o signal.so $(DEPENDS)
+	$(CC) $(CFLAGS) -shared -lm -o signal.lin64.so $(DEPENDS)
 
 install: signal.so
-	cp signal.so ../lib/signal.so
+	cp signal.lin64.so ../lib/signal.lin64.so
 
 clean:
 	find ./ -name "*.o" -exec rm {} \;

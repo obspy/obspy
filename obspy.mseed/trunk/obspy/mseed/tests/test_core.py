@@ -93,7 +93,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = 'temp1.mseed'
         npts = 1000
         # data array of integers - float won't work!
-        data = N.random.randint(-1000, 1000, npts)
+        data = N.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)

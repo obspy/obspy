@@ -270,14 +270,15 @@ class libmseed(object):
         recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
                                  C.c_void_p)(record_handler)
         # Pack mstg into a MSEED file using record_handler as write method
+        msr = C.POINTER(MSRecord)()
         errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                           encoding, byteorder,
                                           C.byref(self.packedsamples),
-                                          flush, verbose, None)
+                                          flush, verbose, msr)
         if errcode == -1:
             raise Exception('Error in mst_packgroup')
         clibmseed.mst_freegroup(C.pointer(mstg))
-        del mstg
+        del mstg, msr
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
                              sampratetol= -1, dataflag=1, skipnotdata=1,

@@ -70,18 +70,18 @@ lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
 lib.decomp_6b.argtypes = [c_file_p, C.c_int,
-                          N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                          N.ctypeslib.ndpointer(dtype='int', ndim=1,
                                                 flags='C_CONTIGUOUS'), ]
 lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
-lib.rem_2nd_diff.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+lib.rem_2nd_diff.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
                                                    flags='C_CONTIGUOUS'),
                              C.c_int]
 lib.rem_2nd_diff.restype = C.c_int
 
 # gse_functions check_sum
-lib.check_sum.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+lib.check_sum.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
                                                 flags='C_CONTIGUOUS'),
                           C.c_int, C.c_longlong]
 lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
@@ -91,13 +91,13 @@ lib.buf_init.argtypes = [C.c_void_p]
 lib.buf_init.restype = C.c_void_p
 
 # gse_functions diff_2nd
-lib.diff_2nd.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+lib.diff_2nd.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
                                                flags='C_CONTIGUOUS'),
                          C.c_int, C.c_int]
 lib.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-lib.compress_6b.argtypes = [N.ctypeslib.ndpointer(dtype='int32', ndim=1,
+lib.compress_6b.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
                                                   flags='C_CONTIGUOUS'),
                             C.c_int]
 lib.compress_6b.restype = C.c_int
@@ -204,7 +204,7 @@ def read(f, test_chksum=False):
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    data = N.zeros(head.n_samps, dtype='int32')
+    data = N.zeros(head.n_samps, dtype='int')
     n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
     lib.rem_2nd_diff(data, head.n_samps)
