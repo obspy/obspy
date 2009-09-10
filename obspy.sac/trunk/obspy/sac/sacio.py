@@ -140,9 +140,9 @@ class ReadSac(object):
             self.hf.append(-12345.0)
         #
         # allocate the array for header ints
-        self.hi = array.array('l')
+        self.hi = array.array('i')
         for _i in xrange(40):
-            self.hi.append(long(-12345))
+            self.hi.append(int(-12345))
         #
         # allocate the array for header characters
         self.hs = array.array('c')
@@ -302,7 +302,7 @@ class ReadSac(object):
         """
         
         self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('l') # allocate the array for header ints
+        self.hi = array.array('i') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
@@ -387,7 +387,7 @@ class ReadSac(object):
         """
         self.seis = array.array('f') # allocate the array for the points
         self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('l') # allocate the array for header ints
+        self.hi = array.array('i') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
         try:
             #### open the file
@@ -451,7 +451,7 @@ class ReadSac(object):
         """
         self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('l') # allocate the array for header ints
+        self.hi = array.array('i') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
         ###### open the file
         try:
