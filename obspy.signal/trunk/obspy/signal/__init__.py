@@ -27,6 +27,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from filter import *
 from rotate import *
 from trigger import *
+from seismometer import *
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv
-import seismometer
