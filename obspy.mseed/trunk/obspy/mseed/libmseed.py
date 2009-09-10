@@ -1093,6 +1093,11 @@ class libmseed(object):
         chain = mstg.contents.traces
         # Loop over all traces in trace_list.
         for _i in xrange(numtraces):
+            # Check that data are numpy.ndarrays of dtype int32
+            if not isinstance(trace_list[_i][1], N.ndarray) or \
+                    trace_list[_i][1].dtype != 'int32':
+                raise Exception("Data must me of type numpy.ndarray, dtype "
+                                "int32")
             # Create variable with the number of sampels in this trace for
             # faster future access.
             npts = trace_list[_i][0]['numsamples']
