@@ -1,11 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The Filter test suite.
 """
 
 from obspy.signal import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH 
-from obspy.signal import lowpass,lowpassZPHSH, highpass, highpassZPHSH, envelope
+from obspy.signal import lowpass,lowpassZPHSH, highpass, highpassZPHSH
+from obspy.signal.filter import envelope
 import inspect, os, unittest, gzip
 import numpy as N
 
