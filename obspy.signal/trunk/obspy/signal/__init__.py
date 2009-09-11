@@ -30,3 +30,4 @@ from trigger import *
 from seismometer import *
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv
+from cpxtrace import *

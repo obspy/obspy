@@ -4,6 +4,7 @@ import ctypes as C
 import numpy as N
 import os
 import platform
+from scipy import *
 
 
 if platform.system() == 'Windows':
@@ -107,6 +108,52 @@ def xcorr(tr1, tr2, window_len):
 
     return shift.value, coe_p.value
 
+def nextpow2(i):
+        n = 2
+        while n < i:
+                n = n * 2
+        return n
+
+def smooth(x,smoothie):
+        suma=N.zeros(size(x))
+        if smoothie>1:
+                if ( len(x) > 1 and len(x)<size(x) ):
+                        out_add = append(append([x[0,:]]*smoothie,x,axis=0),[x[(len(x)-1),:]]*smoothie,axis=0)
+                        print 'Smoothfunction for multidimensional signals needs to be implemented'
+                #       out = filter(ones(1,smoothie)/smoothie,1,out_add)
+                #       out[1:smoothie,:] = []
+                else:
+                        out_add = append(append([x[0]]*smoothie,x),[x[size(x)-1]]*smoothie)
+                        for i in xrange(smoothie,len(x)+smoothie):
+                                sum = 0
+                                for k in range(-smoothie,smoothie):
+                                        sum = sum+out_add[i+k]
+                                suma[i-smoothie]=float(sum)/(2*smoothie)
+                        out = suma
+                        out[0:smoothie] = out[smoothie]
+                        out[size(x)-1-smoothie:size(x)] = out[size(x)-1-smoothie]
+        else:
+                out=x
+        return out
+
+def enframe(x,win,inc):
+        nx=len(x)
+        nwin=len(win)
+        if (nwin == 1):
+                length = win
+        else:
+                length = nextpow2(nwin)
+        nf = int(fix((nx-length+inc)/inc))
+        f=zeros((nf,length))
+        indf = inc*arange(nf)
+        inds = arange(length)+1
+        f = x[(transpose(vstack([indf]*length))+vstack([inds]*nf))-1]
+        if (nwin > 1):
+                w = transpose(win)
+                f = f* vstack([w]*nf)
+        f = signal.detrend(f,type='constant')
+        no_win,buf = f.shape
+        return f,length,no_win
 
 if __name__ == '__main__':
     import doctest
