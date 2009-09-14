@@ -10,6 +10,9 @@ from scipy import signal, fix
 
 if platform.system() == 'Windows':
     lib_name = 'signal.win32.dll'
+elif platform.system() == 'Darwin':
+    # 32 bit OSX, tested with 10.5.6
+    lib_name = 'signal.dylib'
 else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'signal.lin64.so'

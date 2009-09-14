@@ -1,0 +1,22 @@
+# Makefile for coordtrans
+
+INCLUDES= \
+	-I .
+
+DEPENDS = \
+	coordtrans.o \
+	xcorr.o \
+	recstalta.o
+
+CFLAGS = -g -O3 
+CC = gcc
+
+signal.dylib: $(DEPENDS)
+	$(CC) $(CFLAGS) -dynamiclib -lm -o signal.dylib $(DEPENDS)
+
+install: signal.so
+	cp signal.so ../lib/signal.so
+
+clean:
+	find ./ -name "*.o" -exec rm {} \;
+	rm -f *.so

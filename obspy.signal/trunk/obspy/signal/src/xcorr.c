@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <malloc.h>
 #include <memory.h>
 
 void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift, double* coe_p)
