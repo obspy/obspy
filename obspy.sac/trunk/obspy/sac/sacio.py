@@ -86,7 +86,7 @@ class ReadSac(object):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
 
-    def __init__(self,filen=False):
+    def __init__(self,filen=False,headonly=False):
         self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,   \
                       'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8,'int1':9,'t0':10,\
                       't1':11,'t2':12,'t3':13,'t4':14,'t5':15,'t6':16,\
@@ -113,11 +113,15 @@ class ReadSac(object):
                       'kuser2':18,'kcmpnm':19,'knetwk':20,\
                       'kdatrd':21,'kinst':22}
         self.InitArrays()
+        self.headonly = headonly
         if filen:
             self.__call__(filen)
 
     def __call__(self,filename):
-        self.ReadSacFile(filename)
+        if self.headonly:
+            self.ReadSacHeader(filename)
+        else:
+            self.ReadSacFile(filename)
 
 
     def InitArrays(self):
@@ -135,23 +139,18 @@ class ReadSac(object):
         # list). That's a total of 632 bytes.
         #
         # allocate the array for header floats
-        self.hf = array.array('f')
-        for _i in xrange(70):
-            self.hf.append(-12345.0)
+        self.hf = array.array('f',[-12345.0])*70
         #
         # allocate the array for header ints
-        self.hi = array.array('i')
-        for _i in xrange(40):
-            self.hi.append(int(-12345))
+        self.hi = array.array('i',[-12345])*40
         #
         # allocate the array for header characters
         self.hs = array.array('c')
         self.hs.fromstring('-12345  ')
         self.hs.fromstring('-12345          ')
-        for _i in xrange(21):
-            self.hs.fromstring('-12345  ')
-
-        self.seis = array.array('f') # allocate the array for the points
+        self.hs.fromstring('-12345  '*21)
+	# allocate the array for the points
+        self.seis = array.array('f') 
 
 
     def fromarray(self,trace,begin=0.0,delta=1.0,distkm=0):
