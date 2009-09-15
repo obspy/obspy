@@ -39,7 +39,7 @@ class MemoryTestCase(unittest.TestCase):
         for _ in xrange(200):
             start = time.time()
             stream = read(self.file)
-            stream.verify()
+            stream._verify()
             tr = stream[0]
             self.assertAlmostEqual(tr.data.mean(), 201.55502749647832)
             self.assertEqual(tr.stats.network, 'BW')
