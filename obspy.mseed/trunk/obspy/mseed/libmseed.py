@@ -277,7 +277,10 @@ class libmseed(object):
                                           flush, verbose, msr)
         if errcode == -1:
             raise Exception('Error in mst_packgroup')
+        # Cleaning up
         clibmseed.mst_freegroup(C.pointer(mstg))
+        if isinstance(f,file): # necessary for Python 2.5.2 BUG otherwise!
+            f.close()
         del mstg, msr
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
