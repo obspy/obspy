@@ -90,7 +90,8 @@ def readSAC(filename, headonly=False, **kwargs):
         # directly pass the pointers from the array.array class to
         # numpy.ndarray, old version:
         # data=N.fromstring(t.seis.tostring(),dtype='float32'))
-        tr = Trace(header=header, data=N.frombuffer(t.seis, dtype='float32'))
+        #tr = Trace(header=header, data=N.frombuffer(t.seis, dtype='float32'))
+        tr = Trace(header=header, data=t.seis)
     return Stream([tr])
 
 
@@ -135,15 +136,16 @@ def writeSAC(stream_object, filename, **kwargs):
         t.SetHvalue('nzsec', start.second)
         t.SetHvalue('nzmsec', start.microsecond / 1e3)
         # building array of floats
-        t.seis = array.array('f')
+        #t.seis = array.array('f')
         # pass data as string (actually it's a copy), using a list for
         # passing would require a type info per list entry and thus use a lot
         # of memory
         # XXX use the buffer interface at soon as it is supported in
         # array.array, Python2.6
-        if trace.data.dtype != 'float32':
-            trace.data = trace.data.astype('float32')
-        t.seis.fromstring(trace.data.tostring())
+        if trace.data.dtype != '<f4':
+            trace.data = trace.data.astype('<f4')
+        t.seis = trace.data
+        #t.seis.fromstring(trace.data.tostring())
         if i != 0:
             filename = "%s%02d%s" % (base, i, ext)
         t.WriteSacBinary(filename)

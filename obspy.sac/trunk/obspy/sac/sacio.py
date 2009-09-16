@@ -72,6 +72,7 @@ import array,os,string
 from sacutil import *
 import time, copy
 from obspy.core import UTCDateTime
+import numpy as np
 
 
 class SacError(Exception):
@@ -384,7 +385,7 @@ class ReadSac(object):
         >>> t.GetHvalue('npts')
         100
         """
-        self.seis = array.array('f') # allocate the array for the points
+        #self.seis = array.array('f') # allocate the array for the points
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('i') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
@@ -419,11 +420,10 @@ class ReadSac(object):
                     #--------------------------------------------------------------
                     npts = self.hi[9]  # you just have to know it's in the 10th place
                     #             # actually, it's in the SAC manual
-                    mBytes = npts * 4
-                    #
-                    self.seis = array.array('f')
+                    #mBytes = npts * 4
                     try:
-                        self.seis.fromfile(f,npts) # the data are now in s
+                        #self.seis.fromfile(f,npts) # the data are now in s
+                        self.seis = np.fromfile(f,dtype='<f4',count=npts)
                     except EOFError, e:
                         self.hf = self.hi = self.hs = self.seis = None
                         f.close()
@@ -448,7 +448,7 @@ class ReadSac(object):
         True
         >>> os.remove('testbin.sac')
         """
-        self.seis = array.array('f')
+        #self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('i') # allocate the array for header ints
         self.hs = array.array('c') # allocate the array for header characters
@@ -467,11 +467,11 @@ class ReadSac(object):
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
                 # read in the float values
-                for i in range(14):
+                for i in xrange(14):
                     a=map(float,f.readline().split())
                     b=map(self.hf.append,a)  
                 # read in the int values
-                for i in range(8):
+                for i in xrange(8):
                     a=map(int,f.readline().split())
                     b=map(self.hi.append,a)
                 # reading in the string part is a bit more complicated
@@ -489,11 +489,12 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # read in the seismogram points
                 #--------------------------------------------------------------
-                while True:
-                    line = f.readline()
-                    if not line: break
-                    a=map(float,line.split())
-                    b=map(self.seis.append,a)
+                #while True:
+                #    line = f.readline()
+                #    if not line: break
+                #    a=map(float,line.split())
+                #    b=map(self.seis.append,a)
+                self.seis = np.loadtxt(f,dtype='<f4').ravel()
             except IOError, e:
                 self.hf = self.hs = self.hi = self.seis = None
                 f.close()
@@ -695,12 +696,14 @@ class ReadSac(object):
 
     def _chck_header_(self):
         """if trace changed since read, adapt header values"""
-        if not isinstance(self.seis,array.array):
-            self.seis = array.array('f',self.seis)
-        self.SetHvalue('npts',len(self.seis))
-        self.SetHvalue('depmin',min(self.seis))
-        self.SetHvalue('depmax',max(self.seis))
-        self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
+        #if not isinstance(self.seis,array.array):
+        #    self.seis = array.array('f',self.seis)
+        if not isinstance(self.seis,np.ndarray):
+            self.seis = np.array(self.seis,dtype='<f4')
+            self.SetHvalue('npts',len(self.seis))
+            self.SetHvalue('depmin',min(self.seis))
+            self.SetHvalue('depmax',max(self.seis))
+            self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
         
 
 

@@ -30,13 +30,13 @@ class SacioTestCase(unittest.TestCase):
                                  - 1.6, 1.7, -1.8, 1.9, -2.0])
         t = sacio.ReadSac()
         t.fromarray(data)
-        t.WriteSacBinary('test.sac')
-        u = sacio.ReadSac('test.sac')
+        t.WriteSacBinary('test2.sac')
+        u = sacio.ReadSac('test2.sac')
         for _k in ["kstnm", "npts", "nvhdr", "delta"]:
             self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
         self.assertEqual(t.GetHvalue("kstnm"), "-12345  ")
-        self.assertEqual(t.seis, u.seis)
-        os.remove('test.sac')
+        self.assertEqual(t.seis.tolist(), u.seis.tolist())
+        os.remove('test2.sac')
 
 
     def test_Date(self):
@@ -49,6 +49,21 @@ class SacioTestCase(unittest.TestCase):
         diff = t.GetHvalue('npts')
         self.assertEqual(int(t.endtime.timestamp-t.starttime.timestamp),diff)
         
+    def test_read(self):
+        """
+        Tests for sacio read and write
+        """
+        data = array.array('f', [-8.7422776573475858e-08, -0.30901697278022766,
+            -0.58778536319732666, -0.8090171217918396,
+            -0.95105659961700439, -1.0, -0.95105630159378052,
+            -0.80901658535003662, -0.5877845287322998,
+            -0.30901604890823364, 1.1285198979749111e-06])
+        sacfile = os.path.join(self.path, 'test.sac')
+        t = sacio.ReadSac()
+        t.ReadSacFile(sacfile)
+        self.assertEqual(t.seis[0:11].tolist(), data.tolist())
+        self.assertEqual(t.GetHvalue('npts'), 100)
+        self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
 
     def test_readWrite(self):
         """
