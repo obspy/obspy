@@ -146,12 +146,10 @@ class ReadSac(object):
         self.hi = array.array('i',[-12345])*40
         #
         # allocate the array for header characters
-        self.hs = array.array('c')
-        self.hs.fromstring('-12345  ')
-        self.hs.fromstring('-12345          ')
-        self.hs.fromstring('-12345  '*21)
-	# allocate the array for the points
-        self.seis = array.array('f') 
+        self.hs = np.ndarray(24,dtype='|S8')
+        self.hs[:] = '-12345   ' # setting default value
+        # allocate the array for the points
+        self.seis = np.ndarray([],dtype='<f4')
 
 
     def fromarray(self,trace,begin=0.0,delta=1.0,distkm=0):
@@ -203,16 +201,20 @@ class ReadSac(object):
             return(self.hi[index])
         elif self.sdict.has_key(key):
             index = self.sdict[key]
-            length = 8
+            #length = 8
             if index == 0:
-                myarray = self.hs[0:8]
+                #myarray = self.hs[0:8]
+                myarray = self.hs[0]
             elif index == 1:
-                myarray = self.hs[8:24]
+                #myarray = self.hs[8:24]
+                myarray = self.hs[1] + self.hs[2]
             else:
-                start = 8 + index*8  # the extra 8 is from item #2
-                end   = start + 8
-                myarray = self.hs[start:end]
-            return(myarray.tostring())
+                #start = 8 + index*8  # the extra 8 is from item #2
+                #end   = start + 8
+                #myarray = self.hs[start:end]
+                myarray = self.hs[index+1] # extra 1 is from item #2
+            #return(myarray.tostring())
+            return myarray
         else:
             raise SacError("Cannot find header entry for: ",item)
         
@@ -238,33 +240,36 @@ class ReadSac(object):
                 self.hi[index] = int(value)
         elif self.sdict.has_key(key):
                 index = self.sdict[key]
-                vlen = len(value)
+                value = '%-8s' % value
                 if index == 0:
-                        if vlen > 8:
-                                vlen = 8
-                        for i in range(0,8):
-                                self.hs[i] = ' '
-                        for i in range(0,vlen):
-                                self.hs[i] = value[i]
+                        self.hs[0] = value
+                        #if vlen > 8:
+                        #        vlen = 8
+                        #for i in range(0,8):
+                        #        self.hs[i] = ' '
+                        #for i in range(0,vlen):
+                        #        self.hs[i] = value[i]
                 elif index == 1:
-                        start = 8
-                        if vlen > 16:
-                                vlen =16 
-                        for i in range(0,16):
-                                self.hs[i+start] = ' '
-                        for i in range(0,vlen):
-                                self.hs[i+start] = value[i]
+                        #start = 8
+                        #if vlen > 16:
+                        #        vlen =16 
+                        #for i in range(0,16):
+                        #        self.hs[i+start] = ' '
+                        #for i in range(0,vlen):
+                        #        self.hs[i+start] = value[i]
+                        self.hs[1] = value
                 else:
                         #
                         # if you are here, then the index > 2
                         #
-                        if vlen > 8:
-                                vlen = 8
-                        start  = 8 + index*8 
-                        for i in range(0,8):
-                                self.hs[i+start] = ' '
-                        for i in range(0,vlen):
-                                self.hs[i+start] = value[i]
+                        #if vlen > 8:
+                        #        vlen = 8
+                        #start  = 8 + index*8 
+                        #for i in range(0,8):
+                        #        self.hs[i+start] = ' '
+                        #for i in range(0,vlen):
+                        #        self.hs[i+start] = value[i]
+                        self.hs[index+1] = value
         else:
             raise SacError("Cannot find header entry for: ",item)
 
@@ -303,7 +308,7 @@ class ReadSac(object):
         
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('i') # allocate the array for header ints
-        self.hs = array.array('c') # allocate the array for header characters
+        #self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
             #### open the file
@@ -321,7 +326,8 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 self.hf.fromfile(f,70)     # read in the float values
                 self.hi.fromfile(f,40)     # read in the int values
-                self.hs.fromfile(f,192)    # read in the char values
+                #self.hs.fromfile(f,192)    # read in the char values
+                self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
             except EOFError, e:
                 raise SacIOError("Cannot read all header values: ",e)
             else:
@@ -385,10 +391,8 @@ class ReadSac(object):
         >>> t.GetHvalue('npts')
         100
         """
-        #self.seis = array.array('f') # allocate the array for the points
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('i') # allocate the array for header ints
-        self.hs = array.array('c') # allocate the array for header characters
         try:
             #### open the file
             f = open(fname,'rb')
@@ -405,7 +409,8 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 self.hf.fromfile(f,70)     # read in the float values
                 self.hi.fromfile(f,40)     # read in the int values
-                self.hs.fromfile(f,192)    # read in the char values
+                #self.hs.fromfile(f,192)    # read in the char values
+                self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
             except EOFError, e:
                 raise SacIOError("Cannot read any or no header values: ",e)
             else:
@@ -419,10 +424,8 @@ class ReadSac(object):
                     # read in the seismogram points
                     #--------------------------------------------------------------
                     npts = self.hi[9]  # you just have to know it's in the 10th place
-                    #             # actually, it's in the SAC manual
-                    #mBytes = npts * 4
+                    #                  # actually, it's in the SAC manual
                     try:
-                        #self.seis.fromfile(f,npts) # the data are now in s
                         self.seis = np.fromfile(f,dtype='<f4',count=npts)
                     except EOFError, e:
                         self.hf = self.hi = self.hs = self.seis = None
@@ -448,10 +451,9 @@ class ReadSac(object):
         True
         >>> os.remove('testbin.sac')
         """
-        #self.seis = array.array('f')
         self.hf = array.array('f') # allocate the array for header floats
         self.hi = array.array('i') # allocate the array for header ints
-        self.hs = array.array('c') # allocate the array for header characters
+        self.hs = np.ndarray(24, dtype='|S8') # allocate the ndarray for header characters
         ###### open the file
         try:
             f = open(fname,'r')
@@ -478,22 +480,12 @@ class ReadSac(object):
                 # because every string field has to be 8 characters long
                 # apart from the second field which is 16 characters long
                 # resulting in a total length of 192 characters
-                a=f.readline()
-                b=map(self.hs.append,a[0:8])
-                b=map(self.hs.append,a[8:24])
-                for i in range(7):
-                    a=f.readline().split()
-                    for k in a:
-                        b=map(self.hs.append,k.ljust(8))
-                        
+                for i in xrange(0,24,3):
+                    self.hs[i:i+3] = np.fromfile(f,dtype='|S8',count=3)
+                    f.readline() # strip the newline
                 #--------------------------------------------------------------
                 # read in the seismogram points
                 #--------------------------------------------------------------
-                #while True:
-                #    line = f.readline()
-                #    if not line: break
-                #    a=map(float,line.split())
-                #    b=map(self.seis.append,a)
                 self.seis = np.loadtxt(f,dtype='<f4').ravel()
             except IOError, e:
                 self.hf = self.hs = self.hi = self.seis = None
@@ -696,15 +688,12 @@ class ReadSac(object):
 
     def _chck_header_(self):
         """if trace changed since read, adapt header values"""
-        #if not isinstance(self.seis,array.array):
-        #    self.seis = array.array('f',self.seis)
         if not isinstance(self.seis,np.ndarray):
             self.seis = np.array(self.seis,dtype='<f4')
             self.SetHvalue('npts',len(self.seis))
-            self.SetHvalue('depmin',min(self.seis))
-            self.SetHvalue('depmax',max(self.seis))
-            self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
-        
+            self.SetHvalue('depmin',self.seis.min())
+            self.SetHvalue('depmax',self.seis.max())
+            self.SetHvalue('depmen',self.seis.mean())
 
 
 if __name__ == "__main__":

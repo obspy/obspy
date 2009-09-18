@@ -7,6 +7,7 @@ The sacio test suite.
 from obspy.sac import sacio, SacError
 import inspect, os, unittest
 import array
+import numpy as np
 
 
 class SacioTestCase(unittest.TestCase):
@@ -35,7 +36,7 @@ class SacioTestCase(unittest.TestCase):
         for _k in ["kstnm", "npts", "nvhdr", "delta"]:
             self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
         self.assertEqual(t.GetHvalue("kstnm"), "-12345  ")
-        self.assertEqual(t.seis.tolist(), u.seis.tolist())
+        np.testing.assert_array_equal(t.seis, u.seis)
         os.remove('test2.sac')
 
 
@@ -53,15 +54,15 @@ class SacioTestCase(unittest.TestCase):
         """
         Tests for sacio read and write
         """
-        data = array.array('f', [-8.7422776573475858e-08, -0.30901697278022766,
+        data = np.array([-8.7422776573475858e-08, -0.30901697278022766,
             -0.58778536319732666, -0.8090171217918396,
             -0.95105659961700439, -1.0, -0.95105630159378052,
             -0.80901658535003662, -0.5877845287322998,
-            -0.30901604890823364, 1.1285198979749111e-06])
+            -0.30901604890823364, 1.1285198979749111e-06],dtype='<f4')
         sacfile = os.path.join(self.path, 'test.sac')
         t = sacio.ReadSac()
         t.ReadSacFile(sacfile)
-        self.assertEqual(t.seis[0:11].tolist(), data.tolist())
+        np.testing.assert_array_equal(t.seis[0:11], data)
         self.assertEqual(t.GetHvalue('npts'), 100)
         self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
 
@@ -75,6 +76,7 @@ class SacioTestCase(unittest.TestCase):
         # commented get_attr method in sacio
         #self.assertEqual(t.get_attr(), 1)
         self.assertEqual(t.GetHvalue('npts'), 100)
+        self.assertEqual(t.GetHvalue("kcmpnm"), "Q       ")
         self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
         t.SetHvalue("kstnm", "spiff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
@@ -85,9 +87,8 @@ class SacioTestCase(unittest.TestCase):
         t.SetHvalue("kstnm", "spoff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spoff   ')
         t.WriteSacHeader('test2.sac')
-        t.SetHvalueInFile('test2.sac', "kcmpnm", 'Z')
-        self.assertEqual(t.GetHvalueFromFile('test2.sac', "kcmpnm"),
-                         'Z       ')
+        t.SetHvalueInFile('test2.sac', "kcmpnm", 'Z       ')
+        self.assertEqual(t.GetHvalueFromFile('test2.sac', "kcmpnm"), 'Z       ')
         t.IsValidSacFile('test2.sac')
         os.remove('test2.sac')
 
@@ -96,6 +97,7 @@ class SacioTestCase(unittest.TestCase):
         t = sacio.ReadSac()
         t.ReadXYSacFile(os.path.join(self.path, 'testxy.sac'))
         self.assertEqual(t.GetHvalue('npts'), 100)
+        self.assertEqual(t.GetHvalue('kf'), '-12345  ')
         t.WriteSacBinary('testbin.sac')
         self.assertEqual(os.path.exists('testbin.sac'), True)
         os.remove('testbin.sac')
