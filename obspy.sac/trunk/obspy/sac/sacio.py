@@ -311,8 +311,8 @@ class ReadSac(object):
         #self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
-            #### open the file
-            f = open(fname,'r')
+	    #### open the file
+	    f = open(fname,'r')
         except IOError:
             raise SacIOError("No such file:"+fname)
         else:
@@ -329,9 +329,10 @@ class ReadSac(object):
                 #self.hs.fromfile(f,192)    # read in the char values
                 self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
             except EOFError, e:
+                self.hf = self.hi = self.hs = None
+                f.close()
                 raise SacIOError("Cannot read all header values: ",e)
             else:
-                ##### only continue if it is a SAC file
                 try:
                     self.IsSACfile(fname)
                 except SacError, e:
@@ -690,12 +691,13 @@ class ReadSac(object):
         """if trace changed since read, adapt header values"""
         if not isinstance(self.seis,np.ndarray):
             self.seis = np.array(self.seis,dtype='<f4')
-            self.SetHvalue('npts',len(self.seis))
-            self.SetHvalue('depmin',self.seis.min())
-            self.SetHvalue('depmax',self.seis.max())
-            self.SetHvalue('depmen',self.seis.mean())
-
-
+        if self.seis.dtype != 'float32':
+            self.seis = np.array(self.seis,dtype='<f4')
+        self.SetHvalue('npts',len(self.seis))
+        self.SetHvalue('depmin',min(self.seis))
+        self.SetHvalue('depmax',max(self.seis))
+        self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
