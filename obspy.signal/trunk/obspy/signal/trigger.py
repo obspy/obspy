@@ -34,9 +34,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 """
 
 import ctypes as C
-import numpy as N
+import numpy as np
 import os
 import platform
+import copy
 
 
 if platform.system() == 'Windows':
@@ -68,16 +69,16 @@ def recStalta(a, nsta, nlta):
     @rtype: Numpy ndarray
     @return: Charactristic function of recursive STA/LTA
     """
-    lib.recstalta.argtypes = [N.ctypeslib.ndpointer(dtype='float64',
+    lib.recstalta.argtypes = [np.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
                                                     flags='C_CONTIGUOUS'),
-                              N.ctypeslib.ndpointer(dtype='float64',
+                              np.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
                                                     flags='C_CONTIGUOUS'),
                               C.c_int, C.c_int, C.c_int]
     lib.recstalta.restype = C.c_void_p
     ndat = len(a)
-    charfct = N.ndarray(ndat, dtype='float64')
+    charfct = np.ndarray(ndat, dtype='float64')
     lib.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
     return charfct
 
@@ -89,11 +90,11 @@ def recStalta(a, nsta, nlta):
 #C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
 #charfct = lib.recstalta(a, ndat, nsta, nlta # do not use pointer here
 #size = struct.calcsize('d') # calculate size of float64
-#return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
+#return np.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
 #                    dtype='float64',count=ndat)
 
 
-def recStaltaPy(charfct, nsta, nlta):
+def recStaltaPy(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
     Bit slower version written in Python.
@@ -110,28 +111,27 @@ def recStaltaPy(charfct, nsta, nlta):
     @return: Charactristic function of recursive STA/LTA
     """
     try:
-        charfct = charfct.tolist()
+        a = a.tolist()
     except:
         pass
-    ndat = len(charfct)
+    ndat = len(a)
     # compute the short time average (STA) and long time average (LTA)
     # given by Evans and Allen
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
     lta = 0.
-    charfct[0] = 0.
+    charfct = [0.0]*len(a)
     icsta = 1 - csta
     iclta = 1 - clta
-    #charfct = charfct.tolist()
     for i in xrange(1, ndat):
-        sq = charfct[i] ** 2
+        sq = a[i] ** 2
         sta = csta * sq + icsta * sta
         lta = clta * sq + iclta * lta
         charfct[i] = sta / lta
         if i < nlta:
             charfct[i] = 0.
-    return charfct
+    return np.array(charfct)
 
 
 def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
@@ -155,33 +155,33 @@ def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
     """
     m = len(a)
     #
-    sta = N.zeros(len(a), dtype=float)
-    lta = N.zeros(len(a), dtype=float)
-    star = N.zeros(len(a), dtype=float)
-    ltar = N.zeros(len(a), dtype=float)
-    pad_sta = N.zeros(Nsta)
-    pad_lta = N.zeros(Nlta) # avoid for 0 division 0/1=0
+    sta = np.zeros(len(a), dtype='float64')
+    lta = np.zeros(len(a), dtype='float64')
+    star = np.zeros(len(a), dtype='float64')
+    ltar = np.zeros(len(a), dtype='float64')
+    pad_sta = np.zeros(Nsta)
+    pad_lta = np.zeros(Nlta) # avoid for 0 division 0/1=0
     #
     # compute the short time average (STA)
     for i in xrange(Nsta): # window size to smooth over
-        sta += N.concatenate((pad_sta, a[i:m - Nsta + i]))
+        sta += np.concatenate((pad_sta, a[i:m - Nsta + i]))
     sta /= Nsta
     #
     # compute the long time average (LTA), 8 sec average over sta
     for i in xrange(Nlta): # window size to smooth over
-        lta += N.concatenate((pad_lta, sta[i:m - Nlta + i]))
+        lta += np.concatenate((pad_lta, sta[i:m - Nlta + i]))
     lta /= Nlta
-    lta = N.concatenate((N.zeros(1), lta))[:m] #XXX ???
+    lta = np.concatenate((np.zeros(1), lta))[:m] #XXX ???
     #
     # compute star, average of abs diff between trace and lta
     for i in xrange(Nsta): # window size to smooth over
-        star += N.concatenate((pad_sta,
+        star += np.concatenate((pad_sta,
                                abs(a[i:m - Nsta + i] - lta[i:m - Nsta + i])))
     star /= Nsta
     #
     # compute ltar, 8 sec average over star
     for i in xrange(Nlta): # window size to smooth over
-        ltar += N.concatenate((pad_lta, star[i:m - Nlta + i]))
+        ltar += np.concatenate((pad_lta, star[i:m - Nlta + i]))
     ltar /= Nlta
     #
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
@@ -206,17 +206,17 @@ def classicStaLta(a, Nsta, Nlta):
     m = len(a)
     #
     # compute the short time average (STA)
-    sta = N.zeros(len(a), dtype=float)
-    pad_sta = N.zeros(Nsta)
+    sta = np.zeros(len(a), dtype='float64')
+    pad_sta = np.zeros(Nsta)
     for i in range(Nsta): # window size to smooth over
-        sta = sta + N.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
+        sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
     sta = sta / Nsta
     #
     # compute the long time average (LTA)
-    lta = N.zeros(len(a), dtype=float)
-    pad_lta = N.ones(Nlta) # avoid for 0 division 0/1=0
+    lta = np.zeros(len(a), dtype='float64')
+    pad_lta = np.ones(Nlta) # avoid for 0 division 0/1=0
     for i in range(Nlta): # window size to smooth over
-        lta = lta + N.concatenate((pad_lta, a[i:m - Nlta + i] ** 2))
+        lta = lta + np.concatenate((pad_lta, a[i:m - Nlta + i] ** 2))
     lta = lta / Nlta
     #
     # pad zeros of length Nlta to avoid overfit and
@@ -241,8 +241,8 @@ def delayedStaLta(a, Nsta, Nlta):
     #
     # compute the short time average (STA) and long time average (LTA)
     # don't start for STA at Nsta because it's muted later anyway
-    sta = N.zeros(len(a), dtype=float)
-    lta = N.zeros(len(a), dtype=float)
+    sta = np.zeros(len(a), dtype='float64')
+    lta = np.zeros(len(a), dtype='float64')
     for i in range(Nlta + Nsta + 1, m):
         sta[i] = (a[i] ** 2 + a[i - Nsta] ** 2) / Nsta + sta[i - 1]
         lta[i] = (a[i - Nsta - 1] ** 2 + a[i - Nsta - Nlta - 1] ** 2) / \
@@ -258,13 +258,13 @@ def zdetect(a, Nsta):
     m = len(a)
     #
     # Z-detector given by Swindell and Snell (1977)
-    sta = N.zeros(len(a), dtype=float)
+    sta = np.zeros(len(a), dtype='float64')
     # Standard Sta
-    pad_sta = N.zeros(Nsta)
+    pad_sta = np.zeros(Nsta)
     for i in range(Nsta): # window size to smooth over
-        sta = sta + N.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
-    a_mean = N.mean(sta)
-    a_std = N.std(sta)
+        sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
+    a_mean = np.mean(sta)
+    a_std = np.std(sta)
     Z = (sta - a_mean) / a_std
     return Z
 
@@ -308,16 +308,16 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     # 5) if the signal stays above thres2 longer than max_len an event
     #    is triggered and following a new event can be triggered as soon as
     #    the signal is above thres1
-    ind1 = N.where(charfct > thres1)[0]
+    ind1 = np.where(charfct > thres1)[0]
     if len(ind1) == 0:
         return []
-    ind2 = N.where(charfct > thres2)[0]
+    ind2 = np.where(charfct > thres2)[0]
     #
     of = [-1]
-    of.extend(ind2[N.diff(ind2) > 1].tolist())
+    of.extend(ind2[np.diff(ind2) > 1].tolist())
     of.extend([ind2[-1]])
     on = [ind1[0]]
-    on.extend(ind1[N.where(N.diff(ind1) > 1)[0] + 1].tolist())
+    on.extend(ind1[np.where(np.diff(ind1) > 1)[0] + 1].tolist())
     #
     pick = []
     while on[-1] > of[0]:
@@ -328,7 +328,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
         if of[0] - on[0] > max_len:
             of.insert(0, on[0] + max_len)
         pick.append([on[0], of[0]])
-    return pick
+    return np.array(pick)
 
 
 if __name__ == '__main__':
