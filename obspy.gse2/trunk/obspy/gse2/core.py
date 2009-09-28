@@ -2,6 +2,7 @@
 
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.gse2 import libgse2
+from ctypes import ArgumentError
 
 
 def isGSE2(filename):
@@ -117,6 +118,6 @@ def writeGSE2(stream_object, filename, **kwargs):
             raise
         try:
             libgse2.write(header, trace.data, f, **kwargs)
-        except AssertionError:
+        except ArgumentError:
             libgse2.write(header, trace.data.astype('l'), f, **kwargs)
     f.close()

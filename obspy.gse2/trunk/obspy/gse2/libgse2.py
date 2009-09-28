@@ -36,7 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import platform, os
 import ctypes as C
-import numpy as N
+import numpy as np
 from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific
 
@@ -73,19 +73,19 @@ lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
 lib.decomp_6b.argtypes = [c_file_p, C.c_int,
-                          N.ctypeslib.ndpointer(dtype='int', ndim=1,
-                                                flags='C_CONTIGUOUS'), ]
+                          np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                                                 flags='C_CONTIGUOUS'), ]
 lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
-lib.rem_2nd_diff.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
-                                                   flags='C_CONTIGUOUS'),
+lib.rem_2nd_diff.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                                                    flags='C_CONTIGUOUS'),
                              C.c_int]
 lib.rem_2nd_diff.restype = C.c_int
 
 # gse_functions check_sum
-lib.check_sum.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
-                                                flags='C_CONTIGUOUS'),
+lib.check_sum.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                                                 flags='C_CONTIGUOUS'),
                           C.c_int, C.c_longlong]
 lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
 
@@ -94,14 +94,14 @@ lib.buf_init.argtypes = [C.c_void_p]
 lib.buf_init.restype = C.c_void_p
 
 # gse_functions diff_2nd
-lib.diff_2nd.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
-                                               flags='C_CONTIGUOUS'),
+lib.diff_2nd.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                                                flags='C_CONTIGUOUS'),
                          C.c_int, C.c_int]
 lib.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-lib.compress_6b.argtypes = [N.ctypeslib.ndpointer(dtype='int', ndim=1,
-                                                  flags='C_CONTIGUOUS'),
+lib.compress_6b.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                                                   flags='C_CONTIGUOUS'),
                             C.c_int]
 lib.compress_6b.restype = C.c_int
 
@@ -207,7 +207,7 @@ def read(f, test_chksum=False):
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    data = N.zeros(head.n_samps, dtype='int')
+    data = np.zeros(head.n_samps, dtype='int')
     n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
     lib.rem_2nd_diff(data, head.n_samps)
@@ -290,7 +290,11 @@ def write(headdict, data, f, inplace=False):
     lib.diff_2nd(data, n, 0)
     ierr = lib.compress_6b(data, n)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
-    #
+    # set some defaults if not available and convert header entries
+    headdict.setdefault('datatype','CM6')
+    headdict.setdefault('vang',-1)
+    headdict.setdefault('calper',1.0)
+    headdict.setdefault('calib',1.0)
     head = HEADER()
     for _i in headdict.keys():
         if _i in gse2head:

@@ -9,7 +9,7 @@ import inspect
 import os
 import unittest
 import copy
-import numpy as N
+import numpy as np
 
 
 class CoreTestCase(unittest.TestCase):
@@ -98,7 +98,7 @@ class CoreTestCase(unittest.TestCase):
                          tr1.stats.gse2.get('calper'))
         self.assertEqual(tr3.stats.gse2.get('calib'),
                          tr1.stats.gse2.get('calib'))
-        N.testing.assert_equal(tr3.data, tr1.data)
+        np.testing.assert_equal(tr3.data, tr1.data)
 
     def test_readAndWriteStreamsViaObspy(self):
         """
@@ -136,8 +136,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr21.stats['station'], 'RNON ')
         self.assertEqual(tr22.stats['station'], 'RJOB ')
         self.assertEqual(tr22.data[0:13].tolist(), testdata)
-        N.testing.assert_equal(tr21.data, tr11.data)
-        N.testing.assert_equal(tr22.data, tr12.data)
+        np.testing.assert_equal(tr21.data, tr11.data)
+        np.testing.assert_equal(tr22.data, tr12.data)
         os.remove(tmpfile1)
         os.remove(tmpfile2)
 
@@ -148,7 +148,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = 'temp2.gse2'
         npts = 1000
         # data cloud of integers - float won't work!
-        data = N.random.randint(-1000, 1000, npts)
+        data = np.random.randint(-1000, 1000, npts)
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
@@ -164,7 +164,12 @@ class CoreTestCase(unittest.TestCase):
         stream = read(tempfile)
         os.remove(tempfile)
         stream._verify()
-        self.assertEquals(stream[0].data.tolist(), data.tolist())
+        np.testing.assert_equal(data, stream[0].data)
+        # test default attributes
+        self.assertEqual('CM6', stream[0].stats.gse2.datatype)
+        self.assertEqual(-1, stream[0].stats.gse2.vang)
+        self.assertEqual(1.0, stream[0].stats.gse2.calper)
+        self.assertEqual(1.0, stream[0].stats.gse2.calib)
 
 
 def suite():
