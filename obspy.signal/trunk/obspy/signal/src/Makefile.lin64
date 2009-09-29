@@ -6,7 +6,10 @@ INCLUDES= \
 DEPENDS = \
 	coordtrans.o \
 	xcorr.o \
-	recstalta.o
+	recstalta.o \
+	pk_mbaer.o \
+	filt_util.o \
+	arpicker.o
 
 CFLAGS = -m64 -g -O2 -fPIC
 CC = gcc
