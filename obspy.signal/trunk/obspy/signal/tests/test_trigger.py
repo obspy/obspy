@@ -3,10 +3,10 @@
 The obspy.signal.trigger test suite.
 """
 
-from obspy.signal import recStalta, recStaltaPy, triggerOnset
+from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer
 from ctypes import ArgumentError
 import numpy as np
-import unittest
+import unittest, os, inspect, gzip
 
 
 class TriggerTestCase(unittest.TestCase):
@@ -14,6 +14,10 @@ class TriggerTestCase(unittest.TestCase):
     Test cases for obspy.trigger
     """
     def setUp(self):
+        # directory where the test files are located
+        path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.path = os.path.join(path, 'data')
+        # random seed data
         np.random.seed(815)
         self.data = np.random.randn(int(1e5))
         pass
@@ -50,6 +54,20 @@ class TriggerTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, recStalta, [1], 5, 10)
         self.assertRaises(ArgumentError, recStalta,
                           np.array([1], dtype='int32'), 5, 10)
+
+    def test_pkBaer(self):
+        """
+        Test pkBaer against implementation for UNESCO short course
+        """
+        file = os.path.join(self.path,'manz_waldk.a01.gz')
+        data = np.loadtxt(gzip.open(file), dtype='float32')
+        df,  ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
+            (200.0, 20, 60, 7.0, 12.0, 100, 100)
+        nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
+                             thr1, thr2, npreset_len, np_dur)
+        self.assertEquals(nptime, 17544)
+        self.assertEquals(pfm, 'IPU0')
+
 
     def test_triggerOnset(self):
         """

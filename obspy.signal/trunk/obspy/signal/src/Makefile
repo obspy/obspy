@@ -6,7 +6,8 @@ INCLUDES= \
 DEPENDS = \
 	coordtrans.o \
 	xcorr.o \
-	recstalta.o
+	recstalta.o \
+	pk_mbaer.o
 
 CFLAGS = -g -O3 
 CC = gcc

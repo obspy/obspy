@@ -254,6 +254,8 @@ def delayedStaLta(a, Nsta, Nlta):
 def zdetect(a, Nsta):
     """
     Z-detector, (see Withers et al. 1998 p. 99)
+
+    @param Nsta: Window length in Samples.
     """
     m = len(a)
     #
@@ -329,6 +331,43 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
             of.insert(0, on[0] + max_len)
         pick.append([on[0], of[0]])
     return np.array(pick)
+
+
+def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
+    """
+    Wrapper for P-picker routine by m. baer, schweizer. erdbebendienst
+
+    See paper by m. baer and u. kradolfer: an automatic phase picker for
+    local and teleseismic events bssa vol. 77,4 pp1437-1445
+
+    @param reltrc    : timeseries as floating data, possibly filtered
+    @param samp_int  : number of samples per second
+    @param tdownmax  : if dtime exceeds tdownmax, the trigger is examined
+                       for validity
+    @param tupevent  : min nr of samples for itrm to be accepted as a pick
+    @param thr1      : threshold to trigger for pick (c.f. paper)
+    @param thr2      : threshold for updating sigma  (c.f. paper)
+    @param preset_len: no of points taken for the estimation of variance
+                       of SF(t) on preset()
+    @param p_dur     : p_dur defines the time interval for which the
+                       maximum amplitude is evaluated Originally set to 6 secs
+    @return          : (pptime, pfm) pptime sample number of parrival; pfm direction
+                         of first motion (U or D)
+    """
+    pptime = C.c_int()
+    # c_chcar_p strings are immutable, use string_buffer for pointers
+    pfm = C.create_string_buffer("     ", 5)
+    lib.ppick.argtypes = [np.ctypeslib.ndpointer(dtype='float32',
+                                                 ndim=1,
+                                                 flags='C_CONTIGUOUS'),
+                          C.c_int, C.POINTER(C.c_int), C.c_char_p, C.c_float,
+                          C.c_int, C.c_int, C.c_float, C.c_float, C.c_int,
+                          C.c_int]
+    lib.ppick.restype = C.c_void_p
+    lib.ppick(reltrc, len(reltrc), C.byref(pptime), pfm, samp_int, 
+              tdownmax, tupevent, thr1, thr2, preset_len,
+              p_dur)
+    return pptime.value, pfm.value
 
 
 if __name__ == '__main__':
