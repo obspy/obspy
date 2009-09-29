@@ -694,8 +694,8 @@ class ReadSac(object):
         if self.seis.dtype != 'float32':
             self.seis = np.array(self.seis,dtype='<f4')
         self.SetHvalue('npts',len(self.seis))
-        self.SetHvalue('depmin',min(self.seis))
-        self.SetHvalue('depmax',max(self.seis))
+        self.SetHvalue('depmin',self.seis.min())
+        self.SetHvalue('depmax',self.seis.max())
         self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
         
 if __name__ == "__main__":
