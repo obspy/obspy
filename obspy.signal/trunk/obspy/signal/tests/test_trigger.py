@@ -3,7 +3,7 @@
 The obspy.signal.trigger test suite.
 """
 
-from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer
+from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer, arPick
 from ctypes import ArgumentError
 import numpy as np
 import unittest, os, inspect, gzip
@@ -67,6 +67,22 @@ class TriggerTestCase(unittest.TestCase):
                              thr1, thr2, npreset_len, np_dur)
         self.assertEquals(nptime, 17544)
         self.assertEquals(pfm, 'IPU0')
+
+    def test_arPick(self):
+        """
+        Test arPick against implementation for UNESCO short course
+        """
+        data = []
+        for channel in ['z','n','e']:
+            file = os.path.join(self.path,'loc_RJOB20050801145719850.'+channel)
+            data.append(np.loadtxt(file, dtype='float32'))
+        # some default arguments
+        samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
+                200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
+        ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
+                              lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
+        self.assertAlmostEquals(ptime, 30.6350002289)
+        self.assertAlmostEquals(stime, 31.2800006866)
 
 
     def test_triggerOnset(self):

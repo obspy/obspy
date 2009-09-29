@@ -7,7 +7,9 @@ DEPENDS = \
 	coordtrans.o \
 	xcorr.o \
 	recstalta.o \
-	pk_mbaer.o
+	pk_mbaer.o \
+	filt_util.o \
+	arpicker.o
 
 CFLAGS = -g -O3 
 CC = gcc

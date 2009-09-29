@@ -340,7 +340,7 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
     See paper by m. baer and u. kradolfer: an automatic phase picker for
     local and teleseismic events bssa vol. 77,4 pp1437-1445
 
-    @param reltrc    : timeseries as floating data, possibly filtered
+    @param reltrc    : timeseries as numpy.ndarray float32 data, possibly filtered
     @param samp_int  : number of samples per second
     @param tdownmax  : if dtime exceeds tdownmax, the trigger is examined
                        for validity
@@ -368,6 +368,52 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
               tdownmax, tupevent, thr1, thr2, preset_len,
               p_dur)
     return pptime.value, pfm.value
+
+def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
+           s_pick=True):
+    """
+    Return corresponding picks of the AR picker
+
+    @param a        : Z signal of numpy.ndarray float32 point data
+    @param b        : N signal of numpy.ndarray float32 point data
+    @param c        : E signal of numpy.ndarray float32 point data
+    @param samp_rate: no of samples per second
+    @param f1       : frequency of lower Bandpass window
+    @param f2       : frequency of upper Bandpass window
+    @param lta_p    : length of LTA for parrival in seconds
+    @param sta_p    : length of STA for parrival in seconds
+    @param lta_s    : length of LTA for sarrival in seconds
+    @param sta_s    : length of STA for sarrival in seconds
+    @param m_p      : number of AR coefficients for parrival
+    @param m_s      : number of AR coefficients for sarrival
+    @param l_p      : length of variance window for parrival in seconds
+    @param l_s      : length of variance window for sarrival in seconds
+    @param s_pick   : if true pick also S phase, elso only P
+    @return         : (ptime, stime) parrival and sarrival
+    """
+    lib.ar_picker.argtypes =  [np.ctypeslib.ndpointer(dtype='float32',
+                                                 ndim=1,
+                                                 flags='C_CONTIGUOUS'),
+                               np.ctypeslib.ndpointer(dtype='float32',
+                                                 ndim=1,
+                                                 flags='C_CONTIGUOUS'),
+                               np.ctypeslib.ndpointer(dtype='float32',
+                                                 ndim=1,
+                                                 flags='C_CONTIGUOUS'),
+                               C.c_int, C.c_float, C.c_float, C.c_float,
+                               C.c_float, C.c_float, C.c_float, C.c_float,
+                               C.c_int, C.c_int, C.POINTER(C.c_float),
+                               C.POINTER(C.c_float), C.c_double,
+                               C.c_double, C.c_int]
+    lib.ar_picker.restypes =  C.c_void_p
+    s_pick = C.c_int(s_pick) # pick S phase also
+    ptime = C.c_float()
+    stime = C.c_float()
+    lib.ar_picker(a, b, c, len(a), samp_rate, f1, f2, 
+                  lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
+                  C.byref(stime), l_p, 
+                  l_s, s_pick)
+    return ptime.value, stime.value
 
 
 if __name__ == '__main__':
