@@ -311,8 +311,8 @@ class ReadSac(object):
         #self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
-	    #### open the file
-	    f = open(fname,'r')
+            #### open the file
+            f = open(fname,'r')
         except IOError:
             raise SacIOError("No such file:"+fname)
         else:
@@ -696,7 +696,8 @@ class ReadSac(object):
         self.SetHvalue('npts',len(self.seis))
         self.SetHvalue('depmin',self.seis.min())
         self.SetHvalue('depmax',self.seis.max())
-        self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
+        #self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
+        self.SetHvalue('depmen',self.seis.mean())
         
 if __name__ == "__main__":
     import doctest

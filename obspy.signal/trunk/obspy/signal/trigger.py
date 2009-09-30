@@ -38,6 +38,7 @@ import numpy as np
 import os
 import platform
 import copy
+from ctypes import ArgumentError
 
 
 if platform.system() == 'Windows':
@@ -364,9 +365,12 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
                           C.c_int, C.c_int, C.c_float, C.c_float, C.c_int,
                           C.c_int]
     lib.ppick.restype = C.c_void_p
-    lib.ppick(reltrc, len(reltrc), C.byref(pptime), pfm, samp_int, 
-              tdownmax, tupevent, thr1, thr2, preset_len,
-              p_dur)
+    args = (len(reltrc), C.byref(pptime), pfm, samp_int, 
+            tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
+    try:
+        lib.ppick(reltrc, *args)
+    except ArgumentError:
+        lib.ppick(reltrc.astype('float32'), *args)
     return pptime.value, pfm.value
 
 def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
@@ -409,10 +413,14 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
     s_pick = C.c_int(s_pick) # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
-    lib.ar_picker(a, b, c, len(a), samp_rate, f1, f2, 
-                  lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
-                  C.byref(stime), l_p, 
-                  l_s, s_pick)
+    args = (len(a), samp_rate, f1, f2, 
+            lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
+            C.byref(stime), l_p, l_s, s_pick)
+    try:
+        lib.ar_picker(a, b, c, *args)
+    except ArgumentError:
+        lib.ar_picker(a.astype('float32'), b.astype('float32'),
+                     c.astype('float32'), *args)
     return ptime.value, stime.value
 
 
