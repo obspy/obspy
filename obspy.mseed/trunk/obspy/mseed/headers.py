@@ -14,8 +14,12 @@ if sys.platform == 'win32':
     # 32 bit Windows.
     lib_name = 'libmseed-2.3.win32.dll'
 elif sys.platform == 'darwin':
-    # 32 bit OSX, tested with 10.5.6
-    lib_name = 'libmseed.dylib'
+    if platform.architecture()[0] == '64bit':
+        # 64 bit Python on OSX. Standard on Snow Leopard. Tested with 10.6.1.
+        lib_name = 'libmseed_64bit.dylib'
+    else:
+        # 32 bit Python on OSX, tested with 10.5.6
+        lib_name = 'libmseed.dylib'
 else:
     # 32 and 64 bit UNIX
     #XXX Check glibc version by platform.libc_ver()

@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <values.h>
+#include <limits.h>
 #include <time.h>
 
 #define MAX_SEC 10

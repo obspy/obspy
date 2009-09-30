@@ -44,8 +44,12 @@ from obspy.core.util import c_file_p, formatScientific
 if platform.system() == 'Windows':
     lib_name = 'gse_functions.win32.dll'
 elif platform.system() == 'Darwin':
-    # 32 bit OSX, tested with 10.5.6
-    lib_name = 'gse_functions.dylib'
+    if platform.architecture()[0] == '64bit':
+        # 64 bit Python on OSX. Standard on Snow Leopard. Tested with 10.6.1.
+        lib_name = 'gse_functions.64bit.dylib'
+    else:
+        # 32 bit Python on OSX, tested with 10.5.6
+        lib_name = 'gse_functions.dylib'
 else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'gse_functions.lin64.so'
