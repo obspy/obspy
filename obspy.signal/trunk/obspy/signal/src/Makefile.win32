@@ -1,0 +1,70 @@
+!include <ntwin32.mak>
+
+#-------------------------------------------------------------------------
+# Defaults
+#-------------------------------------------------------------------------
+
+!ifndef DEBUG
+DEBUG=0
+!endif
+
+INCLUDES = 
+DLL = signal.dll
+DEF = signal.def
+OBJS = recstalta.obj \
+	   xcorr.obj \
+	   coordtrans.obj \
+	   pk_mbaer.obj \
+	   filt_util.obj \
+	   arpicker.obj
+DEST = ..\lib\signal.win32.dll
+
+#-------------------------------------------------------------------------
+# Compiler-Flags
+#-------------------------------------------------------------------------
+
+CGFLAGS=/c /D_CONSOLE /GB /nologo /W4 /Zp1
+CRFLAGS=/DNDEBUG /MD /Ox
+CDFLAGS=/Ge /MDd /Od /Zi
+
+!if $(DEBUG)==0
+CFLAGS=$(CGFLAGS) $(CRFLAGS)
+!else
+CFLAGS=$(CGFLAGS) $(CDFLAGS)
+!endif
+
+#-------------------------------------------------------------------------
+# Linker-Flags
+#-------------------------------------------------------------------------
+
+LGFLAGS=/DLL /NOLOGO
+LRFLAGS=
+LDFLAGS=/DEBUG
+
+!if $(DEBUG)==0
+LFLAGS=$(LGFLAGS) $(LRFLAGS)
+!else
+LFLAGS=$(LGFLAGS) $(LDFLAGS)
+!endif
+
+#-------------------------------------------------------------------------
+# Build-Rules
+#-------------------------------------------------------------------------
+
+.cpp.obj:
+  CL $(CFLAGS) $<
+
+#-------------------------------------------------------------------------
+# Main-Targets
+#-------------------------------------------------------------------------
+
+all: dll
+
+dll: $(OBJS)
+    link $(LFLAGS) /OUT:$(DLL) /def:$(DEF) $(OBJS)
+
+clean:
+    -erase $(OBJS) $(DLL) *.lib *.exp *.pdb *.dll.manifest
+
+install:    all
+    copy /Y $(DLL) $(DEST)

@@ -16,12 +16,17 @@
 *
 *****************************************************************************************/
 
+#include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <limits.h>
 #include <time.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 
 #define MAX_SEC 10
 #define TRUE 1

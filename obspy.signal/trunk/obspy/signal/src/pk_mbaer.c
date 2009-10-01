@@ -1,6 +1,6 @@
+#include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <malloc.h>
 #include <math.h>
 #include <string.h>
 
