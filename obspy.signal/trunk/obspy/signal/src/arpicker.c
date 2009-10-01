@@ -4,7 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include <malloc.h>
 #include "arpicker.h"
 
 
