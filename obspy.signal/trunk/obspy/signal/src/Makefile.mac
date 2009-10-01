@@ -11,7 +11,7 @@ DEPENDS = \
 	filt_util.o \
 	arpicker.o
 
-CFLAGS = -g -O3 
+CFLAGS = -g -O3 -arch i386 -arch x86_64 -arch ppc 
 CC = gcc
 
 signal.dylib: $(DEPENDS)

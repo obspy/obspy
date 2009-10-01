@@ -1,0 +1,35 @@
+
+                   libmseed - The Mini-SEED library
+
+The Mini-SEED library provides a framework for manipulation of SEED
+data records including the unpacking and packing of data records.
+Functionality is also included for managing waveform data as
+continuous traces.  All structures of SEED 2.4 data records are
+supported with the following exceptions: Blockette 2000 opaque data
+which has an unknown data structure by definition and Blockette 405
+which depends on full SEED (SEED including full ASCII headers) for a
+full data description.
+
+The library has been tested in Linux, Mac OSX (Darwin), Solaris and
+Win32 environments.
+
+For installation instructions see the INSTALL file.  For further
+information regarding the library interface see the documentation in
+the 'doc' directory.  For example uses of libmseed see the source code
+in the 'examples' directory.
+
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Library General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Library General Public License (GNU-LGPL) for more details.  The
+GNU-LGPL and further information can be found here:
+http://www.gnu.org/
+
+
+Chad Trabant, IRIS Data Management Center

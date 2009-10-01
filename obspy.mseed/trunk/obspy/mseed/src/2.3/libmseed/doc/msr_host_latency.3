@@ -1,0 +1,35 @@
+.TH MSR_HOST_LATENCY 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Calculate latency between last sample in a Mini-SEED record and the
+host computer time.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "double  \fBmsr_host_latency\fP ( MSRecord *" msr " );"
+.fi
+
+.SH DESCRIPTION
+\fBmsr_host_latency\fP calculates the latency in seconds of the
+Mini-SEED data as the difference between current time in UTC of the
+host computer and the time of the last sample in the record.
+
+This routine is only really useful when dealing with a telemetered
+data stream or something similar.
+
+Double precision is returned, but the true precision is dependent on
+the accuracy of the host system clock among other things.
+
+.SH RETURN VALUES
+\fBmsr_host_latency\fP returns seconds of latency or 0.0 on error
+(indistinguishable from 0.0 latency).
+
+.SH SEE ALSO
+\fBms_intro(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

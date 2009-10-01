@@ -1,0 +1,35 @@
+
+The library requires that C99 integer types are available on the
+target computer.  Specifically the int8_t, int16_t, int32_t, int64_t
+and their unsigned counterpart types.  If these data types are not
+available guesses are made in lmplatform.h.
+
+-- Unix --
+
+A simple 'make' on most Unix-like systems should build the library.
+
+The included Makefile should work for most Unix-like environments; a
+special target of 'gcc' will explicitly use gcc with '-02'
+optimization and more warnings.  By default a statically linked
+version of the library is built: 'libmseed.a'.
+
+Using gcc it is possible to build a shared library with 'make shared'.
+If 'make' has been run before 'make shared' the object files will
+need to be cleaned up using 'make clean' before running 'make shared'.
+
+-- Mac OSX (Darwin) --
+
+A static library can be compiled using the above Unix instructions,
+just run 'make'.  Using gcc it is possible to build a dynamic library
+with 'make dynamic'.  If 'make' has been run before 'make dynamic' the
+object files will need to be cleaned up using 'make clean' before
+running 'make dynamic'.
+
+-- Windows (Win32) --
+
+On a WIN32 platform the library can be compiled by using the
+Nmake compatible Makefile.win (e.g. 'nmake -f Makefile.win') or Open
+Watcom's Wmake with Makefile.wat (e.g. 'wmake -f Makefile.wat'). The
+default target is a static library 'libmseed.lib'.  The library has
+been tested with Open Watcom 1.8.  A libmseed.def file is included
+for use building and linking a DLL.

@@ -1,0 +1,30 @@
+.TH MSR_DUPLICATE 3 2007/04/28 "Libmseed API"
+.SH DESCRIPTION
+Duplicate an MSRecord structure
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSRecord *\fBmsr_duplicate\fP ( MSRecord *" msr ", flag " datadup " );"
+.fi
+
+.SH DESCRIPTION
+\fBmsr_duplicate\fP creates a copy of an MSRecord structure including
+all sub-structures (FSDH and blockette chain).  If the \fIdatadup\fP
+flag is true the data samples from \fImsr\fP will also be duplicated,
+otherwise the copy MSRecord will not have any associated data sample
+array regardless if the source MSRecord had any.
+
+.SH RETURN VALUE
+\fBmsr_dupliate\fP returns a pointer to an MSRecord on success and
+NULL on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

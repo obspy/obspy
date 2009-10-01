@@ -1,0 +1,51 @@
+.TH MSR_STARTTIME 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Start and end time determination for MSRecord structures
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "hptime_t  \fBmsr_starttime\fP ( MSRecord *" msr " );"
+
+.BI "hptime_t  \fBmsr_starttime_uc\fP ( MSRecord *" msr " );"
+
+.BI "hptime_t  \fBmsr_endtime\fP ( MSRecord *" msr " );"
+.fi
+
+.SH DESCRIPTION
+\fBmsr_starttime\fP returns the start time of the record as a high
+precision epoch time (see \fBms_time(3)\fP).  Any time correction
+given in the fixed section data header is applied if it has not
+already been applied.  If Blockette 1001 is included and parsed the
+microseconds indicated (field 4) are also applied.
+
+NOTE: The record start time for a MSRecord structure is available
+directly at MSRecord.starttime.  Libmseed based programs should use
+that start time whenever possible (\fBmsr_unpack\fP uses
+\fBmsr_starttime\fP to set MSRecord.starttime).
+
+\fBmsr_starttime_uc\fP is a version of \fBmsr_starttime\fP that
+applies no time corrections, just a basic conversion of the start time
+values in the fixed section data header.
+
+\fBmsr_endtime\fP returns the time of the last sample in the record as
+a high precision epoch time (seed \fBms_time(3)\fP).  This is *not*
+the time "covered" by the last sample, but the actual sample time.
+This function calculates the record start time with
+\fBmsr_starttime\fP and then adds the time covered by the samples in
+the record which is calculated from the number of samples and sample
+rate.
+
+.SH RETURN VALUES
+\fBmsr_starttime\fP, \fBmsr_starttime_uc\fP and \fBmsr_endtime\fP
+return a high precision epoch time on success and HPTERROR on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBms_time(3)\fP and \fBmsr_unpack(3)\fP
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

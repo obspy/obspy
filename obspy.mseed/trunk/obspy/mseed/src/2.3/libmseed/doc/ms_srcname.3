@@ -1,0 +1,56 @@
+.TH MS_SRCNAME 3 2006/11/27 "Libmseed API"
+.SH DESCRIPTION
+Determine source names using the SEED naming nomenclature.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "char  *\fBms_recsrcname\fP ( char *" record ", char *" srcname ", flag " quality " );"
+
+.BI "char  *\fBmsr_srcname\fP ( MSRecord *" msr ", char *" srcname ", flag " quality " );"
+
+.BI "char  *\fBmst_srcname\fP ( MSTrace *" mst ", char *" srcname ", flag " quality " );"
+.fi
+
+.SH DESCRIPTION
+These routines generate a source name using the SEED naming
+nomenclature in the format: 'NET_STA_LOC_CHAN' and stores it in the
+buffer provided at \fIsrcname\fP.  If the \fIquality\fP flag is true
+the data quality character will be appended to the source name
+resulting in a format of: 'NET_STA_LOC_CHAN_QUAL'.
+
+The memory pointed to by \fIsrcname\fP must have enough room for the
+resulting string.  As of SEED 2.4 this is a maximum of 18 characters
+including the terminating NULL.  The MSRecord and MSTrace structs are
+capable of producing a source name of 42 characters (including the
+terminating NULL) and libmseed commonly allocates 50 characters for
+the \fIsrcname\fP buffer.
+
+\fBms_recsrcname\fP generates a source name string for the SEED data
+record at \fIrecord\fP.  If the \fIquality\fP flag is true the quality
+character will be appended.
+
+\fBmsr_srcname\fP generates a source name string for the specified
+MSRecord struct.  If the \fIquality\fP flag is true the quality
+character will be appended.
+
+\fBmst_srcname\fP generates a source name string in for the specified
+MSTrace struct.  If the \fIquality\fP flag is true *and*
+mst->dataquality is not zero the quality character will be appended.
+
+.SH LOCATION IDS AND SPACES
+The source name produced by these routines never include spaces.  The
+fixed format nature of SEED data records leads to blank or unused
+location IDs represented by spaces.  Such blank location IDs will be
+collapsed to nothing in the resulting sources names.
+
+.SH RETURN VALUES
+The routines return a pointer to the resulting string or NULL on
+error.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

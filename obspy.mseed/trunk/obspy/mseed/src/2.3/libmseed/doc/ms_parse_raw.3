@@ -1,0 +1,43 @@
+.TH MS_PARSE_RAW 3 2009/07/13 "Libmseed API"
+.SH DESCRIPTION
+Parse, validate and print details of a SEED data record
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_parse_raw\fP ( char *" record ", int " maxreclen ","
+.BI "                    flag " details ", flag " swapflag " );"
+.fi
+
+.SH DESCRIPTION
+\fBms_parse_raw\fP is a simple validating SEED data record header
+parser.  The data in \fIrecord\fP is assumed to contain a SEED data
+record with a maximum length of \fImaxreclen\fP.  In addition to
+validating header fields where possible, raw header fields can be
+printed.  This routine is primarily intended for identifying invalid
+data record headers and printing record header contents.
+
+The \fIdetails\fP flag is interpreted as follows:
+.nf
+  0 = only print error messages for invalid header fields
+  1 = print basic fields in addition to invalid field errors
+  2 = print all fields in addition to invalid field errors
+.fi
+
+The \fIswapflag\fP flag is interpreted as follows:
+.nf
+  1 = swap multibyte quantities
+  0 = do no swapping
+ -1 = autodetect byte order using year test, swap if needed
+.fi
+
+.SH RETURN VALUES
+\fBms_parse_raw\fP returns 0 when no errors were detected or a
+positive count of errors detected.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -1,0 +1,14 @@
+LIBRARY gse_functions.dll
+EXPORTS
+    check_sum
+    diff_2nd
+    compress_6b
+    write_header
+    read_header
+    rem_2nd_diff
+    decomp_6b
+    buf_init
+    buf_putchar
+    buf_dump
+    buf_free
+

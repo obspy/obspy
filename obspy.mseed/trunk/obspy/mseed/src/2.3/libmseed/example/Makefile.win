@@ -1,0 +1,31 @@
+#
+# Nmake file - Windows version
+# Use 'nmake -f Makefile.win'
+#
+# THIS HAS NEVER BEEN TESTED
+# Some modification might be required.
+
+NODEBUG=1
+
+!include <ntwin32.mak>
+
+INCS = /I..
+LIBS = ../libmseed.lib
+BINS = msrepack.exe msview.exe
+
+cflags = $(cflags) -DWIN32
+
+all: $(BINS)
+
+msrepack.exe:	msrepack.obj
+	link.exe /nologo /out:msrepack $(LIBS) msrepack.obj
+
+msview.exe:	msview.obj
+	link.exe /nologo /out:msview $(LIBS) msview.obj
+
+.c.obj:
+   $(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $<
+
+# Clean-up directives
+clean:
+	-del a.out core *.o *.obj *% *~ $(BINS)

@@ -1,0 +1,17 @@
+
+The contents of this directory are wrapper MEX functions that interface
+libmseed functionality with Matlab and GNU Octave.
+
+A help message is included for each function interface wrapper, simply
+typing the name of the function from within Matlab/Octave will display
+a simple usage message.
+
+-- Building --
+
+The static libmseed.a library must already be built before compiling the
+mex interface routines.
+
+On most Unix like systems you'll first need to edit Makefile and set the
+MEX variable to your desired 'mex'/'mkoctfile'.  Then a simple 'make'
+should compile the mex interface routines.
+

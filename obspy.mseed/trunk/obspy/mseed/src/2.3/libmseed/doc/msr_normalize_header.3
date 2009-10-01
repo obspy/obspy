@@ -1,0 +1,41 @@
+.TH MSR_NORMALIZE_HEADER 3 2007/04/28 "Libmseed API"
+.SH DESCRIPTION
+Normalize or synchronize the header fields of an MSRecord structure.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBmsr_normalize_header\fP ( MSRecord *" msr ", flag " verbose );
+.fi
+
+.SH DESCRIPTION
+\fBmsr_normalize_header\fP updates the SEED structures associated with
+an MSRecord structure (MSRecord.fsdh and the blockette chain at
+MSRecord.blkts) with primary values stored at the MSRecord level
+(e.g. MSRecord.starttime, MSRecord.samprate, etc.).
+
+The long explanation is that certain key values (start time, sample
+rate, etc.) are duplicated in a given MSRecord structure.  For example
+the start time is stored at both MSRecord.starttime and in the BTIME
+structure in the FSDH at MSRecord.fsdh.  The base values at the
+MSRecord level (e.g. MSRecord.starttime) are always the primary
+values.  But before the data record can be packed these values must be
+translated back into the SEED structures.  For these duplicated values
+the \fBmsr_normalize_header\fP routine peforms this translation.
+Normally this routine will be called via internal functions when
+\fBmsr_pack\fP is called, it could also be used to synchronize the
+header values when they are directly modified.
+
+.SH RETURN VALUE
+\fBmsr_normalize_header\fP returns the header length in bytes on
+success and -1 on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_pack(3)\fP and \fBmsr_pack_header(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

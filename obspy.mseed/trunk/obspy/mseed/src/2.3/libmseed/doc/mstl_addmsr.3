@@ -1,0 +1,49 @@
+.TH MSTL_INIT 3 2008/11/21 "Libmseed API"
+.SH DESCRIPTION
+Adding MSRecord data coverage to and MSTraceList structure
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSTraceSeg *\fBmstl_addmsr\fP ( MSTraceList *" mstl ", MSRecord *" msr ","
+.BI "                          flag " dataquality ", flag " autoheal ","
+.BI "                          double " timetol ", double " sampratetol " );"
+
+.fi
+
+.SH DESCRIPTION
+\fBmstl_addmsr\fP adds the data coverage in a MSRecord structure to
+the specified MSTraceList structure.  If data samples are associated
+with the MSRecord they will also be added to the MSTraceList.  New
+MSTraceID and MSTraceSeg sub-structures will be created and added to
+the MSTraceList as needed.
+
+Each MSTraceList contains a list of trace IDs as MSTraceID structures
+each of which contain a list of time segments as MSTraceSeg
+structures.  This routine will maintain the list of trace IDs in
+alphanumeric sort order and the subsequent time segments in time
+order.
+
+If the \fIdataquality\fP flag is true traces will be grouped by
+quality in addition to the source name identifiers, in short
+differentiate using quality or not.
+
+If the \fIautoheal\fP flag is true any two trace segments which would
+fit together due to the addition of the new MSRecord coverage will be
+merged.  The only reason to set this option to false (0) is if the
+\fBprvtptr\fP pointer member of the MSTraceSeg structures is being
+used since libmseed has no knowledge how such data should be merged.
+
+.SH RETURN VALUES
+\fBmstl_addmsr\fP returns NULL on error and a pointer to the
+MSTraceSeg structure to which the data coverage was added on success.
+
+.SH SEE ALSO
+\fBmstl_init(3)\fP and \fBmstl_free(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

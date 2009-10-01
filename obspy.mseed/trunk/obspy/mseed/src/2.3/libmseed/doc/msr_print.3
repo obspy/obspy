@@ -1,0 +1,34 @@
+.TH MSR_PRINT 3 2006/11/27 "Libmseed API"
+.SH DESCRIPTION
+Printing of Mini-SEED record header values.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "void   \fBmsr_print\fP ( MSRecord *" msr ", flag " details " );"
+.fi
+
+.SH DESCRIPTION
+\fBmsr_print\fP prints formatted details from the given MSRecord
+struct (parsed record header), i.e. fixed section and blockettes.  All
+output is printed using \fBms_log(3)\fP at level 0.  The \fIdetails\fP
+flag controls how much information is printed:
+.nf
+0  : a single line summarizing the record
+1  : most commonly desired header details
+2+ : all header details
+.fi
+
+If no fixed section header information is available at MSRecord.fsdh
+then a single line is printed from the other information in the
+MSRecord structure.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

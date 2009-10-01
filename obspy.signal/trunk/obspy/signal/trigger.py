@@ -44,12 +44,7 @@ from ctypes import ArgumentError
 if platform.system() == 'Windows':
     lib_name = 'signal.win32.dll'
 elif platform.system() == 'Darwin':
-    if platform.architecture()[0] == '64bit':
-        # 64 bit Python on OSX. Standard on Snow Leopard. Tested with 10.6.1.
-        lib_name = 'signal.64bit.dylib'
-    else:
-        # 32 bit Python on OSX, tested with 10.5.6
-        lib_name = 'signal.dylib'
+    lib_name = 'signal.dylib'
 else:
     if platform.architecture()[0] == '64bit':
         lib_name = 'signal.lin64.so'
