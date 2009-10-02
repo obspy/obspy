@@ -23,6 +23,7 @@ Copyright
     Copyright (c) 2009 by:
         * Moritz Beyreuther
         * Stefan Stange
+        * Robert Barsch
 
 
 Overview

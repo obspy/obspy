@@ -24,6 +24,7 @@ Copyright
         * Tobias Megies
         * Moritz Beyreuther
         * Yannik Behr
+        * Conny Hammer
 
 
 Overview

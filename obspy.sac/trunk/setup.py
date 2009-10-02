@@ -39,7 +39,7 @@ setup(
     """,
     classifiers=[],
     keywords='ObsPy, Seismology, SAC',
-    author='The ObsPy Development Team',
+    author='The ObsPy Development Team & C. J. Ammon',
     author_email='yannik.behr@vuw.ac.nz',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac',
     license=GPL2,
