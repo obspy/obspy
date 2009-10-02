@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -32,11 +32,12 @@ setup(
     description="Provides tools for displaying features used in seismology.",
     long_description="""
     obspy.imaging - Provides tools for displaying features used in seismology.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='obspy imaging beachball focal mechanism, waveforms and ' + \
-        'spectograms',
-    author='Robert Barsch, Christian Sippl, Tobi Megies',
+    keywords='ObsPy, Seismology, Imaging, Beachball, Focal Mechanism, Waveform, Spectogram',
+    author='The ObsPy Development Team',
     author_email='barsch@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging',
     license=GPL2,

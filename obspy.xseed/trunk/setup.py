@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -29,25 +29,28 @@ USA.
 setup(
     name='obspy.xseed',
     version=version,
-    description="Tool to convert between dataless SEED and XML-SEED files.",
+    description="Tool to convert between Dataless SEED and XML-SEED files.",
     long_description="""
-    obspy.xseed - Tool to convert between dataless SEED and XML-SEED files.
+    obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='seismology seed xml convert',
-    author='Robert Barsch, Lion Krischer',
-    author_email='barsch@lmu.de',
+    keywords='ObsPy, Seismology, SEED, Dataless SEED, XML-SEED, XSEED',
+    author='The ObsPy Development Team',
+    author_email='barsch@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed',
     license=GPL2,
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.xseed.tests.suite",
+    test_suite="obspy.xseed.tests.suite",
     install_requires=[
         'setuptools',
         'lxml',
+        'obspy.core',
         # -*- Extra requirements: -*
-    ],        
+    ],
      download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
 )

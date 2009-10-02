@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -37,12 +37,11 @@ setup(
     library of Chad Trabant. Libmseed is written in C and interfaced via
     python-ctypes.
 
-    SVN version:
-    <https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev>
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology, MSEED MiniSEED',
-    author='Lion Krischer, Robert Barsch, Moritz Beyreuther',
+    keywords='ObsPy, Seismology, MSEED, MiniSEED',
+    author='The ObsPy Development Team & Chad Trabant',
     author_email='krischer@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.mseed',
     license=GPL2,

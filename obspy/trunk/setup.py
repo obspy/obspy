@@ -4,7 +4,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.2'
 
 GPL2 = """
 This program is free software; you can redistribute it and/or
@@ -34,12 +34,13 @@ setup(
     there is experimental support to arclink and seishub.
 
     Note currently only obspy.core, obspy.gse2, obspy.mseed and
-    obspy.imaging are automatically installed. Other modules can be found
-    at www.obspy.org
+    obspy.imaging are automatically installed.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology',
-    author='Moritz Beyreuther, Robert Barsch, Lion Krischer',
+    keywords='ObsPy, Seismology',
+    author='The ObsPy Development Team',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy',
     license=GPL2,

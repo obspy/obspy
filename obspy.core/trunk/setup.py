@@ -5,8 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.1'
-
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -41,8 +40,8 @@ setup(
     For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology, ObsPy',
-    author='Moritz Beyreuther, Lion Krischner, Robert Barsch',
+    keywords='ObsPy, Seismology',
+    author='The ObsPy Development Team',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core',
     license=GPL2,

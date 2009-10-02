@@ -6,7 +6,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -33,10 +33,12 @@ setup(
     description="ArcLink/WebDC request client for of ObsPy.",
     long_description="""
     obspy.arclink - ArcLink/WebDC request client for of ObsPy.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
     keywords='ObsPy, Seismology, ArcLink, MiniSEED, SEED, Inventory, Waveform',
-    author='Robert Barsch',
+    author='The ObsPy Development Team',
     author_email='barsch@lmu.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink',
     license=GPL2,

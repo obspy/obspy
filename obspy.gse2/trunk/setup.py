@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -33,15 +33,17 @@ setup(
     long_description="""
     obspy.gse2 - Read & Write Seismograms, Format GSE2.
 
-    This module contains python wrappers for gse_functions - The GSE2 library
-    of Stefan Stange. Currently CM6 compressed GSE2 files are supported, this
-    should be sufficient for most cases. Gse_functions are written in C and
-    interfaced via python-ctypes.
-    See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
+    This module contains Python wrappers for gse_functions - The GSE2 library
+    of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
+    Currently CM6 compressed GSE2 files are supported, this should be 
+    sufficient for most cases. Gse_functions are written in C and interfaced 
+    via python-ctypes.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology, GSE2',
-    author='Moritz Beyreuther, Stefan Stange',
+    keywords='ObsPy, Seismology, GSE2',
+    author='The ObsPy Development Team & Stefan Stange',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
     license=GPL2,

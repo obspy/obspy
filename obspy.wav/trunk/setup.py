@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -35,10 +35,12 @@ setup(
     
     Python method in order to read and write seismograms to WAV audio
     files. The data are squeezed to audible frequencies.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology WAV',
-    author='Moritz Beyreuther',
+    keywords='ObsPy, Seismology, WAV',
+    author='The ObsPy Development Team',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.wav',
     license='GPL',
@@ -46,13 +48,13 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=False,
-    test_suite = "obspy.wav.tests.suite",
+    test_suite="obspy.wav.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.wav/trunk#egg=obspy.wav-dev",
-    dependency_links = [
+    dependency_links=[
         "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev"
     ],
 )

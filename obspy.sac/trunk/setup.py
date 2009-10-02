@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -34,10 +34,12 @@ setup(
     obspy.sac - Read & Write Seismograms, Format SAC.
     
     Python methods for reading and writing seismograms to SAC.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology, SAC',
-    author='Yannik Behr, Moritz Beyreuther',
+    keywords='ObsPy, Seismology, SAC',
+    author='The ObsPy Development Team',
     author_email='yannik.behr@vuw.ac.nz',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac',
     license=GPL2,
@@ -45,14 +47,14 @@ setup(
     namespace_packages=['obspy'],
     include_package_data=True,
     zip_safe=True,
-    test_suite = "obspy.sac.tests.suite",
+    test_suite="obspy.sac.tests.suite",
     install_requires=[
         'obspy.core',
         'setuptools',
         # -*- Extra requirements: -*
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac/trunk#egg=obspy.sac-dev",
-    dependency_links = [
+    dependency_links=[
         "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
     ],
 )

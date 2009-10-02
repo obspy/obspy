@@ -6,7 +6,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.0.1'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -31,10 +31,14 @@ setup(
     name='obspy.seishub',
     version=version,
     description="SeisHub database client for ObsPy.",
-    long_description="obspy.seishub - SeisHub database client for ObsPy.",
+    long_description="""
+    obspy.seishub - SeisHub database client for ObsPy.
+
+    For more information visit http://www.obspy.org.
+    """,
     classifiers=[],
     keywords='ObsPy, Seismology, SeisHub',
-    author='Robert Barsch',
+    author='The ObsPy Development Team',
     author_email='barsch@lmu.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.seishub',
     license=GPL2,

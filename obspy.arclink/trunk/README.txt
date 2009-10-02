@@ -1,5 +1,5 @@
-package obspy.signal
-====================
+package obspy.arclink
+=====================
 
 Copyright
 ---------
@@ -21,23 +21,19 @@ Copyright
     02110-1301, USA.
 
     Copyright (c) 2009 by:
-        * Tobias Megies
-        * Moritz Beyreuther
-        * Yannik Behr
+        * Robert Barsch
 
 
 Overview
 --------
-    obspy.signal - Python signal processing routines for seismology.
-
-    Capabilities include filtering, triggering, rotation, instrument
-    correction and coordinate transformations.
+    obspy.arclink - ArcLink/WebDC request client for of ObsPy.
 
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * scipy
     * obspy.core
+    * obspy.mseed
+    * lxml 
     * setuptools

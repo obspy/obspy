@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -34,10 +34,12 @@ setup(
 
     Capabilities include filtering, triggering, rotation, instrument
     correction and coordinate transformations.
+
+    For more information visit http://www.obspy.org.
     """,
     classifiers=[],
-    keywords='Seismology Signal, Filter, Triggers, Instrument Correction',
-    author='Tobias Megies, Moritz Beyreuther, Yannik Behr',
+    keywords='ObsPy, Seismology, Signal, Filter, Triggers, Instrument Correction',
+    author='The ObsPy Development Team',
     author_email='megies@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.signal',
     license=GPL2,
