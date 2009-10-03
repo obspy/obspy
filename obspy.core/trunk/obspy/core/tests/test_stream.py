@@ -421,6 +421,15 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.sampling_rate, 200)
         self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
 
+    def test_tabCompleteStats(self):
+        """
+        Test stats for tab completion
+        """
+        tr = read(self.mseed_file)[0]
+        self.assertTrue('sampling_rate' in dir(tr.stats))
+        self.assertTrue('npts' in dir(tr.stats))
+        self.assertTrue('station' in dir(tr.stats))
+        self.assertTrue('starttime' in dir(tr.stats))
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

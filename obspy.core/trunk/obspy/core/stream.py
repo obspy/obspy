@@ -10,12 +10,15 @@ import os
 
 def read(pathname, format=None, headonly=False):
     """
-    Reads files using the given pattern into a L{obspy.core.Stream} object.
+    Reads a file into a L{obspy.core.Stream} object.
+
     """
-    st = Stream()
-    for file in iglob(pathname):
-        st += _read(file, format, headonly)
-    return st
+    #Reads files using the given wildcard into a L{obspy.core.Stream} object.
+    #st = Stream()
+    #for file in iglob(pathname):
+    #    st += _read(file, format, headonly)
+    #return st
+    return _read(pathname, format, headonly)
 
 
 def _read(filename, format=None, headonly=False):

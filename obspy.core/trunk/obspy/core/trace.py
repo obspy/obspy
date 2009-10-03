@@ -23,18 +23,22 @@ class Trace(object):
     @param header: Dictionary containing header fields
     @param address: Address of data to be freed when trace is deleted
     """
-    def __init__(self, data=array([]), header={}):
-        self.stats = Stats()
-        self.stats.update(header)
+    def __init__(self, data=array([]), header=None):
+        if header == None:
+            # Default values: For detail see
+            # http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/\
+            # KnownIssues#DefaultParameterValuesinPython
+            header = {}
+        # set some defaults if not set yet
+        for default in ['station', 'network', 'location', 'channel']:
+            header.setdefault(default, '')
+        header.setdefault('npts', len(data))
+        self.stats = Stats(header)
         for key, value in header.iteritems():
             if not isinstance(value, dict):
                 continue
             self.stats[key] = Stats(value)
         self.data = data
-        self.stats.setdefault('npts', len(self.data))
-        # set some defaults if not set yet
-        for default in ['station', 'network', 'location', 'channel']:
-            self.stats.setdefault(default, '')
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \

@@ -171,6 +171,20 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(1.0, stream[0].stats.gse2.calper)
         self.assertEqual(1.0, stream[0].stats.gse2.calib)
 
+    def test_tabCompleteStats(self):
+        """
+        Read files via L{obspy.Trace}
+        """
+        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        # read
+        tr = read(gse2file)[0]
+        self.assertTrue('station' in dir(tr.stats))
+        self.assertTrue('npts' in dir(tr.stats))
+        self.assertTrue('sampling_rate' in dir(tr.stats))
+        self.assertEqual(tr.stats['station'], 'RJOB ')
+        self.assertEqual(tr.stats.npts, 12000)
+        self.assertEqual(tr.stats['sampling_rate'], 200)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
