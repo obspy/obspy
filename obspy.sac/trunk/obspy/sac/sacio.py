@@ -528,8 +528,8 @@ class ReadSac(object):
             raise SacIOError("Can't open file:"+ofname)
         else:
             try:
-                np.savetxt(f,np.reshape(self.hf,(14,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g",delimiter="      ")
-                np.savetxt(f,np.reshape(self.hi,(8,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g",delimiter="      ")
+                np.savetxt(f,np.reshape(self.hf,(14,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g")
+                np.savetxt(f,np.reshape(self.hi,(8,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g")
                 for i in xrange(0,24,3):
                     self.hs[i:i+3].tofile(f)
                     f.write('\n')
