@@ -94,13 +94,21 @@ class SacioTestCase(unittest.TestCase):
 
 
     def test_readWriteXY(self):
-        t = sacio.ReadSac()
-        t.ReadXYSacFile(os.path.join(self.path, 'testxy.sac'))
-        self.assertEqual(t.GetHvalue('npts'), 100)
-        self.assertEqual(t.GetHvalue('kf'), '-12345  ')
-        t.WriteSacBinary('testbin.sac')
-        self.assertEqual(os.path.exists('testbin.sac'), True)
-        os.remove('testbin.sac')
+        """
+        Tests for ascii sac io
+        """
+        tfile = os.path.join(os.path.dirname(__file__),'data','test.sac')
+        t = sacio.ReadSac(tfile)
+        t.WriteSacXY('tmp3.sac')
+        d = sacio.ReadSac()
+        d.ReadSacXY('tmp3.sac')
+        d.WriteSacBinary('tmp4.sac')
+        size1 = os.stat('tmp4.sac')[6]
+        size2 = os.stat(tfile)[6]
+        self.assertEqual(size1,size2)
+        np.testing.assert_array_almost_equal(t.seis,d.seis,decimal=5)
+        os.remove('tmp3.sac')
+        os.remove('tmp4.sac')
 
 
     def test_isSAC(self):

@@ -44,7 +44,7 @@ The ReadSac class provides the following functions:
 Reading:
 
     ReadSacFile       - read binary SAC file
-    ReadXYSacFile     - read XY SAC file    
+    ReadSacXY     - read XY SAC file    
     ReadSacHeader     - read SAC header
     GetHvalue         - extract information from header
 
@@ -52,6 +52,7 @@ Writing:
 
     WriteSacHeader    - write SAC header
     WriteSacBinary    - write binary SAC file
+    WriteSacXY        - write ascii SAC file
 
 
 Convenience:
@@ -117,6 +118,7 @@ class ReadSac(object):
         self.headonly = headonly
         if filen:
             self.__call__(filen)
+
 
     def __call__(self,filename):
         if self.headonly:
@@ -440,11 +442,11 @@ class ReadSac(object):
 
 
 
-    def ReadXYSacFile(self,fname):
-        """\nRead a SAC XY file (not tested much)
+    def ReadSacXY(self,fname):
+        """\nRead SAC XY files (ascii)
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
         >>> t = ReadSac()
-        >>> t.ReadXYSacFile(file)
+        >>> t.ReadSacXY(file)
         >>> t.GetHvalue('npts')
         100
         >>> t.WriteSacBinary('testbin.sac')
@@ -505,7 +507,39 @@ class ReadSac(object):
 
 
     def WriteSacXY(self,ofname):
-        pass
+        """ Write SAC XY file (ascii)
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> t = ReadSac(file)
+        >>> t.WriteSacXY('tmp3.sac')
+        >>> d = ReadSac()
+        >>> d.ReadSacXY('tmp3.sac')
+        >>> d.WriteSacBinary('tmp4.sac')
+        >>> os.stat('tmp4.sac')[6] == os.stat(file)[6]
+        True
+        >>> os.remove('tmp3.sac')
+        >>> os.remove('tmp4.sac')
+        """
+        try:
+            f = open(ofname,'w')
+        except IOError:
+            raise SacIOError("Can't open file:"+ofname)
+        else:
+            try:
+                np.savetxt(f,np.reshape(self.hf,(14,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g",delimiter="      ")
+                np.savetxt(f,np.reshape(self.hi,(8,5)),fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g",delimiter="      ")
+                for i in xrange(0,24,3):
+                    self.hs[i:i+3].tofile(f)
+                    f.write('\n')
+            except:
+                raise SacIOError("Can't write header values:"+ofname)
+            else:
+                try:
+                    npts = self.GetHvalue('npts')
+                    rows = npts/5
+                    np.savetxt(f,np.reshape(self.seis[0:5*rows],(rows,5)),fmt="%15.7g\t%15.7g\t%15.7g\t%15.7g\t%15.7g")
+                    np.savetxt(f,self.seis[5*rows:],delimiter='\t')
+                except:
+                    raise SacIOError("Can't write trace values:"+ofname)
 
 
     def WriteSacBinary(self,ofname):
