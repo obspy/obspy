@@ -2,7 +2,7 @@
 
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.sac.sacio import ReadSac
-import array
+import array, struct
 import numpy as N
 import os
 
@@ -39,9 +39,13 @@ def isSAC(filename):
     
     @param filename: SAC file to be read.
     """
-    g = ReadSac()
     try:
-        npts = g.GetHvalueFromFile(filename, 'npts')
+        f = open(filename,'rb')
+        # 70 header floats, 9 position in header integers
+        f.seek(4*70+4*9)
+        data = f.read(4)
+        f.close()
+        npts = struct.unpack('<i',data)[0]
     except:
         return False
     # check file size
