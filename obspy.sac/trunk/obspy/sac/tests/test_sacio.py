@@ -100,8 +100,7 @@ class SacioTestCase(unittest.TestCase):
         tfile = os.path.join(os.path.dirname(__file__),'data','test.sac')
         t = sacio.ReadSac(tfile)
         t.WriteSacXY('tmp3.sac')
-        d = sacio.ReadSac()
-        d.ReadSacXY('tmp3.sac')
+        d = sacio.ReadSac('tmp3.sac',alpha=True)
         d.WriteSacBinary('tmp4.sac')
         size1 = os.stat('tmp4.sac')[6]
         size2 = os.stat(tfile)[6]

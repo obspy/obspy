@@ -88,7 +88,7 @@ class ReadSac(object):
     """ Class for SAC file IO
     initialise with: t=ReadSac()"""
 
-    def __init__(self,filen=False,headonly=False):
+    def __init__(self,filen=False,headonly=False,alpha=False):
         self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,   \
                       'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8,'int1':9,'t0':10,\
                       't1':11,'t2':12,'t3':13,'t4':14,'t5':15,'t6':16,\
@@ -117,11 +117,16 @@ class ReadSac(object):
         self.InitArrays()
         self.headonly = headonly
         if filen:
-            self.__call__(filen)
+            if alpha:
+                self.__call__(filen,alpha=True)
+            else:
+                self.__call__(filen)
 
 
-    def __call__(self,filename):
-        if self.headonly:
+    def __call__(self,filename,alpha=False):
+        if alpha:
+            self.ReadSacXY(filename)
+        elif self.headonly:
             self.ReadSacHeader(filename)
         else:
             self.ReadSacFile(filename)
@@ -445,8 +450,7 @@ class ReadSac(object):
     def ReadSacXY(self,fname):
         """\nRead SAC XY files (ascii)
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
-        >>> t = ReadSac()
-        >>> t.ReadSacXY(file)
+        >>> t = ReadSac(file,alpha=True)
         >>> t.GetHvalue('npts')
         100
         >>> t.WriteSacBinary('testbin.sac')
@@ -511,8 +515,7 @@ class ReadSac(object):
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.WriteSacXY('tmp3.sac')
-        >>> d = ReadSac()
-        >>> d.ReadSacXY('tmp3.sac')
+        >>> d = ReadSac('tmp3.sac',alpha=True)
         >>> d.WriteSacBinary('tmp4.sac')
         >>> os.stat('tmp4.sac')[6] == os.stat(file)[6]
         True
