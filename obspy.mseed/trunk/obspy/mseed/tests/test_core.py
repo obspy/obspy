@@ -111,6 +111,16 @@ class CoreTestCase(unittest.TestCase):
         stream._verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
+    def test_readWithWildCard(self):
+        """
+        Reads wildcard filenames.
+        """
+        files = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001.*')
+        st = read(files)
+        self.assertEquals(len(st), 4)
+        st.merge()
+        self.assertEquals(len(st), 1)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

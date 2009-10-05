@@ -14,11 +14,10 @@ def read(pathname, format=None, headonly=False):
 
     """
     #Reads files using the given wildcard into a L{obspy.core.Stream} object.
-    #st = Stream()
-    #for file in iglob(pathname):
-    #    st += _read(file, format, headonly)
-    #return st
-    return _read(pathname, format, headonly)
+    st = Stream()
+    for file in iglob(pathname):
+        st.extend(_read(file, format, headonly).traces, reference=True)
+    return st
 
 
 def _read(filename, format=None, headonly=False):
@@ -96,8 +95,7 @@ class Stream(object):
         """
         if not isinstance(stream, Stream):
             raise TypeError
-        new_traces = copy.deepcopy(stream.traces)
-        self.extend(new_traces)
+        self.extend(copy.deepcopy(stream.traces), reference=True)
         return self
 
     def __len__(self):
