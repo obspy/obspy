@@ -4,13 +4,15 @@
 INCLUDES= \
 	-I .
 
-CFLAGS = -g -O3 -arch i386 -arch x86_64 -arch ppc
+export MACOSX_DEPLOYMENT_TARGET = 10.4
+
+CFLAGS = -g -O3 -arch i386 -arch x86_64 -arch ppc -arch ppc64 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4
 CC = gcc
 LD = ld
 
 gse_functions.so: buf.c gse_functions.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c buf.c gse_functions.c
-	$(CC) $(CFLAGS) -dynamiclib -lm -o gse_functions.dynlib buf.o gse_functions.o
+	$(CC) $(CFLAGS) -dynamiclib -lm -o gse_functions.dylib buf.o gse_functions.o
 
 gse_driver: gse_driver.c buf.c gse_functions.c
 	$(CC) $(CLFAGS) -c gse_functions.c buf.c
