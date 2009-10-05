@@ -120,7 +120,7 @@ def recStaltaPy(a, nsta, nlta):
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 0.
+    lta = 1e-99 # avoid zero devision
     charfct = [0.0]*len(a)
     icsta = 1 - csta
     iclta = 1 - clta
@@ -208,14 +208,14 @@ def classicStaLta(a, Nsta, Nlta):
     # compute the short time average (STA)
     sta = np.zeros(len(a), dtype='float64')
     pad_sta = np.zeros(Nsta)
-    for i in range(Nsta): # window size to smooth over
+    for i in xrange(Nsta): # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
     sta = sta / Nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
     pad_lta = np.ones(Nlta) # avoid for 0 division 0/1=0
-    for i in range(Nlta): # window size to smooth over
+    for i in xrange(Nlta): # window size to smooth over
         lta = lta + np.concatenate((pad_lta, a[i:m - Nlta + i] ** 2))
     lta = lta / Nlta
     #
@@ -241,13 +241,13 @@ def delayedStaLta(a, Nsta, Nlta):
     #
     # compute the short time average (STA) and long time average (LTA)
     # don't start for STA at Nsta because it's muted later anyway
-    sta = np.zeros(len(a), dtype='float64')
-    lta = np.zeros(len(a), dtype='float64')
-    for i in range(Nlta + Nsta + 1, m):
+    sta = np.zeros(m, dtype='float64')
+    lta = np.zeros(m, dtype='float64')
+    for i in xrange(m):
         sta[i] = (a[i] ** 2 + a[i - Nsta] ** 2) / Nsta + sta[i - 1]
         lta[i] = (a[i - Nsta - 1] ** 2 + a[i - Nsta - Nlta - 1] ** 2) / \
                  Nlta + lta[i - 1]
-        sta[0:Nlta + Nsta + 50] = 0
+    sta[0:Nlta + Nsta + 50] = 0
     return sta / lta
 
 
@@ -263,7 +263,7 @@ def zdetect(a, Nsta):
     sta = np.zeros(len(a), dtype='float64')
     # Standard Sta
     pad_sta = np.zeros(Nsta)
-    for i in range(Nsta): # window size to smooth over
+    for i in xrange(Nsta): # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
