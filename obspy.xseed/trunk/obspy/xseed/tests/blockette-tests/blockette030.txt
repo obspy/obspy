@@ -1,0 +1,16 @@
+### Blockette 030 tests ###
+
+--01-SEED
+0300086CDSN Gain-Ranged Format~000200104M0~W2 D0-13 A-8191~D1415~P0:#0,1:#2,2:#4,3:#7~
+
+--01-XSEED
+<data_format_dictionary blockette="030">
+  <short_descriptive_name>CDSN Gain-Ranged Format</short_descriptive_name>
+  <data_format_identifier_code>2</data_format_identifier_code>
+  <data_family_type>1</data_family_type>
+  <number_of_decoder_keys>4</number_of_decoder_keys>
+  <decoder_keys>M0</decoder_keys>
+  <decoder_keys>W2 D0-13 A-8191</decoder_keys>
+  <decoder_keys>D1415</decoder_keys>
+  <decoder_keys>P0:#0,1:#2,2:#4,3:#7</decoder_keys>
+</data_format_dictionary>

@@ -1,0 +1,13 @@
+### Blockette 058 tests ###
+
+--01-SEED
+058003503+3.27680E+03+0.00000E+0000
+
+--01-XSEED
+<channel_sensitivity_gain blockette="058">
+  <stage_sequence_number>3</stage_sequence_number>
+  <sensitivity_gain>+3.27680E+03</sensitivity_gain>
+  <frequency>+0.00000E+00</frequency>
+  <number_of_history_values>0</number_of_history_values>
+  <history/>
+</channel_sensitivity_gain>

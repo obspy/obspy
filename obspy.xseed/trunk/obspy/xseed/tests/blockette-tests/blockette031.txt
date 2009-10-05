@@ -1,0 +1,11 @@
+### Blockette 031 tests ###
+
+--01-SEED
+03100720750Stime correction does not include leap second, (-1000ms).~000
+
+--01-XSEED
+<comment_description blockette="031">
+  <comment_code_key>750</comment_code_key>
+  <comment_class_code>S</comment_class_code>
+  <description_of_comment>time correction does not include leap second, (-1000ms).</description_of_comment>
+</comment_description>

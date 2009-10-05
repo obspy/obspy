@@ -1,0 +1,18 @@
+### Blockette 041 tests ###
+
+--01-SEED
+04100620006RFQ380MFIR1~C0040040002-1.0970700E-03-9.9332700E-04
+
+--01-XSEED
+<FIR_dictionary blockette="041">
+  <response_lookup_key>6</response_lookup_key>
+  <response_name>RFQ380MFIR1</response_name>
+  <symmetry_code>C</symmetry_code>
+  <signal_in_units>4</signal_in_units>
+  <signal_out_units>4</signal_out_units>
+  <number_of_factors>2</number_of_factors>
+  <FIR_coefficient>
+    -1.0970700E-03
+    -9.9332700E-04
+  </FIR_coefficient>
+</FIR_dictionary>

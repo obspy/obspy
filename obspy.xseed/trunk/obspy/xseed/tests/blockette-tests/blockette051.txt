@@ -1,0 +1,11 @@
+### Blockette 051 tests ###
+
+--01-SEED
+05100632000,187,06:36:04.0000~2000,187,07:03:20.0000~0001000000
+
+--01-XSEED
+<station_comment blockette="051">
+  <beginning_effective_time>2000-07-05T06:36:04</beginning_effective_time>
+  <end_effective_time>2000-07-05T07:03:20</end_effective_time>
+  <comment_code_key>1</comment_code_key>
+</station_comment>

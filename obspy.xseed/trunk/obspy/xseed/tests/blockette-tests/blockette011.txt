@@ -1,0 +1,23 @@
+### Blockette 011 ###
+
+
+# The SEED string was modified to leave out the sequence number.
+--01-SEED
+0110054004AAK  000000ANMO 000000ANTO 000000BJI  000000
+
+--01-XSEED
+<volume_station_header_index blockette="011">
+  <number_of_stations>4</number_of_stations>
+  <station_identifier>
+    <station_identifier_code>AAK</station_identifier_code>
+  </station_identifier>
+  <station_identifier>
+    <station_identifier_code>ANMO</station_identifier_code>
+  </station_identifier>
+  <station_identifier>
+    <station_identifier_code>ANTO</station_identifier_code>
+  </station_identifier>
+  <station_identifier>
+    <station_identifier_code>BJI</station_identifier_code>
+  </station_identifier>
+</volume_station_header_index>

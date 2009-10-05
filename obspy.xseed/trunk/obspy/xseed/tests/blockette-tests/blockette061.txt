@@ -1,0 +1,23 @@
+### Blockette 061 tests ###
+
+--01-SEED
+061013103DM24XDECI2X1~B0010010007+2.4400000E-04+2.9300000E-03+1.6112000E-02+5.3711001E-02+1.2085000E-01+1.9335900E-01+2.2558600E-01
+
+--01-XSEED
+<FIR_response blockette="061">
+  <stage_sequence_number>3</stage_sequence_number>
+  <response_name>DM24XDECI2X1</response_name>
+  <symmetry_code>B</symmetry_code>
+  <signal_in_units>1</signal_in_units>
+  <signal_out_units>1</signal_out_units>
+  <number_of_coefficients>7</number_of_coefficients>
+  <FIR_coefficient>
+    +2.4400000E-04
+    +2.9300000E-03
+    +1.6112000E-02
+    +5.3711001E-02
+    +1.2085000E-01
+    +1.9335900E-01
+    +2.2558600E-01
+  </FIR_coefficient>
+</FIR_response>

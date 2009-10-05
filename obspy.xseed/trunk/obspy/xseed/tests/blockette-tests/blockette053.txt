@@ -1,0 +1,48 @@
+### Blockette 053 tests ###
+
+--01-SEED
+0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.00000E+00+0.00000E+00
+
+--01-XSEED
+<response_poles_and_zeros blockette="053">
+  <transfer_function_types>A</transfer_function_types>
+  <stage_sequence_number>1</stage_sequence_number>
+  <stage_signal_input_units>2</stage_signal_input_units>
+  <stage_signal_output_units>3</stage_signal_output_units>
+  <A0_normalization_factor>+6.00770E+07</A0_normalization_factor>
+  <normalization_frequency>+2.00000E-02</normalization_frequency>
+  <number_of_complex_zeros>2</number_of_complex_zeros>
+  <complex_zero>
+    <real_zero>+0.00000E+00</real_zero>
+    <imaginary_zero>+0.00000E+00</imaginary_zero>
+    <real_zero_error>+0.00000E+00</real_zero_error>
+    <imaginary_zero_error>+0.00000E+00</imaginary_zero_error>
+    <real_zero>+0.00000E+00</real_zero>
+    <imaginary_zero>+0.00000E+00</imaginary_zero>
+    <real_zero_error>+0.00000E+00</real_zero_error>
+    <imaginary_zero_error>+0.00000E+00</imaginary_zero_error>
+  </complex_zero>
+  <number_of_complex_poles>5</number_of_complex_poles>
+  <complex_pole>
+    <real_pole>-3.70040E-02</real_pole>
+    <imaginary_pole>-3.70160E-02</imaginary_pole>
+    <real_pole_error>+0.00000E+00</real_pole_error>
+    <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
+    <real_pole>-3.70040E-02</real_pole>
+    <imaginary_pole>+3.70160E-02</imaginary_pole>
+    <real_pole_error>+0.00000E+00</real_pole_error>
+    <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
+    <real_pole>-2.51330E+02</real_pole>
+    <imaginary_pole>+0.00000E+00</imaginary_pole>
+    <real_pole_error>+0.00000E+00</real_pole_error>
+    <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
+    <real_pole>-1.31040E+02</real_pole>
+    <imaginary_pole>-4.67290E+02</imaginary_pole>
+    <real_pole_error>+0.00000E+00</real_pole_error>
+    <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
+    <real_pole>-1.31040E+02</real_pole>
+    <imaginary_pole>+4.67290E+02</imaginary_pole>
+    <real_pole_error>+0.00000E+00</real_pole_error>
+    <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
+  </complex_pole>
+</response_poles_and_zeros>

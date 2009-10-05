@@ -1,0 +1,14 @@
+### Blockette 057 tests ###
+
+--01-SEED
+0570051322.0000E+020000100000+0.0000E+00+0.0000E+00
+
+--01-XSEED
+<decimation blockette="057">
+  <stage_sequence_number>32</stage_sequence_number>
+  <input_sample_rate>2.0000E+02</input_sample_rate>
+  <decimation_factor>1</decimation_factor>
+  <decimation_offset>0</decimation_offset>
+  <estimated_delay>+0.0000E+00</estimated_delay>
+  <correction_applied>+0.0000E+00</correction_applied>
+</decimation>

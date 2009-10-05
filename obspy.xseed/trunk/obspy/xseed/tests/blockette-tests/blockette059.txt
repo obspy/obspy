@@ -1,0 +1,11 @@
+### Blockette 059 tests ###
+
+--01-SEED
+05900351989,001~1989,004~4410000000
+
+--01-XSEED
+<channel_comment blockette="059">
+  <beginning_of_effective_time>1989-01-01</beginning_of_effective_time>
+  <end_effective_time>1989-01-04</end_effective_time>
+  <comment_code_key>4410</comment_code_key>
+</channel_comment>

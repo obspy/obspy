@@ -1,0 +1,11 @@
+### Blockette 034 tests ###
+
+--01-SEED
+0340044001M/S~Velocity in Meters Per Second~
+
+--01-XSEED
+<units_abbreviations blockette="034">
+  <unit_lookup_code>1</unit_lookup_code>
+  <unit_name>M/S</unit_name>
+  <unit_description>Velocity in Meters Per Second</unit_description>
+</units_abbreviations>

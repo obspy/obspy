@@ -1,0 +1,15 @@
+### Blockette 010 ###
+
+--01-SEED
+0100095 2.1121992,001,00:00:00.0000~1992,002,00:00:00.0000~1993,029~IRIS DMC~Data for 1992,001~
+
+--01-XSEED
+<volume_identifier blockette="010">
+  <version_of_format>2.1</version_of_format>
+  <logical_record_length>12</logical_record_length>
+  <beginning_time>1992-01-01T00:00:00</beginning_time>
+  <end_time>1992-01-02T00:00:00</end_time>
+  <volume_time>1993-01-29</volume_time>
+  <originating_organization>IRIS DMC</originating_organization>
+  <label>Data for 1992,001</label>
+</volume_identifier>

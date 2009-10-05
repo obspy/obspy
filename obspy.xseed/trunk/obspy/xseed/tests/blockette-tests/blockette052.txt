@@ -1,0 +1,88 @@
+### Blockette 052 tests ###
+
+--01-SEED
+0520113  EHZ0000002~003006+49.766899 +12.207000 +430.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,155~~N
+
+--01-XSEED
+<channel_identifier blockette="052">
+   <location_identifier></location_identifier>
+   <channel_identifier>EHZ</channel_identifier>
+   <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>2</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>3</units_of_signal_response>
+    <units_of_calibration_input>6</units_of_calibration_input>
+    <latitude>+49.766899</latitude>
+    <longitude>+12.207000</longitude>
+    <elevation>+430.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>1</data_format_identifier_code>
+    <data_recored_length>12</data_recored_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-06-04</start_date>
+    <update_flag>N</update_flag>
+</channel_identifier>
+
+
+--02-SEED
+0520121  EHZ0000002~003006+47.737167 +12.795714 +860.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,199~2007,155~N
+
+--02-XSEED
+<channel_identifier blockette="052">
+    <location_identifier></location_identifier>
+    <channel_identifier>EHZ</channel_identifier>
+    <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>2</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>3</units_of_signal_response>
+    <units_of_calibration_input>6</units_of_calibration_input>
+    <latitude>+47.737167</latitude>
+    <longitude>+12.795714</longitude>
+    <elevation>+860.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>1</data_format_identifier_code>
+    <data_recored_length>12</data_recored_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-07-18</start_date>
+    <end_date>2007-06-04</end_date>
+    <update_flag>N</update_flag>
+</channel_identifier>
+
+
+--03-SEED
+0520113  EHZ0000002~003006+49.766899 +12.207000 +430.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,155~~N
+
+--03-XSEED
+<channel_identifier blockette="052">
+   <location_identifier></location_identifier>
+   <channel_identifier>EHZ</channel_identifier>
+   <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>2</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>3</units_of_signal_response>
+    <units_of_calibration_input>6</units_of_calibration_input>
+    <latitude>+49.766899</latitude>
+    <longitude>+12.207000</longitude>
+    <elevation>+430.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>1</data_format_identifier_code>
+    <data_recored_length>12</data_recored_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-06-04</start_date>
+    <update_flag>N</update_flag>
+</channel_identifier>

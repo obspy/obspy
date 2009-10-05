@@ -1,0 +1,12 @@
+### Blockette 032 tests ###
+
+--01-SEED
+032005801NEIC SCIENTIFICE ALERT~NEAR REAL TIME~USGS, NEIC~
+
+--01-XSEED
+<cited_source_dictionary blockette="032">
+  <source_lookup_code>1</source_lookup_code>
+  <name_of_publication_author>NEIC SCIENTIFICE ALERT</name_of_publication_author>
+  <date_published_catalog>NEAR REAL TIME</date_published_catalog>
+  <publisher_name>USGS, NEIC</publisher_name>
+</cited_source_dictionary>

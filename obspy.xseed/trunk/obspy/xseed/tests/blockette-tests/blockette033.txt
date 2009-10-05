@@ -1,0 +1,10 @@
+### Blockette 033 tests ###
+
+--01-SEED
+0330055001(GSN) Global Seismograph Network (IRIS/USGS)~
+
+--01-XSEED
+<generic_abbreviation blockette="033">
+  <abbreviation_lookup_code>1</abbreviation_lookup_code>
+  <abbreviation_description>(GSN) Global Seismograph Network (IRIS/USGS)</abbreviation_description>
+</generic_abbreviation>
