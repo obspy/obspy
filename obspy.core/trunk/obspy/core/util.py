@@ -65,6 +65,10 @@ class AttribDict(dict, object):
         st.update(self)
         return st
 
+    def update(self, adict={}):
+        for (key, value) in adict.iteritems():
+            self[key] = value
+
 
 def getFormatsAndMethods(verbose=False):
     """

@@ -15,7 +15,7 @@ class StatsTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_initStats(self):
+    def test_init(self):
         """
         Init tests.
         """
@@ -39,6 +39,19 @@ class StatsTestCase(unittest.TestCase):
         self.assertEquals(stats2.station, 'ROTZ')
         self.assertEquals(stats.network, 'CZ')
         self.assertEquals(stats.station, 'RJOB')
+
+    def test_update(self):
+        """
+        Tests update method of AttribDict.
+        """
+        x = Stats({'a': 5})
+        self.assertTrue('a' in dir(x))
+        x.update({'b': 5})
+        self.assertTrue('b' in dir(x))
+        y = {'a':5}
+        y.update({'b':5})
+        x = Stats(y)
+        self.assertTrue('b' in dir(x))
 
     def test_simpleStats(self):
         """
