@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from numpy import array, NaN, concatenate, isnan
-from numpy.ma import masked_array, is_masked
+from numpy import array, NaN, concatenate, isnan, ma
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import obspy
@@ -53,7 +52,7 @@ class Trace(object):
         @rtype: int 
         @return: Number of data samples.
         """
-        if is_masked(self.data):
+        if ma.is_masked(self.data):
             return self.data.count()
         return len(self.data)
 
@@ -122,7 +121,7 @@ class Trace(object):
             nans = array([NaN] * delta)
             out.data = concatenate([lt.data, nans, rt.data])
             # Create masked array.
-            out.data = masked_array(out.data, isnan(out.data))
+            out.data = ma.masked_array(out.data, isnan(out.data))
             out.stats.endtime = rt.stats.endtime
             out.stats.npts = out.data.count()
         return out
