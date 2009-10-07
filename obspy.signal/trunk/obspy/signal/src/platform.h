@@ -11,7 +11,7 @@ extern "C" {
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
   #include <limits.h>
   #include <sys/malloc.h>
-#elif defined(WIN32)
+#elif defined(_WIN32)
   #include <limits.h>
   #include <malloc.h>
 #else
