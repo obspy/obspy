@@ -236,6 +236,20 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
     return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
 
 
+def complexifyString(line):
+    """
+    Converts a string of the form '(real, imag)' into a complex type.
+    
+    Doctest:
+    >>> complexifyString("(1,2)")
+    (1+2j)
+    >>> complexifyString(" ( 1 , 2 ) ")
+    (1+2j)
+    """
+    temp = line.split(',')
+    return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

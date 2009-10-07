@@ -2,7 +2,7 @@
 
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict
+from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from telnetlib import Telnet
 import os
 import sys
@@ -233,17 +233,13 @@ class Client(Telnet):
         # parsing zeros
         paz['zeros'] = []
         for zeros in str(resp_paz.zeros).strip().split():
-            temp = zeros.split(',')
-            i = complex(float(temp[0][1:]), float(temp[1][:-1]))
-            paz['zeros'].append(i)
+            paz['zeros'].append(complexifyString(zeros))
         if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
             raise ArcLinkException('Could not parse all zeros')
         # parsing poles
         paz['poles'] = []
         for poles in str(resp_paz.poles).strip().split():
-            temp = poles.split(',')
-            i = complex(float(temp[0][1:]), float(temp[1][:-1]))
-            paz['poles'].append(i)
+            paz['poles'].append(complexifyString(poles))
         if len(paz['poles']) != int(resp_paz.attrib['npoles']):
             raise ArcLinkException('Could not parse all poles')
         # parsing sensitivity
