@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
+# from numpy.ma import masked_array, is_nan does not work with some
+# Python/NumPy combinations.
 from numpy import array, NaN, concatenate, isnan, ma
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
