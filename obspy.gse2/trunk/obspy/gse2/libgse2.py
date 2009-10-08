@@ -212,7 +212,11 @@ def read(f, test_chksum=False):
     lib.rem_2nd_diff(data, head.n_samps)
     chksum = C.c_longlong()
     chksum = lib.check_sum(data, head.n_samps, chksum)
-    chksum2 = int(f.readline().strip().split()[1])
+    # find checksum, allow 10 newlines before
+    for _i in xrange(10):
+        buf = f.readline()
+        if buf.startswith('CHK2'):
+            chksum2 = int(buf.strip().split()[1])
     if test_chksum and chksum != chksum2:
         msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
         raise ChksumError(msg % (chksum, chksum2, chksum, chksum2))
