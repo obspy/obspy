@@ -39,19 +39,7 @@ import os
 import platform
 import copy
 from ctypes import ArgumentError
-
-
-if platform.system() == 'Windows':
-    lib_name = 'signal.win32.dll'
-elif platform.system() == 'Darwin':
-    lib_name = 'signal.dylib'
-else:
-    if platform.architecture()[0] == '64bit':
-        lib_name = 'signal.lin64.so'
-    else:
-        lib_name = 'signal.so'
-
-lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+from util import lib
 
 
 def recStalta(a, nsta, nlta):
