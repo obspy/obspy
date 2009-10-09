@@ -53,9 +53,13 @@ else:
 
 lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
 
-# Exception type for mismatching checksums
+
 class ChksumError(StandardError):
+    """
+    Exception type for mismatching checksums
+    """
     pass
+
 
 # ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
 # pointer descriptor
@@ -210,16 +214,21 @@ def read(f, test_chksum=False):
     n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
     lib.rem_2nd_diff(data, head.n_samps)
-    chksum = C.c_longlong()
-    chksum = lib.check_sum(data, head.n_samps, chksum)
-    # find checksum, allow 10 newlines before
-    for _i in xrange(10):
+    # test checksum only if enabled
+    if test_chksum:
+        # calculate checksum from data
+        chksum_data = lib.check_sum(data, head.n_samps, C.c_longlong())
+        # find checksum within file
         buf = f.readline()
-        if buf.startswith('CHK2'):
-            chksum2 = int(buf.strip().split()[1])
-    if test_chksum and chksum != chksum2:
-        msg = "Missmatching Checksums, CHK1 %d; CHK2 %d; %d != %d"
-        raise ChksumError(msg % (chksum, chksum2, chksum, chksum2))
+        chksum_file = -1
+        while buf:
+            if buf.startswith('CHK2'):
+                chksum_file = int(buf.strip().split()[1])
+                break
+            buf = f.readline()
+        if chksum_data != chksum_file:
+            msg = "Mismatching checksums, CHK %d != CHK %d"
+            raise ChksumError(msg % (chksum_data, chksum_file))
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
@@ -294,10 +303,10 @@ def write(headdict, data, f, inplace=False):
     ierr = lib.compress_6b(data, n)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     # set some defaults if not available and convert header entries
-    headdict.setdefault('datatype','CM6')
-    headdict.setdefault('vang',-1)
-    headdict.setdefault('calper',1.0)
-    headdict.setdefault('calib',1.0)
+    headdict.setdefault('datatype', 'CM6')
+    headdict.setdefault('vang', -1)
+    headdict.setdefault('calper', 1.0)
+    headdict.setdefault('calib', 1.0)
     head = HEADER()
     for _i in headdict.keys():
         if _i in gse2head:

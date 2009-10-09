@@ -3,14 +3,14 @@
 """
 The libgse2 test suite.
 """
-
+from ctypes import ArgumentError
 from obspy.core import UTCDateTime
 from obspy.gse2 import libgse2
+from obspy.gse2.libgse2 import ChksumError
 import inspect
+import numpy as N
 import os
 import unittest
-from ctypes import ArgumentError
-import numpy as N
 
 
 class LibGSE2TestCase(unittest.TestCase):
@@ -37,7 +37,7 @@ class LibGSE2TestCase(unittest.TestCase):
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
-        header, data = libgse2.read(f)
+        header, data = libgse2.read(f, test_chksum=True)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -51,6 +51,17 @@ class LibGSE2TestCase(unittest.TestCase):
         )
         self.assertEqual(data[0:13].tolist(), datalist)
         f.close()
+
+    def test_readWithWrongChecksum(self):
+        """
+        """
+        # read original file
+        gse2file = os.path.join(self.path,
+                                'loc_RJOB20050831023349.z.wrong_chksum')
+        # should fail
+        fp = open(gse2file, 'rb')
+        self.assertRaises(ChksumError, libgse2.read, fp, test_chksum=True)
+        fp.close()
 
     def test_readAndWrite(self):
         """
@@ -105,15 +116,15 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        f = open(os.path.join(self.path, 'loc_RNON20040609200559.z'),'rb')
+        f = open(os.path.join(self.path, 'loc_RNON20040609200559.z'), 'rb')
         pos = f.tell()
         self.assertEqual(None, libgse2.isGse2(f))
-        self.assertEqual(pos,f.tell())
+        self.assertEqual(pos, f.tell())
         f.seek(10)
         self.assertRaises(TypeError, libgse2.isGse2, f)
-        self.assertEqual(10,f.tell())
+        self.assertEqual(10, f.tell())
 
-    def test_maxvalueExceeded(self):
+    def test_maxValueExceeded(self):
         """
         Test that exception is raised when data values exceed the maximum
         of 2^26
