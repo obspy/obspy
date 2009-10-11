@@ -3,18 +3,18 @@
 The libmseed test suite.
 """
 
+from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
 from obspy.mseed.headers import PyFile_FromFile, MSFileParam, _PyFile_callback
 from obspy.mseed.libmseed import clibmseed
-from StringIO import StringIO
 import copy
+import ctypes as C
 import inspect
 import numpy as N
-import ctypes as C
-import threading
 import os
 import random
+import threading
 import time
 import unittest
 
@@ -486,7 +486,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
                               'median': 50.0, 'upper_quantile': 75.0,
                               'lower_quantile': 25.0})
-        # No timing quality set should result in an emtpy dictionary.
+        # No timing quality set should result in an empty dictionary.
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         a = time.time()
@@ -619,13 +619,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0)
         self.assertEqual(start, clibmseed.msr_starttime(msr))
         msr, msf = mseed.readSingleRecordToMSR(filename, ms_p=(msr, msf),
-                                                  dataflag=0, record_number= -1)
+                                               dataflag=0, record_number= -1)
         self.assertEqual(end, clibmseed.msr_endtime(msr))
         # Deallocate msr and msf memory
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                None, 0, None, None, 0, 0, 0)
         # endtime without ms_p argument
-        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0, record_number= -1)
+        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0,
+                                               record_number= -1)
         self.assertEqual(end, clibmseed.msr_endtime(msr))
         # Deallocate msr and msf memory
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),

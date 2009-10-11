@@ -30,8 +30,8 @@ setup(
     ObsPy, Python for Seismological Observatories
 
     Capabilities include filtering, instrument simulation, unified read and
-    write support for GSE2, MSEED, SAC, triggering, imaging, xseed and
-    there is experimental support to arclink and seishub.
+    write support for GSE2, MSEED, SAC, triggering, imaging, XML-SEED and
+    there is experimental support for Arclink and SeisHub servers.
 
     Note currently only obspy.core, obspy.gse2, obspy.mseed and
     obspy.imaging are automatically installed.

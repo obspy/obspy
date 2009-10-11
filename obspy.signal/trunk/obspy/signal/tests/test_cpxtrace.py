@@ -91,7 +91,6 @@ class CpxTraceTestCase(unittest.TestCase):
 
     def test_normenvelope(self):
         """
-        Read files via L{obspy.Trace}
         """
         #A_cpx,A_real = cpxtrace.envelope(self.data_win)
         Anorm = cpxtrace.normEnvelope(self.data_win, self.fs, self.smoothie,
@@ -105,7 +104,6 @@ class CpxTraceTestCase(unittest.TestCase):
 
     def test_centroid(self):
         """
-        Read files via L{obspy.Trace}
         """
         centroid = cpxtrace.centroid(self.data_win, self.fk)
         rms = N.sqrt(N.sum((centroid[0] - self.res[:, 5]) ** 2) /
@@ -117,7 +115,6 @@ class CpxTraceTestCase(unittest.TestCase):
 
     def test_instFreq(self):
         """
-        Read files via L{obspy.Trace}
         """
         omega = cpxtrace.instFreq(self.data_win, self.fs, self.fk)
         rms = N.sqrt(N.sum((omega[0] - self.res[:, 7]) ** 2) /
@@ -129,7 +126,6 @@ class CpxTraceTestCase(unittest.TestCase):
 
     def test_instBwith(self):
         """
-        Read files via L{obspy.Trace}
         """
         sigma = cpxtrace.instBwith(self.data_win, self.fs, self.fk)
         rms = N.sqrt(N.sum((sigma[0] - self.res[:, 9]) ** 2) /
