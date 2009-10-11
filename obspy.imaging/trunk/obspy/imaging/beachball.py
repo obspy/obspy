@@ -100,8 +100,8 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
     # plot the figure
     fig = plt.figure(figsize=(3, 3), dpi=100)
     fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    fig.set_figheight(size / 100)
-    fig.set_figwidth(size / 100)
+    fig.set_figheight(size // 100)
+    fig.set_figwidth(size // 100)
     ax = fig.add_subplot(111, aspect='equal')
 
     # hide axes + ticks

@@ -121,7 +121,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     @rtype: numpy.ndarray complex128
     @return: Frequency response of PAZ of length nfft 
     """
-    n = nfft / 2
+    n = nfft // 2
     a, b = S.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
@@ -161,18 +161,18 @@ def specInv(spec, wlev, nfft):
         real = 1. / spec[0].real ** 2
     spec[0] = complex(real, 0.0)
 
-    if N.abs(spec[nfft / 2].real) < swamp:
+    if N.abs(spec[nfft // 2].real) < swamp:
         if N.abs(spec[nfft / 2].real) > 0.0:
             real = 1. / swamp2
         else:
             real = 0.0;
         found += 1
     else:
-        real = 1. / spec[nfft / 2].real ** 2
-    spec[nfft / 2] = complex(real, 0.0)
+        real = 1. / spec[nfft // 2].real ** 2
+    spec[nfft // 2] = complex(real, 0.0)
 
     spec0 = spec[0]
-    specn = spec[nfft / 2]
+    specn = spec[nfft // 2]
     spec = spec[1:-1]
     sqr_len = abs(spec) ** 2
     idx = N.where(sqr_len < swamp2)

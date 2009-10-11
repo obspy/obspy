@@ -72,7 +72,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         gaps.mseed. The values are assumed to be correct. The first values
         were created using Pitsa.
         """
-        mseed_file = os.path.join(self.path, u'gaps.mseed')
+        mseed_file = os.path.join(self.path, unicode('gaps.mseed'))
         mseed = libmseed()
         # list of known data samples
         starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
@@ -84,7 +84,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         #trace_list = mseed.readMSTracesViaRecords(mseed_file)
         i = 0
         trace_list = mseed.readMSTracesViaRecords(mseed_file)
-        #import pdb;pdb.set_trace()
         for header, data in trace_list:
             self.assertEqual('BGLD', header['station'])
             self.assertEqual('EHE', header['channel'])
@@ -93,9 +92,10 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(datalist[i], data[0:9].tolist())
             i += 1
         del trace_list, header, data
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record',
-                           u'qualityflags.mseed', u'test.mseed',
-                           u'timingquality.mseed']
+        mseed_filenames = [unicode('BW.BGLD.__.EHE.D.2008.001.first_record'),
+                           unicode('qualityflags.mseed'),
+                           unicode('test.mseed'),
+                           unicode('timingquality.mseed')]
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
         npts = [412, 412, 11947, 41604, 1]
@@ -116,7 +116,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         gaps.mseed. The values are assumed to be correct. The first values
         were created using Pitsa.
         """
-        mseed_file = os.path.join(self.path, u'gaps.mseed')
+        mseed_file = os.path.join(self.path, unicode('gaps.mseed'))
         mseed = libmseed()
         # list of known data samples
         starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
@@ -128,7 +128,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         #trace_list = mseed.readMSTracesViaRecords(mseed_file)
         i = 0
         trace_list = mseed.readMSTraces(mseed_file)
-        #import pdb;pdb.set_trace()
         for header, data in trace_list:
             self.assertEqual('BGLD', header['station'])
             self.assertEqual('EHE', header['channel'])
@@ -136,9 +135,9 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(starttime[i], header['starttime'])
             self.assertEqual(datalist[i], data[0:9].tolist())
             i += 1
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record',
-                           u'qualityflags.mseed', u'test.mseed',
-                           u'timingquality.mseed']
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_record',
+                           'qualityflags.mseed', 'test.mseed',
+                           'timingquality.mseed']
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
         npts = [412, 412, 11947, 41604, 1]
@@ -156,9 +155,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         Compares header data read by libmseed
         """
         mseed = libmseed()
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_record',
-                           u'gaps.mseed', u'qualityflags.mseed',
-                           u'test.mseed', u'timingquality.mseed']
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_record',
+                           'gaps.mseed', 'qualityflags.mseed',
+                           'test.mseed', 'timingquality.mseed']
         samprate = [200.0, 200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'BGLD', 'HGN', 'BGLD']
         starttime = [1199145599915000, 1199145599915000, 1199145599915000,
@@ -181,7 +180,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         regardless of write options.
         """
         mseed = libmseed()
-        mseed_file = os.path.join(self.path, u'test.mseed')
+        mseed_file = os.path.join(self.path, 'test.mseed')
         trace_list = mseed.readMSTraces(mseed_file)
         # define test ranges
         record_length_values = [2 ** i for i in range(8, 21)]
@@ -194,7 +193,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         for reclen in record_length_values:
             for byteorder in byteorder_values:
                 for encoding in encoding_values:
-                    filename = u'temp.%s.%s.%s.mseed' % (reclen, byteorder,
+                    filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder,
                                                         encoding)
                     temp_file = os.path.join(self.path, filename)
                     mseed.writeMSTraces(copy.deepcopy(trace_list), temp_file,
@@ -213,12 +212,12 @@ class LibMSEEDTestCase(unittest.TestCase):
         raised. Such write operations can happen on 64 bit platforms.
         """
         mseed = libmseed()
-        mseed_file = os.path.join(self.path, u'test.mseed')
-        tmp_file = os.path.join(self.path, u'tempfile.mseed')
+        mseed_file = os.path.join(self.path, 'test.mseed')
+        tmp_file = os.path.join(self.path, 'tempfile.mseed')
         trace_list = mseed.readMSTraces(mseed_file)
         mseed.writeMSTraces(trace_list, tmp_file)
         trace_list[0][1] = trace_list[0][1].astype('int64')
-        self.assertRaises(Exception,mseed.writeMSTraces,trace_list, tmp_file)
+        self.assertRaises(Exception, mseed.writeMSTraces, trace_list, tmp_file)
         os.remove(tmp_file)
 
     def test_readAndWriteFileWithGaps(self):
@@ -226,7 +225,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Tests reading and writing files with more than one trace.
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, u'gaps.mseed')
+        filename = os.path.join(self.path, 'gaps.mseed')
         # Read file and test if all traces are being read.
         trace_list = mseed.readMSTraces(filename)
         self.assertEqual(len(trace_list), 4)
@@ -234,7 +233,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), len(trace_list) - 1)
         # Write File to temporary file.
-        outfile = u'tempfile.mseed'
+        outfile = unicode('tempfile.mseed')
         mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
         # Read the same file again and compare it to the original file.
         new_trace_list = mseed.readMSTraces(outfile)
@@ -257,7 +256,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         # test file with 3 gaps
-        filename = os.path.join(self.path, u'gaps.mseed')
+        filename = os.path.join(self.path, 'gaps.mseed')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 3)
         # index are now changed, 0 contains head of trace[0]
@@ -277,11 +276,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(gap_list[2][7], 824)
         # real example without gaps
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(gap_list[1:], [])
         # real example with a single gap
-        filename = os.path.join(self.path, u'BW.RJOB.__.EHZ.D.2009.056')
+        filename = os.path.join(self.path, 'BW.RJOB.__.EHZ.D.2009.056')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(len(gap_list), 1)
 
@@ -294,14 +293,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = libmseed()
         # Example 1
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         header = mseed.getFirstRecordHeaderInfo(filename)
         self.assertEqual(header['location'], '')
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         self.assertEqual(header['channel'], 'EHE')
         # Example 2
-        filename = os.path.join(self.path, u'BW.RJOB.__.EHZ.D.2009.056')
+        filename = os.path.join(self.path, 'BW.RJOB.__.EHZ.D.2009.056')
         header = mseed.getFirstRecordHeaderInfo(filename)
         self.assertEqual(header['location'], '')
         self.assertEqual(header['network'], 'BW')
@@ -309,7 +308,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['channel'], 'EHZ')
         # Example 3 again for leak checking
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         header = mseed.getFirstRecordHeaderInfo(filename)
         self.assertEqual(header['location'], '')
         self.assertEqual(header['network'], 'BW')
@@ -326,8 +325,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         trace and without any gaps or overlaps.
         """
         mseed = libmseed()
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_10_percent',
-                           u'test.mseed', u'timingquality.mseed']
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
+                           'test.mseed', 'timingquality.mseed']
         for _i in mseed_filenames:
             filename = os.path.join(self.path, _i)
             # get the start- and end time
@@ -351,7 +350,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         times will be read
         """
         mseed = libmseed()
-        temp = os.path.join(self.path, u'BW.BGLD.__.EHE.D.2008.001')
+        temp = os.path.join(self.path, 'BW.BGLD.__.EHE.D.2008.001')
         file = temp + '.first_10_percent'
         # initialize first record
         file1 = temp + '.first_record'
@@ -412,16 +411,16 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         #Create 10 small files.
         fh = open(filename, 'rb')
         first_ten_records = fh.read(10 * 512)
         fh.close()
         for _i in range(10):
-            fh = open(str(_i) + u'_temp.mseed', 'wb')
+            fh = open(str(_i) + '_temp.mseed', 'wb')
             fh.write(first_ten_records[_i * 512: (_i + 1) * 512])
             fh.close()
-        file_list = [str(_i) + u'_temp.mseed' for _i in range(10)]
+        file_list = [str(_i) + '_temp.mseed' for _i in range(10)]
         # Randomize list.
         file_list.sort(key=lambda _x: random.random())
         # Get the needed start- and endtime.
@@ -437,9 +436,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         f = PyFile_FromFile(mf.contents.fp.contents.value, str(filename),
                             'rb', _PyFile_callback)
         f.seek(info['record_length'])
-        starttime = mseed.getStartFromMSF(filename,msr,msf)
+        starttime = mseed.getStartFromMSF(filename, msr, msf)
         f.seek(9 * info['record_length'])
-        endtime = mseed.getStartFromMSF(filename,msr,msf)
+        endtime = mseed.getStartFromMSF(filename, msr, msf)
         # Deallocate msr and msf memory
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                None, 0, None, None, 0, 0, 0)
@@ -458,7 +457,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         created by the inverse method that reads the bits.
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, u'qualityflags.mseed')
+        filename = os.path.join(self.path, 'qualityflags.mseed')
         # Read quality flags.
         flags = mseed.getDataQualityFlagsCount(filename)
         # The test file contains 18 records. The first record has no set bit,
@@ -482,14 +481,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         type = 3); quantile(V, 0.25, type = 3)
         """
         mseed = libmseed()
-        filename = os.path.join(self.path, u'timingquality.mseed')
+        filename = os.path.join(self.path, 'timingquality.mseed')
         tq = mseed.getTimingQuality(filename)
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
                               'median': 50.0, 'upper_quantile': 75.0,
                               'lower_quantile': 25.0})
         # No timing quality set should result in an emtpy dictionary.
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         a = time.time()
         tq = mseed.getTimingQuality(filename)
         b = time.time()
@@ -514,12 +513,12 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         # Mini-SEED filenames.
-        mseed_filenames = [u'BW.BGLD.__.EHE.D.2008.001.first_10_percent',
-                           u'gaps.mseed', u'qualityflags.mseed', u'test.mseed',
-                           u'timingquality.mseed']
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
+                           'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
+                           'timingquality.mseed']
         # Non Mini-SEED filenames.
-        non_mseed_filenames = [u'test_libmseed.py', u'__init__.py',
-                               u'test_core.py']
+        non_mseed_filenames = ['test_libmseed.py', '__init__.py',
+                               'test_core.py']
         # Loop over Mini-SEED files
         for _i in mseed_filenames:
             filename = os.path.join(self.path, _i)
@@ -538,7 +537,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         # Simply reading the file.
         f = open(filename, 'rb')
         info = mseed._getMSFileInfo(f, filename)
@@ -571,7 +570,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(info['excess_bytes'], 0)
         self.assertEqual(open_file_string.tell(), 111)
         # One more file containing two records.
-        filename = os.path.join(self.path, u'test.mseed')
+        filename = os.path.join(self.path, 'test.mseed')
         f = open(filename, 'rb')
         info = mseed._getMSFileInfo(f, filename)
         f.close()
@@ -584,27 +583,26 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Test that ctypes argtypes are set for type checking
         """
-        from obspy.mseed.headers import MSRecord
         ArgumentError = C.ArgumentError
         cl = clibmseed
-        args = [C.pointer(C.pointer(C.c_int())),'a', 1,1.5,1,0,0,0,0]
-        self.assertRaises(ArgumentError,cl.ms_readtraces,*args)
-        self.assertRaises(TypeError,cl.ms_readtraces,*args[:-1])
-        self.assertRaises(ArgumentError,cl.ms_readmsr_r,*args)
-        self.assertRaises(TypeError,cl.ms_readmsr_r,*args[:-1])
-        self.assertRaises(ArgumentError,cl.mst_printtracelist,*args[:5])
-        self.assertRaises(ArgumentError,PyFile_FromFile,*args[:5])
-        self.assertRaises(ArgumentError,cl.ms_find_reclen,*args[:4])
+        args = [C.pointer(C.pointer(C.c_int())), 'a', 1, 1.5, 1, 0, 0, 0, 0]
+        self.assertRaises(ArgumentError, cl.ms_readtraces, *args)
+        self.assertRaises(TypeError, cl.ms_readtraces, *args[:-1])
+        self.assertRaises(ArgumentError, cl.ms_readmsr_r, *args)
+        self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
+        self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
+        self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
+        self.assertRaises(ArgumentError, cl.ms_find_reclen, *args[:4])
         args.append(1) # 10 argument function
-        self.assertRaises(ArgumentError,cl.mst_packgroup,*args)
+        self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
         args = ['hallo'] # one argument functions
-        self.assertRaises(ArgumentError,cl.msr_starttime,*args)
-        self.assertRaises(ArgumentError,cl.msr_endtime,*args)
-        self.assertRaises(ArgumentError,cl.mst_init,*args)
-        self.assertRaises(ArgumentError,cl.mst_free,*args)
-        self.assertRaises(ArgumentError,cl.mst_initgroup,*args)
-        self.assertRaises(ArgumentError,cl.mst_freegroup,*args)
-        self.assertRaises(ArgumentError,cl.msr_init,*args)
+        self.assertRaises(ArgumentError, cl.msr_starttime, *args)
+        self.assertRaises(ArgumentError, cl.msr_endtime, *args)
+        self.assertRaises(ArgumentError, cl.mst_init, *args)
+        self.assertRaises(ArgumentError, cl.mst_free, *args)
+        self.assertRaises(ArgumentError, cl.mst_initgroup, *args)
+        self.assertRaises(ArgumentError, cl.mst_freegroup, *args)
+        self.assertRaises(ArgumentError, cl.msr_init, *args)
 
     def test_readSingleRecordToMSR(self):
         """
@@ -615,8 +613,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         filename = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        start, end = [1199145599915000L,1199151207890000L]
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+        start, end = [1199145599915000L, 1199151207890000L]
         # start and endtime with ms_p argument
         msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0)
         self.assertEqual(start, clibmseed.msr_starttime(msr))
@@ -628,7 +626,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                                None, 0, None, None, 0, 0, 0)
         # endtime without ms_p argument
         msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0, record_number= -1)
-        self.assertEqual(end, clibmseed.msr_endtime(msr) )
+        self.assertEqual(end, clibmseed.msr_endtime(msr))
         # Deallocate msr and msf memory
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                None, 0, None, None, 0, 0, 0)
@@ -646,20 +644,18 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = libmseed()
         # Use a medium sized file.
         mseed_file = os.path.join(self.path,
-                                u'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                  'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         # Read file into memory.
         f = open(mseed_file, 'rb')
         buffer = f.read()
         f.close()
         def test_function(_i, values):
-            temp_file = os.path.join(self.path,
-                                u'temp_file_' + str(_i))
+            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
             # CHANGE FUNCTION TO BE TESTED HERE!
             values[_i] = mseed.readMSTracesViaRecords(temp_file)
         # Create the same file twenty times in a row.
         for _i in xrange(n_threads):
-            temp_file = os.path.join(self.path,
-                                u'temp_file_' + str(_i))
+            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
             f = open(temp_file, 'wb')
             f.write(buffer)
             f.close()
@@ -690,10 +686,9 @@ class LibMSEEDTestCase(unittest.TestCase):
                              values[_i + 1][0][0])
             N.testing.assert_array_equal(values[_i][0][1],
                                          values[_i + 1][0][1])
-            temp_file = os.path.join(self.path,
-                                u'temp_file_' + str(_i))
+            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
             os.remove(temp_file)
-        temp_file = os.path.join(self.path, u'temp_file_' + str(_i + 1))
+        temp_file = os.path.join(self.path, 'temp_file_' + str(_i + 1))
         os.remove(temp_file)
 
 

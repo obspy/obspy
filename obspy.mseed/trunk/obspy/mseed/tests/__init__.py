@@ -3,6 +3,7 @@
 import obspy, unittest
 from obspy.mseed.tests import test_libmseed, test_core
 
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_core.suite())

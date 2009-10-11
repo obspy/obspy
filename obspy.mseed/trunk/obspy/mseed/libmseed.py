@@ -7,6 +7,18 @@
 #
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
+from StringIO import StringIO
+from obspy.core import UTCDateTime
+from obspy.core.util import scoreatpercentile
+from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
+    PyFile_FromFile, HPTMODULUS, MSRecord
+from struct import unpack
+import ctypes as C
+import math
+import numpy as N
+import operator
+import os
+import sys
 """
 Class for handling MiniSEED files.
 
@@ -33,17 +45,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-from StringIO import StringIO
-from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile
-from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord
-from struct import unpack
-import ctypes as C
-import math
-import numpy as N
-import os
-import sys
 
 
 class libmseed(object):
@@ -279,7 +280,7 @@ class libmseed(object):
             raise Exception('Error in mst_packgroup')
         # Cleaning up
         clibmseed.mst_freegroup(C.pointer(mstg))
-        if isinstance(f,file): # necessary for Python 2.5.2 BUG otherwise!
+        if isinstance(f, file): # necessary for Python 2.5.2 BUG otherwise!
             f.close()
         del mstg, msr
 
@@ -370,7 +371,6 @@ class libmseed(object):
             clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                    str(filename), reclen, None, None,
                                    skipnotdata, dataflag, verbose)
-            #import pdb;pdb.set_trace()
             if record_number == 0:
                 return msr, msf
         else:
@@ -414,7 +414,7 @@ class libmseed(object):
         del msr, msf
         return header
 
-    def getEndFromMSR(self,filename, msr, msf):
+    def getEndFromMSR(self, filename, msr, msf):
         """
         Return endtime of given msr and msf structure
 
@@ -429,7 +429,7 @@ class libmseed(object):
         return UTCDateTime(dtime / HPTMODULUS)
 
 
-    def getStartFromMSF(self,filename, msr, msf):
+    def getStartFromMSF(self, filename, msr, msf):
         """
         Return starttime of given msr and msf structure
 
@@ -509,7 +509,7 @@ class libmseed(object):
             # Check that sample rates match using default tolerance
             if not self._isRateTolerable(cur.samprate, next.samprate):
                 msg = "%s: Sample rate changed! %.10g -> %.10g\n"
-                print msg % (filename, cur.samprate, next.samprate)
+                sys.stderr.write(msg % (filename, cur.samprate, next.samprate))
             gap = (next.starttime - cur.endtime) / HPTMODULUS
             # Check that any overlap is not larger than the trace coverage
             if gap < 0:
@@ -550,14 +550,15 @@ class libmseed(object):
         """
         result = self.getGapList(filename, time_tolerance, samprate_tolerance,
                                  min_gap, max_gap)
-        print "%-17s %-26s %-26s %-5s %-8s" % ('Source', 'Last Sample',
-                                               'Next Sample', 'Gap', 'Samples')
+        msg = "%-17s %-26s %-26s %-5s %-8s\n" % ('Source', 'Last Sample',
+                                                 'Next Sample', 'Gap',
+                                                 'Samples')
+        sys.stdout.write(msg)
+        msg = "%-17s %-26s %-26s %-5s %-.8g"
         for r in result:
-            print "%-17s %-26s %-26s %-5s %-.8g" % ('_'.join(r[0:4]),
-                                                    r[4].isoformat(),
-                                                    r[5].isoformat(),
-                                                    r[6], r[7])
-        print "Total: %d gap(s)" % len(result)
+            sys.stdout.write(msg % ('_'.join(r[0:4]), r[4].isoformat(),
+                                    r[5].isoformat(), r[6], r[7]))
+        sys.stdout.write("Total: %d gap(s)\n" % len(result))
 
     def readMSHeader(self, filename, time_tolerance= -1,
                    samprate_tolerance= -1):
@@ -755,7 +756,7 @@ class libmseed(object):
         f.seek(0)
         info = self._getMSFileInfo(f, filename)
         start = self.getStartFromMSF(filename, msr, msf)
-        pos = (info['number_of_records'] -1) * info['record_length']
+        pos = (info['number_of_records'] - 1) * info['record_length']
         f.seek(pos)
         end = self.getEndFromMSR(filename, msr, msf)
         # Set the start time.
@@ -854,7 +855,6 @@ class libmseed(object):
         # Return the cut file string.
         return data
 
-
     def mergeAndCutMSFiles(self, file_list, starttime=None, endtime=None):
         """
         This method takes several MiniSEED files and returns one merged file.
@@ -892,10 +892,7 @@ class libmseed(object):
                      filename in file_list]
         # Sort the list first by endtime and then by starttime. This results
         # in a list which is sorted by starttime first and then by endtime.
-        file_list.sort(cmp=lambda x, y: int(self._convertDatetimeToMSTime(\
-                       x[1][1]) - self._convertDatetimeToMSTime(y[1][1])))
-        file_list.sort(cmp=lambda x, y: int(self._convertDatetimeToMSTime(\
-                       x[1][0]) - self._convertDatetimeToMSTime(y[1][0])))
+        file_list = sorted(file_list, key=operator.itemgetter(1))
         # Set start- and endtime if they have not been set.
         if not starttime:
             starttime = file_list[0][1][0]
@@ -1057,8 +1054,8 @@ class libmseed(object):
         rec_buffer = f.read(512)
         info['record_length'] = \
            clibmseed.ms_find_reclen(rec_buffer, 512, None)
-        #Calculate Number of Records
-        info['number_of_records'] = long(info['filesize'] / \
+        # Calculate Number of Records
+        info['number_of_records'] = long(info['filesize'] // \
                                          info['record_length'])
         info['excess_bytes'] = info['filesize'] % info['record_length']
         f.seek(pos)

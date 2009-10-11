@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from numpy import isnan, array
+from numpy import array
 from numpy.ma import is_masked
 from obspy.core import UTCDateTime, Trace
 import unittest
@@ -255,8 +255,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(len(trace), 1800)
         self.assertEquals(trace[0], 0)
         self.assertEquals(trace[799], 799)
-        self.assertEquals(trace[800], (800 + 999) / 2)
-        self.assertEquals(trace[999], (999 + 800) / 2)
+        self.assertEquals(trace[800], (800 + 999) // 2)
+        self.assertEquals(trace[999], (999 + 800) // 2)
         self.assertEquals(trace[1000], 799)
         self.assertEquals(trace[1799], 0)
         # verify
