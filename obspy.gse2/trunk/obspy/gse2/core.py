@@ -3,6 +3,7 @@
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.gse2 import libgse2
 from ctypes import ArgumentError
+import numpy as np
 
 
 def isGSE2(filename):
@@ -116,8 +117,7 @@ def writeGSE2(stream_object, filename, **kwargs):
             header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         except:
             raise
-        try:
-            libgse2.write(header, trace.data, f, **kwargs)
-        except ArgumentError:
-            libgse2.write(header, trace.data.astype('l'), f, **kwargs)
+        # be nice and adapt type if necessary
+        trace.data = np.require(trace.data, 'int32', ['C_CONTIGUOUS'])
+        libgse2.write(header, trace.data, f, **kwargs)
     f.close()

@@ -4,7 +4,28 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-#---------------------------------------------------------------------------------
+# Copyright (C) 2008-2010 Conny Hammer
+#-------------------------------------------------------------------
+"""
+Complex Trace Analysis
+
+GNU General Public License (GPL)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
+"""
 
 import time, os, sys, struct
 from scipy import signal
@@ -13,7 +34,8 @@ from numpy import size, pi, median
 from obspy.signal import util
 
 def envelope(data):
-    """Envelope of a signal:
+    """
+    Envelope of a signal:
     
     Computes the envelope of the given data which can be windowed or not.
     The envelope is determind by the absolute value of the analytic signal 
@@ -23,8 +45,8 @@ def envelope(data):
     window is returned.
     
     @param data: Data to make envelope of, type numpy.ndarray.
-    @return A_cpx: Analytic signal of input data.
-    @return A_real: Envelope of input data.
+    @return: (A_cpx, A_real) Tuple: Analytic signal of input data,
+             Envelope of input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape)-1])
     A_cpx = N.zeros((data.shape),dtype='complex64')
@@ -42,7 +64,8 @@ def envelope(data):
     
     
 def normEnvelope(data,fs,smoothie,fk):
-    """Normalized envelope of a signal:
+    """
+    Normalized envelope of a signal:
     
     Computes the normalized envelope of the given data which can be windowed or not.
     In order to obtain a normalized measure of the signal envelope the instantaneous 
@@ -161,7 +184,8 @@ def centroid(data,fk):
     
     
 def instFreq(data,fs,fk):
-    """ Instantaneous frequency of a signal:
+    """
+    Instantaneous frequency of a signal:
     
     Computes the instantaneous frequency of the given data which can be windowed or not.
     The instantaneous frequency is determind by the time derivative of the
@@ -206,7 +230,8 @@ def instFreq(data,fs,fk):
     return omega,domega
 
 def instBwith(data,fs,fk):
-    """ Instantaneous Bandwith of a signal:
+    """
+    Instantaneous Bandwith of a signal:
     
     Computes the instantaneous bandwith of the given data which can be windowed or not.
     The instantaneous bandwith is determind by the time derivative of the

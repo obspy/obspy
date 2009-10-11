@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-import ctypes as C
-import numpy as N
+import ctypes as C, math as M, numpy as np
 from numpy import size
-import os
-import platform
 from scipy import signal, fix
+import os, platform
 
 
 if platform.system() == 'Windows':
@@ -36,9 +34,10 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     @param lon: Longitude to calculate relative coordinate in km
     @return: x, y coordinate in km (in reference to origin)
     """
-    # 2009-07-16 Moritz
+    # 2009-10-11 Moritz
 
-    lib.utl_geo_km.argtypes = [C.c_float, C.c_float, C.c_float, C.c_void_p, C.c_void_p]
+    lib.utl_geo_km.argtypes = [C.c_float, C.c_float, C.c_float,
+                               C.POINTER(C.c_float), C.POINTER(C.c_float)]
     lib.utl_geo_km.restype = C.c_void_p
 
     x = C.c_float(lon)
@@ -64,10 +63,10 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     @param y: value [km] to calculate relative coordinate in degree
     @return: lon, lat coordinate in degree (absolute)
     """
-    # 2009-07-24 Moritz
+    # 2009-10-11 Moritz
 
     lib.utl_lonlat.argtypes = [C.c_float, C.c_float, C.c_float, C.c_float,
-                             C.c_void_p, C.c_void_p]
+                               C.POINTER(C.c_float), C.POINTER(C.c_float)]
     lib.utl_lonlat.restype = C.c_void_p
 
     lon = C.c_float()
@@ -82,7 +81,7 @@ def xcorr(tr1, tr2, window_len):
     """
     Crosscorreltation of tr1 and tr2 in the time domain using window_len.
     
-    >>> tr1 = N.random.randn(10000).astype('float32')
+    >>> tr1 = np.random.randn(10000).astype('float32')
     >>> tr2 = tr1.copy()
     >>> a,b = xcorr(tr1, tr2, 1000)
     >>> a, round(1e6*b) # Rounding Errors
@@ -95,13 +94,17 @@ def xcorr(tr1, tr2, window_len):
     @type window_len: Int
     @param window_len: Window length of cross correlation in samples
     """
-    # 2009-07-10 Moritz
+    # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
-        N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        N.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int, C.c_int, C.c_int, 
         C.POINTER(C.c_int), C.POINTER(C.c_double)]
     lib.X_corr.restype = C.c_void_p
+    
+    # be nice and adapt type if necessary
+    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
+    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
 
     shift = C.c_int()
     coe_p = C.c_double()
@@ -112,21 +115,28 @@ def xcorr(tr1, tr2, window_len):
     return shift.value, coe_p.value
 
 def nextpow2(i):
-    n = 2
-    while n < i:
-            n = n * 2
-    return n
+    """
+    Find the next power of two
+
+    >>> nextpow2(5)
+    8
+    >>> nextpow2(250)
+    256
+    """
+    # do not use numpy here, math is much faster for single values
+    buf = M.ceil(M.log(i)/ M.log(2))
+    return int( M.pow(2, buf))
 
 def smooth(x,smoothie):
-    suma=N.zeros(size(x))
+    suma=np.zeros(size(x))
     if smoothie>1:
         if ( len(x) > 1 and len(x)<size(x) ):
-            out_add = N.append(N.append([x[0,:]]*smoothie,x,axis=0),[x[(len(x)-1),:]]*smoothie,axis=0)
+            out_add = np.append(np.append([x[0,:]]*smoothie,x,axis=0),[x[(len(x)-1),:]]*smoothie,axis=0)
             print 'Smoothfunction for multidimensional signals needs to be implemented'
         #   out = filter(ones(1,smoothie)/smoothie,1,out_add)
         #   out[1:smoothie,:] = []
         else:
-            out_add = N.append(N.append([x[0]]*smoothie,x),[x[size(x)-1]]*smoothie)
+            out_add = np.append(np.append([x[0]]*smoothie,x),[x[size(x)-1]]*smoothie)
             for i in xrange(smoothie,len(x)+smoothie):
                 sum = 0
                 for k in range(-smoothie,smoothie):
@@ -147,13 +157,13 @@ def enframe(x,win,inc):
     else:
         length = nextpow2(nwin)
     nf = int(fix((nx-length+inc)/inc))
-    f=N.zeros((nf,length))
-    indf = inc*N.arange(nf)
-    inds = N.arange(length)+1
-    f = x[(N.transpose(N.vstack([indf]*length))+N.vstack([inds]*nf))-1]
+    f=np.zeros((nf,length))
+    indf = inc*np.arange(nf)
+    inds = np.arange(length)+1
+    f = x[(np.transpose(np.vstack([indf]*length))+np.vstack([inds]*nf))-1]
     if (nwin > 1):
-        w = N.transpose(win)
-        f = f* N.vstack([w]*nf)
+        w = np.transpose(win)
+        f = f* np.vstack([w]*nf)
     f = signal.detrend(f,type='constant')
     no_win,buf = f.shape
     return f,length,no_win

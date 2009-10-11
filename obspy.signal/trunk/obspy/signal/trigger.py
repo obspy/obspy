@@ -48,13 +48,13 @@ def recStalta(a, nsta, nlta):
     Fast version written in C.
 
     @note: This version directly uses a C version via CTypes
-    @type a: Numpy ndarray
-    @param a: Seismic Trace
+    @type a: numpy.ndarray dtype float64
+    @param a: Seismic Trace, numpy.ndarray dtype float64
     @type nsta: Int
     @param nsta: Length of short time average window in samples
     @type nlta: Int
     @param nlta: Length of long time average window in samples
-    @rtype: Numpy ndarray
+    @rtype: numpy.ndarray dtype float64
     @return: Charactristic function of recursive STA/LTA
     """
     lib.recstalta.argtypes = [np.ctypeslib.ndpointer(dtype='float64',
@@ -65,6 +65,8 @@ def recStalta(a, nsta, nlta):
                                                     flags='C_CONTIGUOUS'),
                               C.c_int, C.c_int, C.c_int]
     lib.recstalta.restype = C.c_void_p
+    # be nice and adapt type if necessary
+    a = np.require(a, 'float64', ['C_CONTIGUOUS'])
     ndat = len(a)
     charfct = np.ndarray(ndat, dtype='float64')
     lib.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
@@ -352,12 +354,11 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
                           C.c_int, C.c_int, C.c_float, C.c_float, C.c_int,
                           C.c_int]
     lib.ppick.restype = C.c_void_p
+    # be nice and adapt type if necessary
+    reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     args = (len(reltrc), C.byref(pptime), pfm, samp_int, 
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
-    try:
-        lib.ppick(reltrc, *args)
-    except ArgumentError:
-        lib.ppick(reltrc.astype('float32'), *args)
+    lib.ppick(reltrc, *args)
     return pptime.value, pfm.value
 
 def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
@@ -397,17 +398,17 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
                                C.POINTER(C.c_float), C.c_double,
                                C.c_double, C.c_int]
     lib.ar_picker.restypes =  C.c_void_p
+    # be nice and adapt type if necessary
+    a = np.require(a, 'float32', ['C_CONTIGUOUS'])
+    b = np.require(b, 'float32', ['C_CONTIGUOUS'])
+    c = np.require(c, 'float32', ['C_CONTIGUOUS'])
     s_pick = C.c_int(s_pick) # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
     args = (len(a), samp_rate, f1, f2, 
             lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
             C.byref(stime), l_p, l_s, s_pick)
-    try:
-        lib.ar_picker(a, b, c, *args)
-    except ArgumentError:
-        lib.ar_picker(a.astype('float32'), b.astype('float32'),
-                     c.astype('float32'), *args)
+    lib.ar_picker(a, b, c, *args)
     return ptime.value, stime.value
 
 

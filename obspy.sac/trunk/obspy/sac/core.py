@@ -3,7 +3,7 @@
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.sac.sacio import ReadSac
 import array, struct
-import numpy as N
+import numpy as np
 import os
 
 
@@ -90,11 +90,6 @@ def readSAC(filename, headonly=False, **kwargs):
     if headonly:
         tr = Trace(header=header)
     else:
-        #XXX From Python2.6 the buffer interface can be generally used to
-        # directly pass the pointers from the array.array class to
-        # numpy.ndarray, old version:
-        # data=N.fromstring(t.seis.tostring(),dtype='float32'))
-        #tr = Trace(header=header, data=N.frombuffer(t.seis, dtype='float32'))
         tr = Trace(header=header, data=t.seis)
     return Stream([tr])
 
@@ -109,7 +104,7 @@ def writeSAC(stream_object, filename, **kwargs):
     """
     # Translate the common (renamed) entries
     i = 0
-    base , ext = os.path.splitext(filename)
+    base, ext = os.path.splitext(filename)
     for trace in stream_object:
         t = ReadSac()
         t.InitArrays()
@@ -139,17 +134,8 @@ def writeSAC(stream_object, filename, **kwargs):
         t.SetHvalue('nzmin', start.minute)
         t.SetHvalue('nzsec', start.second)
         t.SetHvalue('nzmsec', start.microsecond / 1e3)
-        # building array of floats
-        #t.seis = array.array('f')
-        # pass data as string (actually it's a copy), using a list for
-        # passing would require a type info per list entry and thus use a lot
-        # of memory
-        # XXX use the buffer interface at soon as it is supported in
-        # array.array, Python2.6
-        if trace.data.dtype != '<f4':
-            trace.data = trace.data.astype('<f4')
-        t.seis = trace.data
-        #t.seis.fromstring(trace.data.tostring())
+        # building array of floats, require correct type
+        t.seis = np.require(trace.data, '<f4')
         if i != 0:
             filename = "%s%02d%s" % (base, i, ext)
         t.WriteSacBinary(filename)

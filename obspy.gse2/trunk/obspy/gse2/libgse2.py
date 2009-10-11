@@ -60,6 +60,28 @@ class ChksumError(StandardError):
     """
     pass
 
+# gse2 header struct
+class HEADER(C.Structure):
+    _fields_ = [
+        ('d_year', C.c_int),
+        ('d_mon', C.c_int),
+        ('d_day', C.c_int),
+        ('t_hour', C.c_int),
+        ('t_min', C.c_int),
+        ('t_sec', C.c_float),
+        ('station', C.c_char * 6),
+        ('channel', C.c_char * 4),
+        ('auxid', C.c_char * 5),
+        ('datatype', C.c_char * 4),
+        ('n_samps', C.c_int),
+        ('samp_rate', C.c_float),
+        ('calib', C.c_float),
+        ('calper', C.c_float),
+        ('instype', C.c_char * 7),
+        ('hang', C.c_float),
+        ('vang', C.c_float),
+    ]
+
 
 # ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
 # pointer descriptor
@@ -109,7 +131,7 @@ lib.compress_6b.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
 lib.compress_6b.restype = C.c_int
 
 ## gse_functions write_header
-lib.write_header.argtypes = [c_file_p, C.c_void_p]
+lib.write_header.argtypes = [c_file_p, C.POINTER(HEADER)]
 lib.write_header.restype = C.c_void_p
 
 ## gse_functions buf_dump
@@ -119,28 +141,6 @@ lib.buf_dump.restype = C.c_void_p
 # gse_functions buf_free
 lib.buf_free.argtypes = [C.c_void_p]
 lib.buf_free.restype = C.c_void_p
-
-# gse2 header struct
-class HEADER(C.Structure):
-    _fields_ = [
-        ('d_year', C.c_int),
-        ('d_mon', C.c_int),
-        ('d_day', C.c_int),
-        ('t_hour', C.c_int),
-        ('t_min', C.c_int),
-        ('t_sec', C.c_float),
-        ('station', C.c_char * 6),
-        ('channel', C.c_char * 4),
-        ('auxid', C.c_char * 5),
-        ('datatype', C.c_char * 4),
-        ('n_samps', C.c_int),
-        ('samp_rate', C.c_float),
-        ('calib', C.c_float),
-        ('calper', C.c_float),
-        ('instype', C.c_char * 7),
-        ('hang', C.c_float),
-        ('vang', C.c_float),
-    ]
 
 # module wide variable, can be imported by:
 # >>> from obspy.gse2 import gse2head
@@ -251,7 +251,7 @@ def write(headdict, data, f, inplace=False):
     
     @requires: headdict dictionary entries C{'datatype', 'n_samps', 
         'samp_rate'} are absolutely necessary
-    @type data: Iterable of longs
+    @type data: numpy.ndarray dtype int32
     @param data: Contains the data.
     @type f: File Pointer
     @param f: Open file pointer of GSE2 file to write, opened in binary

@@ -725,11 +725,10 @@ class ReadSac(object):
 
 
     def _chck_header_(self):
-        """if trace changed since read, adapt header values"""
-        if not isinstance(self.seis,np.ndarray):
-            self.seis = np.array(self.seis,dtype='<f4')
-        if self.seis.dtype != 'float32':
-            self.seis = np.array(self.seis,dtype='<f4')
+        """
+        if trace changed since read, adapt header values
+        """
+        self.seis = np.require(self.seis,'<f4')
         self.SetHvalue('npts',len(self.seis))
         self.SetHvalue('depmin',self.seis.min())
         self.SetHvalue('depmax',self.seis.max())

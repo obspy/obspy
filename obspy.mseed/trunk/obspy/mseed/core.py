@@ -2,7 +2,7 @@
 
 from obspy.core import Stream, Trace
 from obspy.mseed import libmseed
-import sys
+import sys, numpy as np
 
 def isMSEED(filename):
     """
@@ -68,7 +68,8 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
     
     All kwargs are passed directly to obspy.mseed.writeMSTraces.
     
-    @param stream_object: obspy.Stream object.
+    @param stream_object: obspy.Stream object. Data in stream object must
+        be of type int32. NOTE: They are automatically adapted if necessary
     @param filename: Name of the output file
     @param reclen: should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
@@ -110,6 +111,8 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
         # Set Dataquality to indeterminate if it is not already set.
         if len(header['dataquality']) == 0:
             header['dataquality'] = 'D'
+        # be nice and adapt type if necessary
+        _i.data = np.require(_i.data, 'int32', ['C_CONTIGUOUS'])
         # Fill the samplecnt attribute.
         header['samplecnt'] = len(_i.data)
         trace_list.append([header, _i.data])

@@ -4,6 +4,7 @@ The obspy.signal.trigger test suite.
 """
 
 from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer, arPick
+from obspy.signal.util import lib
 from ctypes import ArgumentError
 import numpy as np
 import unittest, os, inspect, gzip
@@ -51,9 +52,12 @@ class TriggerTestCase(unittest.TestCase):
         """
         Type checking recStalta
         """
-        self.assertRaises(ArgumentError, recStalta, [1], 5, 10)
-        self.assertRaises(ArgumentError, recStalta,
-                          np.array([1], dtype='int32'), 5, 10)
+        ndat = 1
+        charfct = np.ndarray(ndat, dtype='float64')
+        self.assertRaises(ArgumentError, lib.recstalta, [1], charfct, 
+                          ndat, 5, 10)
+        self.assertRaises(ArgumentError, lib.recstalta, 
+                          np.array([1], dtype='int32'), charfct, ndat, 5, 10)
 
     def test_pkBaer(self):
         """
