@@ -49,7 +49,7 @@ class CoreTestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         # read
-        st = read(gse2file, headonly=True)
+        st = read(gse2file, headonly = True)
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
         self.assertEqual(tr.stats.npts, 12000)
@@ -65,7 +65,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and Write files via L{obspy.Trace}
         """
-        tempfile = 'temp1.gse2'
+        tempfile = os.path.join(self.path, 'data', 'temp1.gse2')
         gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
         # read trace
         st1 = read(gse2file)
@@ -77,7 +77,7 @@ class CoreTestCase(unittest.TestCase):
         tr2 = st2[0]
         tr2.data = copy.deepcopy(tr1.data)
         tr2.stats = copy.deepcopy(tr1.stats)
-        st2.write(tempfile, format='GSE2')
+        st2.write(tempfile, format = 'GSE2')
         # read comparison trace
         st3 = read(tempfile)
         os.remove(tempfile)
@@ -105,8 +105,8 @@ class CoreTestCase(unittest.TestCase):
         Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
         """
         # setup test
-        tmpfile1 = 'tmp1.gse2'
-        tmpfile2 = 'tmp2.gse2'
+        tmpfile1 = os.path.join(self.path, 'data', 'tmp1.gse2')
+        tmpfile2 = os.path.join(self.path, 'data', 'tmp2.gse2')
         files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
                  os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
@@ -127,7 +127,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr12.stats['station'], 'RJOB ')
         self.assertEqual(tr12.data[0:13].tolist(), testdata)
         # write and read
-        st1.write(tmpfile2, format='GSE2')
+        st1.write(tmpfile2, format = 'GSE2')
         st2 = read(tmpfile2)
         st2._verify()
         self.assertEqual(len(st2), 2)
@@ -145,7 +145,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Write file test via L{obspy.Trace}.
         """
-        tempfile = 'temp2.gse2'
+        tempfile = os.path.join(self.path, 'data', 'temp2.gse2')
         npts = 1000
         # data cloud of integers - float won't work!
         data = np.random.randint(-1000, 1000, npts)
@@ -154,12 +154,12 @@ class CoreTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
-        tr = Trace(data=data, header=stats)
+        tr = Trace(data = data, header = stats)
         tr._verify()
         st = Stream([tr])
         st._verify()
         # write
-        st.write(tempfile, format="GSE2")
+        st.write(tempfile, format = "GSE2")
         # read again
         stream = read(tempfile)
         os.remove(tempfile)
@@ -191,4 +191,4 @@ def suite():
 
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    unittest.main(defaultTest = 'suite')

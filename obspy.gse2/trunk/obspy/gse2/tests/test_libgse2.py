@@ -8,7 +8,7 @@ from obspy.core import UTCDateTime
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError
 import inspect
-import numpy as N
+import numpy as np
 import os
 import unittest
 
@@ -37,7 +37,7 @@ class LibGSE2TestCase(unittest.TestCase):
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
-        header, data = libgse2.read(f, test_chksum=True)
+        header, data = libgse2.read(f, test_chksum = True)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -60,7 +60,7 @@ class LibGSE2TestCase(unittest.TestCase):
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should fail
         fp = open(gse2file, 'rb')
-        self.assertRaises(ChksumError, libgse2.read, fp, test_chksum=True)
+        self.assertRaises(ChksumError, libgse2.read, fp, test_chksum = True)
         fp.close()
 
     def test_readAndWrite(self):
@@ -71,13 +71,13 @@ class LibGSE2TestCase(unittest.TestCase):
         f = open(gse2file, 'rb')
         header, data = libgse2.read(f)
         f.close()
-        tmp_file = 'tmp.gse2'
+        tmp_file = os.path.join(self.path, 'tmp.gse2')
         f = open(tmp_file, 'wb')
         libgse2.write(header, data, f)
         f.close()
         newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
         self.assertEqual(header, newheader)
-        N.testing.assert_equal(data, newdata)
+        np.testing.assert_equal(data, newdata)
         os.remove(tmp_file)
 
     def test_readHeaderInfo(self):
@@ -130,7 +130,7 @@ class LibGSE2TestCase(unittest.TestCase):
         of 2^26
         """
         testfile = os.path.join(self.path, 'tmp.gse2')
-        data = N.array([2 ** 26 + 1])
+        data = np.array([2 ** 26 + 1])
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
@@ -155,7 +155,7 @@ class LibGSE2TestCase(unittest.TestCase):
                           testfile)
         f.close()
         f = open(testfile, 'wb')
-        data = N.array([2, 26, 1], dtype='f')
+        data = np.array([2, 26, 1], dtype = 'f')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
                           testfile)
         f.close()
@@ -167,4 +167,4 @@ def suite():
 
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    unittest.main(defaultTest = 'suite')
