@@ -21,7 +21,7 @@ import unittest
 
 class LibMSEEDTestCase(unittest.TestCase):
     """
-    Test cases for libmseed.
+    Test cases for the libmseed.
     """
     def setUp(self):
         # directory where the test files are located
