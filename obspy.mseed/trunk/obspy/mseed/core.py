@@ -41,11 +41,13 @@ def readMSEED(filename, headonly=False):
         convert_dict = {'station': 'station', 'sampling_rate':'samprate',
                         'npts': 'numsamples', 'network': 'network',
                         'location': 'location', 'channel': 'channel',
-                        'dataquality': 'dataquality', 'starttime' :
-                        'starttime', 'endtime' : 'endtime'}
+                        'starttime' : 'starttime', 'endtime' : 'endtime'}
         # Convert header.
         for _j, _k in convert_dict.iteritems():
             header[_j] = old_header[_k]
+        # Dataquality is Mini-SEED only and thus has an extra Stats attribut.
+        header['mseed'] = {}
+        header['mseed']['dataquality'] = old_header['dataquality']
         # Convert times to obspy.UTCDateTime objects.
         header['starttime'] = \
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
@@ -61,8 +63,7 @@ def readMSEED(filename, headonly=False):
     return Stream(traces=traces)
 
 
-def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
-               byteorder= -1, flush= -1, verbose=0):
+def writeMSEED(stream_object, filename, **kwargs):
     """
     Write Miniseed file from a Stream objext.
     
@@ -75,9 +76,8 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
         which must be expressible as 2 raised to the power of X where X is
         between (and including) 8 to 20. -1 defaults to 4096
     @param encoding: should be set to one of the following supported
-        Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
-        DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
-        and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
+        Mini-SEED data encoding formats: DE_INT16 (1), DE_INT32 (3), 
+        DE_STEIM1 (10) and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
     @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
         big-endian). -1 defaults to big-endian (1)
     @param flush: if it is not zero all of the data will be packed into 
@@ -86,21 +86,52 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
     @param verbose: controls verbosity, a value of zero will result in no 
         diagnostic output.
     """
+    # Check if encoding kwarg is set and catch invalid encodings.
+    if 'encoding' in kwargs.keys():
+        encoding_numbers = {'INT16' : 1, 'INT32' : 3, 'STEIM1' : 10,
+                                'STEIM2' :11}
+        # If its already an integer do nothing.
+        if type(kwargs['encoding']) == int:
+            if kwargs['encoding'] in encoding_numbers.values():
+                pass
+            else:
+                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' +\
+                      '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
+                raise ValueError(msg)
+        # If its a string translate it to the corresponding number.
+        else:
+            try:
+                kwargs['encoding'] = encoding_numbers[kwargs['encoding']]
+            except:
+                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' +\
+                      '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
+                raise ValueError(msg)
+    # Catch invalid record length.
+    valid_record_lengths = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
+                            65536, 131072, 262144, 524288, 1048576]
+    if 'reclen' in kwargs.keys() and \
+                not kwargs['reclen'] in valid_record_lengths:
+        msg = 'Invalid record length. The record length must be expressible\n'+\
+              'as 2 to the power of X where X is between and including 8 to 20.'
+        raise ValueError(msg)
+    # libmseed instance.
     __libmseed__ = libmseed()
     traces = stream_object.traces
     trace_list = []
     convert_dict = {'station': 'station', 'samprate':'sampling_rate',
                 'numsamples': 'npts', 'network': 'network',
                 'location': 'location', 'channel': 'channel',
-                'dataquality': 'dataquality', 'starttime' :
-                'starttime', 'endtime' : 'endtime'}
+                'starttime' : 'starttime', 'endtime' : 'endtime'}
     for _i in traces:
         header = {}
-        #XXX we need to set default values for attributes which are not in
-        # trace.stats object
-        _i.stats.setdefault('dataquality','Q')
         for _j, _k in convert_dict.iteritems():
             header[_j] = _i.stats[_k]
+        # Dataquality is extra.
+        # Set Dataquality to indeterminate (= D) if it is not already set.
+        try:
+            header['dataquality'] = _i.stats['mseed']['dataquality']
+        except:
+            header['dataquality'] = 'D'
         # Convert obspy.UTCDateTime times to Mini-SEED times.
         header['starttime'] = \
             __libmseed__._convertDatetimeToMSTime(header['starttime'])
@@ -108,15 +139,10 @@ def writeMSEED(stream_object, filename, reclen= -1, encoding= -1,
             __libmseed__._convertDatetimeToMSTime(header['endtime'])
         # Save samples as integers.
         header['sampletype'] = 'i'
-        # Set Dataquality to indeterminate if it is not already set.
-        if len(header['dataquality']) == 0:
-            header['dataquality'] = 'D'
         # be nice and adapt type if necessary
         _i.data = np.require(_i.data, 'int32', ['C_CONTIGUOUS'])
         # Fill the samplecnt attribute.
         header['samplecnt'] = len(_i.data)
         trace_list.append([header, _i.data])
     # Write resulting trace_list to Mini-SEED file.
-    __libmseed__.writeMSTraces(trace_list, outfile=filename, reclen=reclen,
-                               encoding=encoding, byteorder=byteorder,
-                               flush=flush, verbose=verbose)
+    __libmseed__.writeMSTraces(trace_list, outfile=filename, **kwargs)
