@@ -89,23 +89,22 @@ def getFormatsAndMethods(verbose=False):
         failure.append(traceback.format_exc())
     try:
         from obspy.wav.core import isWAV, readWAV, writeWAV
-        # The first item is the name of the format, the second the checking 
-        # function.
         temp.append(['WAV', isWAV, readWAV, writeWAV])
     except:
         failure.append(traceback.format_exc())
     try:
         from obspy.sac.core import isSAC, readSAC, writeSAC
-        # The first item is the name of the format, the second the checking 
-        # function.
         temp.append(['SAC', isSAC, readSAC, writeSAC])
     except:
         failure.append(traceback.format_exc())
     try:
         from obspy.mseed.core import isMSEED, readMSEED, writeMSEED
-        # The first item is the name of the format, the second the checking 
-        # function.
         temp.append(['MSEED', isMSEED, readMSEED, writeMSEED])
+    except:
+        failure.append(traceback.format_exc())
+    try:
+        from obspy.seisan.core import isSEISAN, readSEISAN, writeSEISAN
+        temp.append(['SEISAN', isSEISAN, readSEISAN, writeSEISAN])
     except:
         failure.append(traceback.format_exc())
     if verbose:
