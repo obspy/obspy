@@ -44,7 +44,7 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     namespace_packages=['obspy'],
     include_package_data=True,
-    zip_safe=True,
+    zip_safe=False,
     test_suite="obspy.imaging.tests.suite",
     install_requires=[
         'setuptools',
