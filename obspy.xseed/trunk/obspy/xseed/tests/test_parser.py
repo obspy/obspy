@@ -105,7 +105,7 @@ class ParserTestCase(unittest.TestCase):
 
     def test_readAndWriteSEED(self):
         """
-        Reads all SEED records from the bavarian network and writes them
+        Reads all SEED records from the Bavarian network and writes them
         again.
         
         This should not change them.
