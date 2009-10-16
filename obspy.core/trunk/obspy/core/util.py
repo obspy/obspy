@@ -53,6 +53,13 @@ class AttribDict(dict, object):
         super(AttribDict, self).__delattr__(name)
         return super(AttribDict, self).__delitem__(name)
 
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, pickle_dict):
+        for key, value in pickle_dict.iteritems():
+            self[key] = value
+
     __getattr__ = __getitem__
     __setattr__ = __setitem__
     __delattr__ = __delitem__

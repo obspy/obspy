@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from StringIO import StringIO
 from obspy.core import Stats, Stream, Trace
 import copy
+import pickle
 import unittest
 
 
@@ -134,6 +136,18 @@ class StatsTestCase(unittest.TestCase):
             self.assertEquals(st[key].stats['station'], value)
             self.assertEquals(st[key].stats.get('station'), value)
             self.assertTrue(value in st[key].stats.values())
+
+    def test_pickleStats(self):
+        """
+        Pickling L{obspy.core.Stats} objects. Test case for issue #10
+        """
+        stats = Stats()
+        stats.muh = 1
+        stats['maeh'] = 'hallo'
+        picklestring = pickle.dumps(stats)
+        fp = StringIO(picklestring)
+        stats2 = pickle.load(fp)
+        self.assertEquals(stats, stats2)
 
 
 def suite():
