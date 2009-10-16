@@ -4,9 +4,10 @@ The sac.core test suite.
 """
 
 from obspy.core import Stream, Trace, read
+from obspy.core.util import NamedTemporaryFile
 import copy
 import inspect
-import numpy as N
+import numpy as np
 import os
 import unittest
 
@@ -19,7 +20,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(self.path, 'data', 'test.sac')
-        self.testdata = N.array([ -8.74227766e-08, -3.09016973e-01,
+        self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
             - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
             - 5.87784529e-01, -3.09016049e-01], dtype='float32')
@@ -38,7 +39,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.get('channel'), 'Q       ')
         self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
-        N.testing.assert_array_almost_equal(self.testdata[0:10], tr.data[0:10])
+        np.testing.assert_array_almost_equal(self.testdata[0:10],
+                                             tr.data[0:10])
 
     def test_readHeadViaObspy(self):
         """
@@ -58,11 +60,11 @@ class CoreTestCase(unittest.TestCase):
         Writing artificial files via L{obspy.Stream}
         """
         st = Stream(traces=[Trace(header={'sac':{}}, data=self.testdata)])
-        tempfile = os.path.join(self.path, 'data', 'tmp.jjj')
+        tempfile = NamedTemporaryFile().name
         st.write(tempfile, format='SAC')
         tr = read(tempfile)[0]
         os.remove(tempfile)
-        N.testing.assert_array_almost_equal(self.testdata, tr.data)
+        np.testing.assert_array_almost_equal(self.testdata, tr.data)
 
     def test_readAndWriteViaObspy(self):
         """
@@ -76,7 +78,7 @@ class CoreTestCase(unittest.TestCase):
         tr2 = st2[0]
         tr2.data = copy.deepcopy(tr.data)
         tr2.stats = copy.deepcopy(tr.stats)
-        tempfile = os.path.join(self.path, 'data', 'tmp.jjj')
+        tempfile = NamedTemporaryFile().name
         st2.write(tempfile, format='SAC')
         # read comparison trace
         tr3 = read(tempfile)[0]
@@ -88,7 +90,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.get('channel'), tr.stats.get('channel'))
         self.assertEqual(tr.stats.get('starttime'), tr.stats.get('starttime'))
         self.assertEqual(tr.stats.sac.get('nvhdr'), tr.stats.sac.get('nvhdr'))
-        N.testing.assert_equal(tr.data, tr3.data)
+        np.testing.assert_equal(tr.data, tr3.data)
 
 
 def suite():

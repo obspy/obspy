@@ -6,6 +6,7 @@ The audio wav.core test suite.
 
 import obspy
 import inspect, os, unittest, filecmp
+from obspy.core.util import NamedTemporaryFile
 
 
 class CoreTestCase(unittest.TestCase):
@@ -35,13 +36,6 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats['sampling_rate'], 7000)
         for _i in xrange(13):
             self.assertEqual(tr.data[_i], testdata[_i])
-        # readWAV is not existing anymore
-        #tr3 = Trace()
-        #tr3.readWAV(self.file)
-        #self.assertEqual(tr3.stats.npts, 2599)
-        #self.assertEqual(tr3.stats['sampling_rate'], 7000)
-        #for _i in xrange(13):
-        #    self.assertEqual(tr3.data[_i], testdata[_i])
 
     def test_readHeadViaObspy(self):
         """
@@ -58,7 +52,7 @@ class CoreTestCase(unittest.TestCase):
         """
         testdata = [111, 111, 111, 111, 111, 109, 106, 103, 103, 110, 121,
                     132, 139]
-        testfile = os.path.join(self.path, 'data', 'test.wav')
+        testfile = NamedTemporaryFile().name
         self.file = os.path.join(self.path, 'data', '3cssan.reg.8.1.RNON.wav')
         tr = obspy.read(self.file, format='WAV')[0]
         self.assertEqual(tr.stats.npts, 10599)
@@ -78,17 +72,6 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr3.data[_i], testdata[_i])
         self.assertEqual(filecmp.cmp(self.file, testfile), True)
         os.remove(testfile)
-        # write with writeWAV
-        #tr4 = Trace(); tr5 = Trace()
-        #tr4.data = tr.data[:] #copy the data
-        #tr4.writeWAV(testfile,framerate=7000)
-        #del tr4
-        ## and read again
-        #tr5.read(testfile)
-        #self.assertEqual(tr5.stats,tr.stats)
-        #for _i in xrange(13):
-        #    self.assertEqual(tr5.data[_i], testdata[_i])
-        #self.assertEqual(filecmp.cmp(self.file,testfile),True)
 
 
 def suite():

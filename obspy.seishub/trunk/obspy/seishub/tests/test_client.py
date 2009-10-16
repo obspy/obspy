@@ -27,7 +27,8 @@ class ClientTestCase(unittest.TestCase):
         print data
         data = client.waveform.getStationIds(network_id='BW')
         print data
-        data = client.waveform.getChannelIds(network_id='BW', station_id='MANZ')
+        data = client.waveform.getChannelIds(network_id='BW',
+                                             station_id='MANZ')
         print data
         data = client.waveform.getLatency(network_id='BW', station_id='MANZ')
         print data
