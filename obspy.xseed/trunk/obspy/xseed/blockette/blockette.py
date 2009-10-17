@@ -35,6 +35,7 @@ class Blockette(object):
         self.verify = kwargs.get('verify', True)
         self.debug = kwargs.get('debug', False)
         self.strict = kwargs.get('strict', False)
+        self.compact = kwargs.get('compact', False)
         self.record_type = kwargs.get('record_type', None)
         self.record_id = kwargs.get('record_id', None)
         self.blockette_id = "%03d" % self.id
@@ -86,7 +87,8 @@ class Blockette(object):
                 if isinstance(field, Loop):
                     break
                 msg = "End of blockette " + self.blockette_id + " reached " + \
-                      "without parsing all expected fields, here: " + str(field)
+                      "without parsing all expected fields, here: " + \
+                      str(field)
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:

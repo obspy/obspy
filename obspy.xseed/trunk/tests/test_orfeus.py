@@ -33,6 +33,12 @@ for root, dirs, files in os.walk(input_base):
     filelist = [os.path.join(root, fi) for fi in files if '.svn' not in fi]
     for seedfile in filelist:
         print seedfile
+        # The originals of those four files contain compact date strings
+        if seedfile.endswith('FR_CALF') or seedfile.endswith('FR_SAOF') or \
+           seedfile.endswith('IU_SFJD') or seedfile.endswith('NO_JMIC'):
+            compact = True
+        else:
+            compact = False
         x1seedfile = 'output' + os.sep + seedfile + '.1.xml'
         x2seedfile = 'output' + os.sep + seedfile + '.2.xml'
         oseedfile = 'output' + os.sep + seedfile
@@ -52,7 +58,7 @@ for root, dirs, files in os.walk(input_base):
         doc = etree.parse(x1seedfile)
         xmlschema.assertValid(doc)
         # parse XSEED
-        sp = Parser(strict=True)
+        sp = Parser(strict=True, compact=compact)
         sp.parseXSEEDFile(x1seedfile)
         # generate SEED
         seed2 = sp.getSEED()
@@ -71,7 +77,7 @@ for root, dirs, files in os.walk(input_base):
         doc = etree.parse(x2seedfile)
         xmlschema.assertValid(doc)
         # parse XSEED
-        sp = Parser(strict=True)
+        sp = Parser(strict=True, compact=compact)
         sp.parseXSEED(StringIO(xml2))
         seed3 = sp.getSEED()
         # compare XSEED and SEED files
@@ -83,10 +89,5 @@ for root, dirs, files in os.walk(input_base):
             assert seed2 == seed3
         except:
             import pdb;pdb.set_trace()
-        # These four files have3
-        if seedfile.endswith('FR_CALF') or seedfile.endswith('FR_SAOF') \
-                or seedfile.endswith('IU_SFJD') or seedfile.endswith('NO_JMIC'):
-            print 'Skipping SEED comparision due to some error...'
-            continue
         # comparing original with generated SEED is more complicated
         compareSEED(seed1, seed2)

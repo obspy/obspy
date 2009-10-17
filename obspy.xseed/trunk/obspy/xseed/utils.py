@@ -24,7 +24,7 @@ def toXMLTag(name):
     return temp
 
 
-def DateTime2String(t):
+def DateTime2String(t, compact=False):
     """
     Generates a valid SEED time string from a DateTime or Date object.
     
@@ -35,8 +35,24 @@ def DateTime2String(t):
         return ""
     elif isinstance(t, datetime.datetime):
         tt = t.utctimetuple()
-        return "%04d,%03d,%02d:%02d:%02d.%04d" % (t.year, tt[7],
-            t.hour, t.minute, t.second, t.microsecond // 100)
+        if not compact:
+            return "%04d,%03d,%02d:%02d:%02d.%04d" % (t.year, tt[7], t.hour,
+                                                      t.minute, t.second,
+                                                      t.microsecond // 100)
+        temp = "%04d,%03d" % (t.year, tt[7])
+        if not t.hour:
+            return temp
+        temp += ",%02d" % t.hour
+        if not t.minute:
+            return temp
+        temp += ":%02d" % t.minute
+        if not t.second:
+            return temp
+        temp += ":%02d" % t.second
+        if not t.microsecond:
+            return temp
+        temp += ".%04d" % (t.microsecond // 100)
+        return temp
     elif isinstance(t, datetime.date):
         tt = datetime.datetime.combine(t,
                                        datetime.time(0, 0, 0)).utctimetuple()
@@ -110,8 +126,8 @@ def compareSEED(seed1, seed2):
     assert (len(seed1) % 4096) == 0
     assert (len(seed2) % 4096) == 0
     # Loop over each record and remove empty ones. obspy.xseed doesn't write
-    # emtpy records. Redundant code to ease coding...
-    recnums = len(seed1)/4096
+    # empty records. Redundant code to ease coding...
+    recnums = len(seed1) / 4096
     new_seed1 = ''
     for _i in xrange(recnums):
         cur_record = seed1[_i * 4096 + 8: (_i + 1) * 4096].strip()
@@ -119,7 +135,7 @@ def compareSEED(seed1, seed2):
             continue
         new_seed1 += seed1[_i * 4096 : (_i + 1) * 4096]
     seed1 = new_seed1
-    recnums = len(seed2)/4096
+    recnums = len(seed2) / 4096
     new_seed2 = ''
     for _i in xrange(recnums):
         cur_record = seed2[_i * 4096 + 8: (_i + 1) * 4096].strip()
@@ -155,6 +171,10 @@ def compareSEED(seed1, seed2):
         if temp == '0 ':
             continue
         if temp == ' +':
+            continue
+        if temp == '- ':
+            # -056.996398+0031.0
+            #  -56.996398  +31.0
             continue
 
 

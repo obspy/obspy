@@ -58,13 +58,30 @@ class Parser(object):
     @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
-    def __init__(self, verify=True, debug=False, strict=False):
+    def __init__(self, verify=True, debug=False, strict=False, compact=False):
+        """
+        Initializes the SEED parser.
+        
+        @type verify: Boolean.
+        @param verify: Verifies various options like length of blockettes, 
+            required fields etc.fields and will warn about errors.
+        @type debug: Boolean.
+        @param debug: Enables a verbose debug log during parsing of SEED file.
+        @type strict: Boolean.
+        @param strict: Parser will raise an exception if SEED files does not
+            stay within the SEED specifications.
+        @type compact: Boolean.
+        @param compact: SEED volume will contain compact data strings. Missing
+            time strings will be filled with 00:00:00.0000 if this option is
+            disabled.
+        """
         self.record_length = 4096
         self.version = 2.4
         self.blockettes = {}
         self.debug = debug
         self.verify = verify
         self.strict = strict
+        self.compact = compact
         # All parsed data is organized in volume, abbreviations and a list of
         # stations.
         self.volume = None
@@ -237,6 +254,7 @@ class Parser(object):
                 blockette_obj = blockette_class(debug=self.debug,
                                                 verify=self.verify,
                                                 strict=self.strict,
+                                                compact=self.compact,
                                                 version=self.version,
                                                 record_type=record_type)
                 blockette_obj.parseSEED(data, blockette_length)
@@ -396,7 +414,7 @@ class Parser(object):
                 rest_of_the_record = blockette_str[(len(blockette_str) - \
                                                     overhead):]
                 # Loop over the number of records to be written.
-                for _i in xrange(int(math.ceil(len(rest_of_the_record)/\
+                for _i in xrange(int(math.ceil(len(rest_of_the_record) / \
                                                    float(length)))):
                     return_records.append(record)
                     record = ''
@@ -436,18 +454,17 @@ class Parser(object):
         # Loop over all stations.
         for _i in self.stations:
             station = []
-            # Blockette 50 always should be the first blockette
+            # Blockette 50 is always the first blockette
             station.append(_i[0].station_call_letters)
             # Loop over blockettes.
             station.extend(self._createCutAndFlushRecord(_i, 'S'))
             stations_list.append(station)
-        # Make abbreviations.
+        # Create abbreviations.
         abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        # Make volume string. To do this blockette 11 needs to be created.
-        # It will be created first, than the whole volume  will be parsed
-        # to a SEEDString. If the resulting string is longer than self.record
-        # length -6 blockette 11 will be recreated with the newly won
-        # informations.
+        # Create volume string. Blockette 11 will be generated  first, than the 
+        # whole volume will be parsed into a SEEDString. If the resulting 
+        # string is longer than self.record length -6 blockette 11 will be 
+        # recreated with the newly retrieved information.
         abbr_lenght = len(abbreviations)
         cur_count = 1 + abbr_lenght
         while True:
@@ -497,10 +514,11 @@ class Parser(object):
                                               blockette_id)
             blockette_class = getattr(blockette, class_name)
             blockette_obj = blockette_class(debug=self.debug,
-                                                verify=self.verify,
-                                                strict=self.strict,
-                                                version=self.version,
-                                                record_type=record_type)
+                                            verify=self.verify,
+                                            strict=self.strict,
+                                            compact=self.compact,
+                                            version=self.version,
+                                            record_type=record_type)
             blockette_obj.parseXML(XML_blockette)
             return blockette_obj
         elif blockette_id != 0:

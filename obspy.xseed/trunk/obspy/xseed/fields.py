@@ -31,6 +31,7 @@ class Field(object):
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
+        self.compact = kwargs.get('compact', False)
 
     def __str__(self):
         if self.id:
@@ -45,7 +46,7 @@ class Field(object):
         """
         if flags and 'T' in flags:
             dt = utils.Iso2DateTime(s)
-            return utils.DateTime2String(dt)
+            return utils.DateTime2String(dt, self.compact)
         sn = str(s).strip()
         if not flags:
             return sn
@@ -103,6 +104,7 @@ class Field(object):
     def getSEED(self, blockette, pos=0):
         """
         """
+        self.compact = blockette.compact
         try:
             result = getattr(blockette, self.attribute_name)
         except:
