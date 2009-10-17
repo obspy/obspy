@@ -2,16 +2,37 @@
 """
 ObsPy Test Suite Module.
 
-To run the tests, there are the following possibilities
+All tests in ObsPy are located in the tests directory of the certain
+module. The __init__.py of the tests directory itself as well as every test
+has a function called suite.
 
+To run all tests/a single test from the shell/cmd do one of the following:
 {{{
     python -c 'import obspy; print obspy.runTests()' # Run all tests
     python obspy/core/testing.py    # Run all tests
     python obspy/core/testing.py -v # Verbose output
-    python core/testing.py -v obspy.core.tests.test_stream.StreamTestCase.test_adding
+    python obspy/core/testing.py -v obspy.core.tests.test_stream.StreamTestCase.test_adding
+    python obspy/core/tests/test_stats.py -v
+    python obspy/core/tests/test_stats.py -v StatsTestCase.test_pickleStats
 }}}
 
-Find out the name of a specific test by using the -v options.
+To run all tests/a single test inside python do one of the following:
+{{{
+    import obspy
+    obspy.runTests()
+
+    from unittest import TextTestRunner
+    from obspy.core.tests import suite
+    TextTestRunner().run(suite())            # Run all tests
+    TextTestRunner(verbosity=2).run(suite()) # Verbose output
+    
+    from unittest import TextTestRunner
+    from obspy.core.tests.test_stats import suite
+    TextTestRunner().run(suite())            # Run all tests
+    TextTestRunner(verbosity=2).run(suite()) # Verbose output
+}}}
+
+Running the test verbose exposes the available tests.
 """
 
 import obspy

@@ -93,7 +93,7 @@ C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
 C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
 
 ## gse_functions read_header
-lib.read_header.argtypes = [c_file_p, C.c_void_p]
+lib.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
 lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b

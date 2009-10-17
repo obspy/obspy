@@ -193,6 +193,9 @@ def classicStaLta(a, Nsta, Nlta):
     @rtype: Numpy ndarray
     @return: Charactristic function of classic STA/LTA
     """
+    #XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
+    #    This should be faster then the for loops in this fct
+    #    Currently debian lenny ships 1.1.1
     m = len(a)
     #
     # compute the short time average (STA)
