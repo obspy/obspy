@@ -16,7 +16,7 @@ class Blockette055(Blockette):
     """
 
     id = 55
-    name = "Reponse list"
+    name = "Response list"
     fields = [
         Integer(3, "Stage sequence number", 2),
         Integer(4, "Stage input units", 3),

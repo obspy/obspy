@@ -18,7 +18,7 @@ HEADER_INFO = {
     'A': {'name': 'Abbreviation Dictionary Control Header',
           'blockettes': [30, 31, 32, 33, 34, 41, 43, 44, 45, 46, 47, 48]},
     'S': {'name': 'Station Control Header',
-          'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61]}
+          'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
 # Map blockette names and numbers.
 BLOCKETTE_NAMES = {
@@ -37,10 +37,12 @@ BLOCKETTE_NAMES = {
     'channel_identifier' : 52,
     'response_poles_and_zeros' : 53,
     'response_coefficients' : 54,
+    'response_list' : 55,
     'decimation' : 57,
     'channel_sensitivity_gain' : 58,
     'channel_comment' : 59,
-    'FIR_response' : 61}
+    'FIR_response' : 61, 
+    'response_polynomial' : 62}
 
 class SEEDParserException(Exception):
     pass
@@ -261,7 +263,6 @@ class Parser(object):
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
             elif blockette_id != 0:
-                continue
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
 
