@@ -6,6 +6,7 @@ from lxml import etree
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette054 import Blockette054
+from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.parser import Parser, SEEDParserException
 from obspy.xseed.utils import compareSEED
 import inspect
@@ -102,7 +103,33 @@ class ParserTestCase(unittest.TestCase):
         self.assertEquals(len(parser.blockettes[10]), 1)
         self.assertEquals(len(parser.blockettes[51]), 1)
         self.assertEquals(len(parser.blockettes[54]), 2)
-
+        
+    def test_blocketteLongerThanRecordLength(self):
+        """
+        If a blockette is longer than the record length it should result in
+        more than one record.
+        """
+        parser = Parser(strict = True)
+        # Set record length to 100.
+        parser.record_length = 100
+        # Use a blockette 53 string.
+        SEED_string = '0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.00000E+00+0.00000E+00'
+        blkt_53 = Blockette053()
+        blkt_53.parseSEED(SEED_string)
+        # This just tests an internal SEED method.
+        records = parser._createCutAndFlushRecord([blkt_53], 'S')
+        # This should result in five records.
+        self.assertEqual(len(records), 5)
+        # Each records should be 100 - 6 = 94 long.
+        for record in records:
+            self.assertEqual(len(record), 94)
+        # Reassemble the String.
+        new_string = ''
+        for record in records:
+            new_string += record[2:]
+        # Compare the new and the old string.
+        self.assertEqual(new_string.strip(), SEED_string)
+        
     def test_readAndWriteSEED(self):
         """
         Reads all SEED records from the Bavarian network and writes them

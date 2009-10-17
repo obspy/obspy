@@ -104,9 +104,34 @@ def DateTime2Iso(t):
 
 def compareSEED(seed1, seed2):
     """
+    Only works with a record length of 4096 bytes.
     """
+    # Each SEED string should be a multiple of the record length.
+    assert (len(seed1) % 4096) == 0
+    assert (len(seed2) % 4096) == 0
+    # Loop over each record and remove empty ones. obspy.xseed doesn't write
+    # emtpy records. Redundant code to ease coding...
+    recnums = len(seed1)/4096
+    new_seed1 = ''
+    for _i in xrange(recnums):
+        cur_record = seed1[_i * 4096 + 8: (_i + 1) * 4096].strip()
+        if cur_record == '':
+            continue
+        new_seed1 += seed1[_i * 4096 : (_i + 1) * 4096]
+    seed1 = new_seed1
+    recnums = len(seed2)/4096
+    new_seed2 = ''
+    for _i in xrange(recnums):
+        cur_record = seed2[_i * 4096 + 8: (_i + 1) * 4096].strip()
+        if cur_record == '':
+            continue
+        new_seed2 += seed2[_i * 4096 : (_i + 1) * 4096]
+    seed2 = new_seed2
     # length should be the same
-    assert len(seed1) == len(seed2)
+    try:
+        assert len(seed1) == len(seed2)
+    except:
+        import pdb;pdb.set_trace()
     # version string is always ' 2.4' for output
     if seed1[15:19] == ' 2.3':
         seed1 = seed1.replace(' 2.3', ' 2.4', 1)
@@ -131,6 +156,5 @@ def compareSEED(seed1, seed2):
             continue
         if temp == ' +':
             continue
-        import pdb;pdb.set_trace()
 
 

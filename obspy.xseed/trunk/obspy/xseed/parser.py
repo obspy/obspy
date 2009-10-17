@@ -5,6 +5,7 @@ from lxml.etree import Element, SubElement, tostring
 from lxml.etree import parse as xmlparse
 from obspy.xseed import blockette, utils
 from obspy.xseed.blockette import Blockette011, Blockette012
+import math
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -388,12 +389,19 @@ class Parser(object):
             # If negative overhead: Write blockette.
             if overhead <= 0:
                 record += blockette_str
-            # Otherwise finish the record and start a new one.
+            # Otherwise finish the record and start one or more new ones.
             else:
                 record += blockette_str[:len(blockette_str) - overhead]
-                return_records.append(record)
-                record = ''
-                record += blockette_str[(len(blockette_str) - overhead):]
+                # The record so far not written.
+                rest_of_the_record = blockette_str[(len(blockette_str) - \
+                                                    overhead):]
+                # Loop over the number of records to be written.
+                for _i in xrange(int(math.ceil(len(rest_of_the_record)/\
+                                                   float(length)))):
+                    return_records.append(record)
+                    record = ''
+                    # It doesn't hurt to index a string more than its length.
+                    record += rest_of_the_record[_i * length: (_i + 1) * length]
         if len(record) > 0:
             return_records.append(record)
         # Flush last record

@@ -229,6 +229,7 @@ class Float(Field):
         try:
             temp = float(temp)
         except:
+            import pdb;pdb.set_trace()
             msg = "No float value found for %s." % self.field_name
             raise SEEDTypeException(msg)
         return temp
@@ -262,7 +263,7 @@ class FixedString(Field):
         self.default = ' ' * length
 
     def read(self, data):
-        return data.read(self.length).strip()
+        return self._formatString(data.read(self.length).strip(), self.flags)
 
     def write(self, data):
         # Leave fixed length alphanumeric fields left justified (no leading 
@@ -299,7 +300,10 @@ class VariableString(Field):
             dt = utils.String2DateTime(data)
             return utils.DateTime2Iso(dt)
         else:
-            return data
+            if self.flags:
+                return self._formatString(data, self.flags)
+            else:
+                return data
 
     def _read(self, data):
         buffer = ''
