@@ -32,7 +32,6 @@ class Blockette(object):
     ]
 
     def __init__(self, **kwargs):
-        self.verify = kwargs.get('verify', True)
         self.debug = kwargs.get('debug', False)
         self.strict = kwargs.get('strict', False)
         self.compact = kwargs.get('compact', False)
@@ -82,7 +81,7 @@ class Blockette(object):
         for field in blockette_fields:
             # if blockette length reached break with warning
             if data.tell() - start_pos >= expected_length:
-                if not self.strict and not self.verify:
+                if not self.strict:
                     break
                 if isinstance(field, Loop):
                     break
@@ -97,8 +96,8 @@ class Blockette(object):
             field.parseSEED(self, data)
             if field.id == 2:
                 expected_length = field.data
-        # verify or strict tests
-        if not self.verify and not self.strict:
+        # strict tests
+        if not self.strict:
             return
         # check length
         end_pos = data.tell()
@@ -125,14 +124,14 @@ class Blockette(object):
         # add blockette id and length
         return '%03d%04d%s' % (self.id, len(data) + 7, data)
 
-    def parseXML(self, xml_doc):
+    def parseXML(self, xml_doc, version='1.0'):
         """
         Reads lxml etree and fills the blockette with the values of it.
         """
         for field in self.blockette_fields:
-            field.parseXML(self, xml_doc)
+            field.parseXML(self, xml_doc, version=version)
 
-    def getXML(self, show_optional=False):
+    def getXML(self, show_optional=False, version='1.0'):
         """
         Returns a XML document representing this blockette.
         """
@@ -140,6 +139,6 @@ class Blockette(object):
         xml_doc = Element(self.blockette_name, blockette=self.blockette_id)
         # loop over all blockette fields
         for field in self.blockette_fields:
-            node = field.getXML(self)
+            node = field.getXML(self, version=version)
             xml_doc.extend(node)
         return xml_doc

@@ -120,9 +120,10 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result)
 
-    def getXML(self, blockette, pos=0):
+    def getXML(self, blockette, pos=0, version='1.0'):
         """
         """
+        self.xseed_version = version
         if self.ignore:
             # debug
             if blockette.debug:
@@ -155,9 +156,10 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    def parseXML(self, blockette, xml_doc, pos=0):
+    def parseXML(self, blockette, xml_doc, pos=0, version='1.0'):
         """
         """
+        self.xseed_version = version
         try:
             text = xml_doc.xpath(self.attribute_name + "/text()")[pos]
         except:
@@ -385,9 +387,10 @@ class Loop(Field):
                 data += field.getSEED(blockette, i)
         return data
 
-    def getXML(self, blockette, pos=0):
+    def getXML(self, blockette, pos=0, version='1.0'):
         """
         """
+        self.xseed_version = version
         if self.ignore:
             return []
         try:
@@ -430,7 +433,10 @@ class Loop(Field):
             # standard loop
             return [root]
 
-    def parseXML(self, blockette, xml_doc, pos=0):
+    def parseXML(self, blockette, xml_doc, pos=0, version='1.0'):
+        """
+        """
+        self.xseed_version = version
         try:
             self.length = int(getattr(blockette, self.index_field))
         except:

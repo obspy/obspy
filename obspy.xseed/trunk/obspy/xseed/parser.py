@@ -60,13 +60,10 @@ class Parser(object):
     @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
-    def __init__(self, verify=True, debug=False, strict=False, compact=False):
+    def __init__(self, debug=False, strict=False, compact=False):
         """
         Initializes the SEED parser.
         
-        @type verify: Boolean.
-        @param verify: Verifies various options like length of blockettes, 
-            required fields etc.fields and will warn about errors.
         @type debug: Boolean.
         @param debug: Enables a verbose debug log during parsing of SEED file.
         @type strict: Boolean.
@@ -81,7 +78,6 @@ class Parser(object):
         self.version = 2.4
         self.blockettes = {}
         self.debug = debug
-        self.verify = verify
         self.strict = strict
         self.compact = compact
         # All parsed data is organized in volume, abbreviations and a list of
@@ -254,7 +250,6 @@ class Parser(object):
                                               blockette_id)
                 blockette_class = getattr(blockette, class_name)
                 blockette_obj = blockette_class(debug=self.debug,
-                                                verify=self.verify,
                                                 strict=self.strict,
                                                 compact=self.compact,
                                                 version=self.version,
@@ -266,11 +261,13 @@ class Parser(object):
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
 
-    def getXSEED(self):
+    def getXSEED(self, version='1.0'):
         """
         Returns a XML representation of all headers of a SEED volume.
         """
-        doc = Element("xseed", version='1.0')
+        if version not in ['1.0', '1.1']:
+            raise SEEDParserException("Unknown XML-SEED version!")
+        doc = Element("xseed", version=version)
         # Nothing to write if not all necessary data is available.
         if not self.volume or not self.abbreviations or \
                     len(self.stations) == 0:
@@ -326,24 +323,24 @@ class Parser(object):
                 continue
             break
         # Now start actually filling the XML tree.
-        #Volume header:
+        # Volume header:
         root = SubElement(doc, utils.toXMLTag('Volume Index Control Header'))
         for blockette in self.volume:
-            root.append(blockette.getXML())
+            root.append(blockette.getXML(version=version))
         # Abbreviations:
         root = SubElement(doc,
                     utils.toXMLTag('Abbreviation Dictionary Control Header'))
         for blockette in self.abbreviations:
-            root.append(blockette.getXML())
+            root.append(blockette.getXML(version=version))
         # All blockettes for one station in one root element:
         for station in self.stations:
             root = SubElement(doc, utils.toXMLTag('Station Control Header'))
             for blockette in station:
-                root.append(blockette.getXML())
-        # To pass the XSD scheme test an empty timespan control header is added
+                root.append(blockette.getXML(version=version))
+        # To pass the XSD schema test an empty timespan control header is added
         # to the end of the file.
         root = SubElement(doc, utils.toXMLTag('Timespan Control Header'))
-        # Also no data is present in all supported SEED files.
+        # Also no data is present in all supported SEED files (for now).
         root = SubElement(doc, utils.toXMLTag('Data Records'))
         # Delete Blockettes 11 and 12.
         del self.volume[-1]
@@ -515,7 +512,6 @@ class Parser(object):
                                               blockette_id)
             blockette_class = getattr(blockette, class_name)
             blockette_obj = blockette_class(debug=self.debug,
-                                            verify=self.verify,
                                             strict=self.strict,
                                             compact=self.compact,
                                             version=self.version,
@@ -526,17 +522,17 @@ class Parser(object):
             msg = "Unknown blockette type %d found" % blockette_id
             raise SEEDParserException(msg)
 
-    def parseXSEEDFile(self, filename):
+    def parseXSEEDFile(self, filename, version='1.0'):
         """
         Read and parse the given XML-SEED file.
         """
         if self.debug:
             print 'FILENAME:', filename
         fp = open(filename)
-        self.parseXSEED(fp)
+        self.parseXSEED(fp, version=version)
         fp.close()
 
-    def parseXSEED(self, data):
+    def parseXSEED(self, data, version='1.0'):
         """
         Parse a XML-SEED string.
         """
