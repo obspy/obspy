@@ -118,6 +118,6 @@ def writeGSE2(stream_object, filename, **kwargs):
         except:
             raise
         # be nice and adapt type if necessary
-        trace.data = np.require(trace.data, 'int32', ['C_CONTIGUOUS'])
+        trace.data = np.require(trace.data, 'int', ['C_CONTIGUOUS'])
         libgse2.write(header, trace.data, f, **kwargs)
     f.close()
