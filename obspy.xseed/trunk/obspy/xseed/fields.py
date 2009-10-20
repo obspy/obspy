@@ -32,6 +32,7 @@ class Field(object):
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
         self.compact = kwargs.get('compact', False)
+        self.default = kwargs.get('default', False)
 
     def __str__(self):
         if self.id:
@@ -45,6 +46,8 @@ class Field(object):
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
         if flags and 'T' in flags:
+            if not s and self.default:
+                return self.default
             dt = utils.Iso2DateTime(s)
             return utils.DateTime2String(dt, self.compact)
         sn = str(s).strip()
