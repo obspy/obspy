@@ -123,6 +123,17 @@ class CoreTestCase(unittest.TestCase):
         st.merge()
         self.assertEquals(len(st), 1)
 
+    def test_readFullSEED(self):
+        """
+        Reads a full SEED volume.
+        """
+        files = os.path.join(self.path, 'data', 'ArclinkRequest_340397.fseed')
+        st = read(files)
+        self.assertEquals(len(st), 3)
+        self.assertEquals(len(st[0]), 602)
+        self.assertEquals(len(st[1]), 623)
+        self.assertEquals(len(st[2]), 610)
+
     def test_Header(self):
         """
         Tests whether the header is correctly written and read.
