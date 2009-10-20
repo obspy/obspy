@@ -4,6 +4,7 @@ from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from telnetlib import Telnet
+import bz2
 import os
 import sys
 import time
@@ -136,7 +137,8 @@ class Client(Telnet):
         return data
 
     def saveWaveform(self, filename, network_id, station_id, location_id,
-                     channel_id, start_datetime, end_datetime, format="MSEED"):
+                     channel_id, start_datetime, end_datetime, format="MSEED",
+                     compressed=True):
         """
         Writes a fetched waveform into a file.
         
@@ -148,21 +150,27 @@ class Client(Telnet):
         @param start_datetime: start time as L{obspy.UTCDateTime} object.
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
         @param format: 'FSEED', 'MSEED', or 'XSEED'.
+        @param compressed: Request compressed files from ArcLink server.
         @return: L{obspy.Stream} object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
+        if compressed:
+            rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
         rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
                                        (end_datetime + 1).formatArcLink(),
                                        network_id, station_id, channel_id,
                                        location_id)
         data = self._fetch(rtype, [rdata])
+        if compressed:
+            data = bz2.decompress(data)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
-                    start_datetime, end_datetime, format="MSEED"):
+                    start_datetime, end_datetime, format="MSEED",
+                    compressed=True):
         """
         Gets a L{obspy.Stream} object.
         
@@ -174,9 +182,12 @@ class Client(Telnet):
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
         @param format: 'FSEED' or 'MSEED' ('XSEED' is documented, but not yet 
             implemented in ArcLink).
+        @param compressed: Request compressed files from ArcLink server.
         @return: L{obspy.Stream} object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
+        if compressed:
+            rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
         rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
                                        (end_datetime + 1).formatArcLink(),
@@ -184,6 +195,8 @@ class Client(Telnet):
                                        location_id)
         data = self._fetch(rtype, [rdata])
         if data:
+            if compressed:
+                data = bz2.decompress(data)
             tf = NamedTemporaryFile()
             tf.write(data)
             tf.seek(0)
