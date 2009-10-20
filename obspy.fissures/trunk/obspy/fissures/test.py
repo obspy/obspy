@@ -1,16 +1,66 @@
 #import sys
+#http://www.seis.sc.edu/software/fissuresImpl/xref/edu/iris/Fissures/model/AllVTFactory.html
 from omniORB import CORBA
 #, PortableServer
-#from idl import IfSeismogramDC_idl
-#from idl.Fissures_idl import Time
-#from idl.IfNetwork_idl import Channel, NetworkAccess, NetworkFinder, Station, NetworkDC
-#from idl.IfSeismogramDC_idl import DataCenter, LocalSeismogram, RequestFilter
+from idl import IfSeismogramDC_idl
+from idl import Fissures_idl
+from idl import IfNetwork_idl
+from idl import IfSeismogramDC_idl
+
+#
+# This try exits with CORBA.TRANSIENT(omniORB.TRANSIENT_ConnectFailed,
+# CORBA.COMPLETED_NO)
+#
+### orb = CORBA.ORB_init( ["-ORBInitRef",
+###        "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"])
+### #network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId("edu/iris/dmc", "IRIS_NetworkDC")
+### network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
+### #orb.register_value_factory('network_id',network_id) #does not matter if commented or not
+### poa = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
+### #poa = orb.resolve_initial_references("RootPOA") #returns just none
+### print orb.list_initial_services()
+### print poa._narrow(network_id)
+
+#
+# Try very simple version
+#
+### orb = CORBA.ORB_init()
+### #o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
+### o = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
+### network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
+### print o._narrow(network_id)
+
+#y = IfNetwork_idl._0_Fissures.IfNetwork._objref_NetworkDC()
+
+
+#orb = CORBA.ORB_init(sys.argv, CORBA.ORB_ID)
+#poa = orb.resolve_initial_references("RootPOA")
+#ref = Counter()._this() # implicit activation
+#
+#poa._get_the_POAManager().activate()
+#
+## print IOR to console
+##
+#sys.stdout.write (orb.object_to_string(ref)+"\n")
+#sys.stdout.flush();
+#orb.run()
+
+#import pdb;pdb.set_trace()
+#  orb.register_value_factory('blah',x)
+#o = o._narrow(Fortune.CookieServer)
+#print o.get_cookie()
+
+#>>> import CORBA, Fortune
+#>>> orb = CORBA.ORB_init()
+#>>> o = orb.string_to_object("corbaloc::host.example.com/fortune")
+#>>> o = o._narrow(Fortune.CookieServer)
+#>>> print o.get_cookie()
 
 #orb = CORBA.ORB_init()
 #o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-import pdb;pdb.set_trace()
-#o = o._narrow(Fortune.CookieServer)
-#print o.get_cookie()
+#network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId('BW','20091010')
+#_0_Fissures.IfNetwork.NetworkFinder()
+#poa = orb.resolve_initial_references("RootPOA")
 
 
 #        // Pick a name server to get FISSURES servers.
