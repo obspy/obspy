@@ -44,7 +44,7 @@ The ReadSac class provides the following functions:
 Reading:
 
     ReadSacFile       - read binary SAC file
-    ReadSacXY     - read XY SAC file    
+    ReadSacXY         - read XY SAC file    
     ReadSacHeader     - read SAC header
     GetHvalue         - extract information from header
 
@@ -69,7 +69,8 @@ Convenience:
     
 """    
 
-import array,os,string
+#import array,os,string
+import os,string
 from sacutil import *
 import time, copy
 from obspy.core import UTCDateTime
@@ -147,10 +148,14 @@ class ReadSac(object):
         # list). That's a total of 632 bytes.
         #
         # allocate the array for header floats
-        self.hf = array.array('f',[-12345.0])*70
+        #self.hf = array.array('f',[-12345.0])*70
+        self.hf = np.ndarray(70,dtype='<f4')
+        self.hf[:] = -12345.0
         #
         # allocate the array for header ints
-        self.hi = array.array('i',[-12345])*40
+        #self.hi = array.array('i',[-12345])*40
+        self.hi = np.ndarray(40,dtype='<i4')
+        self.hi[:] = -12345
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24,dtype='|S8')
@@ -162,15 +167,16 @@ class ReadSac(object):
     def fromarray(self,trace,begin=0.0,delta=1.0,distkm=0):
         """create a sac-file from an array.array instance
         >>> t=ReadSac()
-        >>> b = array.array('f',xrange(10))
+        >>> b = np.arange(10)
         >>> t.fromarray(b)
         >>> t.GetHvalue('npts')
         10
         """
-        if not isinstance(trace,array.array):
-            raise SacError("input needs to be of instance array.array")
+        if not isinstance(trace,np.ndarray):
+            raise SacError("input needs to be of instance numpy.ndarray")
         else:
             self.seis = copy.copy(trace)
+            self.seis = np.require(self.seis,'<f4')
         ### set a few values that are required to create a valid SAC-file
         self.SetHvalue('int1',2)
         self.SetHvalue('cmpaz',0)
@@ -313,8 +319,8 @@ class ReadSac(object):
         100
         """
         
-        self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('i') # allocate the array for header ints
+        #self.hf = array.array('f') # allocate the array for header floats
+        #self.hi = array.array('i') # allocate the array for header ints
         #self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
@@ -331,9 +337,11 @@ class ReadSac(object):
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
-                self.hf.fromfile(f,70)     # read in the float values
-                self.hi.fromfile(f,40)     # read in the int values
+                #self.hf.fromfile(f,70)     # read in the float values
+                #self.hi.fromfile(f,40)     # read in the int values
                 #self.hs.fromfile(f,192)    # read in the char values
+                self.hf = np.fromfile(f,dtype='<f4',count=70)
+                self.hi = np.fromfile(f,dtype='<i4',count=40)
                 self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
             except EOFError, e:
                 self.hf = self.hi = self.hs = None
@@ -399,8 +407,8 @@ class ReadSac(object):
         >>> t.GetHvalue('npts')
         100
         """
-        self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('i') # allocate the array for header ints
+        #self.hf = array.array('f') # allocate the array for header floats
+        #self.hi = array.array('i') # allocate the array for header ints
         try:
             #### open the file
             f = open(fname,'rb')
@@ -415,9 +423,11 @@ class ReadSac(object):
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
-                self.hf.fromfile(f,70)     # read in the float values
-                self.hi.fromfile(f,40)     # read in the int values
+                #self.hf.fromfile(f,70)     # read in the float values
+                #self.hi.fromfile(f,40)     # read in the int values
                 #self.hs.fromfile(f,192)    # read in the char values
+                self.hf = np.fromfile(f,dtype='<f4',count=70)
+                self.hi = np.fromfile(f,dtype='<i4',count=40)
                 self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
             except EOFError, e:
                 raise SacIOError("Cannot read any or no header values: ",e)
@@ -458,9 +468,9 @@ class ReadSac(object):
         True
         >>> os.remove('testbin.sac')
         """
-        self.hf = array.array('f') # allocate the array for header floats
-        self.hi = array.array('i') # allocate the array for header ints
-        self.hs = np.ndarray(24, dtype='|S8') # allocate the ndarray for header characters
+        #self.hf = array.array('f') # allocate the array for header floats
+        #self.hi = array.array('i') # allocate the array for header ints
+        #self.hs = np.ndarray(24, dtype='|S8') # allocate the ndarray for header characters
         ###### open the file
         try:
             f = open(fname,'r')
@@ -476,13 +486,15 @@ class ReadSac(object):
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
                 # read in the float values
-                for i in xrange(14):
-                    a=map(float,f.readline().split())
-                    b=map(self.hf.append,a)  
+                self.hf = np.fromfile(f,dtype='<f4',count=70,sep=" ")
+                #for i in xrange(14):
+                #    a=map(float,f.readline().split())
+                #    b=map(self.hf.append,a)  
                 # read in the int values
-                for i in xrange(8):
-                    a=map(int,f.readline().split())
-                    b=map(self.hi.append,a)
+                self.hi = np.fromfile(f,dtype='<i4',count=40,sep=" ")
+                #for i in xrange(8):
+                #    a=map(int,f.readline().split())
+                #    b=map(self.hi.append,a)
                 # reading in the string part is a bit more complicated
                 # because every string field has to be 8 characters long
                 # apart from the second field which is 16 characters long
