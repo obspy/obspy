@@ -183,10 +183,13 @@ class libmseed(object):
                                   N.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         # Free MSRecord structure
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
+        self.clear(msf, msr)
         del msf, msr, chain
         return trace_list
+
+    def clear(self, msf, msr):
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, -1, None, None, 0, 0, 0)
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,

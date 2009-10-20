@@ -2,6 +2,7 @@
 
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.mseed.core import readMSEED
+from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import libmseed
 import inspect
 import numpy as N
@@ -91,7 +92,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Write integer array via L{obspy.core.Stream}.
         """
-        tempfile = 'temp1.mseed'
+        tempfile = NamedTemporaryFile().name
         npts = 1000
         # data array of integers - float won't work!
         data = N.random.randint(-1000, 1000, npts).astype('int32')
@@ -121,15 +122,15 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(len(st), 4)
         st.merge()
         self.assertEquals(len(st), 1)
-        
+
     def test_Header(self):
         """
         Tests whether the header is correctly written and read.
         """
-        tempfile = 'temp1.mseed'
+        tempfile = NamedTemporaryFile().name
         data = N.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0, 
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
@@ -151,7 +152,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(stats[key], stream[0].stats[key])
         # Test the dataquality key extra.
         self.assertEqual(stream[0].stats.mseed.dataquality, 'D')
-        
+
     def test_writeAndReadDifferentRecordLengths(self):
         """
         Tests Mini-SEED writing and record lengths.
@@ -159,10 +160,9 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         mseed = libmseed()
         npts = 6000
-        tempfile = 'temp1.mseed'
         data = N.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0, 
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
@@ -175,10 +175,12 @@ class CoreTestCase(unittest.TestCase):
         # Loop over some record lengths.
         for rec_len in record_lengths:
             # Write it.
-            st.write(tempfile, format="MSEED", reclen = rec_len)
+            tempfile = NamedTemporaryFile().name
+            st.write(tempfile, format="MSEED", reclen=rec_len)
             # Open the file.
             file = open(tempfile, 'rb')
             info = mseed._getMSFileInfo(file, tempfile)
+            file.close()
             # Test reading the two files.
             temp_st = read(tempfile)
             N.testing.assert_array_equal(data, temp_st[0].data)
@@ -188,16 +190,16 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(info['record_length'], rec_len)
             # Check if filesize is a multiple of the record length.
             self.assertEqual(info['filesize'] % rec_len, 0)
-            
+
     def test_invalidRecordLength(self):
         """
         An invalid record length should raise an exception.
         """
         npts = 6000
-        tempfile = 'temp1.mseed'
+        tempfile = NamedTemporaryFile().name
         data = N.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0, 
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
@@ -209,14 +211,14 @@ class CoreTestCase(unittest.TestCase):
         # Writing should fail with invalid record lengths.
         # Not a power of 2.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
-                          reclen = 1000)
+                          reclen=1000)
         # Too small.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
-                          reclen = 8)
+                          reclen=8)
         # Not a number.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
-                          reclen = 'A')
-        
+                          reclen='A')
+
     def test_writeAndReadDifferentEncodings(self):
         """
         Writes and read a file with different encoding via the obspy.core
@@ -225,11 +227,9 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         mseed = libmseed()
         npts = 1000
-        tempfile = 'temp1.mseed'
-        tempfile2 = 'temp2.mseed'
         data = N.random.randint(10, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0, 
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
@@ -241,12 +241,14 @@ class CoreTestCase(unittest.TestCase):
         encodings = {'INT16' : 1, 'INT32' : 3, 'STEIM1' : 10, 'STEIM2' :11}
         # Loop over some record lengths.
         for key in encodings.keys():
+            tempfile = NamedTemporaryFile().name
+            tempfile2 = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
-            st.write(tempfile, format="MSEED", encoding = encodings[key])
-            st.write(tempfile2, format = "MSEED", encoding = key)
+            st.write(tempfile, format="MSEED", encoding=encodings[key])
+            st.write(tempfile2, format="MSEED", encoding=key)
             # Check the encodings.
-            msr1 = mseed.readSingleRecordToMSR(tempfile)
-            msr2 = mseed.readSingleRecordToMSR(tempfile2)
+            msr1, msf1 = mseed.readSingleRecordToMSR(tempfile)
+            msr2, msf2 = mseed.readSingleRecordToMSR(tempfile2)
             # Test reading the two files.
             temp_st1 = read(tempfile)
             temp_st2 = read(tempfile2)
@@ -254,22 +256,25 @@ class CoreTestCase(unittest.TestCase):
             N.testing.assert_array_equal(data, temp_st2[0].data)
             del temp_st1
             del temp_st2
+            # Assert encodings.
+            self.assertEqual(msr1.contents.encoding, encodings[key])
+            self.assertEqual(msr2.contents.encoding, encodings[key])
+            # Close file handler
+            mseed.clear(msf1, msr1)
+            mseed.clear(msf2, msr2)
             # Delete temp files.
             os.remove(tempfile)
             os.remove(tempfile2)
-            # Assert encodings.
-            self.assertEqual(msr1[0].contents.encoding, encodings[key])
-            self.assertEqual(msr2[0].contents.encoding, encodings[key])
-            
+
     def test_invalidEncoding(self):
         """
         An invalid encoding should raise an exception.
         """
         npts = 6000
-        tempfile = 'temp1.mseed'
+        tempfile = NamedTemporaryFile().name
         data = N.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0, 
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
@@ -281,10 +286,11 @@ class CoreTestCase(unittest.TestCase):
         # Writing should fail with invalid record lengths.
         # Wrong number.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
-                          encoding = 2)
+                          encoding=2)
         # Wrong Text.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
-                          encoding = 'FLOAT_64')
+                          encoding='FLOAT_64')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
