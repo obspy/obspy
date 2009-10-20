@@ -2,9 +2,15 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
+from lxml.etree import Element, SubElement
 
 
 class Blockette060(Blockette):
+    
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        self.stages = []
     """
     Blockette 060: Response Reference Blockette.
     
@@ -51,3 +57,77 @@ class Blockette060(Blockette):
                 Integer(6, "Response lookup key", 4)], omit_tag=True),
         ]),
     ]
+
+    def parseSEED(self, data, *args, **kwargs):
+        """
+        Read Blockette 60.
+        """
+        import pdb;pdb.set_trace()
+        data.read(3)
+        new_data = data.read(int(data.read(4)))
+        number_of_stages = int(new_data[0:2])
+        # Loop over all stages.
+        counter = 2
+        for _i in xrange(number_of_stages):
+            number_of_responses = int(new_data[counter + 2 : counter + 4])
+            self.stages.append([])
+            # Start inner loop
+            counter += 4
+            for _j in xrange(number_of_responses):
+                # Append to last list.
+                self.stages[-1].append(int(new_data[counter: counter + 4]))
+                counter += 4
+    
+    def getSEED(self, *args, **kwargs):
+        """
+        Writes Blockette 60.
+        """
+        data = ''
+        # Write number of stages.
+        data += '%2d' % len(self.stages)
+        # Loop over all items in self.stages.
+        stage_number = 1
+        for stage in self.stages:
+            # Write stage sequence number.
+            data += '%2d' % stage_number
+            stage_number += 1
+            # Write number of items.
+            data += '%2d' % len(stage)
+            for number in stage:
+                data += '%4d' % number
+        # Add header.
+        length = len(data) + 7
+        header = '060%4d' % length
+        data = header + data
+        return data
+    
+    def getXML(self, version='1.0', *args, **kwargs):
+        """
+        Write XML.
+        """
+        node = Element('response_reference', blockette="060")
+        SubElement(node, 'number_of_stages').text = str(len(self.stages))
+        # Loop over stages.
+        for _i in xrange(len(self.stages)):
+            inner_stage = SubElement(node, 'stage')
+            SubElement(inner_stage, 'stage_sequence_number').text = str(_i + 1)
+            SubElement(inner_stage, 'number_of_responses').text = \
+                                                    str(len(self.stages[_i]))
+            for _j in xrange(len(self.stages[_i])):
+                SubElement(inner_stage, 'response_lookup_key').text = \
+                                                    str(self.stages[_i][_j])
+        return node
+        
+    def parseXML(self, xml_doc, version='1.0', *args, **kwargs):
+        """
+        Read XML of blockette 60.
+        """
+        # Loop over ch
+        for child in xml_doc.getchildren():
+            if child.tag != 'stage':
+                continue
+            self.stages.append([])
+            for inner_child in child.getchildren():
+                if inner_child.tag != 'response_lookup_key':
+                    continue
+                self.stages[-1].append(int(inner_child.text))
