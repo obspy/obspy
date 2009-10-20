@@ -62,7 +62,6 @@ class Blockette060(Blockette):
         """
         Read Blockette 60.
         """
-        import pdb;pdb.set_trace()
         data.read(3)
         new_data = data.read(int(data.read(4)))
         number_of_stages = int(new_data[0:2])

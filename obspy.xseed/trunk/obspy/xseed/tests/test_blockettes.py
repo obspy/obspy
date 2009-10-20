@@ -4,6 +4,7 @@ from glob import iglob
 from lxml import etree
 from obspy.xseed.blockette import Blockette054
 from obspy.xseed.blockette.blockette import BlocketteLengthException
+from StringIO import StringIO
 import sys
 import unittest
 
@@ -149,9 +150,12 @@ class BlocketteTestCase(unittest.TestCase):
                         blkt_number].__dict__['Blockette' + blkt_number]()
             # Now read each part of the example into a blockette object.
             for key in blockette_instances.keys():
-                
                 if key == 'SEED':
-                    blockette_instances[key].parseSEED(example[key])
+                    if blkt_number == '060':
+                        temp = StringIO(example[key])
+                    else:
+                        temp = example[key]
+                    blockette_instances[key].parseSEED(temp)
                 else:
                     blockette_instances[key].parseXML(etree.fromstring(\
                                                                 example[key]))

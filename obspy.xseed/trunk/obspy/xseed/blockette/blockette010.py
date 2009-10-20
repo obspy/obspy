@@ -23,7 +23,8 @@ class Blockette010(Blockette):
         Float(3, "Version of format", 4, mask='%2.1f'),
         Integer(4, "Logical record length", 2),
         VariableString(5, "Beginning time", 1, 22, 'T'),
-        VariableString(6, "End time", 1, 22, 'T'),
+        VariableString(6, "End time", 1, 22, 'T', \
+                                    default_value = '2038-01-01T00:00:00'),
         VariableString(7, "Volume Time", 1, 22, 'T', version=2.3),
         VariableString(8, "Originating Organization", 1, 80, version=2.3),
         VariableString(9, "Label", 1, 80, version=2.3)

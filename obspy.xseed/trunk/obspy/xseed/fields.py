@@ -32,7 +32,7 @@ class Field(object):
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
         self.compact = kwargs.get('compact', False)
-        self.default = kwargs.get('default', False)
+        self.default_value = kwargs.get('default_value', False)
 
     def __str__(self):
         if self.id:
@@ -46,8 +46,8 @@ class Field(object):
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
         if flags and 'T' in flags:
-            if not s and self.default:
-                return self.default
+            if not s and self.default_value:
+                return self.default_value
             dt = utils.Iso2DateTime(s)
             return utils.DateTime2String(dt, self.compact)
         sn = str(s).strip()
@@ -302,6 +302,9 @@ class VariableString(Field):
     def read(self, data):
         data = self._read(data)
         # datetime ?
+        # Default End-Time string.
+        if self.flags and 'T' in self.flags and self.default_value and not data:
+                return self.default_value
         if self.flags and 'T' in self.flags:
             # convert to ISO 8601 time strings
             dt = utils.String2DateTime(data)
