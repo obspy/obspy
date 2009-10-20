@@ -4,7 +4,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.2'
+version = '0.1.3'
 
 GPL2 = """
 This program is free software; you can redistribute it and/or
@@ -56,6 +56,7 @@ setup(
         'obspy.core',
         'obspy.gse2',
         'obspy.mseed',
+        'obspy.sac',
         'obspy.imaging'
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy/trunk#egg=obspy-dev",
