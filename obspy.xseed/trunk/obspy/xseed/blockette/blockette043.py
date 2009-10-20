@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, FixedString, Loop
 from obspy.xseed.fields import VariableString
 
@@ -10,9 +10,9 @@ class Blockette043(Blockette):
     
     See Response (Poles & Zeros) Blockette [53] for more information.
     """
-    
+
     id = 43
-    name = "Response Poles and Zeros Dictionary"
+    name = "Response Poles and Zeros"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),

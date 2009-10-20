@@ -12,12 +12,13 @@ class Blockette047(Blockette):
     """
 
     id = 47
-    name = "Decimation"
+    name = "Decimation Dictionary"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
         Float(5, "Input sample rate", 10, mask='%1.4e'),
-        Integer(6, "Decimation factor", 5),
+        Integer(6, "Decimiation factor", 5, xseed_version='1.0'),
+        Integer(6, "Decimation factor", 5, xseed_version='1.1'),
         Integer(7, "Decimation offset", 5),
         Float(8, "Estimated delay", 11, mask='%+1.4e'),
         Float(9, "Correction applied", 11, mask='%+1.4e')

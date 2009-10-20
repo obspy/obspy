@@ -6,7 +6,7 @@ from lxml.etree import Element, SubElement
 
 
 class Blockette060(Blockette):
-    
+
     def __init__(self, *args, **kwargs):
         """
         """
@@ -76,7 +76,7 @@ class Blockette060(Blockette):
                 # Append to last list.
                 self.stages[-1].append(int(new_data[counter: counter + 4]))
                 counter += 4
-    
+
     def getSEED(self, *args, **kwargs):
         """
         Writes Blockette 60.
@@ -99,7 +99,7 @@ class Blockette060(Blockette):
         header = '060%4d' % length
         data = header + data
         return data
-    
+
     def getXML(self, version='1.0', *args, **kwargs):
         """
         Write XML.
@@ -116,7 +116,7 @@ class Blockette060(Blockette):
                 SubElement(inner_stage, 'response_lookup_key').text = \
                                                     str(self.stages[_i][_j])
         return node
-        
+
     def parseXML(self, xml_doc, version='1.0', *args, **kwargs):
         """
         Read XML of blockette 60.

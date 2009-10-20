@@ -30,3 +30,14 @@ class Blockette041(Blockette):
         Loop("FIR Coefficient", "Number of Factors", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
+
+    def parseXML(self, xml_doc, *args, **kwargs):
+        if self.XSEED_version == '1.0':
+            xml_doc.find('fir_coefficient').tag = 'FIR_coefficient'
+        Blockette.parseXML(self, xml_doc, *args, **kwargs)
+
+    def getXML(self, *args, **kwargs):
+        xml = Blockette.getXML(self, *args, **kwargs)
+        if self.XSEED_version == '1.0':
+            xml.find('FIR_coefficient').tag = 'fir_coefficient'
+        return xml

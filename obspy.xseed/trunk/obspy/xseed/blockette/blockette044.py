@@ -13,7 +13,7 @@ class Blockette044(Blockette):
     """
 
     id = 44
-    name = "Response Coefficients Dictionary"
+    name = "Response Coefficients"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),

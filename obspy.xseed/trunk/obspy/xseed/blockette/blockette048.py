@@ -12,7 +12,7 @@ class Blockette048(Blockette):
     """
 
     id = 48
-    name = "Channel Sensitivity Gain Dictionary"
+    name = "Channel Sensivitity Gain Dictionary"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
