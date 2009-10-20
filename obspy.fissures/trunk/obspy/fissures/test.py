@@ -1,34 +1,74 @@
-#import sys
-#http://www.seis.sc.edu/software/fissuresImpl/xref/edu/iris/Fissures/model/AllVTFactory.html
 from omniORB import CORBA
-#, PortableServer
+import CosNaming
 from idl import IfSeismogramDC_idl
 from idl import Fissures_idl
 from idl import IfNetwork_idl
 from idl import IfSeismogramDC_idl
 
 #
-# This try exits with CORBA.TRANSIENT(omniORB.TRANSIENT_ConnectFailed,
-# CORBA.COMPLETED_NO)
+# http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/namingService/FissuresNamingService.html
+# FissuresNamingService namingService = new FissuresNamingService(orb);
+# namingService.setNameServiceCorbaLoc("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService");
+# NetworkDCOperations netDC = namingService.getNetworkDC("edu/iris/dmc", "IRIS_NetworkDC");
+# NetworkFinder netFinder = netDC.a_finder();
 #
-### orb = CORBA.ORB_init( ["-ORBInitRef",
-###        "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"])
-### #network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId("edu/iris/dmc", "IRIS_NetworkDC")
-### network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
-### #orb.register_value_factory('network_id',network_id) #does not matter if commented or not
-### poa = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-### #poa = orb.resolve_initial_references("RootPOA") #returns just none
-### print orb.list_initial_services()
-### print poa._narrow(network_id)
+orb = CORBA.ORB_init( ["-ORBInitRef",
+       "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
+obj = orb.resolve_initial_references("NameService") #returns just none
+rootContext = obj._narrow(CosNaming.NamingContext)
+bl, bi = rootContext.list(10000)
+binding = bl[0]
+new_obj = rootContext.resolve(binding.binding_name)
+print orb.list_initial_services()
+print bl, bi
+print binding.binding_name
+print binding.binding_type is CosNaming.ncontext
+
+
+#networkDC = IfNetwork_idl._0_Fissures.IfNetwork.NetworkDC#("edu/iris/dmc", "IRIS_NetworkDC")
+#print "Repository ID", NetworkDC._NP_RepositoryId
+#name = [CosNaming.NameComponent("edu","iris","dmc"),
+#        CosNaming.NameComponent("IRIS_NetworkDC")]
+#http://www.bioinformatics.org/pipermail/pipet-devel/2000-March/001317.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #
 # Try very simple version
 #
-### orb = CORBA.ORB_init()
-### #o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-### o = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-### network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
-### print o._narrow(network_id)
+#   orb = CORBA.ORB_init()
+#   o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
+#   #o = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
+#   network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId("edu/iris/dmc", "IRIS_NetworkDC")
+#   #network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
+#   print orb.list_initial_services()
+#   print o._narrow(network_id)
 
 #y = IfNetwork_idl._0_Fissures.IfNetwork._objref_NetworkDC()
 
