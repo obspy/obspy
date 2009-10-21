@@ -4,6 +4,7 @@ from idl import IfSeismogramDC_idl
 from idl import Fissures_idl
 from idl import IfNetwork_idl
 from idl import IfSeismogramDC_idl
+from corba_walk import walk_print
 
 #
 # http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/namingService/FissuresNamingService.html
@@ -16,13 +17,20 @@ orb = CORBA.ORB_init( ["-ORBInitRef",
        "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
 obj = orb.resolve_initial_references("NameService") #returns just none
 rootContext = obj._narrow(CosNaming.NamingContext)
-bl, bi = rootContext.list(10000)
-binding = bl[0]
-new_obj = rootContext.resolve(binding.binding_name)
-print orb.list_initial_services()
-print bl, bi
-print binding.binding_name
-print binding.binding_type is CosNaming.ncontext
+obj_list = [obj]
+while True:
+    childContext = obj_list[-1]._narrow(CosNaming.NamingContext)
+    buf = childContext.list(10000)
+    print buf
+    binding = buf[0][0]
+    childContext = childContext.resolve(binding.binding_name)
+    if binding.binding_type is CosNaming.ncontext:
+        obj_list.append(childContext)
+    else:
+        break
+    #print orb.list_initial_services()
+    #print bl, bi
+    #print binding.binding_name
 
 
 #networkDC = IfNetwork_idl._0_Fissures.IfNetwork.NetworkDC#("edu/iris/dmc", "IRIS_NetworkDC")
