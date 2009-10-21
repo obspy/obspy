@@ -6,7 +6,8 @@ from obspy.xseed.fields import VariableString
 
 
 class Blockette043(Blockette):
-    """Blockette 043: Response (Poles & Zeros) Dictionary Blockette.
+    """
+    Blockette 043: Response (Poles & Zeros) Dictionary Blockette.
     
     See Response (Poles & Zeros) Blockette [53] for more information.
     """

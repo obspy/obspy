@@ -46,7 +46,7 @@ class ParserTestCase(unittest.TestCase):
         ' 0543864' -> results in Blockette 005
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100018 2.408~~~~~"
+        b010 = "0100026 2.408~2038,001~~~~"
         blockette = Blockette010(strict=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
@@ -56,7 +56,7 @@ class ParserTestCase(unittest.TestCase):
         blockette.parseSEED(b054)
         self.assertEquals(b054, blockette.getSEED())
         # combine data
-        data = "000001V " + b010 + (' ' * 230)
+        data = "000001V " + b010 + (' ' * 222)
         data += "000002S " + b054 + (' ' * 8)
         data += "000003S*" + b054 + (' ' * 8)
         # read records
@@ -67,7 +67,7 @@ class ParserTestCase(unittest.TestCase):
         """
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100018 2.408~~~~~"
+        b010 = "0100026 2.408~2038,001~~~~"
         blockette = Blockette010(strict=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
@@ -84,7 +84,7 @@ class ParserTestCase(unittest.TestCase):
         blockette = Blockette051(strict=True)
         blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
-        data = "000001V " + b010 + (' ' * 230)
+        data = "000001V " + b010 + (' ' * 222)
         data += "000002S " + b054 + nr[0:224] # 256-8-24 = 224
         data += "000003S*" + nr[224:472] # 256-8 = 248
         data += "000004S*" + nr[472:720]
@@ -103,13 +103,13 @@ class ParserTestCase(unittest.TestCase):
         self.assertEquals(len(parser.blockettes[10]), 1)
         self.assertEquals(len(parser.blockettes[51]), 1)
         self.assertEquals(len(parser.blockettes[54]), 2)
-        
+
     def test_blocketteLongerThanRecordLength(self):
         """
         If a blockette is longer than the record length it should result in
         more than one record.
         """
-        parser = Parser(strict = True)
+        parser = Parser(strict=True)
         # Set record length to 100.
         parser.record_length = 100
         # Use a blockette 53 string.
@@ -129,7 +129,7 @@ class ParserTestCase(unittest.TestCase):
             new_string += record[2:]
         # Compare the new and the old string.
         self.assertEqual(new_string.strip(), SEED_string)
-        
+
     def test_readAndWriteSEED(self):
         """
         Reads all SEED records from the Bavarian network and writes them
