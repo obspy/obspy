@@ -14,12 +14,14 @@ def name_to_string(name):
         res = res + [(binding_name.id, binding_name.kind)]
     return `res`
 
-def walk(sofar, nameservice, visitor):
+def walk(sofar, name, visitor):
     """Walk the naming tree. Call visitor at object nodes."""
+    nameservice = name._narrow(CosNaming.NamingContext)
     (bl, bi) = nameservice.list(10000)
     print "%d bindings at naming context %s" % (len(bl), name_to_string(sofar))
     print "binding iterator: " + `bi`
     for i in range(len(bl)):
+        print i
         binding = bl[i]
         try:
             obj = nameservice.resolve(binding.binding_name)
@@ -32,11 +34,11 @@ def walk(sofar, nameservice, visitor):
         else:
             visitor(sofar, binding, obj)
 
-def walk_print(nameservice):
+def walk_print(name):
     """Walk the naming tree. Print object nodes."""
     def printit(sofar, binding, obj):
         """Print object node."""
         print name_to_string(sofar + binding.binding_name)
         print obj
 
-    walk([], nameservice, printit)
+    walk([], name, printit)

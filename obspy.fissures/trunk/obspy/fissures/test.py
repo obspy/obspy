@@ -6,111 +6,58 @@ from idl import IfNetwork_idl
 from idl import IfSeismogramDC_idl
 from corba_walk import walk_print
 
+orb = CORBA.ORB_init( ["-ORBInitRef",
+       "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
+obj = orb.resolve_initial_references("NameService") #returns just none
+walk_print(obj)
+
+print """\nTry to retrieve/register object, see
+    http://omniorb.sourceforge.net/omnipy2/omniORBpy/omniORBpy002.html\n"""
+
+name = [CosNaming.NameComponent('Fissures', 'dns'),
+        CosNaming.NameComponent('de', 'dns'),
+        CosNaming.NameComponent('gfz-potsdam', 'dns'),
+        CosNaming.NameComponent('geofon', 'dns'),
+        CosNaming.NameComponent('NetworkDC', 'interface')]
+rootContext = obj._narrow(CosNaming.NamingContext)
+childContext = rootContext.resolve(name)
+print childContext
+print dir(IfNetwork_idl)
+print childContext._narrow(IfNetwork_idl._0_Fissures__POA.IfNetwork.NetworkDC)
+
+# old version of walk_print
+#obj_list = [obj]
+#while True:
+#    childContext = obj_list[-1]._narrow(CosNaming.NamingContext)
+#    buf = childContext.list(10000)
+#    print buf
+#    binding = buf[0][0]
+#    childContext = childContext.resolve(binding.binding_name)
+#    if binding.binding_type is CosNaming.ncontext:
+#        obj_list.append(childContext)
+#    else:
+#        break
+
+
+#
+# Java reference URL
 #
 # http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/namingService/FissuresNamingService.html
+
+
+#
+# Network Java
+#
 # FissuresNamingService namingService = new FissuresNamingService(orb);
 # namingService.setNameServiceCorbaLoc("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService");
 # NetworkDCOperations netDC = namingService.getNetworkDC("edu/iris/dmc", "IRIS_NetworkDC");
 # NetworkFinder netFinder = netDC.a_finder();
 #
-orb = CORBA.ORB_init( ["-ORBInitRef",
-       "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
-obj = orb.resolve_initial_references("NameService") #returns just none
-rootContext = obj._narrow(CosNaming.NamingContext)
-obj_list = [obj]
-while True:
-    childContext = obj_list[-1]._narrow(CosNaming.NamingContext)
-    buf = childContext.list(10000)
-    print buf
-    binding = buf[0][0]
-    childContext = childContext.resolve(binding.binding_name)
-    if binding.binding_type is CosNaming.ncontext:
-        obj_list.append(childContext)
-    else:
-        break
-    #print orb.list_initial_services()
-    #print bl, bi
-    #print binding.binding_name
-
-
-#networkDC = IfNetwork_idl._0_Fissures.IfNetwork.NetworkDC#("edu/iris/dmc", "IRIS_NetworkDC")
-#print "Repository ID", NetworkDC._NP_RepositoryId
-#name = [CosNaming.NameComponent("edu","iris","dmc"),
-#        CosNaming.NameComponent("IRIS_NetworkDC")]
-#http://www.bioinformatics.org/pipermail/pipet-devel/2000-March/001317.html
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #
-# Try very simple version
+# Waveform Java
 #
-#   orb = CORBA.ORB_init()
-#   o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-#   #o = orb.resolve_initial_references("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-#   network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId("edu/iris/dmc", "IRIS_NetworkDC")
-#   #network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId
-#   print orb.list_initial_services()
-#   print o._narrow(network_id)
-
-#y = IfNetwork_idl._0_Fissures.IfNetwork._objref_NetworkDC()
-
-
-#orb = CORBA.ORB_init(sys.argv, CORBA.ORB_ID)
-#poa = orb.resolve_initial_references("RootPOA")
-#ref = Counter()._this() # implicit activation
-#
-#poa._get_the_POAManager().activate()
-#
-## print IOR to console
-##
-#sys.stdout.write (orb.object_to_string(ref)+"\n")
-#sys.stdout.flush();
-#orb.run()
-
-#import pdb;pdb.set_trace()
-#  orb.register_value_factory('blah',x)
-#o = o._narrow(Fortune.CookieServer)
-#print o.get_cookie()
-
-#>>> import CORBA, Fortune
-#>>> orb = CORBA.ORB_init()
-#>>> o = orb.string_to_object("corbaloc::host.example.com/fortune")
-#>>> o = o._narrow(Fortune.CookieServer)
-#>>> print o.get_cookie()
-
-#orb = CORBA.ORB_init()
-#o = orb.string_to_object("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService")
-#network_id = IfNetwork_idl._0_Fissures.IfNetwork.NetworkId('BW','20091010')
-#_0_Fissures.IfNetwork.NetworkFinder()
-#poa = orb.resolve_initial_references("RootPOA")
-
-
 #        // Pick a name server to get FISSURES servers.
 #        FissuresNamingService namingService = new FissuresNamingService(orb);
 #        namingService.setNameServiceCorbaLoc("corbaloc:iiop:dmc.iris.washington.edu:6371/NameService");
