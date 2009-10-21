@@ -9,21 +9,24 @@ from corba_walk import walk_print
 orb = CORBA.ORB_init( ["-ORBInitRef",
        "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
 obj = orb.resolve_initial_references("NameService") #returns just none
+# Comment to deactivate module scanning
 walk_print(obj)
 
 print """\nTry to retrieve/register object, see
     http://omniorb.sourceforge.net/omnipy2/omniORBpy/omniORBpy002.html\n"""
 
-name = [CosNaming.NameComponent('Fissures', 'dns'),
-        CosNaming.NameComponent('de', 'dns'),
-        CosNaming.NameComponent('gfz-potsdam', 'dns'),
-        CosNaming.NameComponent('geofon', 'dns'),
-        CosNaming.NameComponent('NetworkDC', 'interface')]
+name =  [CosNaming.NameComponent(id='Fissures', kind='dns'),
+         CosNaming.NameComponent(id='de', kind='dns'),
+         CosNaming.NameComponent(id='gfz-potsdam', kind='dns'),
+         CosNaming.NameComponent(id='geofon', kind='dns'),
+         CosNaming.NameComponent(id='NetworkDC', kind='interface'),
+         CosNaming.NameComponent(id='GEOFON_NetworkDC', kind='object_FVer1.0')]
+
 rootContext = obj._narrow(CosNaming.NamingContext)
 childContext = rootContext.resolve(name)
-print childContext
-print dir(IfNetwork_idl)
-print childContext._narrow(IfNetwork_idl._0_Fissures__POA.IfNetwork.NetworkDC)
+myNetworkDC = childContext._narrow(Fissures_idl._0_Fissures.IfNetwork.NetworkDC)
+print myNetworkDC
+print dir(myNetworkDC)
 
 # old version of walk_print
 #obj_list = [obj]

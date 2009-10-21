@@ -40,5 +40,6 @@ def walk_print(name):
         """Print object node."""
         print name_to_string(sofar + binding.binding_name)
         print obj
+        #import pdb; pdb.set_trace()
 
     walk([], name, printit)
