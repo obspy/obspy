@@ -263,6 +263,10 @@ class ReadSac(object):
                         #for i in range(0,vlen):
                         #        self.hs[i] = value[i]
                 elif index == 1:
+                    value1 = '%-8s'%value[0:8]
+                    value2 = '%-8s'%value[8:16]
+                    self.hs[1] = value1
+                    self.hs[2] = value2
                         #start = 8
                         #if vlen > 16:
                         #        vlen =16 
@@ -270,7 +274,6 @@ class ReadSac(object):
                         #        self.hs[i+start] = ' '
                         #for i in range(0,vlen):
                         #        self.hs[i+start] = value[i]
-                        self.hs[1] = value
                 else:
                         #
                         # if you are here, then the index > 2
