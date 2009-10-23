@@ -1,32 +1,53 @@
 from omniORB import CORBA
 import CosNaming
-from idl import IfSeismogramDC_idl
-from idl import Fissures_idl
 from idl import IfNetwork_idl
-from idl import IfSeismogramDC_idl
+from idl import Fissures_idl
 from corba_walk import walk_print
 
-orb = CORBA.ORB_init( ["-ORBInitRef",
-       "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService"], CORBA.ORB_ID)
+orb = CORBA.ORB_init( [
+    #"-ORBInitialPort", "6371", 
+    #"-ORBthreadPerConnectionPolicy","0",
+    #"-ORBmaxGIOPConnectionPerServer","10",
+    #"-ORBmaxGIOPVersion","1.2",
+    #"-ORBuseTypeCodeIndirections", "0",
+    "-ORBacceptMisalignedTcIndirections", "1",
+    "-ORBtraceLevel", "40",
+    "-ORBverifyObjectExistsAndType", "0",
+    "-ORBInitRef", 
+        "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService",
+    ], CORBA.ORB_ID)
 obj = orb.resolve_initial_references("NameService") #returns just none
-# Comment to deactivate module scanning
-walk_print(obj)
+# Uncomment to activate verbose module scanning
+#walk_print(obj)
 
 print """\nTry to retrieve/register object, see
     http://omniorb.sourceforge.net/omnipy2/omniORBpy/omniORBpy002.html\n"""
 
 name =  [CosNaming.NameComponent(id='Fissures', kind='dns'),
-         CosNaming.NameComponent(id='de', kind='dns'),
-         CosNaming.NameComponent(id='gfz-potsdam', kind='dns'),
-         CosNaming.NameComponent(id='geofon', kind='dns'),
+         CosNaming.NameComponent(id='edu', kind='dns'),
+         CosNaming.NameComponent(id='iris', kind='dns'),
+         CosNaming.NameComponent(id='dmc', kind='dns'),
          CosNaming.NameComponent(id='NetworkDC', kind='interface'),
-         CosNaming.NameComponent(id='GEOFON_NetworkDC', kind='object_FVer1.0')]
+         CosNaming.NameComponent(id='IRIS_NetworkDC', kind='object_FVer1.0')]
 
 rootContext = obj._narrow(CosNaming.NamingContext)
 childContext = rootContext.resolve(name)
-myNetworkDC = childContext._narrow(Fissures_idl._0_Fissures.IfNetwork.NetworkDC)
-print myNetworkDC
-print dir(myNetworkDC)
+netDC = childContext._narrow(Fissures_idl._0_Fissures.IfNetwork.NetworkDC)
+#netDC = childContext._narrow(Fissures_idl._0_Fissures__POA.IfNetwork.NetworkDC)
+netFind = netDC._get_a_finder()
+net =  netFind.retrieve_by_code("II")[0]
+print net
+print dir(net)
+#import pdb; pdb.set_trace()
+print net.retrieve_stations()
+
+
+# XXX:
+# * create new python IDL, may be dependent on version
+# * firewall problems?
+# http://marc.info/?l=omniorb-list&m=112016990924842&w=2
+# http://thread.gmane.org/gmane.comp.corba.omniorb.user/6473/focus=6478
+# 
 
 # old version of walk_print
 #obj_list = [obj]
