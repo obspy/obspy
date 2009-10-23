@@ -2,6 +2,7 @@
 
 from obspy.xseed.blockette import Blockette 
 from obspy.xseed.fields import Float, Integer, VariableString, Loop
+from obspy.xseed.utils import formatRESP, SEEDtoRESPTime
 
 
 class Blockette058(Blockette):
@@ -38,3 +39,61 @@ class Blockette058(Blockette):
             VariableString(9, "Time of above calibration", 1, 22 , 'T')
         ])
     ]
+
+
+    def getRESP(self, station, channel, abbreviations):
+        """
+        Returns RESP string.
+        """
+        # This blockette can result in two different RESPs.
+        blkt_type =self.stage_sequence_number
+        if blkt_type != 0:
+            string = \
+            '#\t\t+                  +---------------------------------------+                  +\n' + \
+            '#\t\t+                  |       Channel Gain,%6s ch %s      |                  +\n'\
+                        %(station, channel) + \
+            '#\t\t+                  +---------------------------------------+                  +\n'
+        else:
+            string = \
+            '#\t\t+                  +---------------------------------------+                  +\n' + \
+            '#\t\t+                  |   Channel Sensitivity,%6s ch %s   |                  +\n'\
+                        %(station, channel) + \
+            '#\t\t+                  +---------------------------------------+                  +\n'
+        string += '#\t\t\n' + \
+        'B058F03     Stage sequence number:                 %s\n' \
+                    % blkt_type
+        if blkt_type != 0:
+            string += \
+            'B058F04     Gain:                                  %s\n' \
+                        % formatRESP(self.sensitivity_gain, 6) + \
+            'B058F05     Frequency of gain:                     %s HZ\n' \
+                        % formatRESP(self.frequency, 6)
+        else:
+            string += \
+            'B058F04     Sensitivity:                           %s\n' \
+                        % formatRESP(self.sensitivity_gain, 6) + \
+            'B058F05     Frequency of sensitivity:              %s HZ\n' \
+                        % formatRESP(self.frequency, 6)
+        string += \
+        'B058F06     Number of calibrations:                %s\n' \
+                    % self.number_of_history_values
+        if self.number_of_history_values > 1:
+            string += \
+                '#\t\tCalibrations:\n' + \
+                '#\t\t i, sensitivity, frequency, time of calibration\n'
+            for _i in xrange(self.number_of_history_values):
+                string += \
+                'B058F07-08    0 %13s %13s %s\n' \
+                % (formatRESP(self.sensitivity_for_calibration[_i], 6), 
+                formatRESP(self.frequency_of_calibration_sensitivity[_i], 6),
+                SEEDtoRESPTime(self.time_of_above_calibration[_i]))
+        elif self.number_of_history_values == 1:
+            string += \
+                '#\t\tCalibrations:\n' + \
+                '#\t\t i, sensitivity, frequency, time of calibration\n' + \
+                'B058F07-08    0 %13s %13s %s\n' \
+                    % (formatRESP(self.sensitivity_for_calibration, 6), 
+                      formatRESP(self.frequency_of_calibration_sensitivity, 6),
+                      SEEDtoRESPTime(self.time_of_above_calibration))
+        string += '#\t\t\n'
+        return string

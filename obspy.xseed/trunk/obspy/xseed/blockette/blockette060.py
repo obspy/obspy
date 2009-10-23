@@ -104,6 +104,13 @@ class Blockette060(Blockette):
         """
         Write XML.
         """
+        if version == '1.0':
+            msg = 'The xsd-validation file for XML-SEED version 1.0 does not '+\
+                  'support Blockette 60. It will be written but please be ' +\
+                  'aware that  the file cannot be validated.\n' + \
+                  'If you want to validate your file please use XSEED version'+\
+                  ' 1.1.'
+            raise Warning(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
         # Loop over stages.
@@ -130,3 +137,22 @@ class Blockette060(Blockette):
                 if inner_child.tag != 'response_lookup_key':
                     continue
                 self.stages[-1].append(int(inner_child.text))
+
+    def getRESP(self, station, channel, abbreviations):
+        """
+        Returns RESP string.
+        """
+        string = \
+        '#\t\t+            +--------------------------------------------------+             +\n' + \
+        '#\t\t+            |   Response Reference Information,%6s ch %s   |             +\n'\
+                    %(station, channel) + \
+        '#\t\t+            +--------------------------------------------------+             +\n' + \
+        '#\t\t\n' + \
+        'B060F03     Number of Stages:                      %s\n' \
+                % len(self.stages) + \
+        'B060F04     Stage number:                          %s\n' \
+            % 1 + \
+        'B060F05     Number of Responses:                   %s\n' \
+            % len(self.stages[0])
+        string += '#\t\t\n'
+        return string

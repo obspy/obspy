@@ -2,6 +2,7 @@
 
 from obspy.xseed.blockette import Blockette 
 from obspy.xseed.fields import Float, Integer, FixedString, Loop
+from obspy.xseed.utils import LookupCode, formatRESP
 
 
 class Blockette053(Blockette):
@@ -44,3 +45,77 @@ class Blockette053(Blockette):
             Float(18, "Imaginary pole error", 12, mask='%+1.5e')
         ])
     ]
+
+    def getRESP(self, station, channel, abbreviations):
+        """
+        Returns RESP string.
+        """
+        # Field three needs some extra parsing.
+        field_three_dict = {'A' : 'A [Laplace Transform (Rad/sec)]',
+                            'B' : 'B [Analog (Hz)]',
+                            'C' : 'C [Composite]',
+                            'D' : 'D [Digital (Z-transform)]'}
+        string = \
+        '#\t\t+               +--------------------------------------------+                +\n' + \
+        '#\t\t+               |   Response (Poles & Zeros),%6s ch %s   |                +\n' \
+                    %(station, channel) + \
+        '#\t\t+               +--------------------------------------------+                +\n' + \
+        '#\t\t\n' + \
+        'B053F03     Transfer function type:                %s\n' \
+                    % field_three_dict[self.transfer_function_types] + \
+        'B053F04     Stage sequence number:                 %s\n' \
+                    % self.stage_sequence_number + \
+        'B053F05     Response in units lookup:              %s - %s\n'\
+            %(LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
+                         self.stage_signal_input_units),
+              LookupCode(abbreviations, 34, 'unit_description',
+                    'unit_lookup_code', self.stage_signal_input_units))  + \
+        'B053F06     Response out units lookup:             %s - %s\n'\
+            % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
+                         self.stage_signal_output_units),
+              LookupCode(abbreviations, 34, 'unit_description',
+                    'unit_lookup_code', self.stage_signal_output_units))  + \
+        'B053F07     A0 normalization factor:               %G\n'\
+            % self.A0_normalization_factor + \
+        'B053F08     Normalization frequency:               %G\n'\
+            % self.normalization_frequency + \
+        'B053F09     Number of zeroes:                      %s\n'\
+            % self.number_of_complex_zeros + \
+        'B053F14     Number of poles:                       %s\n'\
+            % self.number_of_complex_poles + \
+        '#\t\tComplex zeroes:\n' + \
+        '#\t\t  i  real          imag          real_error    imag_error\n'
+        if self.number_of_complex_zeros > 0:
+            if self.number_of_complex_zeros != 1:
+                # Loop over all zeros.
+                for _i in range(self.number_of_complex_zeros):
+                    string += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (_i,
+                            formatRESP(self.real_zero[_i], 6),
+                            formatRESP(self.imaginary_zero[_i], 6),
+                            formatRESP(self.real_zero_error[_i], 6),
+                            formatRESP(self.imaginary_zero_error[_i], 6))
+            else:
+                string += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (0,
+                            formatRESP(self.real_zero, 6),
+                            formatRESP(self.imaginary_zero, 6),
+                            formatRESP(self.real_zero_error, 6),
+                            formatRESP(self.imaginary_zero_error, 6))
+        string += '#\t\tComplex poles:\n' + \
+        '#\t\t  i  real          imag          real_error    imag_error\n'
+        if self.number_of_complex_poles > 0:
+            if self.number_of_complex_poles != 1:
+                # Loop over all poles.
+                for _i in range(self.number_of_complex_poles):
+                    string += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (_i,
+                            formatRESP(self.real_pole[_i], 6),
+                            formatRESP(self.imaginary_pole[_i], 6),
+                            formatRESP(self.real_pole_error[_i], 6),
+                            formatRESP(self.imaginary_pole_error[_i], 6))
+            else:
+                string += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (0,
+                            formatRESP(self.real_pole, 6),
+                            formatRESP(self.imaginary_pole, 6),
+                            formatRESP(self.real_pole_error, 6),
+                            formatRESP(self.imaginary_pole_error, 6))
+        string += '#\t\t\n'
+        return string

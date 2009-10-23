@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+from obspy.core import UTCDateTime
+from obspy.core.util import formatScientific
+import sys
 
 
 def toAttribute(name):
@@ -177,4 +180,53 @@ def compareSEED(seed1, seed2):
             #  -56.996398  +31.0
             continue
 
+def SEEDtoRESPTime(seedstring):
+    """
+    Converts a SEED String to RESP like date string.
+    """
+    time = UTCDateTime(seedstring)
+#    if time.microsecond == 0:
+#        if time.second == 0 and time.minute == 0:
+#            if time.hour == 0:
+#                return time.strftime('%Y,%j')
+#            return time.strftime('%Y,%j,%H')
+#        time.strftime('%Y,%j,%H:%M:%S')
+    if len(seedstring) == 10:
+        return time.strftime('%Y,%j')
+    else:
+        resp_string =  time.strftime('%Y,%j,%H:%M:%S.')
+        # Microseconds need a special treatment.
+        ms = '%04d' % int(round(int(time.strftime('%f'))/100.))
+    return resp_string + ms
 
+def LookupCode(blockettes, blkt_number, field_name, lookup_code, lookup_code_number):
+    """
+    Loops over a list of blockettes until it finds the blockette with the
+    right number and lookup code.
+    """
+    # List of all possible names for lookupc
+    for blockette in blockettes:
+        if blockette.id != blkt_number:
+            continue
+        if getattr(blockette, lookup_code) != lookup_code_number:
+            continue
+        return getattr(blockette, field_name)
+    return None
+
+def formatRESP(number, digits = 4):
+    """
+    Formats a number according to the RESP format.
+    """
+    format_string = "%-10." + str(digits) + "e"
+    return formatScientific(format_string % number).replace('e', 'E')
+    
+def Blockette34Lookup(abbreviations, lookup):
+    try:
+        return LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
+                         lookup) + ' - ' + \
+               LookupCode(abbreviations, 34, 'unit_description',
+                    'unit_lookup_code', lookup)
+    except:
+        msg = '\nWarning: Abbreviation reference not found.'
+        sys.stdout.write(msg)
+        return 'No Abbreviation Referenced'

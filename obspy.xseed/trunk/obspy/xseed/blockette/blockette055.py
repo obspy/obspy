@@ -2,6 +2,7 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, Loop
+from obspy.xseed.utils import Blockette34Lookup, formatRESP
 
 
 class Blockette055(Blockette):
@@ -38,3 +39,43 @@ class Blockette055(Blockette):
         if self.XSEED_version == '1.1':
             self.name = "Response list"
         Blockette.__init__(self, *args, **kwargs)
+
+    def getRESP(self, station, channel, abbreviations):
+        """
+        Returns RESP string.
+        """
+        string = \
+        '#\t\t+                     +---------------------------------+                     +\n' + \
+        '#\t\t+                     |   Response List,%6s ch %s   |                     +\n'\
+                    %(station, channel) + \
+        '#\t\t+                     +---------------------------------+                     +\n' + \
+        '#\t\t\n' + \
+        'B055F03     Stage sequence number:                 %s\n' \
+                % self.stage_sequence_number + \
+        'B055F04     Response in units lookup:              %s\n' \
+                % Blockette34Lookup(abbreviations, self.stage_input_units) + \
+        'B055F05     Response out units lookup:             %s\n' \
+                % Blockette34Lookup(abbreviations, self.stage_output_units) + \
+        'B055F06     Number of responses:                   %s\n' \
+                % self.number_of_responses_listed
+        if self.number_of_responses_listed:
+            string += \
+                '#\t\tResponses:\n' + \
+                '#\t\t  frequency\t amplitude\t amp error\t    phase\t phase error\n'
+            if self.number_of_responses_listed > 1:
+                for _i in xrange(self.number_of_responses_listed):
+                    string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' \
+                        %(formatRESP(self.frequency[_i], 6),
+                          formatRESP(self.amplitude[_i], 6),
+                          formatRESP(self.amplitude_error[_i], 6),
+                          formatRESP(self.phase_angle[_i], 6),
+                          formatRESP(self.phase_error[_i], 6))
+            else:
+                string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' \
+                    %(formatRESP(self.frequency, 6),
+                      formatRESP(self.amplitude, 6),
+                      formatRESP(self.amplitude_error, 6),
+                      formatRESP(self.phase_angle, 6),
+                      formatRESP(self.phase_error, 6))
+        string += '#\t\t\n'
+        return string

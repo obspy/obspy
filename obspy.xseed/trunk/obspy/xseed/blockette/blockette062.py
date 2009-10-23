@@ -2,6 +2,7 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, Loop
+from obspy.xseed.utils import Blockette34Lookup, formatRESP
 
 
 class Blockette062(Blockette):
@@ -44,3 +45,63 @@ class Blockette062(Blockette):
             Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
         ])
     ]
+
+    def getRESP(self, station, channel, abbreviations):
+        """
+        Returns RESP string.
+        """
+        # Field three needs some extra parsing.
+        field_three_dict = {'A' : 'A [Laplace Transform (Rad/sec)]',
+                            'B' : 'B [Analog (Hz)]',
+                            'C' : 'C [Composite]',
+                            'D' : 'D [Digital (Z-transform)]',
+                            'P' : 'P [Polynomial]'}
+        # Frequency too!
+        frequency_dict = {'A' : 'A [rad/sec]',
+                          'B' : 'B [Hz]'}
+        # Polynomial Approximation too.
+        polynomial_dict = {'M' : 'M [MacLaurin]'}
+        string = \
+        '#\t\t+              +---------------------------------------+                      +\n' + \
+        '#\t\t+              |   Polynomial response,%6s ch %s   |                      +\n'\
+                    %(station, channel) + \
+        '#\t\t+              +---------------------------------------+                      +\n' + \
+        '#\t\t\n' + \
+        'B062F03     Transfer function type:                %s\n' \
+            % field_three_dict[self.transfer_function_type] + \
+        'B062F04     Stage sequence number:                 %s\n' \
+            % self.stage_sequence_number + \
+        'B062F05     Response in units lookup:              %s\n' \
+            % Blockette34Lookup(abbreviations, self.stage_signal_in_units) + \
+        'B062F06     Response out units lookup:             %s\n' \
+            % Blockette34Lookup(abbreviations, self.stage_signal_out_units) + \
+        'B062F07     Polynomial Approximation Type:         %s\n' \
+            % polynomial_dict[self.polynomial_approximation_type] + \
+        'B062F08     Valid Frequency Units:                 %s\n' \
+            % frequency_dict[self.valid_frequency_units] + \
+        'B062F09     Lower Valid Frequency Bound:           %G\n' \
+            % self.lower_valid_frequency_bound + \
+        'B062F10     Upper Valid Frequency Bound:           %G\n' \
+            % self.upper_valid_frequency_bound + \
+        'B062F11     Lower Bound of Approximation:          %G\n' \
+            % self.lower_bound_of_approximation + \
+        'B062F12     Upper Bound of Approximation:          %G\n' \
+            % self.upper_bound_of_approximation + \
+        'B062F13     Maximum Absolute Error:                %G\n' \
+            % self.maximum_absolute_error + \
+        'B062F14     Number of coefficients:                %d\n' \
+            % self.number_of_polynomial_coefficients
+        if self.number_of_polynomial_coefficients:
+            string += '#\t\tPolynomial coefficients:\n' + \
+            '#\t\t  i, coefficient,  error\n'
+            if self.number_of_polynomial_coefficients > 1:
+                for _i in xrange(self.number_of_polynomial_coefficients):
+                    string += 'B062F15-16   %2s %13s %13s\n' \
+                        % (_i, formatRESP(self.polynomial_coefficient[_i], 6),
+                        formatRESP(self.polynomial_coefficient_error[_i], 6))
+            else:
+                string += 'B062F15-16   %2s %13s %13s\n' \
+                        % (0, formatRESP(self.polynomial_coefficient, 6),
+                        formatRESP(self.polynomial_coefficient_error, 6))
+        string += '#\t\t\n'
+        return string

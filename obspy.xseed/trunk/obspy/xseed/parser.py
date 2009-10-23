@@ -5,7 +5,9 @@ from lxml.etree import Element, SubElement, tostring
 from lxml.etree import parse as xmlparse
 from obspy.xseed import blockette, utils
 from obspy.xseed.blockette import Blockette011, Blockette012
+from obspy.xseed.utils import SEEDtoRESPTime
 import math
+import os
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -43,6 +45,8 @@ BLOCKETTE_NAMES = {
     'channel_comment' : 59,
     'FIR_response' : 61, 
     'response_polynomial' : 62}
+
+RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
 
 class SEEDParserException(Exception):
     pass
@@ -558,3 +562,122 @@ class Parser(object):
                                     self._parseXMLBlockette(blockette, 'S'))
         # Update internal values.
         self._updateInternalSEEDStructure()
+    
+    def getChannelResponse(self, folder = ''):
+        """
+        Writes a channel response file from the current obspy.xseed.Parser
+        object.
+        
+        It aims to produce the same resp-files as when running rdseed with
+        the following command:
+        
+        rdseed -f seed.test -R
+        """
+        # Check if there are any stations at all.
+        if len(self.stations) == 0:
+            msg = 'No data to be written.'
+            raise Exception(msg)
+        # Channel Response list.
+        resp_list = []
+        # XXX: Need to check the available fields!
+        # Loop over all stations.
+        for station in self.stations:
+            resp = StringIO('')
+            blockettes = []
+            # Read the current station information and store it.
+            cur_station = station[0].station_call_letters.strip()
+            cur_network = station[0].network_code.strip()
+            # Loop over all blockettes in that station.
+            for _i in xrange(1, len(station)):
+                # Catch all blockette 52.
+                if station[_i].id == 52:
+                    cur_location = station[_i].location_identifier.strip()
+                    cur_channel = station[_i].channel_identifier.strip()
+                    # Take old list and send it to the resp parser.
+                    if resp.len != 0:
+                        # Send the blockettes to the parser and append to list.
+                        self._getRESPString(resp, blockettes, cur_station)
+                        resp_list.append([filename, resp])
+                    # Create the filename.
+                    filename = 'RESP.%s.%s.%s.%s' \
+                        % (cur_network, cur_station, cur_location, cur_channel)
+                    # Create new StringIO and list.
+                    resp = StringIO('')
+                    blockettes = []
+                    blockettes.append(station[_i])
+                    # Write header and the first two lines to the string.
+                    header = \
+                    '#\t\t<< obspy.xseed, Version 0.1.3 >>\n' + \
+                    '#\t\t\n' + \
+                    '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
+                    'B050F03     Station:     %s\n' % cur_station + \
+                    'B050F16     Network:     %s\n' % cur_network
+                    # Write to StringIO.
+                    resp.write(header)
+                    continue
+                blockettes.append(station[_i])
+            # It might happen that no blockette 52 is specified,
+            if len(blockettes) != 0:
+                # One last time for the last channel.
+                self._getRESPString(resp, blockettes, cur_station)
+                resp_list.append([filename, resp])
+        # Combine multiple channels.
+        new_resp_list = []
+        available_channels = [_i[0] for _i in resp_list]
+        channel_set = set(available_channels)
+        for channel in channel_set:
+            channel_list = [_i for _i in resp_list if _i[0] == channel]
+            if len(channel_list) == 1:
+                new_resp_list.append(channel_list[0])
+            else:
+                for _i in xrange(1, len(channel_list)):
+                    channel_list[_i][1].seek(0,0)
+                    channel_list[0][1].write(channel_list[_i][1].read())
+                new_resp_list.append(channel_list[0])
+        # Write the files.
+        for response in new_resp_list:
+            file = open( folder + os.sep + response[0], 'w')
+            response[1].seek(0,0)
+            file.write(response[1].read())
+            file.close()
+
+    def _getRESPString(self, resp, blockettes, station):
+        """
+        Takes a file like object and a list of blockettes containing all
+        blockettes for one channel and writes them RESP like to the StringIO.
+        """
+        blkt52 = blockettes[0]
+        # The first blockette in the list always has to be Blockette 52.
+        channel_info = {'Location' : blkt52.location_identifier,
+                        'Channel' : blkt52.channel_identifier,
+                        'Start date': blkt52.start_date,
+                        'End date': blkt52.end_date}
+        # Set location and end date default values or convert end time..
+        if len(channel_info['Location']) == 0:
+            channel_info['Location'] = '??'
+        if len(channel_info['End date']) == 0:
+            channel_info['End date'] = 'No Ending Time'
+        else:
+            channel_info['End date'] = SEEDtoRESPTime(channel_info['End date'])
+        # Convert starttime.
+        channel_info['Start date'] = SEEDtoRESPTime(channel_info['Start date'])
+        # Write Blockette 52 stuff.
+        resp.write(\
+                'B052F03     Location:    %s\n' % channel_info['Location'] + \
+                'B052F04     Channel:     %s\n' % channel_info['Channel'] + \
+                'B052F22     Start date:  %s\n' % channel_info['Start date'] + \
+                'B052F23     End date:    %s\n' % channel_info['End date'] + \
+                '#\t\t=======================================\n')
+        # Write all other blockettes. Currently now sorting takes place. This
+        # is just an experiement to see how rdseed does it. The Blockettes
+        # might need to be sorted.
+        for blockette in blockettes[1:]:
+            if blockette.id not in RESP_BLOCKETTES:
+                continue
+            try:
+                resp.write(blockette.getRESP(station, channel_info['Channel'], 
+                                             self.abbreviations))
+            except AttributeError:
+                msg = 'RESP output for blockette %s not implemented yet.' \
+                            % blockette.id
+                raise AttributeError(msg)
