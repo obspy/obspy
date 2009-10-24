@@ -43,7 +43,7 @@ BLOCKETTE_NAMES = {
     'decimation' : 57,
     'channel_sensitivity_gain' : 58,
     'channel_comment' : 59,
-    'FIR_response' : 61, 
+    'FIR_response' : 61,
     'response_polynomial' : 62}
 
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
@@ -562,8 +562,8 @@ class Parser(object):
                                     self._parseXMLBlockette(blockette, 'S'))
         # Update internal values.
         self._updateInternalSEEDStructure()
-    
-    def getChannelResponse(self, folder = ''):
+
+    def getChannelResponse(self, folder=''):
         """
         Writes a channel response file from the current obspy.xseed.Parser
         object.
@@ -631,13 +631,13 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
             else:
                 for _i in xrange(1, len(channel_list)):
-                    channel_list[_i][1].seek(0,0)
+                    channel_list[_i][1].seek(0, 0)
                     channel_list[0][1].write(channel_list[_i][1].read())
                 new_resp_list.append(channel_list[0])
         # Write the files.
         for response in new_resp_list:
-            file = open( folder + os.sep + response[0], 'w')
-            response[1].seek(0,0)
+            file = open(folder + os.sep + response[0], 'w')
+            response[1].seek(0, 0)
             file.write(response[1].read())
             file.close()
 
@@ -675,7 +675,7 @@ class Parser(object):
             if blockette.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blockette.getRESP(station, channel_info['Channel'], 
+                resp.write(blockette.getRESP(station, channel_info['Channel'],
                                              self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.' \

@@ -123,6 +123,8 @@ def DateTime2Iso(t):
 
 def compareSEED(seed1, seed2):
     """
+    Compares two SEED files.
+    
     Only works with a record length of 4096 bytes.
     """
     # Each SEED string should be a multiple of the record length.
@@ -147,10 +149,7 @@ def compareSEED(seed1, seed2):
         new_seed2 += seed2[_i * 4096 : (_i + 1) * 4096]
     seed2 = new_seed2
     # length should be the same
-    try:
-        assert len(seed1) == len(seed2)
-    except:
-        import pdb;pdb.set_trace()
+    assert len(seed1) == len(seed2)
     # version string is always ' 2.4' for output
     if seed1[15:19] == ' 2.3':
         seed1 = seed1.replace(' 2.3', ' 2.4', 1)
@@ -180,31 +179,28 @@ def compareSEED(seed1, seed2):
             #  -56.996398  +31.0
             continue
 
+
 def SEEDtoRESPTime(seedstring):
     """
-    Converts a SEED String to RESP like date string.
+    Converts a SEED date into a RESP date string.
     """
     time = UTCDateTime(seedstring)
-#    if time.microsecond == 0:
-#        if time.second == 0 and time.minute == 0:
-#            if time.hour == 0:
-#                return time.strftime('%Y,%j')
-#            return time.strftime('%Y,%j,%H')
-#        time.strftime('%Y,%j,%H:%M:%S')
     if len(seedstring) == 10:
         return time.strftime('%Y,%j')
     else:
-        resp_string =  time.strftime('%Y,%j,%H:%M:%S.')
-        # Microseconds need a special treatment.
-        ms = '%04d' % int(round(int(time.strftime('%f'))/100.))
+        resp_string = time.strftime('%Y,%j,%H:%M:%S.')
+        # Microseconds needs a special treatment.
+        ms = '%04d' % int(round(int(time.strftime('%f')) / 100.))
     return resp_string + ms
 
-def LookupCode(blockettes, blkt_number, field_name, lookup_code, lookup_code_number):
+
+def LookupCode(blockettes, blkt_number, field_name, lookup_code,
+               lookup_code_number):
     """
     Loops over a list of blockettes until it finds the blockette with the
     right number and lookup code.
     """
-    # List of all possible names for lookupc
+    # List of all possible names for lookup
     for blockette in blockettes:
         if blockette.id != blkt_number:
             continue
@@ -213,19 +209,21 @@ def LookupCode(blockettes, blkt_number, field_name, lookup_code, lookup_code_num
         return getattr(blockette, field_name)
     return None
 
-def formatRESP(number, digits = 4):
+
+def formatRESP(number, digits=4):
     """
     Formats a number according to the RESP format.
     """
-    format_string = "%-10." + str(digits) + "e"
-    return formatScientific(format_string % number).replace('e', 'E')
-    
-def Blockette34Lookup(abbreviations, lookup):
+    format_string = "%%-10.%dE" % digits
+    return formatScientific(format_string % number)
+
+
+def Blockette34Lookup(abbr, lookup):
     try:
-        return LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         lookup) + ' - ' + \
-               LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', lookup)
+        l1 = LookupCode(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
+        l2 = LookupCode(abbr, 34, 'unit_description', 'unit_lookup_code',
+                        lookup)
+        return l1 + ' - ' + l2
     except:
         msg = '\nWarning: Abbreviation reference not found.'
         sys.stdout.write(msg)

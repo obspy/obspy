@@ -81,10 +81,8 @@ class UtilsTestCase(unittest.TestCase):
         self.assertEquals(utils.String2DateTime(st),
                           datetime.date(2008, 12, 23))
         st = "2008,358,01:30:22.5"
-        try:
-            utils.String2DateTime(st)
-        except:
-            pass
+        self.assertEquals(utils.String2DateTime(st),
+                          datetime.datetime(2008, 12, 23, 01, 30, 22, 500000))
 
 
 def suite():
