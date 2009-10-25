@@ -3,24 +3,15 @@
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
 from lxml.etree import Element, SubElement
-
-
-RESP = """\
-#\t\t+            +--------------------------------------------------+        \
-     +
-#\t\t+            |   Response Reference Information,%6s ch %s   |            \
- +
-#\t\t+            +--------------------------------------------------+        \
-     +
-#\t\t
-B060F03     Number of Stages:                      %s
-B060F04     Stage number:                          %s
-B060F05     Number of Responses:                   %s
-#\t\t
-"""
+import sys
 
 
 class Blockette060(Blockette):
+
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        self.stages = []
     """
     Blockette 060: Response Reference Blockette.
     
@@ -68,17 +59,12 @@ class Blockette060(Blockette):
         ]),
     ]
 
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        self.stages = []
-
-    def parseSEED(self, data, *args, **kwargs):
+    def parseSEED(self, data, length, *args, **kwargs):
         """
         Read Blockette 60.
         """
-        data.read(3)
-        new_data = data.read(int(data.read(4)))
+        new_data = data.read(length)
+        new_data = new_data[7:]
         number_of_stages = int(new_data[0:2])
         # Loop over all stages.
         counter = 2
@@ -157,6 +143,41 @@ class Blockette060(Blockette):
         """
         Returns RESP string.
         """
-        out = RESP % (station, channel, len(self.stages), 1,
-                      len(self.stages[0]))
-        return out
+        string = ''
+        # Possible dictionary blockettes.
+        dict_blockettes = [41, 43, 44, 45, 46, 47, 48]
+        for _i in xrange(len(self.stages)):
+            string += \
+            '#\t\t+            +--------------------------------------------------+             +\n' + \
+            '#\t\t+            |   Response Reference Information,%6s ch %s   |             +\n'\
+                        %(station, channel) + \
+            '#\t\t+            +--------------------------------------------------+             +\n' + \
+            '#\t\t\n' + \
+            'B060F03     Number of Stages:                      %s\n' \
+                    % len(self.stages) + \
+            'B060F04     Stage number:                          %s\n' \
+                % (_i + 1) + \
+            'B060F05     Number of Responses:                   %s\n' \
+                % len(self.stages[_i]) + \
+            '#\t\t\n'
+            # Loop over all keys and print the information in order.
+            for response_key in self.stages[_i]:
+                # Find the corresponding key in the abbreviations.
+                found_abbrev = False
+                for blockette in abbreviations:
+                    if blockette.id in dict_blockettes and \
+                                blockette.response_lookup_key == response_key:
+                        #try:
+                        string += \
+                            blockette.getRESP(station, channel, abbreviations)
+                        found_abbrev = True
+                        #except AttributeError:
+                        #    msg = 'RESP output not implemented for ' + \
+                        #          'blockette %d.' % blockette.id
+                        #    raise AttributeError(msg)
+                if not found_abbrev:
+                    msg = 'The reference blockette for response key '+\
+                          '%d could not be found.' % response_key
+                    raise Exception(msg)
+        string += '#\t\t\n'
+        return string

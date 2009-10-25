@@ -83,7 +83,7 @@ class Blockette058(Blockette):
                 '#\t\t i, sensitivity, frequency, time of calibration\n'
             for _i in xrange(self.number_of_history_values):
                 string += \
-                'B058F07-08    0 %13s %13s %s\n' \
+                'B058F07-08   %2s %13s %13s %s\n' \
                 % (formatRESP(self.sensitivity_for_calibration[_i], 6), 
                 formatRESP(self.frequency_of_calibration_sensitivity[_i], 6),
                 SEEDtoRESPTime(self.time_of_above_calibration[_i]))

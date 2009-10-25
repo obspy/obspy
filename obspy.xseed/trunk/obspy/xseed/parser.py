@@ -674,10 +674,10 @@ class Parser(object):
         for blockette in blockettes[1:]:
             if blockette.id not in RESP_BLOCKETTES:
                 continue
-            try:
-                resp.write(blockette.getRESP(station, channel_info['Channel'],
+            #try:
+            resp.write(blockette.getRESP(station, channel_info['Channel'],
                                              self.abbreviations))
-            except AttributeError:
-                msg = 'RESP output for blockette %s not implemented yet.' \
-                            % blockette.id
-                raise AttributeError(msg)
+            #except AttributeError:
+            #    msg = 'RESP output for blockette %s not implemented yet.' \
+            #                % blockette.id
+            #    raise AttributeError(msg)
