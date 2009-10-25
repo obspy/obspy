@@ -167,14 +167,14 @@ class Blockette060(Blockette):
                 for blockette in abbreviations:
                     if blockette.id in dict_blockettes and \
                                 blockette.response_lookup_key == response_key:
-                        #try:
-                        string += \
-                            blockette.getRESP(station, channel, abbreviations)
-                        found_abbrev = True
-                        #except AttributeError:
-                        #    msg = 'RESP output not implemented for ' + \
-                        #          'blockette %d.' % blockette.id
-                        #    raise AttributeError(msg)
+                        try:
+                            string += \
+                                blockette.getRESP(station, channel, abbreviations)
+                            found_abbrev = True
+                        except AttributeError:
+                            msg = 'RESP output not implemented for ' + \
+                                  'blockette %d.' % blockette.id
+                            raise AttributeError(msg)
                 if not found_abbrev:
                     msg = 'The reference blockette for response key '+\
                           '%d could not be found.' % response_key
