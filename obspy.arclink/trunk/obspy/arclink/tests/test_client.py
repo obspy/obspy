@@ -218,7 +218,6 @@ class ClientTestCase(unittest.TestCase):
         # can only compare four decimal places
         self.assertAlmostEqual(sensitivity / 1e9,
                                paz['sensitivity'] / 1e9, places=4)
-        import pdb;pdb.set_trace()
 
     def test_saveResponse(self):
         """
