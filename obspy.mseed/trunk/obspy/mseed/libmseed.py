@@ -351,6 +351,7 @@ class libmseed(object):
             with the function call:
             clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                    None, -1, None, None, 0, 0, 0)
+            or the wrapper method around it self.clear(msf, msr)
         """
         # Get some information about the file.
         f = open(filename, 'rb')
@@ -412,8 +413,7 @@ class libmseed(object):
         for _i in attributes:
             header[_i] = getattr(msr.contents, _i)
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
+        self.clear(msf, msr)
         del msr, msf
         return header
 
@@ -471,8 +471,7 @@ class libmseed(object):
         endtime = clibmseed.msr_endtime(msr)
         endtime = self._convertMSTimeToDatetime(endtime)
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
+        self.clear(msf, msr)
         del msr, msf
         return starttime, endtime
 
@@ -702,8 +701,7 @@ class libmseed(object):
                 if first_record:
                     break
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
+        self.clear(msf, msr)
         del msr, msf
         # Length of the list.
         n = len(data)
@@ -770,8 +768,7 @@ class libmseed(object):
             endtime = end
         # Deallocate msr and msf memory for wrong input
         if starttime >= end or endtime <= start:
-            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                                   None, -1, None, None, 0, 0, 0)
+            self.clear(msf, msr)
             del msr, msf
             return ''
         # Guess the most likely records that cover start- and end time.
@@ -852,8 +849,7 @@ class libmseed(object):
         data = f.read(record_length * (end_record - start_record + 1))
         f.close()
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
+        self.clear(msf, msr)
         del msr, msf
         # Return the cut file string.
         return data

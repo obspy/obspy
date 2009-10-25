@@ -265,14 +265,14 @@ class CoreTestCase(unittest.TestCase):
             temp_st2 = read(tempfile2)
             N.testing.assert_array_equal(data, temp_st1[0].data)
             N.testing.assert_array_equal(data, temp_st2[0].data)
-            del temp_st1
-            del temp_st2
+            del temp_st1, temp_st2
             # Assert encodings.
             self.assertEqual(msr1.contents.encoding, encodings[key])
             self.assertEqual(msr2.contents.encoding, encodings[key])
             # Close file handler
             mseed.clear(msf1, msr1)
             mseed.clear(msf2, msr2)
+            del msf1, msr1, msf2, msr2
             # Delete temp files.
             os.remove(tempfile)
             os.remove(tempfile2)

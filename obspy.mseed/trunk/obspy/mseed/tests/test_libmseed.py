@@ -440,8 +440,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         f.seek(9 * info['record_length'])
         endtime = mseed.getStartFromMSF(filename, msr, msf)
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, 0, None, None, 0, 0, 0)
+        mseed.clear(msf, msr)
         del msf, msr
         # Create the merged file<
         data = mseed.mergeAndCutMSFiles(file_list, starttime, endtime)
@@ -622,15 +621,13 @@ class LibMSEEDTestCase(unittest.TestCase):
                                                dataflag=0, record_number= -1)
         self.assertEqual(end, clibmseed.msr_endtime(msr))
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, 0, None, None, 0, 0, 0)
+        mseed.clear(msf, msr)
         # endtime without ms_p argument
         msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0,
                                                record_number= -1)
         self.assertEqual(end, clibmseed.msr_endtime(msr))
         # Deallocate msr and msf memory
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, 0, None, None, 0, 0, 0)
+        mseed.clear(msf, msr)
         del msr, msf # for valgrind
 
     def test_readMSTracesViaRecords_thread_safety(self):
