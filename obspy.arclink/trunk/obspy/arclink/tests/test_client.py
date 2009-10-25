@@ -19,6 +19,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getWaveform(self):
         """
         """
+        # initialize client
         client = Client()
         # example 1
         start = UTCDateTime(2008, 1, 1)
@@ -46,6 +47,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getNotExistingWaveform(self):
         """
         """
+        # initialize client
         client = Client()
         # example 1
         start = UTCDateTime(2008, 1, 1)
@@ -61,6 +63,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getWaveformWrongPattern(self):
         """
         """
+        # initialize client
         client = Client()
         # example 1
         start = UTCDateTime(2008, 1, 1)
@@ -71,6 +74,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getNetworks(self):
         """
         """
+        # initialize client
         client = Client()
         # example 1
         start = UTCDateTime(2008, 1, 1)
@@ -86,6 +90,7 @@ class ClientTestCase(unittest.TestCase):
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
+        # initialize client
         client = Client()
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -121,6 +126,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getCompressedWaveform(self):
         """
         """
+        # initialize client
         client = Client()
         # example 1
         start = UTCDateTime(2008, 1, 1)
@@ -152,6 +158,7 @@ class ClientTestCase(unittest.TestCase):
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
+        # initialize client
         client = Client()
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -187,31 +194,35 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getPAZ(self):
         """
-        Test for the Client.getPAZ function. As reference the EHZ channel
-        of MANZ is taken, the result is compared to the entries of the
-        local response file of the bavarian network.
+        Test for the Client.getPAZ function.
+        
+        As reference the EHZ channel of MANZ is taken, the result is compared 
+        to the entries of the local response file of the Bavarian network.
         """
+        # reference values
         zeros = [0j, 0j]
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j,
                  - 2.513300e+02 + 0.000000e+00j, -1.310400e+02 - 4.672900e+02j,
                  - 1.310400e+02 + 4.672900e+02j]
         gain = 6.0077e+07
-        sensitivity = 2.516800e+09
-        #
+        sensitivity = 2.5168e+09
+        # initialize client
         client = Client()
         start = UTCDateTime(2009, 1, 1)
         end = start + 1
-        # poles and zeros
+        # fetch poles and zeros
         paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
         self.assertEqual(gain, paz['gain'])
         self.assertEqual(poles, paz['poles'])
         self.assertEqual(zeros, paz['zeros'])
-        # can only compare dezimal places
+        # can only compare four decimal places
         self.assertAlmostEqual(sensitivity / 1e9,
                                paz['sensitivity'] / 1e9, places=4)
+        import pdb;pdb.set_trace()
 
     def test_saveResponse(self):
         """
+        Fetches and stores response information as Dataless SEED volume.
         """
         tempfile = NamedTemporaryFile().name
         client = Client()

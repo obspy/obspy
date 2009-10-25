@@ -16,16 +16,49 @@ class ArcLinkException(Exception):
 
 class Client(Telnet):
     """
+    The ArcLink/WebDC client.
+    
+    ArcLink is a distributed data request protocol usable to access archived 
+    waveform data in the MiniSEED or SEED format and associated meta 
+    information as Dataless SEED files. It has been originally founded within 
+    the German WebDC initiative of GEOFON (http://geofon.gfz-potsdam.de/) and 
+    BGR (http://www.bgr.de/). ArcLink has been designed as a "straight 
+    consequent continuation" of the NetDC concept originally developed by the 
+    IRIS DMC. Instead of requiring waveform data via E-mail or FTP requests, 
+    ArcLink offers a direct TCP/IP communication approach. A prototypic 
+    web-based request tool is available via the WebDC homepage at 
+    http://www.webdc.eu. 
+    
+    Public servers:
+      * WebDC server: webdc.eu:18001
+    
+    Further mirrors listed at webdc.eu (restricted access only):
+      * ODC Server:  bhlsa03.knmi.nl:18001
+      * INGV Server: discovery1.rm.ingv.it:18001
+      * IPGP Server: geosrt2.ipgp.fr:18001
     """
     status_timeout = 1
     status_delay = 0.1
-    # possible mirrors listed in webdc.eu, content of all is restricted
-    # ODC Server  bhlsa03.knmi.nl:18001 
-    # INGV Server discovery1.rm.ingv.it:18001 
-    # IPGP Server geosrt2.ipgp.fr:18001 
+
     def __init__(self, host="webdc.eu", port=18001,
                  timeout=20, user="Anonymous", institution="Anonymous",
                  debug=False):
+        """
+        Initialization of the ArcLink client.
+        
+        @param host: Host name of the remote ArcLink server. Uses webdc.eu as 
+            default host.
+        @param port: Port of the remote ArcLink server. Default port is 18001.
+        @param timeout: Seconds before a connection timeout is raised. This 
+            works only for Python >= 2.6.x.
+        @param user: The user name used for authentication with the ArcLink 
+            server.
+        @param password: A password used for authentication with the ArcLink 
+            server.
+        @param institution: A string containing the name of the institution of 
+            the requesting person.
+        @param debug: Verbose output of the connection handling, if enabled. 
+        """
         self.user = user
         self.institution = institution
         # timeout exists only for Python >= 2.6
@@ -44,15 +77,12 @@ class Client(Telnet):
         self.inventory_parser = objectify.makeparser(schema=schema)
         file.close()
 
-    def writeln(self, buffer):
-        self.write(buffer + '\n')
-
-    def write(self, buffer):
+    def _writeln(self, buffer):
+        Telnet.write(self, buffer + '\n')
         if self.debug:
-            print '>>> ' + buffer.strip()
-        Telnet.write(self, buffer)
+            print '>>> ' + buffer
 
-    def readln(self, value=''):
+    def _readln(self, value=''):
         line = self.read_until(value + '\r\n', self.status_timeout)
         line = line.strip()
         if self.debug:
@@ -64,30 +94,30 @@ class Client(Telnet):
             self.open(self.host, self.port)
         else:
             self.open(self.host, self.port, self.timeout)
-        self.writeln('HELLO')
-        self.version = self.readln(')')
-        self.node = self.readln()
-        self.writeln('USER %s' % self.user)
-        self.readln('OK')
-        self.writeln('INSTITUTION %s' % self.institution)
-        self.readln('OK')
+        self._writeln('HELLO')
+        self.version = self._readln(')')
+        self.node = self._readln()
+        self._writeln('USER %s' % self.user)
+        self._readln('OK')
+        self._writeln('INSTITUTION %s' % self.institution)
+        self._readln('OK')
 
     def _bye(self):
-        self.writeln('BYE')
+        self._writeln('BYE')
         self.close()
 
     def _fetch(self, request_type, request_data):
         self._hello()
-        self.writeln(request_type)
+        self._writeln(request_type)
         for line in request_data:
-            self.writeln(line)
-        self.writeln('END')
-        self.readln('OK')
-        self.writeln('STATUS')
-        req_id = int(self.readln())
+            self._writeln(line)
+        self._writeln('END')
+        self._readln('OK')
+        self._writeln('STATUS')
+        req_id = int(self._readln())
         while 1:
-            self.writeln('STATUS %d' % req_id)
-            xml_doc = self.readln()
+            self._writeln('STATUS %d' % req_id)
+            xml_doc = self._readln()
             if 'ready="true"' in xml_doc:
                 self.read_until('\r\n')
                 break
@@ -108,18 +138,18 @@ class Client(Telnet):
         #           exact size of downloadable product.
         if 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
             # error or no data
-            self.writeln('PURGE %d' % req_id)
+            self._writeln('PURGE %d' % req_id)
             self._bye()
             # parse XML for error message
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
         # XXX: safeguard as long not all status messages are covered 
         if '<line content' not in xml_doc:
-            self.writeln('PURGE %d' % req_id)
+            self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No content')
-        self.writeln('DOWNLOAD %d' % req_id)
-        length = int(self.readln())
+        self._writeln('DOWNLOAD %d' % req_id)
+        length = int(self._readln())
         data = ''
         i = 0
         while 1:
@@ -132,7 +162,7 @@ class Client(Telnet):
             raise Exception('Wrong length!')
         if self.debug:
             print data
-        self.writeln('PURGE %d' % req_id)
+        self._writeln('PURGE %d' % req_id)
         self._bye()
         return data
 
@@ -213,7 +243,7 @@ class Client(Telnet):
     def getPAZ(self, network_id, station_id, location_id,
                     channel_id, start_datetime, end_datetime):
         """
-        Returns poles, zeros, gain and sensitivity as dictionary.
+        Returns poles, zeros, gain and sensitivity of a single channel.
         
         @param network_id: Network code, e.g. 'BW'.
         @param station_id: Station code, e.g. 'MANZ'.
@@ -291,6 +321,9 @@ class Client(Telnet):
     def getNetworks(self, start_datetime, end_datetime):
         """
         Returns a dictionary of available networks within the given time span.
+        
+        Currently the time span is ignored by the ArcLink servers, therefore
+        all networks are returned.
         
         @param start_datetime: start time as L{obspy.UTCDateTime} object.
         @param end_datetime: end time as L{obspy.UTCDateTime} object.
