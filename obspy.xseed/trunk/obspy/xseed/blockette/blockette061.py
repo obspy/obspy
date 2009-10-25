@@ -6,6 +6,22 @@ from obspy.xseed.fields import FixedString, Float, Integer, VariableString, \
 from obspy.xseed.utils import formatRESP, LookupCode
 
 
+RESP = """\
+#\t\t+                     +--------------------------------+                 \
+     +
+#\t\t+                     |   FIR response,%6s ch %s   |                     \
+ +
+#\t\t+                     +--------------------------------+                 \
+     +
+#\t\t
+B061F03     Stage sequence number:                 %s
+B061F05     Symmetry type:                         %s
+B061F06     Response in units lookup:              %s - %s
+B061F07     Response out units lookup:             %s - %s
+B061F08     Number of numerators:                  %s
+"""
+
+
 class Blockette061(Blockette):
     """
     Blockette 061: FIR Response Blockette.
@@ -38,38 +54,28 @@ class Blockette061(Blockette):
         """
         Returns RESP string.
         """
-        string = \
-        '#\t\t+                     +--------------------------------+                      +\n' + \
-        '#\t\t+                     |   FIR response,%6s ch %s   |                      +\n'\
-                    %(station, channel) + \
-        '#\t\t+                     +--------------------------------+                      +\n' + \
-        '#\t\t\n' + \
-        'B061F03     Stage sequence number:                 %s\n' \
-                % self.stage_sequence_number + \
-        'B061F05     Symmetry type:                         %s\n' \
-                % self.symmetry_code + \
-        'B061F06     Response in units lookup:              %s - %s\n'\
-            %(LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_in_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_in_units))  + \
-        'B061F07     Response out units lookup:             %s - %s\n'\
-            %(LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_out_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_out_units))  + \
-        'B061F08     Number of numerators:                  %s\n' \
-                % self.number_of_coefficients 
+        out = RESP % (station, channel,
+                      self.stage_sequence_number,
+                      self.symmetry_code,
+                      LookupCode(abbreviations, 34, 'unit_name',
+                                 'unit_lookup_code', self.signal_in_units),
+                      LookupCode(abbreviations, 34, 'unit_description',
+                                 'unit_lookup_code', self.signal_in_units),
+                      LookupCode(abbreviations, 34, 'unit_name',
+                                 'unit_lookup_code', self.signal_out_units),
+                      LookupCode(abbreviations, 34, 'unit_description',
+                                 'unit_lookup_code', self.signal_out_units),
+                      self.number_of_coefficients)
         if self.number_of_coefficients > 1:
-            string +=  '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
+            out += '#\t\tNumerator coefficients:\n'
+            out += '#\t\t  i, coefficient\n'
             for _i in xrange(self.number_of_coefficients):
-                string += 'B061F09    %4s %13s\n' \
-                            % (_i, formatRESP(self.FIR_coefficient[_i], 6))
+                out += 'B061F09    %4s %13s\n' \
+                    % (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_coefficients == 1:
-            string +=  '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
-            string += 'B061F09    %4s %13s\n' \
-                            % (0, formatRESP(self.FIR_coefficient, 6))
-        string += '#\t\t\n'
-        return string
+            out += '#\t\tNumerator coefficients:\n'
+            out += '#\t\t  i, coefficient\n'
+            out += 'B061F09    %4s %13s\n' \
+                % (0, formatRESP(self.FIR_coefficient, 6))
+        out += '#\t\t\n'
+        return out

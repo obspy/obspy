@@ -5,12 +5,22 @@ from obspy.xseed.fields import Integer, Loop
 from lxml.etree import Element, SubElement
 
 
-class Blockette060(Blockette):
+RESP = """\
+#\t\t+            +--------------------------------------------------+        \
+     +
+#\t\t+            |   Response Reference Information,%6s ch %s   |            \
+ +
+#\t\t+            +--------------------------------------------------+        \
+     +
+#\t\t
+B060F03     Number of Stages:                      %s
+B060F04     Stage number:                          %s
+B060F05     Number of Responses:                   %s
+#\t\t
+"""
 
-    def __init__(self, *args, **kwargs):
-        """
-        """
-        self.stages = []
+
+class Blockette060(Blockette):
     """
     Blockette 060: Response Reference Blockette.
     
@@ -57,6 +67,11 @@ class Blockette060(Blockette):
                 Integer(6, "Response lookup key", 4)], omit_tag=True),
         ]),
     ]
+
+    def __init__(self, *args, **kwargs):
+        """
+        """
+        self.stages = []
 
     def parseSEED(self, data, *args, **kwargs):
         """
@@ -105,11 +120,11 @@ class Blockette060(Blockette):
         Write XML.
         """
         if version == '1.0':
-            msg = 'The xsd-validation file for XML-SEED version 1.0 does not '+\
-                  'support Blockette 60. It will be written but please be ' +\
-                  'aware that  the file cannot be validated.\n' + \
-                  'If you want to validate your file please use XSEED version'+\
-                  ' 1.1.'
+            msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
+                  'not support Blockette 60. It will be written but ' + \
+                  'please be aware that the file cannot be validated.\n' + \
+                  'If you want to validate your file please use XSEED ' + \
+                  'version 1.1.'
             raise Warning(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
@@ -142,17 +157,6 @@ class Blockette060(Blockette):
         """
         Returns RESP string.
         """
-        string = \
-        '#\t\t+            +--------------------------------------------------+             +\n' + \
-        '#\t\t+            |   Response Reference Information,%6s ch %s   |             +\n'\
-                    %(station, channel) + \
-        '#\t\t+            +--------------------------------------------------+             +\n' + \
-        '#\t\t\n' + \
-        'B060F03     Number of Stages:                      %s\n' \
-                % len(self.stages) + \
-        'B060F04     Stage number:                          %s\n' \
-            % 1 + \
-        'B060F05     Number of Responses:                   %s\n' \
-            % len(self.stages[0])
-        string += '#\t\t\n'
-        return string
+        out = RESP % (station, channel, len(self.stages), 1,
+                      len(self.stages[0]))
+        return out

@@ -1,12 +1,31 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer
 from obspy.xseed.utils import formatRESP
 
 
+RESP = """\
+#\t\t+                      +------------------------------+                  \
+     +
+#\t\t+                      |   Decimation,%6s ch %s   |                      \
+ +
+#\t\t+                      +------------------------------+                  \
+     +
+#\t\t
+B057F03     Stage sequence number:                 %s
+B057F04     Input sample rate:                     %s
+B057F05     Decimation factor:                     %s
+B057F06     Decimation offset:                     %s
+B057F07     Estimated delay (seconds):             %s
+B057F08     Correction applied (seconds):          %s
+#\t\t
+"""
+
+
 class Blockette057(Blockette):
-    """Blockette 057: Decimation Blockette.
+    """
+    Blockette 057: Decimation Blockette.
     
     Many digital filtration schemes process a high sample rate data stream; 
     filter; then decimate, to produce the desired output. Use this blockette 
@@ -20,7 +39,7 @@ class Blockette057(Blockette):
     Sample:
     057005132 .0000E+02    1    0 0.0000E+00 0.0000E+00
     """
-    
+
     id = 57
     name = "Decimation"
     fields = [
@@ -36,23 +55,11 @@ class Blockette057(Blockette):
         """
         Returns RESP string.
         """
-        string = \
-        '#\t\t+                      +------------------------------+                       +\n' + \
-        '#\t\t+                      |   Decimation,%6s ch %s   |                       +\n'\
-                    %(station, channel) + \
-        '#\t\t+                      +------------------------------+                       +\n' + \
-        '#\t\t\n' + \
-        'B057F03     Stage sequence number:                 %s\n' \
-                    % self.stage_sequence_number + \
-        'B057F04     Input sample rate:                     %s\n' \
-                    % formatRESP(self.input_sample_rate, 6) + \
-        'B057F05     Decimation factor:                     %s\n' \
-                    % self.decimation_factor + \
-        'B057F06     Decimation offset:                     %s\n' \
-                    % self.decimation_offset + \
-        'B057F07     Estimated delay (seconds):             %s\n' \
-                    % formatRESP(self.estimated_delay, 6) + \
-        'B057F08     Correction applied (seconds):          %s\n' \
-                    % formatRESP(self.correction_applied, 6) + \
-        '#\t\t\n'
-        return string
+        out = RESP % (station, channel,
+                      self.stage_sequence_number,
+                      formatRESP(self.input_sample_rate, 6),
+                      self.decimation_factor,
+                      self.decimation_offset,
+                      formatRESP(self.estimated_delay, 6),
+                      formatRESP(self.correction_applied, 6))
+        return out
