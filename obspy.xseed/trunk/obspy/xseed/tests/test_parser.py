@@ -220,6 +220,21 @@ class ParserTestCase(unittest.TestCase):
             self.assertEqual(original_seed, new_seed)
             del parser3, original_seed, new_seed
 
+    def test_readFullSEED(self):
+        """
+        Test the reading of a full-SEED file. The data portion will be omitted.
+        """
+        filename = 'data' + os.sep + 'arclink_full.seed'
+        sp = Parser()
+        sp.parseSEEDFile(filename)
+        # Just checks whether certain blockettes are written.
+        self.assertEqual(len(sp.stations), 1)
+        self.assertEqual([_i.id for _i in sp.volume], [10, 12])
+        self.assertEqual([_i.id for _i in sp.abbreviations],
+                [30, 33, 33, 34, 34, 34, 34, 41, 43, 44, 47, 47, 48, 48, 48])
+        self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
+        self.assertEqual(sp.stations[0][0].network_code, 'GR')
+        self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')

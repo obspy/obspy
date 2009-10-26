@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from lxml.etree import Element, SubElement
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
-from lxml.etree import Element, SubElement
 import sys
 
 
@@ -111,7 +111,7 @@ class Blockette060(Blockette):
                   'please be aware that the file cannot be validated.\n' + \
                   'If you want to validate your file please use XSEED ' + \
                   'version 1.1.'
-            raise Warning(msg)
+            sys.stdout.write(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
         # Loop over stages.
