@@ -188,6 +188,12 @@ class libmseed(object):
         return trace_list
 
     def clear(self, msf, msr):
+        """
+        Method for deallocating MSFileParam and MSRecord structure.
+        
+        @param msf: MSFileParam structure.
+        @param msr: MSRecord structure.
+        """
         clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                None, -1, None, None, 0, 0, 0)
 
@@ -203,9 +209,13 @@ class libmseed(object):
         containing the data values as a numpy array.
 
         @param filename: Name of MiniSEED file.
-        @param reclen, timetol, sampratetol, dataflag, skipnotdata,
-            dataquality, verbose: These are passed directly to the 
-            readFileToTraceGroup method.
+        @param reclen: Directly to the readFileToTraceGroup method.
+        @param timetol: Directly to the readFileToTraceGroup method.
+        @param sampratetol: Directly to the readFileToTraceGroup method.
+        @param dataflag: Directly to the readFileToTraceGroup method.
+        @param skipnotdata: Directly to the readFileToTraceGroup method.
+        @param dataquality: Directly to the readFileToTraceGroup method.
+        @param verbose: Directly to the readFileToTraceGroup method.
         """
         # Create empty list that will contain all traces.
         trace_list = []
@@ -302,7 +312,7 @@ class libmseed(object):
         @param sampratetol: Sample rate tolerance, defaults to -1 (rate
             dependent)
         @param dataflag: Controls whether data samples are unpacked, defaults
-            to true (0).
+            to true (1).
         @param skipnotdata: If true (not zero) any data chunks read that to do
             not have valid data record indicators will be skipped. Defaults to
             true (1).
@@ -347,11 +357,12 @@ class libmseed(object):
             has the number 0. Negative numbers will start counting from the end
             of the file, e.g. -1 is the last complete record.
         @rtype: LP_MSRecord, LP_MSFileParam
-        @required: LP_MSRecord (msr), LP_MSFileParam (msf) need to be deallocated
-            with the function call:
-            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                                   None, -1, None, None, 0, 0, 0)
-            or the wrapper method around it self.clear(msf, msr)
+        @return: msr, msf MSRecord structure and MSFileParam structure
+        @requires: LP_MSRecord (msr), LP_MSFileParam (msf) need to be deallocated
+            with the function call
+            C{clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr), None, -1, None,
+            None, 0, 0, 0)}
+            or the wrapper method around it C{self.clear(msf, msr)}
         """
         # Get some information about the file.
         f = open(filename, 'rb')
@@ -597,15 +608,15 @@ class libmseed(object):
         section of the data header in a MiniSEED file and returns the total
         count for each flag type.
         
-        Data quality flags:
-          [Bit 0] - Amplifier saturation detected (station dependent)
-          [Bit 1] - Digitizer clipping detected
-          [Bit 2] - Spikes detected
-          [Bit 3] - Glitches detected
-          [Bit 4] - Missing/padded data present
-          [Bit 5] - Telemetry synchronization error
-          [Bit 6] - A digital filter may be charging
-          [Bit 7] - Time tag is questionable
+        Data quality flags
+         - [Bit 0] Amplifier saturation detected (station dependent)
+         - [Bit 1] Digitizer clipping detected
+         - [Bit 2] Spikes detected
+         - [Bit 3] Glitches detected
+         - [Bit 4] Missing/padded data present
+         - [Bit 5] Telemetry synchronization error
+         - [Bit 6] A digital filter may be charging
+         - [Bit 7] Time tag is questionable
         
         This will only work correctly if each record in the file has the same
         record length.
