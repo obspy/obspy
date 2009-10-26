@@ -52,3 +52,21 @@ seis = seisDC.retrieve_seismograms(req)
 print "seis[0] has %d points and starts at %s" % (seis[0].num_points, \
         seis[0].begin_time.date_time)
 
+seis_data = seis[0].data
+_i = seis_data.encoded_values[0] # 8 values in total
+
+# src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
+# src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
+compression = _i.compression
+byte_order = _i.byte_order
+npts = _i.num_points
+data = _i.values
+
+fmt = "Extracted data. First of %s records has %d points, type %d \
+compressed, byte order %d, type of data %s, byte length of data is %s"
+print fmt % ( len(seis_data.encoded_values), npts, compression, byte_order, 
+              type(data), len(data) )
+
+# http://www.seis.sc.edu/software/SeedCodec/apidocs/edu/iris/dmc/seedcodec/package-summary.html
+# http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/sac/FissuresToSac.html
+import pdb; pdb.set_trace()
