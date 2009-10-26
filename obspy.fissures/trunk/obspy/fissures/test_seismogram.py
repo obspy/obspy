@@ -71,7 +71,11 @@ print fmt % ( len(seis_data.encoded_values), npts, compression, byte_order,
 # http://www.seis.sc.edu/software/SeedCodec/apidocs/edu/iris/dmc/seedcodec/package-summary.html
 # http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/sac/FissuresToSac.html
 from obspy.mseed import libmseed
-import ctypes as C
 mseed = libmseed()
-x = mseed.unpack_steim2(data, npts, swapflag=1)
+data_ints = mseed.unpack_steim2(data, npts, swapflag=1)
+
+print "Extracted data, length %d, type %s, dtype %s" % (len(data_ints), \
+        type(data_ints), data_ints.dtype)
+
+
 import pdb; pdb.set_trace()
