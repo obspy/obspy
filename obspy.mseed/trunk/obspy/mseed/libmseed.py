@@ -11,7 +11,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord
+    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME
 from struct import unpack
 import ctypes as C
 import math
@@ -1134,3 +1134,28 @@ class libmseed(object):
                 chain.contents.next = clibmseed.mst_init(None)
                 chain = chain.contents.next
         return mstg
+
+    def unpack_steim2(self, data_string, npts, swapflag=0, verbose=0):
+            """
+            Unpack steim2 compressed data given as string.
+            
+            @param data_string: data as string
+            @param npts: number of data points
+            @param swapflag: Swap bytes, defaults to 0
+            @return: Return data as numpy.ndarray of dtype int32
+            """
+            dbuf = C.create_string_buffer(data_string)
+            #dbuf = C.c_void_p.from_address(id(data_string))
+            datasize = len(dbuf)
+            samplecnt = npts
+            datasamples = N.zeros(npts ,dtype='int32')
+            diffbuff = N.zeros(npts ,dtype='int32')
+            x0 = C.c_int32()
+            xn = C.c_int32()
+            nsamples = clibmseed.msr_unpack_steim2( \
+                    C.cast(dbuf, C.POINTER(FRAME)), datasize,
+                    samplecnt, samplecnt, datasamples, diffbuff,
+                    C.byref(x0), C.byref(xn), swapflag, verbose)
+            if nsamples != npts:
+                raise Exception("Error in unpack_steim2")
+            return datasamples

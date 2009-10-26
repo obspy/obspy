@@ -54,10 +54,11 @@ print "seis[0] has %d points and starts at %s" % (seis[0].num_points, \
 
 seis_data = seis[0].data
 _i = seis_data.encoded_values[0] # 8 values in total
-
 # src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
 # src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
 compression = _i.compression
+# src/IfTimeSeries.idl:52:       *  FALSE = big endian format -
+# src/IfTimeSeries.idl:54:       *  TRUE  = little endian format -
 byte_order = _i.byte_order
 npts = _i.num_points
 data = _i.values
@@ -69,4 +70,8 @@ print fmt % ( len(seis_data.encoded_values), npts, compression, byte_order,
 
 # http://www.seis.sc.edu/software/SeedCodec/apidocs/edu/iris/dmc/seedcodec/package-summary.html
 # http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/sac/FissuresToSac.html
+from obspy.mseed import libmseed
+import ctypes as C
+mseed = libmseed()
+x = mseed.unpack_steim2(data, npts, swapflag=1)
 import pdb; pdb.set_trace()
