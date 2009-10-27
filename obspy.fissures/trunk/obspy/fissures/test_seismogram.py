@@ -2,15 +2,15 @@ from omniORB import CORBA
 import CosNaming
 from idl import Fissures
 
-orb = CORBA.ORB_init( [
+orb = CORBA.ORB_init([
     #"-ORBtraceLevel", "40",
-    "-ORBgiopMaxMsgSize","2097152",
-    "-ORBInitRef", 
+    "-ORBgiopMaxMsgSize", "2097152",
+    "-ORBInitRef",
         "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService",
     ], CORBA.ORB_ID)
 
 obj = orb.resolve_initial_references("NameService")
-name =  [CosNaming.NameComponent(id='Fissures', kind='dns'),
+name = [CosNaming.NameComponent(id='Fissures', kind='dns'),
          CosNaming.NameComponent(id='edu', kind='dns'),
          CosNaming.NameComponent(id='iris', kind='dns'),
          CosNaming.NameComponent(id='dmc', kind='dns'),
@@ -22,13 +22,16 @@ netDC = rootContext.resolve(name)
 netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
 netFind = netDC._get_a_finder()
 netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
-networkCode = "IU"
-network =  netFind.retrieve_by_code(networkCode)[0]
+networkCode = "GE"
+network = netFind.retrieve_by_code(networkCode)[0]
 network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
 stations = network.retrieve_stations()
-channels = network.retrieve_for_station(stations[0].id)
+stations2 = [s for s in stations if s.id.station_code == 'APE']
 
-name =  [CosNaming.NameComponent(id='Fissures', kind='dns'),
+channels = network.retrieve_for_station(stations2[0].id)
+
+
+name = [CosNaming.NameComponent(id='Fissures', kind='dns'),
          CosNaming.NameComponent(id='edu', kind='dns'),
          CosNaming.NameComponent(id='iris', kind='dns'),
          CosNaming.NameComponent(id='dmc', kind='dns'),
@@ -37,45 +40,74 @@ name =  [CosNaming.NameComponent(id='Fissures', kind='dns'),
 seisDC = rootContext.resolve(name)
 seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
 
-t1 = Fissures.Time("2003-06-20T06:23:25.0000Z", -1)
-t2 = Fissures.Time("2003-06-20T06:43:25.0000Z", -1)
-req = [Fissures.IfSeismogramDC.RequestFilter(channels[0].id, t1, t2)]
+t1 = Fissures.Time("2003-06-20T06:00:00.0000Z", -1)
+t2 = Fissures.Time("2003-06-20T08:00:00.0000Z", -1)
 
-print "querying for %s.%s.%s.%s" % ( \
-        req[0].channel_id.network_id.network_code,
-        req[0].channel_id.station_code,
-        req[0].channel_id.site_code.strip(),
-        req[0].channel_id.channel_code )
+# request all channels
+req = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) for c in channels]
 
 seis = seisDC.retrieve_seismograms(req)
 
-print "seis[0] has %d points and starts at %s" % (seis[0].num_points, \
-        seis[0].begin_time.date_time)
 
-seis_data = seis[0].data
-_i = seis_data.encoded_values[0] # 8 values in total
-# src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
-# src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
-compression = _i.compression
-# src/IfTimeSeries.idl:52:       *  FALSE = big endian format -
-# src/IfTimeSeries.idl:54:       *  TRUE  = little endian format -
-byte_order = _i.byte_order
-npts = _i.num_points
-data = _i.values
-
-fmt = "Extracted data. First of %s records has %d points, type %d \
-compressed, byte order %d, type of data %s, byte length of data is %s"
-print fmt % ( len(seis_data.encoded_values), npts, compression, byte_order, 
-              type(data), len(data) )
 
 # http://www.seis.sc.edu/software/SeedCodec/apidocs/edu/iris/dmc/seedcodec/package-summary.html
 # http://www.seis.sc.edu/software/fissuresUtil/xref/edu/sc/seis/fissuresUtil/sac/FissuresToSac.html
+
+# build up obspy Trace object
+from obspy.core import Trace, UTCDateTime, Stream
 from obspy.mseed import libmseed
+import numpy as np
+import sys
+
+if sys.byteorder == 'little':
+    byteorder = True
+else:
+    byteorder = False
+
 mseed = libmseed()
-data_ints = mseed.unpack_steim2(data, npts, swapflag=1)
 
-print "Extracted data, length %d, type %s, dtype %s" % (len(data_ints), \
-        type(data_ints), data_ints.dtype)
+st = Stream()
+for sei in seis:
+    tr = Trace()
+    tr.stats.starttime = UTCDateTime(sei.begin_time.date_time)
+    tr.stats.npts = sei.num_points
+    # calculate sampling rate
+    if str(sei.sampling_info.interval.the_units.the_unit_base) != 'SECOND':
+        raise Exception("Wrong unit!")
+    value = sei.sampling_info.interval.value
+    power = sei.sampling_info.interval.the_units.power
+    multi_factor = sei.sampling_info.interval.the_units.multi_factor
+    exponent = sei.sampling_info.interval.the_units.exponent
+    # sampling rate is given in Hertz within ObsPy!
+    delta = pow(value * pow(10, power) * multi_factor, exponent)
+    sr = sei.num_points / float(delta)
+    tr.stats.sampling_rate = sr
+    # calculate end time 
+    temp = 1 / sr * (sei.num_points - 1)
+    # set all kind of stats
+    tr.stats.endtime = tr.stats.starttime + temp
+    tr.stats.station = sei.channel_id.station_code
+    tr.stats.network = sei.channel_id.network_id.network_code
+    tr.stats.channel = sei.channel_id.channel_code
+    tr.stats.location = sei.channel_id.site_code.strip()
+    # loop over data chunks
+    data = []
+    for chunk in sei.data.encoded_values:
+        # for now we only support STEIM2
+        # src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
+        # src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
+        compression = chunk.compression
+        if compression != 11:
+            raise NotImplementedError("Compression not implemented")
+        # swap byte order in decompression routine if byte orders differ 
+        # src/IfTimeSeries.idl:52:       *  FALSE = big endian format -
+        # src/IfTimeSeries.idl:54:       *  TRUE  = little endian format -
+        swapflag = (byteorder != chunk.byte_order)
+        data.append(mseed.unpack_steim2(chunk.values, chunk.num_points,
+                                        swapflag=swapflag))
+    # merge data chunks
+    tr.data = np.concatenate(data)
+    tr._verify()
+    st.append(tr)
 
-
-import pdb; pdb.set_trace()
+st.plot()
