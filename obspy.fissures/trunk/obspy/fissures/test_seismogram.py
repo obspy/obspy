@@ -30,18 +30,18 @@ stations2 = [s for s in stations if s.id.station_code == 'APE']
 
 channels = network.retrieve_for_station(stations2[0].id)
 
-
+#http://www.iris.edu/dhi/servers.htm
 name = [CosNaming.NameComponent(id='Fissures', kind='dns'),
          CosNaming.NameComponent(id='edu', kind='dns'),
          CosNaming.NameComponent(id='iris', kind='dns'),
          CosNaming.NameComponent(id='dmc', kind='dns'),
          CosNaming.NameComponent(id='DataCenter', kind='interface'),
-         CosNaming.NameComponent(id='IRIS_PondDataCenter', kind='object_FVer1.0')]
+         CosNaming.NameComponent(id='IRIS_DataCenter', kind='object_FVer1.0')]
 seisDC = rootContext.resolve(name)
 seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
 
-t1 = Fissures.Time("2003-06-20T06:00:00.0000Z", -1)
-t2 = Fissures.Time("2003-06-20T08:00:00.0000Z", -1)
+t1 = Fissures.Time("2003-06-20T05:59:00.0000Z", -1)
+t2 = Fissures.Time("2003-06-20T06:32:00.0000Z", -1)
 
 # request all channels
 req = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) for c in channels]
@@ -67,7 +67,14 @@ else:
 mseed = libmseed()
 
 st = Stream()
+i = 0
 for sei in seis:
+    if sei.num_points == 0:
+        #XXX these are mostly blocketes R with compression 0
+        #XXX e.g. 000000R APE    HHNGE
+        #print sei.data.encoded_values[0].compression
+        #print sei.data.encoded_values[0].values
+        continue
     tr = Trace()
     tr.stats.starttime = UTCDateTime(sei.begin_time.date_time)
     tr.stats.npts = sei.num_points
@@ -93,12 +100,13 @@ for sei in seis:
     # loop over data chunks
     data = []
     for chunk in sei.data.encoded_values:
+        i+=1
         # for now we only support STEIM2
         # src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
         # src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
         compression = chunk.compression
         if compression != 11:
-            raise NotImplementedError("Compression not implemented")
+            raise NotImplementedError("Compression %d not implemented" % compression)
         # swap byte order in decompression routine if byte orders differ 
         # src/IfTimeSeries.idl:52:       *  FALSE = big endian format -
         # src/IfTimeSeries.idl:54:       *  TRUE  = little endian format -
@@ -110,4 +118,5 @@ for sei in seis:
     tr._verify()
     st.append(tr)
 
-st.plot()
+print st
+import pdb; pdb.set_trace()
