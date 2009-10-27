@@ -37,6 +37,13 @@ class WaveformTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_plotEmptyStream(self):
+        """
+        Plotting of an empty stream should raise a warning.
+        """
+        st = Stream()
+        self.assertRaises(IndexError, st.plot)
+
     def test_WaveformStraightPlotting(self):
         """
         Create waveform plotting examples in tests/output directory.

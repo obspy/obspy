@@ -109,6 +109,10 @@ def plotWaveform(stream_object, outfile=None, format=None,
         stream_object = Stream([stream_object])
     elif not isinstance(stream_object, Stream):
         raise TypeError
+    # Stream object should contain at least one Trace
+    if len(stream_object) < 1:
+        msg = "Empty stream object"
+        raise IndexError(msg)
     # Default width.
     if not size:
         temp_width = 800
