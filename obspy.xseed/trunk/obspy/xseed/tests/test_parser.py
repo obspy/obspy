@@ -224,7 +224,7 @@ class ParserTestCase(unittest.TestCase):
         """
         Test the reading of a full-SEED file. The data portion will be omitted.
         """
-        filename = 'data' + os.sep + 'arclink_full.seed'
+        filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser()
         sp.parseSEEDFile(filename)
         # Just checks whether certain blockettes are written.
