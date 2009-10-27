@@ -433,6 +433,13 @@ clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
         C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
+clibmseed.msr_unpack_steim1.argtypes = [C.POINTER(FRAME), C.c_int, 
+        C.c_int, C.c_int, 
+        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+        C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
+clibmseed.msr_unpack_steim2.restype = C.c_int
+
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely differenct to C.c_char_p which is a string
 clibmseed.mst_packgroup.argtypes = [ C.POINTER(MSTraceGroup),

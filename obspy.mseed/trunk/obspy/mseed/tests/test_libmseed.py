@@ -11,7 +11,7 @@ from obspy.mseed.libmseed import clibmseed
 import copy
 import ctypes as C
 import inspect
-import numpy as N
+import numpy as np
 import os
 import random
 import threading
@@ -81,7 +81,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                     [-427, -416, -393, -430, -426, -407, -401, -422, -439],
                     [-396, -399, -387, -384, -393, -380, -365, -394, -426],
                     [-389, -428, -409, -389, -388, -405, -390, -368, -368]]
-        #trace_list = mseed.readMSTracesViaRecords(mseed_file)
         i = 0
         trace_list = mseed.readMSTracesViaRecords(mseed_file)
         for header, data in trace_list:
@@ -202,7 +201,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                     new_trace_list = mseed.readMSTraces(temp_file)
                     del new_trace_list[0][0]['dataquality']
                     self.assertEqual(testheader, new_trace_list[0][0])
-                    N.testing.assert_array_equal(trace_list[0][1],
+                    np.testing.assert_array_equal(trace_list[0][1],
                                                  new_trace_list[0][1])
                     os.remove(temp_file)
 
@@ -243,7 +242,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Compare new_trace_list with trace_list
         for _i in xrange(len(trace_list)):
             self.assertEqual(trace_list[_i][0], new_trace_list[_i][0])
-            N.testing.assert_array_equal(trace_list[_i][1],
+            np.testing.assert_array_equal(trace_list[_i][1],
                                          new_trace_list[_i][1])
         os.remove(outfile)
 
@@ -682,13 +681,38 @@ class LibMSEEDTestCase(unittest.TestCase):
         for _i in xrange(n_threads - 1):
             self.assertEqual(values[_i][0][0],
                              values[_i + 1][0][0])
-            N.testing.assert_array_equal(values[_i][0][1],
+            np.testing.assert_array_equal(values[_i][0][1],
                                          values[_i + 1][0][1])
             temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
             os.remove(temp_file)
         temp_file = os.path.join(self.path, 'temp_file_' + str(_i + 1))
         os.remove(temp_file)
 
+    def test_unpackSteim2(self):
+        """
+        Test decompression of Steim2 strings. Remove 128 Bytes of header
+        by hand, see SEEDManual_V2.4.pdf page 100.
+        """
+        mseed = libmseed()
+        steim2_file = os.path.join(self.path, 'steim2.mseed')
+        data_string = open(steim2_file).read()[128:] #128 Bytes header
+        data = mseed.unpack_steim2(data_string, 5980, swapflag=1, verbose=0)
+        data_record = mseed.readMSTracesViaRecords(steim2_file)[0][1]
+        np.testing.assert_array_equal(data,data_record)
+
+
+    def test_unpackSteim1(self):
+        """
+        Test decompression of Steim1 strings. Remove 64 Bytes of header
+        by hand, see SEEDManual_V2.4.pdf page 100.
+        """
+        mseed = libmseed()
+        steim1_file = os.path.join(self.path, 
+            'BW.BGLD.__.EHE.D.2008.001.first_record')
+        data_string = open(steim1_file).read()[64:] #64 Bytes header
+        data = mseed.unpack_steim1(data_string, 412, swapflag=1, verbose=0)
+        data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
+        np.testing.assert_array_equal(data,data_record)
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')

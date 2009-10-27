@@ -1144,8 +1144,6 @@ class libmseed(object):
         @param swapflag: Swap bytes, defaults to 0
         @return: Return data as numpy.ndarray of dtype int32
         """
-        #dbuf = C.create_string_buffer(data_string)
-        #dbuf = C.c_void_p.from_address(id(data_string))
         dbuf = data_string
         datasize = len(dbuf)
         samplecnt = npts
@@ -1159,4 +1157,29 @@ class libmseed(object):
                 C.byref(x0), C.byref(xn), swapflag, verbose)
         if nsamples != npts:
             raise Exception("Error in unpack_steim2")
+        return datasamples
+
+
+    def unpack_steim1(self, data_string, npts, swapflag=0, verbose=0):
+        """
+        Unpack steim1 compressed data given as string.
+        
+        @param data_string: data as string
+        @param npts: number of data points
+        @param swapflag: Swap bytes, defaults to 0
+        @return: Return data as numpy.ndarray of dtype int32
+        """
+        dbuf = data_string
+        datasize = len(dbuf)
+        samplecnt = npts
+        datasamples = N.zeros(npts , dtype='int32')
+        diffbuff = N.zeros(npts , dtype='int32')
+        x0 = C.c_int32()
+        xn = C.c_int32()
+        nsamples = clibmseed.msr_unpack_steim1(\
+                C.cast(dbuf, C.POINTER(FRAME)), datasize,
+                samplecnt, samplecnt, datasamples, diffbuff,
+                C.byref(x0), C.byref(xn), swapflag, verbose)
+        if nsamples != npts:
+            raise Exception("Error in unpack_steim1")
         return datasamples
