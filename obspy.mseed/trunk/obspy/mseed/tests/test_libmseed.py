@@ -695,11 +695,10 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = libmseed()
         steim2_file = os.path.join(self.path, 'steim2.mseed')
-        data_string = open(steim2_file).read()[128:] #128 Bytes header
+        data_string = open(steim2_file, 'rb').read()[128:] #128 Bytes header
         data = mseed.unpack_steim2(data_string, 5980, swapflag=1, verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim2_file)[0][1]
-        np.testing.assert_array_equal(data,data_record)
-
+        np.testing.assert_array_equal(data, data_record)
 
     def test_unpackSteim1(self):
         """
@@ -707,12 +706,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         by hand, see SEEDManual_V2.4.pdf page 100.
         """
         mseed = libmseed()
-        steim1_file = os.path.join(self.path, 
-            'BW.BGLD.__.EHE.D.2008.001.first_record')
-        data_string = open(steim1_file).read()[64:] #64 Bytes header
+        steim1_file = os.path.join(self.path,
+                                   'BW.BGLD.__.EHE.D.2008.001.first_record')
+        data_string = open(steim1_file, 'rb').read()[64:] #64 Bytes header
         data = mseed.unpack_steim1(data_string, 412, swapflag=1, verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
-        np.testing.assert_array_equal(data,data_record)
+        np.testing.assert_array_equal(data, data_record)
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
