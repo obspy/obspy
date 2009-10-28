@@ -4,7 +4,7 @@
 04303970001RSSTS2NG1500~A001003+6.00770E+07+1.00000E+00002+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00005-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00-3.70040E-02-3.70160E-02+0.00000E+00+0.00000E+00-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.00000E+00+0.00000E+00
 
 --01-XSEED
-<response_poles_and_zeros_dictionary blockette="043">
+<response_poles_and_zeros blockette="043">
   <response_lookup_key>1</response_lookup_key>
   <response_name>RSSTS2NG1500</response_name>
   <response_type>A</response_type>
@@ -46,4 +46,4 @@
     <real_pole_error>+0.00000E+00</real_pole_error>
     <imaginary_pole_error>+0.00000E+00</imaginary_pole_error>
   </complex_pole>
-</response_poles_and_zeros_dictionary>
+</response_poles_and_zeros>

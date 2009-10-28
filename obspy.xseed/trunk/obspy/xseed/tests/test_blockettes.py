@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 
+from StringIO import StringIO
 from glob import iglob
 from lxml import etree
 from obspy.xseed.blockette import Blockette054
 from obspy.xseed.blockette.blockette import BlocketteLengthException
-from StringIO import StringIO
+import inspect
+import os
 import sys
 import unittest
+
 
 class BlocketteTestCase(unittest.TestCase):
     """
     Test cases for all blockettes..
     """
     def setUp(self):
-        pass
+        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
 
     def tearDown(self):
         pass
-    
+
     def test_invalidBlocketteLength(self):
         """
         A wrong blockette length should raise an exception.
@@ -32,7 +35,7 @@ class BlocketteTestCase(unittest.TestCase):
         Parses the test definition file and creates a list of it.
         """
         # Create a new empty list to store all information of the test in it.
-        test_examples= []
+        test_examples = []
         # Now read the corresponding file and parse it.
         file = open(blkt_file, 'r')
         # Helper variable to parse the file. Might be a little bit slow but its
@@ -65,7 +68,7 @@ class BlocketteTestCase(unittest.TestCase):
         # Simplify and Validate the list.
         self.simplifyAndValidateAndCreateDictionary(test_examples)
         return test_examples
-    
+
     def simplifyAndValidateAndCreateDictionary(self, examples):
         """
         Takes an examples list and combines the XSEED strings and validates the
@@ -113,7 +116,7 @@ class BlocketteTestCase(unittest.TestCase):
             for part in examples[_i]:
                 ex_dict[part[0]] = part[1]
             examples[_i] = ex_dict
-                    
+
     def SEEDAndXSEEDConversion(self, test_examples, blkt_number):
         """
         Takes everything in the prepared list and tests the SEED/XSEED
@@ -131,7 +134,7 @@ class BlocketteTestCase(unittest.TestCase):
                 elif key == 'XSEED':
                     versions = []
                     break
-                versions.append(key.replace('XSEED-',''))
+                versions.append(key.replace('XSEED-', ''))
             # Create several blockette instances. One to read from SEED and one
             # for each XSEED version.
             blockette_instances = {}
@@ -153,9 +156,11 @@ class BlocketteTestCase(unittest.TestCase):
                 if key == 'SEED':
                     if blkt_number == '060':
                         temp = StringIO(example[key])
+                        blockette_instances[key].parseSEED(temp,
+                                                           len(example[key]))
                     else:
                         temp = example[key]
-                    blockette_instances[key].parseSEED(temp)
+                        blockette_instances[key].parseSEED(temp)
                 else:
                     blockette_instances[key].parseXML(etree.fromstring(\
                                                                 example[key]))
@@ -166,8 +171,8 @@ class BlocketteTestCase(unittest.TestCase):
                 # the traceback.
                 self.assertEqual(blockette_instances[key].getSEED(), \
                                  example['SEED'] ,
-                                 'Blockette ' + blkt_number +\
-                                 ' - Getting SEED from ' + key +\
+                                 'Blockette ' + blkt_number + \
+                                 ' - Getting SEED from ' + key + \
                                  '\n' + blockette_instances[key].getSEED() + \
                                  '\n!=\n' + example['SEED'])
                 # Getting all XSEED representations.
@@ -175,19 +180,20 @@ class BlocketteTestCase(unittest.TestCase):
                     self.assertEqual(\
                         etree.tostring(blockette_instances[key].getXML()), \
                         example['XSEED'],
-                        'Blockette ' + blkt_number +\
+                        'Blockette ' + blkt_number + \
                          ' - Getting XSEED from ' + key + '\n' + \
                         etree.tostring(blockette_instances[key].getXML()) + \
                         '\n!=\n' + example['XSEED'])
-    
+
     def test_allBlockettes(self):
         """
         Tests all Blockettes.
         """
         # Loop over all files in the blockette-tests directory.
-        for blkt_file in iglob('blockette-tests/blockette*.txt'):
+        path = os.path.join(self.path, 'blockette-tests', 'blockette*.txt')
+        for blkt_file in iglob(path):
             # Get blockette number.
-            blkt_number = blkt_file[25:28]
+            blkt_number = blkt_file[-7:-4]
             # Check whether the blockette class can be loaded.
             try:
                 __import__('obspy.xseed.blockette.blockette' + blkt_number)
@@ -199,6 +205,7 @@ class BlocketteTestCase(unittest.TestCase):
             # The last step is to actually test the conversions to and from
             # SEED/XSEED for every example in every direction.
             self.SEEDAndXSEEDConversion(test_examples, blkt_number)
+
 
 def suite():
     return unittest.makeSuite(BlocketteTestCase, 'test')
