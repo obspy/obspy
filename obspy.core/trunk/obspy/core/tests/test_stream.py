@@ -43,9 +43,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(stream[0], stream.traces[0])
         self.assertEqual(stream[-1], stream.traces[-1])
         self.assertEqual(stream[3], stream.traces[3])
-        self.assertEqual(stream[0:], stream.traces[0:])
-        self.assertEqual(stream[:2], stream.traces[:2])
-        self.assertEqual(stream[:], stream.traces[:])
 
     def test_adding(self):
         """
@@ -158,7 +155,7 @@ class StreamTestCase(unittest.TestCase):
         # should fail.
         self.assertRaises(TypeError, stream.extend, stream[0])
         self.assertRaises(TypeError, stream.extend, 1)
-        self.assertRaises(TypeError, stream.extend, stream[0:2].append(1))
+        self.assertRaises(TypeError, stream.extend, [stream[0], 1])
 
     def test_insert(self):
         """
@@ -202,7 +199,7 @@ class StreamTestCase(unittest.TestCase):
         # Using insert without a single Traces or a list of Traces should fail.
         self.assertRaises(TypeError, stream.insert, 1, 1)
         self.assertRaises(TypeError, stream.insert, stream[0], stream[0])
-        self.assertRaises(TypeError, stream.insert, 1, stream[0:2].append(1))
+        self.assertRaises(TypeError, stream.insert, 1, [stream[0], 1])
 
     def test_getGaps(self):
         """
@@ -262,6 +259,21 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
+    def test_getslice(self):
+        """
+        Tests the slicing of Stream objects.
+        """
+        stream = read(self.mseed_file)
+        self.assertEqual(stream[0:], stream[0:])
+        self.assertEqual(stream[:2], stream[:2])
+        self.assertEqual(stream[:], stream[:])
+        self.assertEqual(len(stream), 4)
+        new_stream = stream[1:3]
+        self.assertTrue(isinstance(new_stream, Stream))
+        self.assertEqual(len(new_stream), 2)
+        self.assertEqual(new_stream[0].stats, stream[1].stats)
+        self.assertEqual(new_stream[1].stats, stream[2].stats)
+
     def test_pop2(self):
         """
         Test the pop method of the Stream objects.
@@ -283,18 +295,18 @@ class StreamTestCase(unittest.TestCase):
         """
         stream = read(self.mseed_file)
         # Make a copy of the Traces.
-        traces = deepcopy(stream[:])
+        stream2 = deepcopy(stream[:])
         # Use the remove method of the Stream object and of the list of Traces.
         stream.remove(1)
-        del(traces)[1]
+        del(stream2.traces[1])
         stream.remove(-1)
-        del(traces)[-1]
+        del(stream2.traces[-1])
         # Compare all remaining Traces.
         self.assertEqual(2, len(stream))
-        self.assertEqual(2, len(traces))
-        for _i in range(len(traces)):
-            self.assertEqual(traces[_i].stats, stream[_i].stats)
-            N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
+        self.assertEqual(2, len(stream2))
+        for _i in range(len(stream2)):
+            self.assertEqual(stream2[_i].stats, stream[_i].stats)
+            N.testing.assert_array_equal(stream2[_i].data, stream[_i].data)
 
     def test_reverse(self):
         """

@@ -118,6 +118,16 @@ class Stream(object):
             return_string = return_string + '\n' + str(_i)
         return return_string
 
+    def __eq__(self, other):
+        """
+        """
+        if not isinstance(other, Stream):
+            return False
+        if self.traces != other.traces:
+            return False
+        return True
+
+
     def __getitem__(self, index):
         """ 
         __getitem__ method of obspy.Stream objects. 
@@ -125,6 +135,14 @@ class Stream(object):
         @return: Trace objects 
         """
         return self.traces[index]
+
+    def __getslice__(self, i, j):
+        """
+        __getslice__ method of obspy.Stream objects.
+        
+        @return: Stream object
+        """
+        return Stream(traces=self.traces[i:j])
 
     def append(self, trace, reference=False):
         """
@@ -162,6 +180,8 @@ class Stream(object):
                 self.traces.extend(copy.deepcopy(trace_list))
             else:
                 self.traces.extend(trace_list)
+        elif isinstance(trace_list, Stream):
+            self.extend(trace_list.traces, reference=reference)
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
@@ -242,6 +262,8 @@ class Stream(object):
                     self.traces.insert(index + _i, copy.deepcopy(object[_i]))
                 else:
                     self.traces.insert(index + _i, object[_i])
+        elif isinstance(object, Stream):
+            self.insert(index, object.traces, reference=reference)
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)
