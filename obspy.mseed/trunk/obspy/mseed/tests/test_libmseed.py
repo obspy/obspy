@@ -17,6 +17,7 @@ import random
 import threading
 import time
 import unittest
+import sys
 
 
 class LibMSEEDTestCase(unittest.TestCase):
@@ -27,6 +28,11 @@ class LibMSEEDTestCase(unittest.TestCase):
         # directory where the test files are located
         self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(self.dir, 'data')
+        # mseed steim compression is big endian
+        if sys.byteorder == 'little':
+            self.swap = 1
+        else:
+            self.swap = 0
 
     def tearDown(self):
         pass
@@ -696,7 +702,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = libmseed()
         steim2_file = os.path.join(self.path, 'steim2.mseed')
         data_string = open(steim2_file, 'rb').read()[128:] #128 Bytes header
-        data = mseed.unpack_steim2(data_string, 5980, swapflag=1, verbose=0)
+        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap, verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim2_file)[0][1]
         np.testing.assert_array_equal(data, data_record)
 
@@ -709,7 +715,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path,
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         data_string = open(steim1_file, 'rb').read()[64:] #64 Bytes header
-        data = mseed.unpack_steim1(data_string, 412, swapflag=1, verbose=0)
+        data = mseed.unpack_steim1(data_string, 412, swapflag=self.swap, verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
         np.testing.assert_array_equal(data, data_record)
 
