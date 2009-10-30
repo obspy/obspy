@@ -3,10 +3,10 @@
 The seisan.core test suite.
 """
 
+from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
 import inspect
 import os
 import unittest
-from obspy.seisan.core import _getVersion
 
 
 class CoreTestCase(unittest.TestCase):
@@ -23,6 +23,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_getVersion(self):
         """
+        Tests resulting version strings of SEISAN file.
         """
         # 1
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
@@ -32,6 +33,29 @@ class CoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         data = open(file, 'rb').read(80 * 12)
         self.assertEqual(_getVersion(data), ('PC', 32, 7))
+
+    def test_isSEISAN(self):
+        """
+        Tests SEISAN file check.
+        """
+        # 1
+        file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
+        self.assertTrue(isSEISAN(file))
+        # 2
+        file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
+        self.assertTrue(isSEISAN(file))
+
+    def test_readSEISAN(self):
+        """
+        Test SEISAN file reader.
+        """
+        # 1
+        file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
+        stream = readSEISAN(file)
+        # 2
+        #file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
+        #self.assertTrue(isSEISAN(file))
+
 
 
 def suite():

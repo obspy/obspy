@@ -90,8 +90,68 @@ def readSEISAN(filename, headonly=False, **kwargs):
     @rtype: L{obspy.Stream}.
     @return: A ObsPy Stream object.
     """
-    raise NotImplementedError
+    # read data chunk from given file
+    fh = open(filename, 'rb')
+    data = fh.read(80 * 12)
+    # get version info from file
+    (platform, arch, version) = _getVersion(data)
+    # fetch lines
+    fh.seek(0)
+    seisan = {}
+    header = {'seisan': seisan}
+    # start with event file header
+    # line 1
+    data = _readline(fh)
+    seisan['network_name'] = data[1:30]
+    seisan['number_of_channels'] = data[30:33]
+    seisan['year'] = data[33:36]
+    seisan['day'] = data[37:40]
+    seisan['month'] = data[41:43]
+    seisan['hr'] = data[47:49]
+    seisan['min'] = data[50:52]
+    seisan['sec'] = data[53:59]
+    seisan['total_time_window'] = data[60:69]
+    # line 2
+    data = _readline(fh)
+    # line 3
+    # calculate number of lines with channels
+    noc = int(seisan['number_of_channels'])
+    nol = noc // 3 + (noc % 3 and 1)
+    if nol < 10:
+        nol = 10
+    seisan['channels'] = {}
+    for _i in xrange(0, nol):
+        data = _readline(fh)
+        temp = _parseChannel(data[0:28])
+        if temp['station_code']:
+            seisan['channels'][_i * 3] = temp
+        temp = _parseChannel(data[28:52])
+        if temp['station_code']:
+            seisan['channels'][_i * 3 + 1] = temp
+        temp = _parseChannel(data[52:78])
+        if temp['station_code']:
+            seisan['channels'][_i * 3 + 2] = temp
+    # now parse each event file channel header + data
+    for _i in xrange(noc):
+        data = _readline(fh, 1040)
+    import pprint
+    pprint.pprint(seisan)
 
+def _parseChannel(data):
+    temp = {}
+    temp['station_code'] = data[1:5].strip()
+    temp['first_two_components'] = data[5:7]
+    temp['last_component_code'] = data[8]
+    temp['station_code_last_character'] = data[9]
+    temp['start_time_relative_to_event_file_time'] = data[10:17].strip()
+    temp['station_data_interval_length'] = data[18:26].strip()
+    return temp
+
+def _readline(fh, length=80):
+    data = fh.read(length + 8)
+    end = length + 4
+    start = 4
+    return data[start:end]
 
 def writeSEISAN(stream_object, filename, **kwargs):
     """
@@ -102,3 +162,12 @@ def writeSEISAN(stream_object, filename, **kwargs):
     @param filename: SEISAB file to be written.
     """
     raise NotImplementedError
+
+
+class SEISANFile(object):
+    """
+    """
+    def __init__(self, fh):
+        """
+        """
+        self.fh = fh
