@@ -42,8 +42,8 @@ class Blockette061(Blockette):
         Integer(3, "Stage sequence number", 2),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
         FixedString(5, "Symmetry Code", 1, 'U'),
-        Integer(6, "Signal In Units", 3),
-        Integer(7, "Signal Out Units", 3),
+        Integer(6, "Signal In Units", 3, xpath = 34),
+        Integer(7, "Signal Out Units", 3, xpath = 34),
         Integer(8, "Number of Coefficients", 4),
         #REPEAT field 9 for the Number of Coefficients
         Loop("FIR Coefficient", "Number of Coefficients", [

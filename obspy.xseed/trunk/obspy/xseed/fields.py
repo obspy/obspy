@@ -21,6 +21,7 @@ class Field(object):
         self.xseed_version = kwargs.get('xseed_version', None)
         self.version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
+        self.xpath = kwargs.get('xpath', None)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
@@ -151,6 +152,9 @@ class Field(object):
         # reformat float
         if isinstance(self, Float):
             result = self.write(result)
+        # Converts to XPath if necessary.
+        if self.xpath:
+            result = utils.setXPath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
         node.text = unicode(result).strip()
@@ -171,6 +175,10 @@ class Field(object):
             if blockette.debug:
                 print('  %s: set to default value %s' % (self, self.default))
             return
+        # Parse X-Path if necessary. The isdigit test assures legacy support for
+        # XSEED without XPaths.
+        if self.xpath and not text.isdigit():
+            text = utils.getXPath(text)
         # check if already exists
         if hasattr(blockette, self.attribute_name):
             temp = getattr(blockette, self.attribute_name)

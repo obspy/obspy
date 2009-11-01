@@ -23,28 +23,28 @@ HEADER_INFO = {
           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
 # Map blockette names and numbers.
-BLOCKETTE_NAMES = {
-    'volume_identifier' : 10,
-    'volume_station_header_index' : 11,
-    'volume_timespan_index' : 12,
-    'data_format_dictionary' : 30,
-    'comment_description' : 31,
-    'cited_source_dictionary' : 32,
-    'generic_abbreviation' : 33,
-    'units_abbreviations' : 34,
-    'FIR_dictionary' : 41,
-    'response_poles_and_zeros_dictionary' : 43,
-    'station_identifier' : 50,
-    'station_comment' : 51,
-    'channel_identifier' : 52,
-    'response_poles_and_zeros' : 53,
-    'response_coefficients' : 54,
-    'response_list' : 55,
-    'decimation' : 57,
-    'channel_sensitivity_gain' : 58,
-    'channel_comment' : 59,
-    'FIR_response' : 61,
-    'response_polynomial' : 62}
+#BLOCKETTE_NAMES = {
+#    'volume_identifier' : 10,
+#    'volume_station_header_index' : 11,
+#    'volume_timespan_index' : 12,
+#    'data_format_dictionary' : 30,
+#    'comment_description' : 31,
+#    'cited_source_dictionary' : 32,
+#    'generic_abbreviation' : 33,
+#    'units_abbreviations' : 34,
+#    'FIR_dictionary' : 41,
+#    'response_poles_and_zeros' : 43,
+#    'station_identifier' : 50,
+#    'station_comment' : 51,
+#    'channel_identifier' : 52,
+#    'response_poles_and_zeros' : 53,
+#    'response_coefficients' : 54,
+#    'response_list' : 55,
+#    'decimation' : 57,
+#    'channel_sensitivity_gain' : 58,
+#    'channel_comment' : 59,
+#    'FIR_response' : 61,
+#    'response_polynomial' : 62}
 
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
 
@@ -508,7 +508,7 @@ class Parser(object):
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = BLOCKETTE_NAMES[XML_blockette.tag]
+        blockette_id = int(XML_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):

@@ -7,8 +7,8 @@
 <response_coefficients blockette="054">
   <response_type>D</response_type>
   <stage_sequence_number>2</stage_sequence_number>
-  <signal_input_units>3</signal_input_units>
-  <signal_output_units>1</signal_output_units>
+  <signal_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</signal_input_units>
+  <signal_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</signal_output_units>
   <number_of_numerators>0</number_of_numerators>
   <numerators></numerators>
   <number_of_denominators>0</number_of_denominators>

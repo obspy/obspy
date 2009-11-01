@@ -38,8 +38,8 @@ class Blockette054(Blockette):
     fields = [
         FixedString(3, "Response type", 1, 'U'),
         Integer(4, "Stage sequence number", 2),
-        Integer(5, "Signal input units", 3),
-        Integer(6, "Signal output units", 3),
+        Integer(5, "Signal input units", 3, xpath = 34),
+        Integer(6, "Signal output units", 3, xpath = 34),
         Integer(7, "Number of numerators", 4),
         # REPEAT fields 8 — 9 for the Number of numerators:
         Loop('Numerators', "Number of numerators", [

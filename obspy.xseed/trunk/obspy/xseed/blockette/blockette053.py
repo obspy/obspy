@@ -24,8 +24,8 @@ class Blockette053(Blockette):
     fields = [
         FixedString(3, "Transfer function types", 1, 'U'),
         Integer(4, "Stage sequence number", 2),
-        Integer(5, "Stage signal input units", 3),
-        Integer(6, "Stage signal output units", 3),
+        Integer(5, "Stage signal input units", 3, xpath = 34),
+        Integer(6, "Stage signal output units", 3, xpath = 34),
         Float(7, "A0 normalization factor", 12, mask='%+1.5e'),
         Float(8, "Normalization frequency", 12, mask='%+1.5e'),
         Integer(9, "Number of complex zeros", 3),

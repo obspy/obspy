@@ -49,7 +49,7 @@ for root, dirs, files in os.walk(input_base):
         fp.write(xml1)
         fp.close()
         # test against schema
-        doc = etree.parse(x1seedfile)
+        #doc = etree.parse(x1seedfile)
         #xmlschema.assertValid(doc)
         # parse XSEED
         sp = Parser(strict=True)
@@ -68,8 +68,8 @@ for root, dirs, files in os.walk(input_base):
         fp.write(xml2)
         fp.close()
         # test against schema
-        doc = etree.parse(x2seedfile)
-        xmlschema.assertValid(doc)
+        #doc = etree.parse(x2seedfile)
+        #xmlschema.assertValid(doc)
         # parse XSEED
         sp = Parser(strict=True)
         sp.parseXSEED(StringIO(xml2))

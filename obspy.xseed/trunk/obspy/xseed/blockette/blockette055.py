@@ -20,8 +20,8 @@ class Blockette055(Blockette):
     name = "Response list"
     fields = [
         Integer(3, "Stage sequence number", 2),
-        Integer(4, "Stage input units", 3),
-        Integer(5, "Stage output units", 3),
+        Integer(4, "Stage input units", 3, xpath = 34),
+        Integer(5, "Stage output units", 3, xpath = 34),
         Integer(6, "Number of responses listed", 4),
         # REPEAT fields 7 — 11 for the Number of responses listed:
         Loop('Response', "Number of responses listed", [

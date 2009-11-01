@@ -219,6 +219,9 @@ def formatRESP(number, digits=4):
 
 
 def Blockette34Lookup(abbr, lookup):
+    """
+    Gets certain values from blockette 34. Needed for RESP output.
+    """
     try:
         l1 = LookupCode(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
         l2 = LookupCode(abbr, 34, 'unit_description', 'unit_lookup_code',
@@ -228,3 +231,41 @@ def Blockette34Lookup(abbr, lookup):
         msg = '\nWarning: Abbreviation reference not found.'
         sys.stdout.write(msg)
         return 'No Abbreviation Referenced'
+
+def setXPath(blockette, identifier):
+    """
+    Returns an X-Path String to a blockette with the correct identifier.
+    """
+    try:
+        identifier = int(identifier)
+    except:
+        msg = 'X-Path identifier needs to be an integer.'
+        raise TypeError(msg)
+    abbr_path = '/xseed/abbreviation_dictionary_control_header/'
+    end_of_path = '[text()="%s"]/parent::*'
+    if blockette == 30:
+        return abbr_path + \
+            'data_format_dictionary/data_format_identifier_code' + \
+            end_of_path % identifier
+    elif blockette == 31:
+        return abbr_path + \
+            'comment_description/comment_code_key' + \
+            end_of_path % identifier
+    elif blockette == 33:
+        return abbr_path + \
+            'generic_abbreviation/abbreviation_lookup_code' + \
+            end_of_path % identifier
+    elif blockette == 34:
+        return abbr_path + \
+            'units_abbreviations/unit_lookup_code' + \
+            end_of_path % identifier
+    # All dictionary blockettes.
+    elif blockette == 'dictionary':
+        return abbr_path + \
+            '*/response_lookup_key' + \
+            end_of_path % identifier
+    msg = 'XPath for blockette %d not implemented yet.' % blockette
+    raise NotImplementedError(msg)
+        
+def getXPath(xpath):
+    return int(xpath.split('"')[-2])

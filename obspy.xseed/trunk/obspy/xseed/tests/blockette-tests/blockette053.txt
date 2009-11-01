@@ -7,8 +7,8 @@
 <response_poles_and_zeros blockette="053">
   <transfer_function_types>A</transfer_function_types>
   <stage_sequence_number>1</stage_sequence_number>
-  <stage_signal_input_units>2</stage_signal_input_units>
-  <stage_signal_output_units>3</stage_signal_output_units>
+  <stage_signal_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="2"]/parent::*</stage_signal_input_units>
+  <stage_signal_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</stage_signal_output_units>
   <A0_normalization_factor>+6.00770E+07</A0_normalization_factor>
   <normalization_frequency>+2.00000E-02</normalization_frequency>
   <number_of_complex_zeros>2</number_of_complex_zeros>

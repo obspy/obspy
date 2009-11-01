@@ -3,6 +3,7 @@
 from lxml.etree import Element, SubElement
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
+from obspy.xseed.utils import setXPath, getXPath
 import sys
 
 
@@ -110,7 +111,7 @@ class Blockette060(Blockette):
                   'not support Blockette 60. It will be written but ' + \
                   'please be aware that the file cannot be validated.\n' + \
                   'If you want to validate your file please use XSEED ' + \
-                  'version 1.1.'
+                  'version 1.1.\n'
             sys.stdout.write(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
@@ -122,7 +123,7 @@ class Blockette060(Blockette):
                                                     str(len(self.stages[_i]))
             for _j in xrange(len(self.stages[_i])):
                 SubElement(inner_stage, 'response_lookup_key').text = \
-                                                    str(self.stages[_i][_j])
+                            setXPath('dictionary', self.stages[_i][_j])
         return node
 
     def parseXML(self, xml_doc, version='1.0', *args, **kwargs):
@@ -137,7 +138,11 @@ class Blockette060(Blockette):
             for inner_child in child.getchildren():
                 if inner_child.tag != 'response_lookup_key':
                     continue
-                self.stages[-1].append(int(inner_child.text))
+                # for legacy support meaning XSEED without XPaths.:
+                if inner_child.text.isdigit():
+                    self.stages[-1].append(int(inner_child.text))
+                else:
+                    self.stages[-1].append(getXPath(inner_child.text))
 
     def getRESP(self, station, channel, abbreviations):
         """

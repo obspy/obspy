@@ -8,8 +8,8 @@
   <stage_sequence_number>3</stage_sequence_number>
   <response_name>DM24XDECI2X1</response_name>
   <symmetry_code>B</symmetry_code>
-  <signal_in_units>1</signal_in_units>
-  <signal_out_units>1</signal_out_units>
+  <signal_in_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</signal_in_units>
+  <signal_out_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</signal_out_units>
   <number_of_coefficients>7</number_of_coefficients>
   <FIR_coefficient>
     +2.4400000E-04

@@ -9,28 +9,28 @@
   <stage>
     <stage_sequence_number>1</stage_sequence_number>
     <number_of_responses>2</number_of_responses>
-    <response_lookup_key>1</response_lookup_key>
-    <response_lookup_key>2</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="1"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="2"]/parent::*</response_lookup_key>
   </stage>
   <stage>
     <stage_sequence_number>2</stage_sequence_number>
     <number_of_responses>3</number_of_responses>
-    <response_lookup_key>3</response_lookup_key>
-    <response_lookup_key>4</response_lookup_key>
-    <response_lookup_key>5</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="3"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="4"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="5"]/parent::*</response_lookup_key>
   </stage>
   <stage>
     <stage_sequence_number>3</stage_sequence_number>
     <number_of_responses>3</number_of_responses>
-    <response_lookup_key>6</response_lookup_key>
-    <response_lookup_key>8</response_lookup_key>
-    <response_lookup_key>7</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="6"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="8"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="7"]/parent::*</response_lookup_key>
   </stage>
    <stage>
     <stage_sequence_number>4</stage_sequence_number>
     <number_of_responses>3</number_of_responses>
-    <response_lookup_key>9</response_lookup_key>
-    <response_lookup_key>11</response_lookup_key>
-    <response_lookup_key>10</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="9"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="11"]/parent::*</response_lookup_key>
+    <response_lookup_key>/xseed/abbreviation_dictionary_control_header/*/response_lookup_key[text()="10"]/parent::*</response_lookup_key>
   </stage>
 </response_reference>

@@ -22,7 +22,7 @@ class Blockette050(Blockette):
         Integer(7, "Number of channels", 4),
         Integer(8, "Number of station comments", 3),
         VariableString(9, "Site name", 1, 60, 'UNLPS'),
-        Integer(10, "Network identifier code", 3),
+        Integer(10, "Network identifier code", 3, xpath = 33),
         Integer(11, "word order 32bit", 4),
         Integer(12, "word order 16bit", 2),
         VariableString(13, "Start effective date", 1, 22, 'T'),

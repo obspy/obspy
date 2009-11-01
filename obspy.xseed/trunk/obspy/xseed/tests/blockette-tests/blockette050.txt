@@ -12,7 +12,7 @@
   <number_of_channels>6</number_of_channels>
   <number_of_station_comments>1</number_of_station_comments>
   <site_name>Albuquerque, NewMexico, USA</site_name>
-  <network_identifier_code>1</network_identifier_code>
+  <network_identifier_code>/xseed/abbreviation_dictionary_control_header/generic_abbreviation/abbreviation_lookup_code[text()="1"]/parent::*</network_identifier_code>
   <word_order_32bit>3210</word_order_32bit>
   <word_order_16bit>10</word_order_16bit>
   <start_effective_date>1989-08-29</start_effective_date>
