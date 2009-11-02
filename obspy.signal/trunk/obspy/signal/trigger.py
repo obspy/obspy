@@ -201,6 +201,9 @@ def classicStaLta(a, Nsta, Nlta):
     # compute the short time average (STA)
     sta = np.zeros(len(a), dtype='float64')
     pad_sta = np.zeros(Nsta)
+    # Tricky: Construct a big window of length len(a)-Nsta. Now move this
+    # window Nsta points, i.e. the window "sees" every point in a at least
+    # once.
     for i in xrange(Nsta): # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
     sta = sta / Nsta
