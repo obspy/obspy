@@ -518,16 +518,12 @@ class Stream(object):
                 # Overlap
                 if delta <= 0:
                     delta = abs(delta)
-                    left_total = len(cur_trace[-1].data)
+                    left_total = cur_trace[-1].size
                     left_end = left_total - delta
-                    cur_trace[-1].data = cur_trace[-1].data[0:left_end]
-                    
+                    cur_trace[-1] = cur_trace[-1][0:left_end]
                     right_data = trace.data[delta:]
-                    try:
-                        samples = (cur_trace[-1].data[left_end:] + \
-                               cur_trace[-1].data[0:delta]) / 2
-                    except:
-                        import pdb;pdb.set_trace()
+                    samples = (cur_trace[-1][left_end:] + \
+                               cur_trace[-1][0:delta]) / 2
                     cur_trace.extend([samples, right_data])
                 # Gap
                 else:
