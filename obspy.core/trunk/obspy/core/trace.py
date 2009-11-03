@@ -54,8 +54,6 @@ class Trace(object):
         @rtype: int 
         @return: Number of data samples.
         """
-        if np.ma.is_masked(self.data):
-            return self.data.count()
         return len(self.data)
 
     count = __len__
@@ -119,7 +117,6 @@ class Trace(object):
             else:
                 out.data = np.concatenate([ldata[0:lend], samples,
                                            rdata[delta:]])
-            out.stats.npts = out.data.size
         else:
             # gap
             # get number of missing samples
@@ -128,7 +125,7 @@ class Trace(object):
             out.data = np.concatenate([lt.data, nans, rt.data])
             # Create masked array.
             out.data = np.ma.masked_array(out.data, np.isnan(out.data))
-            out.stats.npts = out.data.count()
+        out.stats.npts = out.data.size
         out.stats.endtime = rt.stats.endtime
         return out
 

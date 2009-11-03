@@ -215,9 +215,9 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace.stats.starttime, start)
         self.assertEquals(trace.stats.endtime, start + 14.995)
         self.assertEquals(trace.stats.sampling_rate, 200)
-        self.assertEquals(trace.stats.npts, 2000)
+        self.assertEquals(trace.stats.npts, 3000)
         # data
-        self.assertEquals(len(trace), 2000)
+        self.assertEquals(len(trace), 3000)
         self.assertEquals(trace[0], 0)
         self.assertEquals(trace[999], 999)
         self.assertTrue(is_masked(trace[1000]))
