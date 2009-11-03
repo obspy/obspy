@@ -5,6 +5,7 @@ from obspy.core.trace import Trace
 from obspy.core.util import getFormatsAndMethods
 import copy
 import math
+import numpy as np
 import os
 
 
@@ -445,7 +446,7 @@ class Stream(object):
         for trace in self:
             trace._verify()
 
-    def merge(self):
+    def old_merge(self):
         """
         Merges L{Trace} objects with same IDs.
         
@@ -476,3 +477,68 @@ class Stream(object):
         except KeyError:
             pass
         self.sort()
+        
+        
+    def merge(self):
+        """
+        Merges L{Trace} objects with same IDs.
+        
+        Gaps and overlaps are usually separated in distinct traces. This method
+        tries to merge them and to create distinct traces within this L{Stream}
+        object.  
+        """
+        # order matters!
+        self.sort(keys=['network', 'station', 'location', 'channel',
+                         'starttime', 'endtime'])
+        traces_dict = {}
+        # using pop() and try-except saves memory
+        try:
+            while True:
+                trace = self.traces.pop(0)
+                id = trace.getId()
+                if id not in traces_dict:
+                    traces_dict[id] = [trace]
+                else:
+                    traces_dict[id].append(trace)
+        except IndexError:
+            pass
+        self.traces = []
+        # same here
+        for id in traces_dict.keys():
+            stats = copy.deepcopy(traces_dict[id][0].stats)
+            sampling_rate = stats.sampling_rate
+            stats.starttime = traces_dict[id][0].stats.starttime
+            stats.endtime = traces_dict[id][-1].stats.endtime
+            old_endtime = traces_dict[id][0].stats.endtime
+            cur_trace = [traces_dict[id].pop(0).data]
+            for _i in xrange(len(traces_dict[id])):
+                trace = traces_dict[id].pop(0)
+                delta = int(round((trace.stats.starttime - \
+                        old_endtime) * sampling_rate)) - 1
+                # Overlap
+                if delta <= 0:
+                    delta = abs(delta)
+                    left_total = len(cur_trace[-1].data)
+                    left_end = left_total - delta
+                    cur_trace[-1].data = cur_trace[-1].data[0:left_end]
+                    
+                    right_data = trace.data[delta:]
+                    try:
+                        samples = (cur_trace[-1].data[left_end:] + \
+                               cur_trace[-1].data[0:delta]) / 2
+                    except:
+                        import pdb;pdb.set_trace()
+                    cur_trace.extend([samples, right_data])
+                # Gap
+                else:
+                    nans = np.ma.masked_all(delta)
+                    cur_trace.extend([nans, trace.data])
+                old_endtime = trace.stats.endtime
+            if True in [np.ma.is_masked(_i) for _i in cur_trace]:
+                data = np.ma.concatenate(cur_trace)
+                stats.npts = data.size
+                self.traces.append(Trace(data = data, header = stats))
+            else:
+                data = np.concatenate(cur_trace)
+                stats.npts = data.size
+                self.traces.append(Trace(data = data, header = stats))
