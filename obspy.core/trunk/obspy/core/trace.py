@@ -3,7 +3,7 @@
 from copy import deepcopy
 # from numpy.ma import masked_array, is_nan does not work with some
 # Python/NumPy combinations.
-from numpy import array, NaN, concatenate, isnan, ma
+import numpy as np
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import obspy
@@ -24,7 +24,7 @@ class Trace(object):
     @param header: Dictionary containing header fields
     @param address: Address of data to be freed when trace is deleted
     """
-    def __init__(self, data=array([]), header=None):
+    def __init__(self, data=np.array([]), header=None):
         if header == None:
             # Default values: For detail see
             # http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/\
@@ -54,7 +54,7 @@ class Trace(object):
         @rtype: int 
         @return: Number of data samples.
         """
-        if ma.is_masked(self.data):
+        if np.ma.is_masked(self.data):
             return self.data.count()
         return len(self.data)
 
@@ -103,39 +103,33 @@ class Trace(object):
             lt = trace
         sr = self.stats.sampling_rate
         delta = int(round((rt.stats.starttime - lt.stats.endtime) * sr)) - 1
+        out = deepcopy(lt)
         # check if overlap or gap
         if delta <= 0:
             # overlap
             delta = abs(delta)
-            out = deepcopy(lt)
             ltotal = len(lt)
             lend = ltotal - delta
-            if isinstance(lt.data, list):
-                ldata = array(lt.data)
-            else:
-                ldata = lt.data
-            if isinstance(rt.data, list):
-                rdata = array(rt.data)
-            else:
-                rdata = rt.data
+            ldata = np.asanyarray(lt.data)
+            rdata = np.asanyarray(rt.data)
             samples = (ldata[lend:] + rdata[0:delta]) / 2
-            if ma.is_masked(ldata) or ma.is_masked(rdata):
-                out.data = ma.concatenate([ldata[0:lend], samples,
-                                           rdata[delta:]])
+            if np.ma.is_masked(ldata) or np.ma.is_masked(rdata):
+                out.data = np.ma.concatenate([ldata[0:lend], samples,
+                                              rdata[delta:]])
             else:
-                out.data = concatenate([ldata[0:lend], samples, rdata[delta:]])
-            out.stats.endtime = rt.stats.endtime
+                out.data = np.concatenate([ldata[0:lend], samples,
+                                           rdata[delta:]])
             out.stats.npts = out.data.size
         else:
             # gap
-            out = deepcopy(lt)
             # get number of missing samples
-            nans = array([NaN] * delta)
-            out.data = concatenate([lt.data, nans, rt.data])
+            nans = np.empty(delta)
+            nans[:] = np.NaN
+            out.data = np.concatenate([lt.data, nans, rt.data])
             # Create masked array.
-            out.data = ma.masked_array(out.data, isnan(out.data))
-            out.stats.endtime = rt.stats.endtime
+            out.data = np.ma.masked_array(out.data, np.isnan(out.data))
             out.stats.npts = out.data.count()
+        out.stats.endtime = rt.stats.endtime
         return out
 
     def getId(self):
