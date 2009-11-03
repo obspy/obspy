@@ -312,6 +312,36 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace._verify()
 
+    def test_mergeGapAndOverlap(self):
+        """
+        Test order of merging traces.
+        """
+        # set up
+        tr1 = Trace(data=range(0, 1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr1.stats.endtime = start + 4.995
+        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2.stats.sampling_rate = 200
+        tr2.stats.starttime = start + 4
+        tr2.stats.endtime = start + 8.995
+        tr3 = Trace(data=range(0, 1000)[::-1])
+        tr3.stats.sampling_rate = 200
+        tr3.stats.starttime = start + 12
+        tr3.stats.endtime = start + 16.995
+        # check types
+        overlap = tr1 + tr2
+        self.assertFalse(is_masked(overlap.data))
+        masked_gap = overlap + tr3
+        self.assertTrue(is_masked(masked_gap.data))
+        # check types
+        masked_gap = tr2 + tr3
+        self.assertTrue(is_masked(masked_gap.data))
+        overlap = tr1 + masked_gap
+        self.assertTrue(is_masked(overlap.data))
+
+
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

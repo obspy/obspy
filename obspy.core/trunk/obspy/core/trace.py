@@ -110,10 +110,20 @@ class Trace(object):
             out = deepcopy(lt)
             ltotal = len(lt)
             lend = ltotal - delta
-            ldata = array(lt.data[0:lend])
-            rdata = array(rt.data[delta:])
-            samples = (array(lt.data[lend:]) + array(rt.data[0:delta])) / 2
-            out.data = concatenate([ldata, samples, rdata])
+            if isinstance(lt.data, list):
+                ldata = array(lt.data)
+            else:
+                ldata = lt.data
+            if isinstance(rt.data, list):
+                rdata = array(rt.data)
+            else:
+                rdata = rt.data
+            samples = (ldata[lend:] + rdata[0:delta]) / 2
+            if ma.is_masked(ldata) or ma.is_masked(rdata):
+                out.data = ma.concatenate([ldata[0:lend], samples,
+                                           rdata[delta:]])
+            else:
+                out.data = concatenate([ldata[0:lend], samples, rdata[delta:]])
             out.stats.endtime = rt.stats.endtime
             out.stats.npts = out.data.size
         else:
@@ -216,5 +226,5 @@ class Trace(object):
             raise Exception(msg % (self.stats.endtime, self.stats.starttime))
         sr = self.stats.sampling_rate
         if int(round(delta * sr)) + 1 != len(self.data):
-            msg = "Sample rate(%d) * time delta(%.4lf) + 1 != data size(%d)"
+            msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data size(%d)"
             raise Exception(msg % (sr, delta, len(self.data)))
