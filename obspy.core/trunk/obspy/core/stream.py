@@ -477,8 +477,8 @@ class Stream(object):
         except KeyError:
             pass
         self.sort()
-        
-        
+
+
     def merge(self):
         """
         Merges L{Trace} objects with same IDs.
@@ -520,10 +520,13 @@ class Stream(object):
                     delta = abs(delta)
                     left_total = cur_trace[-1].size
                     left_end = left_total - delta
+                    try:
+                        samples = (cur_trace[-1][left_end:] + \
+                               cur_trace[-1][0:delta]) / 2
+                    except:
+                        import pdb;pdb.set_trace()
                     cur_trace[-1] = cur_trace[-1][0:left_end]
                     right_data = trace.data[delta:]
-                    samples = (cur_trace[-1][left_end:] + \
-                               cur_trace[-1][0:delta]) / 2
                     cur_trace.extend([samples, right_data])
                 # Gap
                 else:
@@ -533,8 +536,8 @@ class Stream(object):
             if True in [np.ma.is_masked(_i) for _i in cur_trace]:
                 data = np.ma.concatenate(cur_trace)
                 stats.npts = data.size
-                self.traces.append(Trace(data = data, header = stats))
+                self.traces.append(Trace(data=data, header=stats))
             else:
                 data = np.concatenate(cur_trace)
                 stats.npts = data.size
-                self.traces.append(Trace(data = data, header = stats))
+                self.traces.append(Trace(data=data, header=stats))

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import UTCDateTime, Stream, Trace, read
-from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import libmseed
+from obspy.mseed.core import readMSEED
 import inspect
-import numpy as N
+import numpy as np
 import os
 import unittest
 
@@ -95,7 +95,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         npts = 1000
         # data array of integers - float won't work!
-        data = N.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
@@ -139,7 +139,7 @@ class CoreTestCase(unittest.TestCase):
         Tests whether the header is correctly written and read.
         """
         tempfile = NamedTemporaryFile().name
-        data = N.random.randint(-1000, 1000, 50).astype('int32')
+        data = np.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
@@ -171,7 +171,7 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         mseed = libmseed()
         npts = 6000
-        data = N.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
@@ -194,7 +194,7 @@ class CoreTestCase(unittest.TestCase):
             file.close()
             # Test reading the two files.
             temp_st = read(tempfile)
-            N.testing.assert_array_equal(data, temp_st[0].data)
+            np.testing.assert_array_equal(data, temp_st[0].data)
             del temp_st
             os.remove(tempfile)
             # Check record length.
@@ -208,7 +208,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 6000
         tempfile = NamedTemporaryFile().name
-        data = N.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
@@ -238,7 +238,7 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         mseed = libmseed()
         npts = 1000
-        data = N.random.randint(10, 1000, npts).astype('int32')
+        data = np.random.randint(10, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
@@ -263,8 +263,8 @@ class CoreTestCase(unittest.TestCase):
             # Test reading the two files.
             temp_st1 = read(tempfile)
             temp_st2 = read(tempfile2)
-            N.testing.assert_array_equal(data, temp_st1[0].data)
-            N.testing.assert_array_equal(data, temp_st2[0].data)
+            np.testing.assert_array_equal(data, temp_st1[0].data)
+            np.testing.assert_array_equal(data, temp_st2[0].data)
             del temp_st1, temp_st2
             # Assert encodings.
             self.assertEqual(msr1.contents.encoding, encodings[key])
@@ -283,7 +283,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 6000
         tempfile = NamedTemporaryFile().name
-        data = N.random.randint(-1000, 1000, npts).astype('int32')
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
