@@ -8,8 +8,8 @@
   <response_lookup_key>6</response_lookup_key>
   <response_name>RFQ380MFIR1</response_name>
   <symmetry_code>C</symmetry_code>
-  <signal_in_units>4</signal_in_units>
-  <signal_out_units>4</signal_out_units>
+  <signal_in_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="4"]/parent::*</signal_in_units>
+  <signal_out_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="4"]/parent::*</signal_out_units>
   <number_of_factors>2</number_of_factors>
   <fir_coefficient>
     -1.0970700E-03

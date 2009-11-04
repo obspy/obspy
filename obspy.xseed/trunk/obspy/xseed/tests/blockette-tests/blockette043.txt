@@ -8,8 +8,8 @@
   <response_lookup_key>1</response_lookup_key>
   <response_name>RSSTS2NG1500</response_name>
   <response_type>A</response_type>
-  <stage_signal_input_units>1</stage_signal_input_units>
-  <stage_signal_output_units>3</stage_signal_output_units>
+  <stage_signal_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</stage_signal_input_units>
+  <stage_signal_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</stage_signal_output_units>
   <A0_normalization_factor>+6.00770E+07</A0_normalization_factor>
   <normalization_frequency>+1.00000E+00</normalization_frequency>
   <number_of_complex_zeros>2</number_of_complex_zeros>
