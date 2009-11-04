@@ -1,3 +1,5 @@
+from matplotlib import use as matplotlibuse
+matplotlibuse('TkAgg')
 from Tkinter import *
 import tkFileDialog
 import tkColorChooser
@@ -8,6 +10,9 @@ from obspy.core import UTCDateTime
 import pickle
 import inspect
 import os
+import numpy as np
+from matplotlib import figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
 class Seishub(object):
     def __init__(self):
@@ -58,7 +63,6 @@ class Seishub(object):
 class NeededVars(object):
     def __init__(self):
         self.color = 'black'
-        self.minmax = None
         self.stream = None
         self.network = None
         self.station = None
@@ -80,7 +84,7 @@ def main():
         """
         NV.color = tkColorChooser.askcolor()[1]
         colorcanvas.itemconfigure(colorcanvas.find_all()[1], fill=NV.color)
-        if NV.minmax:
+        if NV.stream:
             create_graph()
 
     def openfile():
@@ -103,29 +107,22 @@ def main():
         """
         Creates the graph.
         """
-        # Erase any old graphs.
-        for _i in canvas.find_all():
-            canvas.delete(_i)
-        # Draw a white rectangle and erase any previous plot.
-        #canvas.create_rectangle(0,0,900,400, fill = 'white', outline = 'white')
-        # Create the outline again.
-        canvas.create_line(50, 350, 850, 350, width=1)
-        canvas.create_line(50, 350, 50, 50, width=1)
-        canvas.create_line(50, 50, 850, 50, width=1)
-        canvas.create_line(850, 50, 850, 350, width=1)
-        minmax = NV.minmax
-        # Figure out the range.
-        xmin = min([_i[0] for _i in minmax])
-        xmax = max([_i[1] for _i in minmax])
-        x_range = float(300) / (xmax - xmin)
-        # Loop over the list and draw the lines.
-        start_value = 51
-        for _i in xrange(len(minmax)):
-            min_point = (350 - x_range * (minmax[_i][0] - xmin))
-            max_point = int(min_point - x_range * (minmax[_i][1] - minmax[_i][0]))
-            canvas.create_line(start_value, min_point, start_value, max_point, \
-                               width=1, fill=NV.color)
-            start_value += 1
+        print NV.stream
+        #import pdb;pdb.set_trace()
+        a.cla()
+        length = len(NV.stream[0].data)
+        a.set_ylim(NV.stream[0].data.min(), NV.stream[0].data.max())
+        a.set_xlim(0, length)
+        a.set_yticks([])
+        a.plot(NV.stream[0].data, color = NV.color)
+        a.set_xticks([1,length/2, length-1])
+        starttime = NV.stream[0].stats.starttime
+        endtime = NV.stream[0].stats.endtime
+        midtime = starttime + (endtime - starttime)/2
+        a.set_xticklabels([starttime.strftime('%H:%M:%S'),
+                           midtime.strftime('%H:%M:%S'),
+                           endtime.strftime('%H:%M:%S')])
+        canvas.show()
 
     def changeStationList(*args, **kwargs):
         # Delete all old items in station_box.
@@ -183,15 +180,15 @@ def main():
             location = ''
         # Read the waveform
         start = UTCDateTime(2009, 8, 20, 6, 35, 0, 0)
-        end = start + 60 * 30
+        end = start + 60
 
         st = SH.client.waveform.getWaveform(network, station, location,
                                             channel, start, end)
-        NV.st = st
-        # Get minmaxlist.
-        NV.minmax = minmaxlist(st, 799, st[0].stats.starttime.timestamp,
-                               st[0].stats.endtime.timestamp)[2]
-        del NV.minmax[-1]
+        NV.stream = st
+        # Merge the Stream and replace all masked values with NaNs.
+        for trace in NV.stream:
+            if np.ma.is_masked(trace):
+                trace = trace.data[trace._mask] = np.NaN
         create_graph()
 
 
@@ -212,24 +209,21 @@ def main():
     channel_box = Listbox(root)
     channel_box.grid(row=0, column=3)
 
-    # Size of the window and set background to white.
-    canvas = Canvas(root, width=900, height=400, bg='white')
-    canvas.grid(row=1, column=0, columnspan=4)#    # Color picker canvas.
+    f = figure.Figure(figsize=(9,4), dpi=100)
+    a = f.add_subplot(111)
+    a.set_yticks([])
+    a.set_xticks([])
+    
+    # a tk.DrawingArea
+    canvas = FigureCanvasTkAgg(f, master=root)
+    #canvas.show()
+    canvas.get_tk_widget().grid(row=1, column=0, columnspan=4)
+    #canvas._tkcanvas.grid(row=1, column=0, columnspan=4)
+
+    # Color picker canvas.
     colorcanvas = Canvas(root, width=50, height=50, bg='white')
     colorcanvas.grid()
-    Button(root, text='Open File', command=openfile).grid()
-    Button(root, text='Quit', command=root.quit).grid(row=3, column=1)
-    # Layout of the canvas.
-    # ------------------------------
-    # |(50,50)             (850,50)|
-    # |                            |
-    # |                            |
-    # |(50,350)           (850,350)|
-    # ------------------------------
-    canvas.create_line(50, 350, 850, 350, width=1)
-    canvas.create_line(50, 350, 50, 50, width=1)
-    canvas.create_line(50, 50, 850, 50, width=1)
-    canvas.create_line(850, 50, 850, 350, width=1)
+
 
     ## Colorpicker canvas.
     colorcanvas.create_rectangle(5, 5, 45, 45, fill='white', outline='black')
