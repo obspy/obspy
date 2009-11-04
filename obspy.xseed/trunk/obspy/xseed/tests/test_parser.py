@@ -5,8 +5,8 @@ from glob import glob
 from lxml import etree
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
-from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.blockette.blockette053 import Blockette053
+from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser, SEEDParserException
 from obspy.xseed.utils import compareSEED
 import inspect
@@ -30,7 +30,7 @@ class ParserTestCase(unittest.TestCase):
         """
         data = "000001S 0510019~~0001000000"
         sp = Parser(strict=True)
-        self.assertRaises(SEEDParserException, sp.parseSEED, StringIO(data))
+        self.assertRaises(SEEDParserException, sp.read, data)
 
     def test_invalidStartBlockette(self):
         """
@@ -38,7 +38,7 @@ class ParserTestCase(unittest.TestCase):
         """
         data = "000001V 0510019~~0001000000"
         sp = Parser(strict=True)
-        self.assertRaises(SEEDParserException, sp.parseSEED, StringIO(data))
+        self.assertRaises(SEEDParserException, sp.read, data)
 
     def test_blocketteStartsAfterRecord(self):
         """
@@ -61,7 +61,7 @@ class ParserTestCase(unittest.TestCase):
         data += "000003S*" + b054 + (' ' * 8)
         # read records
         parser = Parser(strict=True)
-        parser.parseSEED(StringIO(data))
+        parser.read(data)
 
     def test_multipleContinuedStationControlHeader(self):
         """
@@ -97,7 +97,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=True)
-        parser.parseSEED(StringIO(data))
+        parser.read(data)
         # check results
         self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
         self.assertEquals(len(parser.blockettes[10]), 1)
@@ -157,7 +157,7 @@ class ParserTestCase(unittest.TestCase):
             original_seed = f.read()
             f.seek(0)
             # Parse and write the data.
-            parser.parseSEED(f)
+            parser.read(f)
             f.close()
             new_seed = parser.getSEED()
             # compare both SEED strings
@@ -165,10 +165,8 @@ class ParserTestCase(unittest.TestCase):
             del parser
             parser1 = Parser()
             parser2 = Parser()
-            original_seed = StringIO(original_seed)
-            new_seed = StringIO(new_seed)
-            parser1.parseSEED(original_seed)
-            parser2.parseSEED(new_seed)
+            parser1.read(original_seed)
+            parser2.read(new_seed)
             self.assertEqual(parser1.getSEED(), parser2.getSEED())
             del parser1, parser2
 
@@ -199,7 +197,7 @@ class ParserTestCase(unittest.TestCase):
         for file in BW_SEED_files:
             parser1 = Parser()
             # Parse the file.
-            parser1.parseSEEDFile(file)
+            parser1.read(file)
             # Convert to SEED once to avoid any issues seen in
             # test_readAndWriteSEED.
             original_seed = parser1.getSEED()
@@ -207,7 +205,7 @@ class ParserTestCase(unittest.TestCase):
             # Now read the file, parse it, write XSEED, read XSEED and write
             # SEED again. The output should be totally identical.
             parser2 = Parser()
-            parser2.parseSEED(StringIO(original_seed))
+            parser2.read(original_seed)
             xseed_string = parser2.getXSEED()
             del parser2
             # Validate XSEED.
@@ -215,7 +213,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertTrue(xmlschema.validate(doc))
             del doc
             parser3 = Parser()
-            parser3.parseXSEED(StringIO(xseed_string))
+            parser3.read(xseed_string)
             new_seed = parser3.getSEED()
             self.assertEqual(original_seed, new_seed)
             del parser3, original_seed, new_seed
@@ -226,7 +224,7 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser()
-        sp.parseSEEDFile(filename)
+        sp.read(filename)
         # Just checks whether certain blockettes are written.
         self.assertEqual(len(sp.stations), 1)
         self.assertEqual([_i.id for _i in sp.volume], [10, 12])
@@ -235,6 +233,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
