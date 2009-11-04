@@ -10,7 +10,7 @@ import StringIO
 
 # parse SEED file
 parser = Parser(strict=False, debug=False)
-parser.read('data/bw/dataless.seed.BW_ZUGS')
+parser.read('data/dataless/bw/dataless.seed.BW_ZUGS')
 xml_doc = parser.getXSEED()
 
 # read schema
@@ -22,6 +22,6 @@ parsed_xml_doc = etree.parse(StringIO.StringIO(xml_doc))
 xmlschema.assertValid(parsed_xml_doc)
 
 # write XML results to file system
-fp = open('output/result.xml', 'w')
+fp = open('output/dataless.seed.BW_ZUGS.xml', 'w')
 fp.write(xml_doc)
 fp.close()
