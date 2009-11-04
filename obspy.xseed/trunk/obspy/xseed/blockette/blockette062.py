@@ -29,8 +29,8 @@ class Blockette062(Blockette):
     fields = [
         FixedString(3, "Transfer Function Type", 1),
         Integer(4, "Stage Sequence Number", 2),
-        Integer(5, "Stage Signal In Units", 3),
-        Integer(6, "Stage Signal Out Units", 3),
+        Integer(5, "Stage Signal In Units", 3, xpath = 34),
+        Integer(6, "Stage Signal Out Units", 3, xpath = 34),
         FixedString(7, "Polynomial Approximation Type", 1),
         FixedString(8, "Valid Frequency Units", 1),
         Float(9, "Lower Valid Frequency Bound", 12, mask='%+1.5e'),

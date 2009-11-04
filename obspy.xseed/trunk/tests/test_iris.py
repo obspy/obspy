@@ -10,7 +10,7 @@ import os
 from StringIO import StringIO
 
 
-xmlschema = etree.parse('xml-seed.xsd')
+xmlschema = etree.parse('xml-seed-1.0-modified.xsd')
 xmlschema = etree.XMLSchema(xmlschema)
 
 input_base = os.path.join("data", "iris")
@@ -44,6 +44,9 @@ for root, dirs, files in os.walk(input_base):
         fp = open(out, 'w')
         fp.write(xml)
         fp.close()
+        print 'Validating XSEED...'
+        doc = etree.parse(out)
+        xmlschema.assertValid(doc)
         print 'Parsing XSEED...'
         sp2 = Parser(strict=True)
         sp2.parseXSEED(StringIO(xml))
@@ -56,7 +59,3 @@ for root, dirs, files in os.walk(input_base):
         print 'Comparing SEED strings...'
         compareSEED(seed1, seed2)
         print 'DONE :-)'
-        # Validation not possible because blockette 62 is missing in xsd file.
-#        print 'Validating XSEED...'
-#        doc = etree.parse(out)
-#        xmlschema.assertValid(doc)

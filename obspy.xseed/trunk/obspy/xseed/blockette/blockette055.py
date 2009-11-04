@@ -17,7 +17,8 @@ class Blockette055(Blockette):
     """
 
     id = 55
-    name = "Response list"
+    # Typo is itentional.
+    name = "Reponse list"
     fields = [
         Integer(3, "Stage sequence number", 2),
         Integer(4, "Stage input units", 3, xpath = 34),

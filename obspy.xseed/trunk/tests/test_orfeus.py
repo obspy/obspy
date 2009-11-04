@@ -12,6 +12,8 @@ import os
 
 xmlschema = etree.parse('xml-seed.xsd')
 xmlschema = etree.XMLSchema(xmlschema)
+xmlschema2 = etree.parse('xml-seed-1.0-modified.xsd')
+xmlschema2 = etree.XMLSchema(xmlschema2)
 
 input_base = os.path.join("data", "orfeus")
 output_base = os.path.join("output")
@@ -54,9 +56,10 @@ for root, dirs, files in os.walk(input_base):
         fp = open(x1seedfile, 'w')
         fp.write(xml1)
         fp.close()
-        # test against schema
+        # test against schemas
         doc = etree.parse(x1seedfile)
         xmlschema.assertValid(doc)
+        xmlschema2.assertValid(doc)
         # parse XSEED
         sp = Parser(strict=True, compact=compact)
         sp.parseXSEEDFile(x1seedfile)
@@ -73,9 +76,10 @@ for root, dirs, files in os.walk(input_base):
         fp = open(x2seedfile, 'w')
         fp.write(xml2)
         fp.close()
-        # test against schema
+        # test against schemas
         doc = etree.parse(x2seedfile)
         xmlschema.assertValid(doc)
+        xmlschema2.assertValid(doc)
         # parse XSEED
         sp = Parser(strict=True, compact=compact)
         sp.parseXSEED(StringIO(xml2))
