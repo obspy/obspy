@@ -10,7 +10,6 @@ def toAttribute(name):
     """
     Creates a valid attribute name from a given string.
     """
-    #return name.lower().replace(' ','_')
     temp = name.lower().replace(' ', '_')
     temp = temp.replace('fir_', 'FIR_')
     temp = temp.replace('a0_', 'A0_')
@@ -232,6 +231,7 @@ def Blockette34Lookup(abbr, lookup):
         sys.stdout.write(msg)
         return 'No Abbreviation Referenced'
 
+
 def setXPath(blockette, identifier):
     """
     Returns an X-Path String to a blockette with the correct identifier.
@@ -266,6 +266,10 @@ def setXPath(blockette, identifier):
             end_of_path % identifier
     msg = 'XPath for blockette %d not implemented yet.' % blockette
     raise NotImplementedError(msg)
-        
+
+
 def getXPath(xpath):
+    """
+    Returns lookup key of XPath expression on abbreviation dictionary.
+    """
     return int(xpath.split('"')[-2])
