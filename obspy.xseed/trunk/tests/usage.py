@@ -10,7 +10,7 @@ import StringIO
 
 # parse SEED file
 parser = Parser(strict=False, debug=False)
-parser.parseSEEDFile('data/bw/dataless.seed.BW_ZUGS')
+parser.read('data/bw/dataless.seed.BW_ZUGS')
 xml_doc = parser.getXSEED()
 
 # read schema

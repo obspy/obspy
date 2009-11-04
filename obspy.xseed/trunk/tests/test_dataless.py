@@ -8,23 +8,22 @@ from obspy.xseed import Parser
 from obspy.xseed.utils import compareSEED
 from StringIO import StringIO
 import os
+import glob
 
+# paths
+input_base = os.path.join("data")
+output_base = os.path.join("output")
 
+# validation schemas
+# original 1.0
 xmlschema = etree.parse('xml-seed.xsd')
 xmlschema = etree.XMLSchema(xmlschema)
+# modified 1.0
 xmlschema2 = etree.parse('xml-seed-1.0-modified.xsd')
 xmlschema2 = etree.XMLSchema(xmlschema2)
 
-input_base = os.path.join("data", "bw")
-output_base = os.path.join("output")
 
-# generate output directory
-if not os.path.isdir(output_base + os.sep + "data"):
-    os.mkdir(output_base + os.sep + "data")
-if not os.path.isdir(output_base + os.sep + input_base):
-    os.mkdir(output_base + os.sep + input_base)
-
-for root, dirs, files in os.walk(input_base):
+for files in glob.iglob(os.path.join(input_base):
     # skip empty or SVN directories
     if not files or '.svn' in root:
         continue
