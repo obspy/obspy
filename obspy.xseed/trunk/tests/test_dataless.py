@@ -13,8 +13,8 @@ import glob
 import os
 
 # paths
-input_base = os.path.join("data", "dataless")
-output_base = os.path.join("output", "dataless")
+dataless_path = os.path.join("data", "dataless")
+output_path = os.path.join("output", "dataless")
 
 # validation schemas
 # original 1.0
@@ -32,18 +32,18 @@ compact_date_files = ['dataless-odc.FR_SAOF', 'dataless-odc.FR_CALF',
 xseed_incompatible = ['arclink.dataless.seed', '_US-BB.dataless']
 
 # generate output directory 
-if not os.path.isdir(output_base):
-    os.mkdir(output_base)
+if not os.path.isdir(output_path):
+    os.mkdir(output_path)
 
 # build up file list and loop over all files
 files = []
-files += glob.glob(os.path.join(input_base, '*', '*'))
-files += glob.glob(os.path.join(input_base, '*', '*', '*'))
+files += glob.glob(os.path.join(dataless_path, '*', '*'))
+files += glob.glob(os.path.join(dataless_path, '*', '*', '*'))
 for file in files:
     # check and eventually generate output directory
     path = os.path.dirname(file)
-    relpath = os.path.relpath(path, input_base)
-    path = os.path.join(output_base, relpath)
+    relpath = os.path.relpath(path, dataless_path)
+    path = os.path.join(output_path, relpath)
     if not os.path.isdir(path):
         os.mkdir(path)
     # skip directories

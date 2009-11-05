@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Conversion test suite for Dataless SEED into SEED RESP files and vice versa.
+Conversion test suite for Dataless SEED into SEED RESP files.
 
 Runs tests against all Dataless SEED files within the data/dataless directory. 
 Output is created within the output/resp folder. Once generated files will
 be skipped. Clear the output/resp folder in order to rerun all tests.
 """
 
-from glob import iglob
 from obspy.xseed import Parser
+import glob
 import os
 
 # paths
-input_base = os.path.join("data", "dataless")
-output_base = os.path.join("output", "resp")
+dataless_path = os.path.join("data", "dataless")
+resp_path = os.path.join("data", "resp")
+output_path = os.path.join("output", "resp")
 
 # generate output directory 
-if not os.path.isdir(output_base):
-    os.mkdir(output_base)
+if not os.path.isdir(output_path):
+    os.mkdir(output_path)
 
 
 def _compareRESPFiles(original, new):
@@ -67,27 +68,42 @@ def _compareRESPFiles(original, new):
 
 # build up file list and loop over all files
 files = []
-files += glob.glob(os.path.join(input_base, '*', '*'))
-files += glob.glob(os.path.join(input_base, '*', '*', '*'))
+files += glob.glob(os.path.join(dataless_path, '*', '*'))
+files += glob.glob(os.path.join(dataless_path, '*', '*', '*'))
 for file in files:
-    print file,
-    print '\t|| Channels:',
-    # Create the folder for the new RESP files.
-    RESP_folder = file.replace('data' + os.sep,
-                                    'output' + os.sep + 'RESP' + os.sep)
-    if not os.path.isdir(RESP_folder):
-        os.makedirs(RESP_folder)
-    # Original RESP folder.
-    Org_RESP_folder = RESP_folder.replace('output' + os.sep,
-                                          'data' + os.sep)
+    # check and eventually generate output directory
+    path = os.path.dirname(file)
+    relpath = os.path.relpath(path, dataless_path)
+    path = os.path.join(output_path, relpath)
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    # skip directories
+    if not os.path.isfile(file):
+        continue
+    # create folder from filename
+    seedfile = os.path.basename(file)
+    resp_path = os.path.join(path, seedfile)
+    # skip existing directories
+    if os.path.isdir(resp_path):
+        print "Skipping", os.path.join(relpath, seedfile)
+        continue
+    else:
+        os.mkdir(resp_path)
+        print "Parsing %s\t\t" % os.path.join(relpath, seedfile)
     # Create the RESP file.
-    sp = Parser()
-    sp.parseSEEDFile(file)
-    sp.getChannelResponse(folder=RESP_folder)
-    # Compare all the created RESP files.
-    for RESP in iglob(RESP_folder + os.sep + '*'):
-        print '[' + RESP.split(os.sep)[-1].split('.')[-1] + ' ...',
-        org_RESP = RESP.replace('output' + os.sep, 'data' + os.sep)
-        _compareRESPFiles(org_RESP, RESP)
-        print 'OK]',
-    print ''
+    try:
+        sp = Parser()
+        sp.read(file)
+        sp.writeRESP(folder=resp_path)
+        sp.writeRESP(folder=resp_path + '.zip', zipped=True)
+        # Compare with RESP files generated with rdseed from IRIS 
+        for resp_file in glob.iglob(resp_path + os.sep + '*'):
+            print '  ' + os.path.basename(resp_file)
+            org_resp_file = resp_file.replace('output' + os.sep, 'data' + os.sep)
+            _compareRESPFiles(org_resp_file, resp_file)
+    except Exception, e:
+        # remove all related files
+        if os.path.isdir(resp_path):
+            os.remove(resp_path)
+        # raise actual exception
+        raise e

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from StringIO import StringIO
-from lxml.etree import Element, SubElement, tostring
-from lxml.etree import parse as xmlparse
+from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import blockette, utils
 from obspy.xseed.blockette import Blockette011, Blockette012
 from obspy.xseed.utils import SEEDtoRESPTime
 import math
 import os
+import zipfile
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -338,17 +338,28 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def writeRESP(self, folder=''):
+    def writeRESP(self, folder='', zipped=False):
         """
         Stores channel responses into files within a given folder.
+        
+        @param folder: Folder name.
+        @param zipped: Compresses all files into a single zip archive.
         """
         new_resp_list = self.getRESP()
-        # Write the files.
-        for response in new_resp_list:
-            file = open(folder + os.sep + response[0], 'w')
-            response[1].seek(0, 0)
-            file.write(response[1].read())
-            file.close()
+        if not zipped:
+            # Write single files.
+            for response in new_resp_list:
+                file = open(folder + os.sep + response[0], 'w')
+                response[1].seek(0, 0)
+                file.write(response[1].read())
+                file.close()
+        else:
+            # Create a ZIP archive.
+            zip_file = zipfile.ZipFile(folder, "w")
+            for response in new_resp_list:
+                response[1].seek(0, 0)
+                zip_file.writestr(response[0], response[1].read())
+            zip_file.close()
 
     def _parseSEED(self, data):
         """
