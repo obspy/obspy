@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Checks all dataless SEED files from the Bavarian network (12/2008).
+Checks all Dataless SEED files within the data/dataless directory.
+
+Output is created within the output/dataless folder. Once generated files will
+be skipped. Clear the output/data folder to rerun all Dataless SEED tests.
 """
 
 from lxml import etree
@@ -14,13 +17,20 @@ output_base = os.path.join("output", "dataless")
 
 # validation schemas
 # original 1.0
-xmlschema = etree.parse('xml-seed.xsd')
-xmlschema = etree.XMLSchema(xmlschema)
+xml_doc = etree.parse('xml-seed-1.0.xsd')
+xmlschema100 = etree.XMLSchema(xml_doc)
 # modified 1.0
-xmlschema2 = etree.parse('xml-seed-1.0-modified.xsd')
-xmlschema2 = etree.XMLSchema(xmlschema2)
+xml_doc = etree.parse('xml-seed-1.0.1.xsd')
+xmlschema101 = etree.XMLSchema(xml_doc)
 
+# Exceptions
+# The originals of those files contain compact date strings
+compact_date_files = ['dataless-odc.FR_SAOF', 'dataless-odc.FR_CALF',
+                      'dataless-odc.IU_SFJD', 'dataless-odc.NO_JMIC']
+# not 100% XSEED 1.0 compatible, due to Blockette 060
+xseed_incompatible = ['arclink.dataless.seed', '_US-BB.dataless']
 
+# build up file list and loop over all files
 files = []
 files += glob.glob(os.path.join(input_base, '*', '*'))
 files += glob.glob(os.path.join(input_base, '*', '*', '*'))
@@ -41,53 +51,85 @@ for file in files:
     oseedfile = path + os.sep + seedfile
     # skip existing files
     if os.path.isfile(x2seedfile):
-        print "Skipping " + seedfile
+        print "Skipping", os.path.join(relpath, seedfile)
         continue
     else:
-        print "Creating " + seedfile
+        msg = "Parsing %s\t\t" % os.path.join(relpath, seedfile)
+        print msg,
     # fetch original SEED file
     fp = open(file, 'r')
     seed1 = fp.read()
     fp.close()
-    # parse SEED
-    sp = Parser()
-    sp.read(seed1)
-    # generate XSEED
-    xml1 = sp.getXSEED()
-    fp = open(x1seedfile, 'w')
-    fp.write(xml1)
-    fp.close()
-    # test against schemas
-    doc = etree.parse(x1seedfile)
-    #xmlschema.assertValid(doc)
-    #xmlschema2.assertValid(doc)
-    # parse XSEED
-    sp = Parser(strict=True)
-    sp.read(x1seedfile)
-    # generate SEED
-    seed2 = sp.getSEED()
-    fp = open(oseedfile, 'wb')
-    fp.write(seed2)
-    fp.close()
-    # now parse this generate SEED 
-    sp = Parser(strict=True)
-    sp.read(seed2)
-    # generate XSEED
-    xml2 = sp.getXSEED()
-    fp = open(x2seedfile, 'w')
-    fp.write(xml2)
-    fp.close()
-    # test against schema
-    doc = etree.parse(x2seedfile)
-    #xmlschema.assertValid(doc)
-    #xmlschema2.assertValid(doc)
-    # parse XSEED
-    sp = Parser(strict=True)
-    sp.read(xml2)
-    seed3 = sp.getSEED()
-    # compare XSEED and SEED files
-    assert xml1 == xml2
-    assert seed2 == seed3
-    # comparing original with generated SEED is more complicated
-    utils.compareSEED(seed1, seed2)
+    # set compact date flag
+    compact = False
+    if seedfile in compact_date_files:
+        compact = True
+    # start parsing
+    try:
+        print "rS",
+        # parse SEED
+        sp = Parser()
+        sp.read(seed1)
+        print "wX",
+        # generate XSEED
+        xml1 = sp.getXSEED()
+        fp = open(x1seedfile, 'w')
+        fp.write(xml1)
+        fp.close()
+        print "vX",
+        # test against schemas
+        doc = etree.parse(x1seedfile)
+        if seedfile not in xseed_incompatible:
+            xmlschema100.assertValid(doc)
+        xmlschema101.assertValid(doc)
+        print "rX",
+        # parse XSEED
+        sp = Parser(strict=True, compact=compact)
+        sp.read(x1seedfile)
+        print "wS",
+        # generate SEED
+        seed2 = sp.getSEED()
+        fp = open(oseedfile, 'wb')
+        fp.write(seed2)
+        fp.close()
+        print "rS",
+        # now parse this generate SEED 
+        sp = Parser(strict=True)
+        sp.read(seed2)
+        print "wX",
+        # generate XSEED
+        xml2 = sp.getXSEED()
+        fp = open(x2seedfile, 'w')
+        fp.write(xml2)
+        fp.close()
+        print "vX",
+        # test against schema
+        doc = etree.parse(x2seedfile)
+        if seedfile not in xseed_incompatible:
+            xmlschema100.assertValid(doc)
+        xmlschema101.assertValid(doc)
+        print "rX",
+        # parse XSEED
+        sp = Parser(strict=True, compact=compact)
+        sp.read(xml2)
+        seed3 = sp.getSEED()
+        print "c",
+        # compare XSEED and SEED files
+        if xml1 != xml2:
+            raise Exception("XML-SEED strings differ")
+        if seed2 != seed3:
+            raise Exception("SEED strings differ")
+        # comparing original with generated SEED is more complicated
+        utils.compareSEED(seed1, seed2)
+        print "."
+    except Exception, e:
+        # remove all related files
+        if os.path.isfile(x1seedfile):
+            os.remove(x1seedfile)
+        if os.path.isfile(x2seedfile):
+            os.remove(x2seedfile)
+        if os.path.isfile(oseedfile):
+            os.remove(oseedfile)
+        # raise actual exception
+        raise
 
