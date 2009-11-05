@@ -182,12 +182,12 @@ class ParserTestCase(unittest.TestCase):
         Finally the resulting SEED gets converted to XSEED and back to SEED
         and the two SEED strings are then evaluated to be identical.
         
-        This tests also checks for XML validity using the a xsd-file.
+        This tests also checks for XML validity using a XML schema.
         """
         # Get all filenames.
         BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
         # Path to xsd-file.
-        xsd_path = os.path.join(self.path, 'xml-seed.xsd')
+        xsd_path = os.path.join(self.path, 'xml-seed-1.0.xsd')
         # Prepare validator.
         f = open(xsd_path, 'r')
         xmlschema_doc = etree.parse(f)

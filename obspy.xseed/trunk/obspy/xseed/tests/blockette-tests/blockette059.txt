@@ -7,5 +7,5 @@
 <channel_comment blockette="059">
   <beginning_of_effective_time>1989-01-01</beginning_of_effective_time>
   <end_effective_time>1989-01-04</end_effective_time>
-  <comment_code_key>4410</comment_code_key>
+  <comment_code_key>/xseed/abbreviation_dictionary_control_header/comment_description/comment_code_key[text()="4410"]/parent::*</comment_code_key>
 </channel_comment>

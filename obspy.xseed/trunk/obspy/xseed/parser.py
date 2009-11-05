@@ -182,6 +182,14 @@ class Parser(object):
         return tostring(doc, pretty_print=True, xml_declaration=True,
                         encoding='utf-8')
 
+    def writeXSEED(self, filename, *args, **kwargs):
+        """
+        Stores XML-SEED string into file with given name.
+        """
+        fh = open(filename, 'w')
+        fh.write(self.getXSEED(*args, **kwargs))
+        fh.close()
+
     def getSEED(self):
         """
         Takes everything stored in the object returns a valid SEED string.
@@ -251,6 +259,14 @@ class Parser(object):
                 seed_string += '%06i' % cur_count + _j
                 cur_count += 1
         return seed_string
+
+    def writeSEED(self, filename, *args, **kwargs):
+        """
+        Stores SEED string into file with given name.
+        """
+        fh = open(filename, 'wb')
+        fh.write(self.getSEED(*args, **kwargs))
+        fh.close()
 
     def getRESP(self):
         """
@@ -324,6 +340,7 @@ class Parser(object):
 
     def writeRESP(self, folder=''):
         """
+        Stores channel responses into files within a given folder.
         """
         new_resp_list = self.getRESP()
         # Write the files.
@@ -332,7 +349,6 @@ class Parser(object):
             response[1].seek(0, 0)
             file.write(response[1].read())
             file.close()
-
 
     def _parseSEED(self, data):
         """

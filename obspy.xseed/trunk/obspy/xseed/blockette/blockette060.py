@@ -111,7 +111,7 @@ class Blockette060(Blockette):
                   'not support Blockette 60. It will be written but ' + \
                   'please be aware that the file cannot be validated.\n' + \
                   'If you want to validate your file please use XSEED ' + \
-                  'version 1.1.\n'
+                  'version 1.0.1.\n'
             sys.stdout.write(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))
@@ -155,7 +155,7 @@ class Blockette060(Blockette):
             string += \
             '#\t\t+            +--------------------------------------------------+             +\n' + \
             '#\t\t+            |   Response Reference Information,%6s ch %s   |             +\n'\
-                        %(station, channel) + \
+                        % (station, channel) + \
             '#\t\t+            +--------------------------------------------------+             +\n' + \
             '#\t\t\n' + \
             'B060F03     Number of Stages:                      %s\n' \
@@ -181,7 +181,7 @@ class Blockette060(Blockette):
                                   'blockette %d.' % blockette.id
                             raise AttributeError(msg)
                 if not found_abbrev:
-                    msg = 'The reference blockette for response key '+\
+                    msg = 'The reference blockette for response key ' + \
                           '%d could not be found.' % response_key
                     raise Exception(msg)
         string += '#\t\t\n'

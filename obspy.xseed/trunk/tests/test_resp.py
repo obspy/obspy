@@ -1,17 +1,28 @@
+# -*- coding: utf-8 -*-
+"""
+Conversion test suite for Dataless SEED into SEED RESP files and vice versa.
+
+Runs tests against all Dataless SEED files within the data/dataless directory. 
+Output is created within the output/resp folder. Once generated files will
+be skipped. Clear the output/resp folder in order to rerun all tests.
+"""
+
 from glob import iglob
 from obspy.xseed import Parser
 import os
 
-seed_base = 'data' + os.sep + 'bw'
-output_base = 'output' + os.sep + 'RESP' + os.sep +  'bw'
+# paths
+input_base = os.path.join("data", "dataless")
+output_base = os.path.join("output", "resp")
 
-# Create dir if necessary.
+# generate output directory 
 if not os.path.isdir(output_base):
-    os.makedirs(output_base)
-    
-def compareRESPFiles(original, new):
+    os.mkdir(output_base)
+
+
+def _compareRESPFiles(original, new):
     """
-    Function to compare to RESP files.
+    Compares two RESP files.
     """
     org_file = open(original, 'r')
     new_file = open(new, 'r')
@@ -22,7 +33,7 @@ def compareRESPFiles(original, new):
     for new_line in new_file:
         new_list.append(new_line)
     # Skip the first line.
-    for _i in xrange(1,len(org_list)):
+    for _i in xrange(1, len(org_list)):
         try:
             assert org_list[_i] == new_list[_i]
         except:
@@ -46,16 +57,19 @@ def compareRESPFiles(original, new):
                 new_list[_i]:
                 continue
             msg = '\nCompare failed for:\n' + \
-                  'File :\t' +  original.split(os.sep)[-1] + \
-                  '\nLine :\t' + str(_i+1) + '\n' + \
+                  'File :\t' + original.split(os.sep)[-1] + \
+                  '\nLine :\t' + str(_i + 1) + '\n' + \
                   'EXPECTED:\n' + \
                   org_list[_i] + \
                   'GOT:\n' + \
                   new_list[_i]
             raise AssertionError(msg)
 
-# Loop over bw files.
-for file in iglob(seed_base + os.sep + '*'):
+# build up file list and loop over all files
+files = []
+files += glob.glob(os.path.join(input_base, '*', '*'))
+files += glob.glob(os.path.join(input_base, '*', '*', '*'))
+for file in files:
     print file,
     print '\t|| Channels:',
     # Create the folder for the new RESP files.
@@ -69,11 +83,11 @@ for file in iglob(seed_base + os.sep + '*'):
     # Create the RESP file.
     sp = Parser()
     sp.parseSEEDFile(file)
-    sp.getChannelResponse(folder = RESP_folder)
+    sp.getChannelResponse(folder=RESP_folder)
     # Compare all the created RESP files.
     for RESP in iglob(RESP_folder + os.sep + '*'):
         print '[' + RESP.split(os.sep)[-1].split('.')[-1] + ' ...',
         org_RESP = RESP.replace('output' + os.sep, 'data' + os.sep)
-        compareRESPFiles(org_RESP, RESP)
+        _compareRESPFiles(org_RESP, RESP)
         print 'OK]',
     print ''

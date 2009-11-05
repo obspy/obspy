@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Checks all Dataless SEED files within the data/dataless directory.
+Conversion test suite for Dataless SEED into XML-SEED and vice versa.
 
+Runs tests against all Dataless SEED files within the data/dataless directory. 
 Output is created within the output/dataless folder. Once generated files will
-be skipped. Clear the output/data folder to rerun all Dataless SEED tests.
+be skipped. Clear the output/dataless folder in order to rerun all tests.
 """
 
 from lxml import etree
@@ -93,9 +94,7 @@ for file in files:
         print "wS",
         # generate SEED
         seed2 = sp.getSEED()
-        fp = open(oseedfile, 'wb')
-        fp.write(seed2)
-        fp.close()
+        sp.writeSEED(oseedfile)
         print "rS",
         # now parse this generate SEED 
         sp = Parser(strict=True)
