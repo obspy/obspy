@@ -7,6 +7,7 @@ import copy
 import math
 import numpy as np
 import os
+import sys
 
 
 def read(pathname, format=None, headonly=False):
@@ -18,6 +19,8 @@ def read(pathname, format=None, headonly=False):
     st = Stream()
     for file in iglob(pathname):
         st.extend(_read(file, format, headonly).traces, reference=True)
+    if len(st) == 0:
+        raise Exception("Cannot find a file with filename/wildcard", pathname)
     return st
 
 
