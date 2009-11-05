@@ -30,6 +30,10 @@ compact_date_files = ['dataless-odc.FR_SAOF', 'dataless-odc.FR_CALF',
 # not 100% XSEED 1.0 compatible, due to Blockette 060
 xseed_incompatible = ['arclink.dataless.seed', '_US-BB.dataless']
 
+# generate output directory 
+if not os.path.isdir(output_base):
+    os.mkdir(output_base)
+
 # build up file list and loop over all files
 files = []
 files += glob.glob(os.path.join(input_base, '*', '*'))
