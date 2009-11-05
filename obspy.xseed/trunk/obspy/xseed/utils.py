@@ -127,8 +127,12 @@ def compareSEED(seed1, seed2):
     Only works with a record length of 4096 bytes.
     """
     # Each SEED string should be a multiple of the record length.
-    assert (len(seed1) % 4096) == 0
-    assert (len(seed2) % 4096) == 0
+    if (len(seed1) % 4096) != 0:
+        msg = "Length of first SEED string should be a multiple of 4096 bytes"
+        raise Exception(msg)
+    if (len(seed2) % 4096) != 0:
+        msg = "Length of second SEED string should be a multiple of 4096 bytes"
+        raise Exception(msg)
     # Loop over each record and remove empty ones. obspy.xseed doesn't write
     # empty records. Redundant code to ease coding...
     recnums = len(seed1) / 4096
@@ -148,7 +152,10 @@ def compareSEED(seed1, seed2):
         new_seed2 += seed2[_i * 4096 : (_i + 1) * 4096]
     seed2 = new_seed2
     # length should be the same
-    assert len(seed1) == len(seed2)
+    if len(seed1) != len(seed2):
+        msg = "Length of SEED strings differ! (%d != %d)" % (len(seed1),
+                                                             len(seed2))
+        raise Exception(msg)
     # version string is always ' 2.4' for output
     if seed1[15:19] == ' 2.3':
         seed1 = seed1.replace(' 2.3', ' 2.4', 1)
