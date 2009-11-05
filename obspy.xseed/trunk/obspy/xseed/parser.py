@@ -277,11 +277,10 @@ class Parser(object):
         """
         # Check if there are any stations at all.
         if len(self.stations) == 0:
-            msg = 'No data to be written.'
-            raise Exception(msg)
+            raise Exception('No data to be written.')
+        filename = None
         # Channel Response list.
         resp_list = []
-        # XXX: Need to check the available fields!
         # Loop over all stations.
         for station in self.stations:
             resp = StringIO('')
@@ -494,13 +493,12 @@ class Parser(object):
         for blockette in blockettes[1:]:
             if blockette.id not in RESP_BLOCKETTES:
                 continue
-            #try:
-            resp.write(blockette.getRESP(station, channel_info['Channel'],
+            try:
+                resp.write(blockette.getRESP(station, channel_info['Channel'],
                                              self.abbreviations))
-            #except AttributeError:
-            #    msg = 'RESP output for blockette %s not implemented yet.' \
-            #                % blockette.id
-            #    raise AttributeError(msg)
+            except AttributeError:
+                msg = 'RESP output for blockette %s not implemented yet.'
+                raise AttributeError(msg % blockette.id)
 
     def _parseXMLBlockette(self, XML_blockette, record_type):
         """

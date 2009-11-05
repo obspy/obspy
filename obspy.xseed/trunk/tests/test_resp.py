@@ -104,6 +104,8 @@ for file in files:
     except Exception, e:
         # remove all related files
         if os.path.isdir(resp_path):
-            os.remove(resp_path)
+            for f in glob.glob(os.path.join(resp_path, '*')):
+                os.remove(f)
+            os.removedirs(resp_path)
         # raise actual exception
-        raise e
+        raise

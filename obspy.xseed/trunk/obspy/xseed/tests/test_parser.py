@@ -3,6 +3,7 @@
 from StringIO import StringIO
 from glob import glob
 from lxml import etree
+from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
@@ -233,6 +234,41 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
+
+    def test_createRESPFromXSEED(self):
+        """
+        BUG
+        """
+        ### example 1
+        # parse Dataless SEED
+        filename = os.path.join(self.path, 'dataless.seed.BW_ALTM')
+        sp1 = Parser()
+        sp1.read(filename)
+        # write XML-SEED
+        tempfile = NamedTemporaryFile().name
+        sp1.writeXSEED(tempfile)
+        # parse XML-SEED
+        sp2 = Parser()
+        sp2.read(tempfile)
+        # create RESP files
+        # XXX: incorrect Python data types
+        _resp_list = sp2.getRESP()
+        os.remove(tempfile)
+        ### example 2
+        # parse Dataless SEED
+        filename = os.path.join(self.path, 'arclink_full.seed')
+        sp1 = Parser()
+        sp1.read(filename)
+        # write XML-SEED
+        tempfile = NamedTemporaryFile().name
+        sp1.writeXSEED(tempfile)
+        # parse XML-SEED
+        sp2 = Parser()
+        sp2.read(tempfile)
+        # create RESP files
+        # XXX: "The reference blockette for response key 1 could not be found"
+        _resp_list = sp2.getRESP()
+        os.remove(tempfile)
 
 
 def suite():
