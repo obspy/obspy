@@ -32,11 +32,13 @@ class ClientTestSuite(unittest.TestCase):
         st = self.client.getWaveForm("GE", "APE", "", "SHZ", t, t+600)
         tr = st[0]
         self.assertEqual('GE', tr.stats.network)
-        self.assertEqual('APE ', tr.stats.station)
+        self.assertEqual('APE', tr.stats.station)
         self.assertEqual('', tr.stats.location)
         self.assertEqual('SHZ', tr.stats.channel)
-        import pdb; pdb.set_trace()
-        self.assertEqual('SHZ', tr.stats.starttime)
+        self.assertEqual(UTCDateTime(2003, 6, 20, 5, 57, 43, 321000), tr.stats.starttime)
+        self.assertEqual(50.0, tr.stats.sampling_rate)
+        #XXX: Do not check values of data-samples. Compare to ArcLink/SOD
+        self.assertEqual(37364, len(tr.data))
 
 
 def suite():
