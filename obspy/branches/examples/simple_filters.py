@@ -1,79 +1,82 @@
 from filter_bc import filter_bc
 import matplotlib
-matplotlib.rc('figure.subplot', hspace=.25, wspace=.25) #adjust subplot layout
+matplotlib.rc('figure.subplot', hspace=.35, wspace=.35) #adjust subplot layout
 matplotlib.rc('font', size=8) # adjust font size of plot
-from matplotlib.pyplot import *
-from numpy import *
+import matplotlib.pyplot as plt
+import numpy as np
 
+
+# Number of points (here must be even for fft) and sampling_rate
 npts=1026
 dt=0.05
 
-# Play around with boxcar filtering
+# Determining nyquist frequency and asking for cut off frequency f0
 fmax=1.0/(2*dt) # nyquist
-f0 = float(raw_input('Give cut-off below Nyquist: fmax = %f Hz ' % fmax))
+f0 = float(raw_input('Give cut-off below Nyquist: fmax = %4.1f Hz ' % fmax))
 print 'f0 =', f0
 
 # Uncomment from random points
-y = random.rand(npts) - .5 # uniform random numbers, zero mean
+#y = random.rand(npts) - .5 # uniform random numbers, zero mean
 
 # Spike at npts/2
-#y = zeros(npts,dtype='float')
-#y[npts/2] = 1
+y = np.zeros(npts,dtype='float')
+y[npts/2] = 1
 
+# Filter with filter_bc
 freq, H, y_filt = filter_bc(y,dt,f0)
 
+# Just for the plot, frequency domain representaion of y
+y_f = np.fft.rfft(y)
 
-#######################################################################################
+# Remove offset
+y_f = y_f[1:]
+freq = freq[1:]
+H = H[1:]
+
+# For convenience
+time = np.arange(0,npts)*dt
+
+
+
+#
 # Plot the whole filtering process
-#######################################################################################
+#
+plt.close('all')
 
-close('all')
+plt.subplot(231)
+plt.plot(time, y)
+plt.title('Original data')
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude')
 
-def adjust():
-    ymin, ymax = ylim()
-    ylim(ymin-.2, ymax+.2)
+plt.subplot(232)
+plt.plot(freq, abs(y_f))
+plt.title('Amplitude spectrum')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Arbitrary Amplitude')
 
-subplot(231)
-plot(arange(0,npts)*dt,y)
-adjust()
-title('Original data')
-xlabel('Time [s]')
-ylabel('Amplitude')
+plt.subplot(233), 
+plt.plot(freq, np.angle(y_f))
+plt.title('Phase spectrum')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Phase shift [rad]')
 
-subplot(232)
-tmp = fft.rfft(y)
-plot(freq[1:], abs(tmp[1:]))
-adjust()
-title('Amplitude spectrum')
-xlabel('Frequency [Hz]')
-ylabel('Arbitrary Amplitude')
+plt.subplot(234)
+plt.plot(freq, H)
+plt.title('The filter')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('Filter amplitude')
 
-subplot(233), 
-plot(freq[1:], angle(tmp[1:]))
-adjust()
-title('Phase spectrum')
-xlabel('Frequency [Hz]')
-ylabel('Phase shift [rad]')
+plt.subplot(235)
+plt.plot(freq, abs(y_f*H))
+plt.title('The filtered spectrum')
+plt.xlabel('Time [s]')
+plt.ylabel('Frequency [Hz]')
 
-subplot(234)
-plot(freq[1:], H[1:])
-adjust()
-title('The filter')
-xlabel('Frequency [Hz]')
-ylabel('Filter amplitude')
+plt.subplot(236)
+plt.plot(time, y_filt)
+plt.title('The filtered signal')
+plt.xlabel('Time [s]')
+plt.ylabel('Amplitude')
 
-subplot(235)
-plot(freq[1:], abs((tmp*H)[1:]) )
-adjust()
-title('The filtered spectrum')
-xlabel('Time [s]')
-ylabel('Frequency [Hz]')
-
-subplot(236)
-plot(arange(0,npts)*dt, y_filt)
-adjust()
-title('The filtered signal')
-xlabel('Time [s]')
-ylabel('Amplitude')
-
-show()
+plt.show()
