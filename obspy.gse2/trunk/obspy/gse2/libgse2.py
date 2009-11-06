@@ -210,7 +210,7 @@ def read(f, test_chksum=False):
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
     lib.read_header(fp, C.pointer(head))
-    data = np.zeros(head.n_samps, dtype='int')
+    data = np.empty(head.n_samps, dtype='int')
     n = lib.decomp_6b(fp, head.n_samps, data)
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
     lib.rem_2nd_diff(data, head.n_samps)

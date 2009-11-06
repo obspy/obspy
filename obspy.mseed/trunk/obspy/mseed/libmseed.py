@@ -15,7 +15,7 @@ from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
 from struct import unpack
 import ctypes as C
 import math
-import numpy as N
+import numpy as np
 import operator
 import os
 import sys
@@ -140,7 +140,7 @@ class libmseed(object):
         """
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
-        trace_list = [[{'endtime':0}, N.array([])]]
+        trace_list = [[{'endtime':0}, np.array([])]]
         # Initialize MSRecord structure
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         msf = C.POINTER(MSFileParam)() # null pointer
@@ -173,14 +173,14 @@ class libmseed(object):
             else:
                 # Concatenate last trace and start a new trace
                 trace_list[-1] = [trace_list[-1][0],
-                                  N.concatenate(trace_list[-1][1:])]
+                                  np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
                 concat_flag = False
             last_msrid = msrid
         # Finish up loop, concatenate trace_list if not already done
         if concat_flag:
                 trace_list[-1] = [trace_list[-1][0],
-                                  N.concatenate(trace_list[-1][1:])]
+                                  np.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         # Free MSRecord structure
         self.clear(msf, msr)
@@ -961,9 +961,9 @@ class libmseed(object):
         #ctypes_array = buffer_type.from_address(array_address)
         # Allocate numpy array to move memory to
         # Make a NumPy array from that.
-        #return N.ctypeslib.as_array(ctypes_array)
+        #return np.ctypeslib.as_array(ctypes_array)
         # 2. METHOD MORITZ 
-        numpy_array = N.ndarray(buffer_elements, dtype='int32')
+        numpy_array = np.ndarray(buffer_elements, dtype='int32')
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
@@ -977,7 +977,7 @@ class libmseed(object):
         # this is read only too
         #C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
         #C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
-        #return N.frombuffer(C.pythonapi.PyBuffer_FromMemory(buffer,
+        #return np.frombuffer(C.pythonapi.PyBuffer_FromMemory(buffer,
         #                                                    buffer_elements*4),
         #                    dtype='int32',count=buffer_elements)
 
@@ -1104,7 +1104,7 @@ class libmseed(object):
         # Loop over all traces in trace_list.
         for _i in xrange(numtraces):
             # Check that data are numpy.ndarrays of dtype int32
-            if not isinstance(trace_list[_i][1], N.ndarray) or \
+            if not isinstance(trace_list[_i][1], np.ndarray) or \
                     trace_list[_i][1].dtype != 'int32':
                 raise Exception("Data must me of type numpy.ndarray, dtype "
                                 "int32")
@@ -1147,8 +1147,8 @@ class libmseed(object):
         dbuf = data_string
         datasize = len(dbuf)
         samplecnt = npts
-        datasamples = N.zeros(npts , dtype='int32')
-        diffbuff = N.zeros(npts , dtype='int32')
+        datasamples = np.empty(npts , dtype='int32')
+        diffbuff = np.empty(npts , dtype='int32')
         x0 = C.c_int32()
         xn = C.c_int32()
         nsamples = clibmseed.msr_unpack_steim2(\
@@ -1172,8 +1172,8 @@ class libmseed(object):
         dbuf = data_string
         datasize = len(dbuf)
         samplecnt = npts
-        datasamples = N.zeros(npts , dtype='int32')
-        diffbuff = N.zeros(npts , dtype='int32')
+        datasamples = np.empty(npts , dtype='int32')
+        diffbuff = np.empty(npts , dtype='int32')
         x0 = C.c_int32()
         xn = C.c_int32()
         nsamples = clibmseed.msr_unpack_steim1(\

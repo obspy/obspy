@@ -68,7 +68,7 @@ def recStalta(a, nsta, nlta):
     # be nice and adapt type if necessary
     a = np.require(a, 'float64', ['C_CONTIGUOUS'])
     ndat = len(a)
-    charfct = np.ndarray(ndat, dtype='float64')
+    charfct = np.empty(ndat, dtype='float64')
     lib.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
     return charfct
 

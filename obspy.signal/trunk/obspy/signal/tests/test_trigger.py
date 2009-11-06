@@ -53,7 +53,7 @@ class TriggerTestCase(unittest.TestCase):
         Type checking recStalta
         """
         ndat = 1
-        charfct = np.ndarray(ndat, dtype='float64')
+        charfct = np.empty(ndat, dtype='float64')
         self.assertRaises(ArgumentError, lib.recstalta, [1], charfct, 
                           ndat, 5, 10)
         self.assertRaises(ArgumentError, lib.recstalta, 
