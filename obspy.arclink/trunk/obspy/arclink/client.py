@@ -227,6 +227,8 @@ class Client(Telnet):
         if data:
             if compressed:
                 data = bz2.decompress(data)
+            # we need to create a temporary file, as libmseed only accepts
+            # filenames and not Python file pointers 
             tf = NamedTemporaryFile()
             tf.write(data)
             tf.seek(0)
@@ -234,6 +236,11 @@ class Client(Telnet):
                 stream = read(tf.name, 'MSEED')
             finally:
                 tf.close()
+            # remove temporary file:
+            try:
+                os.remove(tf.name)
+            except:
+                pass
         else:
             stream = Stream()
         # trim stream
@@ -336,7 +343,6 @@ class Client(Telnet):
         xml_doc = self._fetch(rtype, [rdata])
         # generate object by using XML schema
         xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-
         data = AttribDict()
         if not xml_doc.countchildren():
             return data

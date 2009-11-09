@@ -38,6 +38,7 @@ from obspy.mseed import libmseed
 import numpy as np
 import sys
 
+
 class Client(object):
     """
     DHI/Fissures client class. For more informations see the __init__
@@ -56,8 +57,8 @@ class Client(object):
      * http://www.seis.sc.edu/wily
      * http://www.iris.edu/dhi/servers.htm
     """
-    def __init__(self, network_dc=("/edu/iris/dmc","IRIS_NetworkDC"),
-            seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter")):
+    def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
+                 seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter")):
         """
         Initialize Fissures/DHI client. 
         
@@ -78,8 +79,8 @@ class Client(object):
             #"-ORBtraceLevel", "40",
             "-ORBgiopMaxMsgSize", "2097152",
             "-ORBInitRef",
-                "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService",
-            ], CORBA.ORB_ID)
+            "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService",
+        ], CORBA.ORB_ID)
         self.obj = orb.resolve_initial_references("NameService")
         #
         # Resolve naming service
@@ -92,7 +93,7 @@ class Client(object):
                 dns.append(NameComponent(id=id, kind='dns'))
         dns.extend([NameComponent(id='NetworkDC', kind='interface'),
                     NameComponent(id=network_dc[1], kind='object_FVer1.0')])
-        self.net_name = dns 
+        self.net_name = dns
         #
         # put network name together
         dns = [NameComponent(id='Fissures', kind='dns')]
@@ -103,85 +104,16 @@ class Client(object):
                     NameComponent(id=seismogram_dc[1], kind='object_FVer1.0')])
         self.seis_name = dns
 
-    def _dateTime2Fissures(self, utc_datetime):
-        """
-        Convert datetime instance to fissures time object
-
-        @param utc_datetime: UTCDateTime instance
-        @return: Fissures time object
-        """
-        #t = datetime.strftime("%Y-%m-%dT%H:%M:%S")
-        #t += ".%04dZ" % int(datetime.microsecond/1e2)
-        #XXX: Add test to UTCDateTime that str format stays the same
-        t =  str(utc_datetime)[:-3]+'Z'
-        return Fissures.Time(t,-1)
-
-    def _getChannelObj(self, network_id, station_id, location_id, channel_id):
-        """
-        Return Fissures channel object.
-
-        Fissures channel object is requested from the clients network_dc.
-
-        @param network_id: Network id, 2 char; e.g. "GE"
-        @param station_id: Station id, 5 char; e.g. "APE"
-        @param location_id: Location id, 2 char; e.g. "  "
-        @param channel_id: Channel id, 3 char; e.g. "SHZ"
-        @return: Fissures channel object
-        """
-        # resolve network finder
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
-        #
-        # retrieve a network
-        network = netFind.retrieve_by_code(network_id)[0]
-        network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
-        #
-        # retrieve channles from network
-        if location_id.strip() == "":
-            location_id = "  " # must be to emptry spaces
-
-        # Retrieve Channel object
-        # XXX: Wildcards not implemented
-        return network.retrieve_channels_by_code(station_id,location_id,channel_id)
-
-    def _getSeisObj(self, channel_obj, start_datetime, end_datetime):
-        """
-        Return Fissures seismogram object.
-
-        Fissures seismogram object is requested from the clients
-        network_dc. This actually contains the data.
-
-        @param channel_obj: Fissures channel object
-        @param start_datetime: UTCDateTime object of starttime
-        @param end_datetime: UTCDateTime object of endtime
-        @return: Fissures seismogram object
-        """
-        seisDC = self.rootContext.resolve(self.seis_name)
-        seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
-        #
-        # Transform datetime into correct format
-        t1 = self._dateTime2Fissures(start_datetime)
-        t2 = self._dateTime2Fissures(end_datetime)
-        #
-        # Form request for all channels
-        request = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) \
-                for c in channel_obj]
-        #
-        # Retrieve Seismogram object
-        return seisDC.retrieve_seismograms(request)
-
-    def getWaveForm(self, network_id, station_id, location_id, channel_id,
+    def getWaveform(self, network_id, station_id, location_id, channel_id,
             start_datetime, end_datetime):
         """
-        Get WaveForm in an ObsPy stream object from Fissures / DHI.
-
+        Get Waveform in an ObsPy stream object from Fissures / DHI.
+        
         Example:
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
-        >>> st = client.getWaveForm("GE", "APE", "", "SHZ", t, t+600)
-
+        >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
+        
         @param network_id: Network id, 2 char; e.g. "GE"
         @param station_id: Station id, 5 char; e.g. "APE"
         @param location_id: Location id, 2 char; e.g. "  "
@@ -197,18 +129,19 @@ class Client(object):
         # get seismogram object
         seis = self._getSeisObj(channels, start_datetime, end_datetime)
         #
-        # build up obspy stream object
+        # build up ObsPy stream object
         st = Stream()
         i = 0
         for sei in seis:
-            # remove keep alive blocketes R
+            # remove keep alive blockettes R
             if sei.num_points == 0:
                 continue
             tr = Trace()
             tr.stats.starttime = UTCDateTime(sei.begin_time.date_time)
             tr.stats.npts = sei.num_points
             # calculate sampling rate
-            if str(sei.sampling_info.interval.the_units.the_unit_base) != 'SECOND':
+            unit = str(sei.sampling_info.interval.the_units.the_unit_base)
+            if unit != 'SECOND':
                 raise Exception("Wrong unit!")
             value = sei.sampling_info.interval.value
             power = sei.sampling_info.interval.the_units.power
@@ -229,23 +162,92 @@ class Client(object):
             # loop over data chunks
             data = []
             for chunk in sei.data.encoded_values:
-                i+=1
-                # swap byte order in decompression routine if byte orders differ 
-                # src/IfTimeSeries.idl:52:       *  FALSE = big endian format -
+                i += 1
+                # swap byte order in decompression routine if necessary 
+                # src/IfTimeSeries.idl:52: FALSE = big endian format -
                 swapflag = (self.byteorder != chunk.byte_order)
                 compression = chunk.compression
-                # src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
+                # src/IfTimeSeries.idl:44: const EncodingFormat STEIM2=11;
                 if compression == 11:
-                    data.append(self.mseed.unpack_steim2(chunk.values, \
-                          chunk.num_points, swapflag=swapflag))
-                # src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
+                    data.append(self.mseed.unpack_steim2(chunk.values,
+                                                         chunk.num_points,
+                                                         swapflag=swapflag))
+                # src/IfTimeSeries.idl:43: const EncodingFormat STEIM1=10;
                 elif compression == 10:
-                    data.append(self.mseed.unpack_steim1(chunk.values, \
-                          chunk.num_points, swapflag=swapflag))
+                    data.append(self.mseed.unpack_steim1(chunk.values,
+                                                         chunk.num_points,
+                                                         swapflag=swapflag))
                 else:
-                    raise NotImplementedError("Compression %d not implemented" % compression)
+                    msg = "Compression %d not implemented" % compression
+                    raise NotImplementedError(msg)
             # merge data chunks
             tr.data = np.concatenate(data)
             tr._verify()
             st.append(tr)
+            # XXX: merging?
         return st
+
+    def _dateTime2Fissures(self, utc_datetime):
+        """
+        Convert datetime instance to fissures time object
+        
+        @param utc_datetime: UTCDateTime instance
+        @return: Fissures time object
+        """
+        t = str(utc_datetime)[:-3] + 'Z'
+        return Fissures.Time(t, -1)
+
+    def _getChannelObj(self, network_id, station_id, location_id, channel_id):
+        """
+        Return Fissures channel object.
+        
+        Fissures channel object is requested from the clients network_dc.
+        
+        @param network_id: Network id, 2 char; e.g. "GE"
+        @param station_id: Station id, 5 char; e.g. "APE"
+        @param location_id: Location id, 2 char; e.g. "  "
+        @param channel_id: Channel id, 3 char; e.g. "SHZ"
+        @return: Fissures channel object
+        """
+        # resolve network finder
+        netDC = self.rootContext.resolve(self.net_name)
+        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+        netFind = netDC._get_a_finder()
+        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
+        # retrieve a network
+        network = netFind.retrieve_by_code(network_id)[0]
+        network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
+        # retrieve channels from network
+        if location_id.strip() == "":
+            # must be to empty spaces
+            location_id = "  "
+        # Retrieve Channel object
+        # XXX: wildcards not yet implemented
+        return network.retrieve_channels_by_code(station_id, location_id,
+                                                 channel_id)
+
+    def _getSeisObj(self, channel_obj, start_datetime, end_datetime):
+        """
+        Return Fissures seismogram object.
+        
+        Fissures seismogram object is requested from the clients
+        network_dc. This actually contains the data.
+        
+        @param channel_obj: Fissures channel object
+        @param start_datetime: UTCDateTime object of starttime
+        @param end_datetime: UTCDateTime object of endtime
+        @return: Fissures seismogram object
+        """
+        seisDC = self.rootContext.resolve(self.seis_name)
+        seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
+        #
+        # Transform datetime into correct format
+        t1 = self._dateTime2Fissures(start_datetime)
+        t2 = self._dateTime2Fissures(end_datetime)
+        #
+        # Form request for all channels
+        request = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) \
+                for c in channel_obj]
+        #
+        # Retrieve Seismogram object
+        return seisDC.retrieve_seismograms(request)
