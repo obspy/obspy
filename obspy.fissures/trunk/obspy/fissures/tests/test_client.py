@@ -9,6 +9,7 @@ from obspy.fissures import Client
 import inspect
 import os
 import unittest
+import numpy as np
 
 
 class ClientTestSuite(unittest.TestCase):
@@ -42,7 +43,7 @@ class ClientTestSuite(unittest.TestCase):
         self.assertEqual(8559, len(tr.data))
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
-        self.assertEqual(st[0].data.tolist(), st2[0].data.tolist())
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
 
 
 def suite():

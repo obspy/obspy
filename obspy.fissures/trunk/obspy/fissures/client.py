@@ -86,23 +86,11 @@ class Client(object):
         # Resolve naming service
         self.rootContext = self.obj._narrow(NamingContext)
         #
-        # put network name together
-        dns = [NameComponent(id='Fissures', kind='dns')]
-        for id in network_dc[0].split('/'):
-            if id != '':
-                dns.append(NameComponent(id=id, kind='dns'))
-        dns.extend([NameComponent(id='NetworkDC', kind='interface'),
-                    NameComponent(id=network_dc[1], kind='object_FVer1.0')])
-        self.net_name = dns
+        # network cosnaming
+        self.net_name = self._composeName(network_dc, 'NetworkDC')
         #
-        # put network name together
-        dns = [NameComponent(id='Fissures', kind='dns')]
-        for id in seismogram_dc[0].split('/'):
-            if id != '':
-                dns.append(NameComponent(id=id, kind='dns'))
-        dns.extend([NameComponent(id='DataCenter', kind='interface'),
-                    NameComponent(id=seismogram_dc[1], kind='object_FVer1.0')])
-        self.seis_name = dns
+        # seismogram cosnaming
+        self.seis_name = self._composeName(seismogram_dc, 'DataCenter')
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
             start_datetime, end_datetime):
@@ -131,7 +119,6 @@ class Client(object):
         #
         # build up ObsPy stream object
         st = Stream()
-        i = 0
         for sei in seis:
             # remove keep alive blockettes R
             if sei.num_points == 0:
@@ -162,7 +149,6 @@ class Client(object):
             # loop over data chunks
             data = []
             for chunk in sei.data.encoded_values:
-                i += 1
                 # swap byte order in decompression routine if necessary 
                 # src/IfTimeSeries.idl:52: FALSE = big endian format -
                 swapflag = (self.byteorder != chunk.byte_order)
@@ -186,6 +172,28 @@ class Client(object):
             st.append(tr)
             # XXX: merging?
         return st
+
+    def _composeName(self, dc, interface):
+        """
+        Compose Fissures name in CosNaming.NameComponent manner. Set the
+        dns, interfaces and objects together.
+
+        Example:
+        >>> self._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
+                              "NetworkDC")
+
+        @param dc: Tuple containing dns and service as string
+        @param interface: String describing kind of DC, one of EventDC,
+            NetworkDC or DataCenter
+        """
+        # put network name together
+        dns = [NameComponent(id='Fissures', kind='dns')]
+        for id in dc[0].split('/'):
+            if id != '':
+                dns.append(NameComponent(id=id, kind='dns'))
+        dns.extend([NameComponent(id=interface, kind='interface'),
+                    NameComponent(id=dc[1], kind='object_FVer1.0')])
+        return dns
 
     def _dateTime2Fissures(self, utc_datetime):
         """
@@ -219,7 +227,7 @@ class Client(object):
         network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
         # retrieve channels from network
         if location_id.strip() == "":
-            # must be to empty spaces
+            # must be two empty spaces
             location_id = "  "
         # Retrieve Channel object
         # XXX: wildcards not yet implemented
