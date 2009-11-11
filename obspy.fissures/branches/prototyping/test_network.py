@@ -1,6 +1,6 @@
 from omniORB import CORBA
 import CosNaming
-from idl import Fissures
+from obspy.fissures.idl import Fissures
 
 orb = CORBA.ORB_init( [
     #"-ORBtraceLevel", "40",

@@ -24,7 +24,7 @@ class ClientTestSuite(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_client(self):
+    def test_getWavefrom(self):
         """
         Retrieve data from DHI/Fissures, compare stat attributes.
         
@@ -44,6 +44,28 @@ class ClientTestSuite(unittest.TestCase):
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
         np.testing.assert_array_equal(st[0].data, st2[0].data)
+
+    def test_getNetworkIds(self):
+        """
+        Retrieve networks_ids from DHI
+        """
+        #client = Client(network_dc=("/edu/caltech/gps/k2","SCEDC_NetworkDC"))
+        client = Client()
+        print "This will take a very long time"
+        ids = client.getNetworkIds()
+        self.assertEqual(['AD', 'AF', 'AF', 'AK', 'AL'], ids[0:5])
+        self.assertEqual(352, len(ids))
+
+    def test_getStationIds(self):
+        """
+        Retrieve station_ids from DHI
+        """
+        client = Client()
+        ids = client.getStationIds(network_id='GE')
+        stations = ['BRNL', 'PMG', 'MORC', 'DSB', 'LID', 'WLF', 'STU',
+                'BGIO', 'MLR', 'KBS']
+        self.assertEqual(stations, ids[0:10])
+        self.assertEqual(124, len(ids))
 
 
 def suite():

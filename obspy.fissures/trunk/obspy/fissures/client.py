@@ -98,9 +98,11 @@ class Client(object):
         Get Waveform in an ObsPy stream object from Fissures / DHI.
         
         Example:
+        C{
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
+        }
         
         @param network_id: Network id, 2 char; e.g. "GE"
         @param station_id: Station id, 5 char; e.g. "APE"
@@ -173,14 +175,60 @@ class Client(object):
             # XXX: merging?
         return st
 
+    def getNetworkIds(self):
+        """
+        Return all available network_ids as list.
+
+        Note: This takes a very long time.
+        """
+        netDC = self.rootContext.resolve(self.net_name)
+        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+        netFind = netDC._get_a_finder()
+        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
+        # Retrieve all available networks
+        net_list = []
+        networks = netFind.retrieve_all()
+        for network in networks:
+            network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
+            attributes = network.get_attributes()
+            net_list.append(attributes.id.network_code)
+        return net_list
+
+    def getStationIds(self, network_id = None):
+        """
+        Return all available stations as list.
+
+        If no network_id is specified this may take a long time
+
+        @param network_id: Limit stations to network_id
+        """
+        netDC = self.rootContext.resolve(self.net_name)
+        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+        netFind = netDC._get_a_finder()
+        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
+        # Retrieve network informations
+        if network_id == None:
+            networks = netFind.retrieve_all()
+        else:
+            networks = netFind.retrieve_by_code(network_id)
+        station_list = []
+        for network in networks:
+            network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
+            stations = network.retrieve_stations()
+            for station in stations:
+                station_list.append(station.id.station_code)
+        return station_list
+
     def _composeName(self, dc, interface):
         """
         Compose Fissures name in CosNaming.NameComponent manner. Set the
         dns, interfaces and objects together.
 
         Example:
+        C{
         >>> self._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
                               "NetworkDC")
+        }
 
         @param dc: Tuple containing dns and service as string
         @param interface: String describing kind of DC, one of EventDC,
