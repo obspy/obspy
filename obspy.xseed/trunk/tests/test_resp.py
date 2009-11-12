@@ -95,7 +95,7 @@ for file in files:
         sp = Parser()
         sp.read(file)
         sp.writeRESP(folder=resp_path)
-        sp.writeRESP(folder=resp_path + '.zip', zipped=True)
+        sp.writeRESP(folder=resp_path, zipped=True)
         # Compare with RESP files generated with rdseed from IRIS 
         for resp_file in glob.iglob(resp_path + os.sep + '*'):
             print '  ' + os.path.basename(resp_file)

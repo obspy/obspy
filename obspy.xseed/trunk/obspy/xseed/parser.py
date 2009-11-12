@@ -337,24 +337,28 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def writeRESP(self, folder='', zipped=False):
+    def writeRESP(self, folder, zipped=False):
         """
         Stores channel responses into files within a given folder.
         
         @param folder: Folder name.
-        @param zipped: Compresses all files into a single zip archive.
+        @param zipped: Compresses all files into a single ZIP archive named by
+            the folder name extended with the extension '.zip'.
         """
         new_resp_list = self.getRESP()
         if not zipped:
             # Write single files.
             for response in new_resp_list:
-                file = open(folder + os.sep + response[0], 'w')
+                if folder:
+                    file = open(os.path.join(folder, response[0]), 'w')
+                else:
+                    file = open(response[0], 'w')
                 response[1].seek(0, 0)
                 file.write(response[1].read())
                 file.close()
         else:
             # Create a ZIP archive.
-            zip_file = zipfile.ZipFile(folder, "w")
+            zip_file = zipfile.ZipFile(folder + os.extsep + "zip", "w")
             for response in new_resp_list:
                 response[1].seek(0, 0)
                 zip_file.writestr(response[0], response[1].read())
