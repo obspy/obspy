@@ -25,19 +25,14 @@ def _compareRESPFiles(original, new):
     """
     Compares two RESP files.
     """
-    org_file = open(original, 'r')
-    new_file = open(new, 'r')
-    org_list = []
-    new_list = []
-    for org_line in org_file:
-        org_list.append(org_line)
-    for new_line in new_file:
-        new_list.append(new_line)
+    org_list = open(original, 'r').readlines()
+    new_list = open(new, 'r').readlines()
     # Skip the first line.
     for _i in xrange(1, len(org_list)):
         try:
             assert org_list[_i] == new_list[_i]
         except:
+
             # Skip if it is the header.
             if org_list[_i] == '#\t\t<< IRIS SEED Reader, Release 4.8 >>\n' and\
                new_list[_i] == '#\t\t<< obspy.xseed, Version 0.1.3 >>\n':
@@ -57,6 +52,13 @@ def _compareRESPFiles(original, new):
                                       len(org_list[_i])) - 1:]) == \
                 new_list[_i]:
                 continue
+            # search for floating point errors
+            diffs = [i for i, c in enumerate(zip(org_list[_i], new_list[_i])) \
+                     if c[0] != c[1]]
+            if len(diffs) == 1:
+                if new_list[_i][diffs[0] + 1] == 'E' and \
+                   new_list[_i][diffs[0]].isdigit():
+                    continue
             msg = '\nCompare failed for:\n' + \
                   'File :\t' + original.split(os.sep)[-1] + \
                   '\nLine :\t' + str(_i + 1) + '\n' + \
