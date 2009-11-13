@@ -40,7 +40,7 @@ class Parser(object):
     @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
-    def __init__(self, debug=False, strict=False, compact=False):
+    def __init__(self, filename=None, debug=False, strict=False, compact=False):
         """
         Initializes the SEED parser.
         
@@ -65,6 +65,9 @@ class Parser(object):
         self.volume = None
         self.abbreviations = None
         self.stations = []
+        # if a file name is given, read it directly to the parser object
+        if filename:
+            self.read(filename)
 
     def read(self, data):
         """

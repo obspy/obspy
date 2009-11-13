@@ -73,8 +73,7 @@ for file in files:
     try:
         print "rS",
         # parse SEED
-        sp = Parser()
-        sp.read(seed1)
+        sp = Parser(seed1)
         print "wX",
         # generate XSEED
         xml1 = sp.getXSEED()
@@ -89,16 +88,14 @@ for file in files:
         xmlschema101.assertValid(doc)
         print "rX",
         # parse XSEED
-        sp = Parser(strict=True, compact=compact)
-        sp.read(x1seedfile)
+        sp = Parser(x1seedfile, strict=True, compact=compact)
         print "wS",
         # generate SEED
         seed2 = sp.getSEED()
         sp.writeSEED(oseedfile)
         print "rS",
         # now parse this generate SEED 
-        sp = Parser(strict=True)
-        sp.read(seed2)
+        sp = Parser(seed2, strict=True)
         print "wX",
         # generate XSEED
         xml2 = sp.getXSEED()
@@ -113,8 +110,7 @@ for file in files:
         xmlschema101.assertValid(doc)
         print "rX",
         # parse XSEED
-        sp = Parser(strict=True, compact=compact)
-        sp.read(xml2)
+        sp = Parser(xml2, strict=True, compact=compact)
         seed3 = sp.getSEED()
         print "c",
         # compare XSEED and SEED files

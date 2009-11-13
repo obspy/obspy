@@ -114,7 +114,13 @@ class ParserTestCase(unittest.TestCase):
         # Set record length to 100.
         parser.record_length = 100
         # Use a blockette 53 string.
-        SEED_string = '0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.00000E+00+0.00000E+00'
+        SEED_string = '0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E' \
+            '+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+0' \
+            '0+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+' \
+            '00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00' \
+            '-2.51330E+02+0.00000E+00+0.00000E+00+0.00000E+00-1.31040E+02-4' \
+            '.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.0' \
+            '0000E+00+0.00000E+00'
         blkt_53 = Blockette053()
         blkt_53.parseSEED(SEED_string)
         # This just tests an internal SEED method.
@@ -164,10 +170,8 @@ class ParserTestCase(unittest.TestCase):
             # compare both SEED strings
             compareSEED(original_seed, new_seed)
             del parser
-            parser1 = Parser()
-            parser2 = Parser()
-            parser1.read(original_seed)
-            parser2.read(new_seed)
+            parser1 = Parser(original_seed)
+            parser2 = Parser(new_seed)
             self.assertEqual(parser1.getSEED(), parser2.getSEED())
             del parser1, parser2
 
@@ -196,25 +200,22 @@ class ParserTestCase(unittest.TestCase):
         xmlschema = etree.XMLSchema(xmlschema_doc)
         # Loop over all files.
         for file in BW_SEED_files:
-            parser1 = Parser()
             # Parse the file.
-            parser1.read(file)
+            parser1 = Parser(file)
             # Convert to SEED once to avoid any issues seen in
             # test_readAndWriteSEED.
             original_seed = parser1.getSEED()
             del parser1
             # Now read the file, parse it, write XSEED, read XSEED and write
             # SEED again. The output should be totally identical.
-            parser2 = Parser()
-            parser2.read(original_seed)
+            parser2 = Parser(original_seed)
             xseed_string = parser2.getXSEED()
             del parser2
             # Validate XSEED.
             doc = etree.parse(StringIO(xseed_string))
             self.assertTrue(xmlschema.validate(doc))
             del doc
-            parser3 = Parser()
-            parser3.read(xseed_string)
+            parser3 = Parser(xseed_string)
             new_seed = parser3.getSEED()
             self.assertEqual(original_seed, new_seed)
             del parser3, original_seed, new_seed
@@ -224,8 +225,7 @@ class ParserTestCase(unittest.TestCase):
         Test the reading of a full-SEED file. The data portion will be omitted.
         """
         filename = os.path.join(self.path, 'arclink_full.seed')
-        sp = Parser()
-        sp.read(filename)
+        sp = Parser(filename)
         # Just checks whether certain blockettes are written.
         self.assertEqual(len(sp.stations), 1)
         self.assertEqual([_i.id for _i in sp.volume], [10, 12])
@@ -242,14 +242,12 @@ class ParserTestCase(unittest.TestCase):
         ### example 1
         # parse Dataless SEED
         filename = os.path.join(self.path, 'dataless.seed.BW_ALTM')
-        sp1 = Parser()
-        sp1.read(filename)
+        sp1 = Parser(filename)
         # write XML-SEED
         tempfile = NamedTemporaryFile().name
         sp1.writeXSEED(tempfile)
         # parse XML-SEED
-        sp2 = Parser()
-        sp2.read(tempfile)
+        sp2 = Parser(tempfile)
         # create RESP files
         # XXX: incorrect Python data types
         _resp_list = sp2.getRESP()
@@ -257,14 +255,12 @@ class ParserTestCase(unittest.TestCase):
         ### example 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
-        sp1 = Parser()
-        sp1.read(filename)
+        sp1 = Parser(filename)
         # write XML-SEED
         tempfile = NamedTemporaryFile().name
         sp1.writeXSEED(tempfile)
         # parse XML-SEED
-        sp2 = Parser()
-        sp2.read(tempfile)
+        sp2 = Parser(tempfile)
         # create RESP files
         # XXX: "The reference blockette for response key 1 could not be found"
         _resp_list = sp2.getRESP()

@@ -94,8 +94,7 @@ for file in files:
         print "Parsing %s\t\t" % os.path.join(relpath, seedfile)
     # Create the RESP file.
     try:
-        sp = Parser()
-        sp.read(file)
+        sp = Parser(file)
         sp.writeRESP(folder=resp_path)
         sp.writeRESP(folder=resp_path, zipped=True)
         # Compare with RESP files generated with rdseed from IRIS 
