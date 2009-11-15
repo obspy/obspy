@@ -10,7 +10,7 @@ import os
 import sys
 
 
-def read(pathname, format=None, headonly=False):
+def read(pathname, format=None, headonly=False, **kwargs):
     """
     Reads a file into a L{obspy.core.Stream} object.
 
@@ -18,13 +18,13 @@ def read(pathname, format=None, headonly=False):
     #Reads files using the given wildcard into a L{obspy.core.Stream} object.
     st = Stream()
     for file in iglob(pathname):
-        st.extend(_read(file, format, headonly).traces, reference=True)
+        st.extend(_read(file, format, headonly, **kwargs).traces, reference=True)
     if len(st) == 0:
-        raise Exception("Cannot find a file with filename/wildcard", pathname)
+        raise Exception("Cannot open file/files", pathname)
     return st
 
 
-def _read(filename, format=None, headonly=False):
+def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a file into a L{obspy.core.Stream} object.
     
@@ -62,9 +62,9 @@ def _read(filename, format=None, headonly=False):
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     if headonly:
-        stream = fileformat[2](filename, headonly=True)
+        stream = fileformat[2](filename, headonly=True, **kwargs)
     else:
-        stream = fileformat[2](filename)
+        stream = fileformat[2](filename, **kwargs)
     return stream
 
 

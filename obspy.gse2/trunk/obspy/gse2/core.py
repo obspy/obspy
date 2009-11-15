@@ -41,7 +41,7 @@ gse2_extra = [
 ]
 
 
-def readGSE2(filename, headonly=False, **kwargs):
+def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     """
     Reads a GSE2 file and returns an obspy.Trace object.
     GSE2 "stream files", which consists of multiple WID2 entries (GSE2
@@ -50,6 +50,8 @@ def readGSE2(filename, headonly=False, **kwargs):
     
     @param filename: GSE2 file to be read.
     @param headonly: If True read only head of GSE2 file
+    @param verify_chksum: If True verify Checksum and raise Exception if it
+        is not correct
     """
     traces = []
     # read GSE2 file
@@ -66,7 +68,7 @@ def readGSE2(filename, headonly=False, **kwargs):
             if headonly:
                 header = libgse2.readHead(f)
             else:
-                header, data = libgse2.read(f)
+                header, data = libgse2.read(f, verify_chksum=verify_chksum)
             # assign all header entries to a new dictionary compatible with an Obspy
             # Trace object.
             new_header = {}

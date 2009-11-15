@@ -6,6 +6,7 @@ The gse2.core test suite.
 
 from obspy.core import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.gse2.libgse2 import ChksumError
 import copy
 import inspect
 import numpy as np
@@ -31,7 +32,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # read
-        st = read(gse2file)
+        st = read(gse2file, verify_checksum=True)
         st._verify()
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
@@ -185,6 +186,18 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats['station'], 'RJOB ')
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
+
+    def test_readWithWrongChecksum(self):
+        """
+        Test if additional kwarg verify_chksum can be given
+        """
+        # read original file
+        gse2file = os.path.join(self.path, 'data',
+                                'loc_RJOB20050831023349.z.wrong_chksum')
+        # should not fail
+        st = read(gse2file, verify_chksum=False)
+        # should fail
+        self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 
 
 def suite():

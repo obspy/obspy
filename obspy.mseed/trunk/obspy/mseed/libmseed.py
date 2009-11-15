@@ -125,7 +125,8 @@ class libmseed(object):
         return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
-                               skipnotdata=1, verbose=0):
+                               skipnotdata=1, verbose=0, starttime=None,
+                               endtime=None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -141,9 +142,26 @@ class libmseed(object):
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
+        #XXX: Put next lines till seek in a function Function, return msf, msr and f
         # Initialize MSRecord structure
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         msf = C.POINTER(MSFileParam)() # null pointer
+        # allocate file pointer, we need this to cut with start and endtime
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               str(filename), -1, None, None,
+                               1, 0, 0)
+        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
+        f = PyFile_FromFile(mf.contents.fp.contents.value,
+                            str(filename), 'rb', _PyFile_callback)
+        f.seek(0)
+        end_byte = 1e99
+        if starttime or endtime:
+            bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
+            if bytes == '':
+                self.clear(msf, msr)
+                return ''
+            f.seek(bytes[0])
+            end_byte = bytes[0] + bytes[1]
         # Loop over records and append to trace_list.
         # Directly call ms_readmsr
         last_msrid = None
@@ -169,20 +187,20 @@ class libmseed(object):
                 trace_list[-1][0]['endtime'] = header['endtime']
                 trace_list[-1][0]['numsamples'] += header['numsamples']
                 trace_list[-1].append(data)
-                concat_flag = True
             else:
                 # Concatenate last trace and start a new trace
                 trace_list[-1] = [trace_list[-1][0],
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
-                concat_flag = False
             last_msrid = msrid
-        # Finish up loop, concatenate trace_list if not already done
-        if concat_flag:
-                trace_list[-1] = [trace_list[-1][0],
-                                  np.concatenate(trace_list[-1][1:])]
+            if f.tell() >= end_byte:
+                break
+        # Finish up loop, concatenate last trace_list
+        trace_list[-1] = [trace_list[-1][0],
+                          np.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         # Free MSRecord structure
+        f.close()
         self.clear(msf, msr)
         del msf, msr, chain
         return trace_list
@@ -733,24 +751,25 @@ class libmseed(object):
         return result
 
 
-    def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
+    def _bytePosFromTime(self, filename, starttime=None, endtime=None):
         """
-        Cuts a MiniSEED file by cutting at records.
+        Return start and end byte position from mseed file.
         
         The method takes a MiniSEED file and tries to match it as good as
-        possible to the supplied time range. It will simply cut off records
-        that are not within the time range. The record that covers the
-        start time will be the first record and the one that covers the 
-        end time will be the last record.
+        possible to the supplied time range. It will simply return the byte
+        position of records that are within the time range. The byte
+        position of the record that covers the start time will be the first
+        byte position. The byte length will be until the record that covers
+        the end time.
         
         This method will only work correctly for files containing only traces
         from one single source. All traces have to be in chronological order.
-        Also all records in the file need to have the same length.
+        Also all records in the file need to have the same length in bytes.
         
         It will return an empty string if the file does not cover the desired
         range.
         
-        @return: Byte string containing the cut file.
+        @return: Byte position of beginning and total length of bytes
         
         @param filename: File string of the MiniSEED file to be cut.
         @param starttime: L{obspy.core.UTCDateTime} object.
@@ -781,7 +800,7 @@ class libmseed(object):
         if starttime >= end or endtime <= start:
             self.clear(msf, msr)
             del msr, msf
-            return ''
+            return None
         # Guess the most likely records that cover start- and end time.
         nr = info['number_of_records']
         start_record = int((starttime - start) / (end - start) * nr)
@@ -852,16 +871,37 @@ class libmseed(object):
             else:
                 delta = 1
             end_record += delta
-        # Open the file and read the cut file.
-        record_length = info['record_length']
-        # Jump to starting location.
-        f.seek(record_length * start_record, 0)
-        # Read until end_location.
-        data = f.read(record_length * (end_record - start_record + 1))
-        f.close()
         # Deallocate msr and msf memory
         self.clear(msf, msr)
         del msr, msf
+        # Calculate starting position
+        record_length = info['record_length']
+        start_byte = record_length * start_record
+        # length in bytes to read
+        length_byte = record_length * (end_record - start_record + 1)
+        return start_byte, length_byte
+
+    def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
+        """
+        Cuts a MiniSEED file by cutting at records.
+        
+        For details see method _bytePosFromTime.
+        
+        @return: Byte string containing the cut file.
+        
+        @param filename: File string of the MiniSEED file to be cut.
+        @param starttime: L{obspy.core.UTCDateTime} object.
+        @param endtime: L{obspy.core.UTCDateTime} object.
+        """
+        bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
+        if bytes == None:
+            return ''
+        # Open file a seek to location
+        f = open(filename)
+        f.seek(bytes[0], 0)
+        # Read until end_location.
+        data = f.read(bytes[1])
+        f.close()
         # Return the cut file string.
         return data
 

@@ -302,6 +302,22 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
                           encoding='FLOAT_64')
 
+    def test_readPartsOfFile(self):
+        """
+        Test reading only parts of an mseed file without unpacking or
+        touching the rest.
+        """
+        temp = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001')
+        file = temp + '.first_10_percent'
+        t = [UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
+             UTCDateTime(2008, 1, 1, 0, 0, 4, 30000)]
+        tr1 = read(file, starttime=t[0], endtime=t[1])[0]
+        self.assertEqual(t[0], tr1.stats.starttime)
+        self.assertEqual(t[1], tr1.stats.endtime)
+        # initialize second record
+        file2 = temp + '.second_record'
+        tr2 = read(file2)[0]
+        np.testing.assert_array_equal(tr1.data, tr2.data)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

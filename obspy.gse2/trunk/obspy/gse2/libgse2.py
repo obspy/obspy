@@ -190,7 +190,7 @@ def writeHeader(f, head):
     )
 
 
-def read(f, test_chksum=False):
+def read(f, verify_chksum=True):
     """
     Read GSE2 file and return header and data. 
     
@@ -203,7 +203,8 @@ def read(f, test_chksum=False):
     @param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
     @type test_chksum: Bool
-    @param test_chksum: If True: Test Checksum and raise Exception
+    @param verify_chksum: If True verify Checksum and raise Exception if it
+        is not correct
     @rtype: Dictionary, Numpy.ndarray int32
     @return: Header entries and data as numpy.ndarray of type int32.
     """
@@ -215,8 +216,8 @@ def read(f, test_chksum=False):
     assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
     lib.rem_2nd_diff(data, head.n_samps)
     # test checksum only if enabled
-    if test_chksum:
-        # calculate checksum from data
+    if verify_chksum:
+        # calculate checksum from data, as in gse_driver.c line 60
         chksum_data = lib.check_sum(data, head.n_samps, C.c_longlong())
         # find checksum within file
         buf = f.readline()
@@ -291,7 +292,7 @@ def write(headdict, data, f, inplace=False):
     lib.buf_init(None)
     #
     chksum = C.c_longlong()
-    chksum = abs(lib.check_sum(data, n, chksum))
+    chksum = lib.check_sum(data, n, chksum)
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you

@@ -38,7 +38,7 @@ class LibGSE2TestCase(unittest.TestCase):
         # list of known data samples
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
-        header, data = libgse2.read(f, test_chksum=True)
+        header, data = libgse2.read(f, verify_chksum=True)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
@@ -61,7 +61,10 @@ class LibGSE2TestCase(unittest.TestCase):
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should fail
         fp = open(gse2file, 'rb')
-        self.assertRaises(ChksumError, libgse2.read, fp, test_chksum=True)
+        self.assertRaises(ChksumError, libgse2.read, fp, verify_chksum=True)
+        # should not fail
+        fp.seek(0)
+        trl = libgse2.read(fp, verify_chksum=False)
         fp.close()
 
     def test_readAndWrite(self):
