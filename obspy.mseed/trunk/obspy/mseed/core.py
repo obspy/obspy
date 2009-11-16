@@ -14,7 +14,7 @@ def isMSEED(filename):
     return __libmseed__.isMSEED(filename)
 
 
-def readMSEED(filename, headonly=False, **kwargs):
+def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
     """
     Reads a given Mini-SEED file and returns an obspy.Stream object.
     
@@ -25,10 +25,11 @@ def readMSEED(filename, headonly=False, **kwargs):
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename)
     else:
-        if kwargs.get('starttime') or kwargs.get('endtime') or sys.platform == 'win32': 
-            trace_list = __libmseed__.readMSTracesViaRecords(filename, **kwargs)
+        if starttime or endtime or sys.platform == 'win32': 
+            trace_list = __libmseed__.readMSTracesViaRecords(filename,
+                    starttime=starttime, endtime=endtime)
         else:
-            #10% faster, problem with windows
+            #10% faster, problem on windows
             trace_list = __libmseed__.readMSTraces(filename) 
     # Create a list containing all the traces.
     traces = []

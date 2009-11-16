@@ -319,6 +319,22 @@ class CoreTestCase(unittest.TestCase):
         tr2 = read(file2)[0]
         np.testing.assert_array_equal(tr1.data, tr2.data)
 
+    def test_readWithGSE2Option(self):
+        """
+        Test that reading will still work if wrong option (of gse2)
+        verify_chksum is given. This is important if the read method is
+        called for an unkown file format.
+        """
+        file = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001'
+        '.second_record')
+        tr = read(file,verify_chksum=True,starttime=None)[0]
+        data = np.array([-397, -387, -368, -381, -388])
+        np.testing.assert_array_equal(tr.data[0:5], data)
+        self.assertEqual(412, len(tr.data))
+        data = np.array([-406, -417, -403, -423, -413])
+        np.testing.assert_array_equal(tr.data[-5:], data)
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
