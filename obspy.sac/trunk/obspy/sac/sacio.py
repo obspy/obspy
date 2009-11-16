@@ -115,6 +115,7 @@ class ReadSac(object):
                       'kt9':14,'kf':15,'kuser0':16,'kuser1':17,\
                       'kuser2':18,'kcmpnm':19,'knetwk':20,\
                       'kdatrd':21,'kinst':22}
+        self.byteorder = 'little'
         self.InitArrays()
         self.headonly = headonly
         if filen:
@@ -340,9 +341,6 @@ class ReadSac(object):
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
-                #self.hf.fromfile(f,70)     # read in the float values
-                #self.hi.fromfile(f,40)     # read in the int values
-                #self.hs.fromfile(f,192)    # read in the char values
                 self.hf = np.fromfile(f,dtype='<f4',count=70)
                 self.hi = np.fromfile(f,dtype='<i4',count=40)
                 self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
@@ -354,14 +352,23 @@ class ReadSac(object):
                 try:
                     self.IsSACfile(fname)
                 except SacError, e:
-                    self.hf = self.hi = self.hs = None
-                    f.close()
-                    raise SacError(e)
-                else:
                     try:
-                        self._get_date_()
-                    except SacError:
-                        pass
+                        ### if it is not a valid SAC-file try with big endian byte order
+                        f.seek(0,0)
+                        self.hf = np.fromfile(f,dtype='>f4',count=70)
+                        self.hi = np.fromfile(f,dtype='>i4',count=40)
+                        self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
+                        self.IsSACfile(fname)
+                        self.byteorder = 'big'
+                    except SacError, e:
+                        self.hf = self.hi = self.hs = None
+                        f.close()
+                        raise SacError(e)
+                    else:
+                        try:
+                            self._get_date_()
+                        except SacError:
+                            pass
 
 
     def WriteSacHeader(self,fname):
@@ -426,9 +433,6 @@ class ReadSac(object):
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
-                #self.hf.fromfile(f,70)     # read in the float values
-                #self.hi.fromfile(f,40)     # read in the int values
-                #self.hs.fromfile(f,192)    # read in the char values
                 self.hf = np.fromfile(f,dtype='<f4',count=70)
                 self.hi = np.fromfile(f,dtype='<i4',count=40)
                 self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
@@ -438,25 +442,36 @@ class ReadSac(object):
                 ##### only continue if it is a SAC file
                 try:
                     self.IsSACfile(fname)
-                except SacError, e:
-                    raise SacError(e)
-                else:
-                    #--------------------------------------------------------------
-                    # read in the seismogram points
-                    #--------------------------------------------------------------
-                    npts = self.hi[9]  # you just have to know it's in the 10th place
-                    #                  # actually, it's in the SAC manual
+                except SacError:
                     try:
-                        self.seis = np.fromfile(f,dtype='<f4',count=npts)
-                    except EOFError, e:
-                        self.hf = self.hi = self.hs = self.seis = None
-                        f.close()
-                        raise SacIOError("Cannot read any or only some data points: ",e)
+                        ### if it is not a valid SAC-file try with big endian byte order
+                        f.seek(0,0)
+                        self.hf = np.fromfile(f,dtype='>f4',count=70)
+                        self.hi = np.fromfile(f,dtype='>i4',count=40)
+                        self.hs = np.fromfile(f,dtype='|S8', count=24)    # read in the char values
+                        self.IsSACfile(fname)
+                        self.byteorder = 'big'
+                    except SacError, e:
+                        raise SacError(e)
+                #--------------------------------------------------------------
+                # read in the seismogram points
+                #--------------------------------------------------------------
+                npts = self.hi[9]  # you just have to know it's in the 10th place
+                #                  # actually, it's in the SAC manual
+                try:
+                    if self.byteorder == 'big':
+                        self.seis = np.fromfile(f,dtype='>f4',count=npts)
                     else:
-                        try:
-                            self._get_date_()
-                        except SacError:
-                            pass
+                        self.seis = np.fromfile(f,dtype='<f4',count=npts)
+                except EOFError, e:
+                    self.hf = self.hi = self.hs = self.seis = None
+                    f.close()
+                    raise SacIOError("Cannot read any or only some data points: ",e)
+                else:
+                    try:
+                        self._get_date_()
+                    except SacError:
+                        pass
 
 
 
