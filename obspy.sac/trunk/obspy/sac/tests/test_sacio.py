@@ -112,6 +112,23 @@ class SacioTestCase(unittest.TestCase):
         os.remove(tempfile)
         os.remove(tempfile2)
 
+
+    def test_readBigEnd(self):
+        """
+        Test reading big endian binary files
+        """
+        tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
+        tfileb = os.path.join(os.path.dirname(__file__), 'data', 'test.sac.swap')
+        tl = sacio.ReadSac(tfilel)
+        tb = sacio.ReadSac(tfileb)
+        self.assertEqual(tl.GetHvalue('kevnm'),tb.GetHvalue('kevnm'))
+        self.assertEqual(tl.GetHvalue('npts'),tb.GetHvalue('npts'))
+        self.assertEqual(tl.GetHvalueFromFile(tfilel,'kcmpnm'),tb.GetHvalueFromFile(tfileb,'kcmpnm'))
+        
+
+
+
+        
     def test_isSAC(self):
         """
         See if assertation is Raised if file ist not a sac file
