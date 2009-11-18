@@ -5,14 +5,14 @@ import matplotlib
 matplotlib.rc('figure.subplot', hspace=.35, wspace=.35) #adjust subplot layout
 matplotlib.rc('font', size=8) # adjust font size of plot
 import matplotlib.pyplot as plt
-from obspy.signal import lowpass
+from obspy.signal import lowpass, highpass, bandpass
 from scipy.io import loadmat
 
 #
 # f-domain representation of Butterworth filter
 #
 f = np.arange(0,100,dtype='float64')
-f0 = 20
+f0 = 20 #cut off frequency f0
 fs = 15
 
 plt.figure(1)
