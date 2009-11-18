@@ -39,6 +39,9 @@ class Field(object):
         if self.id:
             return "F%02d" % self.id
 
+    def convert(self, value):
+        return value
+
     def _formatString(self, s, flags=None):
         """
         Using SEED specific flags to format strings.
@@ -186,7 +189,7 @@ class Field(object):
                 temp = [temp]
             temp.append(text)
             text = temp
-        setattr(blockette, self.attribute_name, text)
+        setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
             print('  %s: %s' % (self, text))
@@ -201,16 +204,21 @@ class Integer(Field):
         self.length = length
         self.default = 0
 
-    def read(self, data):
-        temp = data.read(self.length)
+    def convert(self, value):
         try:
-            temp = int(temp)
+            if isinstance(value, list):
+                return [int(_i) for _i in value]
+            else:
+                return int(value)
         except:
             if not self.strict:
                 return self.default
             msg = "No integer value found for %s." % self.field_name
             raise SEEDTypeException(msg)
-        return temp
+
+    def read(self, data):
+        temp = data.read(self.length)
+        return self.convert(temp)
 
     def write(self, data):
         format_str = "%%0%dd" % self.length
@@ -239,15 +247,21 @@ class Float(Field):
             msg = "Float field %s requires a data mask." % self.field_name
             raise SEEDTypeException(msg)
 
-    def read(self, data):
-        temp = data.read(self.length)
+    def convert(self, value):
         try:
-            temp = float(temp)
+            if isinstance(value, list):
+                return [float(_i) for _i in value]
+            else:
+                return float(value)
         except:
-            import pdb;pdb.set_trace()
+            if not self.strict:
+                return self.default
             msg = "No float value found for %s." % self.field_name
             raise SEEDTypeException(msg)
-        return temp
+
+    def read(self, data):
+        temp = data.read(self.length)
+        return self.convert(temp)
 
     def write(self, data):
         format_str = "%%0%ds" % self.length
@@ -470,7 +484,7 @@ class Loop(Field):
                 # loop over data fields within one entry
                 for field in self.data_fields:
                     temp = getattr(blockette, field.attribute_name, [])
-                    temp.append(text.pop(0))
+                    temp.append(field.convert(text.pop(0)))
                     setattr(blockette, field.attribute_name, temp)
             return
         elif self.omit_tag:
@@ -492,3 +506,4 @@ class Loop(Field):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseXML(blockette, root, i)
+

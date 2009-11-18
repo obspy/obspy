@@ -237,11 +237,11 @@ class ParserTestCase(unittest.TestCase):
 
     def test_createRESPFromXSEED(self):
         """
-        BUG
+        Tests RESP file creation from XML-SEED.
         """
         ### example 1
         # parse Dataless SEED
-        filename = os.path.join(self.path, 'dataless.seed.BW_ALTM')
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
         # write XML-SEED
         tempfile = NamedTemporaryFile().name
@@ -249,7 +249,6 @@ class ParserTestCase(unittest.TestCase):
         # parse XML-SEED
         sp2 = Parser(tempfile)
         # create RESP files
-        # XXX: incorrect Python data types
         _resp_list = sp2.getRESP()
         os.remove(tempfile)
         ### example 2
@@ -262,7 +261,6 @@ class ParserTestCase(unittest.TestCase):
         # parse XML-SEED
         sp2 = Parser(tempfile)
         # create RESP files
-        # XXX: "The reference blockette for response key 1 could not be found"
         _resp_list = sp2.getRESP()
         os.remove(tempfile)
 
