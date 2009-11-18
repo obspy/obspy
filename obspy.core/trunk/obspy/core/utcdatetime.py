@@ -26,7 +26,8 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(2009, 7, 1, 12, 12, 12)
         >>> UTCDateTime("1970-01-01T12:23:34.123456")
         UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
-    
+        >>> UTCDateTime("2009,010,19:59:42.1800")
+        UTCDateTime(2009, 1, 10, 19, 59, 42, 180000)
         >>> t = UTCDateTime(1240561632.005)
         >>> t
         UTCDateTime(2009, 4, 24, 8, 27, 12, 5000)
@@ -55,11 +56,18 @@ class UTCDateTime(datetime.datetime):
                                                  dt.minute, dt.second,
                                                  dt.microsecond)
             elif isinstance(arg, basestring):
-                arg = arg.replace('T', '')
-                arg = arg.replace('-', '')
-                arg = arg.replace(':', '')
+                arg = arg.replace('T', ' ')
+                arg = arg.replace('-', ' ')
+                arg = arg.replace(':', ' ')
+                arg = arg.replace(',', ' ')
+                arg = arg.replace('Z', ' ')
+                # check for ordinal date (julian date)
+                parts = arg.split(' ')
+                if len(parts) > 1 and len(parts[1]) == 3 and parts[1].isdigit():
+                    patterns = ["%Y%j%H%M%S", "%Y%j"]
+                else:
+                    patterns = ["%Y%m%d%H%M%S", "%Y%m%d"]
                 arg = arg.replace(' ', '')
-                arg = arg.replace('Z', '')
                 ms = 0
                 if '.' in arg:
                     parts = arg.split('.')
@@ -75,7 +83,7 @@ class UTCDateTime(datetime.datetime):
                 if not arg.isdigit():
                     return datetime.datetime.__new__(cls, *args, **kwargs)
                 dt = None
-                for pattern in ["%Y%m%d%H%M%S", "%Y%m%d"]:
+                for pattern in patterns:
                     try:
                         dt = datetime.datetime.strptime(arg, pattern)
                     except:
@@ -94,7 +102,7 @@ class UTCDateTime(datetime.datetime):
                                              dt.day, dt.hour,
                                              dt.minute, dt.second,
                                              dt.microsecond)
-        # check for julian day kwargs
+        # check for ordinal/julian date kwargs
         if 'julday' in kwargs and 'year' in kwargs:
             try:
                 temp = "%4d%03d" % (int(kwargs['year']),

@@ -39,6 +39,32 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
 
+    def test_fromDateStringWithoutSeparator(self):
+        """
+        Tests initialization from a given time string.
+        """
+        dt = UTCDateTime("19700101122334")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime("19700101122334.5")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 500000))
+        dt = UTCDateTime("19700101122334.000005")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 5))
+        dt = UTCDateTime("19691231234319.900000")
+        self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
+
+    def test_fromOrdinalDateString(self):
+        """
+        Tests initialization from a given time string.
+        """
+        dt = UTCDateTime("1970,001,12:23:34")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime("1970,001,12:23:34.5")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 500000))
+        dt = UTCDateTime("1970,001,12:23:34.000005")
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34, 5))
+        dt = UTCDateTime("1969,365,23:43:19.900000")
+        self.assertEquals(dt, UTCDateTime(1969, 12, 31, 23, 43, 19, 900000))
+
     def test_toString(self):
         """
         Tests __str__ method.
