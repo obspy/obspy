@@ -41,6 +41,20 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(strict=True)
         self.assertRaises(SEEDParserException, sp.read, data)
 
+    def test_string(self):
+        """
+        Tests string representation of L{obspy.xseed.Parser} object.
+        """
+        filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
+        sp = Parser(filename)
+        print sp
+
+    def test_nonExistingFilename(self):
+        """
+        Test reading non existing file.
+        """
+        self.assertRaises(IOError, Parser, "XYZ")
+
     def test_blocketteStartsAfterRecord(self):
         """
         '... 058003504 1.00000E+00 0.00000E+0000 000006S*0543864 ... '

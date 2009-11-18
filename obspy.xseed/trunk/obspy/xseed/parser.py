@@ -69,6 +69,27 @@ class Parser(object):
         if filename:
             self.read(filename)
 
+    def __str__(self):
+        """
+        """
+        try:
+            if len(self.stations) == 0:
+                return 'No data'
+        except:
+            return 'No data'
+        else:
+            temp = ""
+            for station in self.stations:
+                for blockette in station:
+                    if blockette.id != 52:
+                        continue
+                    temp += station[0].network_code + '.'
+                    temp += station[0].station_call_letters + '.'
+                    temp += blockette.location_identifier.strip() + '.'
+                    temp += blockette.channel_identifier + os.linesep
+
+            return temp
+
     def read(self, data):
         """
         General parser method for XML-SEED and Dataless SEED files.
@@ -95,7 +116,7 @@ class Parser(object):
             # XML files should always starts with an '<'
             self._parseXSEED(data)
         else:
-            raise TypeError
+            raise IOError
 
     def getXSEED(self, version='1.0'):
         """
@@ -137,6 +158,7 @@ class Parser(object):
         # informations.
         abbr_lenght = len(abbreviations)
         cur_count = 1 + abbr_lenght
+        #if version == '1.0':
         while True:
             blkt11 = Blockette011()
             blkt11.number_of_stations = len(self.stations)
