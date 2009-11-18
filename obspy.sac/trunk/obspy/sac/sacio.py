@@ -69,9 +69,7 @@ Convenience:
     
 """    
 
-#import array,os,string
-import os,string
-from sacutil import *
+import os
 import time, copy
 from obspy.core import UTCDateTime
 import numpy as np
@@ -205,7 +203,7 @@ class ReadSac(object):
     def GetHvalue(self,item):
         """Get a header value using the header arrays: GetHvalue("npts")
         Return value is 1 if no problems occurred, zero otherwise."""
-        key = string.lower(item) # convert the item to lower case
+        key = item.lower() # convert the item to lower case
 
         if self.fdict.has_key(key):
             index = self.fdict[key]
@@ -244,7 +242,7 @@ class ReadSac(object):
         # it's trivial to search each dictionary with the key and return
         #   the value that matches the key
         #
-        key = string.lower(item) # convert the item to lower case
+        key = item.lower() # convert the item to lower case
         #
         if self.fdict.has_key(key):
                 index = self.fdict[key]
