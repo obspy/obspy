@@ -4,8 +4,9 @@ setup.py bdist_egg
 """
 
 from setuptools import setup, find_packages
+import os
 
-version = '0.1.4'
+version = '0.1.5'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -51,6 +52,10 @@ setup(
         'lxml',
         'obspy.core',
         # -*- Extra requirements: -*
+    ],
+    scripts=[
+        'scripts' + os.sep + 'dataless2xseed.py',
+        'scripts' + os.sep + 'xseed2dataless.py'
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
 )
