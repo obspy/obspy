@@ -5,7 +5,8 @@ from obspy.xseed.fields import Integer, VariableString, FixedString, Float
 
 
 class Blockette052(Blockette):
-    """Blockette 052: Channel Identifier Blockette.
+    """
+    Blockette 052: Channel Identifier Blockette.
     
     Sample:
     0520119  BHE0000004~001002+34.946200-106.456700+1740.0100.0090.0+00.0000112
@@ -18,17 +19,17 @@ class Blockette052(Blockette):
         FixedString(3, "Location identifier", 2, 'UN'),
         FixedString(4, "Channel identifier", 3, 'UN'),
         Integer(5, "Subchannel identifier", 4),
-        Integer(6, "Instrument identifier", 3, xpath = 33),
+        Integer(6, "Instrument identifier", 3, xpath=33),
         VariableString(7, "Optional comment", 0, 30, 'UNLPS'),
-        Integer(8, "Units of signal response", 3, xpath = 34),
-        Integer(9, "Units of calibration input", 3, xpath = 34),
+        Integer(8, "Units of signal response", 3, xpath=34),
+        Integer(9, "Units of calibration input", 3, xpath=34),
         Float(10, "Latitude", 10, mask='%+2.6f'),
         Float(11, "Longitude", 11, mask='%+3.6f'),
         Float(12, "Elevation", 7, mask='%+4.1f'),
         Float(13, "Local depth", 5, mask='%3.1f'),
         Float(14, "Azimuth", 5, mask='%3.1f'),
         Float(15, "Dip", 5, mask='%+2.1f'),
-        Integer(16, "Data format identifier code", 4, xpath = 30),
+        Integer(16, "Data format identifier code", 4, xpath=30),
         # The typo is intentional for XSEED 1.0 compatibility.
         Integer(17, "Data recored length", 2, xseed_version='1.0'),
         Integer(17, "Data record length", 2, xseed_version='1.1'),

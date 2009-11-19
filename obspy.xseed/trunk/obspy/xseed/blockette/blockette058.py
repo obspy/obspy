@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString, Loop
-from obspy.xseed.utils import formatRESP, SEEDtoRESPTime
+from obspy.xseed.utils import formatRESP
 
 
 class Blockette058(Blockette):
@@ -24,7 +24,7 @@ class Blockette058(Blockette):
     Sample:
     0580035 3 3.27680E+03 0.00000E+00 0
     """
-    
+
     id = 58
     name = "Channel Sensitivity Gain"
     fields = [
@@ -33,7 +33,7 @@ class Blockette058(Blockette):
         Float(5, "Frequency", 12, mask='%+1.5e'),
         Integer(6, "Number of history values", 2),
         # REPEAT fields 7 — 9 for the Number of history values:
-        Loop('History', "Number of history values", [ 
+        Loop('History', "Number of history values", [
             Float(7, "Sensitivity for calibration", 12, mask='%+1.5e'),
             Float(8, "Frequency of calibration sensitivity", 12, mask='%+1.5e'),
             VariableString(9, "Time of above calibration", 1, 22 , 'T')
@@ -46,18 +46,18 @@ class Blockette058(Blockette):
         Returns RESP string.
         """
         # This blockette can result in two different RESPs.
-        blkt_type =self.stage_sequence_number
+        blkt_type = self.stage_sequence_number
         if blkt_type != 0:
             string = \
             '#\t\t+                  +---------------------------------------+                  +\n' + \
             '#\t\t+                  |       Channel Gain,%6s ch %s      |                  +\n'\
-                        %(station, channel) + \
+                        % (station, channel) + \
             '#\t\t+                  +---------------------------------------+                  +\n'
         else:
             string = \
             '#\t\t+                  +---------------------------------------+                  +\n' + \
             '#\t\t+                  |   Channel Sensitivity,%6s ch %s   |                  +\n'\
-                        %(station, channel) + \
+                        % (station, channel) + \
             '#\t\t+                  +---------------------------------------+                  +\n'
         string += '#\t\t\n' + \
         'B058F03     Stage sequence number:                 %s\n' \
@@ -84,16 +84,16 @@ class Blockette058(Blockette):
             for _i in xrange(self.number_of_history_values):
                 string += \
                 'B058F07-08   %2s %13s %13s %s\n' \
-                % (formatRESP(self.sensitivity_for_calibration[_i], 6), 
+                % (formatRESP(self.sensitivity_for_calibration[_i], 6),
                 formatRESP(self.frequency_of_calibration_sensitivity[_i], 6),
-                SEEDtoRESPTime(self.time_of_above_calibration[_i]))
+                self.time_of_above_calibration[_i].formatSEED())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n' + \
                 'B058F07-08    0 %13s %13s %s\n' \
-                    % (formatRESP(self.sensitivity_for_calibration, 6), 
+                    % (formatRESP(self.sensitivity_for_calibration, 6),
                       formatRESP(self.frequency_of_calibration_sensitivity, 6),
-                      SEEDtoRESPTime(self.time_of_above_calibration))
+                      self.time_of_above_calibration.formatSEED())
         string += '#\t\t\n'
         return string

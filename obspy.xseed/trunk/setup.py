@@ -52,5 +52,5 @@ setup(
         'obspy.core',
         # -*- Extra requirements: -*
     ],
-     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
 )

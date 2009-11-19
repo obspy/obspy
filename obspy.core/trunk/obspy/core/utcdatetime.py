@@ -64,8 +64,10 @@ class UTCDateTime(datetime.datetime):
                 # check for ordinal date (julian date)
                 parts = arg.split(' ')
                 if len(parts) > 1 and len(parts[1]) == 3 and parts[1].isdigit():
+                    # looks like an ordinal date string
                     patterns = ["%Y%j%H%M%S", "%Y%j"]
                 else:
+                    # standard date string
                     patterns = ["%Y%m%d%H%M%S", "%Y%m%d"]
                 arg = arg.replace(' ', '')
                 ms = 0
@@ -252,13 +254,44 @@ class UTCDateTime(datetime.datetime):
             text += '.000000'
         return text.replace(' ', 'T') + 'Z'
 
+    def getJulday(self):
+        return int(self.strftime("%j"))
+
+    julday = property(getJulday)
+
     def formatArcLink(self):
         """
         Returns string representation for the ArcLink protocol.
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
-                                      self.hour, self.minute, self.second,
-                                      self.microsecond)
+                                         self.hour, self.minute, self.second,
+                                         self.microsecond)
+
+    def formatSEED(self, compact=False):
+        """
+        Returns string representation for a SEED volume.
+        """
+        if not compact:
+            if not self.time:
+                return "%04d,%03d" % (self.year, self.julday)
+            return "%04d,%03d,%02d:%02d:%02d.%04d" % (self.year, self.julday,
+                                                      self.hour, self.minute,
+                                                      self.second,
+                                                      self.microsecond // 100)
+        temp = "%04d,%03d" % (self.year, self.julday)
+        if not self.hour:
+            return temp
+        temp += ",%02d" % self.hour
+        if not self.minute:
+            return temp
+        temp += ":%02d" % self.minute
+        if not self.second:
+            return temp
+        temp += ":%02d" % self.second
+        if not self.microsecond:
+            return temp
+        temp += ".%04d" % (self.microsecond // 100)
+        return temp
 
 
 if __name__ == '__main__':

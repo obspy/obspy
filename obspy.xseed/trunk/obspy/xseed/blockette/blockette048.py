@@ -2,7 +2,7 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString, Loop
-from obspy.xseed.utils import formatRESP, SEEDtoRESPTime
+from obspy.xseed.utils import formatRESP
 
 
 class Blockette048(Blockette):
@@ -36,7 +36,7 @@ class Blockette048(Blockette):
         string = \
         '#\t\t+                  +---------------------------------------+                  +\n' + \
         '#\t\t+                  |   Channel Sensitivity,%6s ch %s   |                  +\n'\
-                    %(station, channel) + \
+                    % (station, channel) + \
         '#\t\t+                  +---------------------------------------+                  +\n' + \
         '#\t\t\n' + \
         'B048F05     Sensitivity:                           %s\n' \
@@ -52,16 +52,16 @@ class Blockette048(Blockette):
             for _i in xrange(self.number_of_history_values):
                 string += \
                 'B048F08-09   %2s %13s %13s %s\n' \
-                % (formatRESP(self.sensitivity_for_calibration[_i], 6), 
+                % (formatRESP(self.sensitivity_for_calibration[_i], 6),
                 formatRESP(self.frequency_of_calibration_sensitivity[_i], 6),
-                SEEDtoRESPTime(self.time_of_above_calibration[_i]))
+                self.time_of_above_calibration[_i].formatSEED())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n' + \
                 'B048F08-09    0 %13s %13s %s\n' \
-                    % (formatRESP(self.sensitivity_for_calibration, 6), 
+                    % (formatRESP(self.sensitivity_for_calibration, 6),
                       formatRESP(self.frequency_of_calibration_sensitivity, 6),
-                      SEEDtoRESPTime(self.time_of_above_calibration))
+                      self.time_of_above_calibration.formatSEED())
         string += '#\t\t\n'
         return string

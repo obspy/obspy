@@ -2,6 +2,7 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString
+from obspy.core import UTCDateTime
 
 
 class Blockette010(Blockette):
@@ -24,7 +25,7 @@ class Blockette010(Blockette):
         Integer(4, "Logical record length", 2),
         VariableString(5, "Beginning time", 1, 22, 'T'),
         VariableString(6, "End time", 1, 22, 'T',
-                       default_value='2038-01-01T00:00:00'),
+                       default_value=UTCDateTime(2038, 1, 1)),
         VariableString(7, "Volume Time", 1, 22, 'T', version=2.3),
         VariableString(8, "Originating Organization", 1, 80, version=2.3),
         VariableString(9, "Label", 1, 80, version=2.3)

@@ -5,7 +5,7 @@
 
 --01-XSEED
 <station_comment blockette="051">
-  <beginning_effective_time>2000-07-05T06:36:04</beginning_effective_time>
-  <end_effective_time>2000-07-05T07:03:20</end_effective_time>
+  <beginning_effective_time>2000-07-05T06:36:04.000000Z</beginning_effective_time>
+  <end_effective_time>2000-07-05T07:03:20.000000Z</end_effective_time>
   <comment_code_key>/xseed/abbreviation_dictionary_control_header/comment_description/comment_code_key[text()="1"]/parent::*</comment_code_key>
 </station_comment>

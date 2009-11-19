@@ -30,35 +30,26 @@ def _compareRESPFiles(original, new):
     # Skip the first line.
     for _i in xrange(1, len(org_list)):
         try:
-            assert org_list[_i] == new_list[_i]
+            assert new_list[_i] == org_list[_i]
         except:
-
             # Skip if it is the header.
             if org_list[_i] == '#\t\t<< IRIS SEED Reader, Release 4.8 >>\n' and\
                new_list[_i] == '#\t\t<< obspy.xseed, Version 0.1.3 >>\n':
                 continue
             # Skip if its a short time string.
-            if org_list[_i].startswith('B052F22') and \
-                new_list[_i].startswith('B052F22') and \
-                org_list[_i].replace('\n',
-                    ':00:00.0000\n'[-(len(new_list[_i]) - \
-                                      len(org_list[_i])) - 1:]) == \
-                new_list[_i]:
+            line1 = min(new_list[_i].strip(), org_list[_i].strip())
+            line2 = max(new_list[_i].strip(), org_list[_i].strip())
+            if line1.startswith('B052F22') and line1 in line2:
                 continue
-            if org_list[_i].startswith('B052F23') and \
-                new_list[_i].startswith('B052F23') and \
-                org_list[_i].replace('\n',
-                    ':00:00.0000\n'[-(len(new_list[_i]) - \
-                                      len(org_list[_i])) - 1:]) == \
-                new_list[_i]:
+            if line1.startswith('B052F23') and line1 in line2:
                 continue
             # search for floating point errors
-            diffs = [i for i, c in enumerate(zip(org_list[_i], new_list[_i])) \
-                     if c[0] != c[1]]
-            if len(diffs) == 1:
-                if new_list[_i][diffs[0] + 1] == 'E' and \
-                   new_list[_i][diffs[0]].isdigit():
-                    continue
+#            diffs = [i for i, c in enumerate(zip(org_list[_i], new_list[_i])) \
+#                     if c[0] != c[1]]
+#            if len(diffs) == 1 and diffs[0] != len(org_list[_i]):
+#                if new_list[_i][diffs[0] + 1] == 'E' and \
+#                   new_list[_i][diffs[0]].isdigit():
+#                    continue
             msg = '\nCompare failed for:\n' + \
                   'File :\t' + original.split(os.sep)[-1] + \
                   '\nLine :\t' + str(_i + 1) + '\n' + \
@@ -103,6 +94,7 @@ for file in files:
             org_resp_file = resp_file.replace('output' + os.sep, 'data' + os.sep)
             _compareRESPFiles(org_resp_file, resp_file)
     except Exception, e:
+        import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isdir(resp_path):
             for f in glob.glob(os.path.join(resp_path, '*')):

@@ -8,7 +8,7 @@
 <volume_timespan_index blockette="012">
   <number_of_spans_in_table>1</number_of_spans_in_table>
   <timespan>
-    <beginning_of_span>2000-06-25T06:03:36</beginning_of_span>
-    <end_of_span>2000-06-25T07:51:03.360800</end_of_span>
+    <beginning_of_span>2000-06-25T06:03:36.000000Z</beginning_of_span>
+    <end_of_span>2000-06-25T07:51:03.360800Z</end_of_span>
   </timespan>
 </volume_timespan_index>

@@ -24,7 +24,7 @@
     <max_clock_drift>1.0000E+00</max_clock_drift>
     <number_of_comments>0</number_of_comments>
     <channel_flags>TG</channel_flags>
-    <start_date>2006-06-04</start_date>
+    <start_date>2006-06-04T00:00:00.000000Z</start_date>
     <update_flag>N</update_flag>
 </channel_identifier>
 
@@ -53,8 +53,8 @@
     <max_clock_drift>1.0000E+00</max_clock_drift>
     <number_of_comments>0</number_of_comments>
     <channel_flags>TG</channel_flags>
-    <start_date>2006-07-18</start_date>
-    <end_date>2007-06-04</end_date>
+    <start_date>2006-07-18T00:00:00.000000Z</start_date>
+    <end_date>2007-06-04T00:00:00.000000Z</end_date>
     <update_flag>N</update_flag>
 </channel_identifier>
 
@@ -83,6 +83,6 @@
     <max_clock_drift>1.0000E+00</max_clock_drift>
     <number_of_comments>0</number_of_comments>
     <channel_flags>TG</channel_flags>
-    <start_date>2006-06-04</start_date>
+    <start_date>2006-06-04T00:00:00.000000Z</start_date>
     <update_flag>N</update_flag>
 </channel_identifier>

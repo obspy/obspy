@@ -4,7 +4,6 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import blockette, utils
 from obspy.xseed.blockette import Blockette011, Blockette012
-from obspy.xseed.utils import SEEDtoRESPTime
 import math
 import os
 import zipfile
@@ -478,7 +477,7 @@ class Parser(object):
         for blockette in headers[1].getchildren():
             self.temp['abbreviations'].append(\
                     self._parseXMLBlockette(blockette, 'A'))
-        # Append all stations into seperate list items.
+        # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
                 continue
@@ -503,12 +502,12 @@ class Parser(object):
         # Set location and end date default values or convert end time..
         if len(channel_info['Location']) == 0:
             channel_info['Location'] = '??'
-        if len(channel_info['End date']) == 0:
+        if not channel_info['End date']:
             channel_info['End date'] = 'No Ending Time'
         else:
-            channel_info['End date'] = SEEDtoRESPTime(channel_info['End date'])
+            channel_info['End date'] = channel_info['End date'].formatSEED()
         # Convert starttime.
-        channel_info['Start date'] = SEEDtoRESPTime(channel_info['Start date'])
+        channel_info['Start date'] = channel_info['Start date'].formatSEED()
         # Write Blockette 52 stuff.
         resp.write(\
                 'B052F03     Location:    %s\n' % channel_info['Location'] + \

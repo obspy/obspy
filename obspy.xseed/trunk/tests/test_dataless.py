@@ -115,6 +115,7 @@ for file in files:
         print "c",
         # compare XSEED and SEED files
         if xml1 != xml2:
+            import pdb;pdb.set_trace()
             raise Exception("XML-SEED strings differ")
         if seed2 != seed3:
             raise Exception("SEED strings differ")

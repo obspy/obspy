@@ -46,8 +46,8 @@ class ParserTestCase(unittest.TestCase):
         Tests string representation of L{obspy.xseed.Parser} object.
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
-        sp = Parser(filename)
-        print sp
+        sp = str(Parser(filename)).split()
+        self.assertEquals(sp, ["BW.MANZ..EHZ", "BW.MANZ..EHN", "BW.MANZ..EHE"])
 
     def test_nonExistingFilename(self):
         """
@@ -62,12 +62,12 @@ class ParserTestCase(unittest.TestCase):
         """
         # create a valid blockette 010 with record length 256
         b010 = "0100026 2.408~2038,001~~~~"
-        blockette = Blockette010(strict=True)
+        blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # create a valid blockette 054
         b054 = "0540240A0400300300000009" + ("+1.58748E-03" * 18)
-        blockette = Blockette054(strict=True)
+        blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054)
         self.assertEquals(b054, blockette.getSEED())
         # combine data
@@ -83,7 +83,7 @@ class ParserTestCase(unittest.TestCase):
         """
         # create a valid blockette 010 with record length 256
         b010 = "0100026 2.408~2038,001~~~~"
-        blockette = Blockette010(strict=True)
+        blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # create a valid blockette 054
@@ -91,7 +91,7 @@ class ParserTestCase(unittest.TestCase):
         nr = ""
         for i in range(0, 78):
             nr = nr + "+1.000%02dE-03" % i # 960 chars
-        blockette = Blockette054(strict=True)
+        blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
         self.assertEquals(b054 + nr, blockette.getSEED())
         # create a blockette 052
@@ -161,8 +161,6 @@ class ParserTestCase(unittest.TestCase):
         There are some differences which will be edited before comparison:
         - The written SEED file will always have the version 2.4. BW uses
           version 2.3.
-        - There is a missing ~ in Field 9 in Blockette 10. This is a fault
-          in the BW files. (see SEED-Manual V2.4 page 38)
         
         The different formating of numbers in the stations blockettes will not
         be changed but 'evened'. Both are valid ways to do it - see SEED-Manual

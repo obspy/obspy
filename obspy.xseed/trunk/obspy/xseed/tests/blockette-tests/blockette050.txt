@@ -15,7 +15,7 @@
   <network_identifier_code>/xseed/abbreviation_dictionary_control_header/generic_abbreviation/abbreviation_lookup_code[text()="1"]/parent::*</network_identifier_code>
   <word_order_32bit>3210</word_order_32bit>
   <word_order_16bit>10</word_order_16bit>
-  <start_effective_date>1989-08-29</start_effective_date>
+  <start_effective_date>1989-08-29T00:00:00.000000Z</start_effective_date>
   <update_flag>N</update_flag>
   <network_code>IU</network_code>
 </station_identifier>

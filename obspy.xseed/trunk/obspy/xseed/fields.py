@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lxml.etree import Element, SubElement
-from obspy.core.util import formatScientific
+from obspy.core import util, UTCDateTime
 from obspy.xseed import utils
 import re
 
@@ -17,6 +17,7 @@ class Field(object):
     def __init__(self, id, name, *args, **kwargs):
         # default
         self.id = id
+        self.flag = ''
         self.name = name
         self.xseed_version = kwargs.get('xseed_version', None)
         self.version = kwargs.get('version', None)
@@ -42,46 +43,45 @@ class Field(object):
     def convert(self, value):
         return value
 
-    def _formatString(self, s, flags=None):
+    def _formatString(self, s):
         """
         Using SEED specific flags to format strings.
         
         This method is partly adopted from fseed.py, the SEED builder for 
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
-        if flags and 'T' in flags:
+        if self.flags and 'T' in self.flags:
             if not s and self.default_value:
                 return self.default_value
-            dt = utils.Iso2DateTime(s)
-            return utils.DateTime2String(dt, self.compact)
+            return utils.DateTime2String(s, self.compact)
         sn = str(s).strip()
-        if not flags:
+        if not self.flags:
             return sn
         rx_list = []
-        if 'U' in flags:
+        if 'U' in self.flags:
             rx_list.append("[A-Z]")
-        if 'L' in flags:
+        if 'L' in self.flags:
             rx_list.append("[a-z]")
-        if 'N' in flags:
+        if 'N' in self.flags:
             rx_list.append("[0-9]")
-        if 'P' in flags:
+        if 'P' in self.flags:
             rx_list.append("[^A-Za-z0-9 ]")
-        if 'S' in flags:
+        if 'S' in self.flags:
             rx_list.append(" ")
-        if '_' in flags:
+        if '_' in self.flags:
             rx_list.append("_")
-        if 'U' in flags and 'L' not in flags:
+        if 'U' in self.flags and 'L' not in self.flags:
             sn = sn.upper()
-        elif 'L' in flags and 'U' not in flags:
+        elif 'L' in self.flags and 'U' not in self.flags:
             sn = sn.lower()
-        if 'S' in flags and 'X' not in flags:
+        if 'S' in self.flags and 'X' not in self.flags:
             sn = sn.replace("_", " ")
-        elif 'X' in flags and 'S' not in flags:
+        elif 'X' in self.flags and 'S' not in self.flags:
             sn = sn.replace(" ", "_")
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
         if re.match("(" + rx + ")*$", sn) == None:
-            msg = "Can't convert string %s with flags %s" % (s, flags)
+            msg = "Can't convert string %s with flags %s" % (s, self.flags)
             raise SEEDTypeException(msg)
         return sn
 
@@ -143,11 +143,14 @@ class Field(object):
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
             result = self.default
+        # muh
+        if 'T' in self.flag:
+            import pdb;pdb.set_trace()
         # watch for multiple entries
         if isinstance(result, list):
             result = result[pos]
         # optional if empty
-        if self.optional and len(result) == 0:
+        if not result and self.optional:
             # debug
             if blockette.debug:
                 print('  %s: skipped because optional')
@@ -273,7 +276,7 @@ class Float(Field):
         # special format for exponential output
         result = format_str % (self.mask % temp)
         if 'E' in self.mask or 'e' in self.mask:
-            result = formatScientific(result.upper())
+            result = util.formatScientific(result.upper())
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)
@@ -292,13 +295,13 @@ class FixedString(Field):
         self.default = ' ' * length
 
     def read(self, data):
-        return self._formatString(data.read(self.length).strip(), self.flags)
+        return self._formatString(data.read(self.length).strip())
 
     def write(self, data):
         # Leave fixed length alphanumeric fields left justified (no leading 
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
-        result = format_str % self._formatString(data, self.flags)
+        result = format_str % self._formatString(data)
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)
@@ -313,7 +316,7 @@ class VariableString(Field):
     Variable length fields cannot have leading or trailing spaces. Character 
     counts for variable length fields do not include the tilde terminator. 
     """
-    def __init__(self, id, name, min_length=0, max_length=None, flags=None,
+    def __init__(self, id, name, min_length=0, max_length=None, flags='',
                  **kwargs):
         Field.__init__(self, id, name, **kwargs)
         self.min_length = min_length
@@ -321,19 +324,28 @@ class VariableString(Field):
         self.flags = flags
         self.default = ' ' * min_length
 
+    def convert(self, value):
+        # check for datetime
+        if 'T' in self.flags:
+            return UTCDateTime(value)
+        return value
+
     def read(self, data):
         data = self._read(data)
-        # datetime ?
-        # Default End-Time string.
-        if self.flags and 'T' in self.flags and self.default_value and not data:
-                return self.default_value
-        if self.flags and 'T' in self.flags:
-            # convert to ISO 8601 time strings
-            dt = utils.String2DateTime(data)
-            return utils.DateTime2Iso(dt)
+        # check for datetime
+        if 'T' in self.flags:
+            # default value
+            if not data:
+                if self.default_value:
+                    return self.default_value
+                else:
+                    return ""
+            # check number of separator
+            data += (2 - data.strip().count(':'))*' 00'
+            return UTCDateTime(data)
         else:
             if self.flags:
-                return self._formatString(data, self.flags)
+                return self._formatString(data)
             else:
                 return data
 
@@ -356,7 +368,7 @@ class VariableString(Field):
         return buffer
 
     def write(self, data):
-        result = self._formatString(data, self.flags) + '~'
+        result = self._formatString(data) + '~'
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.field_name)
