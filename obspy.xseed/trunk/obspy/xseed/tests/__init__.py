@@ -5,7 +5,6 @@ from obspy.xseed.tests import test_blockettes, test_fields, test_utils, \
 import unittest
 
 
-
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(test_blockettes.suite())

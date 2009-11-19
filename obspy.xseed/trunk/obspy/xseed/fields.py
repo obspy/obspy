@@ -338,10 +338,10 @@ class VariableString(Field):
             if not data:
                 if self.default_value:
                     return self.default_value
-                else:
-                    return ""
-            # check number of separator
-            data += (2 - data.strip().count(':'))*' 00'
+                return ""
+            # create a full SEED date string
+            temp = "0000,000,00:00:00.0000"
+            data += temp[len(data):]
             return UTCDateTime(data)
         else:
             if self.flags:

@@ -23,6 +23,8 @@ def dataless2xseed(filename, outfile, verbose, debug):
         msg = 'Found %s files.' % len(files) + os.linesep
         sys.stdout.write(msg)
     for file in files:
+        if not os.path.isfile(file):
+            continue
         f = open(file, 'r')
         if f.read(7) != '000001V':
             if verbose:

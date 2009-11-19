@@ -279,18 +279,16 @@ class UTCDateTime(datetime.datetime):
                                                       self.second,
                                                       self.microsecond // 100)
         temp = "%04d,%03d" % (self.year, self.julday)
-        if not self.hour:
+        if not self.time:
             return temp
         temp += ",%02d" % self.hour
-        if not self.minute:
-            return temp
-        temp += ":%02d" % self.minute
-        if not self.second:
-            return temp
-        temp += ":%02d" % self.second
-        if not self.microsecond:
-            return temp
-        temp += ".%04d" % (self.microsecond // 100)
+        if self.microsecond:
+            return temp + ":%02d:%02d.%04d" % (self.minute, self.second,
+                                               self.microsecond // 100)
+        elif self.second:
+            return temp + ":%02d:%02d" % (self.minute, self.second)
+        elif self.minute:
+            return temp + ":%02d" % (self.minute)
         return temp
 
 
