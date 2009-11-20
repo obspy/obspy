@@ -1146,6 +1146,7 @@ class libmseed(object):
             # Check that data are numpy.ndarrays of dtype int32
             if not isinstance(trace_list[_i][1], np.ndarray) or \
                     trace_list[_i][1].dtype != 'int32':
+                clibmseed.mst_freegroup(C.pointer(mstg))
                 raise Exception("Data must me of type numpy.ndarray, dtype "
                                 "int32")
             # Create variable with the number of sampels in this trace for
