@@ -893,11 +893,12 @@ class libmseed(object):
         @param starttime: L{obspy.core.UTCDateTime} object.
         @param endtime: L{obspy.core.UTCDateTime} object.
         """
-        bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
+        bytes = self._bytePosFromTime(filename, starttime=starttime,
+                                      endtime=endtime)
         if bytes == None:
             return ''
         # Open file a seek to location
-        f = open(filename)
+        f = open(filename, "rb")
         f.seek(bytes[0], 0)
         # Read until end_location.
         data = f.read(bytes[1])
