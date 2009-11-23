@@ -40,40 +40,64 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(t.timestamp+60)
         UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
     """
+
     def __new__(cls, *args, **kwargs):
-        if len(args) == 1:
-            arg = args[0]
-            if type(arg) in [int, long, float]:
-                dt = datetime.datetime.utcfromtimestamp(arg)
-                return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                                 dt.day, dt.hour,
-                                                 dt.minute, dt.second,
-                                                 dt.microsecond)
-            elif isinstance(arg, datetime.datetime):
-                dt = arg
-                return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                                 dt.day, dt.hour,
-                                                 dt.minute, dt.second,
-                                                 dt.microsecond)
-            elif isinstance(arg, basestring):
-                arg = arg.replace('T', ' ')
-                arg = arg.replace('-', ' ')
-                arg = arg.replace(':', ' ')
-                arg = arg.replace(',', ' ')
-                arg = arg.replace('Z', ' ')
+        """
+        Creates a new UTCDateTime object.
+        """
+        if len(args) == 0 and len(kwargs) == 0:
+            dt = datetime.datetime.utcnow()
+            return UTCDateTime._new(cls, dt)
+        elif len(args) == 1:
+            value = args[0]
+            # check types
+            if type(value) in [int, long, float]:
+                # got a timestamp
+                dt = datetime.datetime.utcfromtimestamp(value)
+                return UTCDateTime._new(cls, dt)
+            elif isinstance(value, datetime.datetime):
+                # got a Python datetime.datetime object
+                return UTCDateTime._new(cls, value)
+            elif isinstance(value, datetime.date):
+                # got a Python datetime.date object
+                return datetime.datetime.__new__(cls, value.year, value.month,
+                                                 value.day)
+            elif isinstance(value, basestring):
+                # got a string instance
+                value = value.strip()
+                # check for ISO8601 date string
+                if value.count("T") == 1 or 'iso8601' in kwargs:
+                    try:
+                        dt = UTCDateTime._parseISO8601(value)
+                        return UTCDateTime._new(cls, dt)
+                    except:
+                        if 'iso8601' in kwargs:
+                            raise
+                        pass
+                # try to apply some standard patterns
+                value = value.replace('T', ' ')
+                value = value.replace('-', ' ')
+                value = value.replace(':', ' ')
+                value = value.replace(',', ' ')
+                value = value.replace('Z', ' ')
+                value = value.replace('W', ' ')
                 # check for ordinal date (julian date)
-                parts = arg.split(' ')
-                if len(parts) > 1 and len(parts[1]) == 3 and parts[1].isdigit():
+                parts = value.split(' ')
+                if len(parts) == 1 and len(value) == 7 and value.isdigit():
+                    # looks like an compact ordinal date string
+                    patterns = ["%Y%j"]
+                elif len(parts) > 1 and len(parts[1]) == 3 and \
+                   parts[1].isdigit():
                     # looks like an ordinal date string
                     patterns = ["%Y%j%H%M%S", "%Y%j"]
                 else:
                     # standard date string
                     patterns = ["%Y%m%d%H%M%S", "%Y%m%d"]
-                arg = arg.replace(' ', '')
+                value = value.replace(' ', '')
                 ms = 0
-                if '.' in arg:
-                    parts = arg.split('.')
-                    arg = parts[0].strip()
+                if '.' in value:
+                    parts = value.split('.')
+                    value = parts[0].strip()
                     try:
                         ms = float('.' + parts[1].strip())
                     except:
@@ -82,28 +106,19 @@ class UTCDateTime(datetime.datetime):
                 # UTCDateTime which contains the class specifications. If 
                 # argument is not a digit by now, it must be a binary string 
                 # and we pass it to L{datetime.datetime},
-                if not arg.isdigit():
+                if not value.isdigit():
                     return datetime.datetime.__new__(cls, *args, **kwargs)
                 dt = None
                 for pattern in patterns:
                     try:
-                        dt = datetime.datetime.strptime(arg, pattern)
+                        dt = datetime.datetime.strptime(value, pattern)
                     except:
                         continue
                     else:
                         break
                 if dt:
                     dt = UTCDateTime(dt) + ms
-                    return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                                     dt.day, dt.hour,
-                                                     dt.minute, dt.second,
-                                                     dt.microsecond)
-        elif len(args) == 0 and len(kwargs) == 0:
-            dt = datetime.datetime.utcnow()
-            return datetime.datetime.__new__(cls, dt.year, dt.month,
-                                             dt.day, dt.hour,
-                                             dt.minute, dt.second,
-                                             dt.microsecond)
+                    return UTCDateTime._new(cls, dt)
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs and 'year' in kwargs:
             try:
@@ -117,6 +132,94 @@ class UTCDateTime(datetime.datetime):
                 kwargs['day'] = dt.day
                 kwargs.pop('julday')
         return datetime.datetime.__new__(cls, *args, **kwargs)
+
+    @staticmethod
+    def _new(cls, dt):
+        """
+        I'm just a small helper method to create readable source code.
+        """
+        return datetime.datetime.__new__(cls, dt.year, dt.month, dt.day,
+                                         dt.hour, dt.minute, dt.second,
+                                         dt.microsecond)
+
+    @staticmethod
+    def _parseISO8601(value):
+        """
+        Parses an ISO8601:2004 date time string.
+        """
+        # remove trailing 'Z'
+        value = value.replace('Z', '')
+        # split between date and time
+        try:
+            (date, time) = value.split("T")
+        except:
+            date = value
+            time = ""
+        # split microseconds
+        ms = 0
+        if '.' in time:
+            (time, ms) = time.split(".")
+            ms = float('0.' + ms.strip())
+        # remove all hyphens in date
+        date = date.replace('-', '')
+        length_date = len(date)
+        # remove colons in time
+        time = time.replace(':', '')
+        length_time = len(time)
+        # guess date pattern
+        if date.count('W') == 1 and length_date == 8:
+            # we got a week date: YYYYWwwD
+            # remove week indicator 'W'
+            date = date.replace('W', '')
+            date_pattern = "%Y%W%w"
+            year = int(date[0:4])
+            # [Www] is the week number prefixed by the letter 'W', from W01 
+            # through W53.
+            # strpftime %W == Week number of the year (Monday as the first day 
+            # of the week) as a decimal number [00,53]. All days in a new year 
+            # preceding the first Monday are considered to be in week 0.
+            week = int(date[4:6]) - 1
+            # [D] is the weekday number, from 1 through 7, beginning with 
+            # Monday and ending with Sunday.
+            # strpftime %w == Weekday as a decimal number [0(Sunday),6]
+            day = int(date[6])
+            if day == 7:
+                day = 0
+            date = "%04d%02d%1d" % (year, week, day)
+        elif length_date == 7 and date.isdigit():
+            # we got a ordinal date: YYYYDDD
+            date_pattern = "%Y%j"
+        elif length_date == 8 and date.isdigit():
+            # we got a calendar date: YYYYMMDD
+            date_pattern = "%Y%m%d"
+        else:
+            raise Exception("Wrong or incomplete ISO8601:2004 date format")
+        # check for time zone information
+        # note that the zone designator is the actual offset from UTC and 
+        # does not include any information on daylight saving time
+        delta = 0
+        if time.count('+') == 1:
+            (time, tz) = time.split('+')
+            delta = -1 * (int(tz[0:2]) * 60 + int(tz[2:]))
+        elif time.count('-') == 1:
+            (time, tz) = time.split('-')
+            delta = (int(tz[0:2]) * 60 + int(tz[2:]))
+        # guess time pattern
+        if length_time == 6 and time.isdigit():
+            time_pattern = "%H%M%S"
+        elif length_time == 4 and time.isdigit():
+            time_pattern = "%H%M"
+        elif length_time == 2 and time.isdigit():
+            time_pattern = "%H"
+        elif length_time == 0:
+            time_pattern = ""
+        else:
+            raise Exception("Wrong or incomplete ISO8601:2004 time format")
+        # parse patterns
+        dt = datetime.datetime.strptime(date + 'T' + time,
+                                        date_pattern + 'T' + time_pattern)
+        # add microseconds and eventually correct time zone 
+        return UTCDateTime(dt) + (delta + ms)
 
     def getTimeStamp(self):
         """
