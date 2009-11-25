@@ -186,16 +186,18 @@ class _StationMapperClient(_BaseRESTClient):
         Get PAZ for a station at given time span.
         
         >>> c = Client()
-        >>> a = c.station.getPAZ('BW', 'RJOB', '20090707')
+        >>> a = c.station.getPAZ('BW', 'MANZ', '20090707', channel_id='EHZ')
         >>> a['zeros']
         [0j, 0j]
-        >>> a['poles'] #doctest: +ELLIPSIS
-        [(-0.037004000000000002+0.037016j), ...]
+        >>> a['poles']
+        [(-0.037004000000000002+0.037016j), (-0.037004000000000002-0.037016j), (-251.33000000000001+0j), (-131.03999999999999-467.29000000000002j), (-131.03999999999999+467.29000000000002j)]
         >>> a['gain']
         60077000.0
         >>> a['sensitivity']
         2516800000.0
-        >>> a['name']
+
+        XXX: currently not working
+        a['name']
         'Streckeisen STS-2/N seismometer'
         
         @param network_id: Network id, e.g. 'BW'.
@@ -246,9 +248,9 @@ class _StationMapperClient(_BaseRESTClient):
             sensitivity_node = base_node.channel_sensitivity_gain[-1]
         # instrument name
         # XXX: this probably changes with a newer XSEED format
-        xpath_expr = "generic_abbreviation[abbreviation_lookup_code='" + \
-            str(channel_node.instrument_identifier) + "']"
-        name = dict_node.xpath(xpath_expr)[0].abbreviation_description
+        #xpath_expr = "generic_abbreviation[abbreviation_lookup_code='" + \
+        #    str(channel_node.instrument_identifier) + "']"
+        #name = dict_node.xpath(xpath_expr)[0].abbreviation_description
         # poles
         poles_real = paz_node.complex_pole.real_pole[:]
         poles_imag = paz_node.complex_pole.imaginary_pole[:]
@@ -264,7 +266,7 @@ class _StationMapperClient(_BaseRESTClient):
         # sensitivity
         sensitivity = sensitivity_node.sensitivity_gain
         return {'poles': poles, 'zeros': zeros, 'gain': gain,
-                'sensitivity': sensitivity, 'name': name}
+                'sensitivity': sensitivity}# 'name': name}
 
 
 class _EventMapperClient(_BaseRESTClient):

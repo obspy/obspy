@@ -4,22 +4,19 @@ USAGE: stalta4baynet.py mseedfile1 mseedfile2 mseedfile3 ...
 
 STA/LTA trigger for Baynet. \n E.g file wildcard:
 /bay200/mseed_online/archive/2009/BW/R*/EHZ.D/BW.R*..EHZ.D.2009.198
+
+obspy must be in the PYTHONPATH
 """
 # 2009-07-23 Moritz; PYTHON2.5 REQUIRED
+# 2009-11-25 Moritz
 
 import sys
-try:
-    i = sys.path.index('/home/beyreuth/research/ffb/obspy/obspy/branches/symlink')
-    sys.path.pop(i)
-except:
-    pass
-sys.path.insert(1,"/baysoft/obspy/obspy/branches/symlink")
-import obspy, sys, numpy
-from matplotlib.mlab import detrend_linear as detrend
+import obspy
 from obspy.signal import recStalta, triggerOnset, seisSim, pazToFreqResp
 from obspy.signal import cornFreq2Paz
 from obspy.seishub.client import Client
-import copy
+import numpy as np
+from matplotlib.mlab import detrend_linear as detrend
 
 def s2p(sec, trace):
     """Convert seconds to samples with the sampling rate of trace object"""
@@ -66,11 +63,11 @@ for file in mseed_files:
         samp = 0
         df = tr.stats.sampling_rate
         if trId(tr.stats)[1] != last_id or tr.stats.starttime - last_endtime > 1.0 / df:
-            data_buf = numpy.array([], dtype='float64')
+            data_buf = np.array([], dtype='float64')
             olap = 0
         while samp < tr.stats.npts:
             data = tr.data[samp:samp + nfft - olap].astype('float64')
-            data = numpy.concatenate((data_buf, data))
+            data = np.concatenate((data_buf, data))
             data = detrend(data)
             # Correct for frequency response of instrument
             data = seisSim(data, tr.stats.sampling_rate, paz, inst_sim=inst)

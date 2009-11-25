@@ -6,6 +6,7 @@ The obspy.seishub.client test suite.
 
 from obspy.seishub import Client
 import unittest
+from obspy.core import UTCDateTime
 
 
 class ClientTestCase(unittest.TestCase):
@@ -36,6 +37,11 @@ class ClientTestCase(unittest.TestCase):
         print data
         data = client.station.getResource('dataless.seed.BW_MANZ.xml',
                                           format='metadata')
+        print data
+        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
+                                          format='metadata')
+        print data
+        data = client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
         print data
 
 

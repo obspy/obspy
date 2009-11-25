@@ -9,6 +9,8 @@
 #---------------------------------------------------------------------
 """ 
 Python Module for Instrument Correction (Seismology), PAZ
+Poles and zeros information must be given in SEED convention, correction to
+m/s.
 
 
 GNU General Public License (GPL)
@@ -32,6 +34,7 @@ USA.
 import math as M
 import numpy as N
 import scipy as S
+import scipy.signal
 
 
 def cosTaper(npts, p):
@@ -205,7 +208,8 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     @type paz: Dictionary
     @param paz: Dictionary containing keys 'poles', 'zeros',
     'gain'. poles and zeros must be a list of complex floating point
-    numbers, gain must be of type float.
+    numbers, gain must be of type float. Poles and Zeros are assumed to
+    correct to m/s, SEED convention.
     @type water_level: Float
     @param water_level: Water_Level for spectrum to simulate
     @type inst_sim: Dictionary, None
