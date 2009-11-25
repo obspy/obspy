@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
-# Filename: libmseed.py
+#  Filename: libmseed.py
 #  Purpose: Python wrapper for libmseed of Chad Trabant
 #   Author: Lion Krischer, Robert Barsch, Moritz Beyreuther
 #    Email: krischer@geophysik.uni-muenchen.de
@@ -61,6 +61,7 @@ class libmseed(object):
             #Read Trace Group
             mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
             clibmseed.mst_printtracelist(mstg, 1, 1, 1)
+            clibmseed.mst_freegroup(C.pointer(mstg))
             del mstg
         except:
             raise
@@ -142,36 +143,22 @@ class libmseed(object):
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
-        #XXX: Put next lines till seek in a function Function, return msf, msr and f
-        # Initialize MSRecord structure
-        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
-        msf = C.POINTER(MSFileParam)() # null pointer
-        # allocate file pointer, we need this to cut with start and endtime
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), -1, None, None,
-                               1, 0, 0)
-        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-        f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(filename), 'rb', _PyFile_callback)
-        f.seek(0)
+        ms = MSStruct(filename)
         end_byte = 1e99
         if starttime or endtime:
             bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
             if bytes == '':
-                self.clear(msf, msr)
+                del ms # for valgrind
                 return ''
-            f.seek(bytes[0])
+            ms.f.seek(bytes[0])
             end_byte = bytes[0] + bytes[1]
         # Loop over records and append to trace_list.
-        # Directly call ms_readmsr
         last_msrid = None
-        while True:
-            errcode = clibmseed.ms_readmsr_r(C.pointer(msf),
-                C.pointer(msr), filename, reclen,
-                None, None, skipnotdata, dataflag, verbose)
-            if errcode != 0:
-                break
-            chain = msr.contents
+        fileinfo = ms.fileinfo()
+        for _i in xrange(fileinfo['number_of_records']):
+            # Directly call ms_readmsr_r
+            ms.read(reclen, skipnotdata, dataflag, verbose)
+            chain = ms.msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])
             header['endtime'] = long(header['starttime'] + delta * \
@@ -193,27 +180,14 @@ class libmseed(object):
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
             last_msrid = msrid
-            if f.tell() >= end_byte:
+            if ms.f.tell() >= end_byte:
                 break
         # Finish up loop, concatenate last trace_list
         trace_list[-1] = [trace_list[-1][0],
                           np.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
-        # Free MSRecord structure
-        f.close()
-        self.clear(msf, msr)
-        del msf, msr, chain
+        del ms # for valgrind
         return trace_list
-
-    def clear(self, msf, msr):
-        """
-        Method for deallocating MSFileParam and MSRecord structure.
-        
-        @param msf: MSFileParam structure.
-        @param msr: MSRecord structure.
-        """
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               None, -1, None, None, 0, 0, 0)
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
@@ -350,78 +324,6 @@ class libmseed(object):
         return mstg
 
 
-    def readSingleRecordToMSR(self, filename, ms_p=(None, None),
-                              reclen= -1, dataflag=1, skipnotdata=1,
-                              verbose=0, record_number=0):
-        """
-        Reads MiniSEED record from file and populates MS Record data structure.
-        
-        @param filename: MiniSEED file to be read.
-        @param ms_p: Use existing LP_MSRecord (msr) and LP_MSFileParam (msf)
-            structures given by ms_p=(msr,msf), e.g. returned
-            by this function. Given an existing msr and msf the function is
-            much faster.
-        @param reclen: If reclen is 0 the length of the first record is auto-
-            detected. All subsequent records are then expected to have the 
-            same record length. If reclen is negative the length of every 
-            record is automatically detected. Defaults to -1.
-        @param dataflag: Controls whether data samples are unpacked, defaults 
-            to 1.
-        @param skipnotdata: If true (not zero) any data chunks read that to do 
-            not have valid data record indicators will be skipped. Defaults to 
-            True (1).
-        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
-        @param record_number: Number of the record to be read. The first record
-            has the number 0. Negative numbers will start counting from the end
-            of the file, e.g. -1 is the last complete record.
-        @rtype: LP_MSRecord, LP_MSFileParam
-        @return: msr, msf MSRecord structure and MSFileParam structure
-        @requires: LP_MSRecord (msr), LP_MSFileParam (msf) need to be deallocated
-            with the function call
-            C{clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr), None, -1, None,
-            None, 0, 0, 0)}
-            or the wrapper method around it C{self.clear(msf, msr)}
-        """
-        # Get some information about the file.
-        f = open(filename, 'rb')
-        fileinfo = self._getMSFileInfo(f, filename)
-        f.close()
-        # Calculate offset of the record to be read.
-        if record_number < 0:
-            record_number = fileinfo['number_of_records'] + record_number
-        if record_number < 0 or record_number >= fileinfo['number_of_records']:
-            raise ValueError('Please enter a valid record_number')
-        filepos = record_number * fileinfo['record_length']
-        if isinstance(ms_p[0], C.POINTER(MSRecord)) and \
-                isinstance(ms_p[1], C.POINTER(MSFileParam)):
-            msr, msf = ms_p
-        elif ms_p == (None, None):
-            # Init MSRecord structure
-            msr = clibmseed.msr_init(None)
-            # Init null pointer, this pointer is needed for deallocation
-            msf = C.POINTER(MSFileParam)()
-            # Dummy-read/read the first record
-            clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                                   str(filename), reclen, None, None,
-                                   skipnotdata, dataflag, verbose)
-            if record_number == 0:
-                return msr, msf
-        else:
-            cmd = 'Given ms_p arguments are not of type (LP_MSRecord, \
-                   LP_MSFileParam)'
-            raise Exception(cmd)
-        # Parse msf structure in order to seek file pointer to special position
-        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-        f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(filename), 'rb', _PyFile_callback)
-        f.seek(filepos)
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               filename, reclen, None, None,
-                               skipnotdata, dataflag, verbose)
-        f.close()
-        del mf
-        return msr, msf # need both for deallocation
-
     def getFirstRecordHeaderInfo(self, filename):
         """
         Takes a MiniSEED file and returns header of the first record.
@@ -434,46 +336,18 @@ class libmseed(object):
         @param filename: MiniSEED file string.
         """
         # read first header only
-        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
+        ms = MSStruct(filename, filepointer=False)
+        ms.read(-1,0,0,0)
         header = {}
         # header attributes to be read
         attributes = ('location', 'network', 'station', 'channel')
         # loop over attributes
         for _i in attributes:
-            header[_i] = getattr(msr.contents, _i)
-        # Deallocate msr and msf memory
-        self.clear(msf, msr)
-        del msr, msf
+            header[_i] = getattr(ms.msr.contents, _i)
+        # Deallocate for debugging with valrgind
+        del ms
         return header
 
-    def getEndFromMSR(self, filename, msr, msf):
-        """
-        Return endtime of given msr and msf structure
-
-        @param msr: LP_MSRecord of interest
-        @param msf: associated LP_MSFileParam 
-        @param filename: May be redundant but must be given
-        """
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), -1, None, None,
-                               1, 0, 0)
-        dtime = clibmseed.msr_endtime(msr)
-        return UTCDateTime(dtime / HPTMODULUS)
-
-
-    def getStartFromMSF(self, filename, msr, msf):
-        """
-        Return starttime of given msr and msf structure
-
-        @param msr: LP_MSRecord of interest
-        @param msf: associated LP_MSFileParam 
-        @param filename: May be redundant but must be given
-        """
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), -1, None, None,
-                               1, 0, 0)
-        dtime = clibmseed.msr_starttime(msr)
-        return UTCDateTime(dtime / HPTMODULUS)
 
     def getStartAndEndTime(self, filename):
         """
@@ -490,18 +364,13 @@ class libmseed(object):
         
         @param filename: MiniSEED file string.
         """
-        # Get the starttime using the libmseed method msr_starttime
-        msr, msf = self.readSingleRecordToMSR(filename, dataflag=0)
-        starttime = clibmseed.msr_starttime(msr)
-        starttime = self._convertMSTimeToDatetime(starttime)
-        # Get the endtime using the libmseed method msr_endtime
-        msr, msf = self.readSingleRecordToMSR(filename, ms_p=(msr, msf),
-                                              dataflag=0, record_number= -1)
-        endtime = clibmseed.msr_endtime(msr)
-        endtime = self._convertMSTimeToDatetime(endtime)
-        # Deallocate msr and msf memory
-        self.clear(msf, msr)
-        del msr, msf
+        # Get the starttime
+        ms = MSStruct(filename)
+        starttime = ms.getStart()
+        # Get the endtime
+        ms.f.seek( ms.filePosFromRecNum(record_number=-1) )
+        endtime = ms.getEnd()
+        del ms # for valgrind
         return starttime, endtime
 
 
@@ -565,8 +434,8 @@ class libmseed(object):
             else:
                 nsamples += 1
             # Convert to python datetime objects
-            time1 = UTCDateTime.utcfromtimestamp(cur.endtime / HPTMODULUS)
-            time2 = UTCDateTime.utcfromtimestamp(next.starttime / HPTMODULUS)
+            time1 = UTCDateTime(cur.endtime / HPTMODULUS)
+            time2 = UTCDateTime(next.starttime / HPTMODULUS)
             gap_list.append((cur.network, cur.station, cur.location,
                              cur.channel, time1, time2, gap, nsamples))
             cur = next
@@ -703,35 +572,24 @@ class libmseed(object):
             is automatically detected. Defaults to -1.
         """
         # Get some information about the file.
-        f = open(filename, 'rb')
-        fileinfo = self._getMSFileInfo(f, filename)
-        f.close()
-        # Init MSRecord structure
-        msr = clibmseed.msr_init(None)
-        # Init null pointer, this pointer is needed for deallocation
-        msf = C.POINTER(MSFileParam)()
+        fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
+        ms = MSStruct(filename, filepointer=False)
         # Create Timing Quality list.
         data = []
         # Loop over each record
         for _i in xrange(fileinfo['number_of_records']):
             # Loop over every record.
-            errcode = clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                                             str(filename), C.c_int(rl_autodetection),
-                                             None, None, C.c_short(1), C.c_short(0),
-                                             C.c_short(0))
-            if errcode != 0:
-                raise Exception("Error in ms_readmsr_r")
+            ms.read(rl_autodetection, 0, 0, 0)
             # Enclose in try-except block because not all records need to
             # have Blockette 1001.
             try:
                 # Append timing quality to list.
-                data.append(float(msr.contents.Blkt1001.contents.timing_qual))
+                data.append(float(ms.msr.contents.Blkt1001.contents.timing_qual))
             except:
                 if first_record:
                     break
-        # Deallocate msr and msf memory
-        self.clear(msf, msr)
-        del msr, msf
+        # Deallocate for debugging with valgrind
+        del ms
         # Length of the list.
         n = len(data)
         data = sorted(data)
@@ -775,21 +633,14 @@ class libmseed(object):
         @param starttime: L{obspy.core.UTCDateTime} object.
         @param endtime: L{obspy.core.UTCDateTime} object.
         """
+        #XXX: Move to MSStruct class?
         # Read the start and end time of the file.
-        msr = clibmseed.msr_init(None)
-        msf = C.POINTER(MSFileParam)()
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               str(filename), -1, None, None,
-                               1, 0, 0)
-        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-        f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(filename), 'rb', _PyFile_callback)
-        f.seek(0)
-        info = self._getMSFileInfo(f, filename)
-        start = self.getStartFromMSF(filename, msr, msf)
+        ms = MSStruct(filename)
+        info = ms.fileinfo()
+        start = ms.getStart()
         pos = (info['number_of_records'] - 1) * info['record_length']
-        f.seek(pos)
-        end = self.getEndFromMSR(filename, msr, msf)
+        ms.f.seek(pos)
+        end = ms.getEnd()
         # Set the start time.
         if not starttime or starttime <= start:
             starttime = start
@@ -798,8 +649,7 @@ class libmseed(object):
             endtime = end
         # Deallocate msr and msf memory for wrong input
         if starttime >= end or endtime <= start:
-            self.clear(msf, msr)
-            del msr, msf
+            del ms # for valgrind
             return None
         # Guess the most likely records that cover start- and end time.
         nr = info['number_of_records']
@@ -815,13 +665,13 @@ class libmseed(object):
             elif start_record > nr - 1:
                 start_record = nr - 1
                 break
-            f.seek(start_record * info['record_length'])
-            stime = self.getStartFromMSF(filename, msr, msf)
+            ms.f.seek(start_record * info['record_length'])
+            stime = ms.getStart()
             # Calculate last covered record.
-            f.seek(30, 1)
+            ms.f.seek(30, 1)
             # Calculate sample rate.
-            sample_rate = msr.contents.samprate
-            npts = msr.contents.samplecnt
+            sample_rate = ms.msr.contents.samprate
+            npts = ms.msr.contents.samplecnt
             # Calculate time of the first sample of new record
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
@@ -848,13 +698,13 @@ class libmseed(object):
             elif end_record > nr - 1:
                 end_record = nr - 1
                 break
-            f.seek(end_record * info['record_length'])
-            stime = self.getStartFromMSF(filename, msr, msf)
+            ms.f.seek(end_record * info['record_length'])
+            stime = ms.getStart()
             # Calculate last covered record.
-            f.seek(30, 1)
+            ms.f.seek(30, 1)
             # Calculate sample rate.
-            sample_rate = msr.contents.samprate
-            npts = msr.contents.samplecnt
+            sample_rate = ms.msr.contents.samprate
+            npts = ms.msr.contents.samplecnt
             # The time of the last covered sample is now:
             etime = stime + ((npts - 1) / sample_rate)
             # Leave loop if correct record is found or change record number
@@ -871,9 +721,7 @@ class libmseed(object):
             else:
                 delta = 1
             end_record += delta
-        # Deallocate msr and msf memory
-        self.clear(msf, msr)
-        del msr, msf
+        del ms # for valgrind
         # Calculate starting position
         record_length = info['record_length']
         start_byte = record_length * start_record
@@ -984,6 +832,55 @@ class libmseed(object):
             sys.stderr.write('No file has been written.\n')
             sys.stderr.write('Please check your files and try again.\n')
 
+    def unpack_steim2(self, data_string, npts, swapflag=0, verbose=0):
+        """
+        Unpack steim2 compressed data given as string.
+        
+        @param data_string: data as string
+        @param npts: number of data points
+        @param swapflag: Swap bytes, defaults to 0
+        @return: Return data as numpy.ndarray of dtype int32
+        """
+        dbuf = data_string
+        datasize = len(dbuf)
+        samplecnt = npts
+        datasamples = np.empty(npts , dtype='int32')
+        diffbuff = np.empty(npts , dtype='int32')
+        x0 = C.c_int32()
+        xn = C.c_int32()
+        nsamples = clibmseed.msr_unpack_steim2(\
+                C.cast(dbuf, C.POINTER(FRAME)), datasize,
+                samplecnt, samplecnt, datasamples, diffbuff,
+                C.byref(x0), C.byref(xn), swapflag, verbose)
+        if nsamples != npts:
+            raise Exception("Error in unpack_steim2")
+        return datasamples
+
+
+    def unpack_steim1(self, data_string, npts, swapflag=0, verbose=0):
+        """
+        Unpack steim1 compressed data given as string.
+        
+        @param data_string: data as string
+        @param npts: number of data points
+        @param swapflag: Swap bytes, defaults to 0
+        @return: Return data as numpy.ndarray of dtype int32
+        """
+        dbuf = data_string
+        datasize = len(dbuf)
+        samplecnt = npts
+        datasamples = np.empty(npts , dtype='int32')
+        diffbuff = np.empty(npts , dtype='int32')
+        x0 = C.c_int32()
+        xn = C.c_int32()
+        nsamples = clibmseed.msr_unpack_steim1(\
+                C.cast(dbuf, C.POINTER(FRAME)), datasize,
+                samplecnt, samplecnt, datasamples, diffbuff,
+                C.byref(x0), C.byref(xn), swapflag, verbose)
+        if nsamples != npts:
+            raise Exception("Error in unpack_steim1")
+        return datasamples
+
     def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
         """
         Takes a Ctypes c_int32 array and its length and returns it as a numpy
@@ -994,33 +891,13 @@ class libmseed(object):
         @param buffer: Ctypes c_int32 buffer.
         @param buffer_elements: length of the buffer
         """
-        # 1. METHOD LION
-        #buffer_type = C.c_int32 * buffer_elements
-        # Get address of array_in_c, which contains reference to the C array.
-        #array_address = C.addressof(buffer.contents)
-        # Make ctypes style array from C array.
-        #ctypes_array = buffer_type.from_address(array_address)
         # Allocate numpy array to move memory to
-        # Make a NumPy array from that.
-        #return np.ctypeslib.as_array(ctypes_array)
-        # 2. METHOD MORITZ 
-        numpy_array = np.ndarray(buffer_elements, dtype='int32')
+        numpy_array = np.empty(buffer_elements, dtype='int32')
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
         C.memmove(datptr, buffer, buffer_elements * 4)
-        # free the memory of the buffer, do not do that when you used 
-        # mst_freegroup before, else Segmentation fault
-        #libc.free( C.cast(buffer, C.c_void_p) )
         return numpy_array
-        # 3. METHOD MORITZ
-        # reading C memory into buffer which can be converted to numpy array
-        # this is read only too
-        #C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-        #C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
-        #return np.frombuffer(C.pythonapi.PyBuffer_FromMemory(buffer,
-        #                                                    buffer_elements*4),
-        #                    dtype='int32',count=buffer_elements)
 
     def _convertDatetimeToMSTime(self, dt):
         """
@@ -1032,9 +909,9 @@ class libmseed(object):
 
     def _convertMSTimeToDatetime(self, timestring):
         """
-        Takes Mini-SEED timestring and returns a obspy.util.UTCDateTime object.
+        Takes Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
         
-        @param timestring: Mini-SEED timestring (Epoch time string in ms).
+        @param timestamp: Mini-SEED timestring (Epoch time string in ms).
         """
         return UTCDateTime(timestring / HPTMODULUS)
 
@@ -1094,12 +971,10 @@ class libmseed(object):
         with some basic information about the file.
         
         @param f: File pointer of opened file in binary format
-        @param real_name: Realname of the file
+        @param real_name: Realname of the file, needed for calculating size
         """
-        info = {}
-        #
         # get size of file
-        info['filesize'] = os.path.getsize(real_name)
+        info = {'filesize': os.path.getsize(real_name)}
         pos = f.tell()
         f.seek(0)
         rec_buffer = f.read(512)
@@ -1177,51 +1052,114 @@ class libmseed(object):
                 chain = chain.contents.next
         return mstg
 
-    def unpack_steim2(self, data_string, npts, swapflag=0, verbose=0):
-        """
-        Unpack steim2 compressed data given as string.
-        
-        @param data_string: data as string
-        @param npts: number of data points
-        @param swapflag: Swap bytes, defaults to 0
-        @return: Return data as numpy.ndarray of dtype int32
-        """
-        dbuf = data_string
-        datasize = len(dbuf)
-        samplecnt = npts
-        datasamples = np.empty(npts , dtype='int32')
-        diffbuff = np.empty(npts , dtype='int32')
-        x0 = C.c_int32()
-        xn = C.c_int32()
-        nsamples = clibmseed.msr_unpack_steim2(\
-                C.cast(dbuf, C.POINTER(FRAME)), datasize,
-                samplecnt, samplecnt, datasamples, diffbuff,
-                C.byref(x0), C.byref(xn), swapflag, verbose)
-        if nsamples != npts:
-            raise Exception("Error in unpack_steim2")
-        return datasamples
 
 
-    def unpack_steim1(self, data_string, npts, swapflag=0, verbose=0):
+class MSStruct(object):
+    """
+    Class for handling MSRecord and MSFileparam.
+    
+    It consists of a MSRecord and MSFileparam and an attached python file pointer.
+
+    @param filename: file to attach to
+    @param filepointer: attach filepointer f to object
+    @ivar msr: MSRecord
+    @ivar msf: MSFileparam
+    @ivar file: filename
+    @ivar f: Python file pointer to MSFileparam file pointer
+    """
+    def __init__(self, filename, filepointer=True):
+        # Initialize MSRecord structure
+        self.msr = clibmseed.msr_init(C.POINTER(MSRecord)())
+        self.msf = C.POINTER(MSFileParam)() # null pointer
+        self.file = filename
+        if filepointer:
+            self.f = self.filePointer()
+
+    def filePointer(self, byte=0):
         """
-        Unpack steim1 compressed data given as string.
-        
-        @param data_string: data as string
-        @param npts: number of data points
-        @param swapflag: Swap bytes, defaults to 0
-        @return: Return data as numpy.ndarray of dtype int32
+        Add Python file pointer attribute self.f to local class
+
+        @param byte: Seek file pointer to specific byte
         """
-        dbuf = data_string
-        datasize = len(dbuf)
-        samplecnt = npts
-        datasamples = np.empty(npts , dtype='int32')
-        diffbuff = np.empty(npts , dtype='int32')
-        x0 = C.c_int32()
-        xn = C.c_int32()
-        nsamples = clibmseed.msr_unpack_steim1(\
-                C.cast(dbuf, C.POINTER(FRAME)), datasize,
-                samplecnt, samplecnt, datasamples, diffbuff,
-                C.byref(x0), C.byref(xn), swapflag, verbose)
-        if nsamples != npts:
-            raise Exception("Error in unpack_steim1")
-        return datasamples
+        # allocate file pointer, we need this to cut with start and endtime
+        self.read(-1, 0, 0, 0)
+        mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
+        f = PyFile_FromFile(mf.contents.fp.contents.value,
+                            str(self.file), 'rb', _PyFile_callback)
+        f.seek(byte)
+        return f
+
+    def getEnd(self):
+        """
+        Return endtime
+        """
+        self.read(-1, 0, 0, 0)
+        dtime = clibmseed.msr_endtime(self.msr)
+        return UTCDateTime(dtime / HPTMODULUS)
+
+    def getStart(self):
+        """
+        Return starttime
+        """
+        self.read(-1, 0, 0, 0)
+        dtime = clibmseed.msr_starttime(self.msr)
+        return UTCDateTime(dtime / HPTMODULUS)
+
+    def fileinfo(self):
+        """
+        For details see libmseed._getMSFileInfo
+        """
+        self.info = libmseed()._getMSFileInfo(self.f, self.file)
+        return self.info
+
+    def filePosFromRecNum(self, record_number=0):
+        """
+        Return byte position of file given a certain record_number.
+
+        The byte position can be used to seek to certain points in the file
+        """
+        if not hasattr(self, 'info'):
+            self.info = self.fileinfo()
+        # Calculate offset of the record to be read.
+        if record_number < 0:
+            record_number = self.info['number_of_records'] + record_number
+        if record_number < 0 or record_number >= self.info['number_of_records']:
+            raise ValueError('Please enter a valid record_number')
+        return record_number * self.info['record_length']
+
+    def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0):
+        """
+        Read MSRecord using the ms_readmsr_r function. The following
+        parameters are directly passed to ms_readmsr_r.
+
+        @param ms: MSStruct (actually consists of a LP_MSRecord,
+            LP_MSFileParam and an attached file pointer). 
+            Given an existing ms the function is much faster.
+        @param reclen: If reclen is 0 the length of the first record is auto-
+            detected. All subsequent records are then expected to have the 
+            same record length. If reclen is negative the length of every 
+            record is automatically detected. Defaults to -1.
+        @param dataflag: Controls whether data samples are unpacked, defaults 
+            to 1.
+        @param skipnotdata: If true (not zero) any data chunks read that to do 
+            not have valid data record indicators will be skipped. Defaults to 
+            True (1).
+        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        @param record_number: Number of the record to be read. The first record
+            has the number 0. Negative numbers will start counting from the end
+            of the file, e.g. -1 is the last complete record.
+        """
+        errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
+                                         self.file, reclen, None, None,
+                                         skipnotdata, dataflag, verbose)
+        if errcode != 0:
+            raise Exception("Error in ms_readmsr_r")
+
+
+    def __del__(self):
+        """
+        Method for deallocating MSFileParam and MSRecord structure.
+        """
+        clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
+                               None, -1, None, None, 0, 0, 0)
+

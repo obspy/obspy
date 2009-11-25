@@ -7,7 +7,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
 from obspy.mseed.headers import PyFile_FromFile, MSFileParam, _PyFile_callback
-from obspy.mseed.libmseed import clibmseed
+from obspy.mseed.libmseed import clibmseed, MSStruct
 import copy
 import ctypes as C
 import inspect
@@ -428,25 +428,15 @@ class LibMSEEDTestCase(unittest.TestCase):
         file_list = [str(_i) + '_temp.mseed' for _i in range(10)]
         # Randomize list.
         file_list.sort(key=lambda _x: random.random())
-        # Get the needed start- and endtime.
-        open_file = open(filename, 'rb')
-        info = mseed._getMSFileInfo(open_file, filename)
-        open_file.close()
         # Init MSRecord and MSFileParam structure
-        msr = clibmseed.msr_init(None)
-        msf = C.POINTER(MSFileParam)()
-        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
-                               filename, -1, None, None, 1, 0, 0)
-        mf = C.pointer(MSFileParam.from_address(C.addressof(msf)))
-        f = PyFile_FromFile(mf.contents.fp.contents.value, str(filename),
-                            'rb', _PyFile_callback)
-        f.seek(info['record_length'])
-        starttime = mseed.getStartFromMSF(filename, msr, msf)
-        f.seek(9 * info['record_length'])
-        endtime = mseed.getStartFromMSF(filename, msr, msf)
-        # Deallocate msr and msf memory
-        mseed.clear(msf, msr)
-        del msf, msr
+        ms = MSStruct(filename)
+        # Get the needed start- and endtime.
+        info = mseed._getMSFileInfo(ms.f, ms.file)
+        ms.f.seek(info['record_length'])
+        starttime = ms.getStart()
+        ms.f.seek(9 * info['record_length'])
+        endtime = ms.getStart()
+        del ms # for valgrind
         # Create the merged file<
         data = mseed.mergeAndCutMSFiles(file_list, starttime, endtime)
         # Compare the file to the desired output.
@@ -619,21 +609,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         start, end = [1199145599915000L, 1199151207890000L]
-        # start and endtime with ms_p argument
-        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0)
-        self.assertEqual(start, clibmseed.msr_starttime(msr))
-        msr, msf = mseed.readSingleRecordToMSR(filename, ms_p=(msr, msf),
-                                               dataflag=0, record_number= -1)
-        self.assertEqual(end, clibmseed.msr_endtime(msr))
-        # Deallocate msr and msf memory
-        mseed.clear(msf, msr)
-        # endtime without ms_p argument
-        msr, msf = mseed.readSingleRecordToMSR(filename, dataflag=0,
-                                               record_number= -1)
-        self.assertEqual(end, clibmseed.msr_endtime(msr))
-        # Deallocate msr and msf memory
-        mseed.clear(msf, msr)
-        del msr, msf # for valgrind
+        # start and endtime
+        ms = MSStruct(filename)
+        self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
+        ms.f.seek( ms.filePosFromRecNum(-1) )
+        ms.read(-1, 0, 1, 0)
+        self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
+        del ms # for valgrind
 
     def test_readMSTracesViaRecords_thread_safety(self):
         """

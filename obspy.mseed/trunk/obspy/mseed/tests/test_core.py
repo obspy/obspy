@@ -3,6 +3,7 @@
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import libmseed
+from obspy.mseed.libmseed import MSStruct
 from obspy.mseed.core import readMSEED
 import inspect
 import numpy as np
@@ -257,25 +258,19 @@ class CoreTestCase(unittest.TestCase):
             # Write it once with the encoding key and once with the value.
             st.write(tempfile, format="MSEED", encoding=encodings[key])
             st.write(tempfile2, format="MSEED", encoding=key)
-            # Check the encodings.
-            msr1, msf1 = mseed.readSingleRecordToMSR(tempfile)
-            msr2, msf2 = mseed.readSingleRecordToMSR(tempfile2)
             # Test reading the two files.
             temp_st1 = read(tempfile)
             temp_st2 = read(tempfile2)
             np.testing.assert_array_equal(data, temp_st1[0].data)
             np.testing.assert_array_equal(data, temp_st2[0].data)
             del temp_st1, temp_st2
-            # Assert encodings.
-            self.assertEqual(msr1.contents.encoding, encodings[key])
-            self.assertEqual(msr2.contents.encoding, encodings[key])
-            # Close file handler
-            mseed.clear(msf1, msr1)
-            mseed.clear(msf2, msr2)
-            del msf1, msr1, msf2, msr2
-            # Delete temp files.
-            os.remove(tempfile)
-            os.remove(tempfile2)
+            # Check the encodings.
+            for file in [tempfile, tempfile2]:
+                ms = MSStruct(file)
+                ms.read(-1, 1, 1, 0)
+                self.assertEqual(ms.msr.contents.encoding, encodings[key])
+                del ms # for valgrind
+                os.remove(file)
 
     def test_invalidEncoding(self):
         """
