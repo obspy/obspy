@@ -155,18 +155,12 @@ class UTCDateTime(datetime.datetime):
         except:
             date = value
             time = ""
-        # split microseconds
-        ms = 0
-        if '.' in time:
-            (time, ms) = time.split(".")
-            ms = float('0.' + ms.strip())
         # remove all hyphens in date
         date = date.replace('-', '')
-        length_date = len(date)
         # remove colons in time
         time = time.replace(':', '')
-        length_time = len(time)
         # guess date pattern
+        length_date = len(date)
         if date.count('W') == 1 and length_date == 8:
             # we got a week date: YYYYWwwD
             # remove week indicator 'W'
@@ -200,11 +194,17 @@ class UTCDateTime(datetime.datetime):
         delta = 0
         if time.count('+') == 1:
             (time, tz) = time.split('+')
-            delta = -1 * (int(tz[0:2]) * 60 + int(tz[2:]))
+            delta = -1 * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
         elif time.count('-') == 1:
             (time, tz) = time.split('-')
-            delta = (int(tz[0:2]) * 60 + int(tz[2:]))
+            delta = int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60
+        # split microseconds
+        ms = 0
+        if '.' in time:
+            (time, ms) = time.split(".")
+            ms = float('0.' + ms.strip())
         # guess time pattern
+        length_time = len(time)
         if length_time == 6 and time.isdigit():
             time_pattern = "%H%M%S"
         elif length_time == 4 and time.isdigit():
@@ -292,7 +292,7 @@ class UTCDateTime(datetime.datetime):
                 return UTCDateTime(dt)
             elif isinstance(arg, float):
                 sec = int(arg)
-                msec = int((arg - sec) * 1000000)
+                msec = int(round((arg - sec) * 1000000))
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__add__(self, td)
                 return UTCDateTime(dt)

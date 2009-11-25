@@ -59,6 +59,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1240561632)
         self.assertEquals(dt, UTCDateTime(2009, 4, 24, 8, 27, 12))
 
+
     def test_fromISO8601CalendarDateString(self):
         """
         Tests initialization from a given ISO8601 calendar date representation.
@@ -121,6 +122,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12, 23))
         dt = UTCDateTime("20091231T12Z")
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12))
+        # time zones
+        dt = UTCDateTime("2009-12-31T12:23:34-01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 13, 38, 34))
+        dt = UTCDateTime("2009-12-31T12:23:34.5-01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 13, 38, 34, 500000))
+        dt = UTCDateTime("2009-12-31T12:23:34.000005-01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 13, 38, 34, 5))
+        dt = UTCDateTime("2009-12-31T12:23:34+01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 11, 8, 34))
+        dt = UTCDateTime("2009-12-31T12:23:34.5+01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 11, 8, 34, 500000))
+        dt = UTCDateTime("2009-12-31T12:23:34.000005+01:15")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 31, 11, 8, 34, 5))
 
     def test_fromISO8601OrdinalDateString(self):
         """
