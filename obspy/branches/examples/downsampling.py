@@ -16,7 +16,7 @@ fg1 = 8.0 # generator frequency
 fg2 = 4.0 # generator frequency
 
 # Generate f0 Hz sine wave
-pg1 = 1.0/fg  #in seconds
+pg1 = 1.0/fg1 #in seconds
 pg2 = 1.0/fg2 #in seconds
 time = np.linspace(0,npts*dt,npts) # in seconds
 y  = np.sin(2*PI/pg1 * time + PI/5)

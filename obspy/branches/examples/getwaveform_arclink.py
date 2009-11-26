@@ -1,38 +1,49 @@
 from obspy.core import UTCDateTime
-from obspy.core import Stream
 from obspy.arclink import Client
-import matplotlib
-matplotlib.rc('figure.subplot', hspace=0.8) # set default
-import matplotlib.pyplot as plt
 
-# Initialize ArcLink client
-client= Client()
-t = UTCDateTime(2004,12,26,01,00,00)
+def save_all(network, stations, channel, start, end):
+    """
+    Save data as Miniseed for each station in stations
 
-# Initialize data as emtpy list, set the corresponding stations
-# Find available networks and stations on www.webdc.eu -> Query
-data = []
-stations = ['FUR','BFO','BRG','BSEG','BUG']
-m = len(stations)
+    @param network: The network id
+    @param stations: List of stations ids
+    @param channel: The channel id
+    @param start: start datetime as UTCDateTime
+    @param end: end datetime as UTCDateTime
+    """
+    client = Client()
+    for station in stations:
+        file = "%s.%s.%s.%s.D.%s" % (network ,station,'',channel,t.strftime("%Y.%j"))
+        try:
+            client.saveWaveform(file, network, station, '', channel, start, end)
+            print "Saved data from station", station
+        except:
+            print "Cannot retieve data from station", station
 
-## Retrieve stations of network GR and immediately save waveforms
-#data = []
-#for i, station in enumerate(stations):
-#    data.append(client.getWaveform('GR', station, '', 'LHZ', t, t+1800))
-#    print "Retrieved data from station", station
+
 #
-## Plot all the seismograms
-#plt.clf()
-#for i, st in enumerate(data):
-#    tr = st[0]
-#    plt.subplot(m,1,i+1) # python starts counting with 0
-#    plt.plot(tr.data)
-#    plt.title("%s %s" % (tr.stats.station,tr.stats.starttime))
-#plt.show()
+# Sumatra earthquake and corresponding stations
+#
+t = UTCDateTime(2004,12,26,01,00,00)
+network = 'GR'
+stations = ['FUR','BFO','BRG','BSEG','BUG']
+channel = 'LHZ'
+save_all(network, stations, channel, t, t + (5*3600)) #5 hours
 
+#
+# Local earthquake Bavaria and corresponding stations
+#
+t = UTCDateTime("2008-04-17 16:00:20") 
+network = 'BW'
+stations = ['RJOB','RNON','RMOA']
+channel = 'EHZ'
+save_all(network, stations, channel, t+20, t+80) #1 minute
 
-# Save data as Miniseed
-for station in stations:
-    file = "%s.%s.%s.%s.D.%s" % ('GR',station,'','LHZ',t.strftime("%Y.%j"))
-    client.saveWaveform(file, 'GR', station, '', 'LHZ', t, t+(3600*5))
-    print "Saved data from station", station
+#
+# Seismic noise, nothing in it
+#
+t = UTCDateTime("2008-04-16 16:00:20") 
+network = 'BW'
+stations = ['RJOB','RNON','RMOA']
+channel = 'EHZ'
+save_all(network, stations, channel, t+20, t+80) #1 minute

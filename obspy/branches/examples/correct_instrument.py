@@ -11,7 +11,7 @@ le3d = {
     'poles': [-4.21000 + 4.66000j,
               - 4.21000 - 4.66000j,
               - 2.105000 + 0.00000j],
-    'zeros': [0.0 + 0.0j] * 4, # add or remove zeros here
+    'zeros': [0.0 + 0.0j] * 3, # add or remove zeros here
     'gain' : 0.4
 }
 

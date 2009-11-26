@@ -62,10 +62,11 @@ for i in xrange(2,5):
 # load Matlab mat file into Python
 mat = loadmat("germany.mat")
 
-t=mat['translation_time']
+# be sure it is a 1 DIM array => ravel()
+t=mat['translation_time'].ravel()
 dt=.05
 f0=1
-s=mat['translation_Z']
+s=mat['translation_Z'].ravel()
 
 plt.figure(3)
 plt.subplot(2,2,1)
@@ -75,7 +76,7 @@ plt.xlabel('Time [s]')
 plt.ylabel('Amplitude')
 t1=40
 t2=65
-rmax= max(abs(s[np.arange(int(t1/dt),int(t2/dt))]))
+rmax= float(max(abs(s[np.arange(int(t1/dt),int(t2/dt))])))
 plt.axis([40, 65, -rmax, rmax])
 
 for i in xrange(2,5):
@@ -89,7 +90,7 @@ for i in xrange(2,5):
     plt.ylabel('Amplitude')
     t1=40
     t2=65
-    rmax=max( abs(Fs[np.arange(int(t1/dt),int(t2/dt))]))
+    rmax= float(max(abs(s[np.arange(int(t1/dt),int(t2/dt))])))
     plt.axis([ 40, 65, -rmax, rmax ])
 
 plt.figure(4)
@@ -101,7 +102,7 @@ plt.xlabel('Time [s]')
 plt.ylabel('Amplitude')
 t1=40
 t2=65
-rmax=max( abs(Fs[np.arange(int(t1/dt),int(t2/dt))]))
+rmax= float(max(abs(s[np.arange(int(t1/dt),int(t2/dt))])))
 plt.axis([ 40,65, -rmax,rmax ])
 
 for i in xrange(2,5):
@@ -115,7 +116,7 @@ for i in xrange(2,5):
     plt.ylabel('Amplitude')
     t1=40
     t2=65
-    rmax=max( abs(Fs[np.arange(int(t1/dt),int(t2/dt))]))
+    rmax= float(max( abs(Fs[np.arange(int(t1/dt),int(t2/dt))])))
     plt.axis([ 40,65, -rmax,rmax ])
 
 plt.show()
