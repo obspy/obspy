@@ -46,7 +46,8 @@ class ParserTestCase(unittest.TestCase):
         Tests string representation of L{obspy.xseed.Parser} object.
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
-        sp = str(Parser(filename)).split()
+        p = Parser(filename)
+        sp = str(p).split()
         self.assertEquals(sp, ["BW.MANZ..EHZ", "BW.MANZ..EHN", "BW.MANZ..EHE"])
 
     def test_nonExistingFilename(self):
@@ -203,34 +204,35 @@ class ParserTestCase(unittest.TestCase):
         """
         # Get all filenames.
         BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
-        # Path to xsd-file.
-        xsd_path = os.path.join(self.path, 'xml-seed-1.0.xsd')
-        # Prepare validator.
-        f = open(xsd_path, 'r')
-        xmlschema_doc = etree.parse(f)
-        f.close()
-        xmlschema = etree.XMLSchema(xmlschema_doc)
-        # Loop over all files.
-        for file in BW_SEED_files:
-            # Parse the file.
-            parser1 = Parser(file)
-            # Convert to SEED once to avoid any issues seen in
-            # test_readAndWriteSEED.
-            original_seed = parser1.getSEED()
-            del parser1
-            # Now read the file, parse it, write XSEED, read XSEED and write
-            # SEED again. The output should be totally identical.
-            parser2 = Parser(original_seed)
-            xseed_string = parser2.getXSEED()
-            del parser2
-            # Validate XSEED.
-            doc = etree.parse(StringIO(xseed_string))
-            self.assertTrue(xmlschema.validate(doc))
-            del doc
-            parser3 = Parser(xseed_string)
-            new_seed = parser3.getSEED()
-            self.assertEqual(original_seed, new_seed)
-            del parser3, original_seed, new_seed
+        # Loop over all files and versions.
+        for version in ['1.0', '1.1']:
+            # Path to xsd-file.
+            xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
+            # Prepare validator.
+            f = open(xsd_path, 'r')
+            xmlschema_doc = etree.parse(f)
+            f.close()
+            xmlschema = etree.XMLSchema(xmlschema_doc)
+            for file in BW_SEED_files:
+                # Parse the file.
+                parser1 = Parser(file)
+                # Convert to SEED once to avoid any issues seen in
+                # test_readAndWriteSEED.
+                original_seed = parser1.getSEED()
+                del parser1
+                # Now read the file, parse it, write XSEED, read XSEED and 
+                # write SEED again. The output should be totally identical.
+                parser2 = Parser(original_seed)
+                xseed_string = parser2.getXSEED(version=version)
+                del parser2
+                # Validate XSEED.
+                doc = etree.parse(StringIO(xseed_string))
+                self.assertTrue(xmlschema.validate(doc))
+                del doc
+                parser3 = Parser(xseed_string)
+                new_seed = parser3.getSEED()
+                self.assertEqual(original_seed, new_seed)
+                del parser3, original_seed, new_seed
 
     def test_readFullSEED(self):
         """
@@ -240,41 +242,41 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(filename)
         # Just checks whether certain blockettes are written.
         self.assertEqual(len(sp.stations), 1)
-        self.assertEqual([_i.id for _i in sp.volume], [10, 12])
+        self.assertEqual([_i.id for _i in sp.volume], [10])
         self.assertEqual([_i.id for _i in sp.abbreviations],
                 [30, 33, 33, 34, 34, 34, 34, 41, 43, 44, 47, 47, 48, 48, 48])
         self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
-
-    def test_createRESPFromXSEED(self):
-        """
-        Tests RESP file creation from XML-SEED.
-        """
-        ### example 1
-        # parse Dataless SEED
-        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
-        sp1 = Parser(filename)
-        # write XML-SEED
-        tempfile = NamedTemporaryFile().name
-        sp1.writeXSEED(tempfile)
-        # parse XML-SEED
-        sp2 = Parser(tempfile)
-        # create RESP files
-        _resp_list = sp2.getRESP()
-        os.remove(tempfile)
-        ### example 2
-        # parse Dataless SEED
-        filename = os.path.join(self.path, 'arclink_full.seed')
-        sp1 = Parser(filename)
-        # write XML-SEED
-        tempfile = NamedTemporaryFile().name
-        sp1.writeXSEED(tempfile)
-        # parse XML-SEED
-        sp2 = Parser(tempfile)
-        # create RESP files
-        _resp_list = sp2.getRESP()
-        os.remove(tempfile)
+#
+#    def test_createRESPFromXSEED(self):
+#        """
+#        Tests RESP file creation from XML-SEED.
+#        """
+#        ### example 1
+#        # parse Dataless SEED
+#        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+#        sp1 = Parser(filename)
+#        # write XML-SEED
+#        tempfile = NamedTemporaryFile().name
+#        sp1.writeXSEED(tempfile)
+#        # parse XML-SEED
+#        sp2 = Parser(tempfile)
+#        # create RESP files
+#        _resp_list = sp2.getRESP()
+#        os.remove(tempfile)
+#        ### example 2
+#        # parse Dataless SEED
+#        filename = os.path.join(self.path, 'arclink_full.seed')
+#        sp1 = Parser(filename)
+#        # write XML-SEED
+#        tempfile = NamedTemporaryFile().name
+#        sp1.writeXSEED(tempfile)
+#        # parse XML-SEED
+#        sp2 = Parser(tempfile)
+#        # create RESP files
+#        _resp_list = sp2.getRESP()
+#        os.remove(tempfile)
 
 
 def suite():

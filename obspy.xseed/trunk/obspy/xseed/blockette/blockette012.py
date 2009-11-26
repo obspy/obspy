@@ -27,10 +27,5 @@ class Blockette012(Blockette):
             VariableString(4, "Beginning of span", 1, 22, 'T'),
             VariableString(5, "End of span", 1, 22, 'T'),
             Integer(6, "Sequence number of time span header", 6, ignore=True)
-        ], optional=True, xseed_version='1.0'),
-        Loop("Timespan", "Number of spans in table", [
-            VariableString(4, "Beginning of span", 1, 22, 'T'),
-            VariableString(5, "End of span", 1, 22, 'T'),
-            Integer(6, "Sequence number of time span header", 6, ignore=True)
-        ], xseed_version='1.1')
+        ], optional=True),
     ]

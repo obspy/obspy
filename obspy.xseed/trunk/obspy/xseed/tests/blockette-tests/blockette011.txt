@@ -5,7 +5,7 @@
 --01-SEED
 0110054004AAK  000000ANMO 000000ANTO 000000BJI  000000
 
---01-XSEED
+--01-XSEED-1.0
 <volume_station_header_index blockette="011">
   <number_of_stations>4</number_of_stations>
   <station_identifier>

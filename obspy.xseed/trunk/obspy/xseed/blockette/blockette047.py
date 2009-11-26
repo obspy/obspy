@@ -17,7 +17,8 @@ class Blockette047(Blockette):
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
         Float(5, "Input sample rate", 10, mask='%1.4e'),
-        Integer(6, "Decimiation factor", 5, xseed_version='1.0'),
+        Integer(6, "Decimation factor", 5, xseed_version='1.0',
+                xml_tag="decimiation_factor"),
         Integer(6, "Decimation factor", 5, xseed_version='1.1'),
         Integer(7, "Decimation offset", 5),
         Float(8, "Estimated delay", 11, mask='%+1.4e'),
@@ -31,7 +32,7 @@ class Blockette047(Blockette):
         string = \
         '#\t\t+                      +------------------------------+                       +\n' + \
         '#\t\t+                      |   Decimation,%6s ch %s   |                       +\n'\
-                    %(station, channel) + \
+                    % (station, channel) + \
         '#\t\t+                      +------------------------------+                       +\n' + \
         '#\t\t\n' + \
         'B047F05     Response input sample rate:            %s\n' \

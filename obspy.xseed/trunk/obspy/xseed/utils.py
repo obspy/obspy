@@ -5,17 +5,7 @@ from obspy.core.util import formatScientific
 import sys
 
 
-def toAttribute(name):
-    """
-    Creates a valid attribute name from a given string.
-    """
-    temp = name.lower().replace(' ', '_')
-    temp = temp.replace('fir_', 'FIR_')
-    temp = temp.replace('a0_', 'A0_')
-    return temp
-
-
-def toXMLTag(name):
+def toTag(name):
     """
     Creates a XML tag from a given string.
     """
@@ -188,3 +178,11 @@ def getXPath(xpath):
     Returns lookup key of XPath expression on abbreviation dictionary.
     """
     return int(xpath.split('"')[-2])
+
+
+def uniqueList(seq):
+    # Not order preserving
+    keys = {}
+    for e in seq:
+        keys[e] = 1
+    return keys.keys()

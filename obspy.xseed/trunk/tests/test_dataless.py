@@ -17,19 +17,13 @@ dataless_path = os.path.join("data", "dataless")
 output_path = os.path.join("output", "dataless")
 
 # validation schemas
-# original 1.0
-xml_doc = etree.parse('xml-seed-1.0.xsd')
-xmlschema100 = etree.XMLSchema(xml_doc)
-# modified 1.0
-xml_doc = etree.parse('xml-seed-1.0.1.xsd')
-xmlschema101 = etree.XMLSchema(xml_doc)
+xml_doc = etree.parse('xml-seed-1.1.xsd')
+xmlschema11 = etree.XMLSchema(xml_doc)
 
 # Exceptions
 # The originals of those files contain compact date strings
 compact_date_files = ['dataless-odc.FR_SAOF', 'dataless-odc.FR_CALF',
                       'dataless-odc.IU_SFJD', 'dataless-odc.NO_JMIC']
-# not 100% XSEED 1.0 compatible, due to Blockette 060
-xseed_incompatible = ['arclink.dataless.seed', '_US-BB.dataless']
 
 # generate output directory 
 if not os.path.isdir(output_path):
@@ -83,9 +77,7 @@ for file in files:
         print "vX",
         # test against schemas
         doc = etree.parse(x1seedfile)
-        if seedfile not in xseed_incompatible:
-            xmlschema100.assertValid(doc)
-        xmlschema101.assertValid(doc)
+        xmlschema11.assertValid(doc)
         print "rX",
         # parse XSEED
         sp = Parser(x1seedfile, strict=True, compact=compact)
@@ -105,9 +97,7 @@ for file in files:
         print "vX",
         # test against schema
         doc = etree.parse(x2seedfile)
-        if seedfile not in xseed_incompatible:
-            xmlschema100.assertValid(doc)
-        xmlschema101.assertValid(doc)
+        xmlschema11.assertValid(doc)
         print "rX",
         # parse XSEED
         sp = Parser(xml2, strict=True, compact=compact)
@@ -122,6 +112,7 @@ for file in files:
         utils.compareSEED(seed1, seed2)
         print "."
     except Exception, e:
+        import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isfile(x1seedfile):
             os.remove(x1seedfile)

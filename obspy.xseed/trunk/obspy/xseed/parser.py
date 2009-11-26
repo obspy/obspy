@@ -2,7 +2,7 @@
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
-from obspy.xseed import blockette, utils
+from obspy.xseed import blockette, utils, DEFAULT_XSEED_VERSION
 from obspy.xseed.blockette import Blockette011, Blockette012
 import math
 import os
@@ -20,7 +20,9 @@ HEADER_INFO = {
     'S': {'name': 'Station Control Header',
           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
-RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
+RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]#
+
+XSEED_VERSIONS = ['1.0', '1.1']
 
 
 class SEEDParserException(Exception):
@@ -117,11 +119,13 @@ class Parser(object):
         else:
             raise IOError
 
-    def getXSEED(self, version='1.0'):
+    def getXSEED(self, version=DEFAULT_XSEED_VERSION):
         """
         Returns a XML representation of all headers of a SEED volume.
+        
+        @param version: XSEED version string. Defaults to version 1.1
         """
-        if version not in ['1.0', '1.1']:
+        if version not in XSEED_VERSIONS:
             raise SEEDParserException("Unknown XML-SEED version!")
         doc = Element("xseed", version=version)
         # Nothing to write if not all necessary data is available.
@@ -133,75 +137,33 @@ class Parser(object):
         if not self._checkBlockettes():
             msg = 'Not all necessary blockettes are available.'
             raise SEEDParserException(msg)
-        # All the following unfortunately is necessary to get a correct
-        # Blockette 11:
-        # Start with the station strings to be able to write Blockette 11
-        # later on. The created list will contain lists with the first item
-        # being the corresponding station identifier code and each part of the
-        # record being a separate item.
-        stations_list = []
-        # Loop over all stations.
-        for _i in self.stations:
-            station = []
-            # Blockette 50 always should be the first blockette
-            station.append(_i[0].station_call_letters)
-            # Loop over blockettes.
-            station.extend(self._createCutAndFlushRecord(_i, 'S'))
-            stations_list.append(station)
-        # Make abbreviations.
-        abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        # Make volume string. To do this blockette 11 needs to be created.
-        # It will be created first, than the whole volume  will be parsed
-        # to a SEEDString. If the resulting string is longer than self.record
-        # length -6 blockette 11 will be recreated with the newly won
-        # informations.
-        abbr_lenght = len(abbreviations)
-        cur_count = 1 + abbr_lenght
-        #if version == '1.0':
-        while True:
-            blkt11 = Blockette011()
-            blkt11.number_of_stations = len(self.stations)
-            stations_lengths = [cur_count + 1]
-            for _i in [len(_i) - 1 for _i in stations_list][:-1]:
-                stations_lengths.append(stations_lengths[-1] + _i)
-            blkt11.sequence_number_of_station_header = stations_lengths
-            blkt11.station_identifier_code = \
-                [_i[0].station_call_letters for _i in self.stations]
-            self.volume.append(blkt11)
-            # Blockette 12 is also needed.
-            blkt12 = Blockette012()
-            blkt12.number_of_spans_in_table = 0
-            self.volume.append(blkt12)
-            volume = self._createCutAndFlushRecord(self.volume, 'V')
-            if cur_count - abbr_lenght < len(volume):
-                cur_count += len(volume) - 1
-                del self.volume[-1]
-                del self.volume[-2]
-                continue
-            break
+        # Add blockettes 11 and 12 only for XSEED version 1.0.
+        if version == '1.0':
+            self._createBlockettes11and12(blockette12=True)
         # Now start actually filling the XML tree.
         # Volume header:
-        root = SubElement(doc, utils.toXMLTag('Volume Index Control Header'))
+        root = SubElement(doc, utils.toTag('Volume Index Control Header'))
         for blockette in self.volume:
-            root.append(blockette.getXML(version=version))
+            root.append(blockette.getXML(xseed_version=version))
+        # Delete blockettes 11 and 12 if necessary.
+        if version == '1.0':
+            self._deleteBlockettes11and12()
         # Abbreviations:
         root = SubElement(doc,
-                    utils.toXMLTag('Abbreviation Dictionary Control Header'))
+                    utils.toTag('Abbreviation Dictionary Control Header'))
         for blockette in self.abbreviations:
-            root.append(blockette.getXML(version=version))
+            root.append(blockette.getXML(xseed_version=version))
         # All blockettes for one station in one root element:
         for station in self.stations:
-            root = SubElement(doc, utils.toXMLTag('Station Control Header'))
+            root = SubElement(doc, utils.toTag('Station Control Header'))
             for blockette in station:
-                root.append(blockette.getXML(version=version))
-        # To pass the XSD schema test an empty timespan control header is added
-        # to the end of the file.
-        root = SubElement(doc, utils.toXMLTag('Timespan Control Header'))
-        # Also no data is present in all supported SEED files (for now).
-        root = SubElement(doc, utils.toXMLTag('Data Records'))
-        # Delete Blockettes 11 and 12.
-        del self.volume[-1]
-        del self.volume[-2]
+                root.append(blockette.getXML(xseed_version=version))
+        if version == '1.0':
+            # To pass the XSD schema test an empty time span control header is
+            # added to the end of the file.
+            root = SubElement(doc, utils.toTag('Timespan Control Header'))
+            # Also no data is present in all supported SEED files (for now).
+            root = SubElement(doc, utils.toTag('Data Records'))
         # Write XML String.
         return tostring(doc, pretty_print=True, xml_declaration=True,
                         encoding='utf-8')
@@ -229,56 +191,20 @@ class Parser(object):
             raise SEEDParserException(msg)
         # String to be written to:
         seed_string = ''
-        # Start with the station strings to be able to write Blockette 11
-        # later on. The created list will contain lists with the first item
-        # being the corresponding station identifier code and each part of the
-        # record being a separate item.
-        stations_list = []
-        # Loop over all stations.
-        for _i in self.stations:
-            station = []
-            # Blockette 50 is always the first blockette
-            station.append(_i[0].station_call_letters)
-            # Loop over blockettes.
-            station.extend(self._createCutAndFlushRecord(_i, 'S'))
-            stations_list.append(station)
-        # Create abbreviations.
-        abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
-        # Create volume string. Blockette 11 will be generated  first, than the 
-        # whole volume will be parsed into a SEEDString. If the resulting 
-        # string is longer than self.record length -6 blockette 11 will be 
-        # recreated with the newly retrieved information.
-        abbr_lenght = len(abbreviations)
-        cur_count = 1 + abbr_lenght
-        while True:
-            blkt11 = Blockette011()
-            blkt11.number_of_stations = len(self.stations)
-            stations_lengths = [cur_count + 1]
-            for _i in [len(_i) - 1 for _i in stations_list][:-1]:
-                stations_lengths.append(stations_lengths[-1] + _i)
-            blkt11.sequence_number_of_station_header = stations_lengths
-            blkt11.station_identifier_code = \
-                [_i[0].station_call_letters for _i in self.stations]
-            self.volume.append(blkt11)
-            volume = self._createCutAndFlushRecord(self.volume, 'V')
-            if cur_count - abbr_lenght < len(volume):
-                cur_count += len(volume) - 1
-                del self.volume[-1]
-                continue
-            break
         cur_count = 1
+        volume, abbreviations, stations = self._createBlockettes11and12()
+        # Delete Blockette 11 again.
+        self._deleteBlockettes11and12()
         # Finally write the actual SEED String.
         for _i in volume:
             seed_string += '%06i' % cur_count + _i
             cur_count += 1
-        # Delete Blockette 11 again.
-        del self.volume[-1]
         for _i in abbreviations:
             seed_string += '%06i' % cur_count + _i
             cur_count += 1
         # Remove name of the stations.
-        stations_list = [_i[1:] for _i in stations_list]
-        for _i in stations_list:
+        stations = [_i[1:] for _i in stations]
+        for _i in stations:
             for _j in _i:
                 seed_string += '%06i' % cur_count + _j
                 cur_count += 1
@@ -466,17 +392,21 @@ class Parser(object):
         @type data: File pointer or StringIO object.
         """
         data.seek(0)
-        headers = xmlparse(data).getroot().getchildren()
+        root = xmlparse(data).getroot()
+        xseed_version = root.get('version')
+        headers = root.getchildren()
         # Set all temporary attributes.
         self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(\
-                    self._parseXMLBlockette(headers[0].getchildren()[0], 'V'))
+                    self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
+                                            xseed_version))
         # Append all abbreviations.
         for blockette in headers[1].getchildren():
             self.temp['abbreviations'].append(\
-                    self._parseXMLBlockette(blockette, 'A'))
+                    self._parseXMLBlockette(blockette, 'A',
+                                            xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -484,7 +414,8 @@ class Parser(object):
             self.temp['stations'].append([])
             for blockette in control_header.getchildren():
                 self.temp['stations'][-1].append(\
-                                    self._parseXMLBlockette(blockette, 'S'))
+                                    self._parseXMLBlockette(blockette, 'S',
+                                                            xseed_version))
         # Update internal values.
         self._updateInternalSEEDStructure()
 
@@ -528,7 +459,7 @@ class Parser(object):
                 msg = 'RESP output for blockette %s not implemented yet.'
                 raise AttributeError(msg % blockette.id)
 
-    def _parseXMLBlockette(self, XML_blockette, record_type):
+    def _parseXMLBlockette(self, XML_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
@@ -544,7 +475,8 @@ class Parser(object):
                                             strict=self.strict,
                                             compact=self.compact,
                                             version=self.version,
-                                            record_type=record_type)
+                                            record_type=record_type,
+                                            xseed_version=xseed_version)
             blockette_obj.parseXML(XML_blockette)
             return blockette_obj
         elif blockette_id != 0:
@@ -651,12 +583,9 @@ class Parser(object):
         # Check if everything is empty.
         if not self.volume and not self.abbreviations and \
                     len(self.stations) == 0:
-            # Delete Blockette 11.
-            for _i in range(len(self.temp['volume']) - 1, 0, -1):
-                if self.temp['volume'][_i].id == 11:
-                    del self.temp['volume'][_i]
-                    break
-            self.volume = self.temp['volume']
+            # Delete Blockette 11 and 12.
+            self.volume = [i for i in self.temp['volume']
+                           if i.id not in [11, 12]]
             self.abbreviations = self.temp['abbreviations']
             self.stations.extend(self.temp['stations'])
             del self.temp
@@ -729,3 +658,56 @@ class Parser(object):
             elif blockette_id != 0:
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
+
+    def _createBlockettes11and12(self, blockette12=False):
+        """
+        Creates blockettes 11 and 12 for SEED writing and XSEED version 1.1
+        writing.
+        """
+        # All the following unfortunately is necessary to get a correct
+        # Blockette 11:
+        # Start with the station strings to be able to write Blockette 11
+        # later on. The created list will contain lists with the first item
+        # being the corresponding station identifier code and each part of the
+        # record being a separate item.
+        stations = []
+        # Loop over all stations.
+        for _i in self.stations:
+            station = []
+            # Blockette 50 always should be the first blockette
+            station.append(_i[0].station_call_letters)
+            # Loop over blockettes.
+            station.extend(self._createCutAndFlushRecord(_i, 'S'))
+            stations.append(station)
+        # Make abbreviations.
+        abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
+        abbr_lenght = len(abbreviations)
+        cur_count = 1 + abbr_lenght
+        while True:
+            blkt11 = Blockette011()
+            blkt11.number_of_stations = len(self.stations)
+            stations_lengths = [cur_count + 1]
+            for _i in [len(_i) - 1 for _i in stations][:-1]:
+                stations_lengths.append(stations_lengths[-1] + _i)
+            blkt11.sequence_number_of_station_header = stations_lengths
+            blkt11.station_identifier_code = \
+                [_i[0].station_call_letters for _i in self.stations]
+            self.volume.append(blkt11)
+            if blockette12:
+                # Blockette 12 is also needed.
+                blkt12 = Blockette012()
+                blkt12.number_of_spans_in_table = 0
+                self.volume.append(blkt12)
+            volume = self._createCutAndFlushRecord(self.volume, 'V')
+            if cur_count - abbr_lenght < len(volume):
+                cur_count += len(volume) - 1
+                self._deleteBlockettes11and12()
+                continue
+            break
+        return volume, abbreviations, stations
+
+    def _deleteBlockettes11and12(self):
+        """
+        Deletes blockette 11 and 12.
+        """
+        self.volume = [i for i in self.volume if i.id not in [11, 12]]

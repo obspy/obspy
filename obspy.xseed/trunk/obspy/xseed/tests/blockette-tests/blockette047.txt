@@ -1,0 +1,26 @@
+### Blockette 043 tests ###
+
+--01-SEED
+04700690008DFLE24FIR120000~2.0000E+030000200000+0.0000E+00+0.0000E+00
+
+--01-XSEED-1.0
+<decimation_dictionary blockette="047">
+  <response_lookup_key>8</response_lookup_key>
+  <response_name>DFLE24FIR120000</response_name>
+  <input_sample_rate>2.0000E+03</input_sample_rate>
+  <decimiation_factor>2</decimiation_factor>
+  <decimation_offset>0</decimation_offset>
+  <estimated_delay>+0.0000E+00</estimated_delay>
+  <correction_applied>+0.0000E+00</correction_applied>
+</decimation_dictionary>
+
+--01-XSEED-1.1
+<decimation_dictionary blockette="047">
+  <response_lookup_key>8</response_lookup_key>
+  <response_name>DFLE24FIR120000</response_name>
+  <input_sample_rate>2.0000E+03</input_sample_rate>
+  <decimation_factor>2</decimation_factor>
+  <decimation_offset>0</decimation_offset>
+  <estimated_delay>+0.0000E+00</estimated_delay>
+  <correction_applied>+0.0000E+00</correction_applied>
+</decimation_dictionary>

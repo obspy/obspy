@@ -24,4 +24,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 __author__ = """Robert Barsch <barsch@lmu.de>"""
 __docformat__ = 'plaintext'
 
+
+DEFAULT_XSEED_VERSION = '1.1'
+
 from parser import Parser
+
+

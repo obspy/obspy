@@ -14,7 +14,7 @@ parser.read('data/dataless/bw/dataless.seed.BW_ZUGS')
 xml_doc = parser.getXSEED()
 
 # read schema
-xmlschema_doc = etree.parse('xml-seed-1.0.xsd')
+xmlschema_doc = etree.parse('xml-seed-1.1.xsd')
 xmlschema = etree.XMLSchema(xmlschema_doc)
 
 # validate XML document with schema

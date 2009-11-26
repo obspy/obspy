@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from StringIO import StringIO
 from lxml.etree import Element, SubElement
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
@@ -60,10 +61,14 @@ class Blockette060(Blockette):
         ]),
     ]
 
-    def parseSEED(self, data, length, *args, **kwargs):
+    def parseSEED(self, data, length=0, *args, **kwargs):
         """
         Read Blockette 60.
         """
+        # convert to stream for test issues
+        if isinstance(data, basestring):
+            length = len(data)
+            data = StringIO(data)
         new_data = data.read(length)
         new_data = new_data[7:]
         number_of_stages = int(new_data[0:2])
@@ -102,16 +107,16 @@ class Blockette060(Blockette):
         data = header + data
         return data
 
-    def getXML(self, version='1.0', *args, **kwargs):
+    def getXML(self, xseed_version, *args, **kwargs):
         """
         Write XML.
         """
-        if version == '1.0':
+        if xseed_version == '1.0':
             msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
                   'not support Blockette 60. It will be written but ' + \
                   'please be aware that the file cannot be validated.\n' + \
                   'If you want to validate your file please use XSEED ' + \
-                  'version 1.0.1.\n'
+                  'version 1.1.\n'
             sys.stdout.write(msg)
         node = Element('response_reference', blockette="060")
         SubElement(node, 'number_of_stages').text = str(len(self.stages))

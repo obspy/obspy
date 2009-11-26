@@ -3,7 +3,7 @@
 --01-SEED
 0520113  EHZ0000002~003006+49.766899 +12.207000 +430.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,155~~N
 
---01-XSEED
+--01-XSEED-1.0
 <channel_identifier blockette="052">
    <location_identifier></location_identifier>
    <channel_identifier>EHZ</channel_identifier>
@@ -28,11 +28,37 @@
     <update_flag>N</update_flag>
 </channel_identifier>
 
+--01-XSEED-1.1
+<channel_identifier blockette="052">
+   <location_identifier></location_identifier>
+   <channel_identifier>EHZ</channel_identifier>
+   <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>/xseed/abbreviation_dictionary_control_header/generic_abbreviation/abbreviation_lookup_code[text()="2"]/parent::*</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</units_of_signal_response>
+    <units_of_calibration_input>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="6"]/parent::*</units_of_calibration_input>
+    <latitude>+49.766899</latitude>
+    <longitude>+12.207000</longitude>
+    <elevation>+430.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>/xseed/abbreviation_dictionary_control_header/data_format_dictionary/data_format_identifier_code[text()="1"]/parent::*</data_format_identifier_code>
+    <data_record_length>12</data_record_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-06-04T00:00:00.000000Z</start_date>
+    <end_date></end_date>
+    <update_flag>N</update_flag>
+</channel_identifier>
+
 
 --02-SEED
 0520121  EHZ0000002~003006+47.737167 +12.795714 +860.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,199~2007,155~N
 
---02-XSEED
+--02-XSEED-1.0
 <channel_identifier blockette="052">
     <location_identifier></location_identifier>
     <channel_identifier>EHZ</channel_identifier>
@@ -58,11 +84,37 @@
     <update_flag>N</update_flag>
 </channel_identifier>
 
+--02-XSEED-1.1
+<channel_identifier blockette="052">
+    <location_identifier></location_identifier>
+    <channel_identifier>EHZ</channel_identifier>
+    <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>/xseed/abbreviation_dictionary_control_header/generic_abbreviation/abbreviation_lookup_code[text()="2"]/parent::*</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</units_of_signal_response>
+    <units_of_calibration_input>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="6"]/parent::*</units_of_calibration_input>
+    <latitude>+47.737167</latitude>
+    <longitude>+12.795714</longitude>
+    <elevation>+860.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>/xseed/abbreviation_dictionary_control_header/data_format_dictionary/data_format_identifier_code[text()="1"]/parent::*</data_format_identifier_code>
+    <data_record_length>12</data_record_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-07-18T00:00:00.000000Z</start_date>
+    <end_date>2007-06-04T00:00:00.000000Z</end_date>
+    <update_flag>N</update_flag>
+</channel_identifier>
+
 
 --03-SEED
 0520113  EHZ0000002~003006+49.766899 +12.207000 +430.0  0.0  0.0-90.00001122.0000E+021.0000E+000000TG~2006,155~~N
 
---03-XSEED
+--03-XSEED-1.0
 <channel_identifier blockette="052">
    <location_identifier></location_identifier>
    <channel_identifier>EHZ</channel_identifier>
@@ -84,5 +136,31 @@
     <number_of_comments>0</number_of_comments>
     <channel_flags>TG</channel_flags>
     <start_date>2006-06-04T00:00:00.000000Z</start_date>
+    <update_flag>N</update_flag>
+</channel_identifier>
+
+--03-XSEED-1.1
+<channel_identifier blockette="052">
+   <location_identifier></location_identifier>
+   <channel_identifier>EHZ</channel_identifier>
+   <subchannel_identifier>0</subchannel_identifier>
+    <instrument_identifier>/xseed/abbreviation_dictionary_control_header/generic_abbreviation/abbreviation_lookup_code[text()="2"]/parent::*</instrument_identifier>
+    <optional_comment></optional_comment>
+    <units_of_signal_response>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</units_of_signal_response>
+    <units_of_calibration_input>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="6"]/parent::*</units_of_calibration_input>
+    <latitude>+49.766899</latitude>
+    <longitude>+12.207000</longitude>
+    <elevation>+430.0</elevation>
+    <local_depth>0.0</local_depth>
+    <azimuth>0.0</azimuth>
+    <dip>-90.0</dip>
+    <data_format_identifier_code>/xseed/abbreviation_dictionary_control_header/data_format_dictionary/data_format_identifier_code[text()="1"]/parent::*</data_format_identifier_code>
+    <data_record_length>12</data_record_length>
+    <sample_rate>2.0000E+02</sample_rate>
+    <max_clock_drift>1.0000E+00</max_clock_drift>
+    <number_of_comments>0</number_of_comments>
+    <channel_flags>TG</channel_flags>
+    <start_date>2006-06-04T00:00:00.000000Z</start_date>
+    <end_date></end_date>
     <update_flag>N</update_flag>
 </channel_identifier>

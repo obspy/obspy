@@ -124,66 +124,46 @@ class BlocketteTestCase(unittest.TestCase):
         """
         # Another loop over all examples.
         for example in test_examples:
-            # Determine the present XSEED versions.
-            versions = []
-            for key in example.keys():
-                if key == 'SEED':
+            # Create several blockette instances
+            # One to read from SEED and one for each XSEED version.
+            blkt_module = 'obspy.xseed.blockette.blockette' + blkt_number
+            blkt_class_name = 'Blockette' + blkt_number
+            blkt = sys.modules[blkt_module].__dict__[blkt_class_name]
+
+            versions = {}
+            # prepare SEED
+            versions['SEED'] = {}
+            versions['SEED']['blkt'] = blkt()
+            versions['SEED']['data'] = example['SEED']
+            versions['SEED']['blkt'].parseSEED(example['SEED'])
+
+            # prepare XSEED
+            for key, data in example.iteritems():
+                if not 'XSEED' in key:
                     continue
-                # If no version is specified it defaults to 1.0 and the list
-                # stays empty.
-                elif key == 'XSEED':
-                    versions = []
-                    break
-                versions.append(key.replace('XSEED-', ''))
-            # Create several blockette instances. One to read from SEED and one
-            # for each XSEED version.
-            blockette_instances = {}
-            blockette_instances['SEED'] = \
-                sys.modules['obspy.xseed.blockette.blockette' + \
-                blkt_number].__dict__['Blockette' + blkt_number]()
-            # If just standard version.
-            if not versions:
-                blockette_instances['XSEED'] = \
-                sys.modules['obspy.xseed.blockette.blockette' + \
-                blkt_number].__dict__['Blockette' + blkt_number]()
-            else:
-                for version in versions:
-                    blockette_instances['XSEED-' + version] = \
-                        sys.modules['obspy.xseed.blockette.blockette' + \
-                        blkt_number].__dict__['Blockette' + blkt_number]()
-            # Now read each part of the example into a blockette object.
-            for key in blockette_instances.keys():
-                if key == 'SEED':
-                    if blkt_number == '060':
-                        temp = StringIO(example[key])
-                        blockette_instances[key].parseSEED(temp,
-                                                           len(example[key]))
-                    else:
-                        temp = example[key]
-                        blockette_instances[key].parseSEED(temp)
-                else:
-                    blockette_instances[key].parseXML(etree.fromstring(\
-                                                                example[key]))
-            # Test the conversion of the blockette object into each part.
-            for key in blockette_instances.keys():
-                # Test conversion to SEED.
-                # Lengthy assert statement to be able to identify the error in
-                # the traceback.
-                self.assertEqual(blockette_instances[key].getSEED(), \
-                                 example['SEED'] ,
-                                 'Blockette ' + blkt_number + \
-                                 ' - Getting SEED from ' + key + \
-                                 '\n' + blockette_instances[key].getSEED() + \
-                                 '\n!=\n' + example['SEED'])
-                # Getting all XSEED representations.
-                if not versions:
-                    self.assertEqual(\
-                        etree.tostring(blockette_instances[key].getXML()), \
-                        example['XSEED'],
-                        'Blockette ' + blkt_number + \
-                         ' - Getting XSEED from ' + key + '\n' + \
-                        etree.tostring(blockette_instances[key].getXML()) + \
-                        '\n!=\n' + example['XSEED'])
+                if key == 'XSEED':
+                    key = ''
+                versions[key] = {}
+                versions[key]['version'] = key[6:]
+                versions[key]['blkt'] = blkt(xseed_version=key[6:])
+                versions[key]['blkt'].parseXML(etree.fromstring(data))
+                versions[key]['data'] = data
+            # loop over all combinations
+            errmsg = 'Blockette %s - Getting %s from %s\n%s\n!=\n%s'
+            for key1, blkt1 in versions.iteritems():
+                # conversion to SEED
+                seed = blkt1['blkt'].getSEED()
+                self.assertEqual(seed, versions['SEED']['data'],
+                                 errmsg % (blkt_number, 'SEED', key1,
+                                           seed, versions['SEED']['data']))
+                for key2, blkt2 in versions.iteritems():
+                    if key2 == 'SEED':
+                        continue
+                    xseed = etree.tostring(blkt1['blkt'].getXML(\
+                        xseed_version=blkt2['version']))
+                    self.assertEqual(xseed, versions[key2]['data'],
+                                     errmsg % (blkt_number, 'XSEED', key2,
+                                               xseed, blkt2['data']))
 
     def test_allBlockettes(self):
         """

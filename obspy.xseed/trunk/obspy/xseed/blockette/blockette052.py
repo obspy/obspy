@@ -31,7 +31,8 @@ class Blockette052(Blockette):
         Float(15, "Dip", 5, mask='%+2.1f'),
         Integer(16, "Data format identifier code", 4, xpath=30),
         # The typo is intentional for XSEED 1.0 compatibility.
-        Integer(17, "Data recored length", 2, xseed_version='1.0'),
+        Integer(17, "Data record length", 2, xseed_version='1.0',
+                xml_tag="data_recored_length"),
         Integer(17, "Data record length", 2, xseed_version='1.1'),
         Float(18, "Sample rate", 10, mask='%1.4e'),
         Float(19, "Max clock drift", 10, mask='%1.4e'),

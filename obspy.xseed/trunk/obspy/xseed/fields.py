@@ -20,15 +20,15 @@ class Field(object):
         self.flag = ''
         self.name = name
         self.xseed_version = kwargs.get('xseed_version', None)
-        self.version = kwargs.get('version', None)
+        self.seed_version = kwargs.get('version', None)
         self.mask = kwargs.get('mask', None)
         self.xpath = kwargs.get('xpath', None)
         if self.id:
             self.field_id = "F%02d" % self.id
         else:
             self.field_id = None
-        self.field_name = utils.toXMLTag(self.name)
-        self.attribute_name = utils.toAttribute(self.name)
+        self.field_name = kwargs.get('xml_tag', utils.toTag(self.name))
+        self.attribute_name = utils.toTag(self.name)
         # options
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
@@ -127,10 +127,9 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result)
 
-    def getXML(self, blockette, pos=0, version='1.0'):
+    def getXML(self, blockette, pos=0):
         """
         """
-        self.xseed_version = version
         if self.ignore:
             # debug
             if blockette.debug:
@@ -143,9 +142,6 @@ class Field(object):
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
             result = self.default
-        # muh
-        if 'T' in self.flag:
-            import pdb;pdb.set_trace()
         # watch for multiple entries
         if isinstance(result, list):
             result = result[pos]
@@ -169,12 +165,11 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    def parseXML(self, blockette, xml_doc, pos=0, version='1.0'):
+    def parseXML(self, blockette, xml_doc, pos=0):
         """
         """
-        self.xseed_version = version
         try:
-            text = xml_doc.xpath(self.attribute_name + "/text()")[pos]
+            text = xml_doc.xpath(self.field_name + "/text()")[pos]
         except:
             setattr(blockette, self.attribute_name, self.default)
             # debug
@@ -216,7 +211,7 @@ class Integer(Field):
         except:
             if not self.strict:
                 return self.default
-            msg = "No integer value found for %s." % self.field_name
+            msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
     def read(self, data):
@@ -228,12 +223,12 @@ class Integer(Field):
         try:
             temp = int(data)
         except:
-            msg = "No integer value found for %s." % self.field_name
+            msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         result = format_str % temp
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.field_name)
+                  (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
         return result
 
@@ -247,7 +242,7 @@ class Float(Field):
         self.length = length
         self.default = 0
         if not self.mask:
-            msg = "Float field %s requires a data mask." % self.field_name
+            msg = "Float field %s requires a data mask." % self.attribute_name
             raise SEEDTypeException(msg)
 
     def convert(self, value):
@@ -259,7 +254,7 @@ class Float(Field):
         except:
             if not self.strict:
                 return self.default
-            msg = "No float value found for %s." % self.field_name
+            msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
     def read(self, data):
@@ -271,7 +266,7 @@ class Float(Field):
         try:
             temp = float(data)
         except:
-            msg = "No float value found for %s." % self.field_name
+            msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
         # special format for exponential output
         result = format_str % (self.mask % temp)
@@ -279,7 +274,7 @@ class Float(Field):
             result = util.formatScientific(result.upper())
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.field_name)
+                  (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
         return result
 
@@ -304,7 +299,7 @@ class FixedString(Field):
         result = format_str % self._formatString(data)
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.field_name)
+                  (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
         return result
 
@@ -371,11 +366,11 @@ class VariableString(Field):
         result = self._formatString(data) + '~'
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.field_name)
+                  (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
         if len(result) < self.min_length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.field_name)
+                  (len(result), self.length, self.attribute_name)
             raise SEEDTypeException(msg)
         return result
 
@@ -390,7 +385,7 @@ class Loop(Field):
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
         self.data_fields = data_fields
-        self.index_field = utils.toAttribute(index_field)
+        self.index_field = utils.toTag(index_field)
         self.length = 0
         # loop types
         self.repeat_title = kwargs.get('repeat_title', False)
@@ -427,10 +422,9 @@ class Loop(Field):
                 data += field.getSEED(blockette, i)
         return data
 
-    def getXML(self, blockette, pos=0, version='1.0'):
+    def getXML(self, blockette, pos=0):
         """
         """
-        self.xseed_version = version
         if self.ignore:
             return []
         try:
@@ -473,10 +467,9 @@ class Loop(Field):
             # standard loop
             return [root]
 
-    def parseXML(self, blockette, xml_doc, pos=0, version='1.0'):
+    def parseXML(self, blockette, xml_doc, pos=0):
         """
         """
-        self.xseed_version = version
         try:
             self.length = int(getattr(blockette, self.index_field))
         except:
@@ -488,7 +481,10 @@ class Loop(Field):
         if self.flat:
             # flat loop: one or multiple fields are within one parent tag
             # e.g. <root>item1 item2 item1 item2</root>
-            text = xml_doc.xpath(self.attribute_name + '/text()')[0].split()
+            try:
+                text = xml_doc.xpath(self.field_name + '/text()')[0].split()
+            except:
+                import pdb;pdb.set_trace()
             if not text:
                 return
             # loop over number of entries
@@ -502,16 +498,16 @@ class Loop(Field):
         elif self.omit_tag:
             # loop omitting the parent tag: fields are at the same level
             # e.g. <item1/><item2/><item1/><item2/>
-            root = Element(self.attribute_name)
+            root = Element(self.field_name)
             root.extend(xml_doc)
         elif self.repeat_title:
             # parent tag is repeated over every child tag
             # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
-            root = Element(self.attribute_name)
-            root.extend(xml_doc.xpath(self.attribute_name + '/*'))
+            root = Element(self.field_name)
+            root.extend(xml_doc.xpath(self.field_name + '/*'))
         else:
             # standard loop
-            root = xml_doc.xpath(self.attribute_name)[pos]
+            root = xml_doc.xpath(self.field_name)[pos]
 
         # loop over number of entries
         for i in xrange(0, self.length):

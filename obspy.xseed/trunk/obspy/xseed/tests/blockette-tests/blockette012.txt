@@ -4,7 +4,7 @@
 --01-SEED
 012006300012000,177,06:03:36.0000~2000,177,07:51:03.3608~000000
 
---01-XSEED
+--01-XSEED-1.0
 <volume_timespan_index blockette="012">
   <number_of_spans_in_table>1</number_of_spans_in_table>
   <timespan>

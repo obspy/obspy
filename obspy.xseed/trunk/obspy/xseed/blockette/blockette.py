@@ -2,7 +2,7 @@
 
 from StringIO import StringIO
 from lxml.etree import Element
-from obspy.xseed import utils
+from obspy.xseed import utils, DEFAULT_XSEED_VERSION
 from obspy.xseed.fields import Integer, Loop
 
 
@@ -38,24 +38,27 @@ class Blockette(object):
         self.record_type = kwargs.get('record_type', None)
         self.record_id = kwargs.get('record_id', None)
         self.blockette_id = "%03d" % self.id
-        self.blockette_name = utils.toXMLTag(self.name)
+        self.blockette_name = utils.toTag(self.name)
         # debug
         if self.debug:
             print "----"
             print str(self)
         # filter versions specific fields
-        self.XSEED_version = kwargs.get('xseed_version', '1.0')
-        self.SEED_version = kwargs.get('version', 2.4)
-        self.blockette_fields = []
+        self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
+        self.seed_version = kwargs.get('version', 2.4)
+
+    def getFields(self, xseed_version=DEFAULT_XSEED_VERSION):
+        fields = []
         for field in self.fields:
             # Check XML-SEED version
             if field.xseed_version and \
-               field.xseed_version != self.XSEED_version:
+               field.xseed_version != xseed_version:
                 continue
             # Check SEED version
-            if field.version and field.version > self.SEED_version:
+            if field.seed_version and field.seed_version > self.seed_version:
                 continue
-            self.blockette_fields.append(field)
+            fields.append(field)
+        return fields
 
     def __str__(self):
         """
@@ -76,7 +79,7 @@ class Blockette(object):
         if self.debug:
             print ' DATA:', data.read(expected_length)
             data.seek(-expected_length, 1)
-        blockette_fields = self.default_fields + self.blockette_fields
+        blockette_fields = self.default_fields + self.getFields()
         # loop over all blockette fields
         for field in blockette_fields:
             # if blockette length reached break with warning
@@ -119,26 +122,28 @@ class Blockette(object):
         """
         # loop over all blockette fields
         data = ''
-        for field in self.blockette_fields:
+        for field in self.getFields():
             data += field.getSEED(self)
         # add blockette id and length
         return '%03d%04d%s' % (self.id, len(data) + 7, data)
 
-    def parseXML(self, xml_doc, version='1.0'):
+    def parseXML(self, xml_doc):
         """
         Reads lxml etree and fills the blockette with the values of it.
         """
-        for field in self.blockette_fields:
-            field.parseXML(self, xml_doc, version=version)
+        for field in self.getFields(self.xseed_version):
+            field.parseXML(self, xml_doc)
 
-    def getXML(self, show_optional=False, version='1.0'):
+    def getXML(self, show_optional=False,
+               xseed_version=DEFAULT_XSEED_VERSION):
         """
         Returns a XML document representing this blockette.
         """
+        self.xseed_version = xseed_version
         # root element
         xml_doc = Element(self.blockette_name, blockette=self.blockette_id)
         # loop over all blockette fields
-        for field in self.blockette_fields:
-            node = field.getXML(self, version=version)
+        for field in self.getFields(xseed_version=xseed_version):
+            node = field.getXML(self)
             xml_doc.extend(node)
         return xml_doc
