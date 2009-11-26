@@ -143,15 +143,11 @@ class libmseed(object):
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
-        fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
         ms = MSStruct(filename, filepointer=False)
-        ms.read(reclen, skipnotdata, dataflag, verbose)
-        ms.f = ms.filePointer()
-        if fileinfo['record_length'] != -1:
-            ms.f.seek(-fileinfo['record_length'],1)
-        else:
-            ms.f.seek(0)
         end_byte = 1e99
+        ms.read(reclen,0,1,0)
+        ms.f = ms.filePointer()
+        ms.f.seek(0)
         if starttime or endtime:
             bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
             if bytes == '':
@@ -189,8 +185,8 @@ class libmseed(object):
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
             last_msrid = msrid
-            #if ms.f.tell() >= end_byte:
-            #    break
+            if ms.f.tell() >= end_byte:
+                break
         # Finish up loop, concatenate last trace_list
         trace_list[-1] = [trace_list[-1][0],
                           np.concatenate(trace_list[-1][1:])]
