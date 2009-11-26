@@ -339,7 +339,7 @@ class libmseed(object):
         """
         # read first header only
         ms = MSStruct(filename, filepointer=False)
-        ms.read(-1,0,0,0)
+        ms.read(-1, 0, 0, 0)
         header = {}
         # header attributes to be read
         attributes = ('location', 'network', 'station', 'channel')
@@ -370,7 +370,7 @@ class libmseed(object):
         ms = MSStruct(filename)
         starttime = ms.getStart()
         # Get the endtime
-        ms.f.seek( ms.filePosFromRecNum(record_number=-1) )
+        ms.f.seek(ms.filePosFromRecNum(record_number= -1))
         endtime = ms.getEnd()
         del ms # for valgrind
         return starttime, endtime
@@ -1080,11 +1080,11 @@ class MSStruct(object):
     def filePointer(self, byte=0):
         """
         Add Python file pointer attribute self.f to local class
-
+        
         @param byte: Seek file pointer to specific byte
         """
         # allocate file pointer, we need this to cut with start and endtime
-        self.read(-1, 0, 0, 0)
+        self.read(-1, 0, 1, 0)
         mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
         f = PyFile_FromFile(mf.contents.fp.contents.value,
                             str(self.file), 'rb', _PyFile_callback)
@@ -1095,7 +1095,7 @@ class MSStruct(object):
         """
         Return endtime
         """
-        self.read(-1, 0, 0, 0)
+        self.read(-1, 0, 1, 0)
         dtime = clibmseed.msr_endtime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
 
@@ -1103,7 +1103,7 @@ class MSStruct(object):
         """
         Return starttime
         """
-        self.read(-1, 0, 0, 0)
+        self.read(-1, 0, 1, 0)
         dtime = clibmseed.msr_starttime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
 
@@ -1130,11 +1130,11 @@ class MSStruct(object):
         return record_number * self.info['record_length']
 
     def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0,
-            raise_flag=True):
+             raise_flag=True):
         """
         Read MSRecord using the ms_readmsr_r function. The following
         parameters are directly passed to ms_readmsr_r.
-
+        
         @param ms: MSStruct (actually consists of a LP_MSRecord,
             LP_MSFileParam and an attached file pointer). 
             Given an existing ms the function is much faster.
@@ -1152,14 +1152,14 @@ class MSStruct(object):
             has the number 0. Negative numbers will start counting from the end
             of the file, e.g. -1 is the last complete record.
         """
-        errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
+        errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf),
+                                         C.pointer(self.msr),
                                          self.file, reclen, None, None,
                                          skipnotdata, dataflag, verbose)
         if raise_flag and errcode != 0:
             raise Exception("Error in ms_readmsr_r")
         else:
             return errcode
-
 
     def __del__(self):
         """

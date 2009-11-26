@@ -6,7 +6,7 @@ The libmseed test suite.
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.mseed import libmseed
-from obspy.mseed.headers import PyFile_FromFile, MSFileParam, _PyFile_callback
+from obspy.mseed.headers import PyFile_FromFile
 from obspy.mseed.libmseed import clibmseed, MSStruct
 import copy
 import ctypes as C
@@ -14,10 +14,10 @@ import inspect
 import numpy as np
 import os
 import random
+import sys
 import threading
 import time
 import unittest
-import sys
 
 
 class LibMSEEDTestCase(unittest.TestCase):
@@ -605,14 +605,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         Reference start and entimes are optained from the tracegroup.
         Both cases, with and without ms_p argument are tested.
         """
-        mseed = libmseed()
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         start, end = [1199145599915000L, 1199151207890000L]
         # start and endtime
         ms = MSStruct(filename)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
-        ms.f.seek( ms.filePosFromRecNum(-1) )
+        ms.f.seek(ms.filePosFromRecNum(-1))
         ms.read(-1, 0, 1, 0)
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
         del ms # for valgrind

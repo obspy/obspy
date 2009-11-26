@@ -237,7 +237,6 @@ class CoreTestCase(unittest.TestCase):
         methods.
         """
         # libmseed instance.
-        mseed = libmseed()
         npts = 1000
         data = np.random.randint(10, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
@@ -322,7 +321,7 @@ class CoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001'
         '.second_record')
-        tr = read(file,verify_chksum=True,starttime=None)[0]
+        tr = read(file, verify_chksum=True, starttime=None)[0]
         data = np.array([-397, -387, -368, -381, -388])
         np.testing.assert_array_equal(tr.data[0:5], data)
         self.assertEqual(412, len(tr.data))
