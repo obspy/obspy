@@ -143,7 +143,14 @@ class libmseed(object):
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
-        ms = MSStruct(filename)
+        fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
+        ms = MSStruct(filename, filepointer=False)
+        ms.read(reclen, skipnotdata, dataflag, verbose)
+        ms.f = ms.filePointer()
+        if fileinfo['record_length'] != -1:
+            ms.f.seek(-fileinfo['record_length'],1)
+        else:
+            ms.f.seek(0)
         end_byte = 1e99
         if starttime or endtime:
             bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
@@ -157,7 +164,7 @@ class libmseed(object):
         while True:
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
-                              raise_flag=False)
+                              raise_flag = False)
             if errcode != 0:
                 break
             chain = ms.msr.contents
@@ -182,8 +189,8 @@ class libmseed(object):
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
             last_msrid = msrid
-            if ms.f.tell() >= end_byte:
-                break
+            #if ms.f.tell() >= end_byte:
+            #    break
         # Finish up loop, concatenate last trace_list
         trace_list[-1] = [trace_list[-1][0],
                           np.concatenate(trace_list[-1][1:])]
@@ -1075,20 +1082,22 @@ class MSStruct(object):
         self.msf = C.POINTER(MSFileParam)() # null pointer
         self.file = filename
         if filepointer:
-            self.f = self.filePointer()
+            self.read(-1, 0, 1, 0)
+            self.f = self.filePointer(byte=0)
 
-    def filePointer(self, byte=0):
+    def filePointer(self, byte=-1):
         """
         Add Python file pointer attribute self.f to local class
         
-        @param byte: Seek file pointer to specific byte
+        @param byte: Seek file pointer to specific byte, disable seeking by
+                     setting byte to -1 (default)
         """
         # allocate file pointer, we need this to cut with start and endtime
-        self.read(-1, 0, 1, 0)
         mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
         f = PyFile_FromFile(mf.contents.fp.contents.value,
                             str(self.file), 'rb', _PyFile_callback)
-        f.seek(byte)
+        if byte != -1:
+            f.seek(byte)
         return f
 
     def getEnd(self):
@@ -1130,7 +1139,7 @@ class MSStruct(object):
         return record_number * self.info['record_length']
 
     def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0,
-             raise_flag=True):
+            raise_flag=True):
         """
         Read MSRecord using the ms_readmsr_r function. The following
         parameters are directly passed to ms_readmsr_r.

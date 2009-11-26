@@ -25,6 +25,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename)
     else:
+        #if True: #Uncomment to emulate windows behaviour
         if starttime or endtime or sys.platform == 'win32': 
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
                     starttime=starttime, endtime=endtime)
