@@ -154,10 +154,12 @@ class libmseed(object):
             end_byte = bytes[0] + bytes[1]
         # Loop over records and append to trace_list.
         last_msrid = None
-        fileinfo = ms.fileinfo()
-        for _i in xrange(fileinfo['number_of_records']):
+        while True:
             # Directly call ms_readmsr_r
-            ms.read(reclen, skipnotdata, dataflag, verbose)
+            errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
+                              raise_flag=False)
+            if errcode != 0:
+                break
             chain = ms.msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])
@@ -1127,7 +1129,8 @@ class MSStruct(object):
             raise ValueError('Please enter a valid record_number')
         return record_number * self.info['record_length']
 
-    def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0):
+    def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0,
+            raise_flag=True):
         """
         Read MSRecord using the ms_readmsr_r function. The following
         parameters are directly passed to ms_readmsr_r.
@@ -1152,8 +1155,10 @@ class MSStruct(object):
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
                                          self.file, reclen, None, None,
                                          skipnotdata, dataflag, verbose)
-        if errcode != 0:
+        if raise_flag and errcode != 0:
             raise Exception("Error in ms_readmsr_r")
+        else:
+            return errcode
 
 
     def __del__(self):
