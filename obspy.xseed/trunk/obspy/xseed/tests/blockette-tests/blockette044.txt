@@ -1,0 +1,30 @@
+### Blockette 044 tests ###
+
+--01-SEED
+04400460003RLLE24G1677852F2000~D00300400000000
+
+--01-XSEED-1.0
+<response_coefficients blockette="044">
+  <response_lookup_key>3</response_lookup_key>
+  <response_name>RLLE24G1677852F2000</response_name>
+  <response_type>D</response_type>
+  <signal_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</signal_input_units>
+  <signal_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="4"]/parent::*</signal_output_units>
+  <number_of_numerators>0</number_of_numerators>
+  <numerators></numerators>
+  <number_of_denominators>0</number_of_denominators>
+  <denominators></denominators>
+</response_coefficients>
+
+--01-XSEED-1.1
+<response_coefficients_dictionary blockette="044">
+  <response_lookup_key>3</response_lookup_key>
+  <response_name>RLLE24G1677852F2000</response_name>
+  <response_type>D</response_type>
+  <signal_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</signal_input_units>
+  <signal_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="4"]/parent::*</signal_output_units>
+  <number_of_numerators>0</number_of_numerators>
+  <numerators></numerators>
+  <number_of_denominators>0</number_of_denominators>
+  <denominators></denominators>
+</response_coefficients_dictionary>

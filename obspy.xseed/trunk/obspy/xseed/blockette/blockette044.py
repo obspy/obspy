@@ -14,7 +14,7 @@ class Blockette044(Blockette):
     """
 
     id = 44
-    name = "Response Coefficients"
+    name = "Response Coefficients Dictionary"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
@@ -34,6 +34,13 @@ class Blockette044(Blockette):
             Float(13, "Denominator error", 12, mask='%+1.5e')
         ], flat=True)
     ]
+    
+# Changes the name of the blockette because of an error in XSEED 1.0
+    def getXML(self, *args, **kwargs):
+        xml = Blockette.getXML(self, *args, **kwargs)
+        if self.xseed_version == '1.0':
+            xml.tag = 'response_coefficients'
+        return xml
 
     def getRESP(self, station, channel, abbreviations):
         """

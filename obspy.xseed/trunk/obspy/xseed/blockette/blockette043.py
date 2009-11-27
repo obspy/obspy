@@ -14,7 +14,7 @@ class Blockette043(Blockette):
     """
 
     id = 43
-    name = "Response Poles and Zeros"
+    name = "Response Poles and Zeros Dictionary"
     fields = [
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
@@ -40,6 +40,13 @@ class Blockette043(Blockette):
             Float(19, "Imaginary pole error", 12, mask='%+1.5e')
         ])
     ]
+    
+# Changes the name of the blockette because of an error in XSEED 1.0
+    def getXML(self, *args, **kwargs):
+        xml = Blockette.getXML(self, *args, **kwargs)
+        if self.xseed_version == '1.0':
+            xml.tag = 'response_poles_and_zeros'
+        return xml
 
     def getRESP(self, station, channel, abbreviations):
         """
