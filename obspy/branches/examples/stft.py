@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
+
 import obspy
 from obspy.imaging.spectrogram import spectroGram
 import matplotlib.pyplot as plt

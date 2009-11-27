@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
+
 import numpy as np
 
 def filter_bc(x, dt, f0):

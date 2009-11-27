@@ -1,4 +1,5 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
 
 import numpy as np
 import matplotlib

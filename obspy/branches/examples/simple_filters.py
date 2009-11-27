@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
+
 from filter_bc import filter_bc
 import matplotlib
 matplotlib.rc('figure.subplot', hspace=.35, wspace=.35) #adjust subplot layout

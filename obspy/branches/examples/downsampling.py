@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
+
 import matplotlib
 matplotlib.rc('font', size=8) # adjust font size of plot
 import matplotlib.pyplot as plt

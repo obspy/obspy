@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# 2009-11-27 Moritz
 
 import obspy
 from obspy.signal import seisSim, pazToFreqResp

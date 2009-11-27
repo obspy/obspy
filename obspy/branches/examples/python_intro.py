@@ -1,6 +1,8 @@
-################
-# Python Intro #
-################
+#####################
+# PYTHON INTRO      #
+#                   #
+# 2009-11-27 Moritz #
+#####################
 
 # http://docs.python.org/tutorial/index.html
 # http://docs.scipy.org/doc/
@@ -226,8 +228,10 @@ x5[tind,xind] # second and third entry in the first three rows
 # Plotting Arrays #
 ###################
 
-# All 2D plotting routines are efficiently handled with the
-# matplotlib module
+# * All 2D plotting routines are efficiently handled with the
+#   matplotlib module
+# * Gallery with different plots, click on them for seeing the source code
+#   http://matplotlib.sourceforge.net/gallery.html
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -245,7 +249,7 @@ plt.plot(t, x4, 'r--') #red dotted lines
 plt.plot(t, x3, 'gx-') #green lines with x markers in overlay
 plt.show() #you do not need this in an ipython shell
 
-# Clear current figure plot
+# Clear current figure plot and plot histogram
 plt.clf()
 plt.hist(x4) #plot historgram
 
