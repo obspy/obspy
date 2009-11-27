@@ -339,7 +339,7 @@ class libmseed(object):
         """
         # read first header only
         ms = MSStruct(filename, filepointer=False)
-        ms.read(-1, 0, 0, 0)
+        ms.read(-1, 0, 1, 0)
         header = {}
         # header attributes to be read
         attributes = ('location', 'network', 'station', 'channel')
