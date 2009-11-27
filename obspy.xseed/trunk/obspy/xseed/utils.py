@@ -14,6 +14,13 @@ def toTag(name):
     temp = temp.replace('a0_', 'A0_')
     return temp
 
+def toString(tag):
+    """
+    Creates a pretty string from any given XML tag.
+    """
+    temp = tag.replace('_', ' ').title()
+    return temp
+
 
 def DateTime2String(dt, compact=False):
     """

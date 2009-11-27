@@ -4,6 +4,7 @@ from StringIO import StringIO
 from lxml.etree import Element
 from obspy.xseed import utils, DEFAULT_XSEED_VERSION
 from obspy.xseed.fields import Integer, Loop
+import os
 
 
 class BlocketteLengthException(Exception):
@@ -46,6 +47,24 @@ class Blockette(object):
         # filter versions specific fields
         self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
         self.seed_version = kwargs.get('version', 2.4)
+        
+    def __str__(self):
+        """
+        Pretty prints the informations stored in the blockette.
+        """
+        # attribute names to ignore.
+        ignore_attr = ['blockette_id', 'blockette_name', 'compact', 'debug',
+                       'seed_version', 'strict', 'xseed_version',
+                       'length_of_blockette', 'blockette_type']
+        temp = 'Blockette %s: %s Blockette' % (self.blockette_type,
+                    utils.toString(self.blockette_name)) + os.linesep
+        keys = self.__dict__.keys()
+        keys.sort()
+        for key in keys:
+            if key in ignore_attr:
+                continue
+            temp += '    %s: %s' %(utils.toString(key), self.__dict__[key]) + os.linesep
+        return temp.strip()
 
     def getFields(self, xseed_version=DEFAULT_XSEED_VERSION):
         fields = []
@@ -59,12 +78,6 @@ class Blockette(object):
                 continue
             fields.append(field)
         return fields
-
-    def __str__(self):
-        """
-        String representation of this blockette.
-        """
-        return self.blockette_id
 
     def parseSEED(self, data, expected_length=0):
         """

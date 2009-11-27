@@ -87,9 +87,12 @@ class Parser(object):
                     temp += station[0].network_code + '.'
                     temp += station[0].station_call_letters + '.'
                     temp += blockette.location_identifier.strip() + '.'
-                    temp += blockette.channel_identifier + os.linesep
+                    temp += blockette.channel_identifier + ' | '
+                    # Add times.
+                    temp += str(blockette.start_date) + ' - '
+                    temp += str(blockette.end_date) + os.linesep
 
-            return temp
+            return temp.strip()
 
     def read(self, data):
         """

@@ -6,9 +6,9 @@ from lxml import etree
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
-from obspy.xseed.blockette.blockette053 import Blockette053
-from obspy.xseed.blockette.blockette054 import Blockette054
-from obspy.xseed.parser import Parser, SEEDParserException
+from obspy.xseed.blockette.blockette053 import Blockette053 
+from obspy.xseed.blockette.blockette054 import Blockette054 
+from obspy.xseed.parser import Parser, SEEDParserException 
 from obspy.xseed.utils import compareSEED
 import inspect
 import os
@@ -47,9 +47,11 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)
-        sp = str(p).split()
-        self.assertEquals(sp, ["BW.MANZ..EHZ", "BW.MANZ..EHN", "BW.MANZ..EHE"])
-
+        sp = str(p).split(os.linesep)
+        self.assertEquals(sp, ["BW.MANZ..EHZ | 2005-12-06T00:00:00.000000Z - ",
+                               "BW.MANZ..EHN | 2005-12-06T00:00:00.000000Z - ",
+                               "BW.MANZ..EHE | 2005-12-06T00:00:00.000000Z -"])
+        
     def test_nonExistingFilename(self):
         """
         Test reading non existing file.
