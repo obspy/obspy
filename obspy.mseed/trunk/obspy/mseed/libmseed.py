@@ -970,7 +970,8 @@ class libmseed(object):
     def _getMSFileInfo(self, f, real_name):
         """
         Takes a Mini-SEED filename as an argument and returns a dictionary
-        with some basic information about the file.
+        with some basic information about the file. Also suiteable for Full
+        SEED.
         
         @param f: File pointer of opened file in binary format
         @param real_name: Realname of the file, needed for calculating size
@@ -1075,6 +1076,7 @@ class MSStruct(object):
         self.msf = C.POINTER(MSFileParam)() # null pointer
         self.file = filename
         if filepointer:
+            self.read(-1, 0, 1, 0)
             self.f = self.filePointer()
 
     def filePointer(self, byte=0):
@@ -1084,7 +1086,6 @@ class MSStruct(object):
         @param byte: Seek file pointer to specific byte
         """
         # allocate file pointer, we need this to cut with start and endtime
-        self.read(-1, 0, 1, 0)
         mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
         f = PyFile_FromFile(mf.contents.fp.contents.value,
                             str(self.file), 'rb', _PyFile_callback)

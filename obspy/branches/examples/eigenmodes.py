@@ -11,7 +11,7 @@ def stringToBool(s):
 
 
 # do the fourier transformation
-data = np.loadtxt("china8b.asc",usecols=[1])
+data = np.loadtxt("china8b.asc",usecols=[0])
 data -= data.mean()
 df = 0.1
 fdat = np.fft.rfft(data)
@@ -20,7 +20,6 @@ fdat /= fdat.max() #normalize to 1
 # get the eigenmodes
 eigen = np.loadtxt("eiglst", usecols=[0,1,2,3], converters={1:stringToBool})
 # only the S part
-import pdb; pdb.set_trace()
 ind1 = eigen[:,1].astype(bool)
 ind2 = eigen[:,0]
 ind = ((ind2 == 0) & ind1)
