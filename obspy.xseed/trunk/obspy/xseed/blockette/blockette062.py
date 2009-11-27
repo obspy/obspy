@@ -3,6 +3,7 @@
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, Loop
 from obspy.xseed.utils import Blockette34Lookup, formatRESP
+import sys
 
 
 class Blockette062(Blockette):
@@ -45,6 +46,18 @@ class Blockette062(Blockette):
             Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
         ])
     ]
+    
+    # Changes the name of the blockette because of an error in XSEED 1.0
+    def getXML(self, *args, **kwargs):
+        xml = Blockette.getXML(self, *args, **kwargs)
+        if self.xseed_version == '1.0':
+           msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
+                  'not support Blockette 62. It will be written but ' + \
+                  'please be aware that the file cannot be validated.\n' + \
+                  'If you want to validate your file please use XSEED ' + \
+                  'version 1.1.\n'
+           sys.stdout.write(msg) 
+        return xml
 
     def getRESP(self, station, channel, abbreviations):
         """
