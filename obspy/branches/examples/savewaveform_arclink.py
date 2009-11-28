@@ -3,10 +3,11 @@
 
 from obspy.core import UTCDateTime
 from obspy.arclink import Client
+import pickle
 
 def save_all(network, stations, channel, start, end):
     """
-    Save data as Miniseed for each station in stations
+    Save data as MiniSEED and PAZ as Python dump
 
     @param network: The network id
     @param stations: List of stations ids
@@ -16,22 +17,16 @@ def save_all(network, stations, channel, start, end):
     """
     client = Client()
     for station in stations:
-        file = "%s.%s.%s.%s.D.%s" % (network ,station,'',channel,t.strftime("%Y.%j"))
+        mseed_file = "%s.%s.%s.%s.D.%s" % (network ,station,'',channel,t.strftime("%Y.%j"))
+        paz_file = "%s.%s.%s.%s.D.paz" % (network ,station,'',channel)
         try:
-            client.saveWaveform(file, network, station, '', channel, start, end)
-            print "Saved data from station", station
+            client.saveWaveform(mseed_file, network, station, '', channel, start, end)
+            paz = client.getPAZ(network, station, '', channel, start, end)
+            pickle.dump(paz, open(paz_file,'wb'))
+            print "Saved data and paz from station", station
         except:
-            print "Cannot retieve data from station", station
+            print "Cannot retieve data and/or paz from station", station
 
-
-#
-# Sumatra earthquake and corresponding stations
-#
-t = UTCDateTime(2004,12,26,01,00,00)
-network = 'GR'
-stations = ['FUR','BFO','BRG','BSEG','BUG']
-channel = 'LHZ'
-save_all(network, stations, channel, t, t + (5*3600)) #5 hours
 
 #
 # Local earthquake Bavaria and corresponding stations
@@ -50,3 +45,19 @@ network = 'BW'
 stations = ['RJOB','RNON','RMOA']
 channel = 'EHZ'
 save_all(network, stations, channel, t+20, t+80) #1 minute
+
+#
+# Sumatra earthquake and corresponding stations
+#
+t = UTCDateTime(2004,12,26,01,00,00)
+network = 'GR'
+stations = ['FUR','BFO','BRG','BSEG','BUG']
+channel = 'LHZ'
+save_all(network, stations, channel, t, t + (5*3600)) #5 hours
+
+#
+# China earthquake
+#
+t = UTCDateTime("2008,133,5:17:48.640")
+save_all(['GR'],'FUR', 'LHZ', t, t+(3600*23.9))
+
