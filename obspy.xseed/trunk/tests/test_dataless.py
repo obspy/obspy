@@ -11,6 +11,7 @@ from lxml import etree
 from obspy.xseed import Parser, utils
 import glob
 import os
+import sys
 
 # paths
 dataless_path = os.path.join("data", "dataless")
@@ -57,135 +58,100 @@ for file in files:
         continue
     seedfile = os.path.basename(file)
     # create filenames for output directory
-    x1seedfile_10 = path + os.sep + seedfile + '.1_0.1.xml'
-    x2seedfile_10 = path + os.sep + seedfile + '.1_0.2.xml'
-    x1seedfile_11 = path + os.sep + seedfile + '.1_1.1.xml'
-    x2seedfile_11 = path + os.sep + seedfile + '.1_1.2.xml'
-    oseedfile10 = path + os.sep + seedfile + '.10'
-    oseedfile11 = path + os.sep + seedfile + '.11'
+    xseedfile_10 = path + os.sep + seedfile + '.1_0.xml'
+    xseedfile_11 = path + os.sep + seedfile + '.1_1.xml'
+    seedfile = path + os.sep + seedfile
     # skip existing files
-    if os.path.isfile(x2seedfile_10):
-        print "Skipping", os.path.join(relpath, seedfile)
+    if os.path.isfile(xseedfile_10):
+        print "Skipping", os.path.join(relpath, os.path.basename(seedfile))
         continue
     else:
-        msg = "Parsing %s\t\t" % os.path.join(relpath, seedfile)
+        msg = "Parsing %s\t\t" % os.path.join(relpath,
+                                              os.path.basename(seedfile))
         print msg,
     # fetch original SEED file
     fp = open(file, 'r')
-    seed1 = fp.read()
+    org_seed = fp.read()
     fp.close()
     # set compact date flag
     compact = False
-    if seedfile in compact_date_files:
+    if os.path.basename(file) in compact_date_files:
         compact = True
     # start parsing
     try:
         print "rS",
+        sys.stdout.flush()
         # parse SEED
-        sp = Parser(seed1)
-        print "wX",
-        # generate XSEED versions 1.0 and 1.1
-        f1 = open(x1seedfile_10, 'w')
-        f2 = open(x1seedfile_11, 'w')
-        xml1_10 = sp.getXSEED(version = '1.0')
-        xml1_11 = sp.getXSEED()
-        f1.write(xml1_10)
+        sp = Parser(org_seed)
+        print "wS",
+        sys.stdout.flush()
+        # write SEED to compare to original SEED.
+        f1 = open(seedfile, 'w')
+        seed = sp.getSEED(compact = compact)
+        f1.write(seed)
         f1.close()
-        f2.write(xml1_11)
+        print "cS",
+        sys.stdout.flush()
+        # Compare to original SEED.
+        utils.compareSEED(org_seed, seed)
+        print "wX",
+        sys.stdout.flush()
+        # generate XSEED versions 1.0 and 1.1
+        f1 = open(xseedfile_10, 'w')
+        f2 = open(xseedfile_11, 'w')
+        xml_10 = sp.getXSEED(version = '1.0')
+        xml_11 = sp.getXSEED()
+        f1.write(xml_10)
+        f1.close()
+        f2.write(xml_11)
         f2.close()
         print "vX",
+        sys.stdout.flush()
         # test against schemas
         if not skip:
-            doc1 = etree.parse(x1seedfile_10)
+            doc1 = etree.parse(xseedfile_10)
             xmlschema10.assertValid(doc1)
-        doc2 = etree.parse(x1seedfile_11)
+        doc2 = etree.parse(xseedfile_11)
         xmlschema11.assertValid(doc2)
-        print "rX",
-        # parse XSEED in both versions.
-        sp_10 = Parser(x1seedfile_10, strict=True, compact=compact)
-        sp_11 = Parser(x1seedfile_11, strict=True, compact=compact)
-        print "wS",
-        # generate SEED again from both versions.
-        f1 = open(oseedfile10, 'w')
-        f2 = open(oseedfile11, 'w')
-        seed1_10 = sp_10.getSEED()
-        seed1_11 = sp_11.getSEED()
-        f1.write(seed1_10)
-        f2.write(seed1_11)
-        f1.close()
-        f2.close()
         print "rS",
-        # now parse this generate SEED 
-        sp_10 = Parser(oseedfile10)
-        sp_11 = Parser(oseedfile11)
-        print "wX",
-        # generate XSEED again.
-        f1 = open(x1seedfile_10, 'w')
-        f2 = open(x1seedfile_11, 'w')
-        f3 = open(x2seedfile_10, 'w')
-        f4 = open(x2seedfile_11, 'w')
-        xml2_10 = sp_10.getXSEED(version = '1.0')
-        xml2_11 = sp_10.getXSEED()
-        xml3_10 = sp_11.getXSEED(version = '1.0')
-        xml3_11 = sp_11.getXSEED()
-        f1.write(xml2_10)
-        f1.close()
-        f2.write(xml2_11)
-        f2.close()
-        f3.write(xml3_10)
-        f3.close()
-        f4.write(xml3_11)
-        f4.close()
-        print "vX",
-        # test against schema
-        if not skip:
-            doc1 = etree.parse(x1seedfile_10)
-            xmlschema10.assertValid(doc1)
-        doc2 = etree.parse(x1seedfile_11)
-        xmlschema11.assertValid(doc2)
-        if not skip:
-            doc3 = etree.parse(x2seedfile_10)
-            xmlschema10.assertValid(doc3)
-        doc4 = etree.parse(x2seedfile_11)
-        xmlschema11.assertValid(doc4)
+        sys.stdout.flush()
+        # parse the created SEED file.
+        sp1 = Parser(seedfile)
         print "rX",
-        # parse XSEED
-        sp_10 = Parser(xml2_10, strict=True, compact=compact)
-        sp_11 = Parser(xml2_11, strict=True, compact=compact)
-        sp_20 = Parser(xml3_10, strict=True, compact=compact)
-        sp_21 = Parser(xml3_11, strict=True, compact=compact)
-        seed2_10 = sp_10.getSEED()
-        seed2_11 = sp_11.getSEED()
-        seed3_10 = sp_20.getSEED()
-        seed3_11 = sp_21.getSEED()
-        print "c",
-        # compare XSEED and SEED files
-        if xml1_10 != xml2_10 or xml1_10 != xml3_10:
-            raise Exception("XML-SEED 1.0 strings differ")
-        if xml1_11 != xml2_11 or xml1_11 != xml3_11:
-            raise Exception("XML-SEED 1.1 strings differ")
-        if seed1_10 != seed1_11 or seed1_10 != seed2_10 or \
-           seed1_10 != seed2_11 or seed1_10 != seed3_10 or \
-           seed1_10 != seed3_11:
-            raise Exception("SEED strings differ")
-        # comparing original with generated SEED is more complicated
-        utils.compareSEED(seed1, seed1_10)
+        sys.stdout.flush()
+        # parse XSEED in both versions.
+        sp2 = Parser(xseedfile_10, strict=True)
+        sp3 = Parser(xseedfile_11, strict=True)
+        print "wScS",
+        sys.stdout.flush()
+        parsers = [sp1, sp2, sp3]
+        # generate SEED again from all three versions and compare to seed.
+        for parser in parsers:
+            if seed != parser.getSEED(compact = compact):
+                raise Exception("SEED strings differ")
+        print "wX1.0cX",
+        sys.stdout.flush()
+        # generate XSEED 1.0 again from all three versions and compare.
+        for parser in parsers:
+            if xml_10 != parser.getXSEED(version = '1.0'):
+                raise Exception("XML-SEED 1.0 strings differ")
+        print "wX1.1cX",
+        sys.stdout.flush()
+        # generate XSEED 1.0 again from all three versions and compare.
+        for parser in parsers:
+            if xml_11 != parser.getXSEED():
+                raise Exception("XML-SEED 1.1 strings differ")
         print "."
+        sys.stdout.flush()
     except Exception, e:
         import pdb;pdb.set_trace()
         # remove all related files
-        if os.path.isfile(x1seedfile_10):
-            os.remove(x1seedfile_10)
-        if os.path.isfile(x2seedfile_10):
-            os.remove(x2seedfile_10)
-        if os.path.isfile(x1seedfile_11):
-            os.remove(x1seedfile_11)
-        if os.path.isfile(x2seedfile_11):
-            os.remove(x2seedfile_11)
-        if os.path.isfile(oseedfile_10):
-            os.remove(oseedfile_10)
-        if os.path.isfile(oseedfile_11):
-            os.remove(oseedfile_11)
+        if os.path.isfile(xseedfile_10):
+            os.remove(xseedfile_10)
+        if os.path.isfile(xseedfile_11):
+            os.remove(xseedfile_11)
+        if os.path.isfile(seedfile):
+            os.remove(seedfile)
         # raise actual exception
         raise
 

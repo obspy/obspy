@@ -179,10 +179,11 @@ class Parser(object):
         fh.write(self.getXSEED(*args, **kwargs))
         fh.close()
 
-    def getSEED(self):
+    def getSEED(self, compact = False):
         """
         Takes everything stored in the object returns a valid SEED string.
         """
+        self.compact = compact
         # Nothing to write if not all necessary data is available.
         if not self.volume or not self.abbreviations or \
                     len(self.stations) == 0:
@@ -558,6 +559,7 @@ class Parser(object):
         # Loop over all blockettes.
         record = ''
         for blockette in blockettes:
+            blockette.compact = self.compact
             rec_len = len(record)
             # Never split a blockette’s “length/blockette type” section across
             # records.

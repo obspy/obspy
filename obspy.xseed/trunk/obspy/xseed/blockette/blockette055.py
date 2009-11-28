@@ -18,7 +18,7 @@ class Blockette055(Blockette):
 
     id = 55
     # Typo is itentional.
-    name = "Reponse list"
+    name = "Response list"
     fields = [
         Integer(3, "Stage sequence number", 2),
         Integer(4, "Stage input units", 3, xpath = 34),
@@ -34,12 +34,12 @@ class Blockette055(Blockette):
         ], repeat_title=True)
     ]
 
-    def __init__(self, *args, **kwargs):
-        # fix typo for XML-SEED 1.1
-        self.XSEED_version = kwargs.get('xseed_version', '1.0')
-        if self.XSEED_version == '1.1':
-            self.name = "Response list"
-        Blockette.__init__(self, *args, **kwargs)
+    # Changes the name of the blockette because of an error in XSEED 1.0
+    def getXML(self, *args, **kwargs):
+        xml = Blockette.getXML(self, *args, **kwargs)
+        if self.xseed_version == '1.0':
+            xml.tag = 'reponse_list'
+        return xml
 
     def getRESP(self, station, channel, abbreviations):
         """

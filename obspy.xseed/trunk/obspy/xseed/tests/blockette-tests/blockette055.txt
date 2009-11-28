@@ -1,0 +1,33 @@
+### Blockette 055 tests ###
+
+--01-SEED
+0550199010010030003+1.00000E-02+6.84626E-05+0.00000E+00-1.18000E+02+0.00000E+00+1.66700E-02+2.37097E-04+0.00000E+00-1.39000E+02+0.00000E+00+2.00000E-02+3.57630E-04+0.00000E+00-1.45000E+02+0.00000E+00
+
+--01-XSEED-1.1
+<response_list blockette="055">
+  <stage_sequence_number>1</stage_sequence_number>
+  <stage_input_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="1"]/parent::*</stage_input_units>
+  <stage_output_units>/xseed/abbreviation_dictionary_control_header/units_abbreviations/unit_lookup_code[text()="3"]/parent::*</stage_output_units>
+  <number_of_responses_listed>3</number_of_responses_listed>
+  <response>
+    <frequency>+1.00000E-02</frequency>
+    <amplitude>+6.84626E-05</amplitude>
+    <amplitude_error>+0.00000E+00</amplitude_error>
+    <phase_angle>-1.18000E+02</phase_angle>
+    <phase_error>+0.00000E+00</phase_error>
+  </response>
+  <response>
+    <frequency>+1.66700E-02</frequency>
+    <amplitude>+2.37097E-04</amplitude>
+    <amplitude_error>+0.00000E+00</amplitude_error>
+    <phase_angle>-1.39000E+02</phase_angle>
+    <phase_error>+0.00000E+00</phase_error>
+  </response>
+  <response>
+    <frequency>+2.00000E-02</frequency>
+    <amplitude>+3.57630E-04</amplitude>
+    <amplitude_error>+0.00000E+00</amplitude_error>
+    <phase_angle>-1.45000E+02</phase_angle>
+    <phase_error>+0.00000E+00</phase_error>
+  </response>
+</response_list>

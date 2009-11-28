@@ -146,11 +146,16 @@ class Field(object):
         if isinstance(result, list):
             result = result[pos]
         # optional if empty
-        if not result and self.optional:
-            # debug
-            if blockette.debug:
-                print('  %s: skipped because optional')
-            return []
+        if self.optional:
+            try:
+                result = result.strip()
+            except:
+                pass
+            if not result:
+                # debug
+                if blockette.debug:
+                    print('  %s: skipped because optional')
+                return []
         # reformat float
         if isinstance(self, Float):
             result = self.write(result)
