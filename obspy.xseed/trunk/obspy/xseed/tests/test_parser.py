@@ -250,6 +250,37 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
+
+    def test_getPAZ(self):
+        """
+        Test extracting poles and zeros information
+        """
+        filename = os.path.join(self.path, 'arclink_full.seed')
+        sp = Parser(filename)
+        paz = sp.getPAZ('BHE')
+        self.assertEqual(paz['sensitivity'], +7.86576E+08)
+        self.assertEqual(paz['gain'], +6.00770E+07)
+        self.assertEqual(paz['zeros'], [0j, 0j])
+        self.assertEqual(paz['poles'], [(-3.70040E-02 +3.70160E-02j),
+            (-3.70040E-02 -3.70160E-02j), (-2.51330E+02 +0.00000E+00j),
+            (-1.31040E+02 -4.67290E+02j), (-1.31040E+02 +4.67290E+02j)])
+        # Raise exception for undefinded channels
+        self.assertRaises(Exception, sp.getPAZ, 'EHE')
+        #
+        # Do the same for another dataless file
+        #
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        sp = Parser(filename)
+        paz = sp.getPAZ('EHE')
+        #self.assertEqual(paz['sensitivity'], +6.71140E+08)
+        self.assertEqual(paz['gain'], +1.00000E+00)
+        self.assertEqual(paz['zeros'], [0j, 0j, 0j])
+        self.assertEqual(paz['poles'], [(-4.44400E+00 +4.44400E+00j), 
+                                        (-4.44400E+00 -4.44400E+00j),
+                                        (-1.08300E+00 +0.00000E+00j)])
+        # Raise exception for undefinded channels
+        self.assertRaises(Exception, sp.getPAZ, 'BHE')
+
 #
 #    def test_createRESPFromXSEED(self):
 #        """

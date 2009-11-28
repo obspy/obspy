@@ -290,6 +290,58 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
+    def getPAZ(self, channel_id):
+        """
+        Return PAZ, currently only the Laplace transfrom is supported, that
+        is blockettes 43 and 53.
+        No multiple stations or locations codes in the same XSEED volume are
+        allowed.
+    
+        @param channel_id: Channel/Component to extract
+        @return: Dictionary containing PAZ as well as the overall sensitivity
+        """
+        paz = {}
+        # Find index of correct channel
+        index = -1
+        for _i, bl52 in enumerate(self.blockettes[52]):
+            if bl52.channel_identifier == channel_id:
+                index = _i
+        if index == -1:
+            raise Exception('Channel %s not in SEED volume' % channel_id)
+        # Use this index to get the correct sensitivity
+        paz['sensitivity'] = self.blockettes[58][index].sensitivity_gain
+        # poles, zeros and gain blockettes 43 and 53 are currently supported
+        #XXX only single station with single location code allowed
+        resp_type = {43: 'response_type', 53: 'transfer_function_types'}
+        if self.blockettes.has_key(43):
+            blk = 43
+            resp = self.blockettes[43][0]
+        elif self.blockettes.has_key(53):
+            blk = 53
+            blocks = self.blockettes[53]
+            if len(blocks) == 1:
+                resp = blocks[0]
+            elif len(blocks) == _i + 1:
+                resp = blocks[index]
+            else:
+                raise Exception('Inconsistent blockettes 52 and 53, \
+                    possible multiple stations in SEED file')
+        else:
+            raise Exception('Only supporting Laplace transform, i.e. \
+                blockettes 43 and 53')
+        # Currently only support Laplace Transform
+        if getattr(resp,resp_type[blk]) != "A":
+            raise Exception('Only supporting Laplace transform response type')
+        # A0_normalization_factor
+        paz['gain'] = resp.A0_normalization_factor
+        # Poles
+        paz['poles'] = [complex(x,y) for x, y in \
+                        zip(resp.real_pole,resp.imaginary_pole)]
+        # Zeros
+        paz['zeros'] = [complex(x,y) for x, y in \
+                        zip(resp.real_zero,resp.imaginary_zero)]
+        return paz
+
     def writeRESP(self, folder, zipped=False):
         """
         Stores channel responses into files within a given folder.
