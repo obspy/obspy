@@ -24,9 +24,9 @@ data = [] # initialize as empty list
 for i, station in enumerate(stations):
     try:
         data.append(client.getWaveform(network, station, '', channel, t, t+1800))
-        print "Retrieved data from station", station
+        print "Retrieved data for station", station
     except:
-        print "Cannot retrieve data from station", station
+        print "Cannot retrieve data for station", station
 
 
 # Plot all the seismograms
