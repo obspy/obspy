@@ -32,9 +32,10 @@ USA.
 """
 
 import math as M
-import numpy as N
+import numpy as np
 import scipy as S
 import scipy.signal
+import util
 
 
 def cosTaper(npts, p):
@@ -42,13 +43,13 @@ def cosTaper(npts, p):
     Cosinus Taper.
 
     >>> tap = cosTaper(100,1.0)
-    >>> tap2 = 0.5*(1+N.cos(N.linspace(N.pi,2*N.pi,50)))
+    >>> tap2 = 0.5*(1+np.cos(np.linspace(np.pi,2*np.pi,50)))
     >>> (tap[0:50]==tap2).all()
     True
     >>> npts = 100
     >>> p = .1
     >>> tap3 = cosTaper(npts,p)
-    >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==N.ones(npts*(1-p)) ).all()
+    >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
     True
 
     @type npts: Int
@@ -63,10 +64,10 @@ def cosTaper(npts, p):
         frac = int(npts * p / 2.0)
     else:
         frac = int(npts * p / 2.0) + 1
-    return N.concatenate((
-        0.5 * (1 + N.cos(N.linspace(N.pi, 2 * N.pi, frac))),
-        N.ones(npts - 2 * frac),
-        0.5 * (1 + N.cos(N.linspace(0, N.pi, frac)))
+    return np.concatenate((
+        0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, frac))),
+        np.ones(npts - 2 * frac),
+        0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))
         ), axis=0)
 
 def detrend(trace):
@@ -78,7 +79,7 @@ def detrend(trace):
     """
     ndat = len(trace)
     x1, x2 = trace[0], trace[-1]
-    trace -= (x1 + N.arange(ndat) * (x2 - x1) / float(ndat - 1))
+    trace -= (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
 
 
 def cornFreq2Paz(fc, damp=0.707):
@@ -90,8 +91,8 @@ def cornFreq2Paz(fc, damp=0.707):
     @param damping: Corner frequency
     @return: Dictionary containing poles, zeros and gain
     """
-    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * N.pi * fc]
-    poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * N.pi * fc)
+    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
+    poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
     return {'poles':poles, 'zeros':[0j, 0j], 'gain':1}
 
 
@@ -128,66 +129,62 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     a, b = S.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    f = N.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
-    _w, h = S.signal.freqs(a, b, f * 2 * N.pi)
-    h = N.conj(h) # like in PITSA paz2Freq (insdeconv.c) last line
+    f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
+    _w, h = S.signal.freqs(a, b, f * 2 * np.pi)
+    h = np.conj(h) # like in PITSA paz2Freq (insdeconv.c) last line
     h[-1] = h[-1].real + 0.0j
     if freq:
         return h, f
     return h
 
 
-def specInv(spec, wlev, nfft):
+def specInv(spec, wlev):
     """
     Invert Spectrum and shrink values under WaterLevel. Fast version which
-    uses array computation. For understanding the source code, take a look
-    at specInv2.
+    uses array computation.
 
     @note: In place opertions on spec
-    @type: Complex numpy ndarray
-    @param: spectrum to invert, in place opertaion 
+    @param spec: real spectrum as returned by numpy.fft.rfft
+    @param wlev: water level to use 
     """
+    # Translated from PITSA: spr_sinv.c
 
-    max_spec_amp = N.abs(spec).max()
+    max_spec_amp = np.abs(spec).max()
 
+    # swamp is the amplitude spectral value corresponding
+    # to wlev dB below the maximum spectral value
     swamp = max_spec_amp * 10.0 ** (-wlev / 20.0)
     swamp2 = swamp ** 2
     found = 0
 
-    if N.abs(spec[0].real) < swamp:
-        if N.abs(spec[0].real) > 0.0:
-            real = 1. / swamp2;
+    # Manually correct offset (index 0) and nyquist frequency (index -1)
+    for _i in (0, -1):
+        if np.abs(spec[_i].real) < swamp:
+            if np.abs(spec[_i].real) > 0.0:
+                real = 1. / swamp2;
+            else:
+                real = 0.0;
+            found += 1
         else:
-            real = 0.0;
-        found += 1
-    else:
-        real = 1. / spec[0].real ** 2
-    spec[0] = complex(real, 0.0)
-
-    if N.abs(spec[nfft // 2].real) < swamp:
-        if N.abs(spec[nfft / 2].real) > 0.0:
-            real = 1. / swamp2
-        else:
-            real = 0.0;
-        found += 1
-    else:
-        real = 1. / spec[nfft // 2].real ** 2
-    spec[nfft // 2] = complex(real, 0.0)
-
-    spec0 = spec[0]
-    specn = spec[nfft // 2]
-    spec = spec[1:-1]
-    sqr_len = abs(spec) ** 2
-    idx = N.where(sqr_len < swamp2)
-    spec[idx] *= N.sqrt(swamp2 / sqr_len[idx])
-    sqr_len[idx] = abs(spec[idx]) ** 2
+            real = 1. / spec[_i].real ** 2
+        spec[_i] = complex(real, 0.0)
+    #
+    # Do it for the rest by array computation in a slice (specs), i.e.
+    # pointer to the orig.
+    # Attention: Do not copy specs, else the pointer is lost
+    specs = spec[1:-1]
+    sqr_len = abs(specs) ** 2
+    # set/scale length to swamp
+    # but leave phase untouched
+    idx = np.where(sqr_len < swamp2)
+    specs[idx] *= np.sqrt(swamp2 / sqr_len[idx])
+    sqr_len[idx] = abs(specs[idx]) ** 2
     found += len(idx[0])
-
-    inn = N.where(sqr_len > 0.0)
-    spec[inn] = 1 / spec[inn]
-    spec[sqr_len <= 1.0e-10] = complex(0.0, 0.0) #where sqr_len == 0.0
-    spec = N.concatenate(([spec0], spec, [specn]))
-
+    # now do the inversion of the spectrum 
+    inn = np.where(sqr_len > 0.0)
+    specs[inn] = 1.0 / specs[inn]
+    specs[sqr_len <= 1.0e-10] = complex(0.0, 0.0) #where sqr_len == 0.0
+    # spec is/was modified inplace => only found need to be returned
     return found
 
 
@@ -220,6 +217,7 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     Ready to go poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
+    # Translated from PITSA: spr_resg.c
     error = """
     %s must be either of type None or of type dictionary. The dictionary
     must contain poles, zeros and gain as keys, values of poles and zeros
@@ -238,13 +236,14 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     # during convolution, the number of points for the FFT has to be at
     # least 2 *ndat cf. Numerical Recipes p. 429 calculate next power
     # of 2
-    nfft = int(M.pow(2, M.ceil(N.log2(2 * ndat))))
+    nfft = util.nextpow2(2*ndat)
     # explicitly copy, else input data will be modified
     tr = data * cosTaper(ndat, 0.05)
     freq_response = pazToFreqResp(poles, zeros, gain, samp_int, nfft)
-    found = specInv(freq_response, water_level, nfft)
-    spec = N.fft.rfft(tr, n=nfft)
-    spec *= N.conj(freq_response)
+    found = specInv(freq_response, water_level)
+    # transform trace in fourier domain
+    tr = np.fft.rfft(tr, n=nfft)
+    tr *= np.conj(freq_response)
     del freq_response
     #
     # now depending on inst_sim, simulate the seismometer
@@ -257,13 +256,11 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
             gain = inst_sim['gain']
         except:
             raise KeyError(error % 'inst_sim')
-        spec *= N.conj(pazToFreqResp(poles, zeros, gain, samp_int, nfft))
+        tr *= np.conj(pazToFreqResp(poles, zeros, gain, samp_int, nfft))
     else:
         raise TypeError(error % 'inst_sim')
-    tr2 = N.fft.irfft(spec)[0:ndat]
+    # transfrom trace back into the time domain
+    tr = np.fft.irfft(tr)[0:ndat]
     # linear detrend, 
-    x1 = tr2[0]
-    x2 = tr2[-1]
-    tr2 -= (x1 + N.arange(ndat) * (x2 - x1) / float(ndat - 1))
-    #
-    return tr2
+    detrend(tr)
+    return tr
