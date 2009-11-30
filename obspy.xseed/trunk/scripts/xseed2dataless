@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from glob import glob
 from obspy.xseed.parser import Parser
@@ -7,7 +7,7 @@ import os
 import sys
 
 
-def dataless2xseed(filename, options):
+def xseed2dataless(filename, options):
     if isinstance(filename, list):
         files = []
         for item in filename:
@@ -31,28 +31,29 @@ def dataless2xseed(filename, options):
     for file in files:
         if not os.path.isfile(file):
             continue
-        f = open(file, 'rb')
-        if f.read(7) != '000001V':
+        f = open(file, 'r')
+        if f.read(1) != '<':
             if options.verbose:
                 msg = 'Skipping file %s' % file
-                msg += '\t-- not a SEED file' + os.linesep
+                msg += '\t-- not a XML-SEED file' + os.linesep
                 sys.stdout.write(msg)
             f.close()
             continue
         f.close()
         if outdir:
             output = os.path.join(outdir,
-                                  os.path.basename(file) + os.extsep + 'xml')
+                                  os.path.basename(file) + os.extsep + \
+                                  'dataless')
         elif outfile:
             output = outfile
         else:
-            output = os.path.basename(file) + os.extsep + 'xml'
+            output = os.path.basename(file) + os.extsep + 'dataless'
         if options.verbose:
             msg = 'Parsing file %s' % file + os.linesep
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.writeXSEED(output)
+            parser.writeSEED(output)
         except Exception, e:
             if options.debug:
                 raise
@@ -78,7 +79,7 @@ def main():
     filenames = args
     if len(filenames) == 1:
         filenames = filenames[0]
-    dataless2xseed(filenames, options)
+    xseed2dataless(filenames, options)
 
 
 if __name__ == "__main__":

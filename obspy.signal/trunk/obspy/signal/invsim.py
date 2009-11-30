@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #-------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
@@ -236,7 +236,7 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     # during convolution, the number of points for the FFT has to be at
     # least 2 *ndat cf. Numerical Recipes p. 429 calculate next power
     # of 2
-    nfft = util.nextpow2(2*ndat)
+    nfft = util.nextpow2(2 * ndat)
     # explicitly copy, else input data will be modified
     tr = data * cosTaper(ndat, 0.05)
     freq_response = pazToFreqResp(poles, zeros, gain, samp_int, nfft)

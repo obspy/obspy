@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The sacio test suite.
@@ -6,7 +6,6 @@ The sacio test suite.
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import sacio, SacError
-import array
 import inspect, os, unittest
 import numpy as np
 
@@ -30,7 +29,7 @@ class SacioTestCase(unittest.TestCase):
         #data = array.array('f', [1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
         #                         1.9, -2.0])
         data = np.array([1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
-                           1.9, -2.0],dtype='<f4')
+                           1.9, -2.0], dtype='<f4')
         t = sacio.ReadSac()
         t.fromarray(data)
         tempfile = NamedTemporaryFile().name
@@ -121,14 +120,14 @@ class SacioTestCase(unittest.TestCase):
         tfileb = os.path.join(os.path.dirname(__file__), 'data', 'test.sac.swap')
         tl = sacio.ReadSac(tfilel)
         tb = sacio.ReadSac(tfileb)
-        self.assertEqual(tl.GetHvalue('kevnm'),tb.GetHvalue('kevnm'))
-        self.assertEqual(tl.GetHvalue('npts'),tb.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel,'kcmpnm'),tb.GetHvalueFromFile(tfileb,'kcmpnm'))
-        
+        self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
+        self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
+        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
 
 
 
-        
+
+
     def test_isSAC(self):
         """
         See if assertation is Raised if file ist not a sac file

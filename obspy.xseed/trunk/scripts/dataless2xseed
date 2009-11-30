@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from glob import glob
 from obspy.xseed.parser import Parser
@@ -7,7 +7,7 @@ import os
 import sys
 
 
-def xseed2dataless(filename, options):
+def dataless2xseed(filename, options):
     if isinstance(filename, list):
         files = []
         for item in filename:
@@ -31,29 +31,28 @@ def xseed2dataless(filename, options):
     for file in files:
         if not os.path.isfile(file):
             continue
-        f = open(file, 'r')
-        if f.read(1) != '<':
+        f = open(file, 'rb')
+        if f.read(7) != '000001V':
             if options.verbose:
                 msg = 'Skipping file %s' % file
-                msg += '\t-- not a XML-SEED file' + os.linesep
+                msg += '\t-- not a SEED file' + os.linesep
                 sys.stdout.write(msg)
             f.close()
             continue
         f.close()
         if outdir:
             output = os.path.join(outdir,
-                                  os.path.basename(file) + os.extsep + \
-                                  'dataless')
+                                  os.path.basename(file) + os.extsep + 'xml')
         elif outfile:
             output = outfile
         else:
-            output = os.path.basename(file) + os.extsep + 'dataless'
+            output = os.path.basename(file) + os.extsep + 'xml'
         if options.verbose:
             msg = 'Parsing file %s' % file + os.linesep
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.writeSEED(output)
+            parser.writeXSEED(output, version=str(options.version))
         except Exception, e:
             if options.debug:
                 raise
@@ -73,13 +72,15 @@ def main():
                       help="non verbose mode")
     parser.add_option("-o", "--output", dest="output", default=None,
                       help="output filename or directory")
+    parser.add_option("-v", "--version", dest="version", default=1.1,
+                      help="XML-SEED version, 1.0 or 1.1", type="float")
     (options, args) = parser.parse_args()
     if len(args) == 0:
         parser.error("incorrect number of arguments")
     filenames = args
     if len(filenames) == 1:
         filenames = filenames[0]
-    xseed2dataless(filenames, options)
+    dataless2xseed(filenames, options)
 
 
 if __name__ == "__main__":

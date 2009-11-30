@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #-----------------------------------------------------------------------
 # Filename: core.py
 #  Purpose: Python Class for transforming seismograms to audio WAV files

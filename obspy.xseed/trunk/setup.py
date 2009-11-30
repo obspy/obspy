@@ -54,8 +54,8 @@ setup(
         # -*- Extra requirements: -*
     ],
     scripts=[
-        'scripts' + os.sep + 'dataless2xseed.py',
-        'scripts' + os.sep + 'xseed2dataless.py'
+        'scripts' + os.sep + 'dataless2xseed',
+        'scripts' + os.sep + 'xseed2dataless'
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
 )
