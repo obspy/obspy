@@ -5,8 +5,9 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 import os
+import sys
 
-version = '0.1.5'
+version = '0.1.6'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -26,6 +27,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 USA.
 """
+
+
+# set some platform specific scripts
+scripts = [
+    'scripts' + os.sep + 'dataless2xseed',
+    'scripts' + os.sep + 'xseed2dataless'
+]
+if 'win' in sys.platform:
+    scripts.append('scripts' + os.sep + 'dataless2xseed.bat')
+    scripts.append('scripts' + os.sep + 'xseed2dataless.bat')
+
 
 setup(
     name='obspy.xseed',
@@ -53,9 +65,6 @@ setup(
         'obspy.core',
         # -*- Extra requirements: -*
     ],
-    scripts=[
-        'scripts' + os.sep + 'dataless2xseed',
-        'scripts' + os.sep + 'xseed2dataless'
-    ],
+    scripts=scripts,
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
 )

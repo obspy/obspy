@@ -75,7 +75,8 @@ def main():
                       help="output filename or directory")
     (options, args) = parser.parse_args()
     if len(args) == 0:
-        parser.error("incorrect number of arguments")
+        parser.print_help()
+        return
     filenames = args
     if len(filenames) == 1:
         filenames = filenames[0]
