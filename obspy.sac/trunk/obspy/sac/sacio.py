@@ -294,15 +294,15 @@ class ReadSac(object):
         Return value is a one if valid, zero if not.
         """
         npts = self.GetHvalue('npts')
+        if lenchk:
+            if npts != len(self.seis):
+                raise SacError("Number of points in header and length of trace inconsistent!")
         if fsize:
             st = os.stat(name) #file's size = st[6] 
             sizecheck = st[6] - (632 + 4 * npts)
             # size check info
             if sizecheck != 0:
-                raise SacError("File-size and theoretical size inconsistent: %s"%name)
-        if lenchk:
-            if npts != len(self.seis):
-                raise SacError("Number of points in header and length of trace inconsistent!")
+                raise SacError("File-size and theoretical size inconsistent: %s\nCheck that header values are consistent with timeseries."%name)
         # get the SAC file version number
         version = self.GetHvalue('nvhdr')
         if version < 0 or version > 20:
