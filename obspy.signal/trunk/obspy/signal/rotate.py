@@ -25,29 +25,29 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-from numpy import array, sin, cos, pi
-from math import sqrt,pi,asin,tan,atan,atan2
+from numpy import sin, cos
+from math import sqrt, pi, asin, tan, atan, atan2
 
 def rotate_NE_RT(n,e,ba):
-  """Rotates horizontal components of a seismogram:
-
-  The North- and East-Component of a seismogram will be rotated in Radial and Transversal
-  Component. The angle is given as the back-azimuth, that is defined as the angle measured
-  between the vector pointing from the station to the source and the vector pointing from
-  the station to the north.
+    """Rotates horizontal components of a seismogram:
   
-  @param n: Data of the North component of the seismogram.
-  @param e: Data of the East component of the seismogram.
-  @param ba: The back azimuth from station to source in degrees.
-  @return: Radial and Transversal component of seismogram.
-  """
-  if n.__len__()!=e.__len__():
-      raise TypeError("North and East component have different length!?!")
-  if ba<0 or ba>360:
-      raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
-  r=e*sin((ba+180)*2*pi/360)+n*cos((ba+180)*2*pi/360)
-  t=e*cos((ba+180)*2*pi/360)-n*sin((ba+180)*2*pi/360)
-  return r,t
+    The North- and East-Component of a seismogram will be rotated in Radial and Transversal
+    Component. The angle is given as the back-azimuth, that is defined as the angle measured
+    between the vector pointing from the station to the source and the vector pointing from
+    the station to the north.
+    
+    @param n: Data of the North component of the seismogram.
+    @param e: Data of the East component of the seismogram.
+    @param ba: The back azimuth from station to source in degrees.
+    @return: Radial and Transversal component of seismogram.
+    """
+    if len(n) != len(e):
+        raise TypeError("North and East component have different length!?!")
+    if ba<0 or ba>360:
+        raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
+    r=e*sin((ba+180)*2*pi/360)+n*cos((ba+180)*2*pi/360)
+    t=e*cos((ba+180)*2*pi/360)-n*sin((ba+180)*2*pi/360)
+    return r,t
 
 
 def gps2DistAzimuth(lat1,lon1,lat2,lon2) :
