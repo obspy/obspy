@@ -77,7 +77,7 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEquals(field.write(dt), orig)
 
     def test_readCompactDateTime(self):
-        field = VariableString(1, "test", 1, 22, 'T', strict=True,
+        field = VariableString(1, "test", 0, 22, 'T', strict=True,
                                compact=True)
         #1
         orig = '1992,002~'

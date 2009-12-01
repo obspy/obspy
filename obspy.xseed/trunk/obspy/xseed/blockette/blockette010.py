@@ -21,8 +21,14 @@ class Blockette010(Blockette):
     id = 10
     name = "Volume Identifier"
     fields = [
-        Float(3, "Version of format", 4, mask='%2.1f'),
-        Integer(4, "Logical record length", 2),
+        Float(3, "Version of format", 4, mask='%2.1f', default_value=2.4,
+              xseed_version='1.0'),
+        Float(3, "Version of format", 4, mask='%2.1f', default_value=2.4,
+              ignore=True, xseed_version='1.1'),
+        Integer(4, "Logical record length", 2, default_value=12,
+              xseed_version='1.0'),
+        Integer(4, "Logical record length", 2, default_value=12,
+              ignore=True, xseed_version='1.1'),
         VariableString(5, "Beginning time", 1, 22, 'T'),
         VariableString(6, "End time", 1, 22, 'T',
                        default_value=UTCDateTime(2038, 1, 1)),

@@ -1,15 +1,33 @@
 ### Blockette 010 ###
 
 --01-SEED
-0100067 2.1121992,001~1992,002~1993,029~IRIS DMC~Data for 1992,001~
+0100067 2.4121992,001~1992,002~1993,029~IRIS DMC~Data for 1992,001~
 
 --01-XSEED
 <volume_identifier blockette="010">
-  <version_of_format>2.1</version_of_format>
-  <logical_record_length>12</logical_record_length>
   <beginning_time>1992-01-01T00:00:00.000000Z</beginning_time>
   <end_time>1992-01-02T00:00:00.000000Z</end_time>
   <volume_time>1993-01-29T00:00:00.000000Z</volume_time>
   <originating_organization>IRIS DMC</originating_organization>
   <label>Data for 1992,001</label>
 </volume_identifier>
+
+#--01-XSEED-1.0
+#<volume_identifier blockette="010">
+#  <version_of_format>2.4</version_of_format>
+#  <logical_record_length>12</logical_record_length>
+#  <beginning_time>1992-01-01T00:00:00.000000Z</beginning_time>
+#  <end_time>1992-01-02T00:00:00.000000Z</end_time>
+#  <volume_time>1993-01-29T00:00:00.000000Z</volume_time>
+#  <originating_organization>IRIS DMC</originating_organization>
+#  <label>Data for 1992,001</label>
+#</volume_identifier>
+
+#--01-XSEED-1.1
+#<volume_identifier blockette="010">
+#  <beginning_time>1992-01-01T00:00:00.000000Z</beginning_time>
+#  <end_time>1992-01-02T00:00:00.000000Z</end_time>
+#  <volume_time>1993-01-29T00:00:00.000000Z</volume_time>
+#  <originating_organization>IRIS DMC</originating_organization>
+#  <label>Data for 1992,001</label>
+#</volume_identifier>

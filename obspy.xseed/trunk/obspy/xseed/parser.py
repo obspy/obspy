@@ -4,6 +4,7 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import blockette, utils, DEFAULT_XSEED_VERSION
 from obspy.xseed.blockette import Blockette011, Blockette012
+from obspy.xseed.utils import SEEDParserException
 import math
 import os
 import zipfile
@@ -23,10 +24,6 @@ HEADER_INFO = {
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]#
 
 XSEED_VERSIONS = ['1.0', '1.1']
-
-
-class SEEDParserException(Exception):
-    pass
 
 
 class Parser(object):

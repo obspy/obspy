@@ -5,6 +5,10 @@ from obspy.core.util import formatScientific
 import sys
 
 
+class SEEDParserException(Exception):
+    pass
+
+
 def toTag(name):
     """
     Creates a XML tag from a given string.

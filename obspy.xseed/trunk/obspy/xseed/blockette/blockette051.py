@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString
 
 
@@ -11,12 +11,12 @@ class Blockette051(Blockette):
     Sample:
     05100351992,001~1992,002~0740000000
     """
-    
-    id= 51
+
+    id = 51
     name = "Station Comment"
     fields = [
         VariableString(3, "Beginning effective time", 1, 22, 'T'),
         VariableString(4, "End effective time", 1, 22, 'T', optional=True),
-        Integer(5, "Comment code key", 4, xpath = 31),
+        Integer(5, "Comment code key", 4, xpath=31),
         Integer(6, "Comment level", 6, ignore=True)
     ]

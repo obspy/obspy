@@ -3,15 +3,21 @@
 from StringIO import StringIO
 from glob import glob
 from lxml import etree
+from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
-from obspy.xseed.parser import Parser, SEEDParserException
-from obspy.xseed.utils import compareSEED
+from obspy.xseed.parser import Parser
+from obspy.xseed.utils import compareSEED, SEEDParserException
 import inspect
 import os
 import unittest
+import warnings
+
+
+# omit warnings
+warnings.simplefilter('ignore')
 
 
 class ParserTestCase(unittest.TestCase):
@@ -63,7 +69,7 @@ class ParserTestCase(unittest.TestCase):
         ' 0543864' -> results in Blockette 005
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100026 2.408~2038,001~~~~"
+        b010 = "0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
@@ -73,7 +79,7 @@ class ParserTestCase(unittest.TestCase):
         blockette.parseSEED(b054)
         self.assertEquals(b054, blockette.getSEED())
         # combine data
-        data = "000001V " + b010 + (' ' * 222)
+        data = "000001V " + b010 + (' ' * 206)
         data += "000002S " + b054 + (' ' * 8)
         data += "000003S*" + b054 + (' ' * 8)
         # read records
@@ -84,7 +90,7 @@ class ParserTestCase(unittest.TestCase):
         """
         """
         # create a valid blockette 010 with record length 256
-        b010 = "0100026 2.408~2038,001~~~~"
+        b010 = "0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
@@ -96,12 +102,12 @@ class ParserTestCase(unittest.TestCase):
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
         self.assertEquals(b054 + nr, blockette.getSEED())
-        # create a blockette 052
+        # create a blockette 051
         b051 = '05100271999,123~~0001000000'
-        blockette = Blockette051(strict=True)
+        blockette = Blockette051(strict=False)
         blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
-        data = "000001V " + b010 + (' ' * 222)
+        data = "000001V " + b010 + (' ' * 206)
         data += "000002S " + b054 + nr[0:224] # 256-8-24 = 224
         data += "000003S*" + nr[224:472] # 256-8 = 248
         data += "000004S*" + nr[472:720]
@@ -113,7 +119,7 @@ class ParserTestCase(unittest.TestCase):
         data += "000009S*" + nr[720:] + ' ' * 32 # 32 spaces left
         self.assertEqual(len(data), 256 * 9)
         # read records
-        parser = Parser(strict=True)
+        parser = Parser(strict=False)
         parser.read(data)
         # check results
         self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
@@ -280,35 +286,56 @@ class ParserTestCase(unittest.TestCase):
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'BHE')
 
-#
-#    def test_createRESPFromXSEED(self):
-#        """
-#        Tests RESP file creation from XML-SEED.
-#        """
-#        ### example 1
-#        # parse Dataless SEED
-#        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
-#        sp1 = Parser(filename)
-#        # write XML-SEED
-#        tempfile = NamedTemporaryFile().name
-#        sp1.writeXSEED(tempfile)
-#        # parse XML-SEED
-#        sp2 = Parser(tempfile)
-#        # create RESP files
-#        _resp_list = sp2.getRESP()
-#        os.remove(tempfile)
-#        ### example 2
-#        # parse Dataless SEED
-#        filename = os.path.join(self.path, 'arclink_full.seed')
-#        sp1 = Parser(filename)
-#        # write XML-SEED
-#        tempfile = NamedTemporaryFile().name
-#        sp1.writeXSEED(tempfile)
-#        # parse XML-SEED
-#        sp2 = Parser(tempfile)
-#        # create RESP files
-#        _resp_list = sp2.getRESP()
-#        os.remove(tempfile)
+    def test_createRESPFromXSEED(self):
+        """
+        Tests RESP file creation from XML-SEED.
+        """
+        ### example 1
+        # parse Dataless SEED
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        sp1 = Parser(filename)
+        # write XML-SEED
+        tempfile = NamedTemporaryFile().name
+        sp1.writeXSEED(tempfile)
+        # parse XML-SEED
+        sp2 = Parser(tempfile)
+        # create RESP files
+        _resp_list = sp2.getRESP()
+        os.remove(tempfile)
+        ### example 2
+        # parse Dataless SEED
+        filename = os.path.join(self.path, 'arclink_full.seed')
+        sp1 = Parser(filename)
+        # write XML-SEED
+        tempfile = NamedTemporaryFile().name
+        sp1.writeXSEED(tempfile)
+        # parse XML-SEED
+        sp2 = Parser(tempfile)
+        # create RESP files
+        _resp_list = sp2.getRESP()
+        os.remove(tempfile)
+
+    def test_missingRequiredDateTimes(self):
+        """
+        """
+        # blockette 10 - missing start time
+        b010 = "0100034 2.408~2038,001~2009,001~~~"
+        # strict raises an exception
+        blockette = Blockette010(strict=True)
+        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
+        # non-strict warns
+        blockette = Blockette010()
+        blockette.parseSEED(b010)
+        self.assertEquals(b010, blockette.getSEED())
+        # blockette 10 - missing volume time
+        b010 = "0100034 2.4082008,001~2038,001~~~~"
+        # strict raises an exception
+        blockette = Blockette010(strict=True)
+        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
+        # non-strict warns
+        blockette = Blockette010()
+        blockette.parseSEED(b010)
+        self.assertEquals(b010, blockette.getSEED())
 
 
 def suite():

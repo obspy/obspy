@@ -4,6 +4,7 @@ from lxml.etree import Element, SubElement
 from obspy.core import util, UTCDateTime
 from obspy.xseed import utils
 import re
+import warnings
 
 
 class SEEDTypeException(Exception):
@@ -34,7 +35,7 @@ class Field(object):
         self.ignore = kwargs.get('ignore', False)
         self.strict = kwargs.get('strict', False)
         self.compact = kwargs.get('compact', False)
-        self.default_value = kwargs.get('default_value', False)
+        self.default_value = kwargs.get('default_value', self.default)
 
     def __str__(self):
         if self.id:
@@ -50,11 +51,11 @@ class Field(object):
         This method is partly adopted from fseed.py, the SEED builder for 
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
-        if self.flags and 'T' in self.flags:
-            if not s and self.default_value:
-                return self.default_value
-            return utils.DateTime2String(s, self.compact)
         sn = str(s).strip()
+        if self.flags and 'T' in self.flags:
+            if not sn and self.default_value:
+                return self.default_value
+            return utils.DateTime2String(sn, self.compact)
         if not self.flags:
             return sn
         rx_list = []
@@ -89,12 +90,12 @@ class Field(object):
         """
         """
         try:
-            text = self.read(data)
+            text = self.read(data, blockette.strict)
         except Exception, e:
             if blockette.strict:
                 raise e
             # default value if not set
-            text = self.default
+            text = self.default_value
         # check if already exists
         if hasattr(blockette, self.attribute_name):
             temp = getattr(blockette, self.attribute_name)
@@ -118,7 +119,7 @@ class Field(object):
             if blockette.strict:
                 msg = "Missing attribute %s in Blockette %s"
                 raise Exception(msg % (self.name, blockette))
-            result = self.default
+            result = self.default_value
         # watch for multiple entries
         if isinstance(result, list):
             result = result[pos]
@@ -176,10 +177,10 @@ class Field(object):
         try:
             text = xml_doc.xpath(self.field_name + "/text()")[pos]
         except:
-            setattr(blockette, self.attribute_name, self.default)
+            setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
-                print('  %s: set to default value %s' % (self, self.default))
+                print('  %s: set to default value %s' % (self, self.default_value))
             return
         # Parse X-Path if necessary. The isdigit test assures legacy support for
         # XSEED without XPaths.
@@ -203,9 +204,9 @@ class Integer(Field):
     An integer field.
     """
     def __init__(self, id, name, length, **kwargs):
+        self.default = 0
         Field.__init__(self, id, name, **kwargs)
         self.length = length
-        self.default = 0
 
     def convert(self, value):
         try:
@@ -215,11 +216,11 @@ class Integer(Field):
                 return int(value)
         except:
             if not self.strict:
-                return self.default
+                return self.default_value
             msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
-    def read(self, data):
+    def read(self, data, strict=False):
         temp = data.read(self.length)
         return self.convert(temp)
 
@@ -243,9 +244,9 @@ class Float(Field):
     A float number with a fixed length and output mask.
     """
     def __init__(self, id, name, length, **kwargs):
+        self.default = 0.0
         Field.__init__(self, id, name, **kwargs)
         self.length = length
-        self.default = 0
         if not self.mask:
             msg = "Float field %s requires a data mask." % self.attribute_name
             raise SEEDTypeException(msg)
@@ -258,11 +259,11 @@ class Float(Field):
                 return float(value)
         except:
             if not self.strict:
-                return self.default
+                return self.default_value
             msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
-    def read(self, data):
+    def read(self, data, strict=False):
         temp = data.read(self.length)
         return self.convert(temp)
 
@@ -289,12 +290,12 @@ class FixedString(Field):
     An string field with a fixed width.
     """
     def __init__(self, id, name, length, flags='', **kwargs):
+        self.default = ' ' * length
         Field.__init__(self, id, name, **kwargs)
         self.length = length
         self.flags = flags
-        self.default = ' ' * length
 
-    def read(self, data):
+    def read(self, data, strict=False):
         return self._formatString(data.read(self.length).strip())
 
     def write(self, data):
@@ -318,11 +319,11 @@ class VariableString(Field):
     """
     def __init__(self, id, name, min_length=0, max_length=None, flags='',
                  **kwargs):
+        self.default = ''
         Field.__init__(self, id, name, **kwargs)
         self.min_length = min_length
         self.max_length = max_length
         self.flags = flags
-        self.default = ' ' * min_length
 
     def convert(self, value):
         # check for datetime
@@ -330,19 +331,23 @@ class VariableString(Field):
             return UTCDateTime(value)
         return value
 
-    def read(self, data):
+    def read(self, data, strict=False):
         data = self._read(data)
         # check for datetime
         if 'T' in self.flags:
             # default value
-            if not data:
-                if self.default_value:
-                    return self.default_value
-                return ""
-            # create a full SEED date string
-            temp = "0000,000,00:00:00.0000"
-            data += temp[len(data):]
-            return UTCDateTime(data)
+            if data:
+                # create a full SEED date string
+                temp = "0000,000,00:00:00.0000"
+                data += temp[len(data):]
+                return UTCDateTime(data)
+            if self.default_value:
+                return self.default_value
+            if self.min_length:
+                if strict:
+                    raise utils.SEEDParserException
+                warnings.warn('Date is required.')
+            return ""
         else:
             if self.flags:
                 return self._formatString(data)
@@ -385,6 +390,7 @@ class Loop(Field):
     A loop over multiple elements.
     """
     def __init__(self, name, index_field, data_fields, **kwargs):
+        self.default = False
         Field.__init__(self, None, name, **kwargs)
         # initialize + default values
         if not isinstance(data_fields, list):
