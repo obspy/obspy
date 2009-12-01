@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
 from glob import iglob
 from lxml import etree
 from obspy.xseed.blockette import Blockette054

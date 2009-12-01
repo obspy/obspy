@@ -179,7 +179,7 @@ class Parser(object):
         fh.write(self.getXSEED(*args, **kwargs))
         fh.close()
 
-    def getSEED(self, compact = False):
+    def getSEED(self, compact=False):
         """
         Takes everything stored in the object returns a valid SEED string.
         """
@@ -293,11 +293,11 @@ class Parser(object):
 
     def getPAZ(self, channel_id):
         """
-        Return PAZ, currently only the Laplace transfrom is supported, that
+        Return PAZ, currently only the Laplace transform is supported, that
         is blockettes 43 and 53.
         No multiple stations or locations codes in the same XSEED volume are
         allowed.
-    
+        
         @param channel_id: Channel/Component to extract
         @return: Dictionary containing PAZ as well as the overall sensitivity
         """
@@ -331,16 +331,16 @@ class Parser(object):
             raise Exception('Only supporting Laplace transform, i.e. \
                 blockettes 43 and 53')
         # Currently only support Laplace Transform
-        if getattr(resp,resp_type[blk]) != "A":
+        if getattr(resp, resp_type[blk]) != "A":
             raise Exception('Only supporting Laplace transform response type')
         # A0_normalization_factor
         paz['gain'] = resp.A0_normalization_factor
         # Poles
-        paz['poles'] = [complex(x,y) for x, y in \
-                        zip(resp.real_pole,resp.imaginary_pole)]
+        paz['poles'] = [complex(x, y) for x, y in \
+                        zip(resp.real_pole, resp.imaginary_pole)]
         # Zeros
-        paz['zeros'] = [complex(x,y) for x, y in \
-                        zip(resp.real_zero,resp.imaginary_zero)]
+        paz['zeros'] = [complex(x, y) for x, y in \
+                        zip(resp.real_zero, resp.imaginary_zero)]
         return paz
 
     def writeRESP(self, folder, zipped=False):
@@ -681,10 +681,10 @@ class Parser(object):
             root_attribute = self.temp['volume']
         else:
             # Just one abbreviations header allowed!
-            if len(self.temp['abbreviations']):
-                msg = 'More than one Abbreviation Dictionary Control Headers' + \
-                      ' found!'
-                raise SEEDParserException(msg)
+            #if len(self.temp['abbreviations']):
+            #    msg = 'More than one Abbreviation Dictionary Control Headers' + \
+            #          ' found!'
+            #    raise SEEDParserException(msg)
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:

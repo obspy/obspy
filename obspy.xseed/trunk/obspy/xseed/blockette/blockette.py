@@ -47,7 +47,7 @@ class Blockette(object):
         # filter versions specific fields
         self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
         self.seed_version = kwargs.get('version', 2.4)
-        
+
     def __str__(self):
         """
         Pretty prints the informations stored in the blockette.
@@ -56,14 +56,15 @@ class Blockette(object):
         ignore_attr = ['blockette_id', 'blockette_name', 'compact', 'debug',
                        'seed_version', 'strict', 'xseed_version',
                        'length_of_blockette', 'blockette_type']
-        temp = 'Blockette %s: %s Blockette' % (self.blockette_type,
+        temp = 'Blockette %s: %s Blockette' % (self.blockette_id,
                     utils.toString(self.blockette_name)) + os.linesep
         keys = self.__dict__.keys()
         keys.sort()
         for key in keys:
             if key in ignore_attr:
                 continue
-            temp += '    %s: %s' %(utils.toString(key), self.__dict__[key]) + os.linesep
+            temp += '%13s: %s' % (utils.toString(key), self.__dict__[key])
+            temp += os.linesep
         return temp.strip()
 
     def getFields(self, xseed_version=DEFAULT_XSEED_VERSION):

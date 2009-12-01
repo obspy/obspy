@@ -406,10 +406,22 @@ class Loop(Field):
             msg = "Missing attribute %s in Blockette %s"
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
+        debug = blockette.debug
+        blockette.debug = False
+        temp = []
         for _i in xrange(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseSEED(blockette, data)
+                if debug:
+                    temp.append(field.data)
+        # debug
+        if debug:
+            if len(temp) > 3:
+                print('  LOOP: ... (%d elements) ' % (len(temp)))
+            else:
+                print('  LOOP: %s' % (temp))
+            blockette.debug = debug
 
     def getSEED(self, blockette):
         """
@@ -486,10 +498,7 @@ class Loop(Field):
         if self.flat:
             # flat loop: one or multiple fields are within one parent tag
             # e.g. <root>item1 item2 item1 item2</root>
-            try:
-                text = xml_doc.xpath(self.field_name + '/text()')[0].split()
-            except:
-                import pdb;pdb.set_trace()
+            text = xml_doc.xpath(self.field_name + '/text()')[0].split()
             if not text:
                 return
             # loop over number of entries
@@ -513,7 +522,6 @@ class Loop(Field):
         else:
             # standard loop
             root = xml_doc.xpath(self.field_name)[pos]
-
         # loop over number of entries
         for i in xrange(0, self.length):
             # loop over data fields within one entry

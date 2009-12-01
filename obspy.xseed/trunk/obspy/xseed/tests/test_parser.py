@@ -3,12 +3,11 @@
 from StringIO import StringIO
 from glob import glob
 from lxml import etree
-from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
-from obspy.xseed.blockette.blockette053 import Blockette053 
-from obspy.xseed.blockette.blockette054 import Blockette054 
-from obspy.xseed.parser import Parser, SEEDParserException 
+from obspy.xseed.blockette.blockette053 import Blockette053
+from obspy.xseed.blockette.blockette054 import Blockette054
+from obspy.xseed.parser import Parser, SEEDParserException
 from obspy.xseed.utils import compareSEED
 import inspect
 import os
@@ -51,7 +50,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEquals(sp, ["BW.MANZ..EHZ | 2005-12-06T00:00:00.000000Z - ",
                                "BW.MANZ..EHN | 2005-12-06T00:00:00.000000Z - ",
                                "BW.MANZ..EHE | 2005-12-06T00:00:00.000000Z -"])
-        
+
     def test_nonExistingFilename(self):
         """
         Test reading non existing file.
@@ -258,12 +257,12 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser(filename)
         paz = sp.getPAZ('BHE')
-        self.assertEqual(paz['sensitivity'], +7.86576E+08)
-        self.assertEqual(paz['gain'], +6.00770E+07)
+        self.assertEqual(paz['sensitivity'], +7.86576e+08)
+        self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
-        self.assertEqual(paz['poles'], [(-3.70040E-02 +3.70160E-02j),
-            (-3.70040E-02 -3.70160E-02j), (-2.51330E+02 +0.00000E+00j),
-            (-1.31040E+02 -4.67290E+02j), (-1.31040E+02 +4.67290E+02j)])
+        self.assertEqual(paz['poles'], [(-3.70040e-02 + 3.70160e-02j),
+            (-3.70040e-02 - 3.70160e-02j), (-2.51330e+02 + 0.00000e+00j),
+            (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'EHE')
         #
@@ -273,11 +272,11 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(filename)
         paz = sp.getPAZ('EHE')
         #self.assertEqual(paz['sensitivity'], +6.71140E+08)
-        self.assertEqual(paz['gain'], +1.00000E+00)
+        self.assertEqual(paz['gain'], +1.00000e+00)
         self.assertEqual(paz['zeros'], [0j, 0j, 0j])
-        self.assertEqual(paz['poles'], [(-4.44400E+00 +4.44400E+00j), 
-                                        (-4.44400E+00 -4.44400E+00j),
-                                        (-1.08300E+00 +0.00000E+00j)])
+        self.assertEqual(paz['poles'], [(-4.44400e+00 + 4.44400e+00j),
+                                        (-4.44400e+00 - 4.44400e+00j),
+                                        (-1.08300e+00 + 0.00000e+00j)])
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'BHE')
 
