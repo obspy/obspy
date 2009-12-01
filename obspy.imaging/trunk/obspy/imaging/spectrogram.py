@@ -31,9 +31,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 
 from matplotlib import mlab
+import matplotlib.pyplot as plt
 import math as M
-import numpy as N
-import pylab as pl
+import numpy as np
 
 
 def nearestPow2(x):
@@ -50,72 +50,70 @@ def nearestPow2(x):
     @rtype: Int
     @return: Nearest power of 2 to x
     """
-    a = M.pow(2, M.ceil(N.log2(x)))
-    b = M.pow(2, M.floor(N.log2(x)))
+    a = M.pow(2, M.ceil(np.log2(x)))
+    b = M.pow(2, M.floor(np.log2(x)))
     if abs(a - x) < abs(b - x):
         return a
     else:
         return b
 
 
-def spectroGram(data, samp_rate=100.0, log=False, outfile=None, format=None):
+def spectroGram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
+                outfile=None, format=None):
     """
     Computes and plots logarithmic spectogram of the input trace.
     
-    @type data: Numpy ndarray
     @param data: Input data
-    @type sample_rate: Float
     @param sample_rate: Samplerate in Hz
-    @type log: Bool
     @param log: True logarithmic frequency axis, False linear frequency axis
-    @type outfile: String
+    @param per_lap: Percent of overlap
+    @param nwin: Approximate number of windows.
     @param outfile: String for the filename of output file, if None
         interactive plotting is activated.
-    @type format: String
     @param format: Format of image to save
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
-    pl.ioff()
+    plt.ioff()
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
-    nfft = int(nearestPow2(npts / 10.0))
+    nfft = int(nearestPow2(npts / float(nwin)))
     if nfft > 4096:
         nfft = 4096
-    nlap = int(nfft * .8)
+    nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
 
-    # here we call not pl.specgram as this already produces a plot
+    # here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     spectogram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                            NFFT=nfft, noverlap=nlap)
     # db scale and remove offset
-    spectogram = 10 * N.log10(spectogram[1:, :])
+    spectogram = 10 * np.log10(spectogram[1:, :])
     freq = freq[1:]
 
     if log:
-        X, Y = N.meshgrid(time, freq)
-        pl.pcolor(X, Y, spectogram)
-        pl.semilogy()
-        pl.ylim((freq[0], freq[-1]))
+        X, Y = np.meshgrid(time, freq)
+        plt.pcolor(X, Y, spectogram)
+        plt.semilogy()
+        plt.ylim((freq[0], freq[-1]))
     else:
         # this method is much much faster!
-        spectogram = N.flipud(spectogram)
-        extent = 0, N.amax(time), freq[0], freq[-1]
-        pl.imshow(spectogram, None, extent=extent)
-        pl.axis('auto')
+        spectogram = np.flipud(spectogram)
+        extent = 0, np.amax(time), freq[0], freq[-1]
+        plt.imshow(spectogram, None, extent=extent)
+        plt.axis('auto')
 
-    pl.grid(False)
-    pl.xlabel('Time [s]')
-    pl.ylabel('Frequency [Hz]')
+    plt.grid(False)
+    plt.xlabel('Time [s]')
+    plt.ylabel('Frequency [Hz]')
 
     if outfile:
         if format:
-            pl.savefig(outfile, format=format)
+            plt.savefig(outfile, format=format)
         else:
-            pl.savefig(outfile)
+            plt.savefig(outfile)
     else:
-        pl.show()
+        plt.show()
