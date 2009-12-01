@@ -38,7 +38,7 @@ class Blockette047(Blockette):
         'B047F05     Response input sample rate:            %s\n' \
                     % formatRESP(self.input_sample_rate, 6) + \
         'B047F06     Response decimation factor:            %s\n' \
-                    % self.decimiation_factor + \
+                    % self.decimation_factor + \
         'B047F07     Response decimation offset:            %s\n' \
                     % self.decimation_offset + \
         'B047F08     Response delay:                        %s\n' \

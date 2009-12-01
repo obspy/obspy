@@ -44,19 +44,17 @@ def _compareRESPFiles(original, new):
             if line1.startswith('B052F23') and line1 in line2:
                 continue
             # search for floating point errors
-#            diffs = [i for i, c in enumerate(zip(org_list[_i], new_list[_i])) \
-#                     if c[0] != c[1]]
-#            if len(diffs) == 1 and diffs[0] != len(org_list[_i]):
-#                if new_list[_i][diffs[0] + 1] == 'E' and \
-#                   new_list[_i][diffs[0]].isdigit():
-#                    continue
-            msg = '\nCompare failed for:\n' + \
+            diffs = [i for i, c in enumerate(zip(org_list[_i], new_list[_i])) \
+                     if c[0] != c[1]]
+            if len(diffs) == 1 and diffs[0] != len(org_list[_i]):
+                if new_list[_i][diffs[0] + 1] == 'E' and \
+                   new_list[_i][diffs[0]].isdigit():
+                    continue
+            msg = os.linesep + 'Compare failed for:' + os.linesep + \
                   'File :\t' + original.split(os.sep)[-1] + \
-                  '\nLine :\t' + str(_i + 1) + '\n' + \
-                  'EXPECTED:\n' + \
-                  org_list[_i] + \
-                  'GOT:\n' + \
-                  new_list[_i]
+                  '\nLine :\t' + str(_i + 1) + os.linesep + \
+                  'EXPECTED:' + os.linesep + org_list[_i] + \
+                  'GOT:' + os.linesep + new_list[_i]
             raise AssertionError(msg)
 
 # build up file list and loop over all files
@@ -64,6 +62,9 @@ files = []
 files += glob.glob(os.path.join(dataless_path, '*', '*'))
 files += glob.glob(os.path.join(dataless_path, '*', '*', '*'))
 for file in files:
+    # skip arclink
+    #if 'arclink' in file:
+    #    continue
     # check and eventually generate output directory
     path = os.path.dirname(file)
     relpath = os.path.relpath(path, dataless_path)
@@ -94,6 +95,7 @@ for file in files:
             org_resp_file = resp_file.replace('output' + os.sep, 'data' + os.sep)
             _compareRESPFiles(org_resp_file, resp_file)
     except Exception, e:
+        print e
         import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isdir(resp_path):
