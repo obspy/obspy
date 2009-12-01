@@ -7,6 +7,7 @@ from obspy.xseed.blockette import Blockette011, Blockette012
 from obspy.xseed.utils import SEEDParserException
 import math
 import os
+import warnings
 import zipfile
 
 
@@ -24,6 +25,15 @@ HEADER_INFO = {
 RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]#
 
 XSEED_VERSIONS = ['1.0', '1.1']
+
+# Index fields of the abbreviation blockettes.
+INDEX_FIELDS = {30: 'data_format_identifier_code',
+                31: 'comment_code_key',
+                32: 'source_lookup_code',
+                33: 'abbreviation_lookup_code',
+                34: 'unit_lookup_code',
+                35: 'beam_lookup_code'
+}
 
 
 class Parser(object):
@@ -616,6 +626,21 @@ class Parser(object):
                         not 58 in stat_blockettes:
                 return False
         return True
+    
+    
+    def _compareBlockettes(self, blkt1, blkt2):
+        """
+        Compares two blockettes.
+        
+        Returns True or False.
+        """
+        for key in blkt1.__dict__.keys():
+            # Continue if just some metadata.
+            if key in utils.IGNORE_ATTR:
+                continue
+            if blkt1.__dict__[key] != blkt2.__dict__[key]:
+                return False
+        return True
 
     def _updateInternalSEEDStructure(self):
         """
@@ -644,10 +669,70 @@ class Parser(object):
             self.stations.extend(self.temp['stations'])
             del self.temp
         else:
-            msg = 'Merging not yet implemented.'
-            raise NotImplementedError(msg)
+            msg = 'Merging is an experimental feature and still contains a ' +\
+                  'lot of errors!'
+            warnings.warn(msg, UserWarning)
+            # XXX: Sanity check for multiple Blockettes. Remove duplicates.
+            # self._removeDuplicateAbbreviations()
+            # Check the abbreviations.
+            for blkt in self.temp['abbreviations']:
+                id = blkt.blockette_type
+                # Loop over all existing abbreviations and find those with the
+                # same id and content.
+                cur_index = 1
+                # Helper variable.
+                blkt_done = False
+                for ex_blkt in self.abbreviations:
+                    if id != ex_blkt.blockette_type:
+                        continue
+                    # Raise the current index if it is the same blockette.
+                    cur_index += 1
+                    if not self._compareBlockettes(blkt, ex_blkt):
+                        continue
+                    # Update the current blockette and all abbreviations.
+                    self._updateTemporaryStations(id, getattr(ex_blkt,
+                                                    INDEX_FIELDS[id]))
+                    blkt_done = True
+                    break
+                if not blkt_done:
+                    self._updateTemporaryStations(id, cur_index)
+                    # Append abbreviation.
+                    setattr(blkt,INDEX_FIELDS[id] , cur_index)
+                    self.abbreviations.append(blkt)
+            # Update the stations.
+            self.stations.extend(self.temp['stations'])
+            #XXX Update volume control header!
+                
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4
+        
+    
+    def _updateTemporaryStations(self, blkt_id, index_nr):
+        """
+        Loops over all stations, finds the corresponding blockettes and changes
+        all abbreviation lookup codes.
+        """
+        # Blockette dictionary which maps abbreviation ids and and fields.
+        index = {
+            # Abbreviation Blockette : {Station Blockette: (Fields)}
+            30: {52: (16, )},
+            31: {51: (5, ), 59: (5, )},
+            33: {50: (10, ), 52: (6, )},
+            34: {52: (8, 9), 53: (5, 6), 54: (5, 6), 55: (4, 5)}
+        }
+        blockettes = index[blkt_id]
+        # Loop over all stations.
+        stations = self.temp['stations']
+        for station in stations:
+            for blkt in station:
+                try:
+                    fields = blockettes[blkt.blockette_type]
+                except:
+                    continue
+                for field in fields:
+                    setattr(blkt, blkt.getFields()[field - 2].field_name,
+                            index_nr)
+        
 
     def _parseMergedData(self, data, record_type):
         """

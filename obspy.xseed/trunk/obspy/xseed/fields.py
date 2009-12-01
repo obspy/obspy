@@ -346,7 +346,7 @@ class VariableString(Field):
             if self.min_length:
                 if strict:
                     raise utils.SEEDParserException
-                warnings.warn('Date is required.')
+                warnings.warn('Date is required.', UserWarning)
             return ""
         else:
             if self.flags:

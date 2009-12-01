@@ -60,8 +60,8 @@ class RotateTestCase(unittest.TestCase):
             #legend()
             #show()
             #print "RMS misfit:",rms
-            self.assertEqual(rms < 1.e - 5, True)
-
+            self.assertEqual(rms < 1.e-5, True)
+            
     def test_gps2DistAzimuth(self):
         """
         Test gps2DistAzimuth() method with test data from Geocentric Datum of Australia.
@@ -85,9 +85,9 @@ class RotateTestCase(unittest.TestCase):
         alpha12_err = abs(alpha12 - calc_alpha12)
         alpha21_err = abs(alpha21 - calc_alpha21)
 
-        self.assertEqual(dist_err_rel < 1.e - 5, True)
-        self.assertEqual(alpha12_err < 1.e - 5, True)
-        self.assertEqual(alpha21_err < 1.e - 5, True)
+        self.assertEqual(dist_err_rel < 1.e-5, True)
+        self.assertEqual(alpha12_err < 1.e-5, True)
+        self.assertEqual(alpha21_err < 1.e-5, True)
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')

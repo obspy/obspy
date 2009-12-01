@@ -16,8 +16,6 @@ import unittest
 import warnings
 
 
-# omit warnings
-warnings.simplefilter('ignore')
 
 
 class ParserTestCase(unittest.TestCase):
@@ -323,9 +321,13 @@ class ParserTestCase(unittest.TestCase):
         # strict raises an exception
         blockette = Blockette010(strict=True)
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
-        # non-strict warns
+        # non-strict warns. The complicated structure is necessary.
         blockette = Blockette010()
-        blockette.parseSEED(b010)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("ignore")
+            # Trigger a warning.
+            blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = "0100034 2.4082008,001~2038,001~~~~"
@@ -334,8 +336,30 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns
         blockette = Blockette010()
-        blockette.parseSEED(b010)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("ignore")
+            # Trigger a warning.
+            blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
+        
+    def test_compareBlockettes(self):
+        """
+        Tests the comparision of two blockettes.
+        """
+        from obspy.xseed import Parser
+        p = Parser()
+        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+        blockette1 = Blockette010(strict=True, compact=True)
+        blockette1.parseSEED(b010_1)
+        blockette2 = Blockette010(strict=True, compact=True)
+        blockette2.parseSEED(b010_1)
+        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
+        blockette3 = Blockette010(strict=True, compact=True)
+        blockette3.parseSEED(b010_3)
+        self.assertTrue(p._compareBlockettes(blockette1, blockette2))
+        self.assertFalse(p._compareBlockettes(blockette1, blockette3))
+        self.assertFalse(p._compareBlockettes(blockette2, blockette3))
 
 
 def suite():

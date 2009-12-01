@@ -5,6 +5,12 @@ from obspy.core.util import formatScientific
 import sys
 
 
+# Ignore Attributes of Blockettes
+IGNORE_ATTR = ['blockette_id', 'blockette_name', 'compact', 'debug',
+               'seed_version', 'strict', 'xseed_version',
+               'length_of_blockette', 'blockette_type']
+
+
 class SEEDParserException(Exception):
     pass
 

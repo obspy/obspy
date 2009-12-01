@@ -52,18 +52,14 @@ class Blockette(object):
         """
         Pretty prints the informations stored in the blockette.
         """
-        # attribute names to ignore.
-        ignore_attr = ['blockette_id', 'blockette_name', 'compact', 'debug',
-                       'seed_version', 'strict', 'xseed_version',
-                       'length_of_blockette', 'blockette_type']
         temp = 'Blockette %s: %s Blockette' % (self.blockette_id,
                     utils.toString(self.blockette_name)) + os.linesep
         keys = self.__dict__.keys()
         keys.sort()
         for key in keys:
-            if key in ignore_attr:
+            if key in utils.IGNORE_ATTR:
                 continue
-            temp += '%13s: %s' % (utils.toString(key), self.__dict__[key])
+            temp += '%30s: %s' % (utils.toString(key), self.__dict__[key])
             temp += os.linesep
         return temp.strip()
 
