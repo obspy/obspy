@@ -349,6 +349,7 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
                        maximum amplitude is evaluated Originally set to 6 secs
     @return          : (pptime, pfm) pptime sample number of parrival; pfm direction
                          of first motion (U or D)
+    @note            : currently the sample is not take into account
     """
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers
@@ -362,10 +363,13 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
     lib.ppick.restype = C.c_void_p
     # be nice and adapt type if necessary
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
-    args = (len(reltrc), C.byref(pptime), pfm, samp_int, 
+    # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
+    # one shorter
+    args = (len(reltrc)-1, C.byref(pptime), pfm, samp_int, 
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
     lib.ppick(reltrc, *args)
-    return pptime.value, pfm.value
+    # add the sample to the time which is not taken into account
+    return pptime.value+1, pfm.value
 
 def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
            s_pick=True):

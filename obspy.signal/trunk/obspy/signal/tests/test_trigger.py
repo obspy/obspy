@@ -69,7 +69,7 @@ class TriggerTestCase(unittest.TestCase):
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
                              thr1, thr2, npreset_len, np_dur)
-        self.assertEquals(nptime, 17544)
+        self.assertEquals(nptime, 17545)
         self.assertEquals(pfm, 'IPU0')
 
     def test_arPick(self):
