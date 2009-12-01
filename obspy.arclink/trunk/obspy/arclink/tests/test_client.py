@@ -206,10 +206,11 @@ class ClientTestCase(unittest.TestCase):
                  - 1.310400e+02 + 4.672900e+02j]
         gain = 6.0077e+07
         sensitivity = 2.5168e+09
-        # initialize client
-        client = Client()
+        # set start and endtime
         start = UTCDateTime(2009, 1, 1)
         end = start + 1
+        # initialize client
+        client = Client()
         # fetch poles and zeros
         paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
         self.assertEqual(gain, paz['gain'])
@@ -218,6 +219,18 @@ class ClientTestCase(unittest.TestCase):
         # can only compare four decimal places
         self.assertAlmostEqual(sensitivity / 1e9,
                                paz['sensitivity'] / 1e9, places=4)
+
+    def test_getPAZ2(self):
+        """
+        Test for the Client.getPAZ function for erde.
+        """
+        poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
+        t = UTCDateTime(2009, 1, 1)
+        client = Client("erde.geophysik.uni-muenchen.de")
+        # fetch poles and zeros
+        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t+1)
+        self.assertEqual(len(poles), 5)
+        self.assertEqual(poles, paz['poles'][:2])
 
     def test_saveResponse(self):
         """
