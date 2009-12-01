@@ -18,9 +18,9 @@ dataless_path = os.path.join("data", "dataless")
 output_path = os.path.join("output", "dataless")
 
 # validation schemas
-schema_10 = os.path.join(os.pardir, 'obspy', 'xseed' ,'tests', 'data',
+schema_10 = os.path.join(os.pardir, 'obspy', 'xseed' , 'tests', 'data',
                                                         'xml-seed-1.0.xsd')
-schema_11 = os.path.join(os.pardir, 'obspy', 'xseed' ,'tests', 'data',
+schema_11 = os.path.join(os.pardir, 'obspy', 'xseed' , 'tests', 'data',
                                                         'xml-seed-1.1.xsd')
 xml_doc_10 = etree.parse(schema_10)
 xml_doc_11 = etree.parse(schema_11)
@@ -87,7 +87,7 @@ for file in files:
         sys.stdout.flush()
         # write SEED to compare to original SEED.
         f1 = open(seedfile, 'w')
-        seed = sp.getSEED(compact = compact)
+        seed = sp.getSEED(compact=compact)
         f1.write(seed)
         f1.close()
         print "cS",
@@ -99,7 +99,7 @@ for file in files:
         # generate XSEED versions 1.0 and 1.1
         f1 = open(xseedfile_10, 'w')
         f2 = open(xseedfile_11, 'w')
-        xml_10 = sp.getXSEED(version = '1.0')
+        xml_10 = sp.getXSEED(version='1.0')
         xml_11 = sp.getXSEED()
         f1.write(xml_10)
         f1.close()
@@ -127,13 +127,13 @@ for file in files:
         parsers = [sp1, sp2, sp3]
         # generate SEED again from all three versions and compare to seed.
         for parser in parsers:
-            if seed != parser.getSEED(compact = compact):
+            if seed != parser.getSEED(compact=compact):
                 raise Exception("SEED strings differ")
         print "wX1.0cX",
         sys.stdout.flush()
         # generate XSEED 1.0 again from all three versions and compare.
         for parser in parsers:
-            if xml_10 != parser.getXSEED(version = '1.0'):
+            if xml_10 != parser.getXSEED(version='1.0'):
                 raise Exception("XML-SEED 1.0 strings differ")
         print "wX1.1cX",
         sys.stdout.flush()
@@ -144,6 +144,7 @@ for file in files:
         print "."
         sys.stdout.flush()
     except Exception, e:
+        print e
         import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isfile(xseedfile_10):

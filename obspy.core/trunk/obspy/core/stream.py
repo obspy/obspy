@@ -523,11 +523,8 @@ class Stream(object):
                     delta = abs(delta)
                     left_total = cur_trace[-1].size
                     left_end = left_total - delta
-                    try:
-                        samples = (cur_trace[-1][left_end:] + \
+                    samples = (cur_trace[-1][left_end:] + \
                                cur_trace[-1][0:delta]) / 2
-                    except:
-                        import pdb;pdb.set_trace()
                     cur_trace[-1] = cur_trace[-1][0:left_end]
                     right_data = trace.data[delta:]
                     cur_trace.extend([samples, right_data])
