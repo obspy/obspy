@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# With statement for Python 2.5
+from __future__ import with_statement
+
 from StringIO import StringIO
 from glob import glob
 from lxml import etree
@@ -12,10 +15,9 @@ from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
 import inspect
 import os
+import sys
 import unittest
 import warnings
-
-
 
 
 class ParserTestCase(unittest.TestCase):
@@ -323,11 +325,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns. The complicated structure is necessary.
         blockette = Blockette010()
-        #with warnings.catch_warnings(record=True) as w:
-        #    # Cause all warnings to always be triggered.
-        #    warnings.simplefilter("ignore")
-        #    # Trigger a warning.
-        #    blockette.parseSEED(b010)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("ignore")
+            # Trigger a warning.
+            blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = "0100034 2.4082008,001~2038,001~~~~"
@@ -336,11 +338,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns
         blockette = Blockette010()
-        #with warnings.catch_warnings(record=True) as w:
-        #    # Cause all warnings to always be triggered.
-        #    warnings.simplefilter("ignore")
-        #    # Trigger a warning.
-        #    blockette.parseSEED(b010)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("ignore")
+            # Trigger a warning.
+            blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         
     def test_compareBlockettes(self):
