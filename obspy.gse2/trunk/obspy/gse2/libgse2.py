@@ -218,7 +218,7 @@ def read(f, verify_chksum=True):
     # test checksum only if enabled
     if verify_chksum:
         # calculate checksum from data, as in gse_driver.c line 60
-        chksum_data = lib.check_sum(data, head.n_samps, C.c_longlong())
+        chksum_data = abs(lib.check_sum(data, head.n_samps, C.c_longlong()))
         # find checksum within file
         buf = f.readline()
         chksum_file = -1
@@ -292,7 +292,7 @@ def write(headdict, data, f, inplace=False):
     lib.buf_init(None)
     #
     chksum = C.c_longlong()
-    chksum = lib.check_sum(data, n, chksum)
+    chksum = abs(lib.check_sum(data, n, chksum))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
