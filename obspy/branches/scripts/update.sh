@@ -10,3 +10,4 @@ easy_install -U obspy.seishub==dev
 easy_install -U obspy.signal==dev
 easy_install -U obspy.wav==dev
 easy_install -U obspy.xseed==dev
+easy_install -U obspy.fissures==dev

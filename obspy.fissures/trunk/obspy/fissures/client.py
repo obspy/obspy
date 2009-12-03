@@ -30,6 +30,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
+
 from omniORB import CORBA
 from CosNaming import NameComponent, NamingContext
 from idl import Fissures
@@ -58,12 +59,14 @@ class Client(object):
      * http://www.iris.edu/dhi/servers.htm
     """
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
-                 seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter")):
+                 seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter"),
+                 name_service="dmc.iris.washington.edu:6371/NameService"):
         """
         Initialize Fissures/DHI client. 
         
         @param network_dc: Tuple containing dns and NetworkDC name
         @param seismogram_dc: Tuple containing dns and DataCenter name
+        @param name_service: String containing the name service
         """
         #
         # Some object wide variables
@@ -79,12 +82,16 @@ class Client(object):
             #"-ORBtraceLevel", "40",
             "-ORBgiopMaxMsgSize", "2097152",
             "-ORBInitRef",
-            "NameService=corbaloc:iiop:dmc.iris.washington.edu:6371/NameService",
+            "NameService=corbaloc:iiop:" + name_service,
         ], CORBA.ORB_ID)
         self.obj = orb.resolve_initial_references("NameService")
         #
         # Resolve naming service
-        self.rootContext = self.obj._narrow(NamingContext)
+        try:
+            self.rootContext = self.obj._narrow(NamingContext)
+        except:
+            msg = "Could not connect to " + name_service
+            raise Exception(msg)
         #
         # network cosnaming
         self.net_name = self._composeName(network_dc, 'NetworkDC')
@@ -194,7 +201,7 @@ class Client(object):
             net_list.append(attributes.id.network_code)
         return net_list
 
-    def getStationIds(self, network_id = None):
+    def getStationIds(self, network_id=None):
         """
         Return all available stations as list.
 

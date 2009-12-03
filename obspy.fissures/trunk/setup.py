@@ -47,7 +47,7 @@ setup(
      * http://www.iris.edu/dhi/servers.htm
     """,
     classifiers=[],
-    keywords='ObsPy, Seismology',
+    keywords='ObsPy, Seismology, Fissures, DHI, IRIS, CORBA',
     author='The ObsPy Development Team',
     author_email='beyreuth@geophysik.uni-muenchen.de',
     url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.fissures',
@@ -59,6 +59,8 @@ setup(
     test_suite="obspy.fissures.tests.suite",
     install_requires=[
         'setuptools',
+        'omniORB',
+        'obspy.mseed',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.fissures/trunk#egg=obspy.fissures-dev",
 )
