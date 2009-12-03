@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tool to convert between dataless SEED and XML-SEED files.
+Tool to convert between Dataless SEED and XML-SEED files.
 
 
 GNU General Public License (GPL)
@@ -24,9 +24,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 __author__ = """Robert Barsch <barsch@lmu.de>"""
 __docformat__ = 'plaintext'
 
-
 DEFAULT_XSEED_VERSION = '1.1'
-
-from parser import Parser
-
-
+from obspy.xseed.parser import Parser

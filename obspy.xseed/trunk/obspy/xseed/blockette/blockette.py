@@ -2,7 +2,7 @@
 
 from StringIO import StringIO
 from lxml.etree import Element
-from obspy.xseed import utils, DEFAULT_XSEED_VERSION
+from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
 import os
 

@@ -2,8 +2,7 @@
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
-from obspy.xseed import blockette, utils, DEFAULT_XSEED_VERSION
-from obspy.xseed.blockette import Blockette011, Blockette012
+from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
 import math
 import os
@@ -626,8 +625,8 @@ class Parser(object):
                         not 58 in stat_blockettes:
                 return False
         return True
-    
-    
+
+
     def _compareBlockettes(self, blkt1, blkt2):
         """
         Compares two blockettes.
@@ -669,7 +668,7 @@ class Parser(object):
             self.stations.extend(self.temp['stations'])
             del self.temp
         else:
-            msg = 'Merging is an experimental feature and still contains a ' +\
+            msg = 'Merging is an experimental feature and still contains a ' + \
                   'lot of errors!'
             warnings.warn(msg, UserWarning)
             # XXX: Sanity check for multiple Blockettes. Remove duplicates.
@@ -697,16 +696,16 @@ class Parser(object):
                 if not blkt_done:
                     self._updateTemporaryStations(id, cur_index)
                     # Append abbreviation.
-                    setattr(blkt,INDEX_FIELDS[id] , cur_index)
+                    setattr(blkt, INDEX_FIELDS[id] , cur_index)
                     self.abbreviations.append(blkt)
             # Update the stations.
             self.stations.extend(self.temp['stations'])
             #XXX Update volume control header!
-                
+
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4
-        
-    
+
+
     def _updateTemporaryStations(self, blkt_id, index_nr):
         """
         Loops over all stations, finds the corresponding blockettes and changes
@@ -715,9 +714,9 @@ class Parser(object):
         # Blockette dictionary which maps abbreviation ids and and fields.
         index = {
             # Abbreviation Blockette : {Station Blockette: (Fields)}
-            30: {52: (16, )},
-            31: {51: (5, ), 59: (5, )},
-            33: {50: (10, ), 52: (6, )},
+            30: {52: (16,)},
+            31: {51: (5,), 59: (5,)},
+            33: {50: (10,), 52: (6,)},
             34: {52: (8, 9), 53: (5, 6), 54: (5, 6), 55: (4, 5)}
         }
         blockettes = index[blkt_id]
@@ -732,7 +731,7 @@ class Parser(object):
                 for field in fields:
                     setattr(blkt, blkt.getFields()[field - 2].field_name,
                             index_nr)
-        
+
 
     def _parseMergedData(self, data, record_type):
         """
@@ -823,7 +822,7 @@ class Parser(object):
         abbr_lenght = len(abbreviations)
         cur_count = 1 + abbr_lenght
         while True:
-            blkt11 = Blockette011()
+            blkt11 = blockette.Blockette011()
             blkt11.number_of_stations = len(self.stations)
             stations_lengths = [cur_count + 1]
             for _i in [len(_i) - 1 for _i in stations][:-1]:
@@ -834,7 +833,7 @@ class Parser(object):
             self.volume.append(blkt11)
             if blockette12:
                 # Blockette 12 is also needed.
-                blkt12 = Blockette012()
+                blkt12 = blockette.Blockette012()
                 blkt12.number_of_spans_in_table = 0
                 self.volume.append(blkt12)
             volume = self._createCutAndFlushRecord(self.volume, 'V')
