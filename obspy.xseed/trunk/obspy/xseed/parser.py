@@ -310,13 +310,21 @@ class Parser(object):
         paz = {}
         # Find index of correct channel
         index = -1
+        nchannels = len(self.blockettes[52])
         for _i, bl52 in enumerate(self.blockettes[52]):
             if bl52.channel_identifier == channel_id:
                 index = _i
+                break
         if index == -1:
             raise Exception('Channel %s not in SEED volume' % channel_id)
+        bl58stag0 = []
+        for bl58 in self.blockettes[58]:
+            if bl58.stage_sequence_number == 0:
+                bl58stag0.append(bl58)
+        if len(bl58stag0) != nchannels:
+            raise Exception('Not enough stag_seqence in SEED volume' % channel_id)
         # Use this index to get the correct sensitivity
-        paz['sensitivity'] = self.blockettes[58][index].sensitivity_gain
+        paz['sensitivity'] = bl58stag0[index].sensitivity_gain
         # poles, zeros and gain blockettes 43 and 53 are currently supported
         #XXX only single station with single location code allowed
         resp_type = {43: 'response_type', 53: 'transfer_function_types'}
@@ -328,7 +336,7 @@ class Parser(object):
             blocks = self.blockettes[53]
             if len(blocks) == 1:
                 resp = blocks[0]
-            elif len(blocks) == _i + 1:
+            elif len(blocks) == nchannels:
                 resp = blocks[index]
             else:
                 raise Exception('Inconsistent blockettes 52 and 53, \
