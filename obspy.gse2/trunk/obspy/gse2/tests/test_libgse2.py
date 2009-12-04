@@ -41,7 +41,7 @@ class LibGSE2TestCase(unittest.TestCase):
         header, data = libgse2.read(f, verify_chksum=True)
         self.assertEqual('RJOB ', header['station'])
         self.assertEqual('  Z', header['channel'])
-        self.assertEqual(200, header['samp_rate'])
+        self.assertEqual(200.0, header['samp_rate'])
         self.assertEqual('20050831023349.850', "%04d%02d%02d%02d%02d%06.3f" % (
             header['d_year'],
             header['d_mon'],
@@ -50,6 +50,10 @@ class LibGSE2TestCase(unittest.TestCase):
             header['t_min'],
             header['t_sec'])
         )
+        self.assertAlmostEquals(9.49e-02, header['calib'])
+        self.assertEqual(1.0, header['calper'])
+        self.assertEqual(-1.0, header['vang'])
+        self.assertEqual(-1.0, header['hang'])
         self.assertEqual(data[0:13].tolist(), datalist)
         f.close()
 

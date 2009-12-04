@@ -35,6 +35,7 @@ gse2_extra = [
     'instype',
     'datatype',
     'vang',
+    'hang',
     'auxid',
     'calper',
     'calib'
