@@ -95,6 +95,7 @@ def xcorr(tr1, tr2, window_len):
     @param tr2: Trace 2 to correlate with trace 1
     @type window_len: Int
     @param window_len: Window length of cross correlation in samples
+    @return: (index, value) index of maximum xcorr value and the value itself
     """
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
