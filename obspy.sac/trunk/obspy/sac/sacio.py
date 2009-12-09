@@ -53,7 +53,7 @@ Writing:
     WriteSacHeader    - write SAC header
     WriteSacBinary    - write binary SAC file
     WriteSacXY        - write ascii SAC file
-
+    SetHvalue         - set SAC header variable
 
 Convenience:
 
@@ -238,10 +238,6 @@ class ReadSac(object):
         >>> t.GetHvalue('kstnm')
         'spiff   '
         """
-        #
-        # it's trivial to search each dictionary with the key and return
-        #   the value that matches the key
-        #
         key = item.lower() # convert the item to lower case
         #
         if self.fdict.has_key(key):
@@ -255,35 +251,12 @@ class ReadSac(object):
                 value = '%-8s' % value
                 if index == 0:
                         self.hs[0] = value
-                        #if vlen > 8:
-                        #        vlen = 8
-                        #for i in range(0,8):
-                        #        self.hs[i] = ' '
-                        #for i in range(0,vlen):
-                        #        self.hs[i] = value[i]
                 elif index == 1:
                     value1 = '%-8s'%value[0:8]
                     value2 = '%-8s'%value[8:16]
                     self.hs[1] = value1
                     self.hs[2] = value2
-                        #start = 8
-                        #if vlen > 16:
-                        #        vlen =16 
-                        #for i in range(0,16):
-                        #        self.hs[i+start] = ' '
-                        #for i in range(0,vlen):
-                        #        self.hs[i+start] = value[i]
                 else:
-                        #
-                        # if you are here, then the index > 2
-                        #
-                        #if vlen > 8:
-                        #        vlen = 8
-                        #start  = 8 + index*8 
-                        #for i in range(0,8):
-                        #        self.hs[i+start] = ' '
-                        #for i in range(0,vlen):
-                        #        self.hs[i+start] = value[i]
                         self.hs[index+1] = value
         else:
             raise SacError("Cannot find header entry for: ",item)
@@ -321,9 +294,6 @@ class ReadSac(object):
         100
         """
         
-        #self.hf = array.array('f') # allocate the array for header floats
-        #self.hi = array.array('i') # allocate the array for header ints
-        #self.hs = array.array('c') # allocate the array for header characters
         #### check if file exists
         try:
             #### open the file
@@ -415,8 +385,6 @@ class ReadSac(object):
         >>> t.GetHvalue('npts')
         100
         """
-        #self.hf = array.array('f') # allocate the array for header floats
-        #self.hi = array.array('i') # allocate the array for header ints
         try:
             #### open the file
             f = open(fname,'rb')
@@ -484,9 +452,6 @@ class ReadSac(object):
         True
         >>> os.remove('testbin.sac')
         """
-        #self.hf = array.array('f') # allocate the array for header floats
-        #self.hi = array.array('i') # allocate the array for header ints
-        #self.hs = np.ndarray(24, dtype='|S8') # allocate the ndarray for header characters
         ###### open the file
         try:
             f = open(fname,'r')
@@ -503,14 +468,8 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # read in the float values
                 self.hf = np.fromfile(f,dtype='<f4',count=70,sep=" ")
-                #for i in xrange(14):
-                #    a=map(float,f.readline().split())
-                #    b=map(self.hf.append,a)  
                 # read in the int values
                 self.hi = np.fromfile(f,dtype='<i4',count=40,sep=" ")
-                #for i in xrange(8):
-                #    a=map(int,f.readline().split())
-                #    b=map(self.hi.append,a)
                 # reading in the string part is a bit more complicated
                 # because every string field has to be 8 characters long
                 # apart from the second field which is 16 characters long
@@ -699,7 +658,6 @@ class ReadSac(object):
         'heinz   '
         >>> os.remove('test2.sac')
         """
-
         #
         #  Read in the Header
         #
@@ -760,8 +718,33 @@ class ReadSac(object):
         self.SetHvalue('npts',len(self.seis))
         self.SetHvalue('depmin',self.seis.min())
         self.SetHvalue('depmax',self.seis.max())
-        #self.SetHvalue('depmen',sum(self.seis)/len(self.seis))
         self.SetHvalue('depmen',self.seis.mean())
+
+
+    def swap_byte_order(self):
+        """
+        swap byte order of SAC-file in memory
+        >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
+        >>> fileswap = os.path.join(os.path.dirname(__file__),'tests','data','test.sac.swap')
+        >>> x = ReadSac(fileswap)
+        >>> x.swap_byte_order()
+        >>> x.WriteSacBinary('tmp_swap.sac')
+        >>> tr1 = ReadSac('tmp_swap.sac')
+        >>> tr2 = ReadSac(file)
+        >>> np.testing.assert_array_equal(tr1.seis,tr2.seis)
+        >>> os.remove('tmp_swap.sac')
+        """
+
+        if self.byteorder == 'big':
+            bs = 'L'
+        elif self.byteorder == 'little':
+            bs = 'B'
+        self.seis.byteswap(True)
+        self.hf.byteswap(True)
+        self.hi.byteswap(True)
+        self.seis = self.seis.newbyteorder(bs)
+        self.hf   = self.hf.newbyteorder(bs)
+        self.hi   = self.hi.newbyteorder(bs)
         
 if __name__ == "__main__":
     import doctest
