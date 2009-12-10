@@ -5,6 +5,7 @@ The obspy.imaging.spectogram test suite.
 
 from obspy.gse2 import tests as gse2tests
 from obspy.imaging import spectrogram
+from obspy.core import read
 import inspect
 import obspy
 import os
@@ -29,7 +30,7 @@ class SpectrogramTestCase(unittest.TestCase):
         # read data
         path = os.path.dirname(inspect.getsourcefile(gse2tests))
         file = os.path.join(path, 'data', 'loc_RJOB20050831023349.z')
-        g = obspy.read(file, format='GSE2')
+        g = read(file, format='GSE2')
         outfile = os.path.join(self.path, 'spectogram.png')
         spectrogram.spectroGram(g[0].data[0:1000], samp_rate=200.0, log=True,
                                 outfile=outfile)

@@ -35,7 +35,7 @@ To run all tests/a single test inside python do one of the following:
 Running the test verbose exposes the available tests.
 """
 
-import obspy
+import obspy.core
 import sys
 import time
 import unittest
