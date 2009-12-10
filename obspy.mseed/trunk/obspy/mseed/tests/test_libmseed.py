@@ -284,10 +284,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         gap_list = mseed.getGapList(filename)
         self.assertEqual(gap_list[1:], [])
-        # real example with a single gap
-        filename = os.path.join(self.path, 'BW.RJOB.__.EHZ.D.2009.056')
-        gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), 1)
 
     def test_readFirstHeaderInfo(self):
         """
@@ -304,14 +300,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(header['network'], 'BW')
         self.assertEqual(header['station'], 'BGLD')
         self.assertEqual(header['channel'], 'EHE')
-        # Example 2
-        filename = os.path.join(self.path, 'BW.RJOB.__.EHZ.D.2009.056')
-        header = mseed.getFirstRecordHeaderInfo(filename)
-        self.assertEqual(header['location'], '')
-        self.assertEqual(header['network'], 'BW')
-        self.assertEqual(header['station'], 'RJOB')
-        self.assertEqual(header['channel'], 'EHZ')
-        # Example 3 again for leak checking
+        # Example 2 again for leak checking
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         header = mseed.getFirstRecordHeaderInfo(filename)
