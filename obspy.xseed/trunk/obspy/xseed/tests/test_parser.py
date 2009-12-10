@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# With statement for Python 2.5
+# With statement for Python 2.5. Necessary although not used in Python 2.5.
 from __future__ import with_statement
 
 from StringIO import StringIO
@@ -104,7 +104,16 @@ class ParserTestCase(unittest.TestCase):
         # create a blockette 051
         b051 = '05100271999,123~~0001000000'
         blockette = Blockette051(strict=False)
-        blockette.parseSEED(b051)
+        # Only suppress warnings starting with Python 2.6. This is necessary
+        # because there is no suitable context manager for Python 2.5 that
+        # can suppress warnings.
+        if hasattr(warnings, 'catch_warnings'):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                blockette.parseSEED(b051)
+        else:
+            # Just raise the warning using Python 2.5.
+            blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
         data = "000001V " + b010 + (' ' * 206)
         data += "000002S " + b054 + nr[0:224] # 256-8-24 = 224
@@ -119,7 +128,13 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=False)
-        parser.read(data)
+        if hasattr(warnings, 'catch_warnings'):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                parser.read(data)
+        else:
+            # Just raise the warning using Python 2.5.
+            parser.read(data)
         # check results
         self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
         self.assertEquals(len(parser.blockettes[10]), 1)
@@ -316,6 +331,7 @@ class ParserTestCase(unittest.TestCase):
 
     def test_missingRequiredDateTimes(self):
         """
+        A warning should be raised if a blockette misses a required date.
         """
         # blockette 10 - missing start time
         b010 = "0100034 2.408~2038,001~2009,001~~~"
@@ -324,10 +340,20 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns. The complicated structure is necessary.
         blockette = Blockette010()
-        with warnings.catch_warnings(record=True):
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("ignore")
-            # Trigger a warning.
+        # Only suppress warnings starting with Python 2.6. This is necessary
+        # because there is no suitable context manager for Python 2.5 that
+        # can suppress warnings.
+        if hasattr(warnings, 'catch_warnings'):
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                # Trigger a warning.
+                blockette.parseSEED(b010)
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[-1].category, UserWarning))
+                self.assertTrue('date' and 'required' in \
+                                        w[-1].message.message.lower())
+        else:
+            # Just raise the warning using Python 2.5.
             blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
@@ -337,29 +363,40 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns
         blockette = Blockette010()
-        with warnings.catch_warnings(record=True):
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("ignore")
-            # Trigger a warning.
-            blockette.parseSEED(b010)
+        # Only suppress warnings starting with Python 2.6
+        if hasattr(warnings, 'catch_warnings'):
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                # Trigger a warning.
+                blockette.parseSEED(b010)
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[-1].category, UserWarning))
+                self.assertTrue('date' and 'required' in \
+                                        w[-1].message.message.lower())
+        else:
+                blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
 
-    def test_compareBlockettes(self):
-        """
-        Tests the comparision of two blockettes.
-        """
-        p = Parser()
-        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
-        blockette1 = Blockette010(strict=True, compact=True)
-        blockette1.parseSEED(b010_1)
-        blockette2 = Blockette010(strict=True, compact=True)
-        blockette2.parseSEED(b010_1)
-        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
-        blockette3 = Blockette010(strict=True, compact=True)
-        blockette3.parseSEED(b010_3)
-        self.assertTrue(p._compareBlockettes(blockette1, blockette2))
-        self.assertFalse(p._compareBlockettes(blockette1, blockette3))
-        self.assertFalse(p._compareBlockettes(blockette2, blockette3))
+#    def test_compareBlockettes(self):
+#        """
+#        Tests the comparision of two blockettes.
+#        """
+#        p = Parser()
+#        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+#        blockette1 = Blockette010(strict=True, compact=True,
+#                                  xseed_version = '1.0')
+#        blockette1.parseSEED(b010_1)
+#        blockette2 = Blockette010()
+#        blockette2.parseSEED(b010_1)
+#        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
+#        blockette3 = Blockette010(strict=True, compact=True)
+#        blockette3.parseSEED(b010_3)
+#        blockette4 = Blockette010(xseed_version = '1.0')
+#        blockette4.parseSEED(b010_3)
+#        self.assertTrue(p._compareBlockettes(blockette1, blockette2))
+#        self.assertFalse(p._compareBlockettes(blockette1, blockette3))
+#        self.assertFalse(p._compareBlockettes(blockette2, blockette3))
+#        self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
 
 def suite():
