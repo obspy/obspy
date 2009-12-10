@@ -5,9 +5,9 @@ The obspy.arclink.client test suite.
 
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
+from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-import obspy
 import os
 import unittest
 
@@ -97,7 +97,7 @@ class ClientTestCase(unittest.TestCase):
         # MiniSEED
         client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
         stats = os.stat(mseedfile)
-        st = obspy.read(mseedfile)
+        st = read(mseedfile)
         self.assertEquals(stats.st_size, 1024)
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
@@ -111,7 +111,7 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                             format='FSEED')
         stats = os.stat(fseedfile)
-        st = obspy.read(fseedfile)
+        st = read(fseedfile)
         self.assertTrue(stats.st_size > 1024)
         self.assertEquals(open(fseedfile).read(8), "000001V ")
         # ArcLink cuts on record base
@@ -166,7 +166,7 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                             compressed=False)
         stats = os.stat(mseedfile)
-        st = obspy.read(mseedfile)
+        st = read(mseedfile)
         self.assertEquals(stats.st_size, 1024)
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
@@ -180,7 +180,7 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                             format='FSEED')
         stats = os.stat(fseedfile)
-        st = obspy.read(fseedfile)
+        st = read(fseedfile)
         self.assertTrue(stats.st_size > 1024)
         self.assertEquals(open(fseedfile).read(8), "000001V ")
         # ArcLink cuts on record base
@@ -228,7 +228,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime(2009, 1, 1)
         client = Client("erde.geophysik.uni-muenchen.de")
         # fetch poles and zeros
-        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t+1)
+        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
         self.assertEqual(len(poles), 5)
         self.assertEqual(poles, paz['poles'][:2])
 
