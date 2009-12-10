@@ -11,7 +11,7 @@ import sys
 
 
 if platform.system() == 'Windows':
-    lib_name = 'signal.win32.dll'
+    lib_name = 'signal.pyd'
 elif platform.system() == 'Darwin':
     lib_name = 'signal.dylib'
 else:

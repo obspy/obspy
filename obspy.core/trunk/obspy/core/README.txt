@@ -1,5 +1,5 @@
-package obspy.wav
-=================
+package obspy.core
+==================
 
 Copyright
 ---------
@@ -20,21 +20,23 @@ Copyright
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 
-    Copyright (c) 2009 by:
+    Copyright (c) 2009-2010 by:
         * Moritz Beyreuther
+        * Lion Krischner
+        * Robert Barsch
 
 
 Overview
 --------
-    obspy.wav - Read & Write Seismograms to audio, Format WAV
-    
-    Python method in order to read and write seismograms to WAV audio
-    files. The data are squeezed to audible frequencies.
+    obspy.core - Core classes of ObsPy: Python for Seismological Observatories
 
+    This class contains common methods and classes for ObsPy. It includes
+    UTCDateTime, Stats, Stream and Trace classes and methods for reading 
+    seismograms.
+    
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * obspy.core
     * setuptools

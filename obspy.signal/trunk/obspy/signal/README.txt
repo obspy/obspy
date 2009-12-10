@@ -1,5 +1,5 @@
-package obspy.gse2
-==================
+package obspy.signal
+====================
 
 Copyright
 ---------
@@ -20,27 +20,25 @@ Copyright
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 
-    Copyright (c) 2009 by:
+    Copyright (c) 2009-2010 by:
+        * Tobias Megies
         * Moritz Beyreuther
-        * Stefan Stange
-        * Robert Barsch
+        * Yannik Behr
+        * Conny Hammer
 
 
 Overview
 --------
-    obspy.gse2 - Read & Write Seismograms, Format GSE2.
+    obspy.signal - Python signal processing routines for seismology.
 
-    This module contains Python wrappers for gse_functions - The GSE2 library
-    of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
-    Currently CM6 compressed GSE2 files are supported, this should be 
-    sufficient for most cases. Gse_functions are written in C and interfaced 
-    via python-ctypes.
+    Capabilities include filtering, triggering, rotation, instrument
+    correction and coordinate transformations.
 
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * numpy
-    * setuptools
+    * scipy
     * obspy.core
+    * setuptools

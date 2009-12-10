@@ -20,7 +20,7 @@ Copyright
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 
-    Copyright (c) 2009 by:
+    Copyright (c) 2009-2010 by:
         * Lion Krischer
         * Robert Barsch
         * Moritz Beyreuther
@@ -28,11 +28,11 @@ Copyright
 
 Overview
 --------
-    obspy.mseed - Read & Write Seismograms, Format MiniSeed
+    obspy.mseed - Read & write seismograms, Format MiniSeed
     
-    This module contains python wrappers for libmseed - The MiniSeed
+    This module contains Python wrappers for libmseed - The MiniSeed
     library of Chad Trabant. Libmseed is written in C and interfaced via
-    python-ctypes.
+    Python ctypes.
 
     For more information visit http://www.obspy.org.
 

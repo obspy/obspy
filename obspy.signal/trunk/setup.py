@@ -1,33 +1,60 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-setup.py bdist_egg
+obspy.wav installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU General Public License (GPL)
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+from setuptools.extension import Extension
+import os
 
-version = '0.1.2'
 
-GPL2 = """
-GNU General Public License (GPL)
+VERSION = '0.2.0'
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+# hack to prevent build_ext from trying to append "init" to the export symbols
+class finallist(list):
+    def append(self, object):
+        return
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-USA.
-"""
+class MyExtension(Extension):
+    def __init__(self, *args, **kwargs):
+        Extension.__init__(self, *args, **kwargs)
+        self.export_symbols = finallist(self.export_symbols)
+
+src = os.path.join('obspy', 'signal', 'src') + os.sep
+symbols = open(src + 'signal.def', 'r').readlines()[2:]
+lib = MyExtension('signal',
+                  define_macros=[],
+                  libraries=[],
+                  sources=[src + 'recstalta.c', src + 'xcorr.c',
+                           src + 'coordtrans.c', src + 'pk_mbaer.c',
+                           src + 'filt_util.c', src + 'arpicker.c'],
+                  export_symbols=symbols,
+                  extra_link_args=[])
+
+
+# setup
 setup(
     name='obspy.signal',
-    version=version,
+    version=VERSION,
     description="Python signal processing routines for seismology.",
     long_description="""
     obspy.signal - Python signal processing routines for seismology.
@@ -37,25 +64,26 @@ setup(
 
     For more information visit http://www.obspy.org.
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, Signal, Filter, Triggers, Instrument Correction',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team',
-    author_email='megies@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.signal',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'seismology', 'signal', 'filter', 'triggers',
+              'instrument correction', ],
+    license='GPL2',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
     zip_safe=True,
-    test_suite="obspy.signal.tests.suite",
-    install_requires=[
-        'obspy.core',
+    requires=[
         'setuptools',
+        'obspy.core(>=0.2)',
         'scipy',
-        # -*- Extra requirements: -*
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.signal/trunk#egg=obspy.signal-dev",
-    dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
-    ],
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.signal/trunk#egg=obspy.signal-dev",
+    platforms=['any'],
+    ext_package='obspy.signal.lib',
+    ext_modules=[lib],
+    test_suite="obspy.signal.tests.suite",
+    include_package_data=True,
 )

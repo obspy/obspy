@@ -1,4 +1,4 @@
-package obspy.core
+package obspy.gse2
 ==================
 
 Copyright
@@ -20,23 +20,27 @@ Copyright
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 
-    Copyright (c) 2009 by:
+    Copyright (c) 2009-2010 by:
         * Moritz Beyreuther
-        * Lion Krischner
+        * Stefan Stange
         * Robert Barsch
 
 
 Overview
 --------
-    obspy.core - Core classes of ObsPy: Python for Seismological Observatories
+    obspy.gse2 - Read & write seismograms, Format GSE2.
 
-    This class contains common methods and classes for ObsPy. It includes
-    UTCDateTime, Stats, Stream and Trace classes and methods for reading 
-    seismograms.
-    
+    This module contains Python wrappers for gse_functions - The GSE2 library
+    of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
+    Currently CM6 compressed GSE2 files are supported, this should be 
+    sufficient for most cases. Gse_functions are written in C and interfaced 
+    via Python ctypes.
+
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
+    * numpy
     * setuptools
+    * obspy.core

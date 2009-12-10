@@ -1,64 +1,88 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-setup.py bdist_egg
+obspy.gse2 installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU General Public License (GPL)
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+from setuptools.extension import Extension
+import os
 
-version = '0.1.3'
 
-GPL2 = """
-GNU General Public License (GPL)
+VERSION = '0.2.0'
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
+# hack to prevent build_ext from trying to append "init" to the export symbols
+class finallist(list):
+    def append(self, object):
+        return
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
-"""
+class MyExtension(Extension):
+    def __init__(self, *args, **kwargs):
+        Extension.__init__(self, *args, **kwargs)
+        self.export_symbols = finallist(self.export_symbols)
+
+src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
+symbols = open(src + 'gse_functions.def', 'r').readlines()[2:]
+lib = MyExtension('gse_functions',
+                  define_macros=[],
+                  libraries=[],
+                  sources=[src + 'buf.c', src + 'gse_functions.c'],
+                  export_symbols=symbols,
+                  extra_link_args=[])
+
 
 setup(
     name='obspy.gse2',
-    version=version,
-    description="Read & Write Seismograms, Format GSE2.",
+    version=VERSION,
+    description="Read & write seismograms, Format GSE2.",
     long_description="""
-    obspy.gse2 - Read & Write Seismograms, Format GSE2.
+    obspy.gse2 - Read & write seismograms, Format GSE2.
 
     This module contains Python wrappers for gse_functions - The GSE2 library
     of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
     Currently CM6 compressed GSE2 files are supported, this should be 
     sufficient for most cases. Gse_functions are written in C and interfaced 
-    via python-ctypes.
+    via Python ctypes.
 
     For more information visit http://www.obspy.org.
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, GSE2',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team & Stefan Stange',
-    author_email='beyreuth@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'seismology', 'GSE2', 'waveform', 'seismograms'],
+    license='GPL2',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
-    zip_safe=False,
-    test_suite="obspy.gse2.tests.suite",
-    install_requires=[
-        'obspy.core',
+    zip_safe=True,
+    requires=[
         'setuptools',
+        'obspy.core(>=0.2)',
         'numpy',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev",
-    dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core-dev"
-    ],
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev",
+    platforms=['any'],
+    ext_package='obspy.gse2.lib',
+    ext_modules=[lib],
+    include_package_data=True,
+    test_suite="obspy.gse2.tests.suite",
 )

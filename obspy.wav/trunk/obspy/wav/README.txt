@@ -1,5 +1,5 @@
-package obspy.signal
-====================
+package obspy.wav
+=================
 
 Copyright
 ---------
@@ -20,25 +20,22 @@ Copyright
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
     02110-1301, USA.
 
-    Copyright (c) 2009 by:
-        * Tobias Megies
-        * Moritz Beyreuther
-        * Yannik Behr
-        * Conny Hammer
+    Copyright (c) 2009-2010 by:
+        * Moritz Beyreuther (beyreuth@geophysik.uni-muenchen.de)
 
 
 Overview
 --------
-    obspy.signal - Python signal processing routines for seismology.
-
-    Capabilities include filtering, triggering, rotation, instrument
-    correction and coordinate transformations.
+    obspy.wav - Read & write seismograms, Format WAV
+    
+    Python methods in order to read and write seismograms to WAV audio
+    files. The data are squeezed to audible frequencies.
 
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * scipy
-    * obspy.core
     * setuptools
+    * obspy.core
+

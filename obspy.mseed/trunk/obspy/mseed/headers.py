@@ -13,7 +13,7 @@ import numpy as np
 # Import shared libmseed library depending on the platform.
 if sys.platform == 'win32':
     # 32 bit Windows.
-    lib_name = 'libmseed-2.3.win32.dll'
+    lib_name = 'libmseed.pyd'
 elif sys.platform == 'darwin':
     lib_name = 'libmseed.dylib'
 else:
@@ -371,9 +371,9 @@ class U_DIFF(C.Union):
     Union for Steim objects.
     """
     _fields_ = [
-        ("byte", C.c_int8*4),  # 4 1-byte differences.
-        ("hw", C.c_int16*2),   # 2 halfword differences.
-        ("fw", C.c_int32),     # 1 fullword difference.
+        ("byte", C.c_int8 * 4), # 4 1-byte differences.
+        ("hw", C.c_int16 * 2), # 2 halfword differences.
+        ("fw", C.c_int32), # 1 fullword difference.
     ]
 
 class FRAME(C.Structure):
@@ -381,8 +381,8 @@ class FRAME(C.Structure):
     Frame in a seed data record.
     """
     _fields_ = [
-        ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", U_DIFF*14),      # compressed data.
+        ("ctrl", C.c_uint32), # control word for frame.
+        ("w", U_DIFF * 14), # compressed data.
     ]
 
 
@@ -426,15 +426,15 @@ clibmseed.msr_endtime.restype = C.c_int64
 clibmseed.ms_find_reclen.argtypes = [C.c_char_p, C.c_int, C.POINTER(C.c_int)]
 clibmseed.ms_find_reclen.restype = C.c_int
 
-clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int, 
-        C.c_int, C.c_int, 
+clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
+        C.c_int, C.c_int,
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
-clibmseed.msr_unpack_steim1.argtypes = [C.POINTER(FRAME), C.c_int, 
-        C.c_int, C.c_int, 
+clibmseed.msr_unpack_steim1.argtypes = [C.POINTER(FRAME), C.c_int,
+        C.c_int, C.c_int,
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
@@ -444,7 +444,7 @@ clibmseed.msr_unpack_steim2.restype = C.c_int
 # this is completely differenct to C.c_char_p which is a string
 clibmseed.mst_packgroup.argtypes = [ C.POINTER(MSTraceGroup),
     C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
-    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), 
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int),
     C.c_short, C.c_short, C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
 

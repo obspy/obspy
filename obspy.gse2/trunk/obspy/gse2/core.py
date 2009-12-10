@@ -2,7 +2,6 @@
 
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.gse2 import libgse2
-from ctypes import ArgumentError
 import numpy as np
 
 
@@ -56,8 +55,8 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     """
     traces = []
     # read GSE2 file
-    f = open(filename,'rb')
-    for k in xrange(10000): # avoid endless loop
+    f = open(filename, 'rb')
+    for _k in xrange(10000): # avoid endless loop
         pos = f.tell()
         widi = f.readline()[0:4]
         if widi == '': # end of file
@@ -70,8 +69,8 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
                 header = libgse2.readHead(f)
             else:
                 header, data = libgse2.read(f, verify_chksum=verify_chksum)
-            # assign all header entries to a new dictionary compatible with an Obspy
-            # Trace object.
+            # assign all header entries to a new dictionary compatible with an 
+            # Obspy Trace object.
             new_header = {}
             for i, j in convert_dict.iteritems():
                 new_header[j] = header[i]

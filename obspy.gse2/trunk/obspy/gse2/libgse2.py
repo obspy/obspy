@@ -42,7 +42,7 @@ from obspy.core.util import c_file_p, formatScientific
 
 
 if platform.system() == 'Windows':
-    lib_name = 'gse_functions.win32.dll'
+    lib_name = 'gse_functions.pyd'
 elif platform.system() == 'Darwin':
     lib_name = 'gse_functions.dylib'
 else:
