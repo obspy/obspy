@@ -154,36 +154,37 @@ def specInv(spec, wlev):
     # swamp is the amplitude spectral value corresponding
     # to wlev dB below the maximum spectral value
     swamp = max_spec_amp * 10.0 ** (-wlev / 20.0)
-    swamp2 = swamp ** 2
     found = 0
 
     # Manually correct offset (index 0) and nyquist frequency (index -1)
+    # replaced > 0 with > 1e-50
     for _i in (0, -1):
         if np.abs(spec[_i].real) < swamp:
-            if np.abs(spec[_i].real) > 0.0:
-                real = 1. / swamp2;
+            if np.abs(spec[_i].real) > 1e-50:
+                real = 1. / swamp;
             else:
                 real = 0.0;
             found += 1
         else:
-            real = 1. / spec[_i].real ** 2
+            real = 1. / spec[_i].real
         spec[_i] = complex(real, 0.0)
     #
     # Do it for the rest by array computation in a slice (specs), i.e.
     # pointer to the orig.
     # Attention: Do not copy specs, else the pointer is lost
     specs = spec[1:-1]
-    sqr_len = abs(specs) ** 2
-    # set/scale length to swamp
-    # but leave phase untouched
-    idx = np.where(sqr_len < swamp2)
-    specs[idx] *= np.sqrt(swamp2 / sqr_len[idx])
-    sqr_len[idx] = abs(specs[idx]) ** 2
+    sqrt_len = abs(specs)
+    # set/scale length to swamp, but leave phase untouched
+    idx = np.where(sqrt_len < swamp)
+    specs[idx] *= swamp / sqrt_len[idx]
     found += len(idx[0])
-    # now do the inversion of the spectrum 
-    inn = np.where(sqr_len > 0.0)
+    # now do the inversion of the spectrum, this part is most probably
+    # unnecessary but coded exqual to spr_sinv.c
+    sqrt_len = abs(specs) # take new sqrt_len
+    # replace > 0.0 with > 1e-50
+    inn = np.where(sqrt_len > 1e-50)
     specs[inn] = 1.0 / specs[inn]
-    specs[sqr_len <= 1.0e-10] = complex(0.0, 0.0) #where sqr_len == 0.0
+    specs[sqrt_len < 1e-50] = complex(0.0, 0.0)
     # spec is/was modified inplace => only found need to be returned
     return found
 

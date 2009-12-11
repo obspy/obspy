@@ -16,7 +16,7 @@ import unittest
 
 
 INSTRUMENTS = {
-#    'none': None,
+    'None': None,
     'kirnos': PAZ_KIRNOS,
     'wood_anderson': PAZ_WOOD_ANDERSON,
     'wwssn_lp': PAZ_WWSSN_LP,
@@ -93,7 +93,7 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
                          N.sum(data_pitsa ** 2))
-            #print "RMS misfit %15s:" % id, rms
+            ##print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1.1e-05)
             ##pl.subplot(3,2,ii)
             ##pl.plot(datcorr,'r',data_pitsa,'b--')
