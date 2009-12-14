@@ -36,27 +36,6 @@ class InvSimTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def cosTaperPitsa(self, i, n1, n2, n3, n4):
-        """
-        Cosinus Taper definition of Pitsa
-        """
-        if (i <= n1) or (i >= n4):
-            #check for zero taper
-            if (i == n2) or (i == n3):
-                return 1.0
-            else:
-                return 0.0
-        elif (i > n1) and (i <= n2):
-            temp = M.pi * (i - n1) / float(n2 - n1 + 1)
-            fact = 0.5 - 0.5 * M.cos(temp)
-            return abs(fact)
-        elif (i >= n3) and (i < n4):
-            temp = M.pi * (n4 - i) / float(n4 - n3 + 1)
-            fact = 0.5 - 0.5 * M.cos(temp)
-            return abs(fact)
-        else:
-            return 1.0
-
     def test_seisSimVsPitsa1(self):
         """
         Test seisSim seismometer simulation against seismometer simulation
@@ -78,9 +57,6 @@ class InvSimTestCase(unittest.TestCase):
             'gain' : 0.4
         }
 
-        ##import pylab as pl
-        ##pl.figure()
-        ##ii = 1
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, PAZ_LE3D, inst_sim=paz,
@@ -93,16 +69,8 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
                          N.sum(data_pitsa ** 2))
-            ##print "RMS misfit %15s:" % id, rms
+            #print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1.1e-05)
-            ##pl.subplot(3,2,ii)
-            ##pl.plot(datcorr,'r',data_pitsa,'b--')
-            ##pl.title(instrument)
-            ##ii += 1
-        ##pl.subplot(3,2,6)
-        ##pl.plot(data,'k')
-        ##pl.title('original data')
-        ##pl.savefig("instrument.ps")
 
     def test_seisSimVsPitsa2(self):
         """
@@ -124,9 +92,6 @@ class InvSimTestCase(unittest.TestCase):
             'gain' : 1.5
         }
 
-        ##import pylab as pl
-        ##pl.figure()
-        ##ii = 1
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, PAZ_STS2, inst_sim=paz,
@@ -141,15 +106,9 @@ class InvSimTestCase(unittest.TestCase):
                          N.sum(data_pitsa ** 2))
             #print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1e-04)
-            ##pl.subplot(3,2,ii)
-            ##pl.plot(datcorr,'r',data_pitsa,'b--')
-            ##pl.title(instrument)
-            ##ii += 1
-        ##pl.subplot(3,2,6)
-        ##pl.plot(data,'k')
-        ##pl.title('original data')
-        ##pl.savefig("instrument.ps")
 
+    #XXX: Test for really big signal is missing, where the water level is
+    # actually acting
     #def test_seisSimVsPitsa2(self):
     #    from obspy.mseed import test as tests_
     #    path = os.path.dirname(inspect.getsourcefile(tests_))

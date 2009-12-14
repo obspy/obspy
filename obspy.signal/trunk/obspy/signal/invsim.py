@@ -140,52 +140,30 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
 
 def specInv(spec, wlev):
     """
-    Invert Spectrum and shrink values under WaterLevel. Fast version which
-    uses array computation.
+    Invert Spectrum and shrink values under water-level of max spec
+    amplitude. The water-level is given in db scale.
 
-    @note: In place opertions on spec
-    @param spec: real spectrum as returned by numpy.fft.rfft
-    @param wlev: water level to use 
+    @note: In place opertions on spec, translated from PITSA spr_sinv.c
+    @param spec: Real spectrum as returned by numpy.fft.rfft
+    @param wlev: Water level to use 
     """
-    # Translated from PITSA: spr_sinv.c
-
-    max_spec_amp = np.abs(spec).max()
-
-    # swamp is the amplitude spectral value corresponding
+    # Swamp is the amplitude spectral value corresponding
     # to wlev dB below the maximum spectral value
-    swamp = max_spec_amp * 10.0 ** (-wlev / 20.0)
-    found = 0
+    swamp = np.abs(spec).max() * 10.0 ** (-wlev / 20.0)
 
-    # Manually correct offset (index 0) and nyquist frequency (index -1)
-    # replaced > 0 with > 1e-50
-    for _i in (0, -1):
-        if np.abs(spec[_i].real) < swamp:
-            if np.abs(spec[_i].real) > 1e-50:
-                real = 1. / swamp;
-            else:
-                real = 0.0;
-            found += 1
-        else:
-            real = 1. / spec[_i].real
-        spec[_i] = complex(real, 0.0)
-    #
-    # Do it for the rest by array computation in a slice (specs), i.e.
-    # pointer to the orig.
-    # Attention: Do not copy specs, else the pointer is lost
-    specs = spec[1:-1]
-    sqrt_len = abs(specs)
-    # set/scale length to swamp, but leave phase untouched
-    idx = np.where(sqrt_len < swamp)
-    specs[idx] *= swamp / sqrt_len[idx]
-    found += len(idx[0])
-    # now do the inversion of the spectrum, this part is most probably
-    # unnecessary but coded exqual to spr_sinv.c
-    sqrt_len = abs(specs) # take new sqrt_len
-    # replace > 0.0 with > 1e-50
-    inn = np.where(sqrt_len > 1e-50)
-    specs[inn] = 1.0 / specs[inn]
-    specs[sqrt_len < 1e-50] = complex(0.0, 0.0)
-    # spec is/was modified inplace => only found need to be returned
+    # Find length in real fft frequency domain, spec is complex
+    sqrt_len = np.abs(spec)
+    # Set/scale length to swamp, but leave phase untouched
+    idx = np.where((sqrt_len < swamp) & (sqrt_len > 0.0))
+    spec[idx] *= swamp / sqrt_len[idx]
+    found = len(idx[0])
+    # Now invert the spectrum for values where sqrt_len is greater than
+    # 0.0, see PITSA spr_sinv.c for details
+    sqrt_len = np.abs(spec) # Find length of new scaled spec
+    inn = np.where(sqrt_len > 0.0)
+    spec[inn] = 1.0 / spec[inn]
+    # For numerical stability, set all zero length to zero, do not invert
+    spec[sqrt_len == 0.0] = complex(0.0, 0.0)
     return found
 
 
