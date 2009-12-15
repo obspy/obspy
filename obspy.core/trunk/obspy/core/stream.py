@@ -513,6 +513,7 @@ class Stream(object):
             stats.starttime = traces_dict[id][0].stats.starttime
             stats.endtime = traces_dict[id][-1].stats.endtime
             old_endtime = traces_dict[id][0].stats.endtime
+            # This is the data list to which we extend
             cur_trace = [traces_dict[id].pop(0).data]
             for _i in xrange(len(traces_dict[id])):
                 trace = traces_dict[id].pop(0)
@@ -524,7 +525,8 @@ class Stream(object):
                     left_total = cur_trace[-1].size
                     left_end = left_total - delta
                     samples = (cur_trace[-1][left_end:] + \
-                               cur_trace[-1][0:delta]) / 2
+                               trace[:delta]) / 2
+                    # Clip cur_trace
                     cur_trace[-1] = cur_trace[-1][0:left_end]
                     right_data = trace.data[delta:]
                     cur_trace.extend([samples, right_data])

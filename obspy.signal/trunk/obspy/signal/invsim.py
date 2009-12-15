@@ -154,6 +154,7 @@ def specInv(spec, wlev):
     # Find length in real fft frequency domain, spec is complex
     sqrt_len = np.abs(spec)
     # Set/scale length to swamp, but leave phase untouched
+    # 0 sqrt_len will transform in np.nans when deviding by it
     idx = np.where((sqrt_len < swamp) & (sqrt_len > 0.0))
     spec[idx] *= swamp / sqrt_len[idx]
     found = len(idx[0])

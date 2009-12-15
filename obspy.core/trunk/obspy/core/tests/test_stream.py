@@ -3,7 +3,7 @@
 from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 import inspect
-import numpy as N
+import numpy as np
 import os
 import unittest
 
@@ -58,7 +58,7 @@ class StreamTestCase(unittest.TestCase):
         for _i in range(4):
             self.assertNotEqual(stream[_i], stream[_i + 4])
             self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
-            N.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
+            np.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
         # Now add another stream to it.
         other_stream = read(self.gse2_file)
         self.assertEqual(1, len(other_stream))
@@ -68,11 +68,11 @@ class StreamTestCase(unittest.TestCase):
         for _i in range(8):
             self.assertNotEqual(new_stream[_i], stream[_i])
             self.assertEqual(new_stream[_i].stats, stream[_i].stats)
-            N.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
+            np.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
         # Also test for the newly added stream.
         self.assertNotEqual(new_stream[8], other_stream[0])
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
-        N.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
+        np.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
 
     def test_iadding(self):
         """
@@ -89,7 +89,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(5, len(stream))
         self.assertNotEqual(other_stream[0], stream[-1])
         self.assertEqual(other_stream[0].stats, stream[-1].stats)
-        N.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
+        np.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
 
     def test_append(self):
         """
@@ -106,7 +106,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(stream[0], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[0].stats, stream[-1].stats)
-        N.testing.assert_array_equal(stream[0].data, stream[-1].data)
+        np.testing.assert_array_equal(stream[0].data, stream[-1].data)
         # Append the same again but pass by reference.
         stream.append(stream[0], reference=True)
         self.assertEqual(len(stream), 6)
@@ -142,9 +142,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(stream[1], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[0].stats, stream[-2].stats)
-        N.testing.assert_array_equal(stream[0].data, stream[-2].data)
+        np.testing.assert_array_equal(stream[0].data, stream[-2].data)
         self.assertEqual(stream[1].stats, stream[-1].stats)
-        N.testing.assert_array_equal(stream[1].data, stream[-1].data)
+        np.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Extend with the same again but pass by reference.
         stream.extend(stream[0:2], reference=True)
         self.assertEqual(len(stream), 8)
@@ -171,7 +171,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(stream[1], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-1].stats)
-        N.testing.assert_array_equal(stream[1].data, stream[-1].data)
+        np.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Do the same again but pass by reference.
         stream.insert(1, stream[-1], reference=True)
         self.assertEqual(len(stream), 6)
@@ -187,9 +187,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(stream[2], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-2].stats)
-        N.testing.assert_array_equal(stream[1].data, stream[-2].data)
+        np.testing.assert_array_equal(stream[1].data, stream[-2].data)
         self.assertEqual(stream[2].stats, stream[-1].stats)
-        N.testing.assert_array_equal(stream[2].data, stream[-1].data)
+        np.testing.assert_array_equal(stream[2].data, stream[-1].data)
         # Do the same again but pass by reference.
         stream.insert(1, stream[-2:], reference=True)
         self.assertEqual(len(stream), 10)
@@ -242,14 +242,14 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(3, len(stream))
         # Assert attributes. The objects itself are not identical.
         self.assertEqual(temp_trace.stats, traces[-1].stats)
-        N.testing.assert_array_equal(temp_trace.data, traces[-1].data)
+        np.testing.assert_array_equal(temp_trace.data, traces[-1].data)
         # Remove the last copied Trace.
         traces.pop()
         # Remove and return the second Trace.
         temp_trace = stream.pop(1)
         # Assert attributes. The objects itself are not identical.
         self.assertEqual(temp_trace.stats, traces[1].stats)
-        N.testing.assert_array_equal(temp_trace.data, traces[1].data)
+        np.testing.assert_array_equal(temp_trace.data, traces[1].data)
         # Remove the second copied Trace.
         traces.pop(1)
         # Compare all remaining Traces.
@@ -257,7 +257,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(2, len(traces))
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
-            N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
+            np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
     def test_getslice(self):
         """
@@ -306,7 +306,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(2, len(stream2))
         for _i in range(len(stream2)):
             self.assertEqual(stream2[_i].stats, stream[_i].stats)
-            N.testing.assert_array_equal(stream2[_i].data, stream[_i].data)
+            np.testing.assert_array_equal(stream2[_i].data, stream[_i].data)
 
     def test_reverse(self):
         """
@@ -323,7 +323,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(4, len(traces))
         for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
-            N.testing.assert_array_equal(traces[_i].data, stream[_i].data)
+            np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
     def test_sort(self):
         """
@@ -405,7 +405,7 @@ class StreamTestCase(unittest.TestCase):
         # should be equal
         self.assertEqual(a, b)
 
-    def test_merge(self):
+    def test_merge_gaps(self):
         """
         Test the merge method of the Stream objects.
         """
@@ -432,6 +432,32 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.endtime, end)
         self.assertEquals(stream[0].stats.sampling_rate, 200)
         self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
+
+    def test_merge_overlaps(self):
+        """
+        Test the merge method of the Stream objects.
+        """
+        ts = []
+        npts = 1000
+        k = 0
+        for i in xrange(2):
+            ts.append(Trace())
+            ts[-1].data = np.zeros(npts) + k
+            ts[-1].stats.sampling_rate = 1
+            ts[-1].stats.starttime = UTCDateTime("20080808") + k
+            ts[-1].stats.npts = npts
+            ts[-1].stats.endtime = ts[-1].stats.starttime + \
+                    float(ts[-1].stats.npts-1) / ts[-1].stats.sampling_rate
+            k = 20
+        stream = Stream(traces=ts)
+        stream._verify()
+        # merge it
+        stream.merge()
+        # build reference array
+        ref = np.zeros(npts+k) + 10.0
+        ref[:k]  = 0.0
+        ref[-k:] = 20.0
+        np.testing.assert_array_equal(stream[0].data,ref) 
 
     def test_tabCompleteStats(self):
         """
