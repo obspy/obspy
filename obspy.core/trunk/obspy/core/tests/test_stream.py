@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace, read
-import inspect
+from obspy.core import UTCDateTime, Stream, Trace
 import numpy as np
-import os
 import unittest
 
 
@@ -17,20 +15,38 @@ class StreamTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        # Test files, this makes also sure that obspy.mseed and obspy.gse2
-        # modules are installed.
-        try:
-            import obspy.mseed.tests
-            path2 = os.path.dirname(inspect.getsourcefile(obspy.mseed.tests))
-            self.mseed_file = os.path.join(path2, 'data', 'gaps.mseed')
-            import obspy.gse2.tests
-            path2 = os.path.dirname(inspect.getsourcefile(obspy.gse2.tests))
-            self.gse2_file = os.path.join(path2, 'data',
-                                          'loc_RNON20040609200559.z')
-        except ImportError:
-            msg = 'obspy.mseed and obspy.gse2 modules are necessary to ' + \
-                  'test the obspy.core.core methods and functions'
-            raise ImportError(msg)
+        # Create dynamic test_files to avoid dependecies of obspy.core
+        # on obspy.mseed and obspy.gse2.
+        header = {'network': 'BW', 'station': 'BGLD',
+            'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
+            'npts': 412, 'sampling_rate': 200.0,
+            'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
+            'channel': 'EHE'}
+        trace1 = Trace(data = np.random.randint(0,1000,412),
+                                                header = deepcopy(header))
+        header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
+        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 8, 150000)
+        header['npts'] = 824
+        trace2 = Trace(data = np.random.randint(0,1000,824),
+                                                header = deepcopy(header))
+        header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
+        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 14, 330000)
+        trace3 = Trace(data = np.random.randint(0,1000,824),
+                                                header = deepcopy(header))
+        header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
+        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 4, 31, 790000)
+        header['npts'] = 50668
+        trace4 = Trace(data = np.random.randint(0,1000,50668),
+                                                header = deepcopy(header))
+        self.mseed_stream = Stream(traces = [trace1,trace2,trace3,trace4])
+        header = {'network': '', 'station': 'RNON ', 'location': '',
+                  'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
+                  'sampling_rate': 200.0, 'npts': 12000,
+                  'endtime': UTCDateTime(2004, 6, 9, 20, 6, 59, 844998),
+                  'channel': '  Z'}
+        trace = Trace(data = np.random.randint(0, 1000, 12000),
+                                                    header = header)
+        self.gse2_stream = Stream(traces = [trace])
 
     def tearDown(self):
         pass
@@ -39,7 +55,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the getting of items of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(stream[0], stream.traces[0])
         self.assertEqual(stream[-1], stream.traces[-1])
         self.assertEqual(stream[3], stream.traces[3])
@@ -48,7 +64,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the adding of two stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(4, len(stream))
         # Add the same stream object to itself.
         stream = stream + stream
@@ -60,7 +76,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
             np.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
         # Now add another stream to it.
-        other_stream = read(self.gse2_file)
+        other_stream = self.gse2_stream
         self.assertEqual(1, len(other_stream))
         new_stream = stream + other_stream
         self.assertEqual(9, len(new_stream))
@@ -78,9 +94,9 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the __iadd__ method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(4, len(stream))
-        other_stream = read(self.gse2_file)
+        other_stream = self.gse2_stream
         self.assertEqual(1, len(other_stream))
         # Add the other stream to the stream.
         stream += other_stream
@@ -95,7 +111,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the appending method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         # Check current count of traces
         self.assertEqual(len(stream), 4)
         # Append first traces to the Stream object.
@@ -121,7 +137,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the count method and __len__ attribute of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(4, len(stream))
         self.assertEqual(4, stream.count())
         self.assertEqual(stream.count(), len(stream))
@@ -130,7 +146,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the extending method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         # Check current count of traces
         self.assertEqual(len(stream), 4)
         # Extend the Stream object with the first two traces.
@@ -161,7 +177,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the insert Method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(4, len(stream))
         # Insert the last Trace before the second trace.
         stream.insert(1, stream[-1])
@@ -206,7 +222,7 @@ class StreamTestCase(unittest.TestCase):
         Tests the getGaps method of the Stream objects. It is compared directly
         to the obspy.mseed method getGapsList which is assumed to be correct.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         gap_list = stream.getGaps()
         # Gaps list created with obspy.mseed
         mseed_gap_list = [('BW', 'BGLD', '', 'EHE', UTCDateTime(2008, 1, 1, 0, \
@@ -234,7 +250,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the pop method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Remove and return the last Trace.
@@ -263,7 +279,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the slicing of Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         self.assertEqual(stream[0:], stream[0:])
         self.assertEqual(stream[:2], stream[:2])
         self.assertEqual(stream[:], stream[:])
@@ -293,7 +309,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the remove method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         # Make a copy of the Traces.
         stream2 = deepcopy(stream[:])
         # Use the remove method of the Stream object and of the list of Traces.
@@ -312,7 +328,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the reverse method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         # Make a copy of the Traces.
         traces = deepcopy(stream[:])
         # Use reversing of the Stream object and of the list.
@@ -409,7 +425,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the merge method of the Stream objects.
         """
-        stream = read(self.mseed_file)
+        stream = self.mseed_stream
         start = UTCDateTime("2007-12-31T23:59:59.915000")
         end = UTCDateTime("2008-01-01T00:04:31.790000")
         self.assertEquals(len(stream), 4)
@@ -459,11 +475,33 @@ class StreamTestCase(unittest.TestCase):
         ref[-k:] = 20.0
         np.testing.assert_array_equal(stream[0].data,ref) 
 
+
+    def test_mergeOverlapAndDiscardRedundantTrace(self):
+        """
+        If a second trace is completely contained within a first trace it will
+        be discarded.
+        """
+        trace1 = Trace(data = np.zeros(1000))
+        trace1.stats.sampling_rate = 1.0
+        trace1.stats.starttime = UTCDateTime(0)
+        trace1.stats.endtime = trace1.stats.starttime + 1000
+        trace2 = Trace(data = np.zeros(10))
+        trace2.stats.sampling_rate = 1.0
+        trace2.data[:] = 1
+        trace2.stats.starttime = trace1.stats.starttime + 10
+        trace2.stats.endtime = trace2.stats.starttime + 10
+        st = Stream(traces = [trace1, trace2])
+        self.assertEqual(len(st.traces), 2)
+        st.merge()
+        self.assertEqual(len(st.traces), 1)
+        np.testing.assert_array_equal(st[0].data, np.zeros(1000))
+        
+        
     def test_tabCompleteStats(self):
         """
         Test stats for tab completion
         """
-        tr = read(self.mseed_file)[0]
+        tr = self.mseed_stream[0]
         self.assertTrue('sampling_rate' in dir(tr.stats))
         self.assertTrue('npts' in dir(tr.stats))
         self.assertTrue('station' in dir(tr.stats))

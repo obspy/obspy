@@ -375,7 +375,7 @@ class Stream(object):
         self.traces.reverse()
 
     def sort(self, keys=['network', 'station', 'location', 'channel',
-                         'starttime']):
+                         'starttime', 'endtime']):
         """
         Method to sort the traces in the Stream object.
         
@@ -389,7 +389,7 @@ class Stream(object):
              Available items: 'network', 'station', 'channel', 'location',
              'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality' 
              Defaults to ['network', 'station', 'location', 'channel',
-             'starttime'].
+             'starttime', 'endtime'].
         """
         # Check the list and all items.
         msg = "keys must be a list of item strings. Available items to " + \
@@ -512,6 +512,7 @@ class Stream(object):
             sampling_rate = stats.sampling_rate
             stats.starttime = traces_dict[id][0].stats.starttime
             stats.endtime = traces_dict[id][-1].stats.endtime
+            old_starttime = traces_dict[id][0].stats.starttime
             old_endtime = traces_dict[id][0].stats.endtime
             # This is the data list to which we extend
             cur_trace = [traces_dict[id].pop(0).data]
@@ -521,20 +522,27 @@ class Stream(object):
                         old_endtime) * sampling_rate)) - 1
                 # Overlap
                 if delta <= 0:
-                    delta = abs(delta)
-                    left_total = cur_trace[-1].size
-                    left_end = left_total - delta
-                    samples = (cur_trace[-1][left_end:] + \
-                               trace[:delta]) / 2
-                    # Clip cur_trace
-                    cur_trace[-1] = cur_trace[-1][0:left_end]
-                    right_data = trace.data[delta:]
-                    cur_trace.extend([samples, right_data])
+                    # Left delta is the new starttime - old starttime. This
+                    # always has to be greater or equal to zero.
+                    left_delta = int(round((trace.stats.starttime -\
+                                           old_starttime) * sampling_rate))
+                    # The Endtime difference.
+                    right_delta = int(round((trace.stats.endtime -\
+                                           old_endtime) * sampling_rate))
+                    # If right_delta is negative or zero throw the trace away.
+                    if right_delta <= 0:
+                        continue
+                    # Update the old trace with the interpolation.
+                    cur_trace[-1][left_delta:] = \
+                        (cur_trace[-1][left_delta:] + trace[:-right_delta]) /2
+                    # Append the rest of the trace.
+                    cur_trace.append(trace[-right_delta:])
                 # Gap
                 else:
                     nans = np.ma.masked_all(delta)
                     cur_trace.extend([nans, trace.data])
                 old_endtime = trace.stats.endtime
+                old_starttime = trace.stats.starttime
             if True in [np.ma.is_masked(_i) for _i in cur_trace]:
                 data = np.ma.concatenate(cur_trace)
                 stats.npts = data.size
