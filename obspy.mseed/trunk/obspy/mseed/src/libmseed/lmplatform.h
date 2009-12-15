@@ -91,13 +91,7 @@ extern "C" {
   #include <stdio.h>
   #include <sys/types.h>
   #include <ctype.h>
-  #include <time.h>
-  #define __MSVCRT_VERSION__ 0x0700
-  #define time_t __time64_t
-  #define localtime _localtime64
-  #define time _time64
-  #define gmtime _gmtime64
-  
+
   #define snprintf _snprintf
   #define vsnprintf _vsnprintf
   #define strcasecmp _stricmp

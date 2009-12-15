@@ -27,7 +27,7 @@ import os
 import sys
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -40,7 +40,7 @@ class MyExtension(Extension):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
 
-src = os.path.join('obspy', 'mseed', 'src', '2.3', 'libmseed') + os.sep
+src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
 symbols = open(src + 'libmseed.def', 'r').readlines()[2:]
 lib = MyExtension('libmseed',
                   define_macros=[('WIN32', sys.platform == 'win32')],
@@ -79,9 +79,9 @@ setup(
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
-    requires=[
+    install_requires=[
         'setuptools',
-        'obspy.core(>=0.2)',
+        'obspy.core',
         'numpy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \

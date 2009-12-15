@@ -4,28 +4,34 @@ Defines the libmseed structures and blockettes.
 """
 
 import ctypes as C
-import sys
 import platform
 import os
 import numpy as np
 
 
 # Import shared libmseed library depending on the platform.
-if sys.platform == 'win32':
-    # 32 bit Windows.
-    lib_name = 'libmseed.pyd'
-elif sys.platform == 'darwin':
-    lib_name = 'libmseed.dylib'
+# XXX: trying multiple names for now - should be removed
+if platform.system() == 'Windows':
+    lib_names = ['libmseed.pyd']
+elif platform.system() == 'Darwin':
+    lib_names = ['libmseed.so', '_libmseed.dylib']
 else:
     # 32 and 64 bit UNIX
     #XXX Check glibc version by platform.libc_ver()
     if platform.architecture()[0] == '64bit':
-        lib_name = 'libmseed.lin64.so'
+        lib_names = ['libmseed.so', '_libmseed.lin64.so']
     else:
-        lib_name = 'libmseed-2.3.so'
+        lib_names = ['libmseed.so', '_libmseed-2.3.so']
 
 # initialize library
-clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+for lib_name in lib_names:
+    try:
+        clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                        lib_name))
+    except:
+        continue
+    else:
+        break
 
 
 # Figure out Py_ssize_t (PEP 353).

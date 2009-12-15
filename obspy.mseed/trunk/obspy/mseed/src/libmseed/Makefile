@@ -6,7 +6,7 @@
 
 # Options specific for GCC
 GCC = gcc
-GCCFLAGS = -g -O2 -Wall -fPIC
+GCCFLAGS = -O2 -Wall -fPIC
 
 LIB_OBJS = fileutils.o genutils.o gswap.o lmplatform.o lookup.o \
            msrutils.o pack.o packdata.o traceutils.o tracelist.o \
