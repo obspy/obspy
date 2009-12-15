@@ -10,7 +10,7 @@ from obspy.imaging.waveform import _getMinMaxList as minmaxlist
 from obspy.seishub import Client
 import inspect
 import numpy as np
-import obspy
+from obspy.core import read
 import os
 import pickle
 import sys
@@ -126,7 +126,7 @@ def main():
         if not filename:
             return
         # Read the file.
-        NV.st = obspy.read(filename)
+        NV.st = read(filename)
         st = NV.st
         # Get minmaxlist.
         NV.minmax = minmaxlist(st, 799, st[0].stats.starttime.timestamp,

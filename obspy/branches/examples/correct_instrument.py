@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # 2009-11-27 Moritz
 
-import obspy
+from obspy.core import read
 from obspy.signal import seisSim, pazToFreqResp
 from obspy.signal.seismometer import PAZ_WOOD_ANDERSON
 import numpy as np
@@ -17,7 +17,7 @@ le3d = {
 }
 
 # Read in the data
-tr = obspy.read("loc_RJOB20050831023349.z")[0]
+tr = read("loc_RJOB20050831023349.z")[0]
 
 # Do the instrument correction
 data_corr = seisSim(tr.data, tr.stats.sampling_rate, le3d, 

@@ -5,7 +5,7 @@ Script to read Full SEED and correct the instrument response
 USAGE: read_and_correct_fullseed.py seedfile
 """
 
-import obspy
+from obspy.core import read
 from obspy.xseed import Parser
 from obspy.signal import seisSim, cosTaper, highpass
 from matplotlib.mlab import detrend
@@ -22,7 +22,7 @@ except:
 sp = Parser(file)
 
 # parse DataOnly/MiniSEED part
-stream = obspy.read(file)
+stream = read(file)
 
 for tr in stream:
     # get poles, zeros, sensitivity and gain

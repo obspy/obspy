@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # 2009-11-27 Moritz
 
-import obspy
+from obspy.core import read
 import numpy as np
 from obspy.signal import lowpass
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ def stringToBool(s):
     return False
 
 # load data
-tr = obspy.read("china.mseed")[0]
+tr = read("china.mseed")[0]
 df, npts = (tr.stats.sampling_rate, tr.stats.npts)
 tr.data = tr.data.astype('float64') #convert to double
 

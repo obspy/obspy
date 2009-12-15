@@ -259,10 +259,10 @@ plt.hist(x4) #plot historgram
 
 # Basic seismology routines are already implemented in the 
 # obspy module
-import obspy
+from obspy.core import read
 
 # Read in SAC, MSEED or GSE2
-st = obspy.read("loc_RJOB20050831023349.z") #read in stream
+st = read("loc_RJOB20050831023349.z") #read in stream
 tr = st[0] #first trace in stream, trace consits data block that is no gap
 tr.stats #contains all the meta/header information
 tr.stats.gse2 #contains gse2 specific meta/header

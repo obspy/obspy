@@ -805,7 +805,7 @@ def unpack_Steim1(file_string, npts):
 #
 #    import obspy
 #    a = time.time()
-#    dd = obspy.read('tests/data/BW.BGLD..EHE.D.2008.001')
+#    dd = read('tests/data/BW.BGLD..EHE.D.2008.001')
 #    b = time.time()
 #    print 'Compare Time:', b - a
 #    print len(dd[0].data)

@@ -11,7 +11,7 @@ obspy must be in the PYTHONPATH
 # 2009-11-25 Moritz
 
 import sys
-import obspy
+from obspy.core import read
 from obspy.signal import recStalta, triggerOnset, seisSim, pazToFreqResp
 from obspy.signal import cornFreq2Paz
 from obspy.seishub.client import Client
@@ -40,7 +40,7 @@ last_endtime, last_id = 0, "--"
 for file in mseed_files:
     print "\n", file,
     try:
-        stream = obspy.read(file)
+        stream = read(file)
     except:
         continue
     stats = stream[0].stats

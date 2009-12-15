@@ -2,7 +2,7 @@
 
 from lxml import objectify
 from obspy.core.util import NamedTemporaryFile
-import obspy
+from obspy.core import read
 import sys
 import urllib2
 
@@ -120,7 +120,7 @@ class _WaveformMapperClient(object):
         try:
             tf.write(data)
             tf.seek(0)
-            stream = obspy.read(tf.name, 'MSEED')
+            stream = read(tf.name, 'MSEED')
         finally:
             tf.close()
         # trim stream

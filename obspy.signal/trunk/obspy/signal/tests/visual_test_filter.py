@@ -2,7 +2,8 @@
 
 from pylab import *
 from numpy import *
-import obspy, obspy.filter, os, inspect
+from obspy.core import read
+import obspy.filter, os, inspect
 from scipy.signal import remez, convolve, get_window, firwin
 import gzip
 
@@ -10,7 +11,7 @@ file = os.path.join(os.path.dirname(inspect.getfile(obspy)), "gse2",
                     "tests", "data", "loc_RNON20040609200559.z")
 #g = obspy.Trace()
 #g.read(file,format='GSE2')
-g = obspy.read(file, format='GSE2')
+g = read(file, format='GSE2')
 
 #data = array(g.data,dtype='f')
 data = array(g[0].data, dtype='f')

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # 2009-11-27 Moritz
 
-import obspy
+from obspy.core import read
 from obspy.imaging.spectrogram import spectroGram
 import matplotlib.pyplot as plt
 import numpy as np
 
 # read GSE2 file, only once trace in stream
-#tr = obspy.read("data/GR.FUR..LHZ.D.2004.361")[0]
-#tr = obspy.read("data/BW.RNON..EHZ.D.2008.108")[0]
-tr = obspy.read("data/BW.RNON..EHZ.D.2008.107")[0]
+#tr = read("data/GR.FUR..LHZ.D.2004.361")[0]
+#tr = read("data/BW.RNON..EHZ.D.2008.108")[0]
+tr = read("data/BW.RNON..EHZ.D.2008.107")[0]
 npts, df = tr.stats.npts, tr.stats.sampling_rate
 
 # plot seismogram
