@@ -1,56 +1,46 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
-setup.py bdist_egg
+obspy.arclink installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = '0.1.2'
 
-GPL2 = """
-GNU General Public License (GPL)
+VERSION = '0.2.2'
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-USA.
-"""
 
 setup(
     name='obspy.arclink',
-    version=version,
+    version=VERSION,
     description="ArcLink/WebDC request client for of ObsPy.",
     long_description="""
     obspy.arclink - ArcLink/WebDC request client for of ObsPy.
 
     For more information visit http://www.obspy.org.
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, ArcLink, MiniSEED, SEED, Inventory, Waveform',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team',
-    author_email='barsch@lmu.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'Seismology', 'ArcLink', 'MiniSEED', 'SEED',
+              'Inventory', 'Waveform'],
+    license='LGPLv3',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
     install_requires=[
-        'obspy.core',
-        'obspy.mseed',
         'setuptools',
+        'obspy.core>0.2.1',
+        'obspy.mseed>0.2.1',
         'lxml',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink/trunk#egg=obspy.arclink-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.arclink/trunk#egg=obspy.arclink-dev",
+    platforms=['any'],
+    include_package_data=True,
+    test_suite="obspy.arclink.tests.suite",
 )

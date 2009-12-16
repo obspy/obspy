@@ -212,7 +212,9 @@ class ClientTestCase(unittest.TestCase):
         # initialize client
         client = Client()
         # fetch poles and zeros
-        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
+        pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
+        # compare first instrument
+        paz = pazs.values()[0]
         self.assertEqual(gain, paz['gain'])
         self.assertEqual(poles, paz['poles'])
         self.assertEqual(zeros, paz['zeros'])
@@ -228,8 +230,9 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime(2009, 1, 1)
         client = Client("erde.geophysik.uni-muenchen.de")
         # fetch poles and zeros
-        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
-        self.assertEqual(len(poles), 5)
+        pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
+        paz = pazs['STS-2/N/g=1500']
+        self.assertEqual(len(poles), 2)
         self.assertEqual(poles, paz['poles'][:2])
 
     def test_saveResponse(self):

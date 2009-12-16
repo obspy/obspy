@@ -16,7 +16,7 @@ To run all tests/a single test from the shell/cmd do one of the following:
     python obspy/core/tests/test_stats.py -v StatsTestCase.test_pickleStats
 }}}
 
-To run all tests/a single test inside python do one of the following:
+To run all tests/a single test inside Python do one of the following:
 {{{
     import obspy
     obspy.runTests()

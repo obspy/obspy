@@ -2,12 +2,11 @@
 
 from glob import iglob
 from obspy.core.trace import Trace
-from obspy.core.util import getFormatsAndMethods
+from pkg_resources import iter_entry_points, load_entry_point
 import copy
 import math
 import numpy as np
 import os
-import sys
 
 
 def read(pathname, format=None, headonly=False, **kwargs):
@@ -15,10 +14,11 @@ def read(pathname, format=None, headonly=False, **kwargs):
     Reads a file into a L{obspy.core.Stream} object.
 
     """
-    #Reads files using the given wildcard into a L{obspy.core.Stream} object.
+    # Reads files using the given wild card into a L{obspy.core.Stream} object.
     st = Stream()
     for file in iglob(pathname):
-        st.extend(_read(file, format, headonly, **kwargs).traces, reference=True)
+        st.extend(_read(file, format, headonly, **kwargs).traces,
+                  reference=True)
     if len(st) == 0:
         raise Exception("Cannot open file/files", pathname)
     return st
@@ -36,35 +36,46 @@ def _read(filename, format=None, headonly=False, **kwargs):
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
-    # Gets the available formats and the corresponding methods.
-    formats = getFormatsAndMethods()
-    if len(formats) == 0:
+    # Gets the available formats and the corresponding methods as entry points.
+    formats_ep = dict([(ep.name, ep) \
+                      for ep in iter_entry_points('obspy.plugin.waveform')])
+    if not formats_ep:
         msg = "Your current ObsPy installation does not support any file " + \
               "reading formats. Please update or extend your ObsPy " + \
               "installation."
         raise Exception(msg)
-    fileformat = []
+    format_ep = None
     if not format:
         # detect format
-        for _i in formats:
-            if _i[1](filename):
-                fileformat = _i
+        for ep in formats_ep.values():
+            try:
+                # search isFormat for given entry point
+                isFormat = load_entry_point(ep.dist.key,
+                                            'obspy.plugin.waveform.' + ep.name,
+                                            'isFormat')
+            except:
+                continue
+            if isFormat(filename):
+                format_ep = ep
                 break
-        if len(fileformat) == 0:
-            msg = "Format is not supported. Supported Formats: "
-            raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
     else:
-        # format given
-        try:
-            format_index = [_i[0] for _i in formats].index(format.upper())
-            fileformat = formats[format_index]
-        except:
-            msg = "Format is not supported. Supported Formats: "
-            raise TypeError(msg + ', '.join([_i[0] for _i in formats]))
+        # format given via argument
+        format = format.upper()
+        if format in formats_ep:
+            format_ep = formats_ep[format]
+    # file format should be known by now 
+    try:
+        # search readFormat for given entry point
+        readFormat = load_entry_point(format_ep.dist.key,
+                                      'obspy.plugin.waveform.' + \
+                                      format_ep.name, 'readFormat')
+    except:
+        msg = "Format is not supported. Supported Formats: "
+        raise TypeError(msg + ', '.join([ep.name for ep in formats_ep]))
     if headonly:
-        stream = fileformat[2](filename, headonly=True, **kwargs)
+        stream = readFormat(filename, headonly=True, **kwargs)
     else:
-        stream = fileformat[2](filename, **kwargs)
+        stream = readFormat(filename, **kwargs)
     return stream
 
 
@@ -412,14 +423,20 @@ class Stream(object):
         """
         Saves stream into a file.
         """
-        formats = getFormatsAndMethods()
+        format = format.upper()
+        # Gets all available formats and the corresponding entry points.
+        formats_ep = dict([(ep.name, ep) for ep in \
+                           iter_entry_points('obspy.plugin.waveform')])
         try:
-            format_index = [_i[0] for _i in formats].index(format.upper())
+            # search writeFormat for given entry point
+            ep = formats_ep[format]
+            writeFormat = load_entry_point(ep.dist.key,
+                                           'obspy.plugin.waveform.' + \
+                                           ep.name, 'writeFormat')
         except:
-            msg = 'Format is not supported. Supported Formats: ' + \
-                  ', '.join([_i[0] for _i in formats])
-            raise TypeError(msg)
-        formats[format_index][3](self, filename, **kwargs)
+            msg = "Format is not supported. Supported Formats: "
+            raise TypeError(msg + ', '.join([ep.name for ep in formats_ep]))
+        writeFormat(self, filename, **kwargs)
 
     def trim(self, starttime, endtime):
         """
@@ -524,17 +541,17 @@ class Stream(object):
                 if delta <= 0:
                     # Left delta is the new starttime - old starttime. This
                     # always has to be greater or equal to zero.
-                    left_delta = int(round((trace.stats.starttime -\
+                    left_delta = int(round((trace.stats.starttime - \
                                            old_starttime) * sampling_rate))
                     # The Endtime difference.
-                    right_delta = int(round((trace.stats.endtime -\
+                    right_delta = int(round((trace.stats.endtime - \
                                            old_endtime) * sampling_rate))
                     # If right_delta is negative or zero throw the trace away.
                     if right_delta <= 0:
                         continue
                     # Update the old trace with the interpolation.
                     cur_trace[-1][left_delta:] = \
-                        (cur_trace[-1][left_delta:] + trace[:-right_delta]) /2
+                        (cur_trace[-1][left_delta:] + trace[:-right_delta]) / 2
                     # Append the rest of the trace.
                     cur_trace.append(trace[-right_delta:])
                 # Gap

@@ -22,31 +22,31 @@ class StreamTestCase(unittest.TestCase):
             'npts': 412, 'sampling_rate': 200.0,
             'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
             'channel': 'EHE'}
-        trace1 = Trace(data = np.random.randint(0,1000,412),
-                                                header = deepcopy(header))
+        trace1 = Trace(data=np.random.randint(0, 1000, 412),
+                                                header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 8, 150000)
         header['npts'] = 824
-        trace2 = Trace(data = np.random.randint(0,1000,824),
-                                                header = deepcopy(header))
+        trace2 = Trace(data=np.random.randint(0, 1000, 824),
+                                                header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
         header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 14, 330000)
-        trace3 = Trace(data = np.random.randint(0,1000,824),
-                                                header = deepcopy(header))
+        trace3 = Trace(data=np.random.randint(0, 1000, 824),
+                                                header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['endtime'] = UTCDateTime(2008, 1, 1, 0, 4, 31, 790000)
         header['npts'] = 50668
-        trace4 = Trace(data = np.random.randint(0,1000,50668),
-                                                header = deepcopy(header))
-        self.mseed_stream = Stream(traces = [trace1,trace2,trace3,trace4])
+        trace4 = Trace(data=np.random.randint(0, 1000, 50668),
+                                                header=deepcopy(header))
+        self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'endtime': UTCDateTime(2004, 6, 9, 20, 6, 59, 844998),
                   'channel': '  Z'}
-        trace = Trace(data = np.random.randint(0, 1000, 12000),
-                                                    header = header)
-        self.gse2_stream = Stream(traces = [trace])
+        trace = Trace(data=np.random.randint(0, 1000, 12000),
+                                                    header=header)
+        self.gse2_stream = Stream(traces=[trace])
 
     def tearDown(self):
         pass
@@ -456,24 +456,24 @@ class StreamTestCase(unittest.TestCase):
         ts = []
         npts = 1000
         k = 0
-        for i in xrange(2):
+        for _i in xrange(2):
             ts.append(Trace())
             ts[-1].data = np.zeros(npts) + k
             ts[-1].stats.sampling_rate = 1
             ts[-1].stats.starttime = UTCDateTime("20080808") + k
             ts[-1].stats.npts = npts
             ts[-1].stats.endtime = ts[-1].stats.starttime + \
-                    float(ts[-1].stats.npts-1) / ts[-1].stats.sampling_rate
+                    float(ts[-1].stats.npts - 1) / ts[-1].stats.sampling_rate
             k = 20
         stream = Stream(traces=ts)
         stream._verify()
         # merge it
         stream.merge()
         # build reference array
-        ref = np.zeros(npts+k) + 10.0
-        ref[:k]  = 0.0
+        ref = np.zeros(npts + k) + 10.0
+        ref[:k] = 0.0
         ref[-k:] = 20.0
-        np.testing.assert_array_equal(stream[0].data,ref) 
+        np.testing.assert_array_equal(stream[0].data, ref)
 
 
     def test_mergeOverlapAndDiscardRedundantTrace(self):
@@ -481,22 +481,22 @@ class StreamTestCase(unittest.TestCase):
         If a second trace is completely contained within a first trace it will
         be discarded.
         """
-        trace1 = Trace(data = np.zeros(1000))
+        trace1 = Trace(data=np.zeros(1000))
         trace1.stats.sampling_rate = 1.0
         trace1.stats.starttime = UTCDateTime(0)
         trace1.stats.endtime = trace1.stats.starttime + 1000
-        trace2 = Trace(data = np.zeros(10))
+        trace2 = Trace(data=np.zeros(10))
         trace2.stats.sampling_rate = 1.0
         trace2.data[:] = 1
         trace2.stats.starttime = trace1.stats.starttime + 10
         trace2.stats.endtime = trace2.stats.starttime + 10
-        st = Stream(traces = [trace1, trace2])
+        st = Stream(traces=[trace1, trace2])
         self.assertEqual(len(st.traces), 2)
         st.merge()
         self.assertEqual(len(st.traces), 1)
         np.testing.assert_array_equal(st[0].data, np.zeros(1000))
-        
-        
+
+
     def test_tabCompleteStats(self):
         """
         Test stats for tab completion

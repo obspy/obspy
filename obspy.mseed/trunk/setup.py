@@ -27,7 +27,7 @@ import os
 import sys
 
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -39,6 +39,7 @@ class MyExtension(Extension):
     def __init__(self, *args, **kwargs):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
+
 
 src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
 symbols = open(src + 'libmseed.def', 'r').readlines()[2:]
@@ -81,7 +82,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core',
+        'obspy.core>0.2.1',
         'numpy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
@@ -91,4 +92,13 @@ setup(
     ext_modules=[lib],
     include_package_data=True,
     test_suite="obspy.mseed.tests.suite",
+    entry_points="""
+        [obspy.plugin.waveform]
+        MSEED = obspy.mseed.core
+
+        [obspy.plugin.waveform.MSEED]
+        isFormat = obspy.mseed.core:isMSEED
+        readFormat = obspy.mseed.core:readMSEED
+        writeFormat = obspy.mseed.core:writeMSEED
+    """,
 )

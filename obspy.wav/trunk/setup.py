@@ -4,27 +4,14 @@
 obspy.wav installer
 
 @copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU General Public License (GPL)
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-    
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
+@license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 from setuptools import setup, find_packages
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.2'
+
 
 setup(
     name='obspy.wav',
@@ -47,13 +34,22 @@ setup(
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
-    requires=[
+    install_requires=[
         'setuptools',
-        'obspy.core(>=0.2)',
+        'obspy.core>0.2.1',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.wav/trunk#egg=obspy.wav-dev",
     platforms=['any'],
     test_suite="obspy.wav.tests.suite",
     include_package_data=True,
+    entry_points="""
+        [obspy.plugin.waveform]
+        WAV = obspy.wav.core
+
+        [obspy.plugin.waveform.WAV]
+        isFormat = obspy.wav.core:isWAV
+        readFormat = obspy.wav.core:readWAV
+        writeFormat = obspy.wav.core:writeWAV
+    """,
 )

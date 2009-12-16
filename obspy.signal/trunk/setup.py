@@ -26,7 +26,7 @@ from setuptools.extension import Extension
 import os
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -41,7 +41,7 @@ class MyExtension(Extension):
 
 src = os.path.join('obspy', 'signal', 'src') + os.sep
 symbols = open(src + 'signal.def', 'r').readlines()[2:]
-lib = MyExtension('signal',
+lib = MyExtension('libsignal',
                   define_macros=[],
                   libraries=[],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
@@ -74,9 +74,9 @@ setup(
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
-    requires=[
+    install_requires=[
         'setuptools',
-        'obspy.core(>=0.2)',
+        'obspy.core>=0.2.1',
         'scipy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \

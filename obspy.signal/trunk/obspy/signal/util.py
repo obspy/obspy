@@ -10,17 +10,28 @@ import platform
 import sys
 
 
+# Import shared libsignal library depending on the platform.
+# XXX: trying multiple names for now - should be removed
 if platform.system() == 'Windows':
-    lib_name = 'signal.pyd'
+    lib_names = ['libsignal.pyd']
 elif platform.system() == 'Darwin':
-    lib_name = 'signal.dylib'
+    lib_names = ['libmseed.so', '_libsignal.dylib']
 else:
+    # 32 and 64 bit UNIX
+    #XXX Check glibc version by platform.libc_ver()
     if platform.architecture()[0] == '64bit':
-        lib_name = 'signal.lin64.so'
+        lib_names = ['libsignal.so', '_libsignal.lin64.so']
     else:
-        lib_name = 'signal.so'
+        lib_names = ['libsignal.so', '_libsignal.so']
 
-lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+# initialize library
+for lib_name in lib_names:
+    try:
+        lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+    except:
+        continue
+    else:
+        break
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):

@@ -1,34 +1,35 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-setup.py bdist_egg
+obspy.sac installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU General Public License (GPL)
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = '0.1.2'
 
-GPL2 = """
-GNU General Public License (GPL)
+VERSION = '0.2.2'
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-USA.
-"""
 
 setup(
     name='obspy.sac',
-    version=version,
+    version=VERSION,
     description="Read & Write Seismograms, Format SAC.",
     long_description="""
     obspy.sac - Read & Write Seismograms, Format SAC.
@@ -37,24 +38,32 @@ setup(
 
     For more information visit http://www.obspy.org.
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, SAC',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team & C. J. Ammon',
-    author_email='yannik.behr@vuw.ac.nz',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'seismology', 'SAC', 'waveform', 'seismograms'],
+    license='GPL2',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
     zip_safe=True,
-    test_suite="obspy.sac.tests.suite",
     install_requires=[
-        'obspy.core',
         'setuptools',
-        # -*- Extra requirements: -*
+        'obspy.core>0.2.1',
+        'numpy',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sac/trunk#egg=obspy.sac-dev",
-    dependency_links=[
-        "https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk#egg=obspy.core"
-    ],
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.sac/trunk#egg=obspy.sac-dev",
+    platforms=['any'],
+    include_package_data=True,
+    test_suite="obspy.sac.tests.suite",
+    entry_points="""
+        [obspy.plugin.waveform]
+        SAC = obspy.sac.core
+
+        [obspy.plugin.waveform.SAC]
+        isFormat = obspy.sac.core:isSAC
+        readFormat = obspy.sac.core:readSAC
+        writeFormat = obspy.sac.core:writeSAC
+    """,
 )

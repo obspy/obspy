@@ -26,7 +26,7 @@ from setuptools.extension import Extension
 import os
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.2'
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -73,9 +73,9 @@ setup(
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
-    requires=[
+    install_requires=[
         'setuptools',
-        'obspy.core(>=0.2)',
+        'obspy.core>0.2.1',
         'numpy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
@@ -85,4 +85,13 @@ setup(
     ext_modules=[lib],
     include_package_data=True,
     test_suite="obspy.gse2.tests.suite",
+    entry_points="""
+        [obspy.plugin.waveform]
+        GSE2 = obspy.gse2.core
+
+        [obspy.plugin.waveform.GSE2]
+        isFormat = obspy.gse2.core:isGSE2
+        readFormat = obspy.gse2.core:readGSE2
+        writeFormat = obspy.gse2.core:writeGSE2
+    """,
 )

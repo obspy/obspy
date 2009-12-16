@@ -4,27 +4,15 @@
 obspy.core installer
 
 @copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU General Public License (GPL)
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-    
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-    
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
+@license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
+import distribute_setup
+distribute_setup.use_setuptools()
 from setuptools import find_packages, setup
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.2'
 
 
 setup(
@@ -45,12 +33,12 @@ setup(
     author_email='devs@obspy.org',
     classifiers=[],
     keywords=['ObsPy', 'seismology'],
-    license='GPL2',
-    packages=find_packages(),
+    license='LGPLv3',
+    packages=find_packages(exclude=['distribute_setup']),
     namespace_packages=['obspy'],
     zip_safe=True,
-    requires=[
-        'setuptools',
+    install_requires=[
+        'numpy >=1.1.0',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",

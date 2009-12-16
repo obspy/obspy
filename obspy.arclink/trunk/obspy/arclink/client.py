@@ -271,34 +271,42 @@ class Client(Telnet):
         xml_doc = self._fetch(rtype, [rdata])
         # generate object by using XML schema
         xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-        paz = {}
         if not xml_doc.countchildren():
-            return paz
-        if len(xml_doc.resp_paz) > 1:
-            raise ArcLinkException('Currently support only parsing of'
-                'single network and station BW MANZ')
-        resp_paz = xml_doc.resp_paz[0]
-        # parsing gain
-        paz['gain'] = float(resp_paz.attrib['norm_fac'])
-        # parsing zeros
-        paz['zeros'] = []
-        for zeros in str(resp_paz.zeros).strip().split():
-            paz['zeros'].append(complexifyString(zeros))
-        if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
-            raise ArcLinkException('Could not parse all zeros')
-        # parsing poles
-        paz['poles'] = []
-        for poles in str(resp_paz.poles).strip().split():
-            paz['poles'].append(complexifyString(poles))
-        if len(paz['poles']) != int(resp_paz.attrib['npoles']):
-            raise ArcLinkException('Could not parse all poles')
-        # parsing sensitivity
-        component = xml_doc.network.station.seis_stream.component
-        if len(component) > 1:
-            raise ArcLinkException('Currently support only parsing of'
-                'single channel, e.g. EHZ')
-        paz['sensitivity'] = float(component[0].attrib['gain'])
-        return paz
+            return {}
+        pazs = {}
+        for resp_paz in xml_doc.resp_paz:
+            paz = {}
+            # instrument name
+            instrument = resp_paz.attrib['name']
+            # parsing gain
+            paz['gain'] = float(resp_paz.attrib['norm_fac'])
+            # parsing zeros
+            paz['zeros'] = []
+            temp = str(resp_paz.zeros).strip().replace(' ', '')
+            temp = temp.replace(')(', ') (')
+            for zeros in temp.split():
+                paz['zeros'].append(complexifyString(zeros))
+            if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
+                raise ArcLinkException('Could not parse all zeros')
+            # parsing poles
+            paz['poles'] = []
+            temp = str(resp_paz.poles).strip().replace(' ', '')
+            temp = temp.replace(')(', ') (')
+            for poles in temp.split():
+                paz['poles'].append(complexifyString(poles))
+            if len(paz['poles']) != int(resp_paz.attrib['npoles']):
+                raise ArcLinkException('Could not parse all poles')
+            # parsing sensitivity
+            component = xml_doc.network.station.seis_stream.component
+            if len(component) > 1:
+                msg = 'Currently supporting only a single channel, e.g. EHZ'
+                raise ArcLinkException(msg)
+            try:
+                paz['sensitivity'] = float(component[0].attrib['gain'])
+            except:
+                paz['sensitivity'] = float(resp_paz.attrib['gain'])
+            pazs[instrument] = paz
+        return pazs
 
     def saveResponse(self, filename, network_id, station_id, location_id,
                      channel_id, start_datetime, end_datetime, format='SEED'):

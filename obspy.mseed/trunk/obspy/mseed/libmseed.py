@@ -7,23 +7,11 @@
 #
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
-from StringIO import StringIO
-from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile
-from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME
-from struct import unpack
-import ctypes as C
-import math
-import numpy as np
-import operator
-import os
-import sys
 """
 Class for handling MiniSEED files.
 
 Contains wrappers for libmseed - The MiniSEED library. The C library is
-interfaced via python-ctypes. Currently only supports MiniSEED files with
+interfaced via Pythpn ctypes. Currently only supports MiniSEED files with
 integer data values.
 
 
@@ -45,6 +33,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
+from StringIO import StringIO
+from obspy.core import UTCDateTime
+from obspy.core.util import scoreatpercentile
+from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
+    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME
+from struct import unpack
+import ctypes as C
+import math
+import numpy as np
+import operator
+import os
+import sys
 
 
 class libmseed(object):

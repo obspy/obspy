@@ -4,6 +4,7 @@ from obspy.core import Stream, Trace
 from obspy.mseed import libmseed
 import sys, numpy as np
 
+
 def isMSEED(filename):
     """
     Returns true if the file is a Mini-SEED file and false otherwise.
@@ -14,7 +15,8 @@ def isMSEED(filename):
     return __libmseed__.isMSEED(filename)
 
 
-def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
+def readMSEED(filename, headonly=False, starttime=None, endtime=None,
+              **kwargs):
     """
     Reads a given Mini-SEED file and returns an obspy.Stream object.
     
@@ -26,12 +28,12 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
         trace_list = __libmseed__.readMSHeader(filename)
     else:
         #if True: #Uncomment to emulate windows behaviour
-        if starttime or endtime or sys.platform == 'win32': 
+        if starttime or endtime or sys.platform == 'win32':
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
                     starttime=starttime, endtime=endtime)
         else:
             #10% faster, problem on windows
-            trace_list = __libmseed__.readMSTraces(filename) 
+            trace_list = __libmseed__.readMSTraces(filename)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
@@ -47,7 +49,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
         # Convert header.
         for _j, _k in convert_dict.iteritems():
             header[_j] = old_header[_k]
-        # Dataquality is Mini-SEED only and thus has an extra Stats attribut.
+        # Dataquality is Mini-SEED only and thus has an extra Stats attribute.
         header['mseed'] = {}
         header['mseed']['dataquality'] = old_header['dataquality']
         # Convert times to obspy.UTCDateTime objects.
@@ -57,7 +59,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None, **kwargs):
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
         # Append traces.
         if headonly:
-            header['npts'] = int( (header['endtime'] - header['starttime']) *
+            header['npts'] = int((header['endtime'] - header['starttime']) *
                                    header['sampling_rate'] + 1 + 0.5)
             traces.append(Trace(header=header))
         else:
@@ -97,7 +99,7 @@ def writeMSEED(stream_object, filename, **kwargs):
             if kwargs['encoding'] in encoding_numbers.values():
                 pass
             else:
-                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' +\
+                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' + \
                       '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
                 raise ValueError(msg)
         # If its a string translate it to the corresponding number.
@@ -105,7 +107,7 @@ def writeMSEED(stream_object, filename, **kwargs):
             try:
                 kwargs['encoding'] = encoding_numbers[kwargs['encoding']]
             except:
-                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' +\
+                msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' + \
                       '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
                 raise ValueError(msg)
     # Catch invalid record length.
@@ -113,8 +115,8 @@ def writeMSEED(stream_object, filename, **kwargs):
                             65536, 131072, 262144, 524288, 1048576]
     if 'reclen' in kwargs.keys() and \
                 not kwargs['reclen'] in valid_record_lengths:
-        msg = 'Invalid record length. The record length must be expressible\n'+\
-              'as 2 to the power of X where X is between and including 8 to 20.'
+        msg = 'Invalid record length. The record length must be a value\n' + \
+              'of 2 to the power of X where 8 <= X <= 20.'
         raise ValueError(msg)
     # libmseed instance.
     __libmseed__ = libmseed()

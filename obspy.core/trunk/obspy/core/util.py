@@ -1,18 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from ctypes.util import find_library
 import ctypes as C
 import os
-import sys
 import tempfile
-import traceback
-
-
-if sys.platform == 'win32':
-    libc = C.cdll.msvcrt
-else:
-    libc = C.CDLL(find_library('c'))
-libc.free.argtype = [C.c_void_p]
 
 
 class AttribDict(dict, object):
@@ -75,56 +65,6 @@ class AttribDict(dict, object):
     def update(self, adict={}):
         for (key, value) in adict.iteritems():
             self[key] = value
-
-
-def getFormatsAndMethods(verbose=False):
-    """
-    Collects all obspy parser classes.
-
-    @type verbose: Bool
-    @param verbose: Print error messages / exceptions while parsing.
-    """
-    temp = []
-    failure = []
-    # There is one try-except block for each supported file format.
-    try:
-        from obspy.gse2.core import isGSE2, readGSE2, writeGSE2
-        # The first item is the name of the format, the second the checking 
-        # function.
-        temp.append(['GSE2', isGSE2, readGSE2, writeGSE2])
-    except:
-        failure.append(traceback.format_exc())
-    try:
-        from obspy.wav.core import isWAV, readWAV, writeWAV
-        temp.append(['WAV', isWAV, readWAV, writeWAV])
-    except:
-        failure.append(traceback.format_exc())
-    try:
-        from obspy.sac.core import isSAC, readSAC, writeSAC
-        temp.append(['SAC', isSAC, readSAC, writeSAC])
-    except:
-        failure.append(traceback.format_exc())
-    try:
-        from obspy.mseed.core import isMSEED, readMSEED, writeMSEED
-        temp.append(['MSEED', isMSEED, readMSEED, writeMSEED])
-    except:
-        failure.append(traceback.format_exc())
-    try:
-        from obspy.seisan.core import isSEISAN, readSEISAN, writeSEISAN
-        temp.append(['SEISAN', isSEISAN, readSEISAN, writeSEISAN])
-    except:
-        failure.append(traceback.format_exc())
-    if verbose:
-        for _i in xrange(len(failure)):
-            print failure[_i]
-    return temp
-
-
-def supportedFormats():
-    """
-    Returns a list of all file formats supported by ObsPy.
-    """
-    return [_i[0] for _i in getFormatsAndMethods()]
 
 
 def scoreatpercentile(a, per, limit=(), sort=True):
