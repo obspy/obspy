@@ -9,7 +9,7 @@
 #define DRLT	9.9330647e-1
 
 
-int utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *lat) {
+void utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *lat) {
    float	olon;
    float	olat;
    double	lat_fac;	/* conversion factor for latitude in km */
@@ -58,10 +58,9 @@ int utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *la
 
    *lon = csr*tmp_x - snr*tmp_y;
    *lat = csr*tmp_y + snr*tmp_x;
-    
 }
 
-int utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *lat) {
+void utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *lat) {
    float        olon;
    float        olat;
    double       lat_fac;        /* conversion factor for latitude in km */

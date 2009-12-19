@@ -23,4 +23,4 @@ USA.
 """
 # Please do not import anything here. It is needed to run the tests
 # without X11 or any other display, see tests/__init__.py for details
-#from spectrogram import spectroGram
+#from spectrogram import spectrogram

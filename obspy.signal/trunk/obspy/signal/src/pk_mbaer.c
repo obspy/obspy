@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-extern int preset(float *, int , float *, float *, float *, float *, float *, float *, int *, int *, int *, int *, char *, int *, float );
+extern void preset(float *, int , float *, float *, float *, float *, float *, float *, int *, int *, int *, int *, char *, int *, float );
 /*
 *******************************************************************************
 c====================================================================
@@ -448,9 +448,9 @@ float samplespersec;*/
 
 /*int preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, float *sumx2, float *sdev, int *nsum, int *itar, int *ptime, int *preptime, char *pfm, int *ipkflg, float samplespersec)*/
 
-int preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, float *sumx2, float *sdev, int *nsum, int *itar, int *ptime, int *preptime, char *pfm, int *ipkflg, float samplespersec)
+void preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, float *sumx2, float *sdev, int *nsum, int *itar, int *ptime, int *preptime, char *pfm, int *ipkflg, float samplespersec)
 {
-      int j,i;
+      int i;
       float yy2,yyt,ysv;
 
       ysv= rbuf[1];

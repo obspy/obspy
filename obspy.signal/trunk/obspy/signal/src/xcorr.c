@@ -17,16 +17,9 @@ void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift,
     int imax;
     int flag=0;
     double cmax;
-    double mean12;
-    double mean1, mean2;
-    double meansq1, meansq2;
-    double root1;
-    double root2;
     double sum;
     int max;
-    double coeff_p;
     int eff_lag;
-    int i1, i2;
 
     corp = (double *)calloc((2*param+1), sizeof(double));
     if (corp == NULL) 

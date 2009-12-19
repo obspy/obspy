@@ -58,7 +58,7 @@ def nearestPow2(x):
         return b
 
 
-def spectroGram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
+def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
                 outfile=None, format=None):
     """
     Computes and plots logarithmic spectogram of the input trace.

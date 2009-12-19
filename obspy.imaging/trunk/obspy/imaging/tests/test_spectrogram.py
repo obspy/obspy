@@ -32,7 +32,7 @@ class SpectrogramTestCase(unittest.TestCase):
         file = os.path.join(path, 'data', 'loc_RJOB20050831023349.z')
         g = read(file, format='GSE2')
         outfile = os.path.join(self.path, 'spectogram.png')
-        spectrogram.spectroGram(g[0].data[0:1000], samp_rate=200.0, log=True,
+        spectrogram.spectrogram(g[0].data[0:1000], samp_rate=200.0, log=True,
                                 outfile=outfile)
 
 

@@ -360,14 +360,16 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
                           C.c_int, C.POINTER(C.c_int), C.c_char_p, C.c_float,
                           C.c_int, C.c_int, C.c_float, C.c_float, C.c_int,
                           C.c_int]
-    lib.ppick.restype = C.c_void_p
+    lib.ppick.restype = C.c_int
     # be nice and adapt type if necessary
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
     args = (len(reltrc)-1, C.byref(pptime), pfm, samp_int, 
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
-    lib.ppick(reltrc, *args)
+    errcode = lib.ppick(reltrc, *args)
+    if errcode != 0:
+        raise Exception("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
     return pptime.value+1, pfm.value
 
@@ -407,7 +409,7 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
                                C.c_int, C.c_int, C.POINTER(C.c_float),
                                C.POINTER(C.c_float), C.c_double,
                                C.c_double, C.c_int]
-    lib.ar_picker.restypes =  C.c_void_p
+    lib.ar_picker.restypes =  C.c_int
     # be nice and adapt type if necessary
     a = np.require(a, 'float32', ['C_CONTIGUOUS'])
     b = np.require(b, 'float32', ['C_CONTIGUOUS'])
@@ -418,7 +420,9 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
     args = (len(a), samp_rate, f1, f2, 
             lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
             C.byref(stime), l_p, l_s, s_pick)
-    lib.ar_picker(a, b, c, *args)
+    errcode = lib.ar_picker(a, b, c, *args)
+    if errcode != 0:
+        raise Exception("Error in function ar_picker of arpicker.c")
     return ptime.value, stime.value
 
 

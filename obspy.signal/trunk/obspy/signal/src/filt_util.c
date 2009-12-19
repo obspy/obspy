@@ -148,13 +148,7 @@ void spr_bp_fast_bworth(float *tr, int ndat, float tsa, float flo, float fhi, in
    spr_hp_bworth(header1,header2,fc,ns,zph);
    DESCRIPTION: Butterworth highpass filter.
 **/
-void spr_hp_fast_bworth(tr,ndat,tsa,fc,ns,zph)
-float *tr;
-int ndat;
-float tsa;
-float fc;
-int ns;
-int zph;
+void spr_hp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zph)
 {
     int k;                   /* index */
     int n,m,mm;
@@ -330,10 +324,7 @@ void spr_lp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
  * DATE: 15-05-1992
  * DESCRIPTION: Integrate trace in the time domain by summing up
 **/
-void spr_time_fast_int(tr, ndat, t_samp)
-float *tr;
-int ndat;
-float t_samp;
+void spr_time_fast_int(float *tr, int ndat, float t_samp)
 {
         int i;
  
@@ -347,11 +338,7 @@ float t_samp;
 }
 
 
-void  decim(tr1,ndat,ndat2,dec_ratio,pos)
-float  *tr1;
-int ndat;
-int ndat2;
-int dec_ratio,pos;
+void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
 {
     int j;
     int max_pos;
@@ -395,8 +382,8 @@ int dec_ratio,pos;
    
 }
 
-
-int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef) {
+int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef)
+{
     int i,j,k;
     float sqr_sum;
     float *extra_tr1;
@@ -454,4 +441,6 @@ int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef) {
             extra_tr2[j]  = extra_tr2[j+1]-extra_tr3[k]*extra_tr1[j+1];
         }
     }
+    // we should never reach this point
+    return(1);
 }
