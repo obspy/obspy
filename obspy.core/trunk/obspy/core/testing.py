@@ -8,7 +8,8 @@ has a function called suite.
 
 To run all tests/a single test from the shell/cmd do one of the following:
 {{{
-    python -c 'import obspy; print obspy.runTests()' # Run all tests
+    python -c 'import obspy.core; print obspy.core.runTests()'             # Run all tests
+    python -c 'import obspy.core; print obspy.core.runTests(verbose=True)' # Verbose output
     python obspy/core/testing.py    # Run all tests
     python obspy/core/testing.py -v # Verbose output
     python obspy/core/testing.py -v obspy.core.tests.test_stream.StreamTestCase.test_adding
@@ -18,8 +19,9 @@ To run all tests/a single test from the shell/cmd do one of the following:
 
 To run all tests/a single test inside Python do one of the following:
 {{{
-    import obspy
-    obspy.runTests()
+    import obspy.core
+    obspy.core.runTests()             # Run all tests
+    obspy.core.runTests(verbose=True) # Verbose output
 
     from unittest import TextTestRunner
     from obspy.core.tests import suite
@@ -62,11 +64,14 @@ def suite():
     return suite
 
 
-def runTests():
+def runTests(verbose=False):
     """
     This function runs all available tests in obspy, from python
     """
-    unittest.main(defaultTest='suite', module=obspy.core.testing)
+    if verbose:
+        unittest.TextTestRunner(verbosity=2).run(suite()) 
+    else:
+        unittest.main(defaultTest='suite', module=obspy.core.testing)
 
 
 if __name__ == '__main__':
