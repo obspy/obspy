@@ -66,6 +66,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(now, mseed._convertMSTimeToDatetime(
                               mseed._convertDatetimeToMSTime(now)))
         # Some random date.
+        random.seed(815) # make test reproducable
         timestring = random.randint(0, 2000000) * 1e6
         self.assertEqual(timestring, mseed._convertDatetimeToMSTime(
                         mseed._convertMSTimeToDatetime(timestring)))

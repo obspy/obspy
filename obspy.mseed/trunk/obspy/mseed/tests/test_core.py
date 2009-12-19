@@ -96,6 +96,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         npts = 1000
         # data array of integers - float won't work!
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
@@ -140,6 +141,7 @@ class CoreTestCase(unittest.TestCase):
         Tests whether the header is correctly written and read.
         """
         tempfile = NamedTemporaryFile().name
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -172,6 +174,7 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         mseed = libmseed()
         npts = 6000
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -209,6 +212,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 6000
         tempfile = NamedTemporaryFile().name
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -238,6 +242,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # libmseed instance.
         npts = 1000
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(10, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -277,6 +282,7 @@ class CoreTestCase(unittest.TestCase):
         """
         npts = 6000
         tempfile = NamedTemporaryFile().name
+        np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
