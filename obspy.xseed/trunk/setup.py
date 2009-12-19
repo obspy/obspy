@@ -61,8 +61,8 @@ setup(
     test_suite="obspy.xseed.tests.suite",
     install_requires=[
         'setuptools',
-        'lxml',
-        'obspy.core',
+        'lxml<2.2.3',
+        'obspy.core>2.1.0',
         # -*- Extra requirements: -*
     ],
     scripts=scripts,

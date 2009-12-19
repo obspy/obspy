@@ -38,7 +38,7 @@ setup(
     namespace_packages=['obspy'],
     zip_safe=True,
     install_requires=[
-        'numpy >=1.1.0',
+        'numpy>1.0.0',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.wav installer
+obspy.signal installer
 
 @copyright: The ObsPy Development Team (devs@obspy.org)
 @license: GNU General Public License (GPL)
@@ -76,7 +76,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core>=0.2.1',
+        'obspy.core>0.2.1',
         'scipy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
