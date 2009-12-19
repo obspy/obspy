@@ -41,17 +41,29 @@ from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific
 
 
+# Import shared libmseed library depending on the platform.
+# XXX: trying multiple names for now - should be removed
 if platform.system() == 'Windows':
-    lib_name = 'gse_functions.pyd'
+    lib_names = ['gse_functions.pyd']
 elif platform.system() == 'Darwin':
-    lib_name = 'gse_functions.dylib'
+    lib_names = ['gse_functions.so', '_gse_functions.dylib']
+    # 32 and 64 bit UNIX
+    #XXX Check glibc version by platform.libc_ver()
 else:
     if platform.architecture()[0] == '64bit':
-        lib_name = 'gse_functions.lin64.so'
+        lib_names = ['gse_functions.so', '_gse_functions.lin64.so']
     else:
-        lib_name = 'gse_functions.so'
+        lib_names = ['gse_functions.so', '_gse_functions.so']
 
-lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+# initialize library
+for lib_name in lib_names:
+    try:
+        lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                  lib_name))
+    except:
+        continue
+    else:
+        break
 
 
 class ChksumError(StandardError):

@@ -15,7 +15,7 @@ import sys
 if platform.system() == 'Windows':
     lib_names = ['libsignal.pyd']
 elif platform.system() == 'Darwin':
-    lib_names = ['libmseed.so', '_libsignal.dylib']
+    lib_names = ['libsignal.so', '_libsignal.dylib']
 else:
     # 32 and 64 bit UNIX
     #XXX Check glibc version by platform.libc_ver()

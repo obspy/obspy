@@ -62,7 +62,7 @@ setup(
     install_requires=[
         'setuptools',
         'lxml<2.2.3',
-        'obspy.core>2.1.0',
+        'obspy.core>0.2.1',
         # -*- Extra requirements: -*
     ],
     scripts=scripts,

@@ -17,6 +17,7 @@ import inspect
 import os
 import unittest
 import warnings
+import gzip
 
 
 class ParserTestCase(unittest.TestCase):
@@ -277,12 +278,12 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser(filename)
         paz = sp.getPAZ('BHE')
-        self.assertEqual(paz['sensitivity'], +7.86576e+08)
         self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
         self.assertEqual(paz['poles'], [(-3.70040e-02 + 3.70160e-02j),
             (-3.70040e-02 - 3.70160e-02j), (-2.51330e+02 + 0.00000e+00j),
             (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
+        self.assertEqual(paz['sensitivity'], +7.86576e+08)
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'EHE')
         #
@@ -291,14 +292,38 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp = Parser(filename)
         paz = sp.getPAZ('EHE')
-        #self.assertEqual(paz['sensitivity'], +6.71140E+08)
         self.assertEqual(paz['gain'], +1.00000e+00)
         self.assertEqual(paz['zeros'], [0j, 0j, 0j])
         self.assertEqual(paz['poles'], [(-4.44400e+00 + 4.44400e+00j),
                                         (-4.44400e+00 - 4.44400e+00j),
                                         (-1.08300e+00 + 0.00000e+00j)])
+        self.assertEqual(paz['sensitivity'], +6.71140E+08)
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'BHE')
+        #
+        # And the same for yet another dataless file
+        #
+        filename = os.path.join(self.path, 'nied.dataless.gz')
+        f = StringIO(gzip.open(filename).read())
+        sp = Parser(f)
+        gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
+        zeros = [[+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j],
+                 [+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j,
+                    -6.32511E+02 +0.00000E+00j],
+                 [+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j]]
+        poles = [[-1.23413E-02 +1.23413E-02j, -1.23413E-02 -1.23413E-02j,
+                  -3.91757E+01 +4.91234E+01j, -3.91757E+01 -4.91234E+01j],
+                 [-3.58123E-02 -4.44766E-02j, -3.58123E-02 +4.44766E-02j,
+                  -5.13245E+02 +0.00000E+00j, -6.14791E+04 +0.00000E+00j],
+                 [-1.23413E-02 +1.23413E-02j, -1.23413E-02 -1.23413E-02j,
+                  -3.91757E+01 +4.91234E+01j, -3.91757E+01 -4.91234E+01j]]
+        sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
+        for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
+            paz = sp.getPAZ(channel)
+            self.assertEqual(paz['gain'], gain[i])
+            self.assertEqual(paz['zeros'], zeros[i])
+            self.assertEqual(paz['poles'], poles[i])
+            self.assertEqual(paz['sensitivity'], sensitivity[i])
 
     def test_createRESPFromXSEED(self):
         """
