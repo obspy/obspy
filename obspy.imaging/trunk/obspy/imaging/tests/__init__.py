@@ -4,7 +4,10 @@
 # display, e.g. via a ssh connection. Import it only once, else a nasty
 # warning occurs.
 import matplotlib
-matplotlib.use('Agg', warn=False)
+try:
+    matplotlib.use('Agg', warn=False)
+except TypeError: #needed for matplotlib 0.91.2
+    matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 from obspy.imaging.tests import test_backend, test_beachball, test_spectrogram
