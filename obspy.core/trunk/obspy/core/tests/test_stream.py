@@ -85,10 +85,9 @@ class StreamTestCase(unittest.TestCase):
         # The traces of all streams are copied.
         for _i in range(8):
             self.assertNotEqual(new_stream[_i], stream[_i])
-            self.assertEqual(new_stream[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
         # Also test for the newly added stream.
-        self.assertNotEqual(new_stream[8], other_stream[0])
+        self.assertEqual(new_stream[8], other_stream[0])
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
         np.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
 
@@ -105,7 +104,7 @@ class StreamTestCase(unittest.TestCase):
         # This will leave the Traces of the new stream and create a deepcopy of
         # the other Stream's Traces
         self.assertEqual(5, len(stream))
-        self.assertNotEqual(other_stream[0], stream[-1])
+        self.assertEqual(other_stream[0], stream[-1])
         self.assertEqual(other_stream[0].stats, stream[-1].stats)
         np.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
 
@@ -121,12 +120,12 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 5)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertNotEqual(stream[0], stream[-1])
+        self.assertEqual(stream[0], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[0].stats, stream[-1].stats)
         np.testing.assert_array_equal(stream[0].data, stream[-1].data)
-        # Append the same again but pass by reference.
-        stream.append(stream[0], reference=True)
+        # Append the same again
+        stream.append(stream[0])
         self.assertEqual(len(stream), 6)
         # Now the two objects should be identical.
         self.assertEqual(stream[0], stream[-1])
@@ -156,15 +155,15 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 6)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertNotEqual(stream[0], stream[-2])
-        self.assertNotEqual(stream[1], stream[-1])
+        self.assertEqual(stream[0], stream[-2])
+        self.assertEqual(stream[1], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[0].stats, stream[-2].stats)
         np.testing.assert_array_equal(stream[0].data, stream[-2].data)
         self.assertEqual(stream[1].stats, stream[-1].stats)
         np.testing.assert_array_equal(stream[1].data, stream[-1].data)
-        # Extend with the same again but pass by reference.
-        stream.extend(stream[0:2], reference=True)
+        # Extend with the same again
+        stream.extend(stream[0:2])
         self.assertEqual(len(stream), 8)
         # Now the two objects should be identical.
         self.assertEqual(stream[0], stream[-2])
@@ -186,12 +185,13 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 5)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertNotEqual(stream[1], stream[-1])
+        #self.assertNotEqual(stream[1], stream[-1])
+        self.assertEqual(stream[1], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-1].stats)
         np.testing.assert_array_equal(stream[1].data, stream[-1].data)
-        # Do the same again but pass by reference.
-        stream.insert(1, stream[-1], reference=True)
+        # Do the same again
+        stream.insert(1, stream[-1])
         self.assertEqual(len(stream), 6)
         # Now the two Traces should be identical
         self.assertEqual(stream[1], stream[-1])
@@ -201,15 +201,15 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 8)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertNotEqual(stream[1], stream[-2])
-        self.assertNotEqual(stream[2], stream[-1])
+        self.assertEqual(stream[1], stream[-2])
+        self.assertEqual(stream[2], stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[1].stats, stream[-2].stats)
         np.testing.assert_array_equal(stream[1].data, stream[-2].data)
         self.assertEqual(stream[2].stats, stream[-1].stats)
         np.testing.assert_array_equal(stream[2].data, stream[-1].data)
-        # Do the same again but pass by reference.
-        stream.insert(1, stream[-2:], reference=True)
+        # Do the same again
+        stream.insert(1, stream[-2:])
         self.assertEqual(len(stream), 10)
         # Now the two Traces should be identical
         self.assertEqual(stream[1], stream[-2])
@@ -369,7 +369,7 @@ class StreamTestCase(unittest.TestCase):
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
             new_trace = Trace(header=_i)
-            stream.append(new_trace, reference=True)
+            stream.append(new_trace)
         # Use normal sorting.
         stream.sort()
         self.assertEqual([i.stats.sampling_rate for i in stream.traces],
@@ -415,7 +415,7 @@ class StreamTestCase(unittest.TestCase):
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
             new_trace = Trace(header=_i)
-            stream.append(new_trace, reference=True)
+            stream.append(new_trace)
         stream.sort()
         a = [i.stats.sampling_rate for i in stream.traces]
         stream.sort()

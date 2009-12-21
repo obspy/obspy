@@ -17,8 +17,7 @@ def read(pathname, format=None, headonly=False, **kwargs):
     # Reads files using the given wild card into a L{obspy.core.Stream} object.
     st = Stream()
     for file in iglob(pathname):
-        st.extend(_read(file, format, headonly, **kwargs).traces,
-                  reference=True)
+        st.extend(_read(file, format, headonly, **kwargs).traces)
     if len(st) == 0:
         raise Exception("Cannot open file/files", pathname)
     return st
@@ -92,25 +91,23 @@ class Stream(object):
         """
         Method to add two streams.
         
-        It will make a deepcopy of both Stream's Traces and create a new
-        Stream object.
+        It will create a new Stream object.
         """
         if not isinstance(stream, Stream):
             raise TypeError
         traces = copy.deepcopy(self.traces)
-        traces.extend(copy.deepcopy(stream.traces))
+        traces.extend(stream.traces)
         return Stream(traces=traces)
 
     def __iadd__(self, stream):
         """
         Method to add two streams with self += other.
         
-        It will make a deepcopy of the other Stream's Traces and extend the
-        Stream object with them.
+        It will extend the Stream object with the other one.
         """
         if not isinstance(stream, Stream):
             raise TypeError
-        self.extend(copy.deepcopy(stream.traces), reference=True)
+        self.extend(stream.traces)
         return self
 
     def __len__(self):
@@ -159,31 +156,24 @@ class Stream(object):
         """
         return Stream(traces=self.traces[i:j])
 
-    def append(self, trace, reference=False):
+    def append(self, trace):
         """
         This method appends a single Trace object to the Stream object.
         
         @param trace: obspy.Trace object.
-        @param reference: If true it will pass the Trace by reference. If
-            false it will make a deepcopy of the Trace. Defaults to False.
         """
         if isinstance(trace, Trace):
-            if not reference:
-                self.traces.append(copy.deepcopy(trace))
-            else:
-                self.traces.append(trace)
+            self.traces.append(trace)
         else:
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
 
-    def extend(self, trace_list, reference=False):
+    def extend(self, trace_list):
         """
         This method will extend the traces attribute of the Stream object with
         a list of Trace objects.
         
         @param trace_list: list of obspy.Trace objects.
-        @param reference: If true it will pass the Traces by reference. If
-            false it will make a deepcopy of the Traces. Defaults to False.
         """
         if isinstance(trace_list, list):
             for _i in trace_list:
@@ -191,12 +181,9 @@ class Stream(object):
                 if not isinstance(_i, Trace):
                     msg = 'Extend only accepts a list of Trace objects.'
                     raise TypeError(msg)
-            if not reference:
-                self.traces.extend(copy.deepcopy(trace_list))
-            else:
-                self.traces.extend(trace_list)
+            self.traces.extend(trace_list)
         elif isinstance(trace_list, Stream):
-            self.extend(trace_list.traces, reference=reference)
+            self.extend(trace_list.traces)
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
@@ -250,21 +237,16 @@ class Stream(object):
                             nsamples])
         return gap_list
 
-    def insert(self, index, object, reference=False):
+    def insert(self, index, object):
         """
         Inserts either a single Trace object or a list of Trace objects before
         index.
         
         @param index: The Trace will be inserted before index.
         @param object: Single Trace object or list of Trace objects.
-        @param reference: If True it will pass the Traces by reference. If
-            false it will make a deepcopy of the Traces. Defaults to False.
         """
         if isinstance(object, Trace):
-            if not reference:
-                self.traces.insert(index, copy.deepcopy(object))
-            else:
-                self.traces.insert(index, object)
+            self.traces.insert(index, object)
         elif isinstance(object, list):
             # Make sure each item in the list is a trace.
             for _i in object:
@@ -273,12 +255,9 @@ class Stream(object):
                     raise TypeError(msg)
             # Insert each item of the list.
             for _i in xrange(len(object)):
-                if not reference:
-                    self.traces.insert(index + _i, copy.deepcopy(object[_i]))
-                else:
-                    self.traces.insert(index + _i, object[_i])
+                self.traces.insert(index + _i, object[_i])
         elif isinstance(object, Stream):
-            self.insert(index, object.traces, reference=reference)
+            self.insert(index, object.traces)
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)

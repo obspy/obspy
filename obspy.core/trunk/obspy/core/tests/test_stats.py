@@ -99,8 +99,8 @@ class StatsTestCase(unittest.TestCase):
         # change stats attributes
         st[0].stats.station = 'AAA'
         st[1].stats['station'] = 'BBB'
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEquals(st[0].stats.station, 'BBB')
+        self.assertEquals(st[0].stats['station'], 'BBB')
         self.assertEquals(st[1].stats['station'], 'BBB')
         self.assertEquals(st[1].stats.station, 'BBB')
 
