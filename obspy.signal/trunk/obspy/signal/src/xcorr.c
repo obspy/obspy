@@ -13,12 +13,12 @@ void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift,
     double *corp;
     double sum1;
     double sum2;
-    int lmax;
-    int imax;
+    int lmax=0;
+    int imax=0;
     int flag=0;
     double cmax;
     double sum;
-    int max;
+    int max=0;
     int eff_lag;
 
     corp = (double *)calloc((2*param+1), sizeof(double));

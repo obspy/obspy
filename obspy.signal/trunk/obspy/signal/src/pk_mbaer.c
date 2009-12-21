@@ -108,7 +108,7 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       int amp,dtime,num,itrm;
       int amptime,end_dur;
       float rawold,ssx,ssx2,sum,sdev,mean;
-      float edat,rdif,rdat,rda2,rdi2,omega,y2,yt,edev;
+      float edat,rdif,rdat,rda2,rdi2,omega,y2,yt,edev=0.0;
       int i,iamp,picklength;
 
       float xr;

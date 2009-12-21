@@ -20,12 +20,12 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     float aic,aic_mini;
     float pm;
     float buff4_max;
-    int i1,i2,i3,i4,i5,i6,i7;
+    int i1=0,i2=0,i3=0,i4=0,i5=0,i6=0,i7=0;
     int i,j,k;
     int nsta,nlta;
     int nl_p,nl_s;
     int n65,n32;
-    int trace_flag;
+    int trace_flag=0;
 
     *ptime = 0;
     *stime = 0;
@@ -162,7 +162,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
-    for(i=(m_p+nl_p),j=(i2-1-m_p-nl_p);i<(i2-1-m_p-nl_p),j>=(m_p+nl_p);i++,j--){
+    for(i=(m_p+nl_p),j=(i2-1-m_p-nl_p);i<=(i2-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
         aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
@@ -179,7 +179,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         i3 = 0;
 
     // Leonard & Kennett AIC on original traces
-    for(i=0,j=i3;i<n32,j<i2;i++,j++){
+    for(i=0,j=i3;i<n32 && j<i2;i++,j++){
         buff1[i] = tr[j]*tr[j]*tr[j];
     }
     //flip the trace in time
@@ -214,7 +214,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
-    for(i=(m_p+nl_p),j=(n32-1-m_p-nl_p);i<(n32-1-m_p-nl_p),j>=(m_p+nl_p);i++,j--){
+    for(i=(m_p+nl_p),j=(n32-1-m_p-nl_p);i<=(n32-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
         aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
@@ -286,7 +286,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 n65 = 0;
 
             // AIC on wideband record
-            for(i=0,j=i6;i<n65,j<i5;i++,j++){
+            for(i=0,j=i6;i<n65 && j<i5;i++,j++){
                 buff1_s[i] = buff4_s[j]*buff4_s[j]*buff4_s[j];
             }
             //flip the trace in time
@@ -322,7 +322,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             // Joint AIC forward and backward looking for minimum
             aic_mini = 0.;
             i7 = 0;
-            for(i=(m_s+nl_s),j=(n65-1-m_s-nl_s);i<(n65-1-m_s-nl_s),j>=(m_s+nl_s);i++,j--){
+            for(i=(m_s+nl_s),j=(n65-1-m_s-nl_s);i<=(n65-1-m_s-nl_s) && j>=(m_s+nl_s);i++,j--){
                 aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
                 if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
                     aic_mini = aic;
