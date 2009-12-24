@@ -45,7 +45,7 @@ setup(
         [obspy.plugin.waveform]
         SEISAN = obspy.seisan.core
 
-        [obspy.plugin.waveform.MSEED]
+        [obspy.plugin.waveform.SEISAN]
         isFormat = obspy.seisan.core:isSEISAN
         readFormat = obspy.seisan.core:readSEISAN
         writeFormat = obspy.seisan.core:writeSEISAN
