@@ -33,7 +33,6 @@ class WaveformTestCase(unittest.TestCase):
                   'network' : 'AA', 'station' : 'BB', 'channel' : 'CC'}
         self.large_stream = Stream(traces=[Trace(data=data, header=header)])
 
-
     def tearDown(self):
         pass
 
