@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
-import array, struct
-import os
+from obspy.core import Stream, Trace, UTCDateTime, Stats
+import numpy as np
 
 
 def isSEISAN(filename):
@@ -61,24 +60,24 @@ def _getVersion(data):
     
     @type data: String.
     @param data: Data chunk. 
-    @rtype: String or None.
-    @return: SEISAN version.
+    @rtype: (["<"|">"], [32|64], [6|7]).
+    @return: (byte order, architecture, version).
     """
     # check size of data chunk
     if len(data) < 12 * 80:
         return False
     if data[0:2] == 'KP'and data[82] == 'P':
-        return ("PC", 32, 6)
+        return ("<", 32, 6)
     elif data[0:8] == '\x00\x00\x00\x00\x00\x00\x00P' and \
         data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
-        return ("SUN", 64, 7)
+        return (">", 64, 7)
     elif data[0:8] == 'P\x00\x00\x00\x00\x00\x00\x00' and \
         data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
-        return ("PC", 64, 7)
+        return ("<", 64, 7)
     elif data[0:4] == '\x00\x00\x00P' and data[84:88] == '\x00\x00\x00P':
-        return ("SUN", 32, 7)
+        return (">", 32, 7)
     elif data[0:4] == 'P\x00\x00\x00' and data[84:88] == 'P\x00\x00\x00':
-        return ("PC", 32, 7)
+        return ("<", 32, 7)
     return None
 
 
@@ -94,7 +93,7 @@ def readSEISAN(filename, headonly=False, **kwargs):
     fh = open(filename, 'rb')
     data = fh.read(80 * 12)
     # get version info from file
-    (platform, arch, version) = _getVersion(data)
+    (endian, arch, _version) = _getVersion(data)
     # fetch lines
     fh.seek(0)
     seisan = {}
@@ -102,50 +101,53 @@ def readSEISAN(filename, headonly=False, **kwargs):
     # start with event file header
     # line 1
     data = _readline(fh)
-    seisan['network_name'] = data[1:30]
-    seisan['number_of_channels'] = data[30:33]
-    seisan['year'] = data[33:36]
-    seisan['day'] = data[37:40]
-    seisan['month'] = data[41:43]
-    seisan['hr'] = data[47:49]
-    seisan['min'] = data[50:52]
-    seisan['sec'] = data[53:59]
-    seisan['total_time_window'] = data[60:69]
+    number_of_channels = int(data[30:33])
+    # calculate number of lines with channels
+    number_of_lines = number_of_channels // 3 + (number_of_channels % 3 and 1)
+    if number_of_lines < 10:
+        number_of_lines = 10
     # line 2
     data = _readline(fh)
     # line 3
-    # calculate number of lines with channels
-    noc = int(seisan['number_of_channels'])
-    nol = noc // 3 + (noc % 3 and 1)
-    if nol < 10:
-        nol = 10
-    seisan['channels'] = {}
-    for _i in xrange(0, nol):
+    for _i in xrange(0, number_of_lines):
         data = _readline(fh)
-        temp = _parseChannel(data[0:28])
-        if temp['station_code']:
-            seisan['channels'][_i * 3] = temp
-        temp = _parseChannel(data[28:52])
-        if temp['station_code']:
-            seisan['channels'][_i * 3 + 1] = temp
-        temp = _parseChannel(data[52:78])
-        if temp['station_code']:
-            seisan['channels'][_i * 3 + 2] = temp
     # now parse each event file channel header + data
-    for _i in xrange(noc):
-        data = _readline(fh, 1040)
-    import pprint
-    pprint.pprint(seisan)
+    stream = Stream()
+    dlen = arch / 8
+    dtype = endian + 'i' + str(dlen)
+    for _i in xrange(number_of_channels):
+        # get channel header
+        temp = _readline(fh, 1040)
+        # create Stats
+        header = Stats()
+        header['seisan'] = Stats()
+        header['network'] = (temp[16] + temp[19]).strip()
+        header['station'] = temp[0:5].strip()
+        header['location'] = (temp[7] + temp[12]).strip()
+        header['channel'] = (temp[5:7] + temp[8]).strip()
+        header['sampling_rate'] = float(temp[36:43])
+        header['npts'] = int(temp[43:50])
+        # create start and end times
+        year = int(temp[9:12]) + 1900
+        month = int(temp[17:19])
+        day = int(temp[20:22])
+        hour = int(temp[23:25])
+        mins = int(temp[26:28])
+        secs = float(temp[29:35])
+        header['starttime'] = starttime = UTCDateTime(year, month, day,
+                                                      hour, mins) + secs
+        header['endtime'] = starttime + (header['npts'] - 1) / \
+                            float(header['sampling_rate'])
+        if headonly:
+            # skip data
+            fh.seek(dlen * (header['npts'] + 2), 1)
+            stream.append(Trace(header=header))
+        else:
+            # fetch data
+            data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)
+            stream.append(Trace(data=data[2:], header=header))
+    return stream
 
-def _parseChannel(data):
-    temp = {}
-    temp['station_code'] = data[1:5].strip()
-    temp['first_two_components'] = data[5:7]
-    temp['last_component_code'] = data[8]
-    temp['station_code_last_character'] = data[9]
-    temp['start_time_relative_to_event_file_time'] = data[10:17].strip()
-    temp['station_data_interval_length'] = data[18:26].strip()
-    return temp
 
 def _readline(fh, length=80):
     data = fh.read(length + 8)
@@ -153,9 +155,10 @@ def _readline(fh, length=80):
     start = 4
     return data[start:end]
 
+
 def writeSEISAN(stream_object, filename, **kwargs):
     """
-    Writes SEISAN file.
+    Writes a SEISAN file.
     
     @type stream_object: L{obspy.Stream}.
     @param stream_object: A ObsPy Stream object.

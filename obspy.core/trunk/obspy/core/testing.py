@@ -43,7 +43,8 @@ import time
 import unittest
 
 
-_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed']
+_dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed',
+         'seisan']
 modules = ['obspy.%s.tests' % d for d in _dirs]
 
 
@@ -69,7 +70,7 @@ def runTests(verbose=False):
     This function runs all available tests in obspy, from python
     """
     if verbose:
-        unittest.TextTestRunner(verbosity=2).run(suite()) 
+        unittest.TextTestRunner(verbosity=2).run(suite())
     else:
         unittest.main(defaultTest='suite', module=obspy.core.testing)
 

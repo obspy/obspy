@@ -3,8 +3,10 @@
 The seisan.core test suite.
 """
 
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
 import inspect
+import numpy as np
 import os
 import unittest
 
@@ -28,11 +30,11 @@ class CoreTestCase(unittest.TestCase):
         # 1
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         data = open(file, 'rb').read(80 * 12)
-        self.assertEqual(_getVersion(data), ('SUN', 32, 7))
+        self.assertEqual(_getVersion(data), ('>', 32, 7))
         # 2
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         data = open(file, 'rb').read(80 * 12)
-        self.assertEqual(_getVersion(data), ('PC', 32, 7))
+        self.assertEqual(_getVersion(data), ('<', 32, 7))
 
     def test_isSEISAN(self):
         """
@@ -51,11 +53,50 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
-        stream = readSEISAN(file)
+        st1 = readSEISAN(file)
+        st1._verify()
+        self.assertEqual(len(st1), 21)
+        self.assertEqual(st1[20].stats.network, '')
+        self.assertEqual(st1[20].stats.station, 'MBGB')
+        self.assertEqual(st1[20].stats.location, 'J')
+        self.assertEqual(st1[20].stats.channel, 'SBE')
+        self.assertEqual(st1[20].stats.starttime,
+                         UTCDateTime('1997-01-30T10:48:54.040000Z'))
+        self.assertEqual(st1[20].stats.endtime,
+                         UTCDateTime('1997-01-30T10:49:42.902881Z'))
+        self.assertAlmostEqual(st1[20].stats.sampling_rate, 75.2, 1)
+        self.assertEqual(st1[20].stats.npts, 3675)
+        datafile = os.path.join(self.path, 'MBGBSBJE')
+        # compare with ASCII values of trace
+        # XXX: extracted ASCII file contains less values than the original
+        # Seisan file!
+        self.assertEqual(list(st1[20].data[0:3665]),
+                         list(np.fromfile(datafile, dtype=int, sep=' ')))
         # 2
-        #file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
-        #self.assertTrue(isSEISAN(file))
+        file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
+        st2 = readSEISAN(file)
+        st2._verify()
+        self.assertEqual(len(st2), 4)
+        self.assertEqual(list(st2[0].data[0:3]), [492, 519, 542])
 
+    def test_readSEISANHeadOnly(self):
+        """
+        Test SEISAN file reader with headonly flag.
+        """
+        file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
+        st1 = readSEISAN(file, headonly=True)
+        self.assertEqual(len(st1), 21)
+        self.assertEqual(st1[0].stats.network, '')
+        self.assertEqual(st1[0].stats.station, 'MBGA')
+        self.assertEqual(st1[0].stats.location, 'J')
+        self.assertEqual(st1[0].stats.channel, 'SBZ')
+        self.assertEqual(st1[0].stats.starttime,
+                         UTCDateTime('1997-01-30T10:48:54.040000Z'))
+        self.assertEqual(st1[0].stats.endtime,
+                         UTCDateTime('1997-01-30T10:49:42.902881Z'))
+        self.assertAlmostEqual(st1[0].stats.sampling_rate, 75.2, 1)
+        self.assertEqual(st1[0].stats.npts, 3675)
+        self.assertEqual(list(st1[0].data), []) # no data
 
 
 def suite():
