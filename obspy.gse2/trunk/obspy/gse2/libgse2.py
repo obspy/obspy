@@ -56,6 +56,7 @@ else:
         lib_names = ['gse_functions.so', '_gse_functions.so']
 
 # initialize library
+lib = None
 for lib_name in lib_names:
     try:
         lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
@@ -64,6 +65,9 @@ for lib_name in lib_names:
         continue
     else:
         break
+if not lib:
+    msg = 'Could not load shared library "gse_functions" for obspy.gse2.'
+    raise ImportError(msg)
 
 
 class ChksumError(StandardError):

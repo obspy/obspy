@@ -15,9 +15,8 @@ class StreamTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        # Create dynamic test_files to avoid dependecies of obspy.core
-        # on obspy.mseed and obspy.gse2.
-        # set specific seed value such that random numbers are reproducable
+        # Create dynamic test_files to avoid dependencies of other modules.
+        # set specific seed value such that random numbers are reproduceable
         np.random.seed(815)
         header = {'network': 'BW', 'station': 'BGLD',
             'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),

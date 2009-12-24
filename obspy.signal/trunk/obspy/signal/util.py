@@ -25,6 +25,7 @@ else:
         lib_names = ['libsignal.so', '_libsignal.so']
 
 # initialize library
+lib = None
 for lib_name in lib_names:
     try:
         lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
@@ -32,6 +33,9 @@ for lib_name in lib_names:
         continue
     else:
         break
+if not lib:
+    msg = 'Could not load shared library "libsignal" for obspy.signal.'
+    raise ImportError(msg)
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):

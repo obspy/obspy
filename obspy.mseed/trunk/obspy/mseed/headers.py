@@ -24,6 +24,7 @@ else:
         lib_names = ['libmseed.so', '_libmseed-2.3.so']
 
 # initialize library
+clibmseed = None
 for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
@@ -32,6 +33,9 @@ for lib_name in lib_names:
         continue
     else:
         break
+if not clibmseed:
+    msg = 'Could not load shared library "libmseed" for obspy.mseed.'
+    raise ImportError(msg)
 
 
 # Figure out Py_ssize_t (PEP 353).
