@@ -50,7 +50,6 @@ setup(
     install_requires=[
         'setuptools',
         'obspy.core>0.2.1',
-        'numpy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.sac/trunk#egg=obspy.sac-dev",

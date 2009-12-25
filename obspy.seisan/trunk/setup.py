@@ -34,7 +34,6 @@ setup(
     install_requires=[
         'setuptools',
         'obspy.core>0.2.1',
-        'numpy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.seisan/trunk#egg=obspy.seisan-dev",
@@ -48,6 +47,5 @@ setup(
         [obspy.plugin.waveform.SEISAN]
         isFormat = obspy.seisan.core:isSEISAN
         readFormat = obspy.seisan.core:readSEISAN
-        writeFormat = obspy.seisan.core:writeSEISAN
     """,
 )

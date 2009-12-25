@@ -1,5 +1,5 @@
-package obspy.seisan
-====================
+package obspy.seishub
+=====================
 
 Copyright
 ---------
@@ -11,12 +11,15 @@ Copyright
 
 Overview
 --------
-    obspy.seisan - Read & write seismograms, Format SEISAN
+    obspy.seishub - SeisHub database client for ObsPy.
 
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
+    * lxml
     * obspy.core
+    * obspy.mseed
+    * matplotlib
     * setuptools

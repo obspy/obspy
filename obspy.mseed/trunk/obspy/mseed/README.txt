@@ -40,5 +40,4 @@ Overview
 Dependencies
 ------------
     * obspy.core
-    * numpy
     * setuptools

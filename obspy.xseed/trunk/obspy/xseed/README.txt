@@ -1,5 +1,5 @@
-package obspy.seisan
-====================
+package obspy.xseed
+===================
 
 Copyright
 ---------
@@ -7,16 +7,18 @@ Copyright
 
     Copyright (c) 2009-2010 by:
         * Robert Barsch
+        * Lion Krischner
 
 
 Overview
 --------
-    obspy.seisan - Read & write seismograms, Format SEISAN
+    obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files.
 
     For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * obspy.core
+    * lxml
     * setuptools
+    * obspy.core

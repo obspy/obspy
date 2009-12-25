@@ -34,7 +34,6 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core>0.2.1',
         'obspy.mseed>0.2.1',
         'lxml',
     ],

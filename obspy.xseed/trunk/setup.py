@@ -1,70 +1,51 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-setup.py bdist_egg
+obspy.xseed installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from setuptools import setup, find_packages
-import os
-import sys
-
-version = '0.1.6'
-
-GPL2 = """
-GNU General Public License (GPL)
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-USA.
-"""
+from setuptools import find_packages, setup
 
 
-# set some platform specific scripts
-scripts = [
-    'scripts' + os.sep + 'dataless2xseed',
-    'scripts' + os.sep + 'xseed2dataless'
-]
-if 'win' in sys.platform:
-    scripts.append('scripts' + os.sep + 'dataless2xseed.bat')
-    scripts.append('scripts' + os.sep + 'xseed2dataless.bat')
+VERSION = '0.2.0'
 
 
 setup(
     name='obspy.xseed',
-    version=version,
+    version=VERSION,
     description="Tool to convert between Dataless SEED and XML-SEED files.",
     long_description="""
     obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files.
 
     For more information visit http://www.obspy.org.
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, SEED, Dataless SEED, XML-SEED, XSEED',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team',
-    author_email='barsch@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'seismology', 'SEED', 'Dataless SEED', 'XML-SEED',
+              'XSEED'],
+    license='LGPLv3',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
     zip_safe=True,
-    test_suite="obspy.xseed.tests.suite",
     install_requires=[
         'setuptools',
         'lxml<2.2.3',
         'obspy.core>0.2.1',
-        # -*- Extra requirements: -*
     ],
-    scripts=scripts,
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
+    platforms=['any'],
+    include_package_data=True,
+    test_suite="obspy.xseed.tests.suite",
+    entry_points={
+        'console_scripts': [
+            'dataless2xseed = obspy.xseed.scripts.dataless2xseed:main',
+            'xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
+        ],
+    },
 )

@@ -1,34 +1,21 @@
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-setup.py bdist_egg
+obspy.fissures installer
+
+@copyright: The ObsPy Development Team (devs@obspy.org)
+@license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = '0.0.1'
 
-GPL2 = """
-GNU General Public License (GPL)
+VERSION = '0.2.2'
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
-"""
 
 setup(
     name='obspy.fissures',
-    version=version,
+    version=VERSION,
     description="DHI/Fissures request client for of ObsPy.",
     long_description="""
     obspy.fissures - DHI/Fissures request client for of ObsPy.
@@ -46,21 +33,23 @@ setup(
      * http://www.seis.sc.edu/wily
      * http://www.iris.edu/dhi/servers.htm
     """,
-    classifiers=[],
-    keywords='ObsPy, Seismology, Fissures, DHI, IRIS, CORBA',
+    url='http://www.obspy.org',
     author='The ObsPy Development Team',
-    author_email='beyreuth@geophysik.uni-muenchen.de',
-    url='https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.fissures',
-    license=GPL2,
-    packages=find_packages(exclude=['ez_setup']),
+    author_email='devs@obspy.org',
+    classifiers=[],
+    keywords=['ObsPy', 'seismology', 'fissures', 'DHI', 'IRIS', 'CORBA'],
+    license='LGPLv3',
+    packages=find_packages(),
     namespace_packages=['obspy'],
-    include_package_data=True,
     zip_safe=True,
-    test_suite="obspy.fissures.tests.suite",
     install_requires=[
         'setuptools',
-        'omniORB',
-        'obspy.mseed',
+        'obspy.mseed>0.2.1',
+#        'omniORB',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.fissures/trunk#egg=obspy.fissures-dev",
+    download_url="https://svn.geophysik.uni-muenchen.de" + \
+        "/svn/obspy/obspy.fissures/trunk#egg=obspy.fissures-dev",
+    platforms=['any'],
+    include_package_data=True,
+    test_suite="obspy.fissures.tests.suite",
 )

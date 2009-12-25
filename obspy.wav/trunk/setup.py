@@ -30,7 +30,7 @@ setup(
     author_email='devs@obspy.org',
     classifiers=[],
     keywords=['ObsPy', 'seismology', 'seismogram', 'WAV'],
-    license='GPL2',
+    license='LGPLv3',
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,

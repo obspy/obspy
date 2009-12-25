@@ -5,7 +5,7 @@ setup.py bdist_egg
 
 from setuptools import setup, find_packages
 
-version = '0.1.2'
+VERSION = '0.2.2'
 
 GPL2 = """
 GNU General Public License (GPL)
@@ -28,7 +28,7 @@ USA.
 
 setup(
     name='obspy.imaging',
-    version=version,
+    version=VERSION,
     description="Provides tools for displaying features used in seismology.",
     long_description="""
     obspy.imaging - Provides tools for displaying features used in seismology.
@@ -48,9 +48,8 @@ setup(
     test_suite="obspy.imaging.tests.suite",
     install_requires=[
         'setuptools',
+        'obspy.core>0.2.1'
         'matplotlib',
-        'numpy',
-        'obspy.core'
     ],
     download_url="https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev",
     dependency_links=[

@@ -24,4 +24,4 @@ Overview
 
 Dependencies
 ------------
-    * setuptools
+    * numpy
