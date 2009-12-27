@@ -15,8 +15,7 @@ Python Class for transforming seismograms to audio WAV files
 """
 
 from obspy.core import Trace, Stream
-import numpy as N
-import struct
+import numpy as np
 import wave
 import os
 
@@ -38,8 +37,8 @@ def readWAV(filename, headonly=False, **kwargs):
     """
     Read audio WAV file.
     
-    Currently supports unsigned char and short integer data values. This
-    should cover most WAV files.
+    Currently supports uncompressed unsigned char and short integer and
+    integer data values. This should cover most WAV files.
     
     @param filename: Name of WAV file to read.
     """
@@ -50,19 +49,19 @@ def readWAV(filename, headonly=False, **kwargs):
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
         return Stream([Trace(header=header)])
-    # set format
+    # WAVE data format is unsigned char up to 8bit, and signed int
+    # for the remaining.
     if width == 1:
-        format = 'B'
+        fmt = '<u1' #unsigned char
     elif width == 2:
-        format = 'h'
+        fmt = '<i2' #signed short int
     elif width == 4:
-        format = 'l'
+        fmt = '<i4' #signed int (int32)
     else:
-        raise TypeError("Unsupported Format Type, string length %d" % length)
-    data = struct.unpack("%d%s" % (length * nchannel, format),
-                         fh.readframes(length))
+        raise TypeError("Unsupported Format Type, word width %dbytes" % width)
+    data = np.fromstring(fh.readframes(length), dtype=fmt)
     fh.close()
-    return Stream([Trace(header=header, data=N.array(data))])
+    return Stream([Trace(header=header, data=data)])
 
 
 def writeWAV(stream_object, filename, framerate=7000, **kwargs):
@@ -70,7 +69,7 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     Write audio WAV file. The seismogram is squeezed to audible frequencies.
     
     The resulting WAV sound file is as a result really short. The data
-    are written uncompressed as unsigned char.
+    are written uncompressed as signed 4byte integers.
     
     @requires: The attributes self.stats.npts = number of samples; 
         self.data = array of data samples.
@@ -89,8 +88,7 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)
         w.setparams((1, 4, framerate, trace.stats.npts, 'NONE',
                      'not compressed'))
-        trace.data = N.require(trace.data, 'int32')
-        w.writeframes(struct.pack('%dl' % (trace.stats.npts * 1),
-                                  *trace.data))
+        trace.data = np.require(trace.data, '<i4')
+        w.writeframes(trace.data.tostring())
         w.close()
         i += 1
