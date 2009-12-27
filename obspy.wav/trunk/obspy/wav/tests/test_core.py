@@ -7,6 +7,7 @@ The audio wav.core test suite.
 from obspy.core import read, Stream, Trace
 import inspect, os, unittest, filecmp
 from obspy.core.util import NamedTemporaryFile
+import numpy as np
 
 
 class CoreTestCase(unittest.TestCase):
@@ -25,17 +26,16 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
-        testdata = [64, 78, 99, 119, 123, 107, 72, 31, 2, 0, 30, 84, 141]
+        testdata = np.array([64, 78, 99, 119, 123, 107, 
+                             72, 31, 2, 0, 30, 84, 141])
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.npts, 2599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
-        for _i in xrange(13):
-            self.assertEqual(tr.data[_i], testdata[_i])
+        np.testing.assert_array_equal(tr.data[:13], testdata)
         tr2 = read(self.file, format='WAV')[0]
         self.assertEqual(tr2.stats.npts, 2599)
         self.assertEqual(tr2.stats['sampling_rate'], 7000)
-        for _i in xrange(13):
-            self.assertEqual(tr.data[_i], testdata[_i])
+        np.testing.assert_array_equal(tr.data[:13], testdata)
 
     def test_readHeadViaObspy(self):
         """
@@ -50,27 +50,23 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and Write files via L{obspy.Trace}
         """
-        testdata = [111, 111, 111, 111, 111, 109, 106, 103, 103, 110, 121,
-                    132, 139]
+        testdata = np.array([111, 111, 111, 111, 111, 109, 106, 103, 103,
+                             110, 121, 132, 139])
         testfile = NamedTemporaryFile().name
         self.file = os.path.join(self.path, 'data', '3cssan.reg.8.1.RNON.wav')
         tr = read(self.file, format='WAV')[0]
         self.assertEqual(tr.stats.npts, 10599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
-        for _i in xrange(13):
-            self.assertEqual(tr.data[_i], testdata[_i])
+        np.testing.assert_array_equal(tr.data[:13], testdata)
         # write 
         st2 = Stream()
         st2.traces.append(Trace())
-        st2[0].data = tr.data[:] #copy the data
+        st2[0].data = tr.data.copy() #copy the data
         st2.write(testfile, format='WAV', framerate=7000)
-        del st2
-        # and read again
+        # read without giving the WAV format option
         tr3 = read(testfile)[0]
         self.assertEqual(tr3.stats, tr.stats)
-        for _i in xrange(13):
-            self.assertEqual(tr3.data[_i], testdata[_i])
-        self.assertEqual(filecmp.cmp(self.file, testfile), True)
+        np.testing.assert_array_equal(tr3.data[:13], testdata)
         os.remove(testfile)
 
 

@@ -29,7 +29,7 @@ def isWAV(filename):
         fh.close()
     except:
         return False
-    if width == 1 or width == 2:
+    if width == 1 or width == 2 or width == 4:
         return True
     return False
 
@@ -55,6 +55,8 @@ def readWAV(filename, headonly=False, **kwargs):
         format = 'B'
     elif width == 2:
         format = 'h'
+    elif width == 4:
+        format = 'l'
     else:
         raise TypeError("Unsupported Format Type, string length %d" % length)
     data = struct.unpack("%d%s" % (length * nchannel, format),
@@ -85,9 +87,10 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
         w = wave.open(filename, 'wb')
         trace.stats.npts = len(trace.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-        w.setparams((1, 1, framerate, trace.stats.npts, 'NONE',
+        w.setparams((1, 4, framerate, trace.stats.npts, 'NONE',
                      'not compressed'))
-        w.writeframes(struct.pack('%dB' % (trace.stats.npts * 1),
+        trace.data = N.require(trace.data, 'int32')
+        w.writeframes(struct.pack('%dl' % (trace.stats.npts * 1),
                                   *trace.data))
         w.close()
         i += 1
