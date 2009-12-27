@@ -52,7 +52,9 @@ def _read(filename, format=None, headonly=False, **kwargs):
                 isFormat = load_entry_point(ep.dist.key,
                                             'obspy.plugin.waveform.' + ep.name,
                                             'isFormat')
-            except:
+            except Exception, e:
+                # verbose error handling/parsing
+                print "WARNING: Cannot load module %s:" % ep.dist.key, e
                 continue
             if isFormat(filename):
                 format_ep = ep
