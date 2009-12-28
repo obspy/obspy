@@ -9,7 +9,6 @@ from obspy.signal.seismometer import PAZ_KIRNOS, PAZ_WOOD_ANDERSON, \
     PAZ_WWSSN_LP, PAZ_WWSSN_SP
 import gzip
 import inspect
-import math as M
 import numpy as N
 import os
 import unittest

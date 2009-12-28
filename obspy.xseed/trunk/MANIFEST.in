@@ -1,0 +1,7 @@
+recursive-exclude .* *
+prune tests
+prune docs
+global-exclude *pyc
+global-exclude *pyo
+global-exclude .project
+global-exclude .pydevproject

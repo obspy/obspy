@@ -33,7 +33,6 @@ USA.
 
 import math as M
 import numpy as np
-import scipy as S
 import scipy.signal
 import util
 
@@ -126,11 +125,11 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :return: Frequency response of PAZ of length nfft 
     """
     n = nfft // 2
-    a, b = S.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
+    a, b = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
     f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
-    _w, h = S.signal.freqs(a, b, f * 2 * np.pi)
+    _w, h = scipy.signal.freqs(a, b, f * 2 * np.pi)
     h = np.conj(h) # like in PITSA paz2Freq (insdeconv.c) last line
     h[-1] = h[-1].real + 0.0j
     if freq:
@@ -221,7 +220,7 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     # explicitly copy, else input data will be modified
     tr = data * cosTaper(ndat, 0.05)
     freq_response = pazToFreqResp(poles, zeros, gain, samp_int, nfft)
-    found = specInv(freq_response, water_level)
+    specInv(freq_response, water_level)
     # transform trace in fourier domain
     tr = np.fft.rfft(tr, n=nfft)
     tr *= np.conj(freq_response)

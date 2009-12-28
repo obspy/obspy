@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from lxml import objectify
-from obspy.core.util import NamedTemporaryFile
 from obspy.core import read
+from obspy.core.util import NamedTemporaryFile
 import sys
 import urllib2
 
@@ -223,12 +223,10 @@ class _StationMapperClient(_BaseRESTClient):
         # request station resource
         res = self.client.station.getXMLResource(xml_doc['resource_name'])
         base_node = res.station_control_header
-        dict_node = res.abbreviation_dictionary_control_header
         # search for nodes with correct channel and location code
         if channel_id or location_id:
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel_id + "' and location_identifier='" + location_id + "']"
-            channel_node = base_node.xpath(xpath_expr)[0]
             # fetch next following response_poles_and_zeros node
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel_id + "' and location_identifier='" + location_id + \
@@ -243,7 +241,6 @@ class _StationMapperClient(_BaseRESTClient):
             sensitivity_node = base_node.xpath(xpath_expr)[0]
         else:
             # just take first existing nodes
-            channel_node = base_node.channel_identifier[0]
             paz_node = base_node.response_poles_and_zeros[0]
             sensitivity_node = base_node.channel_sensitivity_gain[-1]
         # instrument name

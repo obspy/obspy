@@ -5,8 +5,10 @@ The audio wav.core test suite.
 """
 
 from obspy.core import read, Stream, Trace
-import inspect, os, unittest, filecmp
 from obspy.core.util import NamedTemporaryFile
+import inspect
+import os
+import unittest
 import numpy as np
 
 
@@ -26,7 +28,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via L{obspy.Trace}
         """
-        testdata = np.array([64, 78, 99, 119, 123, 107, 
+        testdata = np.array([64, 78, 99, 119, 123, 107,
                              72, 31, 2, 0, 30, 84, 141])
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.npts, 2599)

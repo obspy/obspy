@@ -33,13 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
+from util import lib
 import ctypes as C
 import numpy as np
-import os
-import platform
-import copy
-from ctypes import ArgumentError
-from util import lib
 
 
 def recStalta(a, nsta, nlta):
@@ -72,17 +68,6 @@ def recStalta(a, nsta, nlta):
     lib.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
     return charfct
 
-#
-# Old but fancy version of recStalta, keep it for the moment
-#lib.recstalta.restype = C.POINTER(C.c_double)
-# reading C memory into buffer which can be converted to numpy array
-#C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-#C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
-#charfct = lib.recstalta(a, ndat, nsta, nlta # do not use pointer here
-#size = struct.calcsize('d') # calculate size of float64
-#return np.frombuffer(C.pythonapi.PyBuffer_FromMemory(charfct,ndat*size),
-#                    dtype='float64',count=ndat)
-
 
 def recStaltaPy(a, nsta, nlta):
     """
@@ -111,7 +96,7 @@ def recStaltaPy(a, nsta, nlta):
     clta = 1. / nlta
     sta = 0.
     lta = 1e-99 # avoid zero devision
-    charfct = [0.0]*len(a)
+    charfct = [0.0] * len(a)
     icsta = 1 - csta
     iclta = 1 - clta
     for i in xrange(1, ndat):
@@ -329,7 +314,8 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     return np.array(pick)
 
 
-def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
+def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
+           p_dur):
     """
     Wrapper for P-picker routine by m. baer, schweizer. erdbebendienst
 
@@ -365,16 +351,17 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
     # one shorter
-    args = (len(reltrc)-1, C.byref(pptime), pfm, samp_int, 
+    args = (len(reltrc) - 1, C.byref(pptime), pfm, samp_int,
             tdownmax, tupevent, thr1, thr2, preset_len, p_dur)
     errcode = lib.ppick(reltrc, *args)
     if errcode != 0:
         raise Exception("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
-    return pptime.value+1, pfm.value
+    return pptime.value + 1, pfm.value
 
-def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
-           s_pick=True):
+
+def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
+           l_p, l_s, s_pick=True):
     """
     Return corresponding picks of the AR picker
 
@@ -395,7 +382,7 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
     :param s_pick: if true pick also S phase, elso only P
     :return: (ptime, stime) parrival and sarrival
     """
-    lib.ar_picker.argtypes =  [np.ctypeslib.ndpointer(dtype='float32',
+    lib.ar_picker.argtypes = [np.ctypeslib.ndpointer(dtype='float32',
                                                  ndim=1,
                                                  flags='C_CONTIGUOUS'),
                                np.ctypeslib.ndpointer(dtype='float32',
@@ -409,7 +396,7 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
                                C.c_int, C.c_int, C.POINTER(C.c_float),
                                C.POINTER(C.c_float), C.c_double,
                                C.c_double, C.c_int]
-    lib.ar_picker.restypes =  C.c_int
+    lib.ar_picker.restypes = C.c_int
     # be nice and adapt type if necessary
     a = np.require(a, 'float32', ['C_CONTIGUOUS'])
     b = np.require(b, 'float32', ['C_CONTIGUOUS'])
@@ -417,8 +404,8 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
     s_pick = C.c_int(s_pick) # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
-    args = (len(a), samp_rate, f1, f2, 
-            lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime), 
+    args = (len(a), samp_rate, f1, f2,
+            lta_p, sta_p, lta_s, sta_s, m_p, m_s, C.byref(ptime),
             C.byref(stime), l_p, l_s, s_pick)
     errcode = lib.ar_picker(a, b, c, *args)
     if errcode != 0:

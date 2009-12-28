@@ -68,7 +68,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertRaises(ChksumError, libgse2.read, fp, verify_chksum=True)
         # should not fail
         fp.seek(0)
-        trl = libgse2.read(fp, verify_chksum=False)
+        _trl = libgse2.read(fp, verify_chksum=False)
         fp.close()
 
     def test_readAndWrite(self):

@@ -54,18 +54,18 @@ class TriggerTestCase(unittest.TestCase):
         """
         ndat = 1
         charfct = np.empty(ndat, dtype='float64')
-        self.assertRaises(ArgumentError, lib.recstalta, [1], charfct, 
+        self.assertRaises(ArgumentError, lib.recstalta, [1], charfct,
                           ndat, 5, 10)
-        self.assertRaises(ArgumentError, lib.recstalta, 
+        self.assertRaises(ArgumentError, lib.recstalta,
                           np.array([1], dtype='int32'), charfct, ndat, 5, 10)
 
     def test_pkBaer(self):
         """
         Test pkBaer against implementation for UNESCO short course
         """
-        file = os.path.join(self.path,'manz_waldk.a01.gz')
+        file = os.path.join(self.path, 'manz_waldk.a01.gz')
         data = np.loadtxt(gzip.open(file), dtype='float32')
-        df,  ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
+        df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
                              thr1, thr2, npreset_len, np_dur)
@@ -77,8 +77,8 @@ class TriggerTestCase(unittest.TestCase):
         Test arPick against implementation for UNESCO short course
         """
         data = []
-        for channel in ['z','n','e']:
-            file = os.path.join(self.path,'loc_RJOB20050801145719850.'+channel)
+        for channel in ['z', 'n', 'e']:
+            file = os.path.join(self.path, 'loc_RJOB20050801145719850.' + channel)
             data.append(np.loadtxt(file, dtype='float32'))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
@@ -88,7 +88,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertAlmostEquals(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
         #self.assertAlmostEquals(stime, 31.2800006866)
-        self.assertEquals(int(stime+0.5), 31)
+        self.assertEquals(int(stime + 0.5), 31)
 
 
     def test_triggerOnset(self):
@@ -96,20 +96,20 @@ class TriggerTestCase(unittest.TestCase):
         Test trigger onset function
         """
         on_of = np.array([[6.0, 31], [69, 94], [131, 181], [215, 265], [278, 315]])
-        cft = np.concatenate((np.sin(np.arange(0,5*np.pi,0.1))+1,
-                              np.sin(np.arange(0,5*np.pi,0.1))+2.1,
-                              np.sin(np.arange(0,5*np.pi,0.1))+0.4))
-        picks = triggerOnset(cft,1.5,1.0,max_len=50)
-        np.testing.assert_array_equal(picks,on_of)
-        #
-        if False: # set True for visual understanding the test
-            import pylab as P
-            P.plot(cft)
-            P.hlines([1.5,1.0],0,len(cft))
-            on_of = np.array(on_of)
-            P.vlines(on_of[:,0],1.0,2.0,color='g',linewidth=2)
-            P.vlines(on_of[:,1],0.5,1.5,color='r',linewidth=2)
-            P.show()
+        cft = np.concatenate((np.sin(np.arange(0, 5 * np.pi, 0.1)) + 1,
+                              np.sin(np.arange(0, 5 * np.pi, 0.1)) + 2.1,
+                              np.sin(np.arange(0, 5 * np.pi, 0.1)) + 0.4))
+        picks = triggerOnset(cft, 1.5, 1.0, max_len=50)
+        np.testing.assert_array_equal(picks, on_of)
+#       # set True for visual understanding the test
+#            import pylab as P
+#            P.plot(cft)
+#            P.hlines([1.5, 1.0], 0, len(cft))
+#            on_of = np.array(on_of)
+#            P.vlines(on_of[:, 0], 1.0, 2.0, color='g', linewidth=2)
+#            P.vlines(on_of[:, 1], 0.5, 1.5, color='r', linewidth=2)
+#            P.show()
+
 
 def suite():
     return unittest.makeSuite(TriggerTestCase, 'test')

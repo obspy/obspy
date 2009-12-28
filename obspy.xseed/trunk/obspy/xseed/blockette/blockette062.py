@@ -30,8 +30,8 @@ class Blockette062(Blockette):
     fields = [
         FixedString(3, "Transfer Function Type", 1),
         Integer(4, "Stage Sequence Number", 2),
-        Integer(5, "Stage Signal In Units", 3, xpath = 34),
-        Integer(6, "Stage Signal Out Units", 3, xpath = 34),
+        Integer(5, "Stage Signal In Units", 3, xpath=34),
+        Integer(6, "Stage Signal Out Units", 3, xpath=34),
         FixedString(7, "Polynomial Approximation Type", 1),
         FixedString(8, "Valid Frequency Units", 1),
         Float(9, "Lower Valid Frequency Bound", 12, mask='%+1.5e'),
@@ -46,17 +46,17 @@ class Blockette062(Blockette):
             Float(12, "Polynomial Coefficient Error", 12, mask='%+1.5e'),
         ])
     ]
-    
+
     # Changes the name of the blockette because of an error in XSEED 1.0
     def getXML(self, *args, **kwargs):
         xml = Blockette.getXML(self, *args, **kwargs)
         if self.xseed_version == '1.0':
-           msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
-                  'not support Blockette 62. It will be written but ' + \
-                  'please be aware that the file cannot be validated.\n' + \
-                  'If you want to validate your file please use XSEED ' + \
-                  'version 1.1.\n'
-           sys.stdout.write(msg) 
+            msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
+                   'not support Blockette 62. It will be written but ' + \
+                   'please be aware that the file cannot be validated.\n' + \
+                   'If you want to validate your file please use XSEED ' + \
+                   'version 1.1.\n'
+            sys.stdout.write(msg)
         return xml
 
     def getRESP(self, station, channel, abbreviations):
@@ -77,7 +77,7 @@ class Blockette062(Blockette):
         string = \
         '#\t\t+              +---------------------------------------+                      +\n' + \
         '#\t\t+              |   Polynomial response,%6s ch %s   |                      +\n'\
-                    %(station, channel) + \
+                    % (station, channel) + \
         '#\t\t+              +---------------------------------------+                      +\n' + \
         '#\t\t\n' + \
         'B062F03     Transfer function type:                %s\n' \

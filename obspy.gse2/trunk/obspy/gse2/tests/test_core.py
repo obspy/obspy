@@ -198,9 +198,9 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data',
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should not fail
-        st = read(gse2file, verify_chksum=False)
+        _st = read(gse2file, verify_chksum=False)
         # add wrong starttime flag of mseed, should also not fail
-        st = read(gse2file, verify_chksum=False, starttime=None)
+        _st = read(gse2file, verify_chksum=False, starttime=None)
         # should fail
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 

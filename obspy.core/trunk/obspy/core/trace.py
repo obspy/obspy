@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-# from numpy.ma import masked_array, is_nan does not work with some
-# Python/NumPy combinations.
-import numpy as np
+from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-import obspy
+import numpy as np
 
 
 class Stats(AttribDict):
@@ -151,7 +149,7 @@ class Trace(object):
         """
         Saves trace into a file.
         """
-        obspy.Stream([self]).write(filename, format, **kwargs)
+        Stream([self]).write(filename, format, **kwargs)
 
     def ltrim(self, starttime):
         """

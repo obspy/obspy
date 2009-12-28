@@ -16,8 +16,8 @@ Python Class for transforming seismograms to audio WAV files
 
 from obspy.core import Trace, Stream
 import numpy as np
-import wave
 import os
+import wave
 
 
 def isWAV(filename):
@@ -45,7 +45,7 @@ def readWAV(filename, headonly=False, **kwargs):
     # read WAV file
     fh = wave.open(filename, 'rb')
     # header information
-    (nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
+    (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
         return Stream([Trace(header=header)])
