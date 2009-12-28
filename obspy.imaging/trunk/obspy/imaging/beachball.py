@@ -14,10 +14,11 @@ obspy.imaging.beachball
 Draws a beach ball diagram of an earthquake focal mechanism.
 
 Most source code provided here are adopted from
-(1) MatLab script written by Oliver Boyd 
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
-(2) ps_meca program from the Generic Mapping Tools (GMT)
-    @see: http://gmt.soest.hawaii.edu
+
+1. MatLab script written by Oliver Boyd 
+   see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+2. ps_meca program from the Generic Mapping Tools (GMT)
+   see: http://gmt.soest.hawaii.edu
 
 
 GNU General Public License (GPL)
@@ -60,7 +61,7 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
     
-    @param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
+    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
         (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
         six independent components of the moment tensor). The strike is of the 
         first plane, clockwise relative to north. 
@@ -70,8 +71,8 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
         hanging wall up-dip (thrust), 0 moves it in the strike direction 
         (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
         opposite to strike (right-lateral). 
-    @param size: Draw with this diameter.
-    @param color: Color to use for quadrants of tension; can be a string, e.g. 
+    :param size: Draw with this diameter.
+    :param color: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
@@ -139,10 +140,10 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
     
-    @param ax: axis object of a matplotlib figure
-    @param T: L{PrincipalAxis}
-    @param N: L{PrincipalAxis}
-    @param P: L{PrincipalAxis}
+    :param ax: axis object of a matplotlib figure
+    :param T: L{PrincipalAxis}
+    :param N: L{PrincipalAxis}
+    :param P: L{PrincipalAxis}
     
     Adapted from ps_tensor / utilmeca.c / Generic Mapping Tools (GMT).
     @see: http://gmt.soest.hawaii.edu
@@ -448,8 +449,8 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
     
-    @param ax: axis object of a matplotlib figure
-    @param np1: L{NodalPlane}
+    :param ax: axis object of a matplotlib figure
+    :param np1: L{NodalPlane}
     
     Adapted from bb.m written by Oliver S. Boyd.
     @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
@@ -595,8 +596,8 @@ def MT2Plane(mt):
     """
     Calculates a nodal plane of a given moment tensor.
      
-    @param mt: L{MomentTensor}
-    @return: L{NodalPlane}
+    :param mt: L{MomentTensor}
+    :return: L{NodalPlane}
     
     Adapted from bb.m written by Oliver S. Boyd.
     @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
@@ -710,8 +711,8 @@ def MT2Axes(mt):
     """
     Calculates the principal axes of a given moment tensor.
      
-    @param mt: L{MomentTensor}
-    @return: tuple of L{PrincipalAxis} T, N and P
+    :param mt: L{MomentTensor}
+    :return: tuple of L{PrincipalAxis} T, N and P
     
     Adapted from GMT_momten2axe / utilmeca.c / Generic Mapping Tools (GMT).
     @see: http://gmt.soest.hawaii.edu

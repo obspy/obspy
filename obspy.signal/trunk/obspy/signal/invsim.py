@@ -52,12 +52,12 @@ def cosTaper(npts, p):
     >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
     True
 
-    @type npts: Int
-    @param npts: Number of points of cosinus taper.
-    @type p: Float
-    @param p: Percent of cosinus taper.
-    @rtype: float numpy ndarray
-    @return: Cosine taper array/vector of length npts.
+    :type npts: Int
+    :param npts: Number of points of cosinus taper.
+    :type p: Float
+    :param p: Percent of cosinus taper.
+    :rtype: float numpy ndarray
+    :return: Cosine taper array/vector of length npts.
     """
     #
     if p == 0.0 or p == 1.0:
@@ -75,7 +75,7 @@ def detrend(trace):
     Inplace detrend signal simply by subtracting a line through the first
     and last point of the trace
 
-    @param trace: Data to detrend
+    :param trace: Data to detrend
     """
     ndat = len(trace)
     x1, x2 = trace[0], trace[-1]
@@ -87,9 +87,9 @@ def cornFreq2Paz(fc, damp=0.707):
     Convert corner frequency and damping to poles and zeros. 2 zeros at
     postion (0j, 0j) are given as output  (m/s).
 
-    @param fc: Corner frequency
-    @param damping: Corner frequency
-    @return: Dictionary containing poles, zeros and gain
+    :param fc: Corner frequency
+    :param damping: Corner frequency
+    :return: Dictionary containing poles, zeros and gain
     """
     poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
@@ -101,7 +101,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
 
-    @note: In order to plot/calculate the phase you need to multiply the
+    :note: In order to plot/calculate the phase you need to multiply the
         complex part by -1. This results from the different definition of
         the fourier transform and the phase. The numpy.fft is defined as
         A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
@@ -112,18 +112,18 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
         negative values in order to get a plot from [0, 2pi]:
         where(phi<0,phi+2*pi,phi); plot(f,phi)
     
-    @type poles: List of complex numbers
-    @param poles: The poles of the transfer function
-    @type zeros: List of complex numbers
-    @param zeros: The zeros of the transfer function
-    @type scale_fac: Float
-    @param scale_fac: Gain factor
-    @type t_samp: Float
-    @param t_samp: Sampling interval in seconds
-    @type nfft: Integer
-    @param nfft: Number of FFT points of signal which needs correction
-    @rtype: numpy.ndarray complex128
-    @return: Frequency response of PAZ of length nfft 
+    :type poles: List of complex numbers
+    :param poles: The poles of the transfer function
+    :type zeros: List of complex numbers
+    :param zeros: The zeros of the transfer function
+    :type scale_fac: Float
+    :param scale_fac: Gain factor
+    :type t_samp: Float
+    :param t_samp: Sampling interval in seconds
+    :type nfft: Integer
+    :param nfft: Number of FFT points of signal which needs correction
+    :rtype: numpy.ndarray complex128
+    :return: Frequency response of PAZ of length nfft 
     """
     n = nfft // 2
     a, b = S.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
@@ -143,9 +143,9 @@ def specInv(spec, wlev):
     Invert Spectrum and shrink values under water-level of max spec
     amplitude. The water-level is given in db scale.
 
-    @note: In place opertions on spec, translated from PITSA spr_sinv.c
-    @param spec: Real spectrum as returned by numpy.fft.rfft
-    @param wlev: Water level to use 
+    :note: In place opertions on spec, translated from PITSA spr_sinv.c
+    :param spec: Real spectrum as returned by numpy.fft.rfft
+    :param wlev: Water level to use 
     """
     # Swamp is the amplitude spectral value corresponding
     # to wlev dB below the maximum spectral value
@@ -178,21 +178,22 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     of the data and convolved by the frequency response of the seismometer to 
     simulate.
     
-    @type data: Numpy Ndarray
-    @param data: Seismogram, (zero mean?)
-    @type samp_rate: Float
-    @param samp_rate: Sample Rate of Seismogram
-    @type paz: Dictionary
-    @param paz: Dictionary containing keys 'poles', 'zeros',
-    'gain'. poles and zeros must be a list of complex floating point
-    numbers, gain must be of type float. Poles and Zeros are assumed to
-    correct to m/s, SEED convention.
-    @type water_level: Float
-    @param water_level: Water_Level for spectrum to simulate
-    @type inst_sim: Dictionary, None
-    @param inst_sim: Dictionary containing keys 'poles', 'zeros',
-        'gain'. Poles and zeros must be a list of complex floating point
-        numbers, gain must be of type float. Or None for no simulation.
+    :type data: Numpy Ndarray
+    :param data: Seismogram, (zero mean?)
+    :type samp_rate: Float
+    :param samp_rate: Sample Rate of Seismogram
+    :type paz: Dictionary
+    :param paz: Dictionary containing keys 'poles', 'zeros',
+                'gain'. poles and zeros must be a list of complex floating
+                point numbers, gain must be of type float. Poles and Zeros
+                are assumed to correct to m/s, SEED convention.
+    :type water_level: Float
+    :param water_level: Water_Level for spectrum to simulate
+    :type inst_sim: Dictionary, None
+    :param inst_sim: Dictionary containing keys 'poles', 'zeros',
+                     'gain'. Poles and zeros must be a list of complex
+                     floating point numbers, gain must be of type float. Or
+                     None for no simulation.
     
     Ready to go poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer

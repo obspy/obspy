@@ -53,53 +53,53 @@ def plotWaveform(stream_object, outfile=None, format=None,
     'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
     can be given as a string encoding a float in the 0-1 range.
     
-    @param stream_object: ObsPy Stream object.
-    @param outfile: Output file string. Also used to automatically
+    :param stream_object: ObsPy Stream object.
+    :param outfile: Output file string. Also used to automatically
         determine the output format. Currently supported is emf, eps, pdf,
         png, ps, raw, rgba, svg and svgz output.
         Defaults to None.
-    @param format: Format of the graph picture. If no format is given the
+    :param format: Format of the graph picture. If no format is given the
         outfile parameter will be used to try to automatically determine
         the output format. If no format is found it defaults to png output.
         If no outfile is specified but a format is than a binary
         imagestring will be returned.
         Defaults to None.
-    @param size: Size tupel in pixel for the output file. This corresponds
+    :param size: Size tupel in pixel for the output file. This corresponds
         to the resolution of the graph for vector formats.
         Defaults to a width of 800 pixel and a height of 250 pixel for each
         seperate plot.
-    @param starttime: Starttime of the graph as a datetime object. If not
+    :param starttime: Starttime of the graph as a datetime object. If not
         set the graph will be plotted from the beginning.
         Defaults to False.
-    @param endtime: Endtime of the graph as a datetime object. If not set
+    :param endtime: Endtime of the graph as a datetime object. If not set
         the graph will be plotted until the end.
         Defaults to False.
-    @param dpi: Dots per inch of the output file. This also affects the
+    :param dpi: Dots per inch of the output file. This also affects the
         size of most elements in the graph (text, linewidth, ...).
         Defaults to 100.
-    @param color: Color of the graph.
+    :param color: Color of the graph.
         Defaults to 'k' (black).
-    @param bgcolor: Background color of the graph. No gradients are supported
+    :param bgcolor: Background color of the graph. No gradients are supported
         for the background.
         Defaults to 'w' (white).
-    @param facecolor: Background color for the all background except behind
+    :param facecolor: Background color for the all background except behind
         the graphs.
         This will affect the default  matplotlib backend only when saving to a
         file. This behaviour might change depending on what backend you are
         using.
         Defaults to 'w' (white).
-    @param transparent: Make all backgrounds transparent (True/False). This
+    :param transparent: Make all backgrounds transparent (True/False). This
         will overwrite the bgcolor and face_color attributes.
         Defaults to False.
-    @param minmaxlist: A list containing minimum, maximum and timestamp
+    :param minmaxlist: A list containing minimum, maximum and timestamp
         values. If none is supplied it will be created automatically.
         Useful for caching.
         Defaults to False.
-    @param number_of_ticks: Number of the ticks on the time scale to display.
+    :param number_of_ticks: Number of the ticks on the time scale to display.
         Defaults to 5.
-    @param tick_format: Format of the time ticks according to strftime methods.
+    :param tick_format: Format of the time ticks according to strftime methods.
         Defaults to '%H:%M:%S'.
-    @param tick_rotation: Number of degrees of the rotation of the ticks an the
+    :param tick_rotation: Number of degrees of the rotation of the ticks an the
         time scale. Ticks with big rotations might be cut off depending on the
         tick_format.
         Defaults to 0.
@@ -439,13 +439,13 @@ def _getMinMaxList(stream_object, width, starttime=None,
         the first and last records must be in chronological order as they
         are used to determine the start- and endtime.
     
-    @param stream_object: ObsPy Stream object.
-    @param width: Number of tuples in the list. Corresponds to the width
+    :param stream_object: ObsPy Stream object.
+    :param width: Number of tuples in the list. Corresponds to the width
         in pixel of the graph.
-    @param starttime: Starttime of the List/Graph as a Datetime object. If
+    :param starttime: Starttime of the List/Graph as a Datetime object. If
         none is supplied the starttime of the file will be used.
         Defaults to None.
-    @param endtime: Endtime of the List/Graph as a Datetime object. If none
+    :param endtime: Endtime of the List/Graph as a Datetime object. If none
         is supplied the endtime of the file will be used.
         Defaults to None.
     """

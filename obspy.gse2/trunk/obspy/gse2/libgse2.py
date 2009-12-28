@@ -14,6 +14,7 @@ Python wrappers for gse_functions - The GSE2 library of Stefan Stange.
 Currently CM6 compressed GSE2 files are supported, this should be
 sufficient for most cases. Gse_functions is written in C and
 interfaced via python-ctypes.
+
 See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
 
@@ -215,14 +216,14 @@ def read(f, verify_chksum=True):
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
     
-    @type f: File Pointer
-    @param f: Open file pointer of GSE2 file to read, opened in binary mode,
+    :type f: File Pointer
+    :param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
-    @type test_chksum: Bool
-    @param verify_chksum: If True verify Checksum and raise Exception if it
+    :type test_chksum: Bool
+    :param verify_chksum: If True verify Checksum and raise Exception if it
         is not correct
-    @rtype: Dictionary, Numpy.ndarray int32
-    @return: Header entries and data as numpy.ndarray of type int32.
+    :rtype: Dictionary, Numpy.ndarray int32
+    :return: Header entries and data as numpy.ndarray of type int32.
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
@@ -266,20 +267,20 @@ def write(headdict, data, f, inplace=False):
     Warning: The data are actually compressed in place for performance
     issues, if you still want to use the data afterwards use data.copy()
     
-    @requires: headdict dictionary entries C{'datatype', 'n_samps', 
-        'samp_rate'} are absolutely necessary
-    @type data: numpy.ndarray dtype int32
-    @param data: Contains the data.
-    @type f: File Pointer
-    @param f: Open file pointer of GSE2 file to write, opened in binary
+    :note: headdict dictionary entries C{'datatype', 'n_samps',
+           'samp_rate'} are absolutely necessary
+    :type data: numpy.ndarray dtype int32
+    :param data: Contains the data.
+    :type f: File Pointer
+    :param f: Open file pointer of GSE2 file to write, opened in binary
               mode, e.g. f = open('myfile','wb')
-    @type inplace: Bool
-    @param inplace: If True, do compression not on a copy of the data but
-    on the data itself --- note this will change the data values and make
-    them therefor unusable
-    @type headdict: Dictonary
-    @param headdict: Header containing the following entries C{
-        {
+    :type inplace: Bool
+    :param inplace: If True, do compression not on a copy of the data but
+                    on the data itself --- note this will change the data
+                    values and make them therefor unusable
+    :type headdict: Dictonary
+    :param headdict: Header containing the following entries::
+
         'd_year': int,
         'd_mon': int,
         'd_mon': int,
@@ -299,10 +300,7 @@ def write(headdict, data, f, inplace=False):
         'instype': char*7,
         'hang': float,
         'vang': float
-        }
-        }
     """
-    #@requires: headdict dictionary entries datatype, n_samps and samp_rate
     fp = C.pythonapi.PyFile_AsFile(f)
     n = len(data)
     lib.buf_init(None)
@@ -344,11 +342,11 @@ def readHead(f):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
-    @type file: File Pointer
-    @param file: Open file pointer of GSE2 file to read, opened in binary
+    :type file: File Pointer
+    :param file: Open file pointer of GSE2 file to read, opened in binary
                  mode, e.g. f = open('myfile','rb')
-    @rtype: Dictonary
-    @return: Header entries.
+    :rtype: Dictonary
+    :return: Header entries.
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
@@ -367,11 +365,11 @@ def getStartAndEndTime(f):
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
-    @type f: File Pointer
-    @param f: Open file pointer of GSE2 file to read, opened in binary
+    :type f: File Pointer
+    :param f: Open file pointer of GSE2 file to read, opened in binary
               mode, e.g. f = open('myfile','rb')
-    @rtype: List
-    @return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
+    :rtype: List
+    :return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
         Julian seconds and as date string.
     """
     fp = C.pythonapi.PyFile_AsFile(f)

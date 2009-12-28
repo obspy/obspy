@@ -47,15 +47,15 @@ def recStalta(a, nsta, nlta):
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
     Fast version written in C.
 
-    @note: This version directly uses a C version via CTypes
-    @type a: numpy.ndarray dtype float64
-    @param a: Seismic Trace, numpy.ndarray dtype float64
-    @type nsta: Int
-    @param nsta: Length of short time average window in samples
-    @type nlta: Int
-    @param nlta: Length of long time average window in samples
-    @rtype: numpy.ndarray dtype float64
-    @return: Charactristic function of recursive STA/LTA
+    :note: This version directly uses a C version via CTypes
+    :type a: numpy.ndarray dtype float64
+    :param a: Seismic Trace, numpy.ndarray dtype float64
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
+    :rtype: numpy.ndarray dtype float64
+    :return: Charactristic function of recursive STA/LTA
     """
     lib.recstalta.argtypes = [np.ctypeslib.ndpointer(dtype='float64',
                                                     ndim=1,
@@ -89,16 +89,16 @@ def recStaltaPy(a, nsta, nlta):
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
     Bit slower version written in Python.
     
-    @note: There exists a faster version of this trigger wrapped in C
-    called recstalta in this module!
-    @type a: Numpy ndarray
-    @param a: Seismic Trace
-    @type nsta: Int
-    @param nsta: Length of short time average window in samples
-    @type nlta: Int
-    @param nlta: Length of long time average window in samples
-    @rtype: Numpy ndarray
-    @return: Charactristic function of recursive STA/LTA
+    :note: There exists a faster version of this trigger wrapped in C
+           called recstalta in this module!
+    :type a: Numpy ndarray
+    :param a: Seismic Trace
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
+    :rtype: Numpy ndarray
+    :return: Charactristic function of recursive STA/LTA
     """
     try:
         a = a.tolist()
@@ -130,18 +130,18 @@ def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
-    @type a: Numpy ndarray
-    @param a: Seismic Trace
-    @type Nsta: Int
-    @param Nsta: Length of short time average window in samples
-    @type Nlta: Int
-    @param Nlta: Length of long time average window in samples
-    @type ration: Float
-    @param ratio: as ratio gets smaller, carlstatrig gets more sensitive
-    @type quiet: Float
-    @param quiet: as quiet gets smaller, carlstatrig gets more sensitive
-    @rtype: Numpy ndarray
-    @return: Charactristic function of CarlStaTrig
+    :type a: Numpy ndarray
+    :param a: Seismic Trace
+    :type Nsta: Int
+    :param Nsta: Length of short time average window in samples
+    :type Nlta: Int
+    :param Nlta: Length of long time average window in samples
+    :type ration: Float
+    :param ratio: as ratio gets smaller, carlstatrig gets more sensitive
+    :type quiet: Float
+    :param quiet: as quiet gets smaller, carlstatrig gets more sensitive
+    :rtype: Numpy ndarray
+    :return: Charactristic function of CarlStaTrig
     """
     m = len(a)
     #
@@ -184,14 +184,14 @@ def classicStaLta(a, Nsta, Nlta):
     the STA is given by Nsta in samples, respectively is the length of the
     LTA given by Nlta in samples.
 
-    @type a: Numpy ndarray
-    @param a: Seismic Trace
-    @type Nsta: Int
-    @param Nsta: Length of short time average window in samples
-    @type Nlta: Int
-    @param Nlta: Length of long time average window in samples
-    @rtype: Numpy ndarray
-    @return: Charactristic function of classic STA/LTA
+    :type a: Numpy ndarray
+    :param a: Seismic Trace
+    :type Nsta: Int
+    :param Nsta: Length of short time average window in samples
+    :type Nlta: Int
+    :param Nlta: Length of long time average window in samples
+    :rtype: Numpy ndarray
+    :return: Charactristic function of classic STA/LTA
     """
     #XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
@@ -224,14 +224,14 @@ def delayedStaLta(a, Nsta, Nlta):
     """
     Delayed STA/LTA, (see Withers et al. 1998 p. 97)
 
-    @type a: Numpy ndarray
-    @param a: Seismic Trace
-    @type Nsta: Int
-    @param Nsta: Length of short time average window in samples
-    @type Nlta: Int
-    @param Nlta: Length of long time average window in samples
-    @rtype: Numpy ndarray
-    @return: Charactristic function of delayed STA/LTA
+    :type a: Numpy ndarray
+    :param a: Seismic Trace
+    :type Nsta: Int
+    :param Nsta: Length of short time average window in samples
+    :type Nlta: Int
+    :param Nlta: Length of long time average window in samples
+    :rtype: Numpy ndarray
+    :return: Charactristic function of delayed STA/LTA
     """
     m = len(a)
     #
@@ -251,7 +251,7 @@ def zdetect(a, Nsta):
     """
     Z-detector, (see Withers et al. 1998 p. 99)
 
-    @param Nsta: Window length in Samples.
+    :param Nsta: Window length in Samples.
     """
     m = len(a)
     #
@@ -278,20 +278,20 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     are more then 1e6 triggerings ("on" AND "of") in charfct --- normally
     this does not happen.
 
-    @type charfct: Numpy ndarray
-    @param charfct: Characteristic function of e.g. STA/LTA trigger
-    @type thres1: Float
-    @param thres1: Value above which trigger (of characteristic function)
+    :type charfct: Numpy ndarray
+    :param charfct: Characteristic function of e.g. STA/LTA trigger
+    :type thres1: Float
+    :param thres1: Value above which trigger (of characteristic function)
                    is activated (higher threshold)
-    @type thres2: Float
-    @param thres2: Value below which trigger (of characteristic function)
+    :type thres2: Float
+    :param thres2: Value below which trigger (of characteristic function)
         is deactivated (lower threshold)
-    @type max_len: Int
-    @param max_len: Maximum length of triggered event in samples. A new
+    :type max_len: Int
+    :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.
-    @rtype: List
-    @return: Nested List of trigger on and of times in samples
+    :rtype: List
+    :return: Nested List of trigger on and of times in samples
     """
     # 1) find indices of samples greater than threshold
     # 2) calculate trigger "of" times by the gap in trigger indices
@@ -336,20 +336,20 @@ def pkBaer(reltrc,samp_int,tdownmax,tupevent,thr1,thr2,preset_len,p_dur):
     See paper by m. baer and u. kradolfer: an automatic phase picker for
     local and teleseismic events bssa vol. 77,4 pp1437-1445
 
-    @param reltrc    : timeseries as numpy.ndarray float32 data, possibly filtered
-    @param samp_int  : number of samples per second
-    @param tdownmax  : if dtime exceeds tdownmax, the trigger is examined
-                       for validity
-    @param tupevent  : min nr of samples for itrm to be accepted as a pick
-    @param thr1      : threshold to trigger for pick (c.f. paper)
-    @param thr2      : threshold for updating sigma  (c.f. paper)
-    @param preset_len: no of points taken for the estimation of variance
+    :param reltrc: timeseries as numpy.ndarray float32 data, possibly filtered
+    :param samp_int: number of samples per second
+    :param tdownmax: if dtime exceeds tdownmax, the trigger is examined
+                     for validity
+    :param tupevent: min nr of samples for itrm to be accepted as a pick
+    :param thr1: threshold to trigger for pick (c.f. paper)
+    :param thr2: threshold for updating sigma  (c.f. paper)
+    :param preset_len: no of points taken for the estimation of variance
                        of SF(t) on preset()
-    @param p_dur     : p_dur defines the time interval for which the
-                       maximum amplitude is evaluated Originally set to 6 secs
-    @return          : (pptime, pfm) pptime sample number of parrival; pfm direction
-                         of first motion (U or D)
-    @note            : currently the sample is not take into account
+    :param p_dur: p_dur defines the time interval for which the
+                  maximum amplitude is evaluated Originally set to 6 secs
+    :return: (pptime, pfm) pptime sample number of parrival; pfm direction
+             of first motion (U or D)
+    :note: currently the first sample is not take into account
     """
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers
@@ -378,22 +378,22 @@ def arPick(a,b,c,samp_rate,f1,f2,lta_p,sta_p,lta_s,sta_s,m_p,m_s,l_p,l_s,
     """
     Return corresponding picks of the AR picker
 
-    @param a        : Z signal of numpy.ndarray float32 point data
-    @param b        : N signal of numpy.ndarray float32 point data
-    @param c        : E signal of numpy.ndarray float32 point data
-    @param samp_rate: no of samples per second
-    @param f1       : frequency of lower Bandpass window
-    @param f2       : frequency of upper Bandpass window
-    @param lta_p    : length of LTA for parrival in seconds
-    @param sta_p    : length of STA for parrival in seconds
-    @param lta_s    : length of LTA for sarrival in seconds
-    @param sta_s    : length of STA for sarrival in seconds
-    @param m_p      : number of AR coefficients for parrival
-    @param m_s      : number of AR coefficients for sarrival
-    @param l_p      : length of variance window for parrival in seconds
-    @param l_s      : length of variance window for sarrival in seconds
-    @param s_pick   : if true pick also S phase, elso only P
-    @return         : (ptime, stime) parrival and sarrival
+    :param a: Z signal of numpy.ndarray float32 point data
+    :param b: N signal of numpy.ndarray float32 point data
+    :param c: E signal of numpy.ndarray float32 point data
+    :param samp_rate: no of samples per second
+    :param f1: frequency of lower Bandpass window
+    :param f2: frequency of upper Bandpass window
+    :param lta_p: length of LTA for parrival in seconds
+    :param sta_p: length of STA for parrival in seconds
+    :param lta_s: length of LTA for sarrival in seconds
+    :param sta_s: length of STA for sarrival in seconds
+    :param m_p: number of AR coefficients for parrival
+    :param m_s: number of AR coefficients for sarrival
+    :param l_p: length of variance window for parrival in seconds
+    :param l_s: length of variance window for sarrival in seconds
+    :param s_pick: if true pick also S phase, elso only P
+    :return: (ptime, stime) parrival and sarrival
     """
     lib.ar_picker.argtypes =  [np.ctypeslib.ndpointer(dtype='float32',
                                                  ndim=1,

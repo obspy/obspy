@@ -44,8 +44,8 @@ def envelope(data):
     If data are windowed the analytic signal and the envelope of each window 
     is returned.
     
-    @param data: Data to make envelope of, type numpy.ndarray.
-    @return: (A_cpx, A_real) Tuple: Analytic signal of input data,
+    :param data: Data to make envelope of, type numpy.ndarray.
+    :return: (A_cpx, A_real) Tuple: Analytic signal of input data,
              Envelope of input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape) - 1])
@@ -75,12 +75,12 @@ def normEnvelope(data, fs, smoothie, fk):
     The time derivative of the normalized envelope is returned if input data 
     are windowed only.
     
-    @param data: Data to make normalized envelope of, type numpy.ndarray.
-    @param fs: Sampling frequency.
-    @param smoothie: Window length for moving average.
-    @param fk: Filter coefficients for computing time derivative.
-    @return Anorm: Normalized envelope of input data.
-    @return dAnorm: Time derivative of normalized envelope.
+    :param data: Data to make normalized envelope of, type numpy.ndarray.
+    :param fs: Sampling frequency.
+    :param smoothie: Window length for moving average.
+    :param fk: Filter coefficients for computing time derivative.
+    :return Anorm: Normalized envelope of input data.
+    :return dAnorm: Time derivative of normalized envelope.
     """
     x = envelope(data)
     fs = float(fs)
@@ -151,10 +151,10 @@ def centroid(data, fk):
     The time derivative of the centroid time is returned if input data are 
     windowed only.
     
-    @param data: Data to determine centroid time of, type numpy.ndarray.
-    @param fk: Filter coefficients for computing time derivative.
-    @return centroid: Centroid time input data.
-    @return dcentroid: Time derivative of centroid time.
+    :param data: Data to determine centroid time of, type numpy.ndarray.
+    :param fk: Filter coefficients for computing time derivative.
+    :return centroid: Centroid time input data.
+    :return dcentroid: Time derivative of centroid time.
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
@@ -200,12 +200,12 @@ def instFreq(data, fs, fk):
     windowed or not. The instantaneous frequency is determined by the time 
     derivative of the analytic signal of the input data.
     
-    @param data: Data to determine instantaneous frequency of, type 
+    :param data: Data to determine instantaneous frequency of, type 
         numpy.ndarray.
-    @param fs: Sampling frequency.
-    @param fk: Filter coefficients for computing time derivative.
-    @return centroid: Instantaneous frequency of input data.
-    @return dcentroid: Time derivative of instantaneous frequency.
+    :param fs: Sampling frequency.
+    :param fk: Filter coefficients for computing time derivative.
+    :return centroid: Instantaneous frequency of input data.
+    :return dcentroid: Time derivative of instantaneous frequency.
     """
     x = envelope(data)
     if (size(x[0].shape) > 1):
@@ -254,12 +254,12 @@ def instBwith(data, fs, fk):
     windowed or not. The instantaneous bandwidth is determined by the time 
     derivative of the envelope normalized by the envelope of the input data.
     
-    @param data: Data to determine instantaneous bandwidth of, type 
+    :param data: Data to determine instantaneous bandwidth of, type 
         numpy.ndarray.
-    @param fs: Sampling frequency.
-    @param fk: Filter coefficients for computing time derivative.
-    @return centroid: Instantaneous bandwidth of input data.
-    @return dcentroid: Time derivative of instantaneous bandwidth.
+    :param fs: Sampling frequency.
+    :param fk: Filter coefficients for computing time derivative.
+    :return centroid: Instantaneous bandwidth of input data.
+    :return dcentroid: Time derivative of instantaneous bandwidth.
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):

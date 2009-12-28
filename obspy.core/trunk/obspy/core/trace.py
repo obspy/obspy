@@ -19,10 +19,10 @@ class Trace(object):
     
     This class contains information about a single trace.
     
-    @type data: Numpy ndarray 
-    @param data: Numpy ndarray of data samples
-    @param header: Dictionary containing header fields
-    @param address: Address of data to be freed when trace is deleted
+    :type data: Numpy ndarray 
+    :param data: Numpy ndarray of data samples
+    :param header: Dictionary containing header fields
+    :param address: Address of data to be freed when trace is deleted
     """
     def __init__(self, data=np.array([]), header=None):
         if header == None:
@@ -51,8 +51,8 @@ class Trace(object):
         """
         Returns the number of data samples of a L{Trace} object.
         
-        @rtype: int 
-        @return: Number of data samples.
+        :rtype: int 
+        :return: Number of data samples.
         """
         return len(self.data)
 
@@ -62,8 +62,8 @@ class Trace(object):
         """ 
         __getitem__ method of L{Trace} object.
         
-        @rtype: list 
-        @return: List of data points 
+        :rtype: list 
+        :return: List of data points 
         """
         return self.data[index]
 

@@ -41,21 +41,21 @@ USA.
 
 The ReadSac class provides the following functions:
 
-Reading:
+Reading::
 
     ReadSacFile       - read binary SAC file
     ReadSacXY         - read XY SAC file    
     ReadSacHeader     - read SAC header
     GetHvalue         - extract information from header
 
-Writing:
+Writing::
 
     WriteSacHeader    - write SAC header
     WriteSacBinary    - write binary SAC file
     WriteSacXY        - write ascii SAC file
     SetHvalue         - set SAC header variable
 
-Convenience:
+Convenience::
 
     IsSACfile         - test if valid binary SAC file
     IsXYSACfile       - test if valid XY SAC file
@@ -64,9 +64,6 @@ Convenience:
     SetHvalueInFile   - change specific header item in specified file
     IsValidSacFile    - test for valid binary SAC file (wraps 'IsSACfile')
 
-    
-#################### TESTS ########################################
-    
 """    
 
 import os
@@ -140,7 +137,7 @@ class ReadSac(object):
         thus the header arrays are not filled by a read method
         beforehand
 
-        @return: Nothing
+        :return: Nothing
         """
         # The sac header has 70 floats, then 40 integers, then 192 bytes
         # in strings. Store them in array (an convert the char to a
@@ -232,7 +229,9 @@ class ReadSac(object):
         
 
     def SetHvalue(self,item,value):
-        """Set a header value using the header arrays: SetHvalue("npts",2048)
+        """
+        Set a header value using the header arrays: ``SetHvalue("npts",2048)``
+
         >>> t = ReadSac()
         >>> t.SetHvalue("kstnm","spiff")
         >>> t.GetHvalue('kstnm')
@@ -340,10 +339,11 @@ class ReadSac(object):
 
 
     def WriteSacHeader(self,fname):
-        """\nWrite a header value to the disk 
-        \tok = WriteSacHeader(thePath)
+        """
+        Write a header value to the disk ``ok = WriteSacHeader(thePath)``
         The header is split into three arrays - floats, ints, and strings
-        The "ok" value is one if no problems occurred, zero otherwise.\n
+        The "ok" value is one if no problems occurred, zero otherwise.
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.WriteSacBinary('test2.sac')
@@ -376,9 +376,11 @@ class ReadSac(object):
 
 
     def ReadSacFile(self,fname):
-        """\nRead read in the header and data in a SAC file 
+        """
+        Read read in the header and data in a SAC file 
         The header is split into three arrays - floats, ints, and strings and the
         data points are returned in the array seis
+
         >>> t=ReadSac()
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t.ReadSacFile(file)
@@ -442,7 +444,9 @@ class ReadSac(object):
 
 
     def ReadSacXY(self,fname):
-        """\nRead SAC XY files (ascii)
+        """
+        Read SAC XY files (ascii)
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','testxy.sac')
         >>> t = ReadSac(file,alpha=True)
         >>> t.GetHvalue('npts')
@@ -498,7 +502,9 @@ class ReadSac(object):
 
 
     def WriteSacXY(self,ofname):
-        """ Write SAC XY file (ascii)
+        """
+        Write SAC XY file (ascii)
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.WriteSacXY('tmp3.sac')
@@ -533,7 +539,9 @@ class ReadSac(object):
 
 
     def WriteSacBinary(self,ofname):
-        """\nWrite a SAC file using the head arrays and array seis 
+        """
+        Write a SAC file using the head arrays and array seis.
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t=ReadSac(file)
         >>> t.WriteSacBinary('test2.sac')
@@ -627,8 +635,10 @@ class ReadSac(object):
 
 
     def GetHvalueFromFile(self, thePath,theItem):
-        """\nQuick access to a specific header item in a specified file.
-        GetHvalueFromFile(thePath,theItem)
+        """
+        Quick access to a specific header item in a specified file. 
+        ``GetHvalueFromFile(thePath,theItem)``
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.WriteSacBinary('test2.sac')
@@ -647,8 +657,10 @@ class ReadSac(object):
 
 
     def SetHvalueInFile(self, thePath,theItem,theValue):
-        """\nQuick access to change a specific header item in a specified file.
-        SetHvalueFromFile(thePath,theItem, theValue)
+        """
+        Quick access to change a specific header item in a specified file.
+        ``SetHvalueFromFile(thePath,theItem, theValue)``
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.WriteSacBinary('test2.sac')
@@ -668,9 +680,11 @@ class ReadSac(object):
 
 
     def IsValidSacFile(self, thePath):
-        """\nQuick test for a valid SAC binary file file.
-        IsValidSACFile(thePath)
-        The "ok" value is one if no problems occurred, zero otherwise.\n"""
+        """
+        Quick test for a valid SAC binary file file.
+        ``IsValidSACFile(thePath)``
+        The "ok" value is one if no problems occurred, zero otherwise.
+        """
         #
         #  Read in the Header
         #
@@ -681,7 +695,9 @@ class ReadSac(object):
 
 
     def _get_date_(self):
-        """if date header values are set calculate date in julian seconds
+        """
+        If date header values are set calculate date in julian seconds
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> t = ReadSac(file)
         >>> t.starttime.timestamp
@@ -712,7 +728,7 @@ class ReadSac(object):
 
     def _chck_header_(self):
         """
-        if trace changed since read, adapt header values
+        If trace changed since read, adapt header values
         """
         self.seis = np.require(self.seis,'<f4')
         self.SetHvalue('npts',len(self.seis))
@@ -723,7 +739,8 @@ class ReadSac(object):
 
     def swap_byte_order(self):
         """
-        swap byte order of SAC-file in memory
+        Swap byte order of SAC-file in memory:
+
         >>> file = os.path.join(os.path.dirname(__file__),'tests','data','test.sac')
         >>> fileswap = os.path.join(os.path.dirname(__file__),'tests','data','test.sac.swap')
         >>> x = ReadSac(fileswap)

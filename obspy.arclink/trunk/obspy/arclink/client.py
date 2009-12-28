@@ -46,18 +46,18 @@ class Client(Telnet):
         """
         Initialization of the ArcLink client.
         
-        @param host: Host name of the remote ArcLink server. Uses webdc.eu as 
+        :param host: Host name of the remote ArcLink server. Uses webdc.eu as 
             default host.
-        @param port: Port of the remote ArcLink server. Default port is 18001.
-        @param timeout: Seconds before a connection timeout is raised. This 
+        :param port: Port of the remote ArcLink server. Default port is 18001.
+        :param timeout: Seconds before a connection timeout is raised. This 
             works only for Python >= 2.6.x.
-        @param user: The user name used for authentication with the ArcLink 
+        :param user: The user name used for authentication with the ArcLink 
             server.
-        @param password: A password used for authentication with the ArcLink 
+        :param password: A password used for authentication with the ArcLink 
             server.
-        @param institution: A string containing the name of the institution of 
+        :param institution: A string containing the name of the institution of 
             the requesting person.
-        @param debug: Verbose output of the connection handling, if enabled. 
+        :param debug: Verbose output of the connection handling, if enabled. 
         """
         self.user = user
         self.institution = institution
@@ -172,16 +172,16 @@ class Client(Telnet):
         """
         Writes a fetched waveform into a file.
         
-        @param filename: String containing the filename.
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @param format: 'FSEED', 'MSEED', or 'XSEED'.
-        @param compressed: Request compressed files from ArcLink server.
-        @return: L{obspy.Stream} object.
+        :param filename: String containing the filename.
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :param format: 'FSEED', 'MSEED', or 'XSEED'.
+        :param compressed: Request compressed files from ArcLink server.
+        :return: L{obspy.Stream} object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -204,16 +204,16 @@ class Client(Telnet):
         """
         Gets a L{obspy.Stream} object.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @param format: 'FSEED' or 'MSEED' ('XSEED' is documented, but not yet 
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :param format: 'FSEED' or 'MSEED' ('XSEED' is documented, but not yet 
             implemented in ArcLink).
-        @param compressed: Request compressed files from ArcLink server.
-        @return: L{obspy.Stream} object.
+        :param compressed: Request compressed files from ArcLink server.
+        :return: L{obspy.Stream} object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -252,13 +252,13 @@ class Client(Telnet):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @return: dictionary containing PAZ information
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :return: dictionary containing PAZ information
         """
         rtype = 'REQUEST INVENTORY instruments=true'
         rdata = "%s %s %s %s %s %s" % (start_datetime.formatArcLink(),
@@ -313,13 +313,13 @@ class Client(Telnet):
         """
         Writes a response information into a file.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @param format: 'SEED' ('XSEED' is documented, but not yet implemented 
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :param format: 'SEED' ('XSEED' is documented, but not yet implemented 
             in ArcLink).
         """
         rtype = 'REQUEST RESPONSE format=%s' % format
@@ -340,9 +340,9 @@ class Client(Telnet):
         Currently the time span is ignored by the ArcLink servers, therefore
         all networks are returned.
         
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @return: dictionary of network data.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :return: dictionary of network data.
         """
         rtype = 'REQUEST INVENTORY'
         rdata = "%s %s *" % (start_datetime.formatArcLink(),

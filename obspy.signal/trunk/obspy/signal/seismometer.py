@@ -6,12 +6,12 @@ The instruments must be corrected before to m/s, which is the RESP/SEED
 standard.
 The seismometer is represented as a dictionary containing the fields:
 
-@type poles: List of Complex Numbers
-@ivar poles: Poles of the seismometer to simulate
-@type zeros: List of Complex Numbers
-@ivar zeros: Zeros of the seismometer to simulate
-@type gain: Float
-@ivar gain: Gain factor of seismometer to simulate
+:type poles: List of Complex Numbers
+:ivar poles: Poles of the seismometer to simulate
+:type zeros: List of Complex Numbers
+:ivar zeros: Zeros of the seismometer to simulate
+:type gain: Float
+:ivar gain: Gain factor of seismometer to simulate
 """
 
 PAZ_WOOD_ANDERSON = {

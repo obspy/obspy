@@ -9,7 +9,7 @@ def isGSE2(filename):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
     
-    @param filename: GSE2 file to be read.
+    :param filename: GSE2 file to be read.
     """
     # Open file.
     try:
@@ -48,9 +48,9 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     parts) are supported. Check that the file is a valid GSE2 file before
     hand, e.g. by the isGSE2 function. in this module.
     
-    @param filename: GSE2 file to be read.
-    @param headonly: If True read only head of GSE2 file
-    @param verify_chksum: If True verify Checksum and raise Exception if it
+    :param filename: GSE2 file to be read.
+    :param headonly: If True read only head of GSE2 file
+    :param verify_chksum: If True verify Checksum and raise Exception if it
         is not correct
     """
     traces = []

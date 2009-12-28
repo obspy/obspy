@@ -27,7 +27,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a file into a L{obspy.core.Stream} object.
     
-    @param format: Format of the file to read. If it is None the format will be
+    :param format: Format of the file to read. If it is None the format will be
         automatically detected. If you specify a format no further format 
         checking is done. To avoid problems please use the option only when 
         you are sure which format your file has. Defaults to None.
@@ -146,7 +146,7 @@ class Stream(object):
         """ 
         __getitem__ method of obspy.Stream objects. 
           
-        @return: Trace objects 
+        :return: Trace objects 
         """
         return self.traces[index]
 
@@ -154,7 +154,7 @@ class Stream(object):
         """
         __getslice__ method of obspy.Stream objects.
         
-        @return: Stream object
+        :return: Stream object
         """
         return Stream(traces=self.traces[i:j])
 
@@ -162,7 +162,7 @@ class Stream(object):
         """
         This method appends a single Trace object to the Stream object.
         
-        @param trace: obspy.Trace object.
+        :param trace: obspy.Trace object.
         """
         if isinstance(trace, Trace):
             self.traces.append(trace)
@@ -175,7 +175,7 @@ class Stream(object):
         This method will extend the traces attribute of the Stream object with
         a list of Trace objects.
         
-        @param trace_list: list of obspy.Trace objects.
+        :param trace_list: list of obspy.Trace objects.
         """
         if isinstance(trace_list, list):
             for _i in trace_list:
@@ -204,9 +204,9 @@ class Stream(object):
         is done. This method only compares the start- and endtimes of the
         Traces.
         
-        @param min_gap: All gaps smaller than this value will be omitted. The
+        :param min_gap: All gaps smaller than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
-        @param max_gap: All gaps larger than this value will be omitted. The
+        :param max_gap: All gaps larger than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
         """
         gap_list = []
@@ -244,8 +244,8 @@ class Stream(object):
         Inserts either a single Trace object or a list of Trace objects before
         index.
         
-        @param index: The Trace will be inserted before index.
-        @param object: Single Trace object or list of Trace objects.
+        :param index: The Trace will be inserted before index.
+        :param object: Single Trace object or list of Trace objects.
         """
         if isinstance(object, Trace):
             self.traces.insert(index, object)
@@ -276,42 +276,42 @@ class Stream(object):
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
         
-        @param outfile: Output file string. Also used to automatically
+        :param outfile: Output file string. Also used to automatically
             determine the output format. Currently supported is emf, eps, pdf,
             png, ps, raw, rgba, svg and svgz output.
             Defaults to None.
-        @param format: Format of the graph picture. If no format is given the
+        :param format: Format of the graph picture. If no format is given the
             outfile parameter will be used to try to automatically determine
             the output format. If no format is found it defaults to png output.
             If no outfile is specified but a format is than a binary
             imagestring will be returned.
             Defaults to None.
-        @param size: Size tupel in pixel for the output file. This corresponds
+        :param size: Size tupel in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
             Defaults to 800x200 px.
-        @param starttime: Starttime of the graph as a datetime object. If not
+        :param starttime: Starttime of the graph as a datetime object. If not
             set the graph will be plotted from the beginning.
             Defaults to False.
-        @param endtime: Endtime of the graph as a datetime object. If not set
+        :param endtime: Endtime of the graph as a datetime object. If not set
             the graph will be plotted until the end.
             Defaults to False.
-        @param dpi: Dots per inch of the output file. This also affects the
+        :param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
-        @param color: Color of the graph. If the supplied parameter is a
+        :param color: Color of the graph. If the supplied parameter is a
             2-tupel containing two html hex string colors a gradient between
             the two colors will be applied to the graph.
             Defaults to 'red'.
-        @param bgcolor: Background color of the graph. If the supplied 
+        :param bgcolor: Background color of the graph. If the supplied 
             parameter is a 2-tupel containing two html hex string colors a 
             gradient between the two colors will be applied to the background.
             Defaults to 'white'.
-        @param transparent: Make all backgrounds transparent (True/False). This
+        :param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
             Defaults to False.
-        @param shadows: Adds a very basic drop shadow effect to the graph.
+        :param shadows: Adds a very basic drop shadow effect to the graph.
             Defaults to False.
-        @param minmaxlist: A list containing minimum, maximum and timestamp
+        :param minmaxlist: A list containing minimum, maximum and timestamp
             values. If none is supplied it will be created automatically.
             Useful for caching.
             Defaults to False.
@@ -330,7 +330,7 @@ class Stream(object):
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
         
-        @param index: Index of the Trace object to be returned and removed.
+        :param index: Index of the Trace object to be returned and removed.
         """
         temp_trace = self.traces[index]
         del(self.traces)[index]
@@ -356,7 +356,7 @@ class Stream(object):
         """
         Removes the Trace object specified by index from the Stream object.
         
-        @param index: Index of the Trace object to be removed
+        :param index: Index of the Trace object to be removed
         """
         del(self.traces)[index]
 
@@ -375,7 +375,7 @@ class Stream(object):
         by the first item first, then by the second and so on. It will always
         be sorted from low to high and from A to Z.
         
-        @param keys: List containing the values according to which the traces
+        :param keys: List containing the values according to which the traces
              will be sorted. They will be sorted by the first item first and
              then by the second item and so on.
              Available items: 'network', 'station', 'channel', 'location',

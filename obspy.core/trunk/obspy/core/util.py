@@ -9,20 +9,22 @@ class AttribDict(dict, object):
     """
     A stats class which behaves like a dictionary.
     
-    You may the following syntax to change or access data in this class:
-      >>> stats = AttribDict()
-      >>> stats.network = 'BW'
-      >>> stats['station'] = 'ROTZ'
-      >>> stats.get('network')
-      'BW'
-      >>> stats['network']
-      'BW'
-      >>> stats.station
-      'ROTZ'
-      >>> x = stats.keys()
-      >>> x.sort()
-      >>> x[0:3]
-      ['network', 'station']
+    You may use the following syntax to change or access data in this
+    class.
+    
+    >>> stats = AttribDict()
+    >>> stats.network = 'BW'
+    >>> stats['station'] = 'ROTZ'
+    >>> stats.get('network')
+    'BW'
+    >>> stats['network']
+    'BW'
+    >>> stats.station
+    'ROTZ'
+    >>> x = stats.keys()
+    >>> x.sort()
+    >>> x[0:3]
+    ['network', 'station']
     """
     def __init__(self, data={}):
         dict.__init__(data)
@@ -80,20 +82,20 @@ def scoreatpercentile(a, per, limit=(), sort=True):
     upper) of two values.  Values of 'a' outside this (closed) interval
     will be ignored.
 
-        >>> a = [1, 2, 3, 4]
-        >>> scoreatpercentile(a, 25)
-        1.75
-        >>> scoreatpercentile(a, 50)
-        2.5
-        >>> scoreatpercentile(a, 75)
-        3.25
-        >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-        >>> scoreatpercentile(a, 25)
-        25.5
-        >>> scoreatpercentile(a, 50)
-        40
-        >>> scoreatpercentile(a, 75)
-        42.5
+    >>> a = [1, 2, 3, 4]
+    >>> scoreatpercentile(a, 25)
+    1.75
+    >>> scoreatpercentile(a, 50)
+    2.5
+    >>> scoreatpercentile(a, 75)
+    3.25
+    >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
+    >>> scoreatpercentile(a, 25)
+    25.5
+    >>> scoreatpercentile(a, 50)
+    40
+    >>> scoreatpercentile(a, 75)
+    42.5
 
     This method is taken from scipy.stats.scoreatpercentile
     Copyright (c) Gary Strangman
@@ -139,15 +141,14 @@ def formatScientific(value):
     
     Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45) 
     [MSC v.1310 32 bit (Intel)] on win32
-    > '%E' % 2.5
+    >>> '%E' % 2.5
     '2.500000E+000'
     
     Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
     [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
-    > '%E' % 2.5
+    >>> '%E' % 2.5
     '2.500000E+00'
-
-    Doctest:
+    
     >>> formatScientific("3.4e+002")
     '3.4e+02'
     >>> formatScientific("3.4E+02")
@@ -186,7 +187,6 @@ def complexifyString(line):
     """
     Converts a string of the form '(real, imag)' into a complex type.
     
-    Doctest:
     >>> complexifyString("(1,2)")
     (1+2j)
     >>> complexifyString(" ( 1 , 2 ) ")

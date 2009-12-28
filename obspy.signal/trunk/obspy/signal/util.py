@@ -47,11 +47,11 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     >>> utlGeoKm(12.0, 48.0, 13.0, 49.0)
     (73.904144287109375, 111.19082641601562)
     
-    @param orig_lon: Longitude of reference origin
-    @param orig_lat: Latitude of reference origin
-    @param lat: Latitude to calculate relative coordinate in km
-    @param lon: Longitude to calculate relative coordinate in km
-    @return: x, y coordinate in km (in reference to origin)
+    :param orig_lon: Longitude of reference origin
+    :param orig_lat: Latitude of reference origin
+    :param lat: Latitude to calculate relative coordinate in km
+    :param lon: Longitude to calculate relative coordinate in km
+    :return: x, y coordinate in km (in reference to origin)
     """
     # 2009-10-11 Moritz
 
@@ -75,11 +75,11 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     >>> utlLonLat(12.0, 48.0, 73.904144287109375, 111.19082641601562)
     (13.0, 49.0)
     
-    @param orig_lon: Longitude of reference origin
-    @param orig_lat: Latitude of reference origin
-    @param x: value [km] to calculate relative coordinate in degree
-    @param y: value [km] to calculate relative coordinate in degree
-    @return: lon, lat coordinate in degree (absolute)
+    :param orig_lon: Longitude of reference origin
+    :param orig_lat: Latitude of reference origin
+    :param x: value [km] to calculate relative coordinate in degree
+    :param y: value [km] to calculate relative coordinate in degree
+    :return: lon, lat coordinate in degree (absolute)
     """
     # 2009-10-11 Moritz
 
@@ -104,13 +104,13 @@ def xcorr(tr1, tr2, window_len):
     >>> a, round(1e6*b) # Rounding Errors
     (0, 1000000.0)
     
-    @type tr1: numpy ndarray float32
-    @param tr1: Trace 1
-    @type tr2: numpy ndarray float32
-    @param tr2: Trace 2 to correlate with trace 1
-    @type window_len: Int
-    @param window_len: Window length of cross correlation in samples
-    @return: (index, value) index of maximum xcorr value and the value itself
+    :type tr1: numpy ndarray float32
+    :param tr1: Trace 1
+    :type tr2: numpy ndarray float32
+    :param tr2: Trace 2 to correlate with trace 1
+    :type window_len: Int
+    :param window_len: Window length of cross correlation in samples
+    :return: (index, value) index of maximum xcorr value and the value itself
     """
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [

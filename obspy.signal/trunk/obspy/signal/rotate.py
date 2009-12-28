@@ -36,10 +36,10 @@ def rotate_NE_RT(n,e,ba):
     between the vector pointing from the station to the source and the vector pointing from
     the station to the north.
     
-    @param n: Data of the North component of the seismogram.
-    @param e: Data of the East component of the seismogram.
-    @param ba: The back azimuth from station to source in degrees.
-    @return: Radial and Transversal component of seismogram.
+    :param n: Data of the North component of the seismogram.
+    :param e: Data of the East component of the seismogram.
+    :param ba: The back azimuth from station to source in degrees.
+    :return: Radial and Transversal component of seismogram.
     """
     if len(n) != len(e):
         raise TypeError("North and East component have different length!?!")
@@ -67,7 +67,8 @@ def gps2DistAzimuth(lat1,lon1,lat2,lon2) :
     http://www.icsm.gov.au/gda/gdatm/index.html
     http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf
 
-    It states:
+    It states::
+
                 Computations on the Ellipsoid
 
             There are a number of formulae that are available
@@ -92,11 +93,15 @@ def gps2DistAzimuth(lat1,lon1,lat2,lon2) :
             Calculate: the ellipsoidal distance (dist) and
             forward and reverse azimuths between the points (alpha12, alpha21).
 
-    @param lat1: Latitude of point A in degrees (positive for northern, negative for southern hemisphere)
-    @param lon1: Longitude of point A in degrees (positive for eastern, negative for western hemisphere)
-    @param lat2: Latitude of point B in degrees (positive for northern, negative for southern hemisphere)
-    @param lon2: Longitude of point B in degrees (positive for eastern, negative for western hemisphere)
-    @return: (Great circle distance in m, azimuth A->B in degrees, azimuth B->A in degrees)
+    :param lat1: Latitude of point A in degrees (positive for northern,
+                 negative for southern hemisphere)
+    :param lon1: Longitude of point A in degrees (positive for eastern,
+                 negative for western hemisphere)
+    :param lat2: Latitude of point B in degrees (positive for northern,
+                 negative for southern hemisphere)
+    :param lon2: Longitude of point B in degrees (positive for eastern,
+                 negative for western hemisphere)
+    :return: (Great circle distance in m, azimuth A->B in degrees, azimuth B->A in degrees)
     """
     #Check inputs
     if lat1>90 or lat1<-90:

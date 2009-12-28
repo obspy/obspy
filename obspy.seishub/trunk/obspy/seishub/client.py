@@ -83,11 +83,11 @@ class _WaveformMapperClient(object):
         """
         Gets a list of network latency values.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @return: List of dictionaries containing latency information.
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :return: List of dictionaries containing latency information.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id']
         for i in range(len(args)):
@@ -100,13 +100,13 @@ class _WaveformMapperClient(object):
         """
         Gets a L{obspy.Stream} object.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @param location_id: Location code, e.g. '01'.
-        @param channel_id: Channel code, e.g. 'EHE'.
-        @param start_datetime: start time as L{obspy.UTCDateTime} object.
-        @param end_datetime: end time as L{obspy.UTCDateTime} object.
-        @return: L{obspy.Stream} object.
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :return: L{obspy.Stream} object.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id',
                'start_datetime', 'end_datetime']
@@ -139,9 +139,9 @@ class _BaseRESTClient(object):
         """
         Gets a resource.
         
-        @param resource_name: Name of the resource.
-        @param format: Format string, e.g. 'xml' or 'map'.
-        @return: Resource
+        :param resource_name: Name of the resource.
+        :param format: Format string, e.g. 'xml' or 'map'.
+        :return: Resource
         """
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
@@ -151,8 +151,8 @@ class _BaseRESTClient(object):
         """
         Gets a XML resource.
         
-        @param resource_name: Name of the resource.
-        @return: Resource
+        :param resource_name: Name of the resource.
+        :return: Resource
         """
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
@@ -169,9 +169,9 @@ class _StationMapperClient(_BaseRESTClient):
         """
         Gets a list of station information.
         
-        @param network_id: Network code, e.g. 'BW'.
-        @param station_id: Station code, e.g. 'MANZ'.
-        @return: List of dictionaries containing station information.
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :return: List of dictionaries containing station information.
         """
         map = ['network_id', 'station_id']
         for i in range(len(args)):
@@ -200,12 +200,12 @@ class _StationMapperClient(_BaseRESTClient):
         a['name']
         'Streckeisen STS-2/N seismometer'
         
-        @param network_id: Network id, e.g. 'BW'.
-        @param station_id: Station id, e.g. 'RJOB'.
-        @param location_id: Location id, e.g. ''.
-        @param channel_id: Channel id, e.g. 'EHE'.
-        @param datetime: L{obspy.core.UTCDateTime} or time string.
-        @return: Dictionary containing zeros, poles, gain and sensitivity.
+        :param network_id: Network id, e.g. 'BW'.
+        :param station_id: Station id, e.g. 'RJOB'.
+        :param location_id: Location id, e.g. ''.
+        :param channel_id: Channel id, e.g. 'EHE'.
+        :param datetime: L{obspy.core.UTCDateTime} or time string.
+        :return: Dictionary containing zeros, poles, gain and sensitivity.
         """
         # request station information
         station_list = self.getList(network_id=network_id,
@@ -279,7 +279,7 @@ class _EventMapperClient(_BaseRESTClient):
         """
         Gets a list of event information.
         
-        @return: List of dictionaries containing event information.
+        :return: List of dictionaries containing event information.
         """
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)

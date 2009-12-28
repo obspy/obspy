@@ -9,7 +9,7 @@ def isMSEED(filename):
     """
     Returns true if the file is a Mini-SEED file and false otherwise.
     
-    @param filename: File to be read.
+    :param filename: File to be read.
     """
     __libmseed__ = libmseed()
     return __libmseed__.isMSEED(filename)
@@ -20,7 +20,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     """
     Reads a given Mini-SEED file and returns an obspy.Stream object.
     
-    @param filename: Mini-SEED file to be read.
+    :param filename: Mini-SEED file to be read.
     """
     __libmseed__ = libmseed()
     # read MiniSEED file
@@ -73,21 +73,21 @@ def writeMSEED(stream_object, filename, **kwargs):
     
     All kwargs are passed directly to obspy.mseed.writeMSTraces.
     
-    @param stream_object: obspy.Stream object. Data in stream object must
+    :param stream_object: obspy.Stream object. Data in stream object must
         be of type int32. NOTE: They are automatically adapted if necessary
-    @param filename: Name of the output file
-    @param reclen: should be set to the desired data record length in bytes
+    :param filename: Name of the output file
+    :param reclen: should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
         between (and including) 8 to 20. -1 defaults to 4096
-    @param encoding: should be set to one of the following supported
+    :param encoding: should be set to one of the following supported
         Mini-SEED data encoding formats: DE_INT16 (1), DE_INT32 (3), 
         DE_STEIM1 (10) and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
-    @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
+    :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
         big-endian). -1 defaults to big-endian (1)
-    @param flush: if it is not zero all of the data will be packed into 
+    :param flush: if it is not zero all of the data will be packed into 
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
-    @param verbose: controls verbosity, a value of zero will result in no 
+    :param verbose: controls verbosity, a value of zero will result in no 
         diagnostic output.
     """
     # Check if encoding kwarg is set and catch invalid encodings.

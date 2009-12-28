@@ -45,10 +45,10 @@ def nearestPow2(x):
     >>> nearestPow2(15)
     4
 
-    @type x: Float
-    @param x: Number
-    @rtype: Int
-    @return: Nearest power of 2 to x
+    :type x: Float
+    :param x: Number
+    :rtype: Int
+    :return: Nearest power of 2 to x
     """
     a = M.pow(2, M.ceil(np.log2(x)))
     b = M.pow(2, M.floor(np.log2(x)))
@@ -63,14 +63,14 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     """
     Computes and plots logarithmic spectogram of the input trace.
     
-    @param data: Input data
-    @param sample_rate: Samplerate in Hz
-    @param log: True logarithmic frequency axis, False linear frequency axis
-    @param per_lap: Percent of overlap
-    @param nwin: Approximate number of windows.
-    @param outfile: String for the filename of output file, if None
+    :param data: Input data
+    :param sample_rate: Samplerate in Hz
+    :param log: True logarithmic frequency axis, False linear frequency axis
+    :param per_lap: Percent of overlap
+    :param nwin: Approximate number of windows.
+    :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
-    @param format: Format of image to save
+    :param format: Format of image to save
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
     plt.ioff()

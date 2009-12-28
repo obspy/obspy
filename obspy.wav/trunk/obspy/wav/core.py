@@ -40,7 +40,7 @@ def readWAV(filename, headonly=False, **kwargs):
     Currently supports uncompressed unsigned char and short integer and
     integer data values. This should cover most WAV files.
     
-    @param filename: Name of WAV file to read.
+    :param filename: Name of WAV file to read.
     """
     # read WAV file
     fh = wave.open(filename, 'rb')
@@ -71,11 +71,11 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     The resulting WAV sound file is as a result really short. The data
     are written uncompressed as signed 4byte integers.
     
-    @requires: The attributes self.stats.npts = number of samples; 
-        self.data = array of data samples.
-    @param filename: Name of WAV file to write.
-    @param framerate: Sample rate of WAV file to use. This this will
-        squeeze the seismogram, DEFAULT=7000. 
+    :note: The attributes self.stats.npts = number of samples and
+           self.data = array of data samples are required
+    :param filename: Name of WAV file to write.
+    :param framerate: Sample rate of WAV file to use. This this will
+                      squeeze the seismogram, DEFAULT=7000. 
     """
     i = 0
     base , ext = os.path.splitext(filename)

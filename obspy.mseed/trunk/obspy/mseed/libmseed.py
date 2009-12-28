@@ -55,7 +55,7 @@ class libmseed(object):
         """
         Prints some informations about the file.
         
-        @param filename: MiniSEED file.
+        :param filename: MiniSEED file.
         """
         try:
             #Read Trace Group
@@ -81,7 +81,7 @@ class libmseed(object):
         
         Thus it cannot be used to validate a MiniSEED or SEED file.
         
-        @param filename: MiniSEED file.
+        :param filename: MiniSEED file.
         """
         f = open(filename, 'rb')
         header = f.read(7)
@@ -136,8 +136,8 @@ class libmseed(object):
         lists first element being a header dictionary and its second element
         containing the data values as a numpy array.
 
-        @param filename: Name of MiniSEED file.
-        @param reclen, dataflag, skipnotdata, verbose: These are passed
+        :param filename: Name of MiniSEED file.
+        :param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
         """
         # Initialise list that will contain all traces, first dummy entry
@@ -202,14 +202,14 @@ class libmseed(object):
         lists first element being a header dictionary and its second element
         containing the data values as a numpy array.
 
-        @param filename: Name of MiniSEED file.
-        @param reclen: Directly to the readFileToTraceGroup method.
-        @param timetol: Directly to the readFileToTraceGroup method.
-        @param sampratetol: Directly to the readFileToTraceGroup method.
-        @param dataflag: Directly to the readFileToTraceGroup method.
-        @param skipnotdata: Directly to the readFileToTraceGroup method.
-        @param dataquality: Directly to the readFileToTraceGroup method.
-        @param verbose: Directly to the readFileToTraceGroup method.
+        :param filename: Name of MiniSEED file.
+        :param reclen: Directly to the readFileToTraceGroup method.
+        :param timetol: Directly to the readFileToTraceGroup method.
+        :param sampratetol: Directly to the readFileToTraceGroup method.
+        :param dataflag: Directly to the readFileToTraceGroup method.
+        :param skipnotdata: Directly to the readFileToTraceGroup method.
+        :param dataquality: Directly to the readFileToTraceGroup method.
+        :param verbose: Directly to the readFileToTraceGroup method.
         """
         # Create empty list that will contain all traces.
         trace_list = []
@@ -246,21 +246,21 @@ class libmseed(object):
         """
         Write Miniseed file from trace_list
         
-        @param trace_list: List containing header informations and data.
-        @param outfile: Name of the output file
-        @param reclen: should be set to the desired data record length in bytes
+        :param trace_list: List containing header informations and data.
+        :param outfile: Name of the output file
+        :param reclen: should be set to the desired data record length in bytes
             which must be expressible as 2 raised to the power of X where X is
             between (and including) 8 to 20. -1 defaults to 4096
-        @param encoding: should be set to one of the following supported
+        :param encoding: should be set to one of the following supported
             MiniSEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
             DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
             and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
-        @param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
+        :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
             big-endian). -1 defaults to big-endian (1)
-        @param flush: if it is not zero all of the data will be packed into 
+        :param flush: if it is not zero all of the data will be packed into 
             records, otherwise records will only be packed while there are
             enough data samples to completely fill a record.
-        @param verbose: controls verbosity, a value of zero will result in no 
+        :param verbose: controls verbosity, a value of zero will result in no 
             diagnostic output.
         """
         try:
@@ -297,23 +297,23 @@ class libmseed(object):
         """
         Reads MiniSEED data from file. Returns MSTraceGroup structure.
         
-        @param filename: Name of MiniSEED file.
-        @param reclen: If reclen is 0 the length of the first record is auto-
+        :param filename: Name of MiniSEED file.
+        :param reclen: If reclen is 0 the length of the first record is auto-
             detected. All subsequent records are then expected to have the
             same record length. If reclen is negative the length of every
             record is automatically detected. Defaults to -1.
-        @param timetol: Time tolerance, default to -1 (1/2 sample period).
-        @param sampratetol: Sample rate tolerance, defaults to -1 (rate
+        :param timetol: Time tolerance, default to -1 (1/2 sample period).
+        :param sampratetol: Sample rate tolerance, defaults to -1 (rate
             dependent)
-        @param dataflag: Controls whether data samples are unpacked, defaults
+        :param dataflag: Controls whether data samples are unpacked, defaults
             to true (1).
-        @param skipnotdata: If true (not zero) any data chunks read that to do
+        :param skipnotdata: If true (not zero) any data chunks read that to do
             not have valid data record indicators will be skipped. Defaults to
             true (1).
-        @param dataquality: If the dataquality flag is true traces will be
+        :param dataquality: If the dataquality flag is true traces will be
             grouped by quality in addition to the source name identifiers.
             Defaults to true (1).
-        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        :param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
         """
         # Creates MSTraceGroup Structure
         mstg = clibmseed.mst_initgroup(None)
@@ -335,7 +335,7 @@ class libmseed(object):
         record of the MiniSEED file only. It returns the location, network,
         station and channel information.
         
-        @param filename: MiniSEED file string.
+        :param filename: MiniSEED file string.
         """
         # read first header only
         ms = MSStruct(filename, filepointer=False)
@@ -364,7 +364,7 @@ class libmseed(object):
         The returned endtime is the time of the last datasample and not the
         time that the last sample covers.
         
-        @param filename: MiniSEED file string.
+        :param filename: MiniSEED file string.
         """
         # Get the starttime
         ms = MSStruct(filename)
@@ -385,13 +385,13 @@ class libmseed(object):
         The starttime is the last correct data sample. If no gaps are found it
         will return an empty list.
         
-        @param time_tolerance: Time tolerance while reading the traces, default 
+        :param time_tolerance: Time tolerance while reading the traces, default 
             to -1 (1/2 sample period).
-        @param samprate_tolerance: Sample rate tolerance while reading the 
+        :param samprate_tolerance: Sample rate tolerance while reading the 
             traces, defaults to -1 (rate dependent).
-        @param min_gap: Omit gaps with less than this value if not None. 
-        @param max_gap: Omit gaps with greater than this value if not None.
-        @return: List of tuples in form of (network, station, location, 
+        :param min_gap: Omit gaps with less than this value if not None. 
+        :param max_gap: Omit gaps with greater than this value if not None.
+        :return: List of tuples in form of (network, station, location, 
             channel, starttime, endtime, gap, samples) 
         """
         # read file
@@ -467,11 +467,11 @@ class libmseed(object):
         """
         Returns trace header information of a given file.
         
-        @param time_tolerance: Time tolerance while reading the traces, default 
+        :param time_tolerance: Time tolerance while reading the traces, default 
             to -1 (1/2 sample period).
-        @param samprate_tolerance: Sample rate tolerance while reading the 
+        :param samprate_tolerance: Sample rate tolerance while reading the 
             traces, defaults to -1 (rate dependent).
-        @return: Dictionary containing header entries
+        :return: Dictionary containing header entries
         """
         # read file
         mstg = self.readFileToTraceGroup(filename, dataflag=0,
@@ -510,8 +510,8 @@ class libmseed(object):
         This will only work correctly if each record in the file has the same
         record length.
         
-        @param filename: MiniSEED file name.
-        @return: List of all flag counts.
+        :param filename: MiniSEED file name.
+        :return: List of all flag counts.
         """
         # Open the file.
         mseedfile = open(filename, 'rb')
@@ -560,14 +560,14 @@ class libmseed(object):
         The median is calculating by either taking the middle value or, with an
         even numbers of values, the average between the two middle values.
         
-        @param filename: Mini-SEED file to be parsed.
-        @param first_record: Determines whether all records are assumed to 
+        :param filename: Mini-SEED file to be parsed.
+        :param first_record: Determines whether all records are assumed to 
             either have a timing quality in Blockette 1001 or not depending on
             whether the first records has one. If True and the first records
             does not have a timing quality it will not parse the whole file. If
             False is will parse the whole file anyway and search for a timing
             quality in each record. Defaults to True.
-        @param rl_autodetection: Determines the auto-detection of the record
+        :param rl_autodetection: Determines the auto-detection of the record
             lengths in the file. If 0 only the length of the first record is
             detected automatically. All subsequent records are then assumed
             to have the same record length. If -1 the length of each record
@@ -629,11 +629,11 @@ class libmseed(object):
         It will return an empty string if the file does not cover the desired
         range.
         
-        @return: Byte position of beginning and total length of bytes
+        :return: Byte position of beginning and total length of bytes
         
-        @param filename: File string of the MiniSEED file to be cut.
-        @param starttime: L{obspy.core.UTCDateTime} object.
-        @param endtime: L{obspy.core.UTCDateTime} object.
+        :param filename: File string of the MiniSEED file to be cut.
+        :param starttime: L{obspy.core.UTCDateTime} object.
+        :param endtime: L{obspy.core.UTCDateTime} object.
         """
         #XXX: Move to MSStruct class?
         # Read the start and end time of the file.
@@ -737,11 +737,11 @@ class libmseed(object):
         
         For details see method _bytePosFromTime.
         
-        @return: Byte string containing the cut file.
+        :return: Byte string containing the cut file.
         
-        @param filename: File string of the MiniSEED file to be cut.
-        @param starttime: L{obspy.core.UTCDateTime} object.
-        @param endtime: L{obspy.core.UTCDateTime} object.
+        :param filename: File string of the MiniSEED file to be cut.
+        :param starttime: L{obspy.core.UTCDateTime} object.
+        :param endtime: L{obspy.core.UTCDateTime} object.
         """
         bytes = self._bytePosFromTime(filename, starttime=starttime,
                                       endtime=endtime)
@@ -771,11 +771,11 @@ class libmseed(object):
         the produced output will not be correct. All files also have to be from
         the same source.
         
-        @param file_list: A list containing MiniSEED filename strings.
-        @param outfile: String of the file to be created.
-        @param starttime: L{obspy.core.UTCDateTime} object.
-        @param endtime: L{obspy.core.UTCDateTime} object.
-        @return: Byte string containing the merged and cut file.
+        :param file_list: A list containing MiniSEED filename strings.
+        :param outfile: String of the file to be created.
+        :param starttime: L{obspy.core.UTCDateTime} object.
+        :param endtime: L{obspy.core.UTCDateTime} object.
+        :return: Byte string containing the merged and cut file.
         """
         # Copy file_list to not alter the provided list.
         file_list = file_list[:]
@@ -838,10 +838,10 @@ class libmseed(object):
         """
         Unpack steim2 compressed data given as string.
         
-        @param data_string: data as string
-        @param npts: number of data points
-        @param swapflag: Swap bytes, defaults to 0
-        @return: Return data as numpy.ndarray of dtype int32
+        :param data_string: data as string
+        :param npts: number of data points
+        :param swapflag: Swap bytes, defaults to 0
+        :return: Return data as numpy.ndarray of dtype int32
         """
         dbuf = data_string
         datasize = len(dbuf)
@@ -863,10 +863,10 @@ class libmseed(object):
         """
         Unpack steim1 compressed data given as string.
         
-        @param data_string: data as string
-        @param npts: number of data points
-        @param swapflag: Swap bytes, defaults to 0
-        @return: Return data as numpy.ndarray of dtype int32
+        :param data_string: data as string
+        :param npts: number of data points
+        :param swapflag: Swap bytes, defaults to 0
+        :return: Return data as numpy.ndarray of dtype int32
         """
         dbuf = data_string
         datasize = len(dbuf)
@@ -890,8 +890,8 @@ class libmseed(object):
         
         This works by reference and no data is copied.
         
-        @param buffer: Ctypes c_int32 buffer.
-        @param buffer_elements: length of the buffer
+        :param buffer: Ctypes c_int32 buffer.
+        :param buffer_elements: length of the buffer
         """
         # Allocate numpy array to move memory to
         numpy_array = np.empty(buffer_elements, dtype='int32')
@@ -905,7 +905,7 @@ class libmseed(object):
         """
         Takes obspy.util.UTCDateTime object and returns an epoch time in ms.
         
-        @param dt: obspy.util.UTCDateTime object.
+        :param dt: obspy.util.UTCDateTime object.
         """
         return int(dt.timestamp * HPTMODULUS)
 
@@ -913,7 +913,7 @@ class libmseed(object):
         """
         Takes Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
         
-        @param timestamp: Mini-SEED timestring (Epoch time string in ms).
+        :param timestamp: Mini-SEED timestring (Epoch time string in ms).
         """
         return UTCDateTime(timestring / HPTMODULUS)
 
@@ -937,7 +937,7 @@ class libmseed(object):
         Return dictionary from MSTrace Object m, leaving the attributes
         datasamples, ststate and next out
         
-        @param m: MST structure to be read.
+        :param m: MST structure to be read.
         """
         h = {}
         # header attributes to be converted
@@ -954,8 +954,8 @@ class libmseed(object):
         Takes dictionary containing MSTrace header data and writes them to the
         MSTrace Group
         
-        @param m: MST structure to be modified.
-        @param h: Dictionary containing all necessary information.
+        :param m: MST structure to be modified.
+        :param h: Dictionary containing all necessary information.
         """
         chain = m.contents
         h['type'] = '\x00'
@@ -973,8 +973,8 @@ class libmseed(object):
         with some basic information about the file. Also suiteable for Full
         SEED.
         
-        @param f: File pointer of opened file in binary format
-        @param real_name: Realname of the file, needed for calculating size
+        :param f: File pointer of opened file in binary format
+        :param real_name: Realname of the file, needed for calculating size
         """
         # get size of file
         info = {'filesize': os.path.getsize(real_name)}
@@ -1005,10 +1005,10 @@ class libmseed(object):
         
         Currently only works with one continuous trace.
         
-        @param header: Dictionary with the header values to be written to the
+        :param header: Dictionary with the header values to be written to the
             structure.
-        @param data: List containing the data values.
-        @param numtraces: Number of traces in the structure. No function so
+        :param data: List containing the data values.
+        :param numtraces: Number of traces in the structure. No function so
             far.
         """
         # Init MSTraceGroup
@@ -1063,12 +1063,12 @@ class MSStruct(object):
     
     It consists of a MSRecord and MSFileparam and an attached python file pointer.
 
-    @param filename: file to attach to
-    @param filepointer: attach filepointer f to object
-    @ivar msr: MSRecord
-    @ivar msf: MSFileparam
-    @ivar file: filename
-    @ivar f: Python file pointer to MSFileparam file pointer
+    :param filename: file to attach to
+    :param filepointer: attach filepointer f to object
+    :ivar msr: MSRecord
+    :ivar msf: MSFileparam
+    :ivar file: filename
+    :ivar f: Python file pointer to MSFileparam file pointer
     """
     def __init__(self, filename, filepointer=True):
         # Initialize MSRecord structure
@@ -1083,7 +1083,7 @@ class MSStruct(object):
         """
         Add Python file pointer attribute self.f to local class
         
-        @param byte: Seek file pointer to specific byte
+        :param byte: Seek file pointer to specific byte
         """
         # allocate file pointer, we need this to cut with start and endtime
         mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
@@ -1136,20 +1136,20 @@ class MSStruct(object):
         Read MSRecord using the ms_readmsr_r function. The following
         parameters are directly passed to ms_readmsr_r.
         
-        @param ms: MSStruct (actually consists of a LP_MSRecord,
+        :param ms: MSStruct (actually consists of a LP_MSRecord,
             LP_MSFileParam and an attached file pointer). 
             Given an existing ms the function is much faster.
-        @param reclen: If reclen is 0 the length of the first record is auto-
+        :param reclen: If reclen is 0 the length of the first record is auto-
             detected. All subsequent records are then expected to have the 
             same record length. If reclen is negative the length of every 
             record is automatically detected. Defaults to -1.
-        @param dataflag: Controls whether data samples are unpacked, defaults 
+        :param dataflag: Controls whether data samples are unpacked, defaults 
             to 1.
-        @param skipnotdata: If true (not zero) any data chunks read that to do 
+        :param skipnotdata: If true (not zero) any data chunks read that to do 
             not have valid data record indicators will be skipped. Defaults to 
             True (1).
-        @param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
-        @param record_number: Number of the record to be read. The first record
+        :param verbose: Controls verbosity from 0 to 2. Defaults to None (0).
+        :param record_number: Number of the record to be read. The first record
             has the number 0. Negative numbers will start counting from the end
             of the file, e.g. -1 is the last complete record.
         """

@@ -37,7 +37,7 @@ def isSAC(filename):
     """
     Checks whether a file is SAC or not. Returns True or False.
     
-    @param filename: SAC file to be read.
+    :param filename: SAC file to be read.
     """
     try:
         f = open(filename,'rb')
@@ -61,9 +61,9 @@ def readSAC(filename, headonly=False, **kwargs):
     """
     Reads a SAC file and returns an L{obspy.Stream} object.
     
-    @param filename: SAC file to be read.
-    @rtype: L{obspy.Stream}.
-    @return: A ObsPy Stream object.
+    :param filename: SAC file to be read.
+    :rtype: L{obspy.Stream}.
+    :return: A ObsPy Stream object.
     """
     # read SAC file
     t = ReadSac()
@@ -98,9 +98,9 @@ def writeSAC(stream_object, filename, **kwargs):
     """
     Writes SAC file.
     
-    @type stream_object: L{obspy.Stream}.
-    @param stream_object: A ObsPy Stream object.
-    @param filename: SAC file to be written.
+    :type stream_object: L{obspy.Stream}.
+    :param stream_object: A ObsPy Stream object.
+    :param filename: SAC file to be written.
     """
     # Translate the common (renamed) entries
     i = 0

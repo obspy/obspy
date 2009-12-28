@@ -11,34 +11,33 @@ class UTCDateTime(datetime.datetime):
     This class inherits from Python's L{datetime.datetime} and refines the UTC 
     time zone support.
     
-    Usage:
-        >>> UTCDateTime(0.0)
-        UTCDateTime(1970, 1, 1, 0, 0)
-        >>> UTCDateTime(1970, 1, 1)
-        UTCDateTime(1970, 1, 1, 0, 0)
-        >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
-        UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
-        >>> UTCDateTime("19700101")
-        UTCDateTime(1970, 1, 1, 0, 0)
-        >>> UTCDateTime("1970-01-01 12:23:34")
-        UTCDateTime(1970, 1, 1, 12, 23, 34)
-        >>> UTCDateTime("20090701121212")
-        UTCDateTime(2009, 7, 1, 12, 12, 12)
-        >>> UTCDateTime("1970-01-01T12:23:34.123456")
-        UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
-        >>> UTCDateTime("2009,010,19:59:42.1800")
-        UTCDateTime(2009, 1, 10, 19, 59, 42, 180000)
-        >>> t = UTCDateTime(1240561632.005)
-        >>> t
-        UTCDateTime(2009, 4, 24, 8, 27, 12, 5000)
-        >>> t.year
-        2009
-        >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
-        (2009, 8, 4, 8, 27, 12, 5000)
-        >>> t.timestamp + 100
-        1240561732.0050001
-        >>> UTCDateTime(t.timestamp+60)
-        UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
+    >>> UTCDateTime(0.0)
+    UTCDateTime(1970, 1, 1, 0, 0)
+    >>> UTCDateTime(1970, 1, 1)
+    UTCDateTime(1970, 1, 1, 0, 0)
+    >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
+    UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
+    >>> UTCDateTime("19700101")
+    UTCDateTime(1970, 1, 1, 0, 0)
+    >>> UTCDateTime("1970-01-01 12:23:34")
+    UTCDateTime(1970, 1, 1, 12, 23, 34)
+    >>> UTCDateTime("20090701121212")
+    UTCDateTime(2009, 7, 1, 12, 12, 12)
+    >>> UTCDateTime("1970-01-01T12:23:34.123456")
+    UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+    >>> UTCDateTime("2009,010,19:59:42.1800")
+    UTCDateTime(2009, 1, 10, 19, 59, 42, 180000)
+    >>> t = UTCDateTime(1240561632.005)
+    >>> t
+    UTCDateTime(2009, 4, 24, 8, 27, 12, 5000)
+    >>> t.year
+    2009
+    >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
+    (2009, 8, 4, 8, 27, 12, 5000)
+    >>> t.timestamp + 100
+    1240561732.0050001
+    >>> UTCDateTime(t.timestamp+60)
+    UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
     """
 
     def __new__(cls, *args, **kwargs):
@@ -225,8 +224,8 @@ class UTCDateTime(datetime.datetime):
         """
         Returns UTC time stamp in floating point seconds.
         
-        @rtype: float
-        @return: Time stamp in seconds
+        :rtype: float
+        :return: Time stamp in seconds
         """
         return float(timegm(self.timetuple())) + self.microsecond / 1.0e6
 
@@ -236,8 +235,8 @@ class UTCDateTime(datetime.datetime):
         """
         Converts current UTCDateTime to a Python L{datetime.datetime} object.
 
-        @rtype: datetime
-        @return: Python datetime object of current UTCDateTime
+        :rtype: datetime
+        :return: Python datetime object of current UTCDateTime
         """
         return datetime.datetime(self.year, self.month, self.day, self.hour,
                                  self.minute, self.second, self.microsecond)
@@ -248,8 +247,8 @@ class UTCDateTime(datetime.datetime):
         """
         Converts current UTCDateTime to a Python L{datetime.date} object.
 
-        @rtype: date
-        @return: Python date object of current UTCDateTime
+        :rtype: date
+        :return: Python date object of current UTCDateTime
         """
         return datetime.date(self.year, self.month, self.day)
 
@@ -259,8 +258,8 @@ class UTCDateTime(datetime.datetime):
         """
         Converts current UTCDateTime to a Python L{datetime.time} object.
 
-        @rtype: time
-        @return: Python time object of current UTCDateTime
+        :rtype: time
+        :return: Python time object of current UTCDateTime
         """
         return datetime.time(self.hour, self.minute, self.second,
                              self.microsecond)
@@ -273,16 +272,15 @@ class UTCDateTime(datetime.datetime):
         
         Adding two L{UTCDateTime} objects results into a time span in seconds.
         
-        Usage:
-            >>> a = UTCDateTime(0.0)
-            >>> a
-            UTCDateTime(1970, 1, 1, 0, 0)
-            >>> a + 1.123456
-            UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
-            >>> UTCDateTime(0.5) + UTCDateTime(10.5)
-            11.0
+        >>> a = UTCDateTime(0.0)
+        >>> a
+        UTCDateTime(1970, 1, 1, 0, 0)
+        >>> a + 1.123456
+        UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
+        >>> UTCDateTime(0.5) + UTCDateTime(10.5)
+        11.0
         
-        @return: UTCDateTime
+        :return: UTCDateTime
         """
         if len(args) == 1:
             arg = args[0]
@@ -312,20 +310,19 @@ class UTCDateTime(datetime.datetime):
         Subtracting two L{UTCDateTime} objects from each other results into a 
         relative time span in seconds.
         
-        Usage:
-            >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
-            >>> a
-            UTCDateTime(1970, 2, 1, 0, 0)
-            >>> a - 1
-            UTCDateTime(1970, 1, 31, 23, 59, 59)
-            >>> a - 1.123456
-            UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
-            >>> a - 60 * 60 * 24 * 31
-            UTCDateTime(1970, 1, 1, 0, 0)
-            >>> UTCDateTime(10.0) - UTCDateTime(9.5)
-            0.5
+        >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
+        >>> a
+        UTCDateTime(1970, 2, 1, 0, 0)
+        >>> a - 1
+        UTCDateTime(1970, 1, 31, 23, 59, 59)
+        >>> a - 1.123456
+        UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
+        >>> a - 60 * 60 * 24 * 31
+        UTCDateTime(1970, 1, 1, 0, 0)
+        >>> UTCDateTime(10.0) - UTCDateTime(9.5)
+        0.5
         
-        @return: UTCDateTime
+        :return: UTCDateTime
         """
         if len(args) == 1:
             arg = args[0]

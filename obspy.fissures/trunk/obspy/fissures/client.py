@@ -50,9 +50,9 @@ class Client(object):
         """
         Initialize Fissures/DHI client. 
         
-        @param network_dc: Tuple containing dns and NetworkDC name
-        @param seismogram_dc: Tuple containing dns and DataCenter name
-        @param name_service: String containing the name service
+        :param network_dc: Tuple containing dns and NetworkDC name
+        :param seismogram_dc: Tuple containing dns and DataCenter name
+        :param name_service: String containing the name service
         """
         #
         # Some object wide variables
@@ -91,20 +91,17 @@ class Client(object):
         Get Waveform in an ObsPy stream object from Fissures / DHI.
         
         Example:
-        C{
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
-        }
         
-        @param network_id: Network id, 2 char; e.g. "GE"
-        @param station_id: Station id, 5 char; e.g. "APE"
-        @param location_id: Location id, 2 char; e.g. "  "
-        @param channel_id: Channel id, 3 char; e.g. "SHZ"
-        @param start_datetime: UTCDateTime object of starttime
-        @param end_datetime: UTCDateTime object of endtime
-        @return: Stream object
-        GE APE SHZ
+        :param network_id: Network id, 2 char; e.g. "GE"
+        :param station_id: Station id, 5 char; e.g. "APE"
+        :param location_id: Location id, 2 char; e.g. "  "
+        :param channel_id: Channel id, 3 char; e.g. "SHZ"
+        :param start_datetime: UTCDateTime object of starttime
+        :param end_datetime: UTCDateTime object of endtime
+        :return: Stream object
         """
         # get channel object
         channels = self._getChannelObj(network_id, station_id, location_id,
@@ -172,7 +169,7 @@ class Client(object):
         """
         Return all available network_ids as list.
 
-        Note: This takes a very long time.
+        :Note: This takes a very long time.
         """
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
@@ -193,7 +190,7 @@ class Client(object):
 
         If no network_id is specified this may take a long time
 
-        @param network_id: Limit stations to network_id
+        :param network_id: Limit stations to network_id
         """
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
@@ -223,8 +220,8 @@ class Client(object):
                               "NetworkDC")
         }
 
-        @param dc: Tuple containing dns and service as string
-        @param interface: String describing kind of DC, one of EventDC,
+        :param dc: Tuple containing dns and service as string
+        :param interface: String describing kind of DC, one of EventDC,
             NetworkDC or DataCenter
         """
         # put network name together
@@ -240,8 +237,8 @@ class Client(object):
         """
         Convert datetime instance to fissures time object
         
-        @param utc_datetime: UTCDateTime instance
-        @return: Fissures time object
+        :param utc_datetime: UTCDateTime instance
+        :return: Fissures time object
         """
         t = str(utc_datetime)[:-3] + 'Z'
         return Fissures.Time(t, -1)
@@ -252,11 +249,11 @@ class Client(object):
         
         Fissures channel object is requested from the clients network_dc.
         
-        @param network_id: Network id, 2 char; e.g. "GE"
-        @param station_id: Station id, 5 char; e.g. "APE"
-        @param location_id: Location id, 2 char; e.g. "  "
-        @param channel_id: Channel id, 3 char; e.g. "SHZ"
-        @return: Fissures channel object
+        :param network_id: Network id, 2 char; e.g. "GE"
+        :param station_id: Station id, 5 char; e.g. "APE"
+        :param location_id: Location id, 2 char; e.g. "  "
+        :param channel_id: Channel id, 3 char; e.g. "SHZ"
+        :return: Fissures channel object
         """
         # resolve network finder
         netDC = self.rootContext.resolve(self.net_name)
@@ -282,10 +279,10 @@ class Client(object):
         Fissures seismogram object is requested from the clients
         network_dc. This actually contains the data.
         
-        @param channel_obj: Fissures channel object
-        @param start_datetime: UTCDateTime object of starttime
-        @param end_datetime: UTCDateTime object of endtime
-        @return: Fissures seismogram object
+        :param channel_obj: Fissures channel object
+        :param start_datetime: UTCDateTime object of starttime
+        :param end_datetime: UTCDateTime object of endtime
+        :return: Fissures seismogram object
         """
         seisDC = self.rootContext.resolve(self.seis_name)
         seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)

@@ -40,7 +40,7 @@ def isSEISAN(filename):
     character 4 is P.
     
     
-    @param filename: SEISAN file to be read.
+    :param filename: SEISAN file to be read.
     """
     try:
         f = open(filename, 'rb')
@@ -58,10 +58,10 @@ def _getVersion(data):
     """
     Extracts SEISAN version from given data chunk.
     
-    @type data: String.
-    @param data: Data chunk. 
-    @rtype: (["<"|">"], [32|64], [6|7]).
-    @return: (byte order, architecture, version).
+    :type data: String.
+    :param data: Data chunk. 
+    :rtype: (["<"|">"], [32|64], [6|7]).
+    :return: (byte order, architecture, version).
     """
     # check size of data chunk
     if len(data) < 12 * 80:
@@ -85,9 +85,9 @@ def readSEISAN(filename, headonly=False, **kwargs):
     """
     Reads a SEISAN file and returns an L{obspy.Stream} object.
     
-    @param filename: SEISAN file to be read.
-    @rtype: L{obspy.Stream}.
-    @return: A ObsPy Stream object.
+    :param filename: SEISAN file to be read.
+    :rtype: L{obspy.Stream}.
+    :return: A ObsPy Stream object.
     """
     # read data chunk from given file
     fh = open(filename, 'rb')
@@ -160,9 +160,9 @@ def writeSEISAN(stream_object, filename, **kwargs):
     """
     Writes a SEISAN file.
     
-    @type stream_object: L{obspy.Stream}.
-    @param stream_object: A ObsPy Stream object.
-    @param filename: SEISAB file to be written.
+    :type stream_object: L{obspy.Stream}.
+    :param stream_object: A ObsPy Stream object.
+    :param filename: SEISAB file to be written.
     """
     raise NotImplementedError
 

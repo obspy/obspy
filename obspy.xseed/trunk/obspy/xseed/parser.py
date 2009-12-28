@@ -51,13 +51,13 @@ class Parser(object):
         """
         Initializes the SEED parser.
         
-        @type debug: Boolean.
-        @param debug: Enables a verbose debug log during parsing of SEED file.
-        @type strict: Boolean.
-        @param strict: Parser will raise an exception if SEED files does not
+        :type debug: Boolean.
+        :param debug: Enables a verbose debug log during parsing of SEED file.
+        :type strict: Boolean.
+        :param strict: Parser will raise an exception if SEED files does not
             stay within the SEED specifications.
-        @type compact: Boolean.
-        @param compact: SEED volume will contain compact data strings. Missing
+        :type compact: Boolean.
+        :param compact: SEED volume will contain compact data strings. Missing
             time strings will be filled with 00:00:00.0000 if this option is
             disabled.
         """
@@ -104,8 +104,8 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
         
-        @type data: Basestring or StringIO object.
-        @param data: Filename or XSEED/SEED string as file pointer or StringIO.
+        :type data: Basestring or StringIO object.
+        :param data: Filename or XSEED/SEED string as file pointer or StringIO.
         """
         # try to transform everything into StringIO object
         if isinstance(data, basestring):
@@ -132,7 +132,7 @@ class Parser(object):
         """
         Returns a XML representation of all headers of a SEED volume.
         
-        @param version: XSEED version string. Defaults to version 1.1
+        :param version: XSEED version string. Defaults to version 1.1
         """
         if version not in XSEED_VERSIONS:
             raise SEEDParserException("Unknown XML-SEED version!")
@@ -304,8 +304,8 @@ class Parser(object):
         No multiple stations or locations codes in the same XSEED volume are
         allowed.
         
-        @param channel_id: Channel/Component to extract
-        @return: Dictionary containing PAZ as well as the overall sensitivity
+        :param channel_id: Channel/Component to extract
+        :return: Dictionary containing PAZ as well as the overall sensitivity
         """
         paz = {}
         # Find index of correct channel
@@ -361,8 +361,8 @@ class Parser(object):
         """
         Stores channel responses into files within a given folder.
         
-        @param folder: Folder name.
-        @param zipped: Compresses all files into a single ZIP archive named by
+        :param folder: Folder name.
+        :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
         """
         new_resp_list = self.getRESP()
@@ -389,7 +389,7 @@ class Parser(object):
         Parses through a whole SEED volume. It will always parse the whole
         file and skip any time span data.
         
-        @type data: File pointer or StringIO object.
+        :type data: File pointer or StringIO object.
         """
         # Jump to the beginning of the file.
         data.seek(0)
@@ -459,7 +459,7 @@ class Parser(object):
         """
         Parse a XML-SEED string.
 
-        @type data: File pointer or StringIO object.
+        :type data: File pointer or StringIO object.
         """
         data.seek(0)
         root = xmlparse(data).getroot()
