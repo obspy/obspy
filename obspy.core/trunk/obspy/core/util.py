@@ -141,12 +141,12 @@ def formatScientific(value):
     
     Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45) 
     [MSC v.1310 32 bit (Intel)] on win32
-    >>> '%E' % 2.5
+    > '%E' % 2.5
     '2.500000E+000'
     
     Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
     [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
-    >>> '%E' % 2.5
+    > '%E' % 2.5
     '2.500000E+00'
     
     >>> formatScientific("3.4e+002")
