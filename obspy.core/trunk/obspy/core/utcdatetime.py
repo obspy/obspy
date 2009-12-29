@@ -6,11 +6,11 @@ import datetime
 
 class UTCDateTime(datetime.datetime):
     """
-    A class providing a smooth interface to UTC based datetime objects. 
-    
-    This class inherits from Python's L{datetime.datetime} and refines the UTC 
+    A class providing a smooth interface to UTC based datetime objects.
+
+    This class inherits from Python's L{datetime.datetime} and refines the UTC
     time zone support.
-    
+
     >>> UTCDateTime(0.0)
     UTCDateTime(1970, 1, 1, 0, 0)
     >>> UTCDateTime(1970, 1, 1)
@@ -102,8 +102,8 @@ class UTCDateTime(datetime.datetime):
                     except:
                         pass
                 # The module copy.deepcopy passes a (binary) string to
-                # UTCDateTime which contains the class specifications. If 
-                # argument is not a digit by now, it must be a binary string 
+                # UTCDateTime which contains the class specifications. If
+                # argument is not a digit by now, it must be a binary string
                 # and we pass it to L{datetime.datetime},
                 if not value.isdigit():
                     return datetime.datetime.__new__(cls, *args, **kwargs)
@@ -166,13 +166,13 @@ class UTCDateTime(datetime.datetime):
             date = date.replace('W', '')
             date_pattern = "%Y%W%w"
             year = int(date[0:4])
-            # [Www] is the week number prefixed by the letter 'W', from W01 
+            # [Www] is the week number prefixed by the letter 'W', from W01
             # through W53.
-            # strpftime %W == Week number of the year (Monday as the first day 
-            # of the week) as a decimal number [00,53]. All days in a new year 
+            # strpftime %W == Week number of the year (Monday as the first day
+            # of the week) as a decimal number [00,53]. All days in a new year
             # preceding the first Monday are considered to be in week 0.
             week = int(date[4:6]) - 1
-            # [D] is the weekday number, from 1 through 7, beginning with 
+            # [D] is the weekday number, from 1 through 7, beginning with
             # Monday and ending with Sunday.
             # strpftime %w == Weekday as a decimal number [0(Sunday),6]
             day = int(date[6])
@@ -188,7 +188,7 @@ class UTCDateTime(datetime.datetime):
         else:
             raise Exception("Wrong or incomplete ISO8601:2004 date format")
         # check for time zone information
-        # note that the zone designator is the actual offset from UTC and 
+        # note that the zone designator is the actual offset from UTC and
         # does not include any information on daylight saving time
         delta = 0
         if time.count('+') == 1:
@@ -217,13 +217,13 @@ class UTCDateTime(datetime.datetime):
         # parse patterns
         dt = datetime.datetime.strptime(date + 'T' + time,
                                         date_pattern + 'T' + time_pattern)
-        # add microseconds and eventually correct time zone 
+        # add microseconds and eventually correct time zone
         return UTCDateTime(dt) + (delta + ms)
 
     def getTimeStamp(self):
         """
         Returns UTC time stamp in floating point seconds.
-        
+
         :rtype: float
         :return: Time stamp in seconds
         """
@@ -269,9 +269,9 @@ class UTCDateTime(datetime.datetime):
     def __add__(self, *args, **kwargs):
         """
         Adds seconds and microseconds to current L{UTCDateTime} object.
-        
+
         Adding two L{UTCDateTime} objects results into a time span in seconds.
-        
+
         >>> a = UTCDateTime(0.0)
         >>> a
         UTCDateTime(1970, 1, 1, 0, 0)
@@ -279,7 +279,7 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
         >>> UTCDateTime(0.5) + UTCDateTime(10.5)
         11.0
-        
+
         :return: UTCDateTime
         """
         if len(args) == 1:
@@ -306,10 +306,10 @@ class UTCDateTime(datetime.datetime):
     def __sub__(self, *args, **kwargs):
         """
         Subtracts seconds and microseconds from current L{UTCDateTime} object.
-        
-        Subtracting two L{UTCDateTime} objects from each other results into a 
+
+        Subtracting two L{UTCDateTime} objects from each other results into a
         relative time span in seconds.
-        
+
         >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
         >>> a
         UTCDateTime(1970, 2, 1, 0, 0)
@@ -321,7 +321,7 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 0, 0)
         >>> UTCDateTime(10.0) - UTCDateTime(9.5)
         0.5
-        
+
         :return: UTCDateTime
         """
         if len(args) == 1:

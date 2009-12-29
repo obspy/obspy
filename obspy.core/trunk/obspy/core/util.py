@@ -8,10 +8,10 @@ import tempfile
 class AttribDict(dict, object):
     """
     A stats class which behaves like a dictionary.
-    
+
     You may use the following syntax to change or access data in this
     class.
-    
+
     >>> stats = AttribDict()
     >>> stats.network = 'BW'
     >>> stats['station'] = 'ROTZ'
@@ -26,6 +26,7 @@ class AttribDict(dict, object):
     >>> x[0:3]
     ['network', 'station']
     """
+
     def __init__(self, data={}):
         dict.__init__(data)
         for key, value in data.iteritems():
@@ -108,7 +109,7 @@ def scoreatpercentile(a, per, limit=(), sort=True):
         values = a
 
     def _interpolate(a, b, fraction):
-        return a + (b - a) * fraction;
+        return a + (b - a) * fraction
 
     idx = per / 100. * (len(values) - 1)
     if (idx % 1 == 0):
@@ -119,7 +120,9 @@ def scoreatpercentile(a, per, limit=(), sort=True):
 
 # C file pointer/ descriptor class
 class FILE(C.Structure): # Never directly used
-    """C file pointer class for type checking with argtypes"""
+    """
+    C file pointer class for type checking with argtypes
+    """
     pass
 c_file_p = C.POINTER(FILE)
 
@@ -131,24 +134,24 @@ c_file_p = C.POINTER(FILE)
 def formatScientific(value):
     """
     Formats floats in a fixed exponential format.
-    
+
     Different operation systems are delivering different output for the
     exponential format of floats. Here we ensure to deliver in a for SEED
-    valid format independent of the OS. For speed issues we simple cut any 
-    number ending with E+0XX or E-0XX down to E+XX or E-XX. This fails for 
-    numbers XX>99, but should not occur, because the SEED standard does 
+    valid format independent of the OS. For speed issues we simple cut any
+    number ending with E+0XX or E-0XX down to E+XX or E-XX. This fails for
+    numbers XX>99, but should not occur, because the SEED standard does
     not allow this values either.
-    
-    Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45) 
+
+    Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45)
     [MSC v.1310 32 bit (Intel)] on win32
     > '%E' % 2.5
     '2.500000E+000'
-    
+
     Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
     [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
     > '%E' % 2.5
     '2.500000E+00'
-    
+
     >>> formatScientific("3.4e+002")
     '3.4e+02'
     >>> formatScientific("3.4E+02")
@@ -170,14 +173,17 @@ def formatScientific(value):
 def NamedTemporaryFile(dir=None, suffix='.tmp'):
     """
     Weak replacement for L{tempfile.NamedTemporaryFile}.
-    
-    But this class will work also with Windows Vista's UAC. The calling 
+
+    But this class will work also with Windows Vista's UAC. The calling
     program is responsible to close the returned file pointer after usage.
     """
+
     class NamedTemporaryFile(object):
+
         def __init__(self, fd, fname):
             self._fileobj = os.fdopen(fd, 'w+b')
             self.name = fname
+
         def __getattr__(self, attr):
             return getattr(self._fileobj, attr)
     return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
@@ -186,7 +192,7 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
 def complexifyString(line):
     """
     Converts a string of the form '(real, imag)' into a complex type.
-    
+
     >>> complexifyString("(1,2)")
     (1+2j)
     >>> complexifyString(" ( 1 , 2 ) ")

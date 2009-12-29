@@ -12,7 +12,7 @@
 obspy.core - Core classes of ObsPy, Python for Seismological Observatories
 
 This class contains common methods and classes for ObsPy. It includes
-UTCDateTime, Stats, Stream and Trace classes and methods for reading 
+UTCDateTime, Stats, Stream and Trace classes and methods for reading
 seismograms.
 
 @copyright: The ObsPy Development Team (devs@obspy.org)
@@ -20,7 +20,7 @@ seismograms.
 """
 
 # don't change order
-from utcdatetime import UTCDateTime
-from trace import Trace, Stats
-from stream import Stream, read
-from testing import runTests
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.trace import Stats, Trace
+from obspy.core.stream import Stream, read
+from obspy.core.testing import runTests

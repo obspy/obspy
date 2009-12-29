@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import numpy as np
@@ -14,14 +13,15 @@ class Stats(AttribDict):
 class Trace(object):
     """
     ObsPy Trace class.
-    
+
     This class contains information about a single trace.
-    
-    :type data: Numpy ndarray 
+
+    :type data: Numpy ndarray
     :param data: Numpy ndarray of data samples
     :param header: Dictionary containing header fields
     :param address: Address of data to be freed when trace is deleted
     """
+
     def __init__(self, data=np.array([]), header=None):
         if header == None:
             # Default values: For detail see
@@ -48,8 +48,8 @@ class Trace(object):
     def __len__(self):
         """
         Returns the number of data samples of a L{Trace} object.
-        
-        :rtype: int 
+
+        :rtype: int
         :return: Number of data samples.
         """
         return len(self.data)
@@ -57,20 +57,20 @@ class Trace(object):
     count = __len__
 
     def __getitem__(self, index):
-        """ 
+        """
         __getitem__ method of L{Trace} object.
-        
-        :rtype: list 
-        :return: List of data points 
+
+        :rtype: list
+        :return: List of data points
         """
         return self.data[index]
 
     def __add__(self, trace):
         """
         Adds a Trace object to this Trace
-        
+
         It will automatically append the data by interpolating overlaps or
-        filling gaps with numpy.NaN samples. Sampling rate and Trace ID must 
+        filling gaps with numpy.NaN samples. Sampling rate and Trace ID must
         be the same.
         """
         if not isinstance(trace, Trace):
@@ -149,6 +149,9 @@ class Trace(object):
         """
         Saves trace into a file.
         """
+        # we need to import here in order to prevent a circular import of 
+        # Stream and Trace classes
+        from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
     def ltrim(self, starttime):

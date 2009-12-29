@@ -8,34 +8,32 @@ has a function called suite.
 
 To run all tests/a single test from the shell/cmd do one of the following::
 
-    python -c 'import obspy.core; print obspy.core.runTests()'             # Run all tests
-    python -c 'import obspy.core; print obspy.core.runTests(verbose=True)' # Verbose output
-    python obspy/core/testing.py    # Run all tests
-    python obspy/core/testing.py -v # Verbose output
-    python obspy/core/testing.py -v obspy.core.tests.test_stream.StreamTestCase.test_adding
+    python -c "import obspy.core; obspy.core.runTests()"       # Run all tests
+    python -c "import obspy.core; obspy.core.runTests(True)"   # Verbose output
+    python obspy/core/testing.py      # Run all tests
+    python obspy/core/testing.py -v   # Verbose output
     python obspy/core/tests/test_stats.py -v
     python obspy/core/tests/test_stats.py -v StatsTestCase.test_pickleStats
 
 To run all tests/a single test inside Python do one of the following::
 
     import obspy.core
-    obspy.core.runTests()             # Run all tests
-    obspy.core.runTests(verbose=True) # Verbose output
+    obspy.core.runTests()               # Run all tests
+    obspy.core.runTests(verbose=True)   # Verbose output
 
     from unittest import TextTestRunner
     from obspy.core.tests import suite
-    TextTestRunner().run(suite())            # Run all tests
-    TextTestRunner(verbosity=2).run(suite()) # Verbose output
-    
+    TextTestRunner().run(suite())              # Run all tests
+    TextTestRunner(verbosity=2).run(suite())   # Verbose output
+
     from unittest import TextTestRunner
     from obspy.core.tests.test_stats import suite
-    TextTestRunner().run(suite())            # Run all tests
-    TextTestRunner(verbosity=2).run(suite()) # Verbose output
+    TextTestRunner().run(suite())              # Run all tests
+    TextTestRunner(verbosity=2).run(suite())   # Verbose output
 
 Running the test verbose exposes the available tests.
 """
 
-import obspy.core
 import sys
 import time
 import unittest
@@ -70,7 +68,7 @@ def runTests(verbose=False):
     if verbose:
         unittest.TextTestRunner(verbosity=2).run(suite())
     else:
-        unittest.main(defaultTest='suite', module=obspy.core.testing)
+        unittest.main(defaultTest='suite', module="obspy.core.testing")
 
 
 if __name__ == '__main__':
