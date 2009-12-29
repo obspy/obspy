@@ -47,3 +47,7 @@ python setup.py develop -N -U
 cd ../..
 cd obspy.signal/trunk
 python setup.py develop -N -U
+
+cd ../..
+cd obspy/trunk
+python setup.py develop -N -U
