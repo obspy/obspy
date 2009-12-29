@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2010 Moritz Beyreuther
 #---------------------------------------------------------------------
-""" 
+"""
 Read & Write Seismograms, Format GSE2.
 
 Python wrappers for gse_functions - The GSE2 library of Stefan Stange.
@@ -35,7 +35,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
-import platform, os
+import os
+import platform
 import ctypes as C
 import numpy as np
 from obspy.core import UTCDateTime
@@ -76,6 +77,7 @@ class ChksumError(StandardError):
     Exception type for mismatching checksums
     """
     pass
+
 
 # gse2 header struct
 class HEADER(C.Structure):
@@ -202,26 +204,24 @@ def writeHeader(f, head):
             head.calper,
             head.instype,
             head.hang,
-            head.vang
-        )
-    )
+            head.vang))
 
 
 def read(f, verify_chksum=True):
     """
-    Read GSE2 file and return header and data. 
-    
+    Read GSE2 file and return header and data.
+
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases. Data are in circular frequency counts, for
     correction of calper multiply by 2PI and calper: data * 2 * pi *
     header['calper'].
-    
+
     :type f: File Pointer
     :param f: Open file pointer of GSE2 file to read, opened in binary mode,
               e.g. f = open('myfile','rb')
     :type test_chksum: Bool
     :param verify_chksum: If True verify Checksum and raise Exception if it
-        is not correct
+                          is not correct
     :rtype: Dictionary, Numpy.ndarray int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
@@ -258,15 +258,15 @@ def read(f, verify_chksum=True):
 def write(headdict, data, f, inplace=False):
     """
     Write GSE2 file, given the header and data.
-    
+
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases. Data are in circular frequency counts, for
-    correction of calper multiply by 2PI and calper: 
+    correction of calper multiply by 2PI and calper:
     data * 2 * pi * header['calper'].
-    
+
     Warning: The data are actually compressed in place for performance
     issues, if you still want to use the data afterwards use data.copy()
-    
+
     :note: headdict dictionary entries C{'datatype', 'n_samps',
            'samp_rate'} are absolutely necessary
     :type data: numpy.ndarray dtype int32
@@ -335,6 +335,7 @@ def write(headdict, data, f, inplace=False):
     lib.buf_free(None)
     del fp, head
 
+
 def readHead(f):
     """
     Return (and read) only the header of gse2 file as dictionary.
@@ -361,7 +362,7 @@ def readHead(f):
 def getStartAndEndTime(f):
     """
     Return start and endtime/date of GSE2 file
-    
+
     Currently supports only CM6 compressed GSE2 files, this should be
     sufficient for most cases.
 
@@ -370,7 +371,7 @@ def getStartAndEndTime(f):
               mode, e.g. f = open('myfile','rb')
     :rtype: List
     :return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
-        Julian seconds and as date string.
+             Julian seconds and as date string.
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()

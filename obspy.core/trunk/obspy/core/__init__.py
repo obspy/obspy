@@ -15,8 +15,8 @@ This class contains common methods and classes for ObsPy. It includes
 UTCDateTime, Stats, Stream and Trace classes and methods for reading
 seismograms.
 
-@copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 # don't change order
