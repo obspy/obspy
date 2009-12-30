@@ -2,6 +2,7 @@
 #
 # ObsPy documentation build configuration file, created by
 # sphinx-quickstart on Sat Dec 26 11:55:06 2009.
+# :note: major modification of original version at the end
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -177,3 +178,54 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+# Redefine how to process inherited methods/members
+def process_inherited(app, what, name, obj, options, docstringlines): 
+    """ 
+    If we're including inherited members, omit their docstrings. 
+    """ 
+    if not options.get('inherited-members'): 
+        return 
+ 
+    if what in ['class', 'data', 'exception', 'function', 'module']: 
+        return 
+ 
+    name = name.split('.')[-1] 
+ 
+    if what == 'method' and hasattr(obj, 'im_class'): 
+        if name in obj.im_class.__dict__.keys(): 
+            return 
+ 
+    if what == 'attribute' and hasattr(obj, '__objclass__'): 
+        if name in obj.__objclass__.__dict__.keys(): 
+            return 
+ 
+    for i in xrange(len(docstringlines)): 
+        docstringlines.pop() 
+
+# Options for Including private Members/Methods
+#----------------------------------------------
+# For reference, see
+# * http://bitbucket.org/birkenfeld/sphinx/src/tip/tests/test_autodoc.py
+# * http://hg.sagemath.org/sage-main/file/21efb0b3fc47/doc/common/conf.py#l1
+#   which is the sagemath conf.py
+# * http://trac.sagemath.org/sage_trac/attachment/ticket/7549/\
+#       trac_7549-doc_inheritance_underscore_v3.patch
+
+# Do not skip private members
+def skip_underscore(app, what, name, obj, skip, options): 
+    """ 
+    Conditionally include docstrings for objects whose names begin 
+    with one underscore ('_'). 
+    """ 
+    name = name.split('.')[-1]
+    if name.startswith('_') and not name.startswith('__'):
+        return False 
+    return skip 
+
+# Attach this to the builder
+def setup(app):
+    #app.connect('autodoc-process-docstring', process_inherited)
+    app.connect('autodoc-skip-member', skip_underscore)
+    pass
+

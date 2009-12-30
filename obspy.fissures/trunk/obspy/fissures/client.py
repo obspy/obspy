@@ -7,14 +7,14 @@
 #
 # Copyright (C) 2008-2010 Moritz Beyreuther, Robert Barsch
 #---------------------------------------------------------------------
-""" 
+"""
 Data Handling Interface (DHI)/Fissures client.
 
 Python function for accessing data from DHI/Fissures.
 The method is based on omniORB CORBA requests.
 
-@copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 from omniORB import CORBA
@@ -41,8 +41,9 @@ class Client(object):
     http://www.iris.edu/dhi/
 
     Detailed information on network_dc and seismogram_dc servers:
-     * http://www.seis.sc.edu/wily
-     * http://www.iris.edu/dhi/servers.htm
+
+    * http://www.seis.sc.edu/wily
+    * http://www.iris.edu/dhi/servers.htm
     """
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
                  seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter"),
@@ -89,12 +90,11 @@ class Client(object):
             start_datetime, end_datetime):
         """
         Get Waveform in an ObsPy stream object from Fissures / DHI.
-        
-        Example:
+
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
-        
+
         :param network_id: Network id, 2 char; e.g. "GE"
         :param station_id: Station id, 5 char; e.g. "APE"
         :param location_id: Location id, 2 char; e.g. "  "
@@ -169,7 +169,7 @@ class Client(object):
         """
         Return all available network_ids as list.
 
-        :Note: This takes a very long time.
+        :note: This takes a very long time.
         """
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
@@ -214,11 +214,8 @@ class Client(object):
         Compose Fissures name in CosNaming.NameComponent manner. Set the
         dns, interfaces and objects together.
 
-        Example:
-        C{
         >>> self._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
                               "NetworkDC")
-        }
 
         :param dc: Tuple containing dns and service as string
         :param interface: String describing kind of DC, one of EventDC,
