@@ -141,8 +141,22 @@ class SacioTestCase(unittest.TestCase):
         self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
 
 
+    def test_getdist(self):
+        tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
+        tempfile = NamedTemporaryFile().name
+        t = sacio.ReadSac(tfile)
+        t.SetHvalue('evla',48.15)
+        t.SetHvalue('evlo',11.58333)
+        t.SetHvalue('stla',-41.2869)
+        t.SetHvalue('stlo',174.7746)
+        t.SetHvalue('lcalda',1)
+        t.WriteSacBinary(tempfile)
+        t2 = sacio.ReadSac(tempfile)
+        self.assertEqual(t2.GetHvalue('dist'),18486532.0)
+        self.assertAlmostEqual(t2.GetHvalue('az'),65.654154562,5)
+        self.assertAlmostEqual(t2.GetHvalue('baz'),305.975459869,5)
 
-
+        
     def test_isSAC(self):
         """
         See if assertation is Raised if file ist not a sac file

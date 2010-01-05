@@ -67,6 +67,7 @@ Convenience::
 """
 
 from obspy.core import UTCDateTime
+from obspy.signal import rotate
 import numpy as np
 import os
 import time
@@ -348,6 +349,12 @@ class ReadSac(object):
                             self._get_date_()
                         except SacError:
                             pass
+                        if self.GetHvalue('lcalda'):
+                            try:
+                                self._get_dist_()
+                            except SacError:
+                                pass
+                            
 
     def WriteSacHeader(self, fname):
         """
@@ -459,6 +466,11 @@ class ReadSac(object):
                         self._get_date_()
                     except SacError:
                         pass
+                    if self.GetHvalue('lcalda'):
+                        try:
+                            self._get_dist_()
+                        except SacError:
+                            pass
 
     def ReadSacXY(self, fname):
         """
@@ -517,6 +529,11 @@ class ReadSac(object):
                     self._get_date_()
                 except SacError:
                     pass
+                if self.GetHvalue('lcalda'):
+                    try:
+                        self._get_dist_()
+                    except SacError:
+                        pass
 
     def WriteSacXY(self, ofname):
         """
@@ -753,12 +770,49 @@ class ReadSac(object):
         """
         If trace changed since read, adapt header values
         """
-        self.seis = np.require(self.seis, '<f4')
-        self.SetHvalue('npts', len(self.seis))
-        self.SetHvalue('depmin', self.seis.min())
-        self.SetHvalue('depmax', self.seis.max())
-        self.SetHvalue('depmen', self.seis.mean())
+        self.seis = np.require(self.seis,'<f4')
+        self.SetHvalue('npts',self.seis.size)
+        self.SetHvalue('depmin',self.seis.min())
+        self.SetHvalue('depmax',self.seis.max())
+        self.SetHvalue('depmen',self.seis.mean())
 
+    def _get_dist_(self):
+        """
+        calculate distance from station and event coordinates
+        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
+        ...                     'test.sac')
+        >>> t = ReadSac(file)
+        >>> t.SetHvalue('evla',48.15)
+        >>> t.SetHvalue('evlo',11.58333)
+        >>> t.SetHvalue('stla',-41.2869)
+        >>> t.SetHvalue('stlo',174.7746)
+        >>> t._get_dist_()
+        >>> round(abs(t.GetHvalue('dist') - 18486532.0),5)
+        0.0
+        >>> round(abs(t.GetHvalue('az') - 65.654154562),5)
+        0.0
+        >>> round(abs(t.GetHvalue('baz') - 305.975459869),5)
+        0.0
+
+        The orginal SAC-program calculates the distance assuming a
+        average radius of 6371 km. Therefore, our routine should be more
+        acurate.
+        """
+        eqlat = self.GetHvalue('evla')
+        eqlon = self.GetHvalue('evlo')
+        stlat = self.GetHvalue('stla')
+        stlon = self.GetHvalue('stlo')
+        d = self.GetHvalue('dist')
+        if eqlat == -12345.0 or eqlon == -12345.0 or \
+           stlat == -12345.0 or stlon == -12345.0:
+            raise SacError('Insufficient information to calculate distance.')
+        if d != -12345.0:
+            raise SacError('Distance is already set.')
+        dist, az, baz = rotate.gps2DistAzimuth(eqlat,eqlon,stlat,stlon)
+        self.SetHvalue('dist',dist)
+        self.SetHvalue('az',az)
+        self.SetHvalue('baz',baz)
+        
     def swap_byte_order(self):
         """
         Swap byte order of SAC-file in memory:
