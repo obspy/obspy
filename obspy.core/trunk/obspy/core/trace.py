@@ -143,7 +143,8 @@ class Trace(object):
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Trace objects."
             raise Exception(msg)
-        waveform.plotWaveform(self, **kwargs)
+        waveform = WaveformPlotting(stream = self, *args, **kwargs)
+        waveform.plotWaveform()
 
     def write(self, filename, format, **kwargs):
         """

@@ -264,7 +264,7 @@ class Stream(object):
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)
 
-    def plot(self, **kwargs):
+    def plot(self, *args, **kwargs):
         """
         Creates a graph of ObsPy Stream object. It either saves the image
         directly to the file system or returns an binary image string.
@@ -317,13 +317,14 @@ class Stream(object):
             Defaults to False.
         """
         try:
-            from obspy.imaging import waveform
+            from obspy.imaging.waveform import WaveformPlotting
         except:
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Stream objects."
             print msg
             raise
-        waveform.plotWaveform(self, **kwargs)
+        waveform = WaveformPlotting(stream = self, *args, **kwargs)
+        waveform.plotWaveform()
 
     def pop(self, index= -1):
         """
@@ -530,8 +531,11 @@ class Stream(object):
                     if right_delta > 0:
                         continue
                     # Update the old trace with the interpolation.
-                    cur_trace[-1][left_delta:] = \
-                        (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
+                    try:
+                        cur_trace[-1][left_delta:] = \
+                            (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
+                    except:
+                        import ipdb; ipdb.set_trace()
                     # Append the rest of the trace.
                     cur_trace.append(trace[right_delta:])
                 # Gap
