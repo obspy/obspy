@@ -31,8 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from copy import deepcopy, copy
 from math import ceil
-from numpy import isfinite
-from numpy.ma import is_masked
 from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
 import matplotlib.pyplot as plt
@@ -46,7 +44,6 @@ class WaveformPlotting(object):
 
     It uses matplotlib to plot the waveforms.
     """
-
 
     def __init__(self, **kwargs):
         """
@@ -122,7 +119,6 @@ class WaveformPlotting(object):
         # be dependant on your matplotlib backend.
         self.format = kwargs.get('format')
 
-        
     def plotWaveform(self, *args, **kwargs):
         """
         Creates a graph of any given ObsPy Stream object. It either saves the 
@@ -151,23 +147,27 @@ class WaveformPlotting(object):
             #If format is set use it.
             if self.format:
                 plt.savefig(self.outfile, dpi=dpi, transparent=transparent,
-                    facecolor=face_color, edgecolor=face_color, format=self.format)
-            #Otherwise try to get the self.format from self.outfile or default to png.
+                            facecolor=face_color, edgecolor=face_color,
+                            format=self.format)
+            #Otherwise get the self.format from self.outfile or default to PNG.
             else:
-                plt.savefig(self.outfile, dpi = self.dpi, transparent=self.transparent,
-                    facecolor=self.face_color, edgecolor=self.face_color)
-        #Return an binary imagestring if self.outfile is not set but self.format is.
+                plt.savefig(self.outfile, dpi=self.dpi,
+                            transparent=self.transparent,
+                            facecolor=self.face_color,
+                            edgecolor=self.face_color)
+        #Return an binary imagestring if not self.outfile but self.format.
         if not self.outfile:
             if self.format:
                 imgdata = StringIO.StringIO()
-                plt.savefig(imgdata, dpi=self.dpi, transparent=self.transparent,
-                        facecolor=self.face_color, edgecolor=self.face_color,
-                        format=self.format)
+                plt.savefig(imgdata, dpi=self.dpi,
+                            transparent=self.transparent,
+                            facecolor=self.face_color,
+                            edgecolor=self.face_color,
+                            format=self.format)
                 imgdata.seek(0)
                 return imgdata.read()
             else:
                 plt.show()
-
 
     def plot(self, *args, **kwargs):
         """
@@ -203,7 +203,7 @@ class WaveformPlotting(object):
         self.stats = []
         # Loop over each Trace and call the appropriate plotting method.
         for _i, tr in enumerate(stream_new):
-            plt.subplot(len(stream_new), 1, _i + 1, axisbg =
+            plt.subplot(len(stream_new), 1, _i + 1, axisbg=
                         self.background_color)
             max_freq = max([trmini.stats.sampling_rate for trmini in tr])
             if (self.endtime - self.starttime) * max_freq > 400000:
@@ -213,8 +213,7 @@ class WaveformPlotting(object):
         # Set ticks.
         self.__plotSetXTicks()
         self.__plotSetYTicks()
-                
-                
+
     def plotDay(self, *args, **kwargs):
         """
         Extend the seismogram.
@@ -222,10 +221,10 @@ class WaveformPlotting(object):
         # Get minmax array.
         self.__dayplotGetMinMaxValues(self, *args, **kwargs)
         # Normalize array
-        self.__dayplotNormalizeValues(self,  *args, **kwargs)
+        self.__dayplotNormalizeValues(self, *args, **kwargs)
         from datetime import datetime
         # Get timezone information. If none is  given, use local time.
-        self.time_offset = kwargs.get('time_offset', 
+        self.time_offset = kwargs.get('time_offset',
                            round((UTCDateTime(datetime.now()) - \
                            UTCDateTime()) / 3600.0 , 2))
         self.timezone = kwargs.get('timezone', 'local time')
@@ -243,10 +242,10 @@ class WaveformPlotting(object):
             else:
                 self.repeat = self.steps
         # Create axis to plot on.
-        plt.subplot(1, 1, 1, axisbg = self.background_color)
+        plt.subplot(1, 1, 1, axisbg=self.background_color)
         # Adjust the subplots to be symmetrical. Also make some more room
         # at the top.
-        plt.gcf().subplots_adjust(left = 0.12, right = 0.88, top = 0.88)
+        plt.gcf().subplots_adjust(left=0.12, right=0.88, top=0.88)
         # Create x_value_array.
         aranged_array = np.arange(self.width)
         x_values = np.empty(2 * self.width)
@@ -261,7 +260,7 @@ class WaveformPlotting(object):
             y_values[0::2] += self.extreme_values[_i, :, 0]
             y_values[1::2] += self.extreme_values[_i, :, 1]
             # Plot the values.
-            plt.plot(x_values, y_values, color = self.color[(_i % self.repeat)
+            plt.plot(x_values, y_values, color=self.color[(_i % self.repeat)
                                                            % len(self.color)])
         # Set ranges.
         plt.xlim(0, self.width - 1)
@@ -276,10 +275,10 @@ class WaveformPlotting(object):
         plt.gcf().axes[0].yaxis.grid(False)
         # Set the title of the plot.
         s = self.stream[0].stats
-        plt.title('%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel),
-                  fontsize = 'medium')
+        plt.title('%s.%s.%s.%s' % (s.network, s.location, s.station,
+                                   s.channel),
+                  fontsize='medium')
 
-        
     def __plotStraight(self, trace, *args, **kwargs):
         """
         Just plots the data samples in the self.stream. Useful for smaller
@@ -289,11 +288,11 @@ class WaveformPlotting(object):
         Slow and high memory consumption for large datasets.
         """
         # Use deepcopy here, because the Traces are generally small and if more
-        # than one Trace is present, they will be merged and the original Stream
-        # object should not change.
+        # than one Trace is present, they will be merged and the original 
+        # Stream object should not change.
         if len(trace) > 1:
             traces = deepcopy(trace)
-            stream = Stream(traces = traces)
+            stream = Stream(traces=traces)
             stream.merge()
             trace = stream[0]
         else:
@@ -325,7 +324,6 @@ class WaveformPlotting(object):
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         plt.xlim(0, len(trace.data) - 1)
-        
 
     def __plotMinMax(self, trace, *args, **kwargs):
         """
@@ -348,7 +346,7 @@ class WaveformPlotting(object):
             # trace does not match the starttime of the plot.
             ts = _t.stats.starttime
             if ts > self.starttime:
-                start = int(ceil(((ts-self.starttime) * \
+                start = int(ceil(((ts - self.starttime) * \
                         sampling_rate) / pixel_length))
                 # Samples before start.
                 prestart = int(((self.starttime + start * pixel_length /
@@ -357,16 +355,16 @@ class WaveformPlotting(object):
                 start = 0
             # Figure out the number of pixels in the current trace.
             length = len(_t.data) - start
-            pixel_count = int(length//pixel_length)
+            pixel_count = int(length // pixel_length)
             rest = int(length % pixel_length)
             # Reference to new data array which does not copy data but is
             # reshapeable.
             data = _t.data[start: start + pixel_count * pixel_length]
             data = data.reshape(pixel_count, pixel_length)
             # Calculate extreme_values and put them into new array.
-            extreme_values = np.ma.masked_all((self.width, 2), dtype = np.float)
-            min = data.min(axis = 1)
-            max = data.max(axis = 1)
+            extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
+            min = data.min(axis=1)
+            max = data.max(axis=1)
             extreme_values[start: start + pixel_count, 0] = min
             extreme_values[start: start + pixel_count, 1] = max
             # First and last and last pixel need seperate treatment.
@@ -394,8 +392,8 @@ class WaveformPlotting(object):
                 max[:, 0] = minmax[:, 1]
                 max[:, 1] = extreme_values[:, 1]
                 # Find the minimum and maxiumum values.
-                min = min.min(axis = 1)
-                max = max.max(axis = 1)
+                min = min.min(axis=1)
+                max = max.max(axis=1)
                 # Write again to minmax.
                 minmax[:, 0] = min
                 minmax[:, 1] = max
@@ -412,10 +410,9 @@ class WaveformPlotting(object):
         y_values.mask = True
         y_values[0::2] = minmax[:, 0]
         y_values[1::2] = minmax[:, 1]
-        plt.plot(x_values, y_values, color = self.color)
+        plt.plot(x_values, y_values, color=self.color)
         # Set the x-limit to avoid clipping of masked values.
         plt.xlim(0, self.width - 1)
-
 
     def __plotSetXTicks(self, *args, **kwargs):
         """
@@ -434,8 +431,7 @@ class WaveformPlotting(object):
             ax.set_xticklabels([(self.starttime + _i *
                                 interval).strftime(self.tick_format)
                                 for _i in range(self.number_of_ticks)],
-                                fontsize = 'small')
-
+                                fontsize='small')
 
     def __plotSetYTicks(self, *args, **kwargs):
         """
@@ -458,19 +454,19 @@ class WaveformPlotting(object):
             ticks = [mean - 0.7 * max_distance, mean, mean + 0.7 *
                            max_distance]
             ax.set_yticks([round(int(_j)) for _j in ticks])
-            ax.set_yticklabels(ax.get_yticks(), fontsize = 'small')
+            ax.set_yticklabels(ax.get_yticks(), fontsize='small')
             # Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='left',
                       fontsize='small', verticalalignment='center')
-            
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):
         """
-        Takes a Stream object and calculates the min and max values for each pixel in the dayplot.
+        Takes a Stream object and calculates the min and max values for each 
+        pixel in the dayplot.
 
-        Writes a three dimensional array. The first axis is the step, i.e number of trace, the
-        second is the pixel in that step and the third contains the minimum and maximum value
-        of the pixel.
+        Writes a three dimensional array. The first axis is the step, i.e 
+        number of trace, the second is the pixel in that step and the third 
+        contains the minimum and maximum value of the pixel.
         """
         # XXX: Currently only works for Streams containing just one Trace.
         if len(self.stream) != 1:
@@ -482,10 +478,10 @@ class WaveformPlotting(object):
         # Samples per interval.
         spt = self.interval * trace.stats.sampling_rate
         # Calculate the steps. Cut the result after three digits.
-        steps = ceil(round((self.endtime - self.starttime) / self.interval, 3)) 
+        steps = ceil(round((self.endtime - self.starttime) / self.interval, 3))
         self.steps = int(steps)
         # How many data points in one pixel.
-        pixel_width = int(spt//self.width)
+        pixel_width = int(spt // self.width)
         # If the last step has just one sample, then merge it.
         merged_value = False
         if trace_length % (self.steps - 1) == 1:
@@ -508,14 +504,14 @@ class WaveformPlotting(object):
             data = trace.data[_i * spt: (_i + 1) * spt]
             # Reshaping only works if the length of the array is the
             # multiple of the two arguments.
-            slice_value = len(data)//self.width * self.width
+            slice_value = len(data) // self.width * self.width
             data_sliced = data[: slice_value]
             data_rest = data[slice_value:]
             data_sliced = data_sliced.reshape(self.width, pixel_width)
             # Write the min/max values to the array. The first value on axis
             # is the minimum value, the second on the maximum value.
-            extreme_values[_i, :, 0] = data_sliced.min(axis = 1) 
-            extreme_values[_i, :, 1] = data_sliced.max(axis = 1)
+            extreme_values[_i, :, 0] = data_sliced.min(axis=1)
+            extreme_values[_i, :, 1] = data_sliced.max(axis=1)
             # Eventually override the last value.
             if len(data_rest):
                 if data_rest.min() < extreme_values[_i, -1, 0]:
@@ -529,14 +525,14 @@ class WaveformPlotting(object):
             # about missing entries.
             extreme_values[-1, :, :] = np.ma.masked
             # The following code is somewhat redundant.
-            pixel_count = len(data)//pixel_width
+            pixel_count = len(data) // pixel_width
             slice_value = pixel_count * pixel_width
             data_sliced = data[: slice_value]
             data_rest = data[slice_value:]
             data_sliced = data_sliced.reshape(pixel_count, pixel_width)
             # Write to array.
-            extreme_values[-1, : pixel_count, 0] = data_sliced.min(axis = 1)
-            extreme_values[-1, : pixel_count, 1] = data_sliced.max(axis = 1)
+            extreme_values[-1, : pixel_count, 0] = data_sliced.min(axis=1)
+            extreme_values[-1, : pixel_count, 1] = data_sliced.max(axis=1)
             # Write last values.
             if len(data_rest):
                 extreme_values[-1, pixel_count, 0] = data_rest.min()
@@ -551,8 +547,7 @@ class WaveformPlotting(object):
         # Set class variable.
         self.extreme_values = extreme_values
 
-
-    def __dayplotNormalizeValues(self,  *args, **kwargs):
+    def __dayplotNormalizeValues(self, *args, **kwargs):
         """
         Normalizes all values in the 3 dimensional array, so that the minimum
         value will be 0 and the maximum value will be 1.
@@ -567,8 +562,8 @@ class WaveformPlotting(object):
         # mean value at 0.5.
         max = self.extreme_values[:, :, 1].max()
         min = self.extreme_values[:, :, 0].min()
-        if max  >  -min:
-            self.extreme_values  = (self.extreme_values / max) / 2 + 0.5
+        if max > -min:
+            self.extreme_values = (self.extreme_values / max) / 2 + 0.5
         else:
             self.extreme_values = (self.extreme_values / abs(min)) / 2 + 0.5
 
@@ -584,10 +579,10 @@ class WaveformPlotting(object):
             time_value = self.interval
         elif self.interval < 3600:
             type = 'minutes'
-            time_value = self.interval/60
+            time_value = self.interval / 60
         else:
             type = 'hours'
-            time_value = self.interval/3600
+            time_value = self.interval / 3600
         # Up to 20 time units and if its a full number, show every unit.
         if time_value <= 20 and time_value % 1 == 0:
             count = time_value
@@ -600,12 +595,11 @@ class WaveformPlotting(object):
                     count = _i
                     break
         # Calculate and set ticks.
-        ticks = np.linspace(0.0, max_value, count +1)
-        ticklabels = np.linspace(0.0, count, count +1)
+        ticks = np.linspace(0.0, max_value, count + 1)
+        ticklabels = np.linspace(0.0, count, count + 1)
         plt.xticks(ticks, ['%g' % _i for _i in ticklabels])
         plt.xlabel('time in %s' % type)
 
-        
     def __dayplotSetYTicks(self, *args, **kwargs):
         """
         Sets the yticks for the dayplot.
@@ -613,14 +607,14 @@ class WaveformPlotting(object):
         # Do not display all ticks except if it are five or less steps.
         if self.steps <= 5:
             tick_steps = range(0, self.steps)
-            ticks = np.arange(self.steps, 0, -1, dtype = np.float)
+            ticks = np.arange(self.steps, 0, -1, dtype=np.float)
             ticks -= 0.5
         else:
             tick_steps = range(0, self.steps, self.repeat)
-            ticks = np.arange(self.steps, 0, -1 * self.repeat, dtype = np.float)
+            ticks = np.arange(self.steps, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
-        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') for\
-                      _i in tick_steps]
+        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') \
+                      for _i in tick_steps]
         plt.yticks(ticks, ticklabels)
         plt.ylabel('UTC')
         # Save range.
@@ -639,14 +633,13 @@ class WaveformPlotting(object):
         time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
                      (sign, self.time_offset, (self.time_offset % 1 * 60))
         self.twin.set_ylabel(time_label)
- 
 
     def __setupFigure(self):
         """
         The design and look of the whole plot to be produced.
         """
         # Setup figure and axes
-        plt.figure(num=None, dpi = self.dpi, figsize = (float(self.width) /
+        plt.figure(num=None, dpi=self.dpi, figsize=(float(self.width) /
                    self.dpi, float(self.height) / self.dpi))
         fig = plt.gcf()
         # XXX: Figure out why this is needed sometimes.
@@ -659,7 +652,6 @@ class WaveformPlotting(object):
                                   self.endtime.strftime(pattern))
         plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
                      horizontalalignment='left')
-
 
     def __setupSubplot(axis):
         """

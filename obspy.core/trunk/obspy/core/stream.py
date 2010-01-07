@@ -323,7 +323,7 @@ class Stream(object):
                   "plot ObsPy Stream objects."
             print msg
             raise
-        waveform = WaveformPlotting(stream = self, *args, **kwargs)
+        waveform = WaveformPlotting(stream=self, *args, **kwargs)
         waveform.plotWaveform()
 
     def pop(self, index= -1):
@@ -448,38 +448,6 @@ class Stream(object):
         for trace in self:
             trace._verify()
 
-    def old_merge(self):
-        """
-        Merges L{Trace} objects with same IDs.
-
-        Gaps and overlaps are usually separated in distinct traces. This method
-        tries to merge them and to create distinct traces within this L{Stream}
-        object.
-        """
-        # order matters!
-        self.sort()
-        traces_dict = {}
-        # using pop() and try-except saves memory
-        try:
-            while True:
-                trace = self.traces.pop()
-                id = trace.getId()
-                if id not in traces_dict:
-                    traces_dict[id] = trace
-                else:
-                    traces_dict[id] = traces_dict[id] + trace
-        except IndexError:
-            pass
-        self.traces = []
-        # same here
-        try:
-            while True:
-                id, trace = traces_dict.popitem()
-                self.traces.append(trace)
-        except KeyError:
-            pass
-        self.sort()
-
     def merge(self):
         """
         Merges L{Trace} objects with same IDs.
@@ -531,11 +499,8 @@ class Stream(object):
                     if right_delta > 0:
                         continue
                     # Update the old trace with the interpolation.
-                    try:
-                        cur_trace[-1][left_delta:] = \
-                            (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
-                    except:
-                        import ipdb; ipdb.set_trace()
+                    cur_trace[-1][left_delta:] = \
+                        (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
                     # Append the rest of the trace.
                     cur_trace.append(trace[right_delta:])
                 # Gap

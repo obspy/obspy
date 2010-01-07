@@ -10,8 +10,8 @@
 """ 
 Python Class for transforming seismograms to audio WAV files
 
-@copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 from obspy.core import Trace, Stream

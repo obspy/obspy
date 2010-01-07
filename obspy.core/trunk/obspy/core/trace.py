@@ -133,17 +133,17 @@ class Trace(object):
 
     id = property(getId)
 
-    def plot(self, **kwargs):
+    def plot(self, *args, **kwargs):
         """
         Creates a graph of this L{Trace} object.
         """
         try:
-            from obspy.imaging import waveform
+            from obspy.imaging.waveform import WaveformPlotting
         except:
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Trace objects."
             raise Exception(msg)
-        waveform = WaveformPlotting(stream = self, *args, **kwargs)
+        waveform = WaveformPlotting(stream=self, *args, **kwargs)
         waveform.plotWaveform()
 
     def write(self, filename, format, **kwargs):

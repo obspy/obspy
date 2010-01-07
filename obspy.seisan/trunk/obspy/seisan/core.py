@@ -162,15 +162,6 @@ def writeSEISAN(stream_object, filename, **kwargs):
     
     :type stream_object: L{obspy.Stream}.
     :param stream_object: A ObsPy Stream object.
-    :param filename: SEISAB file to be written.
+    :param filename: SEISAN file to be written.
     """
     raise NotImplementedError
-
-
-class SEISANFile(object):
-    """
-    """
-    def __init__(self, fh):
-        """
-        """
-        self.fh = fh
