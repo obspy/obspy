@@ -27,11 +27,11 @@ class CoreTestCase(unittest.TestCase):
         """
         Tests resulting version strings of SEISAN file.
         """
-        # 1
+        # 1 - big endian, 32 bit
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         data = open(file, 'rb').read(80 * 12)
         self.assertEqual(_getVersion(data), ('>', 32, 7))
-        # 2
+        # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         data = open(file, 'rb').read(80 * 12)
         self.assertEqual(_getVersion(data), ('<', 32, 7))
@@ -40,10 +40,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Tests SEISAN file check.
         """
-        # 1
+        # 1 - big endian, 32 bit
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         self.assertTrue(isSEISAN(file))
-        # 2
+        # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         self.assertTrue(isSEISAN(file))
 
@@ -51,7 +51,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test SEISAN file reader.
         """
-        # 1
+        # 1 - big endian, 32 bit
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
         st1 = readSEISAN(file)
         st1._verify()
@@ -72,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         # Seisan file!
         self.assertEqual(list(st1[20].data[0:3665]),
                          list(np.fromfile(datafile, dtype=int, sep=' ')))
-        # 2
+        # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         st2 = readSEISAN(file)
         st2._verify()
@@ -83,6 +83,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test SEISAN file reader with headonly flag.
         """
+        # 1 - big endian, 32 bit
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
         st1 = readSEISAN(file, headonly=True)
         self.assertEqual(len(st1), 21)

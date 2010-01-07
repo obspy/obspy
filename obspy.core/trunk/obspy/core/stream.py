@@ -36,8 +36,12 @@ def _read(filename, format=None, headonly=False, **kwargs):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
     # Gets the available formats and the corresponding methods as entry points.
-    formats_ep = dict([(ep.name, ep) \
-                      for ep in iter_entry_points('obspy.plugin.waveform')])
+    formats_ep = {}
+    for ep in iter_entry_points('obspy.plugin.waveform', None):
+        _l = list(iter_entry_points('obspy.plugin.waveform.' + ep.name,
+                                    'readFormat'))
+        if _l:
+            formats_ep[ep.name] = ep
     if not formats_ep:
         msg = "Your current ObsPy installation does not support any file " + \
               "reading formats. Please update or extend your ObsPy " + \
@@ -72,7 +76,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                       format_ep.name, 'readFormat')
     except:
         msg = "Format is not supported. Supported Formats: "
-        raise TypeError(msg + ', '.join([ep.name for ep in formats_ep]))
+        raise TypeError(msg + ', '.join(formats_ep.keys()))
     if headonly:
         stream = readFormat(filename, headonly=True, **kwargs)
     else:
@@ -401,14 +405,22 @@ class Stream(object):
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=False)
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format="", **kwargs):
         """
         Saves stream into a file.
         """
         format = format.upper()
         # Gets all available formats and the corresponding entry points.
-        formats_ep = dict([(ep.name, ep) for ep in \
-                           iter_entry_points('obspy.plugin.waveform')])
+        formats_ep = {}
+        for ep in iter_entry_points('obspy.plugin.waveform', None):
+            _l = list(iter_entry_points('obspy.plugin.waveform.' + ep.name,
+                                        'writeFormat'))
+            if _l:
+                formats_ep[ep.name] = ep
+        if not format:
+            msg = "Please provide a output format. Supported Formats: "
+            print msg + ', '.join(formats_ep.keys())
+            return
         try:
             # search writeFormat for given entry point
             ep = formats_ep[format]
@@ -417,7 +429,7 @@ class Stream(object):
                                            ep.name, 'writeFormat')
         except:
             msg = "Format is not supported. Supported Formats: "
-            raise TypeError(msg + ', '.join([ep.name for ep in formats_ep]))
+            raise TypeError(msg + ', '.join(formats_ep.keys()))
         writeFormat(self, filename, **kwargs)
 
     def trim(self, starttime, endtime):
