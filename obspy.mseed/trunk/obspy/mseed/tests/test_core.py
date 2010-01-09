@@ -243,7 +243,7 @@ class CoreTestCase(unittest.TestCase):
         # libmseed instance.
         npts = 1000
         np.random.seed(815) # make test reproducable
-        data = np.random.randint(10, 1000, npts).astype('int32')
+        data = np.random.randn(npts).astype('float64') * 1e3 + .5
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
@@ -251,28 +251,30 @@ class CoreTestCase(unittest.TestCase):
         stats['starttime'] = start
         stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
-        tr._verify()
         st = Stream([tr])
-        st._verify()
-        encodings = {'INT16' : 1, 'INT32' : 3, 'STEIM1' : 10, 'STEIM2' :11}
+        encodings = {'ASCII': (0, "a"), 'INT32': (3,"i"),
+                     'FLOAT32': (4, "f"), 'FLOAT64': (5, "d"), 
+                     'STEIM1': (10, "i"), 'STEIM2' : (11, "i")}
         # Loop over some record lengths.
         for key in encodings.keys():
             tempfile = NamedTemporaryFile().name
-            tempfile2 = NamedTemporaryFile().name
+            #tempfile2 = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
-            st.write(tempfile, format="MSEED", encoding=encodings[key])
-            st.write(tempfile2, format="MSEED", encoding=key)
+            st[0].data = data.astype(encodings[key][1])
+            st._verify()
+            st.write(tempfile, format="MSEED", encoding=encodings[key][0])
+            #st.write(tempfile2, format="MSEED", encoding=key)
             # Test reading the two files.
             temp_st1 = read(tempfile)
-            temp_st2 = read(tempfile2)
-            np.testing.assert_array_equal(data, temp_st1[0].data)
-            np.testing.assert_array_equal(data, temp_st2[0].data)
-            del temp_st1, temp_st2
+            #temp_st2 = read(tempfile2)
+            np.testing.assert_array_equal(st[0].data, temp_st1[0].data)
+            #np.testing.assert_array_equal(st[0].data, temp_st2[0].data)
+            del temp_st1#, temp_st2
             # Check the encodings.
-            for file in [tempfile, tempfile2]:
+            for file in [tempfile]:#, tempfile2]:
                 ms = MSStruct(file)
                 ms.read(-1, 1, 1, 0)
-                self.assertEqual(ms.msr.contents.encoding, encodings[key])
+                self.assertEqual(ms.msr.contents.encoding, encodings[key][0])
                 del ms # for valgrind
                 os.remove(file)
 
@@ -334,6 +336,30 @@ class CoreTestCase(unittest.TestCase):
         data = np.array([-406, -417, -403, -423, -413])
         np.testing.assert_array_equal(tr.data[-5:], data)
 
+    def test_writeAllTypes(self):
+        """
+        Tests writing all different types. This is an test which is independent of
+        the read method. Only the data part is verified.
+        """
+        file = os.path.join(self.path, "data", \
+                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        tempfile = NamedTemporaryFile().name
+        # Read the data and copy them
+        st = read(file)
+        data_copy = st[0].data.copy()
+        # Float64, Float32, Int32, Int24, Int16, Char
+        encoding = {("<f8","<f8"): 5, ("<f4","<f4"): 4, ("<i4","<i4"): 3, 
+                    ("|S1","|S1"): 0}#, ("<i4","<i2"): 1}
+        for dtype in encoding.keys():
+            # Convert data to floats and write them again
+            st[0].data = data_copy.astype(dtype[0])
+            st.write(tempfile, format="MSEED", encoding=encoding[dtype], 
+                     reclen=256, byteorder=0)
+            # Read the binary chunk of data without header not using ObsPy
+            s = open(tempfile, "rb").read()
+            data = np.fromstring(s[56:256], dtype=dtype[1])
+            # Test if both are the same
+            np.testing.assert_array_equal(data, st[0].data[:len(data)])
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

@@ -37,7 +37,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME
+    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES
 from struct import unpack
 import ctypes as C
 import math
@@ -166,8 +166,9 @@ class libmseed(object):
             header['endtime'] = long(header['starttime'] + delta * \
                                       (header['numsamples'] - 1))
             # Access data directly as numpy array.
-            data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
-                                                       chain.numsamples)
+            data = self._ctypesArray2NumpyArray(chain.datasamples,
+                                                chain.numsamples,
+                                                chain.sampletype)
             msrid = self._MSRId(header)
             last_endtime = trace_list[-1][0]['endtime']
             if abs(last_endtime - header['starttime']) <= 1.01 * delta and \
@@ -227,8 +228,9 @@ class libmseed(object):
         for i in xrange(numtraces):
             header = self._convertMSTToDict(chain)
             # Access data directly as numpy array.
-            data = self._accessCtypesArrayAsNumpyArray(chain.datasamples,
-                                                       chain.numsamples)
+            data = self._ctypesArray2NumpyArray(chain.datasamples,
+                                                chain.numsamples,
+                                                chain.sampletype)
             trace_list.append([header, data])
             # Set chain to next trace.
             if i != numtraces - 1:
@@ -883,22 +885,24 @@ class libmseed(object):
             raise Exception("Error in unpack_steim1")
         return datasamples
 
-    def _accessCtypesArrayAsNumpyArray(self, buffer, buffer_elements):
+    def _ctypesArray2NumpyArray(self, buffer, buffer_elements, sampletype):
         """
-        Takes a Ctypes c_int32 array and its length and returns it as a numpy
-        array.
+        Takes a Ctypes array and its length and type and returns it as a
+        numpy array.
         
         This works by reference and no data is copied.
         
-        :param buffer: Ctypes c_int32 buffer.
-        :param buffer_elements: length of the buffer
+        :param buffer: Ctypes c_void_p pointer to buffer.
+        :param buffer_elements: length of the whole buffer
+        :param sampletype: type of sample, on of "a", "i", "f", "d"
         """
         # Allocate numpy array to move memory to
-        numpy_array = np.empty(buffer_elements, dtype='int32')
+        numpy_array = np.empty(buffer_elements, dtype=sampletype)
+        samplesize = clibmseed.ms_samplesize(C.c_char(sampletype))
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
-        C.memmove(datptr, buffer, buffer_elements * 4)
+        C.memmove(datptr, buffer, buffer_elements * samplesize)
         return numpy_array
 
     def _convertDatetimeToMSTime(self, dt):
@@ -1023,11 +1027,12 @@ class libmseed(object):
         # Loop over all traces in trace_list.
         for _i in xrange(numtraces):
             # Check that data are numpy.ndarrays of dtype int32
+            sampletype = trace_list[_i][0]['sampletype']
             if not isinstance(trace_list[_i][1], np.ndarray) or \
-                    trace_list[_i][1].dtype != 'int32':
+                    trace_list[_i][1].dtype != DATATYPES[sampletype][0]:
                 clibmseed.mst_freegroup(C.pointer(mstg))
-                raise Exception("Data must me of type numpy.ndarray, dtype "
-                                "int32")
+                raise Exception("Data must be of type numpy.ndarray " + \
+                                "dtype %s" % DATATYPES[sampletype][0])
             # Create variable with the number of sampels in this trace for
             # faster future access.
             npts = trace_list[_i][0]['numsamples']
@@ -1035,21 +1040,22 @@ class libmseed(object):
             self._convertDictToMST(chain, trace_list[_i][0])
             # Create a single datapoint and resize its memory to be able to
             # hold all datapoints.
-            tempdatpoint = C.c_int32()
-            C.resize(tempdatpoint,
-                     clibmseed.ms_samplesize(C.c_char(trace_list[_i][0]\
-                                                      ['sampletype'])) * npts)
+            tempdatpoint = DATATYPES[sampletype][1]()
+            datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
+            C.resize(tempdatpoint, datasize)
             # old segmentationfault try
             # chain.contents.datasamples = \
             # trace_list[_i][1].ctypes.data_as(C.POINTER(C.c_long))
             # The datapoints in the MSTG structure are a pointer to the memory
             # area reserved for tempdatpoint.
-            chain.contents.datasamples = C.pointer(tempdatpoint)
+            #chain.contents.datasamples = C.pointer(tempdatpoint)
+            chain.contents.datasamples = C.cast(C.pointer(tempdatpoint), 
+                                                C.c_void_p)
             # Pointer to the Numpy data buffer.
             datptr = trace_list[_i][1].ctypes.get_data()
             # Manually move the contents of the numpy data buffer to the
             # address of the previously created memory area.
-            C.memmove(chain.contents.datasamples, datptr, npts * 4)
+            C.memmove(chain.contents.datasamples, datptr, datasize)
             if _i != numtraces - 1:
                 chain.contents.next = clibmseed.mst_init(None)
                 chain = chain.contents.next

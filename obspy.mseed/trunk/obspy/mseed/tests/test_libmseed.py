@@ -184,13 +184,16 @@ class LibMSEEDTestCase(unittest.TestCase):
         This uses all possible encodings, record lengths and the byte order 
         options. A reencoded SEED file should still have the same values 
         regardless of write options.
+        Note: Test currently only tests the first trace
         """
         mseed = libmseed()
         mseed_file = os.path.join(self.path, 'test.mseed')
         trace_list = mseed.readMSTraces(mseed_file)
+        data = trace_list[0][1].copy()
         # define test ranges
         record_length_values = [2 ** i for i in range(8, 21)]
-        encoding_values = [1, 3, 10, 11]
+        encoding_values = {0: "a", 3: "i", 4: "f", 5: "d",
+                           10: "i", 11: "i"}
         byteorder_values = [0, 1]
         # deletes the data quality indicators
         testheader = trace_list[0][0].copy()
@@ -198,7 +201,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         # loops over all combinations of test values
         for reclen in record_length_values:
             for byteorder in byteorder_values:
-                for encoding in encoding_values:
+                for encoding in encoding_values.keys():
+                    trace_list[0][1] = data.astype(encoding_values[encoding])
+                    trace_list[0][0]['sampletype'] = encoding_values[encoding]
                     filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder,
                                                         encoding)
                     temp_file = os.path.join(self.path, filename)
@@ -207,15 +212,16 @@ class LibMSEEDTestCase(unittest.TestCase):
                                         reclen=reclen)
                     new_trace_list = mseed.readMSTraces(temp_file)
                     del new_trace_list[0][0]['dataquality']
+                    testheader['sampletype'] = encoding_values[encoding]
                     self.assertEqual(testheader, new_trace_list[0][0])
                     np.testing.assert_array_equal(trace_list[0][1],
-                                                 new_trace_list[0][1])
+                                                  new_trace_list[0][1])
                     os.remove(temp_file)
 
     def test_WriteRaiseOnInt64(self):
         """
         Writing data of type int64 is not supported, an Exception should be
-        raised. Such write operations can happen on 64 bit platforms.
+        raised. Such write operations can happen on 64bit platforms.
         """
         mseed = libmseed()
         mseed_file = os.path.join(self.path, 'test.mseed')
