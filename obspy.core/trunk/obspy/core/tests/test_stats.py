@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from StringIO import StringIO
-from obspy.core import Stats, Stream, Trace
+from obspy.core import Stats, Stream, Trace, AttribDict
 import copy
 import pickle
 import unittest
@@ -22,8 +22,18 @@ class StatsTestCase(unittest.TestCase):
         Init tests.
         """
         stats = Stats({'test': 'muh'})
+        stats['other1'] = {'test1': '1'}
+        stats['other2'] = AttribDict({'test2': '2'})
+        stats['other3'] = 'test3'
         self.assertEquals(stats.test, 'muh')
         self.assertEquals(stats['test'], 'muh')
+        self.assertEquals(stats.other1.test1, '1')
+        self.assertEquals(stats.other1.__class__, AttribDict)
+        self.assertEquals(len(stats.other1), 1)
+        self.assertEquals(stats.other2.test2, '2')
+        self.assertEquals(stats.other2.__class__, AttribDict)
+        self.assertEquals(len(stats.other2), 1)
+        self.assertEquals(stats.other3, 'test3')
         self.assertTrue('test' in stats)
         self.assertTrue('test' in stats.__dict__)
 
@@ -34,11 +44,22 @@ class StatsTestCase(unittest.TestCase):
         stats = Stats()
         stats.network = 'BW'
         stats['station'] = 'ROTZ'
+        stats['other1'] = {'test1': '1'}
+        stats['other2'] = AttribDict({'test2': '2'})
+        stats['other3'] = 'test3'
         stats2 = copy.deepcopy(stats)
         stats.network = 'CZ'
         stats.station = 'RJOB'
+        self.assertEquals(stats2.__class__, Stats)
         self.assertEquals(stats2.network, 'BW')
         self.assertEquals(stats2.station, 'ROTZ')
+        self.assertEquals(stats2.other1.test1, '1')
+        self.assertEquals(stats2.other1.__class__, AttribDict)
+        self.assertEquals(len(stats2.other1), 1)
+        self.assertEquals(stats2.other2.test2, '2')
+        self.assertEquals(stats2.other2.__class__, AttribDict)
+        self.assertEquals(len(stats2.other2), 1)
+        self.assertEquals(stats2.other3, 'test3')
         self.assertEquals(stats.network, 'CZ')
         self.assertEquals(stats.station, 'RJOB')
 
@@ -50,8 +71,8 @@ class StatsTestCase(unittest.TestCase):
         self.assertTrue('a' in dir(x))
         x.update({'b': 5})
         self.assertTrue('b' in dir(x))
-        y = {'a':5}
-        y.update({'b':5})
+        y = {'a': 5}
+        y.update({'b': 5})
         x = Stats(y)
         self.assertTrue('b' in dir(x))
 

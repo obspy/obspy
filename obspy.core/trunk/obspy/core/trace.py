@@ -7,7 +7,54 @@ import numpy as np
 
 
 class Stats(AttribDict):
-    pass
+    """
+    A stats class which behaves like a dictionary.
+    
+    Attributes starttime, npts, sampling_rate and delta are dynamically 
+    monitored and used to recalculated endtime, delta or sampling_rate if set 
+    to a new value. The attribute endtime is set to readonly.
+    """
+    readonly = ['endtime']
+
+    def __init__(self, data={}):
+        # set default values
+        super(Stats, self).__setitem__('sampling_rate', 1.0)
+        super(Stats, self).__setitem__('starttime', UTCDateTime(0))
+        super(Stats, self).__setitem__('npts', 0)
+        # init
+        super(Stats, self).__init__(data)
+        # set derived values
+        self._update()
+
+    def __setitem__(self, key, value):
+        if key in self.readonly:
+            msg = "Attribute \"%s\" in Stats object is read only!" % (key)
+            raise AttributeError(msg)
+        if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
+            if key == 'delta':
+                key = 'sampling_rate'
+                value = 1.0 / float(value)
+            # set current key
+            super(Stats, self).__setitem__(key, value)
+            # det derived values
+            self._update()
+        elif isinstance(value, dict):
+            super(Stats, self).__setitem__(key, AttribDict(value))
+        elif isinstance(value, Stats):
+            msg = "Stats object must not contain another Stats object."
+            raise AttributeError(msg)
+        else:
+            super(Stats, self).__setitem__(key, value)
+
+    __setattr__ = __setitem__
+
+    def _update(self):
+        # set delta
+        delta = 1.0 / float(self.sampling_rate)
+        super(Stats, self).__setitem__('delta', delta)
+        # set endtime
+        endtime = self.starttime + (self.npts - 1) / float(self.sampling_rate)
+        super(Stats, self).__setitem__('endtime', endtime)
 
 
 class Trace(object):
@@ -33,11 +80,8 @@ class Trace(object):
             header.setdefault(default, '')
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
-        for key, value in header.iteritems():
-            if not isinstance(value, dict):
-                continue
-            self.stats[key] = Stats(value)
-        self.data = data
+        # set data without changing npts in stats object (for headonly option)
+        super(Trace, self).__setattr__('data', data)
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
@@ -55,6 +99,16 @@ class Trace(object):
         return len(self.data)
 
     count = __len__
+
+    def __setattr__(self, key, value):
+        """
+        __setattr__ method of L{Trace} object.
+        
+        Any change in Trace.data will dynamically set Trace.stats.npts.
+        """
+        if key == 'data':
+            self.stats.npts = len(value)
+        return super(Trace, self).__setattr__(key, value)
 
     def __getitem__(self, index):
         """
@@ -124,7 +178,6 @@ class Trace(object):
             # Create masked array.
             out.data = np.ma.masked_array(out.data, np.isnan(out.data))
         out.stats.npts = out.data.size
-        out.stats.endtime = rt.stats.endtime
         return out
 
     def getId(self):
@@ -192,8 +245,7 @@ class Trace(object):
         if endtime == self.stats.starttime:
             total = 1
         self.data = self.data[0:total]
-        self.stats.npts = len(self.data)
-        self.stats.endtime = endtime
+        self.stats.npts = total
 
     def trim(self, starttime, endtime):
         """

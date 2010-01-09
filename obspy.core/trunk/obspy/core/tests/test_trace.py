@@ -35,7 +35,6 @@ class TraceTestCase(unittest.TestCase):
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
-        trace.stats.endtime = end
         # verify
         trace._verify()
         # ltrim 100 samples
@@ -104,7 +103,6 @@ class TraceTestCase(unittest.TestCase):
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
-        trace.stats.endtime = end
         # verify
         trace._verify()
         # rtrim 100 samples
@@ -178,7 +176,6 @@ class TraceTestCase(unittest.TestCase):
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
         end = UTCDateTime(2000, 1, 1, 0, 0, 5, 0)
-        trace.stats.endtime = end
         # verify
         trace._verify()
         # rtrim 100 samples
@@ -201,11 +198,9 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr1.stats.endtime = start + 4.995
         tr2 = Trace(data=range(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 10
-        tr2.stats.endtime = start + 14.995
         # verify
         tr1._verify()
         tr2._verify()
@@ -236,11 +231,9 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr1.stats.endtime = start + 4.995
         tr2 = Trace(data=range(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
-        tr2.stats.endtime = start + 8.995
         # verify
         tr1._verify()
         tr2._verify()
@@ -271,7 +264,6 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr1.stats.endtime = start + 5
         # verify
         tr1._verify()
         # add
@@ -291,11 +283,9 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr1.stats.endtime = start + 5
         tr2 = Trace(data=range(0, 201))
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 1
-        tr2.stats.endtime = start + 2
         # verify
         tr1._verify()
         tr2._verify()
@@ -321,15 +311,12 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr1.stats.endtime = start + 4.995
         tr2 = Trace(data=range(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
-        tr2.stats.endtime = start + 8.995
         tr3 = Trace(data=range(0, 1000)[::-1])
         tr3.stats.sampling_rate = 200
         tr3.stats.starttime = start + 12
-        tr3.stats.endtime = start + 16.995
         # check types
         overlap = tr1 + tr2
         self.assertFalse(is_masked(overlap.data))

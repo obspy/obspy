@@ -21,21 +21,17 @@ class StreamTestCase(unittest.TestCase):
         header = {'network': 'BW', 'station': 'BGLD',
             'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
             'npts': 412, 'sampling_rate': 200.0,
-            'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
             'channel': 'EHE'}
         trace1 = Trace(data=np.random.randint(0, 1000, 412),
                                                 header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
-        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 8, 150000)
         header['npts'] = 824
         trace2 = Trace(data=np.random.randint(0, 1000, 824),
                                                 header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 0, 14, 330000)
         trace3 = Trace(data=np.random.randint(0, 1000, 824),
                                                 header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
-        header['endtime'] = UTCDateTime(2008, 1, 1, 0, 4, 31, 790000)
         header['npts'] = 50668
         trace4 = Trace(data=np.random.randint(0, 1000, 50668),
                                                 header=deepcopy(header))
@@ -43,7 +39,6 @@ class StreamTestCase(unittest.TestCase):
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
-                  'endtime': UTCDateTime(2004, 6, 9, 20, 6, 59, 844998),
                   'channel': '  Z'}
         trace = Trace(data=np.random.randint(0, 1000, 12000),
                                                     header=header)
@@ -350,21 +345,17 @@ class StreamTestCase(unittest.TestCase):
         stream = Stream()
         # Create a list of header dictionaries. The sampling rate serves as a
         # unique identifier for each Trace.
-        headers = [{'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
-                UTCDateTime(1990, 1, 2), 'network' : 'AAA', 'station' : 'ZZZ',
-                'channel' : 'XXX', 'sampling_rate' : 100.0},
-                {'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
-                UTCDateTime(1990, 1, 3), 'network' : 'AAA', 'station' : 'YYY',
-                'channel' : 'CCC', 'sampling_rate' : 200.0},
-                {'starttime' : UTCDateTime(2000, 1, 1), 'endtime' : \
-                UTCDateTime(2001, 1, 2), 'network' : 'AAA', 'station' : 'EEE',
-                'channel' : 'GGG', 'sampling_rate' : 300.0},
-                {'starttime' : UTCDateTime(1989, 1, 1), 'endtime' : \
-                UTCDateTime(2010, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
-                'channel' : 'GGG', 'sampling_rate' : 400.0},
-                {'starttime' : UTCDateTime(2010, 1, 1), 'endtime' : \
-                UTCDateTime(2011, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
-                'channel' : 'FFF', 'sampling_rate' : 500.0}]
+        headers = [
+            {'starttime' : UTCDateTime(1990, 1, 1), 'network' : 'AAA',
+             'station' : 'ZZZ', 'channel' : 'XXX', 'sampling_rate' : 100.0},
+            {'starttime' : UTCDateTime(1990, 1, 1), 'network' : 'AAA',
+             'station' : 'YYY', 'channel' : 'CCC', 'sampling_rate' : 200.0},
+            {'starttime' : UTCDateTime(2000, 1, 1), 'network' : 'AAA',
+             'station' : 'EEE', 'channel' : 'GGG', 'sampling_rate' : 300.0},
+            {'starttime' : UTCDateTime(1989, 1, 1), 'network' : 'AAA',
+             'station' : 'XXX', 'channel' : 'GGG', 'sampling_rate' : 400.0},
+            {'starttime' : UTCDateTime(2010, 1, 1), 'network' : 'AAA',
+             'station' : 'XXX', 'channel' : 'FFF', 'sampling_rate' : 500.0}]
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
             new_trace = Trace(header=_i)
@@ -381,8 +372,8 @@ class StreamTestCase(unittest.TestCase):
         stream.sort(keys=['channel', 'sampling_rate'])
         self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [200.0, 500.0, 300.0, 400.0, 100.0])
-        # Sort after npts and channel and sampling_rate.
-        stream.sort(keys=['endtime', 'channel', 'sampling_rate'])
+        # Sort after npts and sampling_rate and endtime.
+        stream.sort(keys=['npts', 'sampling_rate', 'endtime'])
         self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [100.0, 200.0, 300.0, 400.0, 500.0])
         # Sorting without a list or a wrong item string should fail.
@@ -463,8 +454,6 @@ class StreamTestCase(unittest.TestCase):
             ts[-1].stats.sampling_rate = 1
             ts[-1].stats.starttime = UTCDateTime("20080808") + k
             ts[-1].stats.npts = npts
-            ts[-1].stats.endtime = ts[-1].stats.starttime + \
-                    float(ts[-1].stats.npts - 1) / ts[-1].stats.sampling_rate
             k = 20
         stream = Stream(traces=ts)
         stream._verify()
@@ -485,12 +474,10 @@ class StreamTestCase(unittest.TestCase):
         trace1 = Trace(data=np.zeros(1000))
         trace1.stats.sampling_rate = 1.0
         trace1.stats.starttime = UTCDateTime(0)
-        trace1.stats.endtime = trace1.stats.starttime + 1000
         trace2 = Trace(data=np.zeros(10))
         trace2.stats.sampling_rate = 1.0
         trace2.data[:] = 1
         trace2.stats.starttime = trace1.stats.starttime + 10
-        trace2.stats.endtime = trace2.stats.starttime + 10
         st = Stream(traces=[trace1, trace2])
         self.assertEqual(len(st.traces), 2)
         st.merge()

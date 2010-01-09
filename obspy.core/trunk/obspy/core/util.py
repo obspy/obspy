@@ -7,7 +7,7 @@ import tempfile
 
 class AttribDict(dict, object):
     """
-    A stats class which behaves like a dictionary.
+    A class which behaves like a dictionary.
 
     You may use the following syntax to change or access data in this
     class.
@@ -26,18 +26,18 @@ class AttribDict(dict, object):
     >>> x[0:3]
     ['network', 'station']
     """
+    readonly = []
 
     def __init__(self, data={}):
         dict.__init__(data)
-        for key, value in data.iteritems():
-            self[key] = value
+        self.update(data)
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
 
     def __setitem__(self, key, value):
         super(AttribDict, self).__setattr__(key, value)
-        return super(AttribDict, self).__setitem__(key, value)
+        super(AttribDict, self).__setitem__(key, value)
 
     def __getitem__(self, name):
         return super(AttribDict, self).__getitem__(name)
@@ -50,23 +50,24 @@ class AttribDict(dict, object):
         return self.__dict__
 
     def __setstate__(self, pickle_dict):
-        for key, value in pickle_dict.iteritems():
-            self[key] = value
+        self.update(pickle_dict)
 
     __getattr__ = __getitem__
     __setattr__ = __setitem__
     __delattr__ = __delitem__
 
     def copy(self, init={}):
-        return AttribDict(init)
+        return self.__class__(init)
 
     def __deepcopy__(self, *args, **kwargs):
-        st = AttribDict()
+        st = self.__class__()
         st.update(self)
         return st
 
     def update(self, adict={}):
         for (key, value) in adict.iteritems():
+            if key in self.readonly:
+                continue
             self[key] = value
 
 

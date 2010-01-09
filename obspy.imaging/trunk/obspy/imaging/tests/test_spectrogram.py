@@ -32,7 +32,6 @@ class SpectrogramTestCase(unittest.TestCase):
         header = {'network': 'BW', 'station': 'BGLD',
             'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
             'npts': 412, 'sampling_rate': 200.0,
-            'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
             'channel': 'EHE'}
         trace = Trace(data=np.random.randint(0, 1000, 412), header=header)
         stream = Stream([trace])

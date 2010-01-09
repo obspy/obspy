@@ -130,10 +130,7 @@ class Client(object):
             delta = pow(value * pow(10, power) * multi_factor, exponent)
             sr = sei.num_points / float(delta)
             tr.stats.sampling_rate = sr
-            # calculate end time 
-            temp = 1 / sr * (sei.num_points - 1)
             # set all kind of stats
-            tr.stats.endtime = tr.stats.starttime + temp
             tr.stats.station = sei.channel_id.station_code
             tr.stats.network = sei.channel_id.network_id.network_code
             tr.stats.channel = sei.channel_id.channel_code

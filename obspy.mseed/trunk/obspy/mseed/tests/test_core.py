@@ -102,7 +102,6 @@ class CoreTestCase(unittest.TestCase):
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])
@@ -146,9 +145,7 @@ class CoreTestCase(unittest.TestCase):
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        stats['endtime'] = start + (50 - 1) * 0.005
+        stats['starttime'] = UTCDateTime(2000, 1, 1)
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])
@@ -181,7 +178,6 @@ class CoreTestCase(unittest.TestCase):
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])
@@ -219,7 +215,6 @@ class CoreTestCase(unittest.TestCase):
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])
@@ -249,7 +244,6 @@ class CoreTestCase(unittest.TestCase):
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         st = Stream([tr])
         encodings = {'ASCII': (0, "a"), 'INT32': (3,"i"),
@@ -291,7 +285,6 @@ class CoreTestCase(unittest.TestCase):
                  'mseed' : {'dataquality' : 'D'}}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])

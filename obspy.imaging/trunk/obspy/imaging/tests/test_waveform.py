@@ -22,16 +22,14 @@ class WaveformTestCase(unittest.TestCase):
         # a wiggly sinus period.
         data = N.linspace(0, 2 * N.pi, 100000)
         data = 10 * (N.sin(data) + 0.2 * N.sin(20 * data) * N.sin(7777 * data))
-        header = {'starttime' : UTCDateTime(0), 'endtime' : UTCDateTime(0) + \
-                  100000, 'sampling_rate' : 1, 'npts' : data.size,
-                  'network' : 'AA', 'station' : 'BB', 'channel' : 'CC'}
+        header = {'npts' : data.size, 'network' : 'AA', 'station' : 'BB',
+                  'channel' : 'CC'}
         self.stream = Stream(traces=[Trace(data=data, header=header)])
         # Create a the same file again but use more data values..
         data = N.linspace(0, 2 * N.pi, 1000000)
         data = 10 * (N.sin(data) + 0.2 * N.sin(20 * data) * N.sin(7777 * data))
-        header = {'starttime' : UTCDateTime(0), 'endtime' : UTCDateTime(0) + \
-                  100000, 'sampling_rate' : 10, 'npts' : data.size,
-                  'network' : 'AA', 'station' : 'BB', 'channel' : 'CC'}
+        header = {'sampling_rate' : 10, 'npts' : data.size, 'network' : 'AA',
+                  'station' : 'BB', 'channel' : 'CC'}
         self.large_stream = Stream(traces=[Trace(data=data, header=header)])
 
     def tearDown(self):

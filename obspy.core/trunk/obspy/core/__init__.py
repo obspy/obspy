@@ -21,6 +21,7 @@ seismograms.
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
 from obspy.core.testing import runTests

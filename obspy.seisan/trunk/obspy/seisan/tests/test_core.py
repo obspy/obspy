@@ -66,6 +66,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('1997-01-30T10:49:42.902881Z'))
         self.assertAlmostEqual(st1[20].stats.sampling_rate, 75.2, 1)
         self.assertEqual(st1[20].stats.npts, 3675)
+        self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         datafile = os.path.join(self.path, 'MBGBSBJE')
         # compare with ASCII values of trace
         # XXX: extracted ASCII file contains less values than the original
@@ -97,6 +98,7 @@ class CoreTestCase(unittest.TestCase):
                          UTCDateTime('1997-01-30T10:49:42.902881Z'))
         self.assertAlmostEqual(st1[0].stats.sampling_rate, 75.2, 1)
         self.assertEqual(st1[0].stats.npts, 3675)
+        self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         self.assertEqual(list(st1[0].data), []) # no data
 
 

@@ -356,6 +356,7 @@ class ReadSac(object):
                             except SacError:
                                 pass
 
+
     def WriteSacHeader(self, fname):
         """
         Write a header value to the disk ``ok = WriteSacHeader(thePath)``

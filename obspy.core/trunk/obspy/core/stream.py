@@ -489,7 +489,6 @@ class Stream(object):
             stats = copy.deepcopy(traces_dict[id][0].stats)
             sampling_rate = stats.sampling_rate
             stats.starttime = traces_dict[id][0].stats.starttime
-            stats.endtime = traces_dict[id][-1].stats.endtime
             old_starttime = traces_dict[id][0].stats.starttime
             old_endtime = traces_dict[id][0].stats.endtime
             # This is the data list to which we extend

@@ -85,8 +85,6 @@ def readSAC(filename, headonly=False, **kwargs):
                                       minute=t.GetHvalue('nzmin'),
                                       second=t.GetHvalue('nzsec'),
                                       microsecond=t.GetHvalue('nzmsec') * 1000)
-    header['endtime'] = header['starttime'] + \
-                        header['npts'] / float(header['sampling_rate'])
     if headonly:
         tr = Trace(header=header)
     else:

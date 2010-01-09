@@ -96,8 +96,6 @@ def readSEISAN(filename, headonly=False, **kwargs):
     (endian, arch, _version) = _getVersion(data)
     # fetch lines
     fh.seek(0)
-    seisan = {}
-    header = {'seisan': seisan}
     # start with event file header
     # line 1
     data = _readline(fh)
@@ -120,7 +118,6 @@ def readSEISAN(filename, headonly=False, **kwargs):
         temp = _readline(fh, 1040)
         # create Stats
         header = Stats()
-        header['seisan'] = Stats()
         header['network'] = (temp[16] + temp[19]).strip()
         header['station'] = temp[0:5].strip()
         header['location'] = (temp[7] + temp[12]).strip()
@@ -136,8 +133,6 @@ def readSEISAN(filename, headonly=False, **kwargs):
         secs = float(temp[29:35])
         header['starttime'] = starttime = UTCDateTime(year, month, day,
                                                       hour, mins) + secs
-        header['endtime'] = starttime + (header['npts'] - 1) / \
-                            float(header['sampling_rate'])
         if headonly:
             # skip data
             fh.seek(dlen * (header['npts'] + 2), 1)

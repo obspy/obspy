@@ -82,8 +82,6 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
             new_header['starttime'] = UTCDateTime(
                 header['d_year'], header['d_mon'], header['d_day'],
                 header['t_hour'], header['t_min'], 0) + header['t_sec']
-            new_header['endtime'] = new_header['starttime'] + \
-                (header['n_samps'] - 1) / float(header['samp_rate'])
             if headonly:
                 traces.append(Trace(header=new_header))
             else:

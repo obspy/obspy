@@ -158,7 +158,6 @@ class CoreTestCase(unittest.TestCase):
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
-        stats['endtime'] = start + (npts - 1) * 0.005
         tr = Trace(data=data, header=stats)
         tr._verify()
         st = Stream([tr])
