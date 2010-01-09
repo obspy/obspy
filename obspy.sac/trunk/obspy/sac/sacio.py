@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #---------------------------------------------------------------------
-""" 
+"""
 An object-oriented version of C. J. Ammon's SAC I/O module.
 Here is C. J. Ammon's his introductory comment:
 
@@ -17,7 +17,7 @@ For a more complete description, start python and enter,
 Suspected limitations: I don't used XY files much - I am
 not sure that those access routines are bug free.
 
-Send bug reports (not enhancement/feature requests) to: 
+Send bug reports (not enhancement/feature requests) to:
 cja12@psu.edu [with PySAC in the subject field]
 I don't support this software so don't wait for an answer.
 I may not have time...
@@ -44,7 +44,7 @@ The ReadSac class provides the following functions:
 Reading::
 
     ReadSacFile       - read binary SAC file
-    ReadSacXY         - read XY SAC file    
+    ReadSacXY         - read XY SAC file
     ReadSacHeader     - read SAC header
     GetHvalue         - extract information from header
 
@@ -67,7 +67,6 @@ Convenience::
 """
 
 from obspy.core import UTCDateTime
-from obspy.signal import rotate
 import numpy as np
 import os
 import time
@@ -83,38 +82,40 @@ class SacIOError(Exception):
 
 
 class ReadSac(object):
-    """ 
+    """
     Class for SAC file IO
-    
+
     Initialise with: t=ReadSac()
     """
+
     def __init__(self, filen=False, headonly=False, alpha=False):
-        self.fdict = {'delta':0, 'depmin':1, 'depmax':2, 'scale':3,
-                      'odelta':4, 'b':5, 'e':6, 'o':7, 'a':8, 'int1':9,
-                      't0':10, 't1':11, 't2':12, 't3':13, 't4':14, 't5':15,
-                      't6':16, 't7':17, 't8':18, 't9':19, 'f':20, 'stla':31,
-                      'stlo':32, 'stel':33, 'stdp':34, 'evla':35, 'evlo':36,
-                      'evdp':38, 'mag':39, 'user0':40, 'user1':41, 'user2':42,
-                      'user3':43, 'user4':44, 'user5':45, 'user6':46,
-                      'user7':47, 'user8':48, 'user9':49, 'dist':50, 'az':51,
-                      'baz':52, 'gcarc':53, 'depmen':56, 'cmpaz':57,
-                      'cmpinc':58}
+        self.fdict = {'delta': 0, 'depmin': 1, 'depmax': 2, 'scale': 3,
+                      'odelta': 4, 'b': 5, 'e': 6, 'o': 7, 'a': 8, 'int1': 9,
+                      't0': 10, 't1': 11, 't2': 12, 't3': 13, 't4': 14,
+                      't5': 15, 't6': 16, 't7': 17, 't8': 18, 't9': 19,
+                      'f': 20, 'stla': 31, 'stlo': 32, 'stel': 33, 'stdp': 34,
+                      'evla': 35, 'evlo': 36, 'evdp': 38, 'mag': 39,
+                      'user0': 40, 'user1': 41, 'user2': 42, 'user3': 43,
+                      'user4': 44, 'user5': 45, 'user6': 46, 'user7': 47,
+                      'user8': 48, 'user9': 49, 'dist': 50, 'az': 51,
+                      'baz': 52, 'gcarc': 53, 'depmen': 56, 'cmpaz': 57,
+                      'cmpinc': 58}
 
-        self.idict = {'nzyear':0, 'nzjday':1, 'nzhour':2, 'nzmin':3,
-                      'nzsec':4, 'nzmsec':5, 'nvhdr':6, 'norid':7,
-                      'nevid':8, 'npts':9, 'nwfid':11,
-                      'iftype':15, 'idep':16, 'iztype':17, 'iinst':19,
-                      'istreg':20, 'ievreg':21, 'ievtype':22, 'iqual':23,
-                      'isynth':24, 'imagtyp':25, 'imagsrc':26,
-                      'leven':35, 'lpspol':36, 'lovrok':37,
-                      'lcalda':38}
+        self.idict = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
+                      'nzsec': 4, 'nzmsec': 5, 'nvhdr': 6, 'norid': 7,
+                      'nevid': 8, 'npts': 9, 'nwfid': 11,
+                      'iftype': 15, 'idep': 16, 'iztype': 17, 'iinst': 19,
+                      'istreg': 20, 'ievreg': 21, 'ievtype': 22, 'iqual': 23,
+                      'isynth': 24, 'imagtyp': 25, 'imagsrc': 26,
+                      'leven': 35, 'lpspol': 36, 'lovrok': 37,
+                      'lcalda': 38}
 
-        self.sdict = {'kstnm':0, 'kevnm':1, 'khole':2, 'ko':3, 'ka':4,
-                      'kt0':5, 'kt1':6, 'kt2':7, 'kt3':8, 'kt4':9,
-                      'kt5':10, 'kt6':11, 'kt7':12, 'kt8':13,
-                      'kt9':14, 'kf':15, 'kuser0':16, 'kuser1':17,
-                      'kuser2':18, 'kcmpnm':19, 'knetwk':20,
-                      'kdatrd':21, 'kinst':22}
+        self.sdict = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
+                      'kt0': 5, 'kt1': 6, 'kt2': 7, 'kt3': 8, 'kt4': 9,
+                      'kt5': 10, 'kt6': 11, 'kt7': 12, 'kt8': 13,
+                      'kt9': 14, 'kf': 15, 'kuser0': 16, 'kuser1': 17,
+                      'kuser2': 18, 'kcmpnm': 19, 'knetwk': 20,
+                      'kdatrd': 21, 'kinst': 22}
         self.byteorder = 'little'
         self.InitArrays()
         self.headonly = headonly
@@ -123,7 +124,6 @@ class ReadSac(object):
                 self.__call__(filen, alpha=True)
             else:
                 self.__call__(filen)
-
 
     def __call__(self, filename, alpha=False):
         if alpha:
@@ -166,7 +166,7 @@ class ReadSac(object):
     def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0):
         """
         Create a SAC file from an array.array instance
-        
+
         >>> t=ReadSac()
         >>> b = np.arange(10)
         >>> t.fromarray(b)
@@ -204,18 +204,18 @@ class ReadSac(object):
     def GetHvalue(self, item):
         """
         Get a header value using the header arrays: GetHvalue("npts")
-        
+
         Return value is 1 if no problems occurred, zero otherwise.
         """
         key = item.lower() # convert the item to lower case
 
-        if self.fdict.has_key(key):
+        if key in self.fdict:
             index = self.fdict[key]
             return(self.hf[index])
-        elif self.idict.has_key(key):
+        elif key in self.idict:
             index = self.idict[key]
             return(self.hi[index])
-        elif self.sdict.has_key(key):
+        elif key in self.sdict:
             index = self.sdict[key]
             #length = 8
             if index == 0:
@@ -245,13 +245,13 @@ class ReadSac(object):
         """
         key = item.lower() # convert the item to lower case
         #
-        if self.fdict.has_key(key):
+        if key in self.fdict:
                 index = self.fdict[key]
                 self.hf[index] = float(value)
-        elif self.idict.has_key(key):
+        elif key in self.idict:
                 index = self.idict[key]
                 self.hi[index] = int(value)
-        elif self.sdict.has_key(key):
+        elif key in self.sdict:
                 index = self.sdict[key]
                 value = '%-8s' % value
                 if index == 0:
@@ -269,15 +269,16 @@ class ReadSac(object):
     def IsSACfile(self, name, fsize=True, lenchk=False):
         """
         Test for a valid SAC file using arrays: IsSACfile(path)
-        
+
         Return value is a one if valid, zero if not.
         """
         npts = self.GetHvalue('npts')
         if lenchk:
             if npts != len(self.seis):
-                raise SacError("Number of points in header and length of trace inconsistent!")
+                raise SacError("Number of points in header and" + \
+                               "length of trace inconsistent!")
         if fsize:
-            st = os.stat(name) #file's size = st[6] 
+            st = os.stat(name) #file's size = st[6]
             sizecheck = st[6] - (632 + 4 * npts)
             # size check info
             if sizecheck != 0:
@@ -293,8 +294,8 @@ class ReadSac(object):
 
     def ReadSacHeader(self, fname):
         """
-        Read a header value into the header arrays 
-        
+        Read a header value into the header arrays
+
         The header is split into three arrays - floats, ints, and strings
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
@@ -314,7 +315,7 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # parse the header
                 #
-                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                # The sac header has 70 floats, 40 integers, then 192 bytes
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
@@ -331,7 +332,7 @@ class ReadSac(object):
                     self.IsSACfile(fname)
                 except SacError, e:
                     try:
-                        # if it is not a valid SAC-file try with big endian 
+                        # if it is not a valid SAC-file try with big endian
                         # byte order
                         f.seek(0, 0)
                         self.hf = np.fromfile(f, dtype='>f4', count=70)
@@ -354,12 +355,11 @@ class ReadSac(object):
                                 self._get_dist_()
                             except SacError:
                                 pass
-                            
 
     def WriteSacHeader(self, fname):
         """
         Write a header value to the disk ``ok = WriteSacHeader(thePath)``
-        
+
         The header is split into three arrays - floats, ints, and strings
         The "ok" value is one if no problems occurred, zero otherwise.
 
@@ -396,9 +396,9 @@ class ReadSac(object):
 
     def ReadSacFile(self, fname):
         """
-        Read read in the header and data in a SAC file 
-        
-        The header is split into three arrays - floats, ints, and strings and 
+        Read read in the header and data in a SAC file
+
+        The header is split into three arrays - floats, ints, and strings and
         the data points are returned in the array seis
 
         >>> t=ReadSac()
@@ -418,7 +418,7 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # parse the header
                 #
-                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                # The sac header has 70 floats, 40 integers, then 192 bytes
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
@@ -434,7 +434,7 @@ class ReadSac(object):
                     self.IsSACfile(fname)
                 except SacError:
                     try:
-                        # if it is not a valid SAC-file try with big endian 
+                        # if it is not a valid SAC-file try with big endian
                         # byte order
                         f.seek(0, 0)
                         self.hf = np.fromfile(f, dtype='>f4', count=70)
@@ -448,7 +448,7 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # read in the seismogram points
                 #--------------------------------------------------------------
-                # you just have to know it's in the 10th place 
+                # you just have to know it's in the 10th place
                 # actually, it's in the SAC manual
                 npts = self.hi[9]
                 try:
@@ -496,7 +496,7 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # parse the header
                 #
-                # The sac header has 70 floats, then 40 integers, then 192 bytes
+                # The sac header has 70 floats, 40 integers, then 192 bytes
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
@@ -603,14 +603,14 @@ class ReadSac(object):
                 msg = "Cannot write SAC-buffer to file: "
                 raise SacIOError(msg, ofname, e)
 
-    def PrintIValue(self, label='=', value= -12345):
+    def PrintIValue(self, label='=', value=-12345):
         """
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
             print label, value
 
-    def PrintFValue(self, label='=', value= -12345.0):
+    def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
@@ -677,7 +677,7 @@ class ReadSac(object):
 
     def GetHvalueFromFile(self, thePath, theItem):
         """
-        Quick access to a specific header item in a specified file. 
+        Quick access to a specific header item in a specified file.
         ``GetHvalueFromFile(thePath,theItem)``
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
@@ -770,11 +770,11 @@ class ReadSac(object):
         """
         If trace changed since read, adapt header values
         """
-        self.seis = np.require(self.seis,'<f4')
-        self.SetHvalue('npts',self.seis.size)
-        self.SetHvalue('depmin',self.seis.min())
-        self.SetHvalue('depmax',self.seis.max())
-        self.SetHvalue('depmen',self.seis.mean())
+        self.seis = np.require(self.seis, '<f4')
+        self.SetHvalue('npts', self.seis.size)
+        self.SetHvalue('depmin', self.seis.min())
+        self.SetHvalue('depmax', self.seis.max())
+        self.SetHvalue('depmen', self.seis.mean())
 
     def _get_dist_(self):
         """
@@ -798,6 +798,15 @@ class ReadSac(object):
         average radius of 6371 km. Therefore, our routine should be more
         acurate.
         """
+        # Avoid top level dependency on obspy.signal. Thus if obspy.signal
+        # is not allow only this function will not work, not the whole
+        # module
+        try:
+            from obspy.signal import rotate
+        except ImportError, e:
+            print "ERROR: obspy.signal is needed for this function " + \
+                  "and is not installed"
+            raise e
         eqlat = self.GetHvalue('evla')
         eqlon = self.GetHvalue('evlo')
         stlat = self.GetHvalue('stla')
@@ -808,18 +817,18 @@ class ReadSac(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = rotate.gps2DistAzimuth(eqlat,eqlon,stlat,stlon)
-        self.SetHvalue('dist',dist)
-        self.SetHvalue('az',az)
-        self.SetHvalue('baz',baz)
-        
+        dist, az, baz = rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
+        self.SetHvalue('dist', dist)
+        self.SetHvalue('az', az)
+        self.SetHvalue('baz', baz)
+
     def swap_byte_order(self):
         """
         Swap byte order of SAC-file in memory:
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
-        >>> fileswap = os.path.join(os.path.dirname(__file__), 'tests', 
+        >>> fileswap = os.path.join(os.path.dirname(__file__), 'tests',
         ...                         'data', 'test.sac.swap')
         >>> x = ReadSac(fileswap)
         >>> x.swap_byte_order()
