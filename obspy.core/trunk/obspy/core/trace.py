@@ -80,8 +80,16 @@ class Trace(object):
             header.setdefault(default, '')
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
+        # correct data format
+        data = self._convertData(data)
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
+
+    def _convertData(self, data):
+        # convert to numpy array if data is given as string 
+        if isinstance(data, basestring):
+            return np.fromstring(data, dtype='|S1')
+        return data
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
@@ -107,6 +115,8 @@ class Trace(object):
         Any change in Trace.data will dynamically set Trace.stats.npts.
         """
         if key == 'data':
+            # correct data format
+            value = self._convertData(value)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 

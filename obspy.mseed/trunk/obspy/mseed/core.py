@@ -2,7 +2,8 @@
 
 from obspy.core import Stream, Trace
 from obspy.mseed import libmseed
-import sys, numpy as np
+from obspy.mseed.headers import ENCODINGS
+import sys
 
 
 def isMSEED(filename):
@@ -67,8 +68,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     return Stream(traces=traces)
 
 
-#def writeMSEED(stream_object, filename, encoding=-1, **kwargs):
-def writeMSEED(stream_object, filename, encoding=-1, **kwargs):
+def writeMSEED(stream_object, filename, encoding= -1, **kwargs):
     """
     Write Miniseed file from a Stream objext.
     
@@ -82,8 +82,8 @@ def writeMSEED(stream_object, filename, encoding=-1, **kwargs):
         between (and including) 8 to 20. -1 defaults to 4096
     :type encoding: Integer
     :param encoding: should be set to one of the following supported
-        Mini-SEED data encoding formats: ASCII (0), INT32 (3), FLOAT32 (4),
-        FLOAT64 (5), STEIM1 (10) and STEIM2 (11). -1 defaults 
+        Mini-SEED data encoding formats: ASCII (0), INT16 (1) INT32 (3), 
+        FLOAT32 (4), FLOAT64 (5), STEIM1 (10) and STEIM2 (11). Defaults 
         to STEIM2 (11)
     :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
         big-endian). -1 defaults to big-endian (1)
@@ -94,37 +94,21 @@ def writeMSEED(stream_object, filename, encoding=-1, **kwargs):
         diagnostic output.
     """
     # Check if encoding kwarg is set and catch invalid encodings.
-    kwargs['encoding'] = encoding
     #XXX: Currently INT16 and INT24 are not working. INT24 due to lacking
     #     numpy support, INT16 due to conversion problems from signed and
     #     unsigned integers {1: "i"}
-    valid_encodings = {-1: "i", 0: "a", 3: "i", 4: "f", 5: "d", 10: "i", 11: "i"}
-    if kwargs['encoding'] in valid_encodings.keys():
-        pass
+    valid_encodings = dict([(item[0], key) \
+                            for (key, item) in ENCODINGS.iteritems()])
+    if encoding == -1:
+        encoding = 11
+    if isinstance(encoding, int) and encoding in ENCODINGS:
+        encoding = encoding
+    elif isinstance(encoding, basestring) and encoding in valid_encodings:
+        encoding = valid_encodings[encoding]
     else:
-        msg = 'Invalid encoding %s. Valid encodings: %s' % \
-              (kwargs['encoding'], `valid_encodings.keys()`)
-        raise ValueError(msg)
-    ###XXX: Disabling support to specify strings as encodings. I think
-    ###     this is more confusing than helpful
-    ###encoding_numbers = {'ASCII': 0, 'INT16' : 1, 'INT32' : 3, 'FLOAT32' : 4,
-    ###                    'FLOAT64': 5, 'STEIM1' : 10, 'STEIM2' :11}
-    #### If its already an integer do nothing.
-    ###if type(kwargs['encoding']) == int:
-    ###    if kwargs['encoding'] in valid_encodings.keys():
-    ###        pass
-    ###    else:
-    ###        msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' + \
-    ###              '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
-    ###        raise ValueError(msg)
-    #### If its a string translate it to the corresponding number.
-    ###else:
-    ###    try:
-    ###        kwargs['encoding'] = encoding_numbers[kwargs['encoding']]
-    ###    except:
-    ###        msg = 'Invalid encoding. Valid encodings: "INT16(1)",\n' + \
-    ###              '"INT32(3)", "STEIM1(10)", "STEIM2(11)"'
-    ###        raise ValueError(msg)
+        msg = 'Invalid encoding %s. Valid encodings: %s'
+        raise ValueError(msg % (encoding, valid_encodings))
+    kwargs['encoding'] = encoding
     # Catch invalid record length.
     valid_record_lengths = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
                             65536, 131072, 262144, 524288, 1048576]
@@ -156,7 +140,7 @@ def writeMSEED(stream_object, filename, encoding=-1, **kwargs):
             __libmseed__._convertDatetimeToMSTime(header['starttime'])
         header['endtime'] = \
             __libmseed__._convertDatetimeToMSTime(header['endtime'])
-        header['sampletype'] = valid_encodings[kwargs['encoding']]
+        header['sampletype'] = ENCODINGS[encoding][1][0]
         # Fill the samplecnt attribute.
         header['samplecnt'] = len(_i.data)
         trace_list.append([header, _i.data])

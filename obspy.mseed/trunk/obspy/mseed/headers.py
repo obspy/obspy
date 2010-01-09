@@ -53,10 +53,19 @@ else:
 
 # Data types, libmseed: (numpy, ctypes)
 # msr_packgroup only allows sampletypes "a", "i", "f" or "d"
-DATATYPES = {"a": ("|S1", C.c_char),
-             "i": ("int32", C.c_int32),
-             "f": ("float32", C.c_float),
-             "d": ("float64", C.c_double)}
+DATATYPES = {"string8": ("a", C.c_char, "|S1"),
+             "int16": ("i", C.c_int16, "i2"),
+             "int32": ("i", C.c_int32, "i4"),
+             "float32": ("f", C.c_float, "f4"),
+             "float64": ("d", C.c_double, "f8")}
+
+ENCODINGS = {0: ("ASCII", DATATYPES["string8"]),
+             1: ("INT16", DATATYPES["int16"]),
+             3: ("INT32", DATATYPES["int32"]),
+             4: ("FLOAT32", DATATYPES["float32"]),
+             5: ("FLOAT64", DATATYPES["float64"]),
+             10: ("STEIM1", DATATYPES["int32"]),
+             11: ("STEIM2", DATATYPES["int32"])}
 
 # SEED binary time
 class BTime(C.Structure):

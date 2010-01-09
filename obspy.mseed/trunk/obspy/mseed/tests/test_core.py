@@ -246,26 +246,26 @@ class CoreTestCase(unittest.TestCase):
         stats['starttime'] = start
         tr = Trace(data=data, header=stats)
         st = Stream([tr])
-        encodings = {'ASCII': (0, "a"), 'INT32': (3,"i"),
-                     'FLOAT32': (4, "f"), 'FLOAT64': (5, "d"), 
+        encodings = {'ASCII': (0, "a"), 'INT32': (3, "i"),
+                     'FLOAT32': (4, "f"), 'FLOAT64': (5, "d"),
                      'STEIM1': (10, "i"), 'STEIM2' : (11, "i")}
         # Loop over some record lengths.
         for key in encodings.keys():
             tempfile = NamedTemporaryFile().name
-            #tempfile2 = NamedTemporaryFile().name
+            tempfile2 = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
             st[0].data = data.astype(encodings[key][1])
             st._verify()
-            st.write(tempfile, format="MSEED", encoding=encodings[key][0])
-            #st.write(tempfile2, format="MSEED", encoding=key)
+            st.write(tempfile, format="MSEED", encoding=key)
+            st.write(tempfile2, format="MSEED", encoding=key)
             # Test reading the two files.
             temp_st1 = read(tempfile)
-            #temp_st2 = read(tempfile2)
+            temp_st2 = read(tempfile2)
             np.testing.assert_array_equal(st[0].data, temp_st1[0].data)
-            #np.testing.assert_array_equal(st[0].data, temp_st2[0].data)
+            np.testing.assert_array_equal(st[0].data, temp_st2[0].data)
             del temp_st1#, temp_st2
             # Check the encodings.
-            for file in [tempfile]:#, tempfile2]:
+            for file in [tempfile, tempfile2]:
                 ms = MSStruct(file)
                 ms.read(-1, 1, 1, 0)
                 self.assertEqual(ms.msr.contents.encoding, encodings[key][0])
@@ -341,18 +341,18 @@ class CoreTestCase(unittest.TestCase):
         st = read(file)
         data_copy = st[0].data.copy()
         # Float64, Float32, Int32, Int24, Int16, Char
-        encoding = {("<f8","<f8"): 5, ("<f4","<f4"): 4, ("<i4","<i4"): 3, 
-                    ("|S1","|S1"): 0}#, ("<i4","<i2"): 1}
-        for dtype in encoding.keys():
+        encodings = {5: "<f8", 4: "<f4", 3: "<i4", 0: "|S1"} #, 1: "<i2"
+        for encoding, dtype in encodings.iteritems():
             # Convert data to floats and write them again
-            st[0].data = data_copy.astype(dtype[0])
-            st.write(tempfile, format="MSEED", encoding=encoding[dtype], 
+            st[0].data = data_copy.astype(dtype)
+            st.write(tempfile, format="MSEED", encoding=encoding,
                      reclen=256, byteorder=0)
             # Read the binary chunk of data without header not using ObsPy
             s = open(tempfile, "rb").read()
-            data = np.fromstring(s[56:256], dtype=dtype[1])
+            data = np.fromstring(s[56:256], dtype=dtype)
             # Test if both are the same
             np.testing.assert_array_equal(data, st[0].data[:len(data)])
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

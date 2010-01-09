@@ -254,9 +254,9 @@ class libmseed(object):
             which must be expressible as 2 raised to the power of X where X is
             between (and including) 8 to 20. -1 defaults to 4096
         :param encoding: should be set to one of the following supported
-            MiniSEED data encoding formats: DE_ASCII (0), DE_INT16 (1),
-            DE_INT32 (3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10)
-            and DE_STEIM2 (11). -1 defaults to STEIM-2 (11)
+            MiniSEED data encoding formats: ASCII (0), INT16 (1),
+            INT32 (3), FLOAT32 (4), FLOAT64 (5), STEIM1 (10)
+            and STEIM2 (11). Defaults to STEIM2 (11)
         :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
             big-endian). -1 defaults to big-endian (1)
         :param flush: if it is not zero all of the data will be packed into 
@@ -968,8 +968,8 @@ class libmseed(object):
                       'dataquality', 'type', 'starttime', 'endtime',
                       'samprate', 'samplecnt', 'numsamples', 'sampletype')
         # loop over attributes
-        for _i in attributes:
-            setattr(chain, _i, h[_i])
+        for attr in attributes:
+            setattr(chain, attr, h[attr])
 
     def _getMSFileInfo(self, f, real_name):
         """
@@ -1028,11 +1028,11 @@ class libmseed(object):
         for _i in xrange(numtraces):
             # Check that data are numpy.ndarrays of dtype int32
             sampletype = trace_list[_i][0]['sampletype']
+            dtype = trace_list[_i][1].dtype.name
             if not isinstance(trace_list[_i][1], np.ndarray) or \
-                    trace_list[_i][1].dtype != DATATYPES[sampletype][0]:
+                    dtype not in DATATYPES.keys():
                 clibmseed.mst_freegroup(C.pointer(mstg))
-                raise Exception("Data must be of type numpy.ndarray " + \
-                                "dtype %s" % DATATYPES[sampletype][0])
+                raise Exception("Unsupported data type %s" % dtype)
             # Create variable with the number of sampels in this trace for
             # faster future access.
             npts = trace_list[_i][0]['numsamples']
@@ -1040,16 +1040,12 @@ class libmseed(object):
             self._convertDictToMST(chain, trace_list[_i][0])
             # Create a single datapoint and resize its memory to be able to
             # hold all datapoints.
-            tempdatpoint = DATATYPES[sampletype][1]()
+            tempdatpoint = DATATYPES[dtype][1]()
             datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
             C.resize(tempdatpoint, datasize)
-            # old segmentationfault try
-            # chain.contents.datasamples = \
-            # trace_list[_i][1].ctypes.data_as(C.POINTER(C.c_long))
             # The datapoints in the MSTG structure are a pointer to the memory
             # area reserved for tempdatpoint.
-            #chain.contents.datasamples = C.pointer(tempdatpoint)
-            chain.contents.datasamples = C.cast(C.pointer(tempdatpoint), 
+            chain.contents.datasamples = C.cast(C.pointer(tempdatpoint),
                                                 C.c_void_p)
             # Pointer to the Numpy data buffer.
             datptr = trace_list[_i][1].ctypes.get_data()
