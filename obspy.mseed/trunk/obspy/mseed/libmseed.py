@@ -1033,7 +1033,11 @@ class libmseed(object):
         # Create a single datapoint and resize its memory to be able to
         # hold all datapoints.
         tempdatpoint = c_dtype()
-        datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
+        # Size recognition does not seem to work for ASCII.
+        if sampletype == 'a':
+            datasize = 4 * npts
+        else:
+            datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
         C.resize(tempdatpoint, datasize)
         # The datapoints in the MSTG structure are a pointer to the memory
         # area reserved for tempdatpoint.

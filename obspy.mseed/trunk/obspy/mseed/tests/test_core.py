@@ -325,16 +325,16 @@ class CoreTestCase(unittest.TestCase):
         st = Stream([Trace(data=data)])
         self.assertRaises(Exception, st.write, tempfile, format="MSEED")
 
-    def test_bugSavingSmallASCII(self):
+    def test_SavingSmallASCII(self):
         """
-        XXX: see #31
+        Tests writing small ASCII strings.
         """
         tempfile = NamedTemporaryFile().name
         st = Stream()
         st.append(Trace(data="A" * 17))
         # fails ...
         st.append(Trace(data="B" * 16))
-        st.write(tempfile, format="MSEED", verbose=2)
+        st.write(tempfile, format="MSEED")
 
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
