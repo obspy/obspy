@@ -357,6 +357,23 @@ class CoreTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(tr, data.astype("=" + dtype))
 
 
+    def test_writeWrongEncoding(self):
+        """
+        Tests to write a floating point mseed file with incoding STEIM1.
+        An exception should be raised.
+        """
+        file = os.path.join(self.path, "data", \
+                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        tempfile = NamedTemporaryFile().name
+        # Read the data and convert them to float
+        st = read(file)
+        st[0].data = st[0].data.astype('float32') + .5
+        # Type is not consistent float32 cannot be compressed with STEIM1,
+        # therefor an exception must be raised.
+        self.assertRaises(Exception, st.write, tempfile, format="MSEED",
+                          encoding=10, reclen=256, byteorder=0)
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
