@@ -5,7 +5,7 @@ set PYTHON="python"
 
 cd ..
 
-FOR %%M IN (core arclink fissures gse2 imaging mseed sac seisan seishub signal wav xseed) DO (
+FOR %%M IN (core arclink fissures gse2 imaging mseed sac seisan seishub signal wav xseed sh) DO (
 cd ..\..
 cd obspy.%%M/trunk
 echo === obspy.%%M ===

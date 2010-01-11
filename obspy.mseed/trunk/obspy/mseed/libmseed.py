@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import scoreatpercentile
+from obspy.core.util import quantile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
     PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES
 from struct import unpack
@@ -614,9 +614,9 @@ class libmseed(object):
         result['max'] = max(data)
         result['average'] = sum(data) / n
         data = sorted(data)
-        result['median'] = scoreatpercentile(data, 50, sort=False)
-        result['lower_quantile'] = scoreatpercentile(data, 25, sort=False)
-        result['upper_quantile'] = scoreatpercentile(data, 75, sort=False)
+        result['median'] = quantile(data, 0.5, issorted=False)
+        result['lower_quantile'] = quantile(data, 0.25, issorted=False)
+        result['upper_quantile'] = quantile(data, 0.75, issorted=False)
         return result
 
 

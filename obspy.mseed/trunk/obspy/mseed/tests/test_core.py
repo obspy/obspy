@@ -356,7 +356,6 @@ class CoreTestCase(unittest.TestCase):
                 # byte order is always native (=)
                 np.testing.assert_array_equal(tr, data.astype("=" + dtype))
 
-
     def test_writeWrongEncoding(self):
         """
         Tests to write a floating point mseed file with incoding STEIM1.

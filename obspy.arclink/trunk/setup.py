@@ -3,8 +3,8 @@
 """
 obspy.arclink installer
 
-@copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 from setuptools import find_packages, setup
@@ -25,10 +25,22 @@ setup(
     url='http://www.obspy.org',
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
-    classifiers=[],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: ' + \
+        'GNU Library or Lesser General Public License (LGPL)',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Geophysics',
+    ],
     keywords=['ObsPy', 'Seismology', 'ArcLink', 'MiniSEED', 'SEED',
               'Inventory', 'Waveform'],
-    license='LGPLv3',
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
@@ -39,7 +51,6 @@ setup(
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.arclink/trunk#egg=obspy.arclink-dev",
-    platforms=['any'],
     include_package_data=True,
     test_suite="obspy.arclink.tests.suite",
 )

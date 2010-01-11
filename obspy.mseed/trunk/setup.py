@@ -3,8 +3,8 @@
 """
 obspy.mseed installer
 
-@copyright: The ObsPy Development Team (devs@obspy.org)
-@license: GNU General Public License (GPL)
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU General Public License (GPL)
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
     as published by the Free Software Foundation; either version 2
@@ -73,10 +73,22 @@ setup(
     url='http://www.obspy.org',
     author='The ObsPy Development Team & Chad Trabant',
     author_email='devs@obspy.org',
-    classifiers=[],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+        'Programming Language :: C',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Geophysics',
+    ],
     keywords=['ObsPy', 'seismology', 'MSEED', 'MiniSEED', 'waveform',
               'seismograms'],
-    license='GPL2',
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=True,
@@ -86,7 +98,6 @@ setup(
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev",
-    platforms=['any'],
     ext_package='obspy.mseed.lib',
     ext_modules=[lib],
     include_package_data=True,

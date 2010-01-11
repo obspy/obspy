@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from math import modf, floor
 import ctypes as C
 import os
 import tempfile
@@ -71,52 +72,66 @@ class AttribDict(dict, object):
             self[key] = value
 
 
-def scoreatpercentile(a, per, limit=(), sort=True):
+def quantile(x, q, qtype=7, issorted=False):
     """
-    Calculates the score at the given 'per' percentile of the sequence a.
+    Compute quantiles from input array x given q. For median, specify q=50.
 
-    For example, the score at per = 50 is the median.
-
-    If the desired quantile lies between two data points, we interpolate
-    between them.
-
-    If the parameter 'limit' is provided, it should be a tuple (lower,
-    upper) of two values.  Values of 'a' outside this (closed) interval
-    will be ignored.
+    :param x: input data
+    :param q: quantile
+    :param qtype: algorithm
+    :param issorted: True if x already sorted.
 
     >>> a = [1, 2, 3, 4]
-    >>> scoreatpercentile(a, 25)
+    >>> quantile(a, 0.25)
     1.75
-    >>> scoreatpercentile(a, 50)
+    >>> quantile(a, 0.50)
     2.5
-    >>> scoreatpercentile(a, 75)
+    >>> quantile(a, 0.75)
     3.25
     >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-    >>> scoreatpercentile(a, 25)
+    >>> quantile(a, 0.25)
     25.5
-    >>> scoreatpercentile(a, 50)
+    >>> quantile(a, 0.50)
     40
-    >>> scoreatpercentile(a, 75)
+    >>> quantile(a, 0.75)
     42.5
 
-    This method is taken from scipy.stats.scoreatpercentile
-    Copyright (c) Gary Strangman
+    :Author:
+        Ernesto P.Adorio Ph.D.
+        UP Extension Program in Pampanga, Clark Field.
+        http://adorio-research.org/wordpress/?p=125
     """
-    if sort:
-        values = sorted(a)
-        if limit:
-            values = values[(limit[0] < a) & (a < limit[1])]
+    # sort list
+    if not issorted:
+        y = sorted(x)
     else:
-        values = a
-
-    def _interpolate(a, b, fraction):
-        return a + (b - a) * fraction
-
-    idx = per / 100. * (len(values) - 1)
-    if (idx % 1 == 0):
-        return values[int(idx)]
+        y = x
+    if not (1 <= qtype <= 9):
+        return None  # error!
+    # Parameters for the Hyndman and Fan algorithm
+    abcd = [
+        (0, 0, 1, 0), # inverse empirical distrib.function., R type 1
+        (0.5, 0, 1, 0), # similar to type 1, averaged, R type 2
+        (0.5, 0, 0, 0), # nearest order statistic,(SAS) R type 3
+        (0, 0, 0, 1), # California linear interpolation, R type 4
+        (0.5, 0, 0, 1), # hydrologists method, R type 5
+        (0, 1, 0, 1), # mean-based estimate(Weibull method), R type 6
+        (1, -1, 0, 1), # mode-based method,(S, S-Plus), R type 7
+        (1.0 / 3, 1.0 / 3, 0, 1), # median-unbiased ,  R type 8
+        (3 / 8.0, 0.25, 0, 1)   # normal-unbiased, R type 9.
+    ]
+    a, b, c, d = abcd[qtype - 1]
+    n = len(x)
+    g, j = modf(a + (n + b) * q - 1)
+    if j < 0:
+        return y[0]
+    elif j > n:
+        return y[n]
+    j = int(floor(j))
+    if g == 0:
+        return y[j]
     else:
-        return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
+        return y[j] + (y[j + 1] - y[j]) * (c + d * g)
 
 
 # C file pointer/ descriptor class
