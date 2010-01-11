@@ -4,7 +4,7 @@ The obspy.imaging.waveform test suite.
 """
 
 from copy import deepcopy
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core import Stream, Trace
 import inspect
 import numpy as N
 import os
@@ -59,8 +59,6 @@ class WaveformTestCase(unittest.TestCase):
         self.stream[1].stats.location = '00'
         self.stream[0].stats.starttime = \
             self.stream[0].stats.starttime + 2 * 60 * 60
-        self.stream[0].stats.endtime = \
-            self.stream[0].stats.endtime + 2 * 60 * 60
         self.stream.plot(outfile=\
             os.path.join(self.path, 'waveform_straightPlotting-2traces.png'),
             color='green', bgcolor='#F5FEA5', face_color='purple')
@@ -72,8 +70,6 @@ class WaveformTestCase(unittest.TestCase):
         self.stream[1].stats.location = ''
         self.stream[1].stats.starttime = \
             self.stream[0].stats.starttime + 2 * 24 * 60 * 60
-        self.stream[1].stats.endtime = \
-            self.stream[0].stats.endtime + 2 * 24 * 60 * 60
         self.stream.plot(outfile=\
             os.path.join(self.path,
             'waveform_straightPlotting-simple-gap-transparent.png'),
@@ -85,10 +81,8 @@ class WaveformTestCase(unittest.TestCase):
         # height but should still be centered despite being moved up a notch.
         self.stream.append(deepcopy(self.stream[0]))
         self.stream[2].stats.starttime = self.stream[0].stats.endtime
-        self.stream[2].stats.endtime = self.stream[0].stats.endtime + 100000
         self.stream[2].stats.network = 'ZZ'
         self.stream[1].stats.starttime = self.stream[2].stats.endtime
-        self.stream[1].stats.endtime = self.stream[2].stats.endtime + 100000
         # Make half the amplitude but move it up 100 units.
         self.stream[2].data = 0.5 * self.stream[2].data + 100
         self.stream.plot(outfile=\
@@ -112,8 +106,6 @@ class WaveformTestCase(unittest.TestCase):
         self.large_stream[1].stats.location = '00'
         self.large_stream[0].stats.starttime = \
             self.large_stream[0].stats.starttime + 2 * 60 * 60
-        self.large_stream[0].stats.endtime = \
-            self.large_stream[0].stats.endtime + 2 * 60 * 60
         self.large_stream.plot(outfile=\
                os.path.join(self.path, 'waveform_MinMaxPlotting-2traces.png'),
                color='green', bgcolor='#F5FEA5', face_color='purple')
@@ -125,8 +117,6 @@ class WaveformTestCase(unittest.TestCase):
         self.large_stream[1].stats.location = ''
         self.large_stream[1].stats.starttime = \
             self.large_stream[0].stats.starttime + 2 * 24 * 60 * 60
-        self.large_stream[1].stats.endtime = \
-            self.large_stream[0].stats.endtime + 2 * 24 * 60 * 60
         self.large_stream.plot(outfile=\
             os.path.join(self.path,
             'waveform_MinMaxPlotting-simple-gap-transparent.png'),
@@ -139,13 +129,9 @@ class WaveformTestCase(unittest.TestCase):
         self.large_stream.append(deepcopy(self.large_stream[0]))
         self.large_stream[2].stats.starttime = \
                                             self.large_stream[0].stats.endtime
-        self.large_stream[2].stats.endtime = \
-                                    self.large_stream[0].stats.endtime + 100000
         self.large_stream[2].stats.network = 'ZZ'
         self.large_stream[1].stats.starttime = \
                                             self.large_stream[2].stats.endtime
-        self.large_stream[1].stats.endtime = \
-                                    self.large_stream[2].stats.endtime + 100000
         # Make half the amplitude but move it up 100 units.
         self.large_stream[2].data = 0.5 * self.large_stream[2].data + 100
         self.large_stream.plot(outfile=\

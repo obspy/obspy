@@ -115,8 +115,8 @@ class WaveformPlotting(object):
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
-        # File format of the resulting file. Usually defaults to png but might
-        # be dependant on your matplotlib backend.
+        # File format of the resulting file. Usually defaults to PNG but might
+        # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
 
     def plotWaveform(self, *args, **kwargs):
@@ -124,9 +124,9 @@ class WaveformPlotting(object):
         Creates a graph of any given ObsPy Stream object. It either saves the 
         image directly to the file system or returns an binary image string.
         
-        For all color values you can use legit html names, html hex strings
+        For all color values you can use legit HTML names, HTML hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
-        R , G , B are in the range [0,1]. You can also use single letters for
+        R , G , B are in the range [0, 1]. You can also use single letters for
         basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
@@ -146,8 +146,10 @@ class WaveformPlotting(object):
         if self.outfile:
             #If format is set use it.
             if self.format:
-                plt.savefig(self.outfile, dpi=dpi, transparent=transparent,
-                            facecolor=face_color, edgecolor=face_color,
+                plt.savefig(self.outfile, dpi=self.dpi,
+                            transparent=self.transparent,
+                            facecolor=self.face_color,
+                            edgecolor=self.face_color,
                             format=self.format)
             #Otherwise get the self.format from self.outfile or default to PNG.
             else:
@@ -310,16 +312,16 @@ class WaveformPlotting(object):
             temp = [np.ma.masked_all(int(samples))]
             concat = temp.extend(concat)
             concat = temp
-            trace.stats.starttime = self.starttime
         if self.endtime != trace.stats.endtime:
             samples = (self.endtime - trace.stats.endtime) * \
                       trace.stats.sampling_rate
             concat.append(np.ma.masked_all(int(samples)))
-            trace.stats.endtime = self.endtime
         if len(concat) > 1:
             # Use the masked array concatenate, otherwise it will result in a
             # not masked array.
             trace.data = np.ma.concatenate(concat)
+            # set starttime and calculate endtime
+            trace.stats.starttime = self.starttime
         plt.plot(trace.data, color=self.color)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
@@ -328,7 +330,7 @@ class WaveformPlotting(object):
     def __plotMinMax(self, trace, *args, **kwargs):
         """
         Plots the data using a min/max approach that calculated the minimum and
-        maxiumum values of each "pixel" and than plots only these values. Works
+        maximum values of each "pixel" and than plots only these values. Works
         much faster with large data sets.
         """
         # Some variables to help calculate the values.
@@ -367,7 +369,7 @@ class WaveformPlotting(object):
             max = data.max(axis=1)
             extreme_values[start: start + pixel_count, 0] = min
             extreme_values[start: start + pixel_count, 1] = max
-            # First and last and last pixel need seperate treatment.
+            # First and last and last pixel need separate treatment.
             if start and prestart:
                 extreme_values[start - 1, 0] = _t.data[:prestart].min()
                 extreme_values[start - 1, 1] = _t.data[:prestart].max()
@@ -391,7 +393,7 @@ class WaveformPlotting(object):
                 min[:, 1] = extreme_values[:, 0]
                 max[:, 0] = minmax[:, 1]
                 max[:, 1] = extreme_values[:, 1]
-                # Find the minimum and maxiumum values.
+                # Find the minimum and maximum values.
                 min = min.min(axis=1)
                 max = max.max(axis=1)
                 # Write again to minmax.
@@ -652,14 +654,3 @@ class WaveformPlotting(object):
                                   self.endtime.strftime(pattern))
         plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
                      horizontalalignment='left')
-
-    def __setupSubplot(axis):
-        """
-        Configures the properties of each axis.
-        """
-        plt.title(title_text, horizontalalignment='left', fontsize='small',
-                  verticalalignment='center')
-        plt.ylim(cur_min_y, cur_max_y)
-        plt.yticks(yticks_location, fontsize='small')
-        plt.xticks(tick_location, tick_names, rotation=tick_rotation,
-                   fontsize='small')
