@@ -53,7 +53,7 @@ def suite():
         try:
             __import__(module)
         except ImportError, e:
-            print "Cannot import test suite of module obspy.%s" % module
+            print "Cannot import test suite of module %s" % module
             print e
             time.sleep(0.5)
         else:
