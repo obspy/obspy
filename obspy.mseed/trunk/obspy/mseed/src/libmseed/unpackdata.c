@@ -78,7 +78,7 @@ int msr_unpack_int_16
   int		swapflag)       /* if data should be swapped.	        */
 {
   int		nd = 0;		/* # of data points in packet.		*/
-  uint16_t	stmp;
+  int16_t	stmp;
   
   if (num_samples < 0) return 0;
   if (req_samples < 0) return 0;

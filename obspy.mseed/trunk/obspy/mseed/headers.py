@@ -51,21 +51,23 @@ elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
 else:
     raise TypeError("Cannot determine type of Py_ssize_t")
 
-# Data types, libmseed: (numpy, ctypes)
-# msr_packgroup only allows sampletypes "a", "i", "f" or "d"
-DATATYPES = {"string8": ("a", C.c_char, "|S1"),
-             "int16": ("i", C.c_int16, "i2"),
-             "int32": ("i", C.c_int32, "i4"),
-             "float32": ("f", C.c_float, "f4"),
-             "float64": ("d", C.c_double, "f8")}
 
-ENCODINGS = {0: ("ASCII", DATATYPES["string8"]),
-             1: ("INT16", DATATYPES["int16"]),
-             3: ("INT32", DATATYPES["int32"]),
-             4: ("FLOAT32", DATATYPES["float32"]),
-             5: ("FLOAT64", DATATYPES["float64"]),
-             10: ("STEIM1", DATATYPES["int32"]),
-             11: ("STEIM2", DATATYPES["int32"])}
+# expected data types for libmseed id: (numpy, ctypes)
+DATATYPES = {"a": C.c_char,
+             "i": C.c_int32,
+             "f": C.c_float,
+             "d": C.c_double}
+
+# allowed encodings:
+# SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
+ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type),
+             1: ("INT16", "i", np.dtype("int16")),
+             3: ("INT32", "i", np.dtype("int32")),
+             4: ("FLOAT32", "f", np.dtype("float32")),
+             5: ("FLOAT64", "d", np.dtype("float64")),
+             10: ("STEIM1", "i", np.dtype("int32")),
+             11: ("STEIM2", "i", np.dtype("int32"))}
+
 
 # SEED binary time
 class BTime(C.Structure):

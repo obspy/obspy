@@ -218,20 +218,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                                                   new_trace_list[0][1])
                     os.remove(temp_file)
 
-    def test_WriteRaiseOnInt64(self):
-        """
-        Writing data of type int64 is not supported, an Exception should be
-        raised. Such write operations can happen on 64bit platforms.
-        """
-        mseed = libmseed()
-        mseed_file = os.path.join(self.path, 'test.mseed')
-        tmp_file = os.path.join(self.path, 'tempfile.mseed')
-        trace_list = mseed.readMSTraces(mseed_file)
-        mseed.writeMSTraces(trace_list, tmp_file)
-        trace_list[0][1] = trace_list[0][1].astype('int64')
-        self.assertRaises(Exception, mseed.writeMSTraces, trace_list, tmp_file)
-        os.remove(tmp_file)
-
     def test_readAndWriteFileWithGaps(self):
         """
         Tests reading and writing files with more than one trace.

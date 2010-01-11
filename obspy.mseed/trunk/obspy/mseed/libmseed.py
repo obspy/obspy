@@ -11,7 +11,7 @@
 Class for handling MiniSEED files.
 
 Contains wrappers for libmseed - The MiniSEED library. The C library is
-interfaced via Pythpn ctypes. Currently only supports MiniSEED files with
+interfaced via Python ctypes. Currently only supports MiniSEED files with
 integer data values.
 
 
@@ -146,7 +146,8 @@ class libmseed(object):
         ms = MSStruct(filename)
         end_byte = 1e99
         if starttime or endtime:
-            bytes = self._bytePosFromTime(filename, starttime=starttime, endtime=endtime)
+            bytes = self._bytePosFromTime(filename, starttime=starttime,
+                                          endtime=endtime)
             if bytes == '':
                 del ms # for valgrind
                 return ''
@@ -253,6 +254,7 @@ class libmseed(object):
         :param reclen: should be set to the desired data record length in bytes
             which must be expressible as 2 raised to the power of X where X is
             between (and including) 8 to 20. -1 defaults to 4096
+        :type encoding: Integer
         :param encoding: should be set to one of the following supported
             MiniSEED data encoding formats: ASCII (0), INT16 (1),
             INT32 (3), FLOAT32 (4), FLOAT64 (5), STEIM1 (10)
@@ -269,29 +271,34 @@ class libmseed(object):
             f = open(outfile, 'wb')
         except TypeError:
             f = outfile
-        # Populate MSTG Structure
-        mstg = self._populateMSTG(trace_list)
-        # Initialize packedsamples pointer for the mst_pack function
-        self.packedsamples = C.c_int()
-        # Callback function for mst_pack to actually write the file
-        def record_handler(record, reclen, _stream):
-            f.write(record[0:reclen])
-        # Define Python callback function for use in C function
-        recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
-                                 C.c_void_p)(record_handler)
-        # Pack mstg into a MSEED file using record_handler as write method
-        msr = C.POINTER(MSRecord)()
-        errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
-                                          encoding, byteorder,
-                                          C.byref(self.packedsamples),
-                                          flush, verbose, msr)
-        if errcode == -1:
-            raise Exception('Error in mst_packgroup')
-        # Cleaning up
-        clibmseed.mst_freegroup(C.pointer(mstg))
+        for trace in trace_list:
+            # Populate MSTG Structure
+            mstg = self._populateMSTG(trace)
+            # Initialize packedsamples pointer for the mst_pack function
+            self.packedsamples = C.c_int()
+            # Callback function for mst_pack to actually write the file
+            def record_handler(record, reclen, _stream):
+                f.write(record[0:reclen])
+            # Define Python callback function for use in C function
+            recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
+                                     C.c_void_p)(record_handler)
+            # Pack mstg into a MSEED file using record_handler as write method
+            msr = C.POINTER(MSRecord)()
+            try:
+                enc = trace[0]['encoding']
+            except:
+                enc = encoding
+            errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
+                                              enc, byteorder,
+                                              C.byref(self.packedsamples),
+                                              flush, verbose, msr)
+            if errcode == -1:
+                raise Exception('Error in mst_packgroup')
+            # Cleaning up
+            clibmseed.mst_freegroup(C.pointer(mstg))
+            del mstg, msr
         if isinstance(f, file): # necessary for Python 2.5.2 BUG otherwise!
             f.close()
-        del mstg, msr
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
                              sampratetol= -1, dataflag=1, skipnotdata=1,
@@ -994,69 +1001,53 @@ class libmseed(object):
         f.seek(pos)
         return info
 
-
     def _isRateTolerable(self, sr1, sr2):
         """
         Tests default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
         """
         return math.fabs(1.0 - (sr1 / float(sr2))) < 0.0001
 
-
-    def _populateMSTG(self, trace_list):
+    def _populateMSTG(self, trace):
         """
         Populates MSTrace_Group structure from given header, data and
         numtraces and returns the MSTrace_Group
         
-        Currently only works with one continuous trace.
-        
-        :param header: Dictionary with the header values to be written to the
-            structure.
-        :param data: List containing the data values.
-        :param numtraces: Number of traces in the structure. No function so
-            far.
+        :param trace: Trace.
         """
         # Init MSTraceGroup
         mstg = clibmseed.mst_initgroup(None)
         # Set numtraces.
-        numtraces = len(trace_list)
-        mstg.contents.numtraces = numtraces
+        mstg.contents.numtraces = 1
         # Define starting point of the MSTG structure and the same as a string.
         # Init MSTrace object and connect with group
         mstg.contents.traces = clibmseed.mst_init(None)
         chain = mstg.contents.traces
-        # Loop over all traces in trace_list.
-        for _i in xrange(numtraces):
-            # Check that data are numpy.ndarrays of dtype int32
-            sampletype = trace_list[_i][0]['sampletype']
-            dtype = trace_list[_i][1].dtype.name
-            if not isinstance(trace_list[_i][1], np.ndarray) or \
-                    dtype not in DATATYPES.keys():
-                clibmseed.mst_freegroup(C.pointer(mstg))
-                raise Exception("Unsupported data type %s" % dtype)
-            # Create variable with the number of sampels in this trace for
-            # faster future access.
-            npts = trace_list[_i][0]['numsamples']
-            # Write header in MSTrace structure
-            self._convertDictToMST(chain, trace_list[_i][0])
-            # Create a single datapoint and resize its memory to be able to
-            # hold all datapoints.
-            tempdatpoint = DATATYPES[dtype][1]()
-            datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
-            C.resize(tempdatpoint, datasize)
-            # The datapoints in the MSTG structure are a pointer to the memory
-            # area reserved for tempdatpoint.
-            chain.contents.datasamples = C.cast(C.pointer(tempdatpoint),
-                                                C.c_void_p)
-            # Pointer to the Numpy data buffer.
-            datptr = trace_list[_i][1].ctypes.get_data()
-            # Manually move the contents of the numpy data buffer to the
-            # address of the previously created memory area.
-            C.memmove(chain.contents.datasamples, datptr, datasize)
-            if _i != numtraces - 1:
-                chain.contents.next = clibmseed.mst_init(None)
-                chain = chain.contents.next
+        # fetch encoding options
+        sampletype = trace[0]['sampletype']
+        c_dtype = DATATYPES[sampletype]
+        # Create variable with the number of sampels in this trace for
+        # faster future access.
+        npts = trace[0]['numsamples']
+        # Write header in MSTrace structure
+        self._convertDictToMST(chain, trace[0])
+        # Create a single datapoint and resize its memory to be able to
+        # hold all datapoints.
+        tempdatpoint = c_dtype()
+        datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
+        C.resize(tempdatpoint, datasize)
+        # The datapoints in the MSTG structure are a pointer to the memory
+        # area reserved for tempdatpoint.
+        chain.contents.datasamples = C.cast(C.pointer(tempdatpoint),
+                                            C.c_void_p)
+        # Swap if wrong byte order
+        if trace[1].dtype.byteorder != "=":
+            trace[1] = trace[1].byteswap()
+        # Pointer to the Numpy data buffer.
+        datptr = trace[1].ctypes.get_data()
+        # Manually move the contents of the numpy data buffer to the
+        # address of the previously created memory area.
+        C.memmove(chain.contents.datasamples, datptr, datasize)
         return mstg
-
 
 
 class MSStruct(object):

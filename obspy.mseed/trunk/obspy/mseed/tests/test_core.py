@@ -3,8 +3,9 @@
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import libmseed
-from obspy.mseed.libmseed import MSStruct
 from obspy.mseed.core import readMSEED
+from obspy.mseed.headers import ENCODINGS
+from obspy.mseed.libmseed import MSStruct
 import inspect
 import numpy as np
 import os
@@ -98,14 +99,7 @@ class CoreTestCase(unittest.TestCase):
         # data array of integers - float won't work!
         np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
-        stats = {'network': 'BW', 'station': 'TEST', 'location':'',
-                 'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        tr = Trace(data=data, header=stats)
-        tr._verify()
-        st = Stream([tr])
-        st._verify()
+        st = Stream([Trace(data=data)])
         # write
         st.write(tempfile, format="MSEED")
         # read again
@@ -146,10 +140,7 @@ class CoreTestCase(unittest.TestCase):
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
                  'mseed' : {'dataquality' : 'D'}}
         stats['starttime'] = UTCDateTime(2000, 1, 1)
-        tr = Trace(data=data, header=stats)
-        tr._verify()
-        st = Stream([tr])
-        st._verify()
+        st = Stream([Trace(data=data, header=stats)])
         # Write it.
         st.write(tempfile, format="MSEED")
         # Read it again and delete the temporary file.
@@ -173,15 +164,7 @@ class CoreTestCase(unittest.TestCase):
         npts = 6000
         np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
-        stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed' : {'dataquality' : 'D'}}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        tr = Trace(data=data, header=stats)
-        tr._verify()
-        st = Stream([tr])
-        st._verify()
+        st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         # Loop over some record lengths.
         for rec_len in record_lengths:
@@ -210,15 +193,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
-        stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed' : {'dataquality' : 'D'}}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        tr = Trace(data=data, header=stats)
-        tr._verify()
-        st = Stream([tr])
-        st._verify()
+        st = Stream([Trace(data=data)])
         # Writing should fail with invalid record lengths.
         # Not a power of 2.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
@@ -239,38 +214,23 @@ class CoreTestCase(unittest.TestCase):
         npts = 1000
         np.random.seed(815) # make test reproducable
         data = np.random.randn(npts).astype('float64') * 1e3 + .5
-        stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed' : {'dataquality' : 'D'}}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        tr = Trace(data=data, header=stats)
-        st = Stream([tr])
-        encodings = {'ASCII': (0, "a"), 'INT32': (3, "i"),
-                     'FLOAT32': (4, "f"), 'FLOAT64': (5, "d"),
-                     'STEIM1': (10, "i"), 'STEIM2' : (11, "i")}
+        st = Stream([Trace(data=data)])
         # Loop over some record lengths.
-        for key in encodings.keys():
+        for encoding, value in ENCODINGS.iteritems():
+            seed_dtype = value[2]
             tempfile = NamedTemporaryFile().name
-            tempfile2 = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
-            st[0].data = data.astype(encodings[key][1])
+            st[0].data = data.astype(seed_dtype)
             st._verify()
-            st.write(tempfile, format="MSEED", encoding=key)
-            st.write(tempfile2, format="MSEED", encoding=key)
-            # Test reading the two files.
+            st.write(tempfile, format="MSEED", encoding=encoding)
             temp_st1 = read(tempfile)
-            temp_st2 = read(tempfile2)
             np.testing.assert_array_equal(st[0].data, temp_st1[0].data)
-            np.testing.assert_array_equal(st[0].data, temp_st2[0].data)
-            del temp_st1#, temp_st2
-            # Check the encodings.
-            for file in [tempfile, tempfile2]:
-                ms = MSStruct(file)
-                ms.read(-1, 1, 1, 0)
-                self.assertEqual(ms.msr.contents.encoding, encodings[key][0])
-                del ms # for valgrind
-                os.remove(file)
+            del temp_st1
+            ms = MSStruct(tempfile)
+            ms.read(-1, 1, 1, 0)
+            self.assertEqual(ms.msr.contents.encoding, encoding)
+            del ms # for valgrind
+            os.remove(tempfile)
 
     def test_invalidEncoding(self):
         """
@@ -280,15 +240,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')
-        stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed' : {'dataquality' : 'D'}}
-        start = UTCDateTime(2000, 1, 1)
-        stats['starttime'] = start
-        tr = Trace(data=data, header=stats)
-        tr._verify()
-        st = Stream([tr])
-        st._verify()
+        st = Stream([Trace(data=data)])
         # Writing should fail with invalid record lengths.
         # Wrong number.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
@@ -299,7 +251,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readPartsOfFile(self):
         """
-        Test reading only parts of an mseed file without unpacking or
+        Test reading only parts of an Mini-SEED file without unpacking or
         touching the rest.
         """
         temp = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001')
@@ -318,10 +270,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Test that reading will still work if wrong option (of gse2)
         verify_chksum is given. This is important if the read method is
-        called for an unkown file format.
+        called for an unknown file format.
         """
         file = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001'
-        '.second_record')
+                            '.second_record')
         tr = read(file, verify_chksum=True, starttime=None)[0]
         data = np.array([-397, -387, -368, -381, -388])
         np.testing.assert_array_equal(tr.data[0:5], data)
@@ -329,7 +281,7 @@ class CoreTestCase(unittest.TestCase):
         data = np.array([-406, -417, -403, -423, -413])
         np.testing.assert_array_equal(tr.data[-5:], data)
 
-    def test_writeAllTypes(self):
+    def test_allDataTypesAndEndiansInMultipleFiles(self):
         """
         Tests writing all different types. This is an test which is independent of
         the read method. Only the data part is verified.
@@ -341,18 +293,65 @@ class CoreTestCase(unittest.TestCase):
         st = read(file)
         data_copy = st[0].data.copy()
         # Float64, Float32, Int32, Int24, Int16, Char
-        encodings = {5: "<f8", 4: "<f4", 3: "<i4", 0: "|S1"} #, 1: "<i2"
-        for encoding, dtype in encodings.iteritems():
-            # Convert data to floats and write them again
-            st[0].data = data_copy.astype(dtype)
-            st.write(tempfile, format="MSEED", encoding=encoding,
-                     reclen=256, byteorder=0)
-            # Read the binary chunk of data without header not using ObsPy
-            s = open(tempfile, "rb").read()
-            data = np.fromstring(s[56:256], dtype=dtype)
-            # Test if both are the same
-            np.testing.assert_array_equal(data, st[0].data[:len(data)])
+        encodings = {5: "f8", 4: "f4", 3: "i4", 0: "S1", 1: "i2"}
+        byteorders = {0:'<', 1:'>'}
+        for byteorder, btype in byteorders.iteritems():
+            for encoding, dtype in encodings.iteritems():
+                # Convert data to floats and write them again
+                st[0].data = data_copy.astype(dtype)
+                st.write(tempfile, format="MSEED", encoding=encoding,
+                         reclen=256, byteorder=byteorder)
+                # Read the first record of data without header not using ObsPy
+                s = open(tempfile, "rb").read()
+                data = np.fromstring(s[56:256], dtype=btype + dtype)
+                np.testing.assert_array_equal(data, st[0].data[:len(data)])
+                # Read the binary chunk of data with ObsPy
+                st2 = read(tempfile)
+                np.testing.assert_array_equal(st2[0].data, st[0].data)
 
+    def test_invalidDataType(self):
+        """
+        Writing data of type int64 is not supported, an Exception should be
+        raised.
+        """
+        npts = 6000
+        tempfile = NamedTemporaryFile().name
+        np.random.seed(815) # make test reproducable
+        data = np.random.randint(-1000, 1000, npts).astype('int64')
+        st = Stream([Trace(data=data)])
+        # Writing should fail with invalid record lengths.
+        self.assertRaises(Exception, st.write, tempfile, format="MSEED")
+
+    def test_bugSavingSmallASCII(self):
+        """
+        XXX: see #31
+        """
+        tempfile = NamedTemporaryFile().name
+        st = Stream()
+        st.append(Trace(data="A" * 17))
+        #t.append(Trace(data="B" * 16))
+        # Writing should fail with invalid record lengths.
+        st.write(tempfile, format="MSEED", verbose=2)
+
+    def test_allDataTypesAndEndiansInSingleFile(self):
+        """
+        Tests
+        """
+        tempfile = NamedTemporaryFile().name
+        st1 = Stream()
+        data = np.random.randint(-1000, 1000, 500)
+        for dtype in ["i2", "i4", "f4", "f8", "S1"]:
+            for enc in ["<", ">", "="]:
+                st1.append(Trace(data=data.astype(np.dtype(enc + dtype))))
+        st1.write(tempfile, format="MSEED")
+        # read everything back (int16 gets converted into int32)
+        st2 = read(tempfile)
+        for dtype in ["i4", "i4", "f4", "f8", "S1"]:
+            for enc in ["<", ">", "="]:
+                tr = st2.pop(0).data
+                self.assertEqual(tr.dtype.kind + str(tr.dtype.itemsize), dtype)
+                # byte order is always native (=)
+                np.testing.assert_array_equal(tr, data.astype("=" + dtype))
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
