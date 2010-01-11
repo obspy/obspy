@@ -311,15 +311,18 @@ class CoreTestCase(unittest.TestCase):
 
     def test_invalidDataType(self):
         """
-        Writing data of type int64 is not supported, an Exception should be
-        raised.
+        Writing data of type int64 and int16 are not supported.
         """
         npts = 6000
         tempfile = NamedTemporaryFile().name
         np.random.seed(815) # make test reproducable
+        # int64
         data = np.random.randint(-1000, 1000, npts).astype('int64')
         st = Stream([Trace(data=data)])
-        # Writing should fail with invalid record lengths.
+        self.assertRaises(Exception, st.write, tempfile, format="MSEED")
+        # int8
+        data = np.random.randint(-1000, 1000, npts).astype('int8')
+        st = Stream([Trace(data=data)])
         self.assertRaises(Exception, st.write, tempfile, format="MSEED")
 
     def test_bugSavingSmallASCII(self):
@@ -329,13 +332,13 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         st = Stream()
         st.append(Trace(data="A" * 17))
-        #t.append(Trace(data="B" * 16))
-        # Writing should fail with invalid record lengths.
+        # fails ...
+        st.append(Trace(data="B" * 16))
         st.write(tempfile, format="MSEED", verbose=2)
 
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
-        Tests
+        Tests all data and endian types into a single file.
         """
         tempfile = NamedTemporaryFile().name
         st1 = Stream()
@@ -352,6 +355,7 @@ class CoreTestCase(unittest.TestCase):
                 self.assertEqual(tr.dtype.kind + str(tr.dtype.itemsize), dtype)
                 # byte order is always native (=)
                 np.testing.assert_array_equal(tr, data.astype("=" + dtype))
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
