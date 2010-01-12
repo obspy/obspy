@@ -8,13 +8,8 @@ import unittest
 
 class UTCDateTimeTestCase(unittest.TestCase):
     """
-    Test suite for L{obspy.core.UTCDateTime}.
+    Test suite for obspy.core.UTCDateTime.
     """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_fromString(self):
         """
@@ -58,7 +53,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 4, 24, 8, 27, 12, 5000))
         dt = UTCDateTime(1240561632)
         self.assertEquals(dt, UTCDateTime(2009, 4, 24, 8, 27, 12))
-
 
     def test_fromISO8601CalendarDateString(self):
         """

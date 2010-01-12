@@ -24,7 +24,7 @@ class Stats(AttribDict):
         # init
         super(Stats, self).__init__(data)
         # set derived values
-        self._update()
+        self.__refresh()
 
     def __setitem__(self, key, value):
         if key in self.readonly:
@@ -36,8 +36,8 @@ class Stats(AttribDict):
                 value = 1.0 / float(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
-            # det derived values
-            self._update()
+            # set derived values
+            self.__refresh()
         elif isinstance(value, dict):
             super(Stats, self).__setitem__(key, AttribDict(value))
         elif isinstance(value, Stats):
@@ -48,7 +48,10 @@ class Stats(AttribDict):
 
     __setattr__ = __setitem__
 
-    def _update(self):
+    def __refresh(self):
+        """
+        Refreshes current delta and endtime entries.
+        """
         # set delta
         delta = 1.0 / float(self.sampling_rate)
         super(Stats, self).__setitem__('delta', delta)
@@ -191,6 +194,8 @@ class Trace(object):
         return out
 
     def getId(self):
+        """
+        """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
 
@@ -283,3 +288,8 @@ class Trace(object):
         if int(round(delta * sr)) + 1 != len(self.data):
             msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data size(%d)"
             raise Exception(msg % (sr, delta, len(self.data)))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

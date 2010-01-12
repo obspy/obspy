@@ -6,13 +6,13 @@ import datetime
 
 class UTCDateTime(datetime.datetime):
     """
-    A class providing a smooth interface to UTC based datetime objects.
+    A class providing an interface to UTC-based datetime objects.
 
-    This class inherits from Python's L{datetime.datetime} and refines the UTC
-    time zone support.
+    This class inherits from Python datetime.datetime class and refines the UTC
+    time zone support. It supports the full ISO8601:2004 specification and also
+    additional string patterns during object initialisation. ISO8601 detection 
+    may be enforced by setting the iso8601 parameter to True.
 
-    >>> UTCDateTime(0.0)
-    UTCDateTime(1970, 1, 1, 0, 0)
     >>> UTCDateTime(1970, 1, 1)
     UTCDateTime(1970, 1, 1, 0, 0)
     >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
@@ -27,11 +27,11 @@ class UTCDateTime(datetime.datetime):
     UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
     >>> UTCDateTime("2009,010,19:59:42.1800")
     UTCDateTime(2009, 1, 10, 19, 59, 42, 180000)
+    >>> UTCDateTime("2009-W53-7T12:23:34.5")
+    UTCDateTime(2010, 1, 3, 12, 23, 34, 500000)
+    >>> UTCDateTime("2009-001", iso8601=True)         # enforce ISO8601
+    UTCDateTime(2009, 1, 1, 0, 0)
     >>> t = UTCDateTime(1240561632.005)
-    >>> t
-    UTCDateTime(2009, 4, 24, 8, 27, 12, 5000)
-    >>> t.year
-    2009
     >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
     (2009, 8, 4, 8, 27, 12, 5000)
     >>> t.timestamp + 100
@@ -46,17 +46,17 @@ class UTCDateTime(datetime.datetime):
         """
         if len(args) == 0 and len(kwargs) == 0:
             dt = datetime.datetime.utcnow()
-            return UTCDateTime._new(cls, dt)
+            return UTCDateTime.__new(cls, dt)
         elif len(args) == 1:
             value = args[0]
             # check types
             if type(value) in [int, long, float]:
                 # got a timestamp
                 dt = datetime.datetime.utcfromtimestamp(value)
-                return UTCDateTime._new(cls, dt)
+                return UTCDateTime.__new(cls, dt)
             elif isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
-                return UTCDateTime._new(cls, value)
+                return UTCDateTime.__new(cls, value)
             elif isinstance(value, datetime.date):
                 # got a Python datetime.date object
                 return datetime.datetime.__new__(cls, value.year, value.month,
@@ -68,7 +68,7 @@ class UTCDateTime(datetime.datetime):
                 if value.count("T") == 1 or 'iso8601' in kwargs:
                     try:
                         dt = UTCDateTime._parseISO8601(value)
-                        return UTCDateTime._new(cls, dt)
+                        return UTCDateTime.__new(cls, dt)
                     except:
                         if 'iso8601' in kwargs:
                             raise
@@ -117,7 +117,7 @@ class UTCDateTime(datetime.datetime):
                         break
                 if dt:
                     dt = UTCDateTime(dt) + ms
-                    return UTCDateTime._new(cls, dt)
+                    return UTCDateTime.__new(cls, dt)
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs and 'year' in kwargs:
             try:
@@ -133,7 +133,7 @@ class UTCDateTime(datetime.datetime):
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     @staticmethod
-    def _new(cls, dt):
+    def __new(cls, dt):
         """
         I'm just a small helper method to create readable source code.
         """
@@ -224,6 +224,10 @@ class UTCDateTime(datetime.datetime):
         """
         Returns UTC time stamp in floating point seconds.
 
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.getTimeStamp()
+        1222864235.0450201
+
         :rtype: float
         :return: Time stamp in seconds
         """
@@ -233,7 +237,11 @@ class UTCDateTime(datetime.datetime):
 
     def getDateTime(self):
         """
-        Converts current UTCDateTime to a Python L{datetime.datetime} object.
+        Converts current UTCDateTime to a Python datetime.datetime object.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.getDateTime()
+        datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
 
         :rtype: datetime
         :return: Python datetime object of current UTCDateTime
@@ -245,9 +253,13 @@ class UTCDateTime(datetime.datetime):
 
     def getDate(self):
         """
-        Converts current UTCDateTime to a Python L{datetime.date} object.
+        Converts current UTCDateTime to a Python datetime.date object.
 
-        :rtype: date
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.getDate()
+        datetime.date(2008, 10, 1)
+
+        :rtype: datetime.date
         :return: Python date object of current UTCDateTime
         """
         return datetime.date(self.year, self.month, self.day)
@@ -256,9 +268,13 @@ class UTCDateTime(datetime.datetime):
 
     def getTime(self):
         """
-        Converts current UTCDateTime to a Python L{datetime.time} object.
+        Converts current UTCDateTime to a Python datetime.time object.
 
-        :rtype: time
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.getTime()
+        datetime.time(12, 30, 35, 45020)
+
+        :rtype: datetime.time
         :return: Python time object of current UTCDateTime
         """
         return datetime.time(self.hour, self.minute, self.second,
@@ -266,11 +282,26 @@ class UTCDateTime(datetime.datetime):
 
     time = property(getTime)
 
+    def getJulday(self):
+        """
+        Get the Julian day of the current UTCDateTime object.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.getJulday()
+        275
+
+        :rtype: int
+        :return: Julian day of current UTCDateTime
+        """
+        return int(self.strftime("%j"))
+
+    julday = property(getJulday)
+
     def __add__(self, *args, **kwargs):
         """
-        Adds seconds and microseconds to current L{UTCDateTime} object.
+        Adds seconds and microseconds to current UTCDateTime object.
 
-        Adding two L{UTCDateTime} objects results into a time span in seconds.
+        Adding two UTCDateTime objects results into a time span in seconds.
 
         >>> a = UTCDateTime(0.0)
         >>> a
@@ -305,9 +336,9 @@ class UTCDateTime(datetime.datetime):
 
     def __sub__(self, *args, **kwargs):
         """
-        Subtracts seconds and microseconds from current L{UTCDateTime} object.
+        Subtracts seconds and microseconds from current UTCDateTime object.
 
-        Subtracting two L{UTCDateTime} objects from each other results into a
+        Subtracting two UTCDateTime objects from each other results into a
         relative time span in seconds.
 
         >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
@@ -322,7 +353,7 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(10.0) - UTCDateTime(9.5)
         0.5
 
-        :return: UTCDateTime
+        :return: UTCDateTime or float
         """
         if len(args) == 1:
             arg = args[0]
@@ -347,21 +378,28 @@ class UTCDateTime(datetime.datetime):
 
     def __str__(self):
         """
-        Returns string representation of the L{UTCDateTime} object.
+        Returns ISO8601 string representation from current UTCDateTime object.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> str(dt)
+        '2008-10-01T12:30:35.045020Z'
+
+        :return: string
         """
         text = datetime.datetime.__str__(self)
         if not '.' in text:
             text += '.000000'
         return text.replace(' ', 'T') + 'Z'
 
-    def getJulday(self):
-        return int(self.strftime("%j"))
-
-    julday = property(getJulday)
-
     def formatArcLink(self):
         """
         Returns string representation for the ArcLink protocol.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.formatArcLink()
+        '2008,10,1,12,30,35,45020'
+
+        :return: string
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
                                          self.hour, self.minute, self.second,
@@ -370,6 +408,18 @@ class UTCDateTime(datetime.datetime):
     def formatSEED(self, compact=False):
         """
         Returns string representation for a SEED volume.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.formatSEED()
+        '2008,275,12:30:35.0450'
+        >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
+        >>> dt.formatSEED(compact=True)
+        '2008,275,00:30'
+
+        :type compact: boolean
+        :param compact: Delivers a compact SEED date string if enabled. Default
+            value is set to False.
+        :return: string
         """
         if not compact:
             if not self.time:
