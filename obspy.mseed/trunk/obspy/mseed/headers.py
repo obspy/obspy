@@ -29,12 +29,13 @@ for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
                                         lib_name))
-    except:
+    except Exception, e:
         continue
     else:
         break
 if not clibmseed:
-    msg = 'Could not load shared library "libmseed" for obspy.mseed.'
+    msg = 'Could not load shared library "libmseed" for obspy.mseed.' + \
+          '\n\n %s' % str(e)
     raise ImportError(msg)
 
 
