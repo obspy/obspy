@@ -100,7 +100,7 @@ for sei in seis:
     # loop over data chunks
     data = []
     for chunk in sei.data.encoded_values:
-        i+=1
+        i += 1
         # for now we only support STEIM2
         # src/IfTimeSeries.idl:43:    //  const EncodingFormat STEIM1=10;
         # src/IfTimeSeries.idl:44:    //  const EncodingFormat STEIM2=11;
@@ -115,7 +115,7 @@ for sei in seis:
                                         swapflag=swapflag))
     # merge data chunks
     tr.data = np.concatenate(data)
-    tr._verify()
+    tr.verify()
     st.append(tr)
 
 print st

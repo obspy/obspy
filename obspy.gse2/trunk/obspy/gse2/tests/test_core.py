@@ -33,7 +33,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # read
         st = read(gse2file, verify_checksum=True)
-        st._verify()
+        st.verify()
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'RJOB ')
         self.assertEqual(tr.stats.npts, 12000)
@@ -73,7 +73,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
         # read trace
         st1 = read(gse2file)
-        st1._verify()
+        st1.verify()
         tr1 = st1[0]
         # write comparison trace
         st2 = Stream()
@@ -85,7 +85,7 @@ class CoreTestCase(unittest.TestCase):
         # read comparison trace
         st3 = read(tempfile)
         os.remove(tempfile)
-        st3._verify()
+        st3.verify()
         tr3 = st3[0]
         # check if equal
         self.assertEqual(tr3.stats['station'], tr1.stats['station'])
@@ -123,7 +123,7 @@ class CoreTestCase(unittest.TestCase):
         f.close()
         # read
         st1 = read(tmpfile1)
-        st1._verify()
+        st1.verify()
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]
         tr12 = st1[1]
@@ -133,7 +133,7 @@ class CoreTestCase(unittest.TestCase):
         # write and read
         st1.write(tmpfile2, format='GSE2')
         st2 = read(tmpfile2)
-        st2._verify()
+        st2.verify()
         self.assertEqual(len(st2), 2)
         tr21 = st1[0]
         tr22 = st1[1]
@@ -159,15 +159,14 @@ class CoreTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1)
         stats['starttime'] = start
         tr = Trace(data=data, header=stats)
-        tr._verify()
         st = Stream([tr])
-        st._verify()
+        st.verify()
         # write
         st.write(tempfile, format="GSE2")
         # read again
         stream = read(tempfile)
         os.remove(tempfile)
-        stream._verify()
+        stream.verify()
         np.testing.assert_equal(data, stream[0].data)
         # test default attributes
         self.assertEqual('CM6', stream[0].stats.gse2.datatype)

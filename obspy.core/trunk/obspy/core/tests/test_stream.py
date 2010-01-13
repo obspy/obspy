@@ -430,10 +430,10 @@ class StreamTestCase(unittest.TestCase):
         for i in range(0, 4):
             self.assertEquals(stream[i].stats.sampling_rate, 200)
             self.assertEquals(stream[i].getId(), 'BW.BGLD..EHE')
-        stream._verify()
+        stream.verify()
         # merge it
         stream.merge()
-        stream._verify()
+        stream.verify()
         self.assertEquals(len(stream), 1)
         self.assertEquals(len(stream[0]), stream[0].data.size)
         self.assertEquals(stream[0].stats.starttime, start)
@@ -456,7 +456,7 @@ class StreamTestCase(unittest.TestCase):
             ts[-1].stats.npts = npts
             k = 20
         stream = Stream(traces=ts)
-        stream._verify()
+        stream.verify()
         # merge it
         stream.merge()
         # build reference array

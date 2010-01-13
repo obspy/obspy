@@ -54,7 +54,7 @@ class CoreTestCase(unittest.TestCase):
         # 1 - big endian, 32 bit
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
         st1 = readSEISAN(file)
-        st1._verify()
+        st1.verify()
         self.assertEqual(len(st1), 21)
         self.assertEqual(st1[20].stats.network, '')
         self.assertEqual(st1[20].stats.station, 'MBGB')
@@ -76,7 +76,7 @@ class CoreTestCase(unittest.TestCase):
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         st2 = readSEISAN(file)
-        st2._verify()
+        st2.verify()
         self.assertEqual(len(st2), 4)
         self.assertEqual(list(st2[0].data[0:3]), [492, 519, 542])
 

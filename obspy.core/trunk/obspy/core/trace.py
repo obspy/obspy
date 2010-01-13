@@ -21,6 +21,7 @@ class Stats(AttribDict):
         super(Stats, self).__setitem__('sampling_rate', 1.0)
         super(Stats, self).__setitem__('starttime', UTCDateTime(0))
         super(Stats, self).__setitem__('npts', 0)
+        super(Stats, self).__setitem__('calib', 1.0)
         # init
         super(Stats, self).__init__(data)
         # set derived values
@@ -273,9 +274,9 @@ class Trace(object):
         self.ltrim(starttime)
         self.rtrim(endtime)
 
-    def _verify(self):
+    def verify(self):
         """
-        Verifies this L{Trace} object with saved stats values.
+        Verifies current Trace object with header values in stats attribute.
         """
         if len(self) != self.stats.npts:
             msg = "ntps(%d) differs from data size(%d)"

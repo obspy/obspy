@@ -30,7 +30,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [2787, 2776, 2774, 2780, 2783]
         # read
         stream = readMSEED(testfile)
-        stream._verify()
+        stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(stream[0].stats.get('location'), '00')
@@ -48,7 +48,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [2787, 2776, 2774, 2780, 2783]
         # without given format -> auto detect file format
         stream = read(testfile)
-        stream._verify()
+        stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
         self.assertEqual(stream[0].stats.npts, 11947)
@@ -56,7 +56,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(stream[0].data[_i], testdata[_i])
         # with given format
         stream = read(testfile, format='MSEED')
-        stream._verify()
+        stream.verify()
         self.assertEqual(stream[0].stats.get('location'), '00')
         self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
         self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
@@ -66,7 +66,7 @@ class CoreTestCase(unittest.TestCase):
         gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
         stream = read(gapfile)
-        stream._verify()
+        stream.verify()
         self.assertEqual(4, len(stream.traces))
         for _i in stream.traces:
             self.assertEqual(True, isinstance(_i, Trace))
@@ -105,7 +105,7 @@ class CoreTestCase(unittest.TestCase):
         # read again
         stream = read(tempfile)
         os.remove(tempfile)
-        stream._verify()
+        stream.verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
     def test_readWithWildCard(self):
@@ -146,7 +146,7 @@ class CoreTestCase(unittest.TestCase):
         # Read it again and delete the temporary file.
         stream = read(tempfile)
         os.remove(tempfile)
-        stream._verify()
+        stream.verify()
         # Loop over the attributes to be able to assert them because a
         # dictionary is not a stats dictionary.
         # This also assures that there are no additional keys.
@@ -221,7 +221,7 @@ class CoreTestCase(unittest.TestCase):
             tempfile = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
             st[0].data = data.astype(seed_dtype)
-            st._verify()
+            st.verify()
             st.write(tempfile, format="MSEED", encoding=encoding)
             temp_st1 = read(tempfile)
             np.testing.assert_array_equal(st[0].data, temp_st1[0].data)

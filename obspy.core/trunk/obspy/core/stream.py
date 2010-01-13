@@ -453,12 +453,12 @@ class Stream(object):
         for trace in self:
             trace.rtrim(endtime)
 
-    def _verify(self):
+    def verify(self):
         """
-        Verifies all L{Trace} objects in this L{Stream}.
+        Verifies all Trace objects in current Streams using header information.
         """
         for trace in self:
-            trace._verify()
+            trace.verify()
 
     def merge(self):
         """

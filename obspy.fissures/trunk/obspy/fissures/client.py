@@ -157,7 +157,7 @@ class Client(object):
                     raise NotImplementedError(msg)
             # merge data chunks
             tr.data = np.concatenate(data)
-            tr._verify()
+            tr.verify()
             st.append(tr)
             # XXX: merging?
         return st
