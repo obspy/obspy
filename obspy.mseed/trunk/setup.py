@@ -21,10 +21,12 @@ obspy.mseed installer
     02110-1301, USA.
 """
 
+from distutils.ccompiler import get_default_compiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import os
 import platform
+import sys
 
 
 VERSION = '0.2.2'
@@ -43,15 +45,16 @@ class MyExtension(Extension):
 macros = []
 if platform.system() == "Windows":
     macros.append(('WIN32', '1'))
-    # The following lines are needed for Python 2.6 compiled with MinGW 
-    # otherwise exception is raised by C extension using gmtime or localtime
+    # Workaround Win32 + MinGW + Python 2.6 
     # :see: http://bugs.python.org/issue3308
-    macros.append(('time_t', '__int64'))
-    macros.append(('localtime', '_localtime64'))
-    macros.append(('gmtime', '_gmtime64'))
+    if 'mingw32' in sys.argv or \
+       ('-c' not in sys.argv and get_default_compiler() == 'mingw32'):
+        macros.append(('time_t', '__int64'))
+        macros.append(('localtime', '_localtime64'))
+        macros.append(('gmtime', '_gmtime64'))
 
 src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
-symbols = open(src + 'libmseed.def', 'r').readlines()[2:]
+symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]]
 lib = MyExtension('libmseed',
                   define_macros=macros,
                   libraries=[],
