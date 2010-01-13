@@ -33,6 +33,7 @@ OBJS=	fileutils.obj	&
 	tracelist.obj	&
 	unpack.obj	&
 	unpackdata.obj  &
+	selection.obj	&
 	logging.obj
 
 all: lib

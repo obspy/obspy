@@ -18,7 +18,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * Version: 2006.344
+ * Version: 2010.006
  ***************************************************************************/
 
 #include "lmplatform.h"
@@ -35,11 +35,11 @@ ms_gswap2 ( void *data2 )
     uint8_t  c[2];
   } dat;
   
-  memcpy( &dat, data2, sizeof(dat) );
+  memcpy( &dat, data2, 2 );
   temp     = dat.c[0];
   dat.c[0] = dat.c[1];
   dat.c[1] = temp;
-  memcpy( data2, &dat, sizeof(dat) );
+  memcpy( data2, &dat, 2 );
 }
 
 
@@ -53,11 +53,11 @@ ms_gswap3 ( void *data3 )
     uint8_t  c[3];
   } dat;
   
-  memcpy( &dat, data3, sizeof(dat) );
+  memcpy( &dat, data3, 3 );
   temp     = dat.c[0];
   dat.c[0] = dat.c[2];
   dat.c[2] = temp;
-  memcpy( data3, &dat, sizeof(dat) );
+  memcpy( data3, &dat, 3 );
 }
 
 
@@ -70,14 +70,14 @@ ms_gswap4 ( void *data4 )
     uint8_t c[4];
   } dat;
   
-  memcpy( &dat, data4, sizeof(dat) );
+  memcpy( &dat, data4, 4 );
   temp     = dat.c[0];
   dat.c[0] = dat.c[3];
   dat.c[3] = temp;
   temp     = dat.c[1];
   dat.c[1] = dat.c[2];
   dat.c[2] = temp;
-  memcpy( data4, &dat, sizeof(dat) );
+  memcpy( data4, &dat, 4 );
 }
 
 
@@ -91,7 +91,7 @@ ms_gswap8 ( void *data8 )
     uint8_t   c[8];
   } dat;
   
-  memcpy( &dat, data8, sizeof(dat) );
+  memcpy( &dat, data8, 8 );
   temp     = dat.c[0];
   dat.c[0] = dat.c[7];
   dat.c[7] = temp;
@@ -107,7 +107,7 @@ ms_gswap8 ( void *data8 )
   temp     = dat.c[3];
   dat.c[3] = dat.c[4];
   dat.c[4] = temp;
-  memcpy( data8, &dat, sizeof(dat) );
+  memcpy( data8, &dat, 8 );
 }
 
 /* Swap routines that work on memory aligned quantities */

@@ -18,7 +18,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2009.177
+ * modified: 2010.006
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -27,7 +27,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
+  /* On some platforms (e.g. ARM) structures are aligned on word boundaries
+     by adding padding between the elements.  This library uses structs that
+     map to SEED header/blockette structures that are required to have a
+     layout exactly as specified, i.e. no padding.
+
+     If "ATTRIBUTE_PACKED" is defined at compile time (e.g. -DATTRIBUTE_PACKED)
+     the preprocessor will use the define below to add the "packed" attribute 
+     to effected structs.  This attribute is supported by GCC and increasingly
+     more compilers.
+  */
+#if defined(ATTRIBUTE_PACKED)
+  #define LMP_PACKED __attribute__((packed))
+#else
+  #define LMP_PACKED
+#endif
+
   /* Make some guesses about the system libraries based
    * on the architecture.  Currently the assumptions are:
    * Linux => glibc2 libraries (LMP_GLIBC2)
@@ -91,12 +107,6 @@ extern "C" {
   #include <stdio.h>
   #include <sys/types.h>
   #include <ctype.h>
-  #include <time.h>
-  #define __MSVCRT_VERSION__ 0x0700
-  #define time_t __time64_t
-  #define localtime _localtime64
-  #define time _time64
-  #define gmtime _gmtime64
 
   #define snprintf _snprintf
   #define vsnprintf _vsnprintf

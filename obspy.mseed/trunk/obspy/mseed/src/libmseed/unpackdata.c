@@ -14,7 +14,7 @@
  *  (previously) ORFEUS/EC-Project MEREDIAN
  *  (currently) IRIS Data Management Center
  *
- *  modified: 2009.111
+ *  modified: 2010.012
  ************************************************************************/
 
 /*

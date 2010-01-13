@@ -24,7 +24,7 @@ obspy.mseed installer
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import os
-import sys
+import platform
 
 
 VERSION = '0.2.2'
@@ -40,11 +40,20 @@ class MyExtension(Extension):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
 
+macros = []
+if platform.system() == "Windows":
+    macros.append(('WIN32', '1'))
+    # The following lines are needed for Python 2.6 compiled with MinGW 
+    # otherwise exception is raised by C extension using gmtime or localtime
+    # :see: http://bugs.python.org/issue3308
+    macros.append(('time_t', '__int64'))
+    macros.append(('localtime', '_localtime64'))
+    macros.append(('gmtime', '_gmtime64'))
 
 src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
 symbols = open(src + 'libmseed.def', 'r').readlines()[2:]
 lib = MyExtension('libmseed',
-                  define_macros=[('WIN32', sys.platform == 'win32')],
+                  define_macros=macros,
                   libraries=[],
                   sources=[src + 'fileutils.c', src + 'genutils.c',
                            src + 'gswap.c', src + 'lmplatform.c',
@@ -52,7 +61,7 @@ lib = MyExtension('libmseed',
                            src + 'pack.c', src + 'packdata.c',
                            src + 'traceutils.c', src + 'tracelist.c',
                            src + 'unpack.c', src + 'unpackdata.c',
-                           src + 'logging.c'],
+                           src + 'selection.c', src + 'logging.c'],
                   export_symbols=symbols,
                   extra_link_args=[])
 

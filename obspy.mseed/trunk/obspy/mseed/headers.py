@@ -9,10 +9,15 @@ import os
 import numpy as np
 
 
-# Import shared libmseed library depending on the platform.
-# XXX: trying multiple names for now - should be removed
+# Import shared libmseed depending on the platform. 
+# Trying multiple libraries: 
+# First entry: library name generated via "python setup.py build"
+# Further entries: pre-generated libraries
 if platform.system() == 'Windows':
-    lib_names = ['libmseed.pyd']
+    if platform.architecture()[0] == '64bit':
+        lib_names = ['libmseed.pyd']
+    else:
+        lib_names = ['libmseed.pyd', '_libmseed.win32.dll']
 elif platform.system() == 'Darwin':
     lib_names = ['libmseed.so', '_libmseed.dylib']
 else:

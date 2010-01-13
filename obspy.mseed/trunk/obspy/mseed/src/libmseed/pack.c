@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2008.220
+ * modified: 2009.365
  ***************************************************************************/
 
 #include <stdio.h>
@@ -20,9 +20,10 @@
 
 /* Function(s) internal to this file */
 static int msr_pack_header_raw (MSRecord *msr, char *rawrec, int maxheaderlen,
-				flag swapflag, flag normalize, flag verbose);
+				flag swapflag, flag normalize,
+				struct blkt_1001_s **blkt1001, flag verbose);
 static int msr_update_header (MSRecord * msr, char *rawrec, flag swapflag,
-			      flag verbose);
+			      struct blkt_1001_s *blkt1001, flag verbose);
 static int msr_pack_data (void *dest, void *src, int maxsamples, int maxdatabytes,
 			  int *packsamples, int32_t *lastintsample, flag comphistory,
 			  char sampletype, flag encoding, flag swapflag,
@@ -74,6 +75,8 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
 {
   uint16_t *HPnumsamples;
   uint16_t *HPdataoffset;
+  struct blkt_1001_s *HPblkt1001 = NULL;
+  
   char *rawrec;
   char *envvariable;
   char srcname[50];
@@ -90,6 +93,7 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
   int recordcnt = 0;
   int totalpackedsamples;
   int packsamples, packoffset;
+  hptime_t segstarttime;
   
   if ( ! msr )
     return -1;
@@ -122,6 +126,9 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
   /* Set shared srcname pointer to source name */
   PACK_SRCNAME = &srcname[0];
   
+  /* Track original segment start time for new start time calculation */
+  segstarttime = msr->starttime;
+
   /* Read possible environmental variables that force byteorder */
   if ( packheaderbyteorder == -2 )
     {
@@ -276,14 +283,14 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
 	}
     }
   
-  headerlen = msr_pack_header_raw (msr, rawrec, msr->reclen, headerswapflag, 1, verbose);
+  headerlen = msr_pack_header_raw (msr, rawrec, msr->reclen, headerswapflag, 1, &HPblkt1001, verbose);
   
   if ( headerlen == -1 )
     {
       ms_log (2, "msr_pack(%s): Error packing header\n", PACK_SRCNAME);
       return -1;
     }
-
+  
   /* Determine offset to encoded data */
   if ( msr->encoding == DE_STEIM1 || msr->encoding == DE_STEIM2 )
     {
@@ -357,12 +364,13 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
       /* Update record header for next record */
       msr->sequence_number = ( msr->sequence_number >= 999999 ) ? 1 : msr->sequence_number + 1;
       if ( msr->samprate > 0 )
-        msr->starttime += (double) packsamples / msr->samprate * HPTMODULUS;
-      msr_update_header (msr, rawrec, headerswapflag, verbose);
+	msr->starttime = segstarttime + (hptime_t)(totalpackedsamples / msr->samprate * HPTMODULUS + 0.5);
+      
+      msr_update_header (msr, rawrec, headerswapflag, HPblkt1001, verbose);
       
       recordcnt++;
       msr->ststate->packedrecords++;
-
+      
       /* Set compression history flag for subsequent records (Steim encodings) */
       if ( ! msr->ststate->comphistory )
         msr->ststate->comphistory = 1;
@@ -486,7 +494,7 @@ msr_pack_header ( MSRecord *msr, flag normalize, flag verbose )
     }
   
   headerlen = msr_pack_header_raw (msr, msr->record, maxheaderlen,
-				   headerswapflag, normalize, verbose);
+				   headerswapflag, normalize, NULL, verbose);
   
   return headerlen;
 }  /* End of msr_pack_header() */
@@ -501,7 +509,8 @@ msr_pack_header ( MSRecord *msr, flag normalize, flag verbose )
  ***************************************************************************/
 static int
 msr_pack_header_raw ( MSRecord *msr, char *rawrec, int maxheaderlen,
-		      flag swapflag, flag normalize, flag verbose )
+		      flag swapflag, flag normalize, 
+		      struct blkt_1001_s **blkt1001, flag verbose )
 {
   struct blkt_link_s *cur_blkt;
   struct fsdh_s *fsdh;
@@ -769,8 +778,12 @@ msr_pack_header_raw ( MSRecord *msr, char *rawrec, int maxheaderlen,
 	  struct blkt_1001_s *blkt_1001 = (struct blkt_1001_s *) (rawrec + offset);
 	  memcpy (blkt_1001, cur_blkt->blktdata, sizeof (struct blkt_1001_s));
 	  offset += sizeof (struct blkt_1001_s);
+	  
+	  /* Track location of Blockette 1001 if requested */
+	  if ( blkt1001 )
+	    *blkt1001 = blkt_1001;
 	}
-
+      
       else if ( cur_blkt->blkt_type == 2000 )
 	{
 	  struct blkt_2000_s *blkt_2000 = (struct blkt_2000_s *) (rawrec + offset);
@@ -828,7 +841,7 @@ msr_pack_header_raw ( MSRecord *msr, char *rawrec, int maxheaderlen,
  ***************************************************************************/
 static int
 msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
-		    flag verbose )
+		    struct blkt_1001_s *blkt1001, flag verbose )
 {
   struct fsdh_s *fsdh;
   char seqnum[7];
@@ -844,13 +857,31 @@ msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
   /* Pack values into the fixed section of header */
   snprintf (seqnum, 7, "%06d", msr->sequence_number);
   memcpy (fsdh->sequence_number, seqnum, 6);
-
+  
+  /* Update fixed-section start time */
   ms_hptime2btime (msr->starttime, &(fsdh->start_time));
   
   /* Swap byte order? */
   if ( swapflag )
     {
       MS_SWAPBTIME (&fsdh->start_time);
+    }
+  
+  /* Update microseconds if Blockette 1001 is present */
+  if ( msr->Blkt1001 && blkt1001 )
+    {
+      hptime_t sec, usec;
+      
+      /* Calculate microseconds offset */
+      sec = msr->starttime / (HPTMODULUS / 10000);
+      usec = msr->starttime - (sec * (HPTMODULUS / 10000));
+      usec /= (HPTMODULUS / 1000000);
+      
+      /* Update microseconds offset in blockette chain entry */
+      msr->Blkt1001->usec = (int8_t) usec;
+      
+      /* Update microseconds offset in packed header */
+      blkt1001->usec = (int8_t) usec;
     }
   
   return 0;

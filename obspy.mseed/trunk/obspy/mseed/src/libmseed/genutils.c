@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2009.194
+ * modified: 2009.353
  ***************************************************************************/
 
 #include <stdio.h>
@@ -61,6 +61,113 @@ ms_recsrcname (char *record, char *srcname, flag quality)
   
   return srcname;
 } /* End of ms_recsrcname() */
+
+
+/***************************************************************************
+ * ms_splitsrcname:
+ *
+ * Split srcname into separate components: "NET_STA_LOC_CHAN[_QUAL]".
+ * Memory for each component must already be allocated.  If a specific
+ * component is not desired set the appropriate argument to NULL.
+ *
+ * Returns 0 on success and -1 on error.
+ ***************************************************************************/
+int
+ms_splitsrcname (char *srcname, char *net, char *sta, char *loc, char *chan,
+		 char *qual)
+{
+  char *id;
+  char *ptr, *top, *next;
+  int sepcnt = 0;
+  
+  if ( ! srcname )
+    return -1;
+  
+  /* Verify number of separating underscore characters */
+  id = srcname;
+  while ( (id = strchr (id, '_')) )
+    {
+      id++;
+      sepcnt++;
+    }
+  
+  /* Either 3 or 4 separating underscores are required */
+  if ( sepcnt != 3 && sepcnt != 4 )
+    {
+      return -1;
+    }
+  
+  /* Duplicate srcname */
+  if ( ! (id = strdup(srcname)) )
+    {
+      fprintf (stderr, "ms_splitsrcname(): Error duplicating srcname string");
+      return -1;
+    }
+  
+  /* Network */
+  top = id;
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( net )
+	strcpy (net, top);
+      
+      top = next;
+    }
+  /* Station */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( sta )
+	strcpy (sta, top);
+      
+      top = next;
+    }
+  /* Location */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( loc )
+	strcpy (loc, top);
+      
+      top = next;
+    }
+  /* Channel & optional Quality */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( chan )
+	strcpy (chan, top);
+      
+      top = next;
+      
+      /* Quality */
+      if ( *top && qual )
+	{
+	  /* Quality is a single character */
+	  *qual = *top;
+	}
+    }
+  /* Otherwise only Channel */
+  else if ( *top && chan )
+    {
+      strcpy (chan, top);
+    }
+  
+  /* Free duplicated stream ID */
+  if ( id )
+    free (id);
+  
+  return 0;
+}  /* End of ms_splitsrcname() */
 
 
 /***************************************************************************

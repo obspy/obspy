@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.3"
-#define LIBMSEED_RELEASE "2009.201"
+#define LIBMSEED_VERSION "2.4dev4"
+#define LIBMSEED_RELEASE "2010.012"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -158,7 +158,7 @@ typedef struct btime_s
   uint8_t   sec;
   uint8_t   unused;
   uint16_t  fract;
-}
+} LMP_PACKED
 BTime;
 
 /* Fixed section data of header */
@@ -182,7 +182,7 @@ struct fsdh_s
   int32_t        time_correct;
   uint16_t       data_offset;
   uint16_t       blockette_offset;
-};
+} LMP_PACKED;
 
 /* Blockette 100, Sample Rate (without header) */
 struct blkt_100_s
@@ -190,7 +190,7 @@ struct blkt_100_s
   float     samprate;
   int8_t    flags;
   uint8_t   reserved[3];
-};
+} LMP_PACKED;
 
 /* Blockette 200, Generic Event Detection (without header) */
 struct blkt_200_s
@@ -202,7 +202,7 @@ struct blkt_200_s
   uint8_t   reserved;
   BTime     time;
   char      detector[24];
-};
+} LMP_PACKED;
 
 /* Blockette 201, Murdock Event Detection (without header) */
 struct blkt_201_s
@@ -217,7 +217,7 @@ struct blkt_201_s
   uint8_t   loopback;
   uint8_t   pick_algorithm;
   char      detector[24];
-};
+} LMP_PACKED;
 
 /* Blockette 300, Step Calibration (without header) */
 struct blkt_300_s
@@ -233,7 +233,7 @@ struct blkt_300_s
   uint32_t  reference_amplitude;
   char      coupling[12];
   char      rolloff[12];
-};
+} LMP_PACKED;
 
 /* Blockette 310, Sine Calibration (without header) */
 struct blkt_310_s
@@ -249,7 +249,7 @@ struct blkt_310_s
   uint32_t  reference_amplitude;
   char      coupling[12];
   char      rolloff[12];
-};
+} LMP_PACKED;
 
 /* Blockette 320, Pseudo-random Calibration (without header) */
 struct blkt_320_s
@@ -265,7 +265,7 @@ struct blkt_320_s
   char      coupling[12];
   char      rolloff[12];
   char      noise_type[8];
-};
+} LMP_PACKED;
   
 /* Blockette 390, Generic Calibration (without header) */
 struct blkt_390_s
@@ -277,14 +277,14 @@ struct blkt_390_s
   float     amplitude;
   char      input_channel[3];
   uint8_t   reserved2;
-};
+} LMP_PACKED;
 
 /* Blockette 395, Calibration Abort (without header) */
 struct blkt_395_s
 {
   BTime     time;
   uint8_t   reserved[2];
-};
+} LMP_PACKED;
 
 /* Blockette 400, Beam (without header) */
 struct blkt_400_s
@@ -293,7 +293,7 @@ struct blkt_400_s
   float     slowness;
   uint16_t  configuration;
   uint8_t   reserved[2];
-};
+} LMP_PACKED;
 
 /* Blockette 405, Beam Delay (without header) */
 struct blkt_405_s
@@ -312,7 +312,7 @@ struct blkt_500_s
   char      exception_type[16];
   char      clock_model[32];
   char      clock_status[128];
-};
+} LMP_PACKED;
 
 /* Blockette 1000, Data Only SEED (without header) */
 struct blkt_1000_s
@@ -321,7 +321,7 @@ struct blkt_1000_s
   uint8_t   byteorder;
   uint8_t   reclen;
   uint8_t   reserved;
-};
+} LMP_PACKED;
 
 /* Blockette 1001, Data Extension (without header) */
 struct blkt_1001_s
@@ -330,7 +330,7 @@ struct blkt_1001_s
   int8_t    usec;
   uint8_t   reserved;
   uint8_t   framecnt;
-};
+} LMP_PACKED;
 
 /* Blockette 2000, Opaque Data (without header) */
 struct blkt_2000_s
@@ -342,7 +342,7 @@ struct blkt_2000_s
   uint8_t   flags;
   uint8_t   numheaders;
   char      payload[1];
-};
+} LMP_PACKED;
 
 /* Blockette chain link, generic linkable blockette index */
 typedef struct blkt_link_s
@@ -469,6 +469,20 @@ typedef struct MSTraceList_s {
 }
 MSTraceList;
 
+/* Data selection structure time window definition containers */
+typedef struct SelectTime_s {
+  hptime_t starttime;    /* Earliest data for matching channels */
+  hptime_t endtime;      /* Latest data for matching channels */
+  struct SelectTime_s *next;
+} SelectTime;
+
+/* Data selection structure definition containers */
+typedef struct Selections_s {
+  char srcname[100];     /* Matching (globbing) source name: Net_Sta_Loc_Chan_Qual */
+  struct SelectTime_s *timewindows;
+  struct Selections_s *next;
+} Selections;
+
 
 /* Global variables (defined in pack.c) and macros to set/force
  * pack byte orders */
@@ -581,6 +595,8 @@ extern int      ms_readmsr (MSRecord **ppmsr, char *msfile, int reclen, off_t *f
 			    flag skipnotdata, flag dataflag, flag verbose);
 extern int      ms_readmsr_r (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
 			      off_t *fpos, int *last, flag skipnotdata, flag dataflag, flag verbose);
+extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *msfile, int reclen,
+				 off_t *fpos, int *last, flag skipnotdata, flag dataflag, Selections *selections, flag verbose);
 extern int      ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
 			       flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
 extern int      ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
@@ -590,6 +606,7 @@ extern int      ms_find_reclen (const char *recbuf, int recbuflen, FILE *fileptr
 
 /* General use functions */
 extern char*    ms_recsrcname (char *record, char *srcname, flag quality);
+extern int      ms_splitsrcname (char *srcname, char *net, char *sta, char *loc, char *chan, char *qual);
 extern int      ms_strncpclean (char *dest, const char *source, int length);
 extern int      ms_strncpopen (char *dest, const char *source, int length);
 extern int      ms_doy2md (int year, int jday, int *month, int *mday);
@@ -639,6 +656,16 @@ extern void   ms_loginit (void (*log_print)(char*), const char *logprefix,
 extern MSLogParam *ms_loginit_l (MSLogParam *logp,
 			         void (*log_print)(char*), const char *logprefix,
 			         void (*diag_print)(char*), const char *errprefix);
+
+/* Selection functions */
+extern Selections *ms_matchselect (Selections *selections, char *srcname,
+				  hptime_t starttime, hptime_t endtime, SelectTime **ppselecttime);
+extern Selections *msr_matchselect (Selections *selections, MSRecord *msr, SelectTime **ppselecttime);
+extern int      ms_addselect (Selections **ppselections, char *net, char* sta, char *loc,
+			      char *chan, char *qual, hptime_t starttime, hptime_t endtime);
+extern int      ms_readselectionsfile (Selections **ppselections, char *filename);
+extern void     ms_freeselections (Selections *selections);
+extern void     ms_printselections (Selections *selections);
 
 /* Generic byte swapping routines */
 extern void     ms_gswap2 ( void *data2 );

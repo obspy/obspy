@@ -1,3 +1,61 @@
+2010.012:
+	- Fix unpacking of 16-bit integer encoded data, thanks to
+	Robert Barsch. 
+	
+2010.008:
+	- Fix special case of "--" location ID in ms_addselect().
+	
+2010.007:
+	- Add SelectTime **ppselecttime argument to ms_matchselect()
+	and msr_matchselect() routines so that the matching time range
+	can optionally be returned to the caller.
+
+2010.006:
+	- Add a check for ATTRIBUTE_PACKED define (lmplatform.h) and
+	if set add an __attribute__((packed)) qualifier to all structs
+	that are mapped to SEED structures (and cannot be padded).
+	This is useful on platforms such as ARM that pad structures 
+	for alignment by default.  To use add "-DATTRIBUTE_PACKED" to
+	CFLAGS or equivalent.
+	- Fixes to gswapX() routines for platforms where structures
+	are padded for alignment; patch from Laurence Withers, thanks.
+	- Add msr_matchselect and ms_printselections() routine to
+	selections.c.
+
+2010.005:
+	- Simplify packed file reading in ms_readmsr_main() and allow
+	data sections to be skipped based on a Selection list, packed
+	files are used internally at the IRIS DMC.  
+	- Rename ms_readmsr_r() to ms_readmsr_main() and create a
+	simple wrapper function for ms_readmsr_r().
+
+2010.004:
+	- Add selection.c containing routines to manage data selection
+	lists based on network, station, location, channel, quality,
+	start and end times.  The name parameters may contain globbing
+	charaters for matching.  External routines are: ms_addselect(),
+	ms_matchselect(), ms_readselectionfile() and ms_freeselections().
+
+2009.365:
+	- Correctly track microsecond offset in Blockette 1001 when
+	msr_pack() creates more than one record.
+
+2009.357:
+	- Reduce error accumulation of record start times in pack.c,
+	thanks to Roman Racine for the report and suggested fix.
+	The error only accumulated to significant values when packing
+	a large number of records with a single call to msr_pack().
+	
+2009.354:
+	- Change return type of internal ms_readpackinfo() to off_t and
+	fix small error return check.
+
+2009.353:
+	- Add ms_splitsrcname() routine to split "NET_STA_LOC_CHAN[_QUAL]"
+	into separate components.
+	- Update MINOR_VER version to 4 anticipating the 2.4 release 
+	(seem to have forgotten 3).
+
 2009.201: 2.3
 	- msr_unpack(): change new blockette count and data offset
 	test failures to "Warning" instead of "ERROR".

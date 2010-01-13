@@ -74,6 +74,12 @@ EXPORTS
     ms_log_l
     ms_loginit
     ms_loginit_l
+    ms_matchselect
+    msr_matchselect
+    ms_addselect
+    ms_readselectionsfile
+    ms_freeselections
+    ms_printselections
     ms_gswap2
     ms_gswap3
     ms_gswap4
