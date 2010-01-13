@@ -131,8 +131,7 @@ def readSEISAN(filename, headonly=False, **kwargs):
         hour = int(temp[23:25])
         mins = int(temp[26:28])
         secs = float(temp[29:35])
-        header['starttime'] = starttime = UTCDateTime(year, month, day,
-                                                      hour, mins) + secs
+        header['starttime'] = UTCDateTime(year, month, day, hour, mins) + secs
         if headonly:
             # skip data
             fh.seek(dlen * (header['npts'] + 2), 1)

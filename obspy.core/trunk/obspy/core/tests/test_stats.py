@@ -98,8 +98,9 @@ class StatsTestCase(unittest.TestCase):
         """
         Various setter and getter tests.
         """
+        #1
         stats = Stats()
-        stats.test = Stats()
+        stats.test = dict()
         stats.test['test2'] = 'muh'
         self.assertEquals(stats.test.test2, 'muh')
         self.assertEquals(stats.test['test2'], 'muh')
@@ -110,6 +111,19 @@ class StatsTestCase(unittest.TestCase):
         self.assertEquals(stats.test['test2'], 'maeh')
         self.assertEquals(stats['test'].test2, 'maeh')
         self.assertEquals(stats['test']['test2'], 'maeh')
+        #2 - multiple initialization 
+        stats = Stats({'muh': 'meah'})
+        stats2 = Stats(Stats(Stats(stats)))
+        self.assertEquals(stats2.muh, 'meah')
+        #3 - check conversion to AttribDict
+        stats = Stats()
+        stats.sub1 = {'muh': 'meah'}
+        stats.sub2 = AttribDict({'muh2': 'meah2'})
+        stats2 = Stats(stats)
+        self.assertTrue(isinstance(stats.sub1, AttribDict))
+        self.assertTrue(isinstance(stats.sub2, AttribDict))
+        self.assertEquals(stats2.sub1.muh, 'meah')
+        self.assertEquals(stats2.sub2.muh2, 'meah2')
 
     def test_bugfix_setStats(self):
         """

@@ -8,29 +8,69 @@ import numpy as np
 
 class Stats(AttribDict):
     """
-    A stats class which behaves like a dictionary.
-    
-    Attributes starttime, npts, sampling_rate and delta are dynamically 
-    monitored and used to recalculated endtime, delta or sampling_rate if set 
-    to a new value. The attribute endtime is set to readonly.
+    A class containing header information for a single :class:`Trace` object.
+
+    Default header attributes are:
+
+    ============= =================== ============ ================= ====
+    Name          Description         Data type    Default value     Mode
+    ============= =================== ============ ================= ====
+    sampling_rate Sampling rate [Hz]  float        1.0               RW
+    delta         Sample distance [s] float        1.0               RW
+    calib         Calibration factor  float        1.0               RW
+    npts          Number of points    int          0                 RW
+    network       Network code        string       ''                RW
+    location      Location code       string       ''                RW
+    station       Station code        string       ''                RW
+    channel       Channel code        string       ''                RW
+    starttime     Start time [UTC]    UTCDateTime  1970-01-01 00:00  RW
+    endtime       End time [UTC]      UTCDateTime  1970-01-01 00:00  R
+    ============= =================== ============ ================= ====
+
+    The attributes `starttime`, `sampling_rate` and `delta` are dynamically
+    monitored and used to recalculated `endtime`, `delta` and `sampling_rate`
+    on any change. Attribute `endtime` is read only and can not be modified.
+
+        >>> stats = Stats()
+        >>> stats.sampling_rate
+        1.0
+        >>> stats.delta = 0.005
+        >>> stats.sampling_rate
+        200.0
+
+    All header information of the `Stats` class may be accessed or modified
+    either in the dictionary style or directly via the respective attribute.
+
+        >>> stats = Stats()
+        >>> stats.network = 'BW'
+        >>> stats['network']
+        'BW'
+        >>> stats['station'] = 'MANZ'
+        >>> stats.station
+        'MANZ'
     """
     readonly = ['endtime']
 
-    def __init__(self, data={}):
-        # set default values
+    def __init__(self, header={}):
+        # set default values without calculating derived entries
         super(Stats, self).__setitem__('sampling_rate', 1.0)
         super(Stats, self).__setitem__('starttime', UTCDateTime(0))
         super(Stats, self).__setitem__('npts', 0)
-        super(Stats, self).__setitem__('calib', 1.0)
-        # init
-        super(Stats, self).__init__(data)
-        # set derived values
-        self.__refresh()
+        # set default values for all other headers
+        header.setdefault('calib', 1.0)
+        for default in ['station', 'network', 'location', 'channel']:
+            header.setdefault(default, '')
+        # initialize
+        super(Stats, self).__init__(header)
+        # calculate derived values
+        self._calculateDerivedValues()
 
     def __setitem__(self, key, value):
+        # filter read only attributes
         if key in self.readonly:
             msg = "Attribute \"%s\" in Stats object is read only!" % (key)
             raise AttributeError(msg)
+        # keys which need to refresh derived values
         if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
             if key == 'delta':
                 key = 'sampling_rate'
@@ -38,20 +78,19 @@ class Stats(AttribDict):
             # set current key
             super(Stats, self).__setitem__(key, value)
             # set derived values
-            self.__refresh()
-        elif isinstance(value, dict):
+            self._calculateDerivedValues()
+            return
+        # all other keys
+        if isinstance(value, dict):
             super(Stats, self).__setitem__(key, AttribDict(value))
-        elif isinstance(value, Stats):
-            msg = "Stats object must not contain another Stats object."
-            raise AttributeError(msg)
         else:
             super(Stats, self).__setitem__(key, value)
 
     __setattr__ = __setitem__
 
-    def __refresh(self):
+    def _calculateDerivedValues(self):
         """
-        Refreshes current delta and endtime entries.
+        Calculates derived headers such as `delta` and `endtime`.
         """
         # set delta
         delta = 1.0 / float(self.sampling_rate)
@@ -63,37 +102,25 @@ class Stats(AttribDict):
 
 class Trace(object):
     """
-    ObsPy Trace class.
+    A class containing data and meta data about a single continuous trace.
 
-    This class contains information about a single trace.
-
-    :type data: Numpy ndarray
-    :param data: Numpy ndarray of data samples
+    :type data: `numpy.array`
+    :param data: Numpy array of data samples
+    :type header: `dict` or :class:`Stats`
     :param header: Dictionary containing header fields
-    :param address: Address of data to be freed when trace is deleted
     """
 
     def __init__(self, data=np.array([]), header=None):
+        # set some defaults if not set yet
         if header == None:
             # Default values: For detail see
             # http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/\
             # KnownIssues#DefaultParameterValuesinPython
             header = {}
-        # set some defaults if not set yet
-        for default in ['station', 'network', 'location', 'channel']:
-            header.setdefault(default, '')
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
-        # correct data format
-        data = self._convertData(data)
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
-
-    def _convertData(self, data):
-        # convert to numpy array if data is given as string 
-        if isinstance(data, basestring):
-            return np.fromstring(data, dtype='|S1')
-        return data
 
     def __str__(self):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
@@ -107,6 +134,13 @@ class Trace(object):
 
         :rtype: int
         :return: Number of data samples.
+
+        Usage:
+            >>> tr = Trace(data=[1, 2, 3, 4])
+            >>> tr.count()
+            4
+            >>> len(tr)
+            4
         """
         return len(self.data)
 
@@ -119,8 +153,6 @@ class Trace(object):
         Any change in Trace.data will dynamically set Trace.stats.npts.
         """
         if key == 'data':
-            # correct data format
-            value = self._convertData(value)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 

@@ -332,7 +332,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         st = Stream()
         for _i in xrange(1, 100, 1):
-            st.append(Trace(data="A" * _i))
+            st.append(Trace(data=np.fromstring("A" * _i, "|S1")))
         st.write(tempfile, format="MSEED")
 
     def test_allDataTypesAndEndiansInSingleFile(self):
