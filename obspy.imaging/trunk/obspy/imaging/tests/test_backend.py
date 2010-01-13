@@ -23,7 +23,7 @@ class BackendTestCase(unittest.TestCase):
         display setting. It is therefor the optimal for programs on servers
         etc.
         """
-        self.assertEqual('Agg', matplotlib.get_backend())
+        self.assertEqual('AGG', matplotlib.get_backend().upper())
 
 
 def suite():
