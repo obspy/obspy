@@ -56,4 +56,9 @@ setup(
         "/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
     include_package_data=True,
     test_suite="obspy.core.tests.suite",
+    entry_points={
+        'console_scripts': [
+            'obspy-runtests = obspy.core.scripts.runtests:main',
+        ],
+    },
 )
