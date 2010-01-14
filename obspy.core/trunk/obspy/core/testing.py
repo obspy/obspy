@@ -37,7 +37,7 @@ Running the test verbose exposes the available tests.
 import sys
 import time
 import unittest
-
+import obspy
 
 _dirs = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging', 'xseed',
          'seisan']
