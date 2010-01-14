@@ -1,54 +1,74 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
+
+import numpy as np
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-import numpy as np
 
 
 class Stats(AttribDict):
-    """
-    A `Stats` object contains meta information of a single
-    :class:`~obspy.core.trace.Trace` object.
+    r"""
+    A container for additional header information of a single Trace object.
 
-    **Basic Usage**
+    A ``Stats`` object may contain all header information (also known as meta
+    data) of a :class:`~obspy.core.trace.Trace` object. Those headers may be
+    accessed or modified either in the dictionary style or directly via a
+    corresponding attribute. There are various default attributes which are
+    required by every waveform import and export modules within ObsPy such as
+    :mod:`obspy.mseed`.
 
-    All header information of such object may be accessed or modified either in
-    the dictionary style or directly via the respective attribute.
+    Basic Usage
+    -----------
 
-        >>> stats = Stats()
-        >>> stats.network = 'BW'
-        >>> stats['network']
-        'BW'
-        >>> stats['station'] = 'MANZ'
-        >>> stats.station
-        'MANZ'
+    >>> stats = Stats()
+    >>> stats.network = 'BW'
+    >>> stats['network']
+    'BW'
+    >>> stats['station'] = 'MANZ'
+    >>> stats.station
+    'MANZ'
 
-    **Default Attributes**
+    Parameters
+    ----------
 
-    The `Stats` object contains various default attributes which are summarized
-    in the following table. Those attributes are required by all waveform
-    import and export modules within ObsPy such as :mod:`obspy.mseed`. 
+    header : dict or :class:`~obspy.core.trace.Stats`, optional
+        Dictionary containing meta information of a single
+        :class:`~obspy.core.trace.Trace` object. Possible keywords are
+        summarized in the following attributes section.
 
-    ================= =================== ============ ================ =====
-    Attribute         Description         Data Type    Default Value    Notes
-    ================= =================== ============ ================ =====
-    ``sampling_rate`` Sampling rate [Hz]  float        1.0              (1)(2)
-    ``delta``         Sample distance [s] float        1.0              (1)(2)
-    ``calib``         Calibration factor  float        1.0              
-    ``npts``          Number of points    int          0                (2)(4)
-    ``network``       Network code        string                        
-    ``location``      Location code       string                        
-    ``station``       Station code        string                        
-    ``channel``       Channel code        string                        
-    ``starttime``     Start time [UTC]    UTCDateTime  1970-01-01 00:00 \(2)
-    ``endtime``       End time [UTC]      UTCDateTime  1970-01-01 00:00 (2)(3)
-    ================= =================== ============ ================ =====
+    Attributes
+    ----------
 
-    Notes:
+    sampling_rate : float, optional
+        Sampling rate in hertz (default value is 1.0).
+    delta : float, optional
+        Sample distance in seconds (default value is 1.0).
+    calib : float, optional
+        Calibration factor (default value is 1.0).
+    npts : int, optional
+        Number of sample points (default value is 0, which implies that no data
+        is present).
+    network : string, optional
+        Network code (default is an empty string).
+    location : string, optional
+        Location code (default is an empty string).
+    station : string, optional
+        Station code (default is an empty string).
+    channel : string, optional
+        Channel code (default is an empty string).
+    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        Date and time of the first data sample given in UTC (default value is
+        "1970-01-01T00:00:00.0Z").
+    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        Date and time of the last data sample given in UTC
+        (default value is "1970-01-01T00:00:00.0Z").
 
-    (1) 
-        The attributes ``sampling_rate`` and ``delta`` are linked to each
+    Notes
+    -----
+
+    (1) The attributes ``sampling_rate`` and ``delta`` are linked to each
         other. If one of the attributes is modified the other will be
         recalculated.
 
@@ -59,8 +79,7 @@ class Stats(AttribDict):
         >>> stats.sampling_rate
         200.0
 
-    (2) 
-        The attributes ``starttime``, ``npts``, ``sampling_rate`` and ``delta``
+    (2) The attributes ``starttime``, ``npts``, ``sampling_rate`` and ``delta``
         are monitored and used to automatically calculate the ``endtime``.
 
         >>> stats = Stats()
@@ -78,8 +97,7 @@ class Stats(AttribDict):
             ``endtime = starttime + (npts-1) * delta``. This behaviour may
             change in the future to ``endtime = starttime + npts * delta``.
 
-    (3)
-        The attribute ``endtime`` is read only and can not be modified.
+    (3) The attribute ``endtime`` is read only and can not be modified.
 
         >>> stats = Stats()
         >>> stats.endtime = UTCDateTime(2009, 1, 1, 12, 0, 0)
@@ -101,6 +119,16 @@ class Stats(AttribDict):
     readonly = ['endtime']
 
     def __init__(self, header={}):
+        """
+        Doles muh
+
+
+
+        Notes
+        -----
+
+        muh
+        """
         # set default values without calculating derived entries
         super(Stats, self).__setitem__('sampling_rate', 1.0)
         super(Stats, self).__setitem__('starttime', UTCDateTime(0))

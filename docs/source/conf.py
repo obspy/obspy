@@ -24,8 +24,8 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
-              'sphinx.ext.autosummary', 'sphinx.ext.pngmath']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -124,16 +124,16 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_use_modindex = True
+html_use_modindex = True
 
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = True
 
 # If true, the index is split into individual pages for each letter.
-#html_split_index = False
+html_split_index = False
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
-#html_copy_source = True
+html_copy_source = True
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
@@ -181,28 +181,28 @@ latex_documents = [
 #latex_use_modindex = True
 
 # Redefine how to process inherited methods/members
-def process_inherited(app, what, name, obj, options, docstringlines):
-    """ 
-    If we're including inherited members, omit their docstrings. 
-    """
-    if not options.get('inherited-members'):
-        return
-
-    if what in ['class', 'data', 'exception', 'function', 'module']:
-        return
-
-    name = name.split('.')[-1]
-
-    if what == 'method' and hasattr(obj, 'im_class'):
-        if name in obj.im_class.__dict__.keys():
-            return
-
-    if what == 'attribute' and hasattr(obj, '__objclass__'):
-        if name in obj.__objclass__.__dict__.keys():
-            return
-
-    for i in xrange(len(docstringlines)):
-        docstringlines.pop()
+#def process_inherited(app, what, name, obj, options, docstringlines):
+#    """ 
+#    If we're including inherited members, omit their docstrings. 
+#    """
+#    if not options.get('inherited-members'):
+#        return
+#
+#    if what in ['class', 'data', 'exception', 'function', 'module']:
+#        return
+#
+#    name = name.split('.')[-1]
+#
+#    if what == 'method' and hasattr(obj, 'im_class'):
+#        if name in obj.im_class.__dict__.keys():
+#            return
+#
+#    if what == 'attribute' and hasattr(obj, '__objclass__'):
+#        if name in obj.__objclass__.__dict__.keys():
+#            return
+#
+#    for i in xrange(len(docstringlines)):
+#        docstringlines.pop()
 
 # Options for Including private Members/Methods
 #----------------------------------------------
@@ -224,9 +224,50 @@ def process_inherited(app, what, name, obj, options, docstringlines):
 #        return False 
 #    return skip 
 
+from numpydoc.docscrape_sphinx import SphinxDocString
+from numpydoc.docscrape import Reader
+import textwrap
+
+# Monkey patch SphinxDocString
+def obspy_str_usage(self):
+    examples_str = "\n".join(self['Basic Usage'])
+
+    if (self.use_plots and 'import matplotlib' in examples_str
+            and 'plot::' not in examples_str):
+        out = []
+        out += self._str_header('Basic Usage')
+        out += ['.. plot::', '']
+        out += self._str_indent(self['Basic Usage'])
+        out += ['']
+        return out
+    else:
+        return self._str_section('Examples')
+
+def obspy__str__(self, indent=0, func_role="obj"):
+        out = []
+        out += self._str_signature()
+        out += self._str_index() + ['']
+        out += self._str_summary()
+        out += self._str_extended_summary()
+        #out += self._str_usage()
+        for param_list in ('Parameters', 'Returns', 'Raises'):
+            out += self._str_param_list(param_list)
+        out += self._str_member_list('Attributes')
+        out += self._str_warnings()
+        out += self._str_see_also(func_role)
+        out += self._str_section('Notes')
+        out += self._str_references()
+        out += self._str_examples()
+        out += self._str_member_list('Methods')
+        out = self._str_indent(out, indent)
+        return '\n'.join(out)
+
+SphinxDocString.__str__ = obspy__str__
+SphinxDocString._str_usage = obspy_str_usage
+
 # Attach this to the builder
 def setup(app):
+    pass
+#    app.connect('autodoc-process-signature', mangle_signature)
     #app.connect('autodoc-process-docstring', process_inherited)
     #app.connect('autodoc-skip-member', skip_underscore)
-    pass
-

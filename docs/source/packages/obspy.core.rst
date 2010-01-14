@@ -19,9 +19,10 @@ Modules
 
 .. autosummary::
   :toctree: .
+  :nosignatures:
 
     obspy.core.trace
     obspy.core.stream
-    obspy.core.util
     obspy.core.utcdatetime
+    obspy.core.util
     obspy.core.testing
