@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import obspy
 from obspy.core import util, utcdatetime, trace
 from obspy.core.tests import test_stream, test_utcdatetime, test_trace, \
     test_stats
