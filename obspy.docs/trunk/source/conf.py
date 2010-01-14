@@ -24,7 +24,8 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
+              'sphinx.ext.autosummary', 'sphinx.ext.pngmath']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -37,7 +38,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'ObsPy'
-copyright = '2009, ObsPy Development Team'
+copyright = '2009-2010, ObsPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -88,7 +89,7 @@ html_style = 'default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = "ObsPy documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -180,28 +181,28 @@ latex_documents = [
 #latex_use_modindex = True
 
 # Redefine how to process inherited methods/members
-def process_inherited(app, what, name, obj, options, docstringlines): 
+def process_inherited(app, what, name, obj, options, docstringlines):
     """ 
     If we're including inherited members, omit their docstrings. 
-    """ 
-    if not options.get('inherited-members'): 
-        return 
- 
-    if what in ['class', 'data', 'exception', 'function', 'module']: 
-        return 
- 
-    name = name.split('.')[-1] 
- 
-    if what == 'method' and hasattr(obj, 'im_class'): 
-        if name in obj.im_class.__dict__.keys(): 
-            return 
- 
-    if what == 'attribute' and hasattr(obj, '__objclass__'): 
-        if name in obj.__objclass__.__dict__.keys(): 
-            return 
- 
-    for i in xrange(len(docstringlines)): 
-        docstringlines.pop() 
+    """
+    if not options.get('inherited-members'):
+        return
+
+    if what in ['class', 'data', 'exception', 'function', 'module']:
+        return
+
+    name = name.split('.')[-1]
+
+    if what == 'method' and hasattr(obj, 'im_class'):
+        if name in obj.im_class.__dict__.keys():
+            return
+
+    if what == 'attribute' and hasattr(obj, '__objclass__'):
+        if name in obj.__objclass__.__dict__.keys():
+            return
+
+    for i in xrange(len(docstringlines)):
+        docstringlines.pop()
 
 # Options for Including private Members/Methods
 #----------------------------------------------
@@ -213,19 +214,19 @@ def process_inherited(app, what, name, obj, options, docstringlines):
 #       trac_7549-doc_inheritance_underscore_v3.patch
 
 # Do not skip private members
-def skip_underscore(app, what, name, obj, skip, options): 
-    """ 
-    Conditionally include docstrings for objects whose names begin 
-    with one underscore ('_'). 
-    """ 
-    name = name.split('.')[-1]
-    if name.startswith('_') and not name.startswith('__'):
-        return False 
-    return skip 
+#def skip_underscore(app, what, name, obj, skip, options): 
+#    """ 
+#    Conditionally include docstrings for objects whose names begin 
+#    with one underscore ('_'). 
+#    """ 
+#    name = name.split('.')[-1]
+#    if name.startswith('_') and not name.startswith('__'):
+#        return False 
+#    return skip 
 
 # Attach this to the builder
 def setup(app):
     #app.connect('autodoc-process-docstring', process_inherited)
-    app.connect('autodoc-skip-member', skip_underscore)
+    #app.connect('autodoc-skip-member', skip_underscore)
     pass
 

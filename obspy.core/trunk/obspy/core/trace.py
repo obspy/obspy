@@ -8,38 +8,13 @@ import numpy as np
 
 class Stats(AttribDict):
     """
-    A class containing header information for a single :class:`Trace` object.
+    A `Stats` object contains meta information of a single
+    :class:`~obspy.core.trace.Trace` object.
 
-    Default header attributes are:
+    **Basic Usage**
 
-    ============= =================== ============ ================= ====
-    Name          Description         Data type    Default value     Mode
-    ============= =================== ============ ================= ====
-    sampling_rate Sampling rate [Hz]  float        1.0               RW
-    delta         Sample distance [s] float        1.0               RW
-    calib         Calibration factor  float        1.0               RW
-    npts          Number of points    int          0                 RW
-    network       Network code        string       ''                RW
-    location      Location code       string       ''                RW
-    station       Station code        string       ''                RW
-    channel       Channel code        string       ''                RW
-    starttime     Start time [UTC]    UTCDateTime  1970-01-01 00:00  RW
-    endtime       End time [UTC]      UTCDateTime  1970-01-01 00:00  R
-    ============= =================== ============ ================= ====
-
-    The attributes `starttime`, `sampling_rate` and `delta` are dynamically
-    monitored and used to recalculated `endtime`, `delta` and `sampling_rate`
-    on any change. Attribute `endtime` is read only and can not be modified.
-
-        >>> stats = Stats()
-        >>> stats.sampling_rate
-        1.0
-        >>> stats.delta = 0.005
-        >>> stats.sampling_rate
-        200.0
-
-    All header information of the `Stats` class may be accessed or modified
-    either in the dictionary style or directly via the respective attribute.
+    All header information of such object may be accessed or modified either in
+    the dictionary style or directly via the respective attribute.
 
         >>> stats = Stats()
         >>> stats.network = 'BW'
@@ -48,6 +23,80 @@ class Stats(AttribDict):
         >>> stats['station'] = 'MANZ'
         >>> stats.station
         'MANZ'
+
+    **Default Attributes**
+
+    The `Stats` object contains various default attributes which are summarized
+    in the following table. Those attributes are required by all waveform
+    import and export modules within ObsPy such as :mod:`obspy.mseed`. 
+
+    ================= =================== ============ ================ =====
+    Attribute         Description         Data Type    Default Value    Notes
+    ================= =================== ============ ================ =====
+    ``sampling_rate`` Sampling rate [Hz]  float        1.0              (1)(2)
+    ``delta``         Sample distance [s] float        1.0              (1)(2)
+    ``calib``         Calibration factor  float        1.0              
+    ``npts``          Number of points    int          0                (2)(4)
+    ``network``       Network code        string                        
+    ``location``      Location code       string                        
+    ``station``       Station code        string                        
+    ``channel``       Channel code        string                        
+    ``starttime``     Start time [UTC]    UTCDateTime  1970-01-01 00:00 \(2)
+    ``endtime``       End time [UTC]      UTCDateTime  1970-01-01 00:00 (2)(3)
+    ================= =================== ============ ================ =====
+
+    Notes:
+
+    (1) 
+        The attributes ``sampling_rate`` and ``delta`` are linked to each
+        other. If one of the attributes is modified the other will be
+        recalculated.
+
+        >>> stats = Stats()
+        >>> stats.sampling_rate
+        1.0
+        >>> stats.delta = 0.005
+        >>> stats.sampling_rate
+        200.0
+
+    (2) 
+        The attributes ``starttime``, ``npts``, ``sampling_rate`` and ``delta``
+        are monitored and used to automatically calculate the ``endtime``.
+
+        >>> stats = Stats()
+        >>> stats.npts = 60
+        >>> stats.delta = 1.0
+        >>> stats.starttime = UTCDateTime(2009, 1, 1, 12, 0, 0)
+        >>> stats.endtime
+        UTCDateTime(2009, 1, 1, 12, 0, 59)
+        >>> stats.delta = 0.5
+        >>> stats.endtime
+        UTCDateTime(2009, 1, 1, 12, 0, 29, 500000)
+
+        .. note::
+            Endtime is currently calculated as
+            ``endtime = starttime + (npts-1) * delta``. This behaviour may
+            change in the future to ``endtime = starttime + npts * delta``.
+
+    (3)
+        The attribute ``endtime`` is read only and can not be modified.
+
+        >>> stats = Stats()
+        >>> stats.endtime = UTCDateTime(2009, 1, 1, 12, 0, 0)
+        Traceback (most recent call last):
+        ...
+        AttributeError: Attribute "endtime" in Stats object is read only!
+
+    (4)
+        The attribute ``npts`` will be automatically updated from the 
+        :class:`~obspy.core.trace.Trace` object.
+
+        >>> trace = Trace()
+        >>> trace.stats.npts
+        0
+        >>> trace.data = [1, 2, 3, 4]
+        >>> trace.stats.npts
+        4
     """
     readonly = ['endtime']
 
@@ -96,15 +145,21 @@ class Stats(AttribDict):
         delta = 1.0 / float(self.sampling_rate)
         super(Stats, self).__setitem__('delta', delta)
         # set endtime
-        endtime = self.starttime + (self.npts - 1) / float(self.sampling_rate)
+        if self.npts == 0:
+            # XXX: inconsistent
+            delta = 0
+        else:
+            delta = (self.npts - 1) / float(self.sampling_rate)
+        endtime = self.starttime + delta
         super(Stats, self).__setitem__('endtime', endtime)
 
 
 class Trace(object):
     """
-    A class containing data and meta data about a single continuous trace.
+    A `Trace` object contains data and meta data about a single continuous 
+    time series such as a seismic trace.
 
-    :type data: `numpy.array`
+    :type data: `numpy.array` or `ma.masked_array`
     :param data: Numpy array of data samples
     :type header: `dict` or :class:`Stats`
     :param header: Dictionary containing header fields
@@ -130,16 +185,17 @@ class Trace(object):
 
     def __len__(self):
         """
-        Returns the number of data samples of a L{Trace} object.
+        Returns the number of data samples of a :class:`obspy.core.trace.Trace`
+        object.
 
         :rtype: int
         :return: Number of data samples.
 
-        Usage:
-            >>> tr = Trace(data=[1, 2, 3, 4])
-            >>> tr.count()
+        Example:
+            >>> trace = Trace(data=[1, 2, 3, 4])
+            >>> trace.count()
             4
-            >>> len(tr)
+            >>> len(trace)
             4
         """
         return len(self.data)
@@ -228,6 +284,19 @@ class Trace(object):
 
     def getId(self):
         """
+        Returns a SEED compatible identifier containing network, station,
+        location and channel code for the current Trace object.
+        
+        :rtype: string
+        :returns: SEED identifier
+        
+        Example:
+            >>> meta = {'station':'MANZ', 'network':'BW', 'channel':'EHZ'}
+            >>> trace = Trace(header=meta)
+            >>> trace.getId()
+            'BW.MANZ..EHZ'
+            >>> trace.id
+            'BW.MANZ..EHZ'
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
