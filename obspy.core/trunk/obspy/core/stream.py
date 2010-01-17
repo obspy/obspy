@@ -11,10 +11,75 @@ import os
 
 def read(pathname, format=None, headonly=False, **kwargs):
     """
-    Reads a file into a L{obspy.core.Stream} object.
+    Reads a file(s) into a :class:`~obspy.core.stream.Stream` object.
 
+    It allows wildcards in the pathname to read multiple files. The input
+    format is auto detected. The allowed formats depend on the packages
+    installed. Commonly packages for the formats "GSE2", "MSEED", "SAC" and
+    "SEISAN" are installed.
+
+    Basic Usage
+    -----------
+    .. code-block:: python
+
+        >> from obspy.core import read
+        >> st = read("RJOB_061005_072159.ehz")
+        >> print st
+        1 Trace(s) in Stream:
+        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
+
+    Parameters
+    ----------
+    pathname : string
+        String containing Filename. Wildcards are allowed.
+    format : string, optional
+        Format of the file to read. Commonly on of "GSE2", "MSEED",
+        "SAC" or "SEISAN". If it is None the format will be automatically
+        detected which results in a slightly faster reading. If you specify
+        a format no further format checking is done. To avoid problems
+        please use the option only when you are sure which format your file
+        has.
+    headonly : bool, optional
+        If set to True, read only the head. This is most useful for
+        scanning available data in huge (temporary) data sets.
+    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        "MSEED" only. Specify the starttime to read. The remaining
+        records are not unpacked. Usually this resuls in a slightly faster
+        reading.
+    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        "MSEED" only. See description of starttime.
+    verify_chksum : bool, optional
+        "GSE2" only. Defaults to True. If set to False the checksum of the
+        "GSE2" file is not verified. Most useful for data written with old
+        software which computed the checksum in a wrong way.
+
+    Notes
+    -----
+    The read method internally uses the pkg_resources module to find
+    available data format packages. Currently it connects to:
+
+    * :func:`~obspy.mseed.core.readMSEED`
+    * :func:`~obspy.mseed.core.readGSE2`
+    * :func:`~obspy.mseed.core.readSAC`
+    * :func:`~obspy.mseed.core.readSEISAN`
+    * :func:`~obspy.mseed.core.readWAV`
+
+    Next to the read function the :meth:`~Stream.write` function is a method of the
+    returned Stream object.
+
+    Examples
+    --------
+    A small example using wildcards, in this case it matches two files.
+    Both files are then read into one :class:`~obspy.core.stream.Stream`
+    object::
+    
+        >> from obspy.core import read
+        >> st = read("RJOB_061005_07*.ehz")
+        >> print st
+        2 Trace(s) in Stream:
+        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
+        --RJOB   Z | 2005-10-06,08:21:59--2005-10-06,08:24:59 | 200.0 Hz, 36000 samples
     """
-    # Reads files using the given wild card into a L{obspy.core.Stream} object.
     st = Stream()
     for file in iglob(pathname):
         st.extend(_read(file, format, headonly, **kwargs).traces)

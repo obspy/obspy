@@ -10,11 +10,11 @@ Classes & functions
   :toctree: .
   :nosignatures:
 
-    obspy.core.stream.read
-    obspy.core.trace.Trace
-    obspy.core.trace.Stats
-    obspy.core.stream.Stream
-    obspy.core.utcdatetime.UTCDateTime
+    ~stream.read
+    ~trace.Trace
+    ~trace.Stats
+    ~stream.Stream
+    ~utcdatetime.UTCDateTime
 
 
 Modules
@@ -24,7 +24,7 @@ Modules
   :toctree: .
   :nosignatures:
 
-    obspy.core.trace
-    obspy.core.stream
-    obspy.core.utcdatetime
-    obspy.core.util
+    ~trace
+    ~stream
+    ~utcdatetime
+    ~util
