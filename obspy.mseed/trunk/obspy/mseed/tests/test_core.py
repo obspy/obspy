@@ -371,6 +371,57 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(Exception, st.write, tempfile, format="MSEED",
                           encoding=10, reclen=256, byteorder=0)
 
+    def test_filesFromLibmseed(self):
+        """
+        Tests reading of files that are created by libmseed.
+
+        This test also checks the files created by libmseed to some extend.
+        """
+        path = os.path.join(self.path, "data", "libmseed")
+        # Dictionary. The key is the filename, the value a tuple: dtype,
+        # sampletype, encoding, content
+        def_content = np.arange(1, 51, dtype = 'int32')
+        files = {
+            os.path.join(path, "smallASCII.mseed") : ('|S1', 'a', 0,
+                        np.fromstring('ABCDEFGH', dtype = '|S1')), 
+            # Tests all ASCII letters.
+            os.path.join(path, "fullASCII.mseed") : ('|S1', 'a', 0,
+               np.fromstring(
+               """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV""" +\
+               """WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~""", dtype = '|S1')),  
+            # XXX: int16 array will also be returned as int32.
+            os.path.join(path, "int16_INT16.mseed") : ('int32', 'i', 1,
+                                                    def_content.astype('int16')), 
+            os.path.join(path, "int32_INT32.mseed") : ('int32', 'i', 3,
+                                                    def_content), 
+            os.path.join(path, "int32_Steim1.mseed") : ('int32', 'i', 10,
+                                                    def_content), 
+            os.path.join(path, "int32_Steim2.mseed") : ('int32', 'i', 11,
+                                                    def_content), 
+            os.path.join(path, "float32_Float32.mseed") : ('float32', 'f', 4,
+                                                def_content.astype('float32')), 
+            os.path.join(path, "float64_Float64.mseed") : ('float64', 'd', 5,
+                                                def_content.astype('float64'))
+        }
+        # Loop over all files and read them.
+        for file in files.keys():
+            st = read(file)
+            # Check the array. 
+            np.testing.assert_array_equal(st[0].data, files[file][3])
+            # Check the dtype.
+            self.assertEqual(st[0].data.dtype, files[file][0])
+            del st
+            # Read just the first record to check encoding. The sampletype
+            # should follow from the encoding. But libmseed seems not to read
+            # the sampletype when reading a file.
+            ms = MSStruct(file, filepointer=False)
+            ms.read(-1, 0, 1, 0)
+            # Check values.
+            self.assertEqual(getattr(ms.msr.contents, 'encoding'),
+                             files[file][2])
+            # Deallocate for debugging with valrgind
+            del ms
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
