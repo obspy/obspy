@@ -408,8 +408,11 @@ class WaveformPlotting(object):
         aranged = np.arange(self.width)
         x_values[0::2] = aranged
         x_values[1::2] = aranged
-        y_values = np.ma.empty(2 * self.width)
-        y_values.mask = True
+        # Initialze completely masked array. This version is a little bit
+        # slower than first creating an empty array and then setting the mask
+        # to True. But on numpy 1.1 this results in a 0-D array which can not
+        # be indexed.
+        y_values = np.ma.masked_all(2 * self.width)
         y_values[0::2] = minmax[:, 0]
         y_values[1::2] = minmax[:, 1]
         plt.plot(x_values, y_values, color=self.color)
