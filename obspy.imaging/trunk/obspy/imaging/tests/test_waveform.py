@@ -4,7 +4,7 @@ The obspy.imaging.waveform test suite.
 """
 
 from copy import deepcopy
-from obspy.core import Stream, Trace
+from obspy.core import Stream, Trace, UTCDateTime
 import inspect
 import numpy as N
 import os
@@ -18,22 +18,52 @@ class WaveformTestCase(unittest.TestCase):
     def setUp(self):
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(path, 'output')
-        # Create a test file which can be used for all test cases. This creates
-        # a wiggly sinus period.
-        data = N.linspace(0, 2 * N.pi, 100000)
-        data = 10 * (N.sin(data) + 0.2 * N.sin(20 * data) * N.sin(7777 * data))
-        header = {'npts' : data.size, 'network' : 'AA', 'station' : 'BB',
-                  'channel' : 'CC'}
-        self.stream = Stream(traces=[Trace(data=data, header=header)])
-        # Create a the same file again but use more data values..
-        data = N.linspace(0, 2 * N.pi, 1000000)
-        data = 10 * (N.sin(data) + 0.2 * N.sin(20 * data) * N.sin(7777 * data))
-        header = {'sampling_rate' : 10, 'npts' : data.size, 'network' : 'AA',
-                  'station' : 'BB', 'channel' : 'CC'}
-        self.large_stream = Stream(traces=[Trace(data=data, header=header)])
 
     def tearDown(self):
         pass
+
+    def createStream(self, starttime, endtime, sampling_rate):
+        """
+        Helper method to create a Stream object that can be used for testing
+        waveform plotting.
+
+        Takes the time frame of the Stream to be created and a sampling rate.
+        Any other header information will have to be adjusted on a case by case
+        basis. Please remember to use the same sampling rate for one Trace as
+        merging and plotting will not work otherwise.
+
+        This method will create a single sine curve to a first approximation
+        with superimposed 10 smaller sine curves on it.
+
+        :return: Stream object
+        """
+        time_delta = endtime - starttime
+        number_of_samples = time_delta * sampling_rate + 1
+        # Calculate first sine wave.
+        curve = N.linspace(0, 2 * N.pi, int(number_of_samples//2))
+        # Superimpose it with a smaller but shorter wavelength sine wave.
+        curve = N.sin(curve) + 0.2 * N.sin(10 * curve)
+        # To get a thick curve alternate between two curves.
+        data = N.empty(number_of_samples)
+        # Check if even number and adjust if necessary.
+        if number_of_samples % 2 == 0:
+            length = number_of_samples
+            data[0::2] = curve
+            data[1::2] = curve + 0.2
+        else:
+            length = number_of_samples - 1
+            data[-1] = 0.0
+            data[0:-1][0::2] = curve
+            data[0:-1][1::2] = curve + 0.2
+        tr = Trace()
+        tr.stats.starttime = starttime
+        tr.stats.sampling_rate = float(sampling_rate)
+        # Fill dummy header.
+        tr.stats.network = 'BW'
+        tr.stats.station = 'OBSPY'
+        tr.stats.channel = 'TEST'
+        tr.data = data
+        return Stream(traces = [tr])
 
     def test_plotEmptyStream(self):
         """
@@ -42,102 +72,101 @@ class WaveformTestCase(unittest.TestCase):
         st = Stream()
         self.assertRaises(IndexError, st.plot)
 
-    def test_WaveformStraightPlotting(self):
+    def test_plotSameTraceDifferentSampleRates(self):
         """
-        Create waveform plotting examples in tests/output directory.
-        
-        This approach uses small data sets and therefore the waveform plotting
-        method just plots all data values.
+        Plotting of a Stream object, that contains two traces with the same id
+        and different sampling rates should raise an exception.
         """
-        # First create a reference plot.
-        self.stream.plot(outfile=\
-            os.path.join(self.path, 'waveform_straightPlotting-reference.png'))
-        # Create a second identical Trace but shift the times a little bit.
-        # Also make the plots green and the background in purple.
-        self.stream += deepcopy(self.stream)
-        self.stream[0].stats.location = '01'
-        self.stream[1].stats.location = '00'
-        self.stream[0].stats.starttime = \
-            self.stream[0].stats.starttime + 2 * 60 * 60
-        self.stream.plot(outfile=\
-            os.path.join(self.path, 'waveform_straightPlotting-2traces.png'),
-            color='green', bgcolor='#F5FEA5', face_color='purple')
-        # Make a simple plot with a gap and adjust the ticks to show the
-        # weekday and microsecond and rotate the ticks two degrees. All
-        # background should also be transparent.
-        self.stream.sort()
-        self.stream[0].stats.location = ''
-        self.stream[1].stats.location = ''
-        self.stream[1].stats.starttime = \
-            self.stream[0].stats.starttime + 2 * 24 * 60 * 60
-        self.stream.plot(outfile=\
-            os.path.join(self.path,
-            'waveform_straightPlotting-simple-gap-transparent.png'),
-            tick_format='%a, %H:%M:%S:%f', tick_rotation=2,
-            transparent=True)
-        # Create a two Traces plot with a gap. This should
-        # result in two Traces and the second trace should fit right in the
-        # middle of the first trace. The second trace will also only have half
-        # height but should still be centered despite being moved up a notch.
-        self.stream.append(deepcopy(self.stream[0]))
-        self.stream[2].stats.starttime = self.stream[0].stats.endtime
-        self.stream[2].stats.network = 'ZZ'
-        self.stream[1].stats.starttime = self.stream[2].stats.endtime
-        # Make half the amplitude but move it up 100 units.
-        self.stream[2].data = 0.5 * self.stream[2].data + 100
-        self.stream.plot(outfile=\
-            os.path.join(self.path,
-                'waveform_straightPlotting-2traces-gap.png'), color='lime')
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 10, 1.0)
+        st += self.createStream(start + 10, start + 20, 10.0)
+        self.assertRaises(Exception, st.plot)
 
-    def test_WaveformMinMaxApproachPlotting(self):
+    def test_plotOneHourManySamples(self):
         """
-        Create waveform plotting examples in tests/output directory.
-        
-        This approach uses large data sets and therefore the waveform plotting
-        method uses a minima and maxima approach to plot the data.
-        """
-        # First create a reference plot.
-        self.large_stream.plot(outfile=\
-            os.path.join(self.path, 'waveform_MinMaxPlotting-reference.png'))
-        # Create a second identical Trace but shift the times a little bit.
-        # Also make the plots green and the background in purple.
-        self.large_stream += deepcopy(self.large_stream)
-        self.large_stream[0].stats.location = '01'
-        self.large_stream[1].stats.location = '00'
-        self.large_stream[0].stats.starttime = \
-            self.large_stream[0].stats.starttime + 2 * 60 * 60
-        self.large_stream.plot(outfile=\
-               os.path.join(self.path, 'waveform_MinMaxPlotting-2traces.png'),
-               color='green', bgcolor='#F5FEA5', face_color='purple')
-        # Make a simple plot with a gap and adjust the ticks to show the
-        # weekday and microsecond and rotate the ticks two degrees. All
-        # background should also be transparent.
-        self.large_stream.sort()
-        self.large_stream[0].stats.location = ''
-        self.large_stream[1].stats.location = ''
-        self.large_stream[1].stats.starttime = \
-            self.large_stream[0].stats.starttime + 2 * 24 * 60 * 60
-        self.large_stream.plot(outfile=\
-            os.path.join(self.path,
-            'waveform_MinMaxPlotting-simple-gap-transparent.png'),
-            tick_format='%a, %H:%M:%S:%f', tick_rotation=2,
-            transparent=True)
-        # Create a two Traces plot with a gap. This should
-        # result in two Traces and the second trace should fit right in the
-        # middle of the first trace. The second trace will also only have half
-        # height but should still be centered despite being moved up a notch.
-        self.large_stream.append(deepcopy(self.large_stream[0]))
-        self.large_stream[2].stats.starttime = \
-                                            self.large_stream[0].stats.endtime
-        self.large_stream[2].stats.network = 'ZZ'
-        self.large_stream[1].stats.starttime = \
-                                            self.large_stream[2].stats.endtime
-        # Make half the amplitude but move it up 100 units.
-        self.large_stream[2].data = 0.5 * self.large_stream[2].data + 100
-        self.large_stream.plot(outfile=\
-            os.path.join(self.path,
-                'waveform_MinMaxPlotting-2traces-gap.png'), color='lime')
+        Plots one hour, starting Jan 1970.
 
+        Uses a frequency of 1000 Hz to get a sample count of over 3 Million and
+        get in the range, that plotting will choose to use a minimum maximum
+        approach to plot the data.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600, 1000.0)
+        filename = 'OneHourManySamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
+        
+    def test_plotOneHourFewSamples(self):
+        """
+        Plots one hour, starting Jan 1970.
+
+        Uses a frequency of 10 Hz.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600, 10.0)
+        filename = 'OneHourFewSamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
+
+    def test_plotSimpleGapManySamples(self):
+        """
+        Plots three hours with a gap.
+
+        There are 45 minutes of data at the beginning and 45 minutes of data at
+        the end.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600 * 3/4, 500.0)
+        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 500.0)
+        filename = 'SimpleGapManySamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
+
+    def test_plotSimpleGapFewSamples(self):
+        """
+        Plots three hours with a gap.
+
+        There are 45 minutes of data at the beginning and 45 minutes of data at
+        the end.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600 * 3/4, 5.0)
+        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 5.0)
+        filename = 'SimpleGapFewSamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
+
+    def test_plotComplexGapManySamples(self):
+        """
+        Plots three hours with a gap.
+
+        There are 45 minutes of data at the beginning and 45 minutes of data at
+        the end.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600 * 3/4, 500.0)
+        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 500.0)
+        st[0].stats.location = '01'
+        st[1].stats.location = '01'
+        temp_st = self.createStream(start + 3600 * 3/4, start +  2.25 * 3600, 500.0)
+        temp_st[0].stats.location = '02'
+        st += temp_st
+        filename = 'ComplexGapManySamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
+
+    def test_plotComplexGapFewSamples(self):
+        """
+        Plots three hours with a gap.
+
+        There are 45 minutes of data at the beginning and 45 minutes of data at
+        the end.
+        """
+        start = UTCDateTime(0)
+        st = self.createStream(start, start + 3600 * 3/4, 5.0)
+        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 5.0)
+        st[0].stats.location = '01'
+        st[1].stats.location = '01'
+        temp_st = self.createStream(start + 3600 * 3/4, start +  2.25 * 3600, 5.0)
+        temp_st[0].stats.location = '02'
+        st += temp_st
+        filename = 'ComplexGapFewSamples.png'
+        st.plot(outfile = os.path.join(self.path, filename))
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')

@@ -205,10 +205,15 @@ class WaveformPlotting(object):
         self.stats = []
         # Loop over each Trace and call the appropriate plotting method.
         for _i, tr in enumerate(stream_new):
+            # Each trace needs to have the same sampling rate.
+            sampling_rates = set([_tr.stats.sampling_rate for _tr in tr])
+            if len(sampling_rates) > 1:
+                msg = "All traces with the same id need to have the same " + "sampling rate."
+                raise Exception(msg)
+            sampling_rate = sampling_rates.pop()
             plt.subplot(len(stream_new), 1, _i + 1, axisbg=
                         self.background_color)
-            max_freq = max([trmini.stats.sampling_rate for trmini in tr])
-            if (self.endtime - self.starttime) * max_freq > 400000:
+            if (self.endtime - self.starttime) * sampling_rate  > 400000:
                 self.__plotMinMax(stream_new[_i], *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], *args, **kwargs)
@@ -408,11 +413,11 @@ class WaveformPlotting(object):
         aranged = np.arange(self.width)
         x_values[0::2] = aranged
         x_values[1::2] = aranged
-        # Initialze completely masked array. This version is a little bit
-        # slower than first creating an empty array and then setting the mask
-        # to True. But on numpy 1.1 this results in a 0-D array which can not
-        # be indexed.
-        y_values = np.ma.masked_all(2 * self.width)
+        # Initialze completely masked array. This version is a little bit 
+        # slower than first creating an empty array and then setting the mask 
+        # to True. But on numpy 1.1 this results in a 0-D array which can not 
+        # be indexed. 
+        y_values = np.ma.masked_all(2 *self.width) 
         y_values[0::2] = minmax[:, 0]
         y_values[1::2] = minmax[:, 1]
         plt.plot(x_values, y_values, color=self.color)
@@ -458,7 +463,7 @@ class WaveformPlotting(object):
             # Set the location of the ticks.
             ticks = [mean - 0.7 * max_distance, mean, mean + 0.7 *
                            max_distance]
-            ax.set_yticks([round(int(_j)) for _j in ticks])
+            ax.set_yticks([round(_j, 2) for _j in ticks])
             ax.set_yticklabels(ax.get_yticks(), fontsize='small')
             # Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='left',
