@@ -25,7 +25,7 @@ from optparse import OptionParser
 import unittest
 
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
-                   'xseed', 'seisan']
+                   'xseed', 'seisan', 'sh']
 
 
 def suite(tests=[]):

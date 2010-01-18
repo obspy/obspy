@@ -59,14 +59,14 @@ setup(
     entry_points="""
         [obspy.plugin.waveform]
         Q = obspy.sh.core
-        SH-ASC = obspy.sh.core
+        SH_ASC = obspy.sh.core
 
         [obspy.plugin.waveform.Q]
         isFormat = obspy.sh.q:isQ
         readFormat = obspy.sh.q:readQ
         writeFormat = obspy.sh.q:writeQ
 
-        [obspy.plugin.waveform.SH-ASC]
+        [obspy.plugin.waveform.SH_ASC]
         isFormat = obspy.sh.asc:isASC
         readFormat = obspy.sh.asc:readASC
         writeFormat = obspy.sh.asc:writeASC

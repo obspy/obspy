@@ -418,6 +418,9 @@ class Trace(object):
         if int(round(delta * sr)) + 1 != len(self.data):
             msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data size(%d)"
             raise Exception(msg % (sr, delta, len(self.data)))
+        if not isinstance(self.stats, Stats):
+            msg = "Attribute stats must be an instance of obspy.core.Stats"
+            raise Exception(msg)
 
 
 if __name__ == '__main__':
