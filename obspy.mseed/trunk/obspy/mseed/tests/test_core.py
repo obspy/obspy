@@ -405,22 +405,35 @@ class CoreTestCase(unittest.TestCase):
         }
         # Loop over all files and read them.
         for file in files.keys():
-            st = read(file)
-            # Check the array. 
-            np.testing.assert_array_equal(st[0].data, files[file][3])
-            # Check the dtype.
-            self.assertEqual(st[0].data.dtype, files[file][0])
-            del st
-            # Read just the first record to check encoding. The sampletype
-            # should follow from the encoding. But libmseed seems not to read
-            # the sampletype when reading a file.
-            ms = MSStruct(file, filepointer=False)
-            ms.read(-1, 0, 1, 0)
-            # Check values.
-            self.assertEqual(getattr(ms.msr.contents, 'encoding'),
-                             files[file][2])
-            # Deallocate for debugging with valrgind
-            del ms
+            # Check little and big Endian for each file.
+            for _i in ('littleEndian', 'bigEndian'):
+                cur_file = file[:-6] + '_' + _i + '.mseed'
+                st = read(os.path.join(cur_file))
+                # Check the array. 
+                np.testing.assert_array_equal(st[0].data, files[file][3])
+                # Check the dtype.
+                self.assertEqual(st[0].data.dtype, files[file][0])
+                # Check byteorder. Should always be native byteorder. Byteorder
+                # does not apply to ASCII arrays.
+                if 'ASCII' in cur_file:
+                    self.assertEqual(st[0].data.dtype.byteorder, '|')
+                else:
+                    self.assertEqual(st[0].data.dtype.byteorder, '=')
+                del st
+                # Read just the first record to check encoding. The sampletype
+                # should follow from the encoding. But libmseed seems not to read
+                # the sampletype when reading a file.
+                ms = MSStruct(cur_file, filepointer=False)
+                ms.read(-1, 0, 1, 0)
+                # Check values.
+                self.assertEqual(getattr(ms.msr.contents, 'encoding'),
+                                 files[file][2])
+                if _i == 'littleEndian':
+                    self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 0)
+                else:
+                    self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 1)
+                # Deallocate for debugging with valrgind
+                del ms
 
 
 def suite():
