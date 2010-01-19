@@ -28,7 +28,7 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh']
 
 
-def suite(tests=[]):
+def suite(verbosity=1, tests=[]):
     """
     The obspy test suite.
     """
@@ -44,8 +44,15 @@ def suite(tests=[]):
             names.append(test)
     # Construct the test suite from the given names. Note modules need not
     # be imported before in this case
-    suite = unittest.TestLoader().loadTestsFromNames(names)
-    return suite
+    suites = []
+    ut = unittest.TestLoader()
+    for name in names:
+        try:
+            suites.append(ut.loadTestsFromName(name, None))
+        except:
+            if verbosity:
+                print "Cannot import test suite for module %s" % name
+    return ut.suiteClass(suites)
 
 
 def runTests(verbosity=1, tests=[]):
@@ -56,7 +63,7 @@ def runTests(verbosity=1, tests=[]):
     :param tests: List of tests to run. Defaults to runs all.
                     Example ['obspy.core.tests.suite']
     """
-    unittest.TextTestRunner(verbosity=verbosity).run(suite(tests))
+    unittest.TextTestRunner(verbosity=verbosity).run(suite(verbosity, tests))
 
 
 def main():
