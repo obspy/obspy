@@ -126,8 +126,8 @@ class libmseed(object):
         return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
-                               skipnotdata=1, verbose=0, starttime=None,
-                               endtime=None):
+                               skipnotdata=1, verbose=0, starttime = None,
+                               endtime = None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -472,7 +472,7 @@ class libmseed(object):
         sys.stdout.write("Total: %d gap(s)\n" % len(result))
 
     def readMSHeader(self, filename, time_tolerance= -1,
-                   samprate_tolerance= -1):
+                     samprate_tolerance= -1, reclen = -1):
         """
         Returns trace header information of a given file.
         
@@ -486,7 +486,8 @@ class libmseed(object):
         mstg = self.readFileToTraceGroup(filename, dataflag=0,
                                          skipnotdata=0,
                                          timetol=time_tolerance,
-                                         sampratetol=samprate_tolerance)
+                                         sampratetol=samprate_tolerance,
+                                         reclen=reclen)
         # iterate through traces
         cur = mstg.contents.traces.contents
         header = [[self._convertMSTToDict(cur), None]]

@@ -331,8 +331,7 @@ class CoreTestCase(unittest.TestCase):
         """
         tempfile = NamedTemporaryFile().name
         st = Stream()
-        for _i in xrange(1, 100, 1):
-            st.append(Trace(data=np.fromstring("A" * _i, "|S1")))
+        st.append(Trace(data=np.fromstring("A" * 8, "|S1")))
         st.write(tempfile, format="MSEED")
 
     def test_allDataTypesAndEndiansInSingleFile(self):
@@ -434,6 +433,14 @@ class CoreTestCase(unittest.TestCase):
                     self.assertEqual(getattr(ms.msr.contents, 'byteorder'), 1)
                 # Deallocate for debugging with valrgind
                 del ms
+
+    def test_wrongRecordLengthAsArgument(self):
+        """
+        Specifying a wrong record length should raise an error.
+        """
+        file = os.path.join(self.path, 'data', 'libmseed',
+                            'float32_Float32_bigEndian.mseed')
+        self.assertRaises(Exception, read, file, reclen = 4096)
 
 
 def suite():
