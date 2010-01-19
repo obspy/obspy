@@ -232,6 +232,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(str(dt), '1970-01-01T12:23:34.000000Z')
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 500000)
         self.assertEquals(str(dt), '1970-01-01T12:23:34.500000Z')
+        dt = UTCDateTime(1970, 1, 1, 12, 23, 34.500000)
+        self.assertEquals(str(dt), '1970-01-01T12:23:34.500000Z')
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 5)
         self.assertEquals(str(dt), '1970-01-01T12:23:34.000005Z')
         dt = UTCDateTime(1970, 1, 1)

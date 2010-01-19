@@ -21,7 +21,6 @@ class Stats(AttribDict):
 
     Basic Usage
     -----------
-
     >>> stats = Stats()
     >>> stats.network = 'BW'
     >>> stats['network']
@@ -32,7 +31,6 @@ class Stats(AttribDict):
 
     Parameters
     ----------
-
     header : dict or :class:`~obspy.core.trace.Stats`, optional
         Dictionary containing meta information of a single
         :class:`~obspy.core.trace.Trace` object. Possible keywords are
@@ -40,7 +38,6 @@ class Stats(AttribDict):
 
     Attributes
     ----------
-
     sampling_rate : float, optional
         Sampling rate in hertz (default value is 1.0).
     delta : float, optional
@@ -67,7 +64,6 @@ class Stats(AttribDict):
 
     Notes
     -----
-
     (1) The attributes ``sampling_rate`` and ``delta`` are linked to each
         other. If one of the attributes is modified the other will be
         recalculated.
@@ -120,14 +116,6 @@ class Stats(AttribDict):
 
     def __init__(self, header={}):
         """
-        Doles muh
-
-
-
-        Notes
-        -----
-
-        muh
         """
         # set default values without calculating derived entries
         super(Stats, self).__setitem__('sampling_rate', 1.0)

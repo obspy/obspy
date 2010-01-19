@@ -8,10 +8,10 @@ class UTCDateTime(datetime.datetime):
     """
     A class providing an interface to UTC-based datetime objects.
 
-    This class inherits from Python datetime.datetime class and refines the UTC
-    time zone support. It supports the full ISO8601:2004 specification and also
-    additional string patterns during object initialisation. ISO8601 detection 
-    may be enforced by setting the iso8601 parameter to True.
+    This class inherits from Python `datetime.datetime` class and refines the
+    UTC time zone support. It supports the full ISO8601:2004 specification and
+    also additional string patterns during object initialization. ISO8601
+    detection may be enforced by setting the ``iso8601`` parameter to True.
 
     >>> UTCDateTime(1970, 1, 1)
     UTCDateTime(1970, 1, 1, 0, 0)
@@ -46,17 +46,17 @@ class UTCDateTime(datetime.datetime):
         """
         if len(args) == 0 and len(kwargs) == 0:
             dt = datetime.datetime.utcnow()
-            return UTCDateTime.__new(cls, dt)
+            return UTCDateTime._new(cls, dt)
         elif len(args) == 1:
             value = args[0]
             # check types
             if type(value) in [int, long, float]:
                 # got a timestamp
                 dt = datetime.datetime.utcfromtimestamp(value)
-                return UTCDateTime.__new(cls, dt)
+                return UTCDateTime._new(cls, dt)
             elif isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
-                return UTCDateTime.__new(cls, value)
+                return UTCDateTime._new(cls, value)
             elif isinstance(value, datetime.date):
                 # got a Python datetime.date object
                 return datetime.datetime.__new__(cls, value.year, value.month,
@@ -68,7 +68,7 @@ class UTCDateTime(datetime.datetime):
                 if value.count("T") == 1 or 'iso8601' in kwargs:
                     try:
                         dt = UTCDateTime._parseISO8601(value)
-                        return UTCDateTime.__new(cls, dt)
+                        return UTCDateTime._new(cls, dt)
                     except:
                         if 'iso8601' in kwargs:
                             raise
@@ -117,7 +117,7 @@ class UTCDateTime(datetime.datetime):
                         break
                 if dt:
                     dt = UTCDateTime(dt) + ms
-                    return UTCDateTime.__new(cls, dt)
+                    return UTCDateTime._new(cls, dt)
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs and 'year' in kwargs:
             try:
@@ -130,10 +130,15 @@ class UTCDateTime(datetime.datetime):
                 kwargs['month'] = dt.month
                 kwargs['day'] = dt.day
                 kwargs.pop('julday')
+        # check if seconds are given as float value
+        if len(args) == 6 and isinstance(args[5], float):
+            kwargs['microsecond'] = int(args[5] % 1 * 1000000)
+            kwargs['second'] = int(args[5])
+            args = args[0:5]
         return datetime.datetime.__new__(cls, *args, **kwargs)
 
     @staticmethod
-    def __new(cls, dt):
+    def _new(cls, dt):
         """
         I'm just a small helper method to create readable source code.
         """

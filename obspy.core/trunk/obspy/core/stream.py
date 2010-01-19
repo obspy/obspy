@@ -11,30 +11,26 @@ import os
 
 def read(pathname, format=None, headonly=False, **kwargs):
     """
-    Reads a file(s) into a :class:`~obspy.core.stream.Stream` object.
+    Reads a file(s) given as wildcards into a ObsPy Stream object.
 
-    It allows wildcards in the pathname to read multiple files. The input
-    format is auto detected. The allowed formats depend on the packages
-    installed. Commonly packages for the formats "GSE2", "MSEED", "SAC" and
-    "SEISAN" are installed.
+    The `read` method opens one or multiple files given via wildcards in the
+    `pathname` attribute and returns a ObsPy :class:`~obspy.core.stream.Stream`
+    object. The file format format is auto detected if not given. Allowed
+    formats depend on the ObsPy packages installed. Commonly, packages for the
+    formats "GSE2", "MSEED" and "SAC" are installed.
 
     Basic Usage
     -----------
-    .. code-block:: python
-
-        >> from obspy.core import read
-        >> st = read("RJOB_061005_072159.ehz")
-        >> print st
-        1 Trace(s) in Stream:
-        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("RJOB_061005_072159.ehz") # doctest: +SKIP
 
     Parameters
     ----------
     pathname : string
         String containing Filename. Wildcards are allowed.
     format : string, optional
-        Format of the file to read. Commonly on of "GSE2", "MSEED",
-        "SAC" or "SEISAN". If it is None the format will be automatically
+        Format of the file to read. Commonly one of "GSE2", "MSEED",
+        or "SAC". If it is None the format will be automatically
         detected which results in a slightly faster reading. If you specify
         a format no further format checking is done. To avoid problems
         please use the option only when you are sure which format your file
@@ -42,43 +38,52 @@ def read(pathname, format=None, headonly=False, **kwargs):
     headonly : bool, optional
         If set to True, read only the head. This is most useful for
         scanning available data in huge (temporary) data sets.
-    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        "MSEED" only. Specify the starttime to read. The remaining
-        records are not unpacked. Usually this resuls in a slightly faster
-        reading.
-    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        "MSEED" only. See description of starttime.
-    verify_chksum : bool, optional
-        "GSE2" only. Defaults to True. If set to False the checksum of the
-        "GSE2" file is not verified. Most useful for data written with old
-        software which computed the checksum in a wrong way.
 
     Notes
     -----
-    The read method internally uses the pkg_resources module to find
-    available data format packages. Currently it connects to:
+    Additional ObsPy modules extend the functionality of the `read` method. The
+    following table summarizes all known formats currently available for ObsPy.
 
-    * :func:`~obspy.mseed.core.readMSEED`
-    * :func:`~obspy.mseed.core.readGSE2`
-    * :func:`~obspy.mseed.core.readSAC`
-    * :func:`~obspy.mseed.core.readSEISAN`
-    * :func:`~obspy.mseed.core.readWAV`
+    Please refer to the linked function call of each module for any extra
+    options available at the import stage.
 
-    Next to the read function the :meth:`~Stream.write` function is a method of the
-    returned Stream object.
+    =======  ===================  ====================================
+    Format   Required Module      Linked Function Call
+    =======  ===================  ====================================
+    MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
+    GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
+    SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
+    SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
+    WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
+    Q        :mod:`obspy.sh`      :func:`obspy.sh.q.readQ`
+    SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.asc.readASC`
+    =======  ===================  ====================================
+    
+    Next to the read function the :meth:`~Stream.write` function is a method of
+    the returned Stream object.
 
     Examples
     --------
-    A small example using wildcards, in this case it matches two files.
-    Both files are then read into one :class:`~obspy.core.stream.Stream`
-    object::
-    
-        >> from obspy.core import read
-        >> st = read("RJOB_061005_07*.ehz")
-        >> print st
+    (1) The following code uses wildcards, in this case it matches two files.
+        Both files are then read into a :class:`~obspy.core.stream.Stream` object.
+
+        >>> from obspy.core import read  # doctest: +SKIP
+        >>> st = read("RJOB_061005_07*.ehz")  # doctest: +SKIP
+        >>> print st  # doctest: +SKIP
         2 Trace(s) in Stream:
         --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
         --RJOB   Z | 2005-10-06,08:21:59--2005-10-06,08:24:59 | 200.0 Hz, 36000 samples
+
+    (2) Using the ``format`` parameter disables the autodetection. The file
+        can be found [1]_.
+
+        >>> from obspy.core import read  # doctest: +SKIP
+        >>> st = read("test.mseed", format="MSEED")  # doctest: +SKIP
+        >>> print st  # doctest: +SKIP
+        1 Trace(s) in Stream:
+        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
+
+    .. [1] http://svn.geophysik.uni-muenchen.de/trac/obspy/browser/obspy.mseed/trunk/obspy/mseed/tests/data/test.mseed?format=raw
     """
     st = Stream()
     for file in iglob(pathname):
@@ -593,3 +598,8 @@ class Stream(object):
                 data = np.concatenate(cur_trace)
                 stats.npts = data.size
                 self.traces.append(Trace(data=data, header=stats))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
