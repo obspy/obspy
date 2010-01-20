@@ -4,9 +4,12 @@
 The Filter test suite.
 """
 
-from obspy.signal.util import xcorr
-import unittest
+from obspy.signal.util import xcorr, lib_name
 import numpy as np
+import ctypes as C
+import inspect
+import unittest
+import os
 
 
 class UtilTestCase(unittest.TestCase):
@@ -56,6 +59,29 @@ class UtilTestCase(unittest.TestCase):
         self.assertEquals(shift, 10)
         self.assertAlmostEquals(corr, 1, 2)
 
+    def test_SRL(self):
+        """
+        Tests if example in ObsPy paper submitted to the Electronic
+        Seismologist section of SRL is still working. The test shouldn't be
+        changed because the reference gets wrong.
+        """
+        np.random.seed(815)
+        data1 = np.random.randn(1000).astype('float32')
+        data2 = data1.copy()
+        window_len = 100
+
+        path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        name = os.path.join(os.pardir, path, 'lib', lib_name)
+        lib = C.CDLL(name)
+        #
+        shift = C.c_int()
+        coe_p = C.c_double()
+        lib.X_corr(data1.ctypes.data, data2.ctypes.data,
+                   window_len, len(data1), len(data2),
+                   C.byref(shift), C.byref(coe_p))
+
+        self.assertAlmostEquals(0.0, shift.value)
+        self.assertAlmostEquals(1.0, coe_p.value)
 
 def suite():
     return unittest.makeSuite(UtilTestCase, 'test')
