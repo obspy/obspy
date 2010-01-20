@@ -28,6 +28,7 @@ convert_dict = {
     'samp_rate':'sampling_rate',
     'n_samps': 'npts',
     'channel': 'channel',
+    'calib': 'calib',
 }
 
 gse2_extra = [
@@ -37,7 +38,6 @@ gse2_extra = [
     'hang',
     'auxid',
     'calper',
-    'calib'
 ]
 
 

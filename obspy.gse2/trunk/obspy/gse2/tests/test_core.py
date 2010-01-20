@@ -39,11 +39,11 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
         self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('hang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
         self.assertEqual(tr.stats.gse2.get('instype'), '      ')
-        self.assertAlmostEqual(tr.stats.gse2.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
@@ -59,9 +59,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
         self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
-        self.assertAlmostEqual(tr.stats.gse2.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
         self.assertEqual(str(tr.data), '[]')
 
@@ -96,12 +96,12 @@ class CoreTestCase(unittest.TestCase):
                          tr1.stats.get('channel'))
         self.assertEqual(tr3.stats.get('starttime'),
                          tr1.stats.get('starttime'))
+        self.assertEqual(tr3.stats.get('calib'),
+                         tr1.stats.get('calib'))
         self.assertEqual(tr3.stats.gse2.get('vang'),
                          tr1.stats.gse2.get('vang'))
         self.assertEqual(tr3.stats.gse2.get('calper'),
                          tr1.stats.gse2.get('calper'))
-        self.assertEqual(tr3.stats.gse2.get('calib'),
-                         tr1.stats.gse2.get('calib'))
         np.testing.assert_equal(tr3.data, tr1.data)
 
     def test_readAndWriteStreamsViaObspy(self):
@@ -172,7 +172,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual('CM6', stream[0].stats.gse2.datatype)
         self.assertEqual(-1, stream[0].stats.gse2.vang)
         self.assertEqual(1.0, stream[0].stats.gse2.calper)
-        self.assertEqual(1.0, stream[0].stats.gse2.calib)
+        self.assertEqual(1.0, stream[0].stats.calib)
 
     def test_tabCompleteStats(self):
         """

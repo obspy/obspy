@@ -21,7 +21,7 @@ from omniORB import CORBA
 from CosNaming import NameComponent, NamingContext
 from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream
-from obspy.mseed import libmseed
+from obspy.mseed.libmseed import LibMSEED
 import numpy as np
 import sys
 
@@ -62,7 +62,7 @@ class Client(object):
         else:
             self.byteorder = False
         #
-        self.mseed = libmseed()
+        self.mseed = LibMSEED()
         #
         # Initialize CORBA object
         orb = CORBA.ORB_init([

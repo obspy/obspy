@@ -54,7 +54,7 @@ class ClientTestSuite(unittest.TestCase):
         print "This will take a very long time"
         ids = client.getNetworkIds()
         self.assertEqual(['AD', 'AF', 'AF', 'AK', 'AL'], ids[0:5])
-        self.assertEqual(352, len(ids))
+        self.assertEqual(360, len(ids))
 
     def test_getStationIds(self):
         """
@@ -65,7 +65,7 @@ class ClientTestSuite(unittest.TestCase):
         stations = ['BRNL', 'PMG', 'MORC', 'DSB', 'LID', 'WLF', 'STU',
                 'BGIO', 'MLR', 'KBS']
         self.assertEqual(stations, ids[0:10])
-        self.assertEqual(124, len(ids))
+        self.assertEqual(160, len(ids))
 
 
 def suite():
