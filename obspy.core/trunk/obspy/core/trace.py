@@ -9,7 +9,7 @@ from obspy.core.util import AttribDict
 
 
 class Stats(AttribDict):
-    r"""
+    """
     A container for additional header information of a single Trace object.
 
     A ``Stats`` object may contain all header information (also known as meta

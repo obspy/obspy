@@ -6,38 +6,129 @@ import datetime
 
 class UTCDateTime(datetime.datetime):
     """
-    A class providing an interface to UTC-based datetime objects.
+    A UTC-based datetime object.
 
-    This class inherits from Python `datetime.datetime` class and refines the
-    UTC time zone support. It supports the full ISO8601:2004 specification and
-    also additional string patterns during object initialization. ISO8601
-    detection may be enforced by setting the ``iso8601`` parameter to True.
+    This class inherits from Python :class:`datetime.datetime` class and
+    refines the UTC time zone (Coordinated Universal Time) support. It features
+    the full ISO8601:2004 specification and some additional string patterns
+    during object initialization.
 
-    >>> UTCDateTime(1970, 1, 1)
-    UTCDateTime(1970, 1, 1, 0, 0)
-    >>> UTCDateTime(datetime.datetime(2009, 5, 24, 8, 28, 12, 5001))
-    UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
-    >>> UTCDateTime("19700101")
-    UTCDateTime(1970, 1, 1, 0, 0)
-    >>> UTCDateTime("1970-01-01 12:23:34")
-    UTCDateTime(1970, 1, 1, 12, 23, 34)
-    >>> UTCDateTime("20090701121212")
-    UTCDateTime(2009, 7, 1, 12, 12, 12)
-    >>> UTCDateTime("1970-01-01T12:23:34.123456")
-    UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
-    >>> UTCDateTime("2009,010,19:59:42.1800")
-    UTCDateTime(2009, 1, 10, 19, 59, 42, 180000)
-    >>> UTCDateTime("2009-W53-7T12:23:34.5")
-    UTCDateTime(2010, 1, 3, 12, 23, 34, 500000)
-    >>> UTCDateTime("2009-001", iso8601=True)         # enforce ISO8601
-    UTCDateTime(2009, 1, 1, 0, 0)
-    >>> t = UTCDateTime(1240561632.005)
-    >>> t.year, t.hour, t.month, t.hour, t.minute, t.second, t.microsecond
-    (2009, 8, 4, 8, 27, 12, 5000)
-    >>> t.timestamp + 100
-    1240561732.0050001
-    >>> UTCDateTime(t.timestamp+60)
-    UTCDateTime(2009, 4, 24, 8, 28, 12, 5000)
+    Parameters
+    ----------
+    *args : int, float, string, :class:`datetime.datetime`, optional
+        The creation of a new `UTCDateTime` object depends from the given input
+        parameters. All possible options are summarized in the examples section
+        underneath.
+    iso8601 : boolean, optional
+        Enforce ISO8601:2004 detection. Works only with a string as first input
+        argument.
+
+    Supported Operations
+    --------------------
+    ``UTCDateTime = UTCDateTime + delta``
+        Adds/removes ``delta`` seconds (given as int or float) to/from the
+        current ``UTCDateTime`` object and returns a new ``UTCDateTime``
+        object.
+    ``delta = UTCDateTime - UTCDateTime``
+        Calculates the time difference in seconds between two ``UTCDateTime``
+        objects. The time difference is given as float data type and may also
+        contain a negative number.
+
+    Examples
+    --------
+    (1) Using a timestamp value.
+
+        >>> UTCDateTime(0)
+        UTCDateTime(1970, 1, 1, 0, 0)
+
+        >>> UTCDateTime(1240561632)
+        UTCDateTime(2009, 4, 24, 8, 27, 12)
+
+        >>> UTCDateTime(1240561632.5)
+        UTCDateTime(2009, 4, 24, 8, 27, 12, 500000)
+
+    (2) Using a `ISO8601:2004 <http://en.wikipedia.org/wiki/ISO_8601>`__
+        string. The detection may be enforced by setting the ``iso8601``
+        parameter to True.
+
+        * Calendar date representation.
+
+            >>> UTCDateTime("2009-12-31T12:23:34.5")
+            UTCDateTime(2009, 12, 31, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("20091231T122334.5")           # compact
+            UTCDateTime(2009, 12, 31, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009-12-31T12:23:34.5Z")      # w/o time zone
+            UTCDateTime(2009, 12, 31, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009-12-31T12:23:34+01:15")   # w/ time zone
+            UTCDateTime(2009, 12, 31, 11, 8, 34)
+
+        * Ordinal date representation.
+
+            >>> UTCDateTime("2009-365T12:23:34.5")
+            UTCDateTime(2009, 12, 31, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009365T122334.5")            # compact
+            UTCDateTime(2009, 12, 31, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009001", iso8601=True)       # enforce ISO8601
+            UTCDateTime(2009, 1, 1, 0, 0)
+
+        * Week date representation.
+
+            >>> UTCDateTime("2009-W53-7T12:23:34.5")
+            UTCDateTime(2010, 1, 3, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009W537T122334.5")           # compact
+            UTCDateTime(2010, 1, 3, 12, 23, 34, 500000)
+
+            >>> UTCDateTime("2009W011", iso8601=True)      # enforce ISO8601
+            UTCDateTime(2008, 12, 29, 0, 0)
+
+    (3) Using not ISO8601 compatible strings.
+
+        >>> UTCDateTime("1970-01-01 12:23:34")
+        UTCDateTime(1970, 1, 1, 12, 23, 34)
+
+        >>> UTCDateTime("1970,01,01,12:23:34")
+        UTCDateTime(1970, 1, 1, 12, 23, 34)
+
+        >>> UTCDateTime("1970,001,12:23:34")
+        UTCDateTime(1970, 1, 1, 12, 23, 34)
+
+        >>> UTCDateTime("20090701121212")
+        UTCDateTime(2009, 7, 1, 12, 12, 12)
+
+        >>> UTCDateTime("19700101")
+        UTCDateTime(1970, 1, 1, 0, 0)
+
+    (4) Using multiple arguments in the following order: `year, month,
+        day[, hour[, minute[, second[, microsecond]]]`. The year, month and day
+        arguments are required.
+
+        >>> UTCDateTime(1970, 1, 1)
+        UTCDateTime(1970, 1, 1, 0, 0)
+
+        >>> UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+        UTCDateTime(1970, 1, 1, 12, 23, 34, 123456)
+
+    (5) Using the following keyword arguments: `year, month, day, julday, hour,
+        minute, second, microsecond`. Either the combination of year, month and
+        day, or year and julday are required.
+
+        >>> UTCDateTime(year=1970, month=1, day=1, minute=15, microsecond=20)
+        UTCDateTime(1970, 1, 1, 0, 15, 0, 20)
+
+        >>> UTCDateTime(year=2009, julday=234, hour=14, minute=13)
+        UTCDateTime(2009, 8, 22, 14, 13)
+
+    (6) Using a Python :class:`datetime.datetime` object. 
+
+        >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
+        >>> UTCDateTime(dt)
+        UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
     """
 
     def __new__(cls, *args, **kwargs):
@@ -227,7 +318,7 @@ class UTCDateTime(datetime.datetime):
 
     def getTimeStamp(self):
         """
-        Returns UTC time stamp in floating point seconds.
+        Returns UTC timestamp in floating point seconds.
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getTimeStamp()
@@ -242,14 +333,14 @@ class UTCDateTime(datetime.datetime):
 
     def getDateTime(self):
         """
-        Converts current UTCDateTime to a Python datetime.datetime object.
+        Returns a Python datetime object from the current UTCDateTime object.
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getDateTime()
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
 
-        :rtype: datetime
-        :return: Python datetime object of current UTCDateTime
+        :rtype: :class:`datetime.datetime`
+        :return: Python datetime object of current UTCDateTime object.
         """
         return datetime.datetime(self.year, self.month, self.day, self.hour,
                                  self.minute, self.second, self.microsecond)
@@ -258,14 +349,14 @@ class UTCDateTime(datetime.datetime):
 
     def getDate(self):
         """
-        Converts current UTCDateTime to a Python datetime.date object.
+        Returns a Python date object from the current UTCDateTime object.
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getDate()
         datetime.date(2008, 10, 1)
 
         :rtype: datetime.date
-        :return: Python date object of current UTCDateTime
+        :return: Python date object of current UTCDateTime object.
         """
         return datetime.date(self.year, self.month, self.day)
 
@@ -273,14 +364,14 @@ class UTCDateTime(datetime.datetime):
 
     def getTime(self):
         """
-        Converts current UTCDateTime to a Python datetime.time object.
+        Returns a Python time object from the current UTCDateTime object.
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getTime()
         datetime.time(12, 30, 35, 45020)
 
         :rtype: datetime.time
-        :return: Python time object of current UTCDateTime
+        :return: Python time object of current UTCDateTime object.
         """
         return datetime.time(self.hour, self.minute, self.second,
                              self.microsecond)
@@ -289,7 +380,7 @@ class UTCDateTime(datetime.datetime):
 
     def getJulday(self):
         """
-        Get the Julian day of the current UTCDateTime object.
+        Returns the Julian day of the current UTCDateTime object.
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getJulday()
@@ -421,10 +512,11 @@ class UTCDateTime(datetime.datetime):
         >>> dt.formatSEED(compact=True)
         '2008,275,00:30'
 
-        :type compact: boolean
+        :type compact: boolean, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
-        :return: string
+        :rtype: string
+        :return: Date time string in the SEED format.
         """
         if not compact:
             if not self.time:

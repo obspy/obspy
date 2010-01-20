@@ -231,6 +231,65 @@ import textwrap
 # Monkey path NumpyDocString
 def obspy__init__(self, docstring, config={}):
     docstring = textwrap.dedent(docstring).split('\n')
+    newdoc = []
+    params = {}
+    ids = []
+    kw = None
+    for line in docstring:
+        if not line or line.isspace():
+            kw = None
+            newdoc.append(line)
+            continue
+        elif not kw and line[0] not in [':', '@']:
+            kw = None
+            newdoc.append(line)
+            continue
+        if line.startswith(":param ") or line.startswith("@param "):
+            kw, desc = line[7:].split(':', 1)
+            kw = kw.strip()
+            ids.append(kw)
+            params.setdefault(kw, {})
+            params[kw].setdefault('dtype', '')
+            params[kw]['desc'] = ['    ' + desc.strip()]
+            continue
+        elif line.startswith(":type ") or line.startswith("@type "):
+            kw, dtype = line[6:].split(':', 1)
+            kw = kw.strip()
+            params.setdefault(kw, {})
+            params[kw].setdefault('desc', [])
+            params[kw]['dtype'] = dtype
+            continue
+        elif line.startswith(":return:") or line.startswith("@return:"):
+            desc = line[8:].strip()
+            kw = 'return'
+            params.setdefault(kw, {})
+            params[kw].setdefault('dtype', '')
+            params[kw]['desc'] = ['    ' + desc.strip()]
+            continue
+        elif line.startswith(":rtype:") or line.startswith("@rtype:"):
+            dtype = line[7:].strip()
+            kw = 'return'
+            params.setdefault(kw, {})
+            params[kw].setdefault('desc', [])
+            params[kw]['dtype'] = dtype
+            continue
+        if not kw:
+            newdoc.append(line)
+            continue
+        params[kw]['desc'].append('    ' + line.strip())
+
+    docstring = newdoc
+    if ids:
+        docstring += ['Parameters', '----------', '']
+    for id in ids:
+        docstring += ["%s : %s" % (id, params[id]['dtype'])]
+        docstring += params[id]['desc']
+    if 'return' in params:
+        docstring += ['', 'Returns', '-------', '']
+        docstring += ["%s" % params['return']['dtype']]
+        docstring += params['return']['desc']
+    docstring.append('')
+
 
     self._doc = Reader(docstring)
     self._parsed_data = {
@@ -247,56 +306,97 @@ def obspy__init__(self, docstring, config={}):
         'Methods': [],
         'See Also': [],
         'Notes': [],
+        'Supported Operations': [],
         'Warnings': [],
         'References': '',
         'Examples': '',
+        'Example': '',
         'index': {}
         }
 
     self._parse()
+    self['Supported Operations'] = self._parse_param_list(self['Supported Operations'])
 
-# Monkey patch SphinxDocString
-def obspy_str_usage(self):
-    examples_str = "\n".join(self['Basic Usage'])
+def obspy_str_param_list(self, name):
+    out = []
+    if self[name]:
+        out += self._str_field_list(name)
+        out += ['']
+        for param, param_type, desc in self[name]:
+            if not param_type:
+                out += self._str_indent(['%s' % (param.strip())])
+            else:
+                out += self._str_indent(['**%s** : %s' % (param.strip(),
+                                                          param_type.strip())])
+            out += ['']
+            out += self._str_indent(desc, 8)
+            out += ['']
+    return out
 
-    if not self['Basic Usage']:
-        return ['']
-    elif (self.use_plots and 'import matplotlib' in examples_str
+def obspy_str_table(self, name, h1, h2):
+    out = []
+    if self[name]:
+        out += self._str_header(name)
+        out += ['']
+        # table header
+        max1 = max([len(p[0]) for p in self[name]])
+        out += ['=' * max1 + ' ' + '=' * 80]
+        out += [h1 + ' ' * (max1 + 1 - len(h1)) + h2]
+        out += ['=' * max1 + ' ' + '=' * 80]
+        for param, param_type, desc in self[name]:
+            d1 = param.strip()
+            d1 = d1 + ' ' * (max1 + 1 - len(d1))
+            out += [d1 + desc[0].strip()]
+            if len(desc) == 1:
+                continue
+            for d2 in desc[1:]:
+                out += [' ' * max1 + ' ' + d2.strip()]
+        out += ['=' * max1 + ' ' + '=' * 80]
+        out += ['']
+    return out
+
+def obspy_str_examples(self, name):
+    examples_str = "\n".join(self[name])
+    if (self.use_plots and 'import matplotlib' in examples_str
             and 'plot::' not in examples_str):
-        out = ['']
-        out += self._str_header('Basic Usage')
+        out = []
+        out += self._str_header(name)
         out += ['.. plot::', '']
-        out += self._str_indent(self['Basic Usage'])
+        out += self._str_indent(self[name])
         out += ['']
         return out
     else:
-        return [''] + self._str_section('Basic Usage') + ['']
+        return self._str_section(name)
 
 def obspy__str__(self, indent=0, func_role="obj"):
-        out = []
-        out += self._str_signature()
-        out += self._str_index() + ['']
-        out += self._str_summary()
-        out += self._str_extended_summary()
-        for param_list in ('Parameters', 'Returns', 'Raises'):
-            out += self._str_param_list(param_list)
-        out += self._str_usage()
-        out += self._str_member_list('Attributes')
-        out += self._str_warnings()
-        out += self._str_see_also(func_role)
-        out += self._str_section('Notes')
-        out += self._str_references()
-        out += self._str_examples()
-        # Do not include Methods, these are generated by
-        # sphinx-autogen automatically. If included here,
-        # the will be included twice
-        #out += self._str_member_list('Methods')
-        out = self._str_indent(out, indent)
-        return '\n'.join(out)
+    out = []
+    out += self._str_signature()
+    out += self._str_index() + ['']
+    out += self._str_summary()
+    out += self._str_extended_summary()
+    for param_list in ('Parameters', 'Returns', 'Raises'):
+        out += self._str_param_list(param_list)
+    out += self._str_examples('Basic Usage')
+    out += self._str_member_list('Attributes')
+    out += self._str_warnings()
+    out += self._str_see_also(func_role)
+    out += self._str_table('Supported Operations', 'Operation', 'Result')
+    out += self._str_examples('Notes')
+    out += self._str_references()
+    out += self._str_examples('Examples')
+    out += self._str_examples('Example')
+    # Do not include Methods, these are generated by
+    # sphinx-autogen automatically. If included here,
+    # the will be included twice
+    #out += self._str_member_list('Methods')
+    out = self._str_indent(out, indent)
+    return '\n'.join(out)
 
 NumpyDocString.__init__ = obspy__init__
-SphinxDocString._str_usage = obspy_str_usage
 SphinxDocString.__str__ = obspy__str__
+SphinxDocString._str_param_list = obspy_str_param_list
+SphinxDocString._str_examples = obspy_str_examples
+SphinxDocString._str_table = obspy_str_table
 
 # Attach this to the builder
 def setup(app):
