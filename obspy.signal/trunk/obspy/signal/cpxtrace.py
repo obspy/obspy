@@ -14,7 +14,7 @@ Complex Trace Analysis
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from numpy import size, pi, median
+from numpy import size, pi
 from obspy.signal import util
 from scipy import signal
 import numpy as np
@@ -211,7 +211,7 @@ def instFreq(data, fs, fk):
             hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
             omega_win = abs(((f * hd - fd * h) /
                              (f * f + h * h)) * fs / 2.0 / pi)
-            omega[i] = median(omega_win)
+            omega[i] = np.median(omega_win)
             i = i + 1
     else:
         omega = np.zeros(size(x[0]), dtype='float64')
@@ -258,7 +258,7 @@ def instBwith(data, fs, fk):
             t = signal.lfilter(fk, 1, A_win_add)
             t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
-            sigma[i] = median(sigma_win)
+            sigma[i] = np.median(sigma_win)
             i += 1
     else:
         sigma = np.zeros(size(x[0]), dtype='float64')

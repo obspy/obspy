@@ -1,5 +1,5 @@
-:mod:`obspy.sac` - Glues the single ObsPy packages together
-============================================================
+:mod:`obspy.sac` - SAC read and write support 
+=============================================
 
 .. currentmodule:: obspy.sac
 .. automodule:: obspy.sac

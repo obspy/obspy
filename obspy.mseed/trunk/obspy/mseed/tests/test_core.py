@@ -2,7 +2,7 @@
 
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.mseed import libmseed
+from obspy.mseed import LibMSEED
 from obspy.mseed.core import readMSEED
 from obspy.mseed.headers import ENCODINGS
 from obspy.mseed.libmseed import MSStruct
@@ -160,7 +160,7 @@ class CoreTestCase(unittest.TestCase):
         Tests Mini-SEED writing and record lengths.
         """
         # libmseed instance.
-        mseed = libmseed()
+        mseed = LibMSEED()
         npts = 6000
         np.random.seed(815) # make test reproducable
         data = np.random.randint(-1000, 1000, npts).astype('int32')

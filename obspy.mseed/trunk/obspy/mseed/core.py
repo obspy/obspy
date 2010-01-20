@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import Stream, Trace
-from obspy.mseed import libmseed
+from obspy.mseed import LibMSEED
 from obspy.mseed.headers import ENCODINGS
 import numpy as np
 import sys
@@ -13,7 +13,7 @@ def isMSEED(filename):
     
     :param filename: File to be read.
     """
-    __libmseed__ = libmseed()
+    __libmseed__ = LibMSEED()
     return __libmseed__.isMSEED(filename) 
 
 def readMSEED(filename, headonly = False, starttime = None, endtime = None,
@@ -23,7 +23,7 @@ def readMSEED(filename, headonly = False, starttime = None, endtime = None,
     
     :param filename: Mini-SEED file to be read.
     """
-    __libmseed__ = libmseed()
+    __libmseed__ = LibMSEED()
     # read MiniSEED file
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename, reclen=reclen)
@@ -115,7 +115,7 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
               'of 2 to the power of X where 8 <= X <= 20.'
         raise ValueError(msg)
     # libmseed instance.
-    __libmseed__ = libmseed()
+    __libmseed__ = LibMSEED()
     traces = stream_object.traces
     trace_list = []
     convert_dict = {'station': 'station', 'samprate':'sampling_rate',

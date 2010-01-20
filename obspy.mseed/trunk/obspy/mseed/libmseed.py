@@ -47,7 +47,7 @@ import os
 import sys
 
 
-class libmseed(object):
+class LibMSEED(object):
     """
     Class for handling MiniSEED files.
     """
@@ -1109,7 +1109,7 @@ class MSStruct(object):
         """
         For details see libmseed._getMSFileInfo
         """
-        self.info = libmseed()._getMSFileInfo(self.f, self.file)
+        self.info = LibMSEED()._getMSFileInfo(self.f, self.file)
         return self.info
 
     def filePosFromRecNum(self, record_number=0):

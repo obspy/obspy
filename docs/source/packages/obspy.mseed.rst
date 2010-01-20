@@ -1,5 +1,5 @@
-:mod:`obspy.mseed` - Glues the single ObsPy packages together
-============================================================
+:mod:`obspy.mseed` - MiniSEED read and write support 
+====================================================
 
 .. currentmodule:: obspy.mseed
 .. automodule:: obspy.mseed
@@ -11,7 +11,7 @@ Classes & functions
   :toctree: .
   :nosignatures:
 
-    libmseed.libmseed
+    libmseed.LibMSEED
 
 
 Modules

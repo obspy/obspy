@@ -5,7 +5,7 @@ The libmseed test suite.
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.mseed import libmseed
+from obspy.mseed import LibMSEED
 from obspy.mseed.headers import PyFile_FromFile
 from obspy.mseed.libmseed import clibmseed, MSStruct
 import copy
@@ -55,7 +55,7 @@ class LibMSEEDTestCase(unittest.TestCase):
             100000.111112 : UTCDateTime(1970, 1, 2, 3, 46, 40, 111112),
             200000000 : UTCDateTime(1976, 5, 3, 19, 33, 20)
         }
-        mseed = libmseed()
+        mseed = LibMSEED()
         # Loop over timesdict.
         for ts, dt in timesdict.iteritems():
             self.assertEqual(dt, mseed._convertMSTimeToDatetime(ts * 1000000L))
@@ -80,7 +80,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         were created using Pitsa.
         """
         mseed_file = os.path.join(self.path, unicode('gaps.mseed'))
-        mseed = libmseed()
+        mseed = LibMSEED()
         # list of known data samples
         starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
                      1199145618455000L]
@@ -123,7 +123,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         were created using Pitsa.
         """
         mseed_file = os.path.join(self.path, unicode('gaps.mseed'))
-        mseed = libmseed()
+        mseed = LibMSEED()
         # list of known data samples
         starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
                      1199145618455000L]
@@ -160,7 +160,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Compares header data read by libmseed
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_record',
                            'gaps.mseed', 'qualityflags.mseed',
                            'test.mseed', 'timingquality.mseed']
@@ -186,7 +186,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         regardless of write options.
         Note: Test currently only tests the first trace
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         mseed_file = os.path.join(self.path, 'test.mseed')
         trace_list = mseed.readMSTraces(mseed_file)
         data = trace_list[0][1].copy()
@@ -222,7 +222,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Tests reading and writing files with more than one trace.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         filename = os.path.join(self.path, 'gaps.mseed')
         # Read file and test if all traces are being read.
         trace_list = mseed.readMSTraces(filename)
@@ -252,7 +252,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         The values are compared with the original printgaplist method of the 
         libmseed library and manually with the SeisGram2K viewer.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         # test file with 3 gaps
         filename = os.path.join(self.path, 'gaps.mseed')
         gap_list = mseed.getGapList(filename)
@@ -284,7 +284,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         
         The values can be read from the filename.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         # Example 1
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
@@ -311,7 +311,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         parses the whole file. This will only work for files with only one
         trace and without any gaps or overlaps.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
                            'test.mseed', 'timingquality.mseed']
         for _i in mseed_filenames:
@@ -336,7 +336,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         The cut file is compared to a manually cut file which start and end 
         times will be read
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         temp = os.path.join(self.path, 'BW.BGLD.__.EHE.D.2008.001')
         file = temp + '.first_10_percent'
         # initialize first record
@@ -396,7 +396,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Creates ten small files, randomizes their order, merges the middle
         eight files and compares it to the desired result.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         #Create 10 small files.
@@ -432,7 +432,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         A real test file would be better as this test tests a file that was
         created by the inverse method that reads the bits.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         filename = os.path.join(self.path, 'qualityflags.mseed')
         # Read quality flags.
         flags = mseed.getDataQualityFlagsCount(filename)
@@ -456,7 +456,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         V <- 0:100; min(V); max(V); mean(V); median(V); quantile(V, 0.75,
         type = 3); quantile(V, 0.25, type = 3)
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         filename = os.path.join(self.path, 'timingquality.mseed')
         tq = mseed.getTimingQuality(filename)
         self.assertEqual(tq, {'min': 0.0, 'max': 100.0, 'average': 50.0,
@@ -487,7 +487,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         # Mini-SEED filenames.
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
@@ -511,7 +511,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Tests the getMSFileInfo method with known values.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         filename = os.path.join(self.path,
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
         # Simply reading the file.
@@ -607,7 +607,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Fails with readMSTracesViaRecords and passes with readMSTraces!
         """
         n_threads = 3
-        mseed = libmseed()
+        mseed = LibMSEED()
         # Use a medium sized file.
         mseed_file = os.path.join(self.path,
                                   'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
@@ -662,7 +662,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Test decompression of Steim2 strings. Remove 128 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         steim2_file = os.path.join(self.path, 'steim2.mseed')
         data_string = open(steim2_file, 'rb').read()[128:] #128 Bytes header
         data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap, verbose=0)
@@ -674,7 +674,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Test decompression of Steim1 strings. Remove 64 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
         """
-        mseed = libmseed()
+        mseed = LibMSEED()
         steim1_file = os.path.join(self.path,
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         data_string = open(steim1_file, 'rb').read()[64:] #64 Bytes header
