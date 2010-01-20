@@ -1,0 +1,25 @@
+:mod:`obspy.sac` - Glues the single ObsPy packages together
+============================================================
+
+.. currentmodule:: obspy.sac
+.. automodule:: obspy.sac
+
+Classes & functions
+-------------------
+
+.. autosummary::
+  :toctree: .
+  :nosignatures:
+
+    sacio.ReadSac
+
+
+Modules
+-------
+
+.. autosummary::
+  :toctree: .
+  :nosignatures:
+
+    core
+    sacio

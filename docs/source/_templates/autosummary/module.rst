@@ -1,6 +1,7 @@
 {{ fullname }}
 {{ underline }}
 
+.. currentmodule:: {{ fullname }}
 .. automodule:: {{ fullname }}
 
    {% block functions %}
@@ -8,8 +9,10 @@
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree: .
+      :nosignatures:
    {% for item in functions %}
-      ~{{ item }}
+      {{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
@@ -20,7 +23,7 @@
 
    .. autosummary::
    {% for item in classes %}
-      ~{{ item }}
+      {{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}
@@ -31,7 +34,7 @@
 
    .. autosummary::
    {% for item in classes %}
-      ~{{ item }}
+      {{ item }}
    {%- endfor %}
    {% endif %}
    {% endblock %}

@@ -1,6 +1,7 @@
 :mod:`obspy.core` - Glues the single ObsPy packages together
 ============================================================
 
+.. currentmodule:: obspy.core
 .. automodule:: obspy.core
 
 Classes & functions
@@ -10,11 +11,11 @@ Classes & functions
   :toctree: .
   :nosignatures:
 
-    ~stream.read
-    ~trace.Trace
-    ~trace.Stats
-    ~stream.Stream
-    ~utcdatetime.UTCDateTime
+    stream.read
+    trace.Trace
+    trace.Stats
+    stream.Stream
+    utcdatetime.UTCDateTime
 
 
 Modules
@@ -24,7 +25,7 @@ Modules
   :toctree: .
   :nosignatures:
 
-    ~trace
-    ~stream
-    ~utcdatetime
-    ~util
+    trace
+    stream
+    utcdatetime
+    util
