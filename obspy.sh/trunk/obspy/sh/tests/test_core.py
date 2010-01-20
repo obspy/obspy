@@ -2,14 +2,14 @@
 
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sh.asc import readASC, writeASC
+from obspy.sh.core import readASC, writeASC, isASC, isQ
 import inspect
 import numpy as np
 import os
 import unittest
 
 
-class ASCTestCase(unittest.TestCase):
+class CoreTestCase(unittest.TestCase):
     """
     """
     def setUp(self):
@@ -18,6 +18,24 @@ class ASCTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    def test_isASCFile(self):
+        """
+        """
+        testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
+        self.assertEqual(isASC(testfile), True)
+        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        self.assertEqual(isASC(testfile), False)
+
+    def test_isQFile(self):
+        """
+        """
+        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
+        self.assertEqual(isQ(testfile), True)
+        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QBN')
+        self.assertEqual(isQ(testfile), False)
+        testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
+        self.assertEqual(isQ(testfile), False)
 
     def test_readSingleChannelASCFile(self):
         """
@@ -124,7 +142,7 @@ class ASCTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(ASCTestCase, 'test')
+    return unittest.makeSuite(CoreTestCase, 'test')
 
 
 if __name__ == '__main__':

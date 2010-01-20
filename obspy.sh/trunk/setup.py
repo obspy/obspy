@@ -62,13 +62,13 @@ setup(
         SH_ASC = obspy.sh.core
 
         [obspy.plugin.waveform.Q]
-        isFormat = obspy.sh.q:isQ
-        readFormat = obspy.sh.q:readQ
-        writeFormat = obspy.sh.q:writeQ
+        isFormat = obspy.sh.core:isQ
+        readFormat = obspy.sh.core:readQ
+        writeFormat = obspy.sh.core:writeQ
 
         [obspy.plugin.waveform.SH_ASC]
-        isFormat = obspy.sh.asc:isASC
-        readFormat = obspy.sh.asc:readASC
-        writeFormat = obspy.sh.asc:writeASC
+        isFormat = obspy.sh.core:isASC
+        readFormat = obspy.sh.core:readASC
+        writeFormat = obspy.sh.core:writeASC
     """,
 )

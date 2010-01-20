@@ -2,12 +2,47 @@
 
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
-import numpy as np
 from obspy.core.util import formatScientific
+import numpy as np
+import os
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
           'OCT', 'NOV', 'DEC' ]
+
+SH_IDX = {
+    'LENGTH':'L001',
+    'SIGN':'I011',
+    'EVENTNO':'I012',
+    'MARK':'I014',
+    'DELTA':'R000',
+    'CALIB':'R026',
+    'DISTANCE':'R011',
+    'AZIMUTH':'R012',
+    'SLOWNESS':'R018',
+    'INCI':'R013',
+    'DEPTH':'R014',
+    'MAGNITUDE':'R015',
+    'LAT':'R016',
+    'LON':'R017',
+    'SIGNOISE':'R022',
+    'PWDW':'R023',
+    'DCVREG':'R024',
+    'DCVINCI':'R025',
+    'COMMENT':'S000',
+    'STATION':'S001',
+    'OPINFO':'S002',
+    'FILTER':'S011',
+    'QUALITY':'S012',
+    'COMP':'C000',
+    'CHAN1':'C001',
+    'CHAN2':'C002',
+    'BYTEORDER':'C003',
+    'START':'S021',
+    'P-ONSET':'S022',
+    'S-ONSET':'S023',
+    'ORIGIN':'S024'
+}
 
 
 def isASC(filename):
@@ -170,3 +205,89 @@ def writeASC(stream, filename):
             fh.write("%s %s" % (formatScientific("%-.6e" % sample), delim))
         fh.write("\n")
     fh.close()
+
+
+def isQ(filename):
+    """
+    Checks whether a file is Q or not. Returns True or False.
+
+    Parameters
+    ----------
+
+    filename : string
+        Name of the Q file to be read.
+    """
+    # file must start with magic number 43981
+    try:
+        temp = open(filename, 'rb').read(5)
+    except:
+        return False
+    if temp != '43981':
+        return False
+    return True
+
+
+def readQ(filename, headonly=False, data_directory=None, byteorder='='):
+    """
+    Reads a Q file and returns an ObsPy Stream object.
+
+    Q files consists of two files per data set:
+    * a ASCII header file with file extension `QHD` and the
+    * binary data file with file extension `QBN`.
+
+    The read method only accepts header files for the ``filename`` parameter.
+    ObsPy assumes that the corresponding data file is within the same directory
+    if the ``data_directory`` parameter is not set. Otherwise it will search
+    in the given ``data_directory`` for a file with the `QBN` file extension.
+
+    Parameters
+    ----------
+
+    filename : string
+        Q header file to be read. Must have a `QHD` file extension.
+    headonly : bool, optional
+        If set to True, read only the head. This is most useful for
+        scanning available data in huge (temporary) data sets.
+    data_directory : string, optional
+        Data directory where the corresponding QBN file can be found.
+    byteorder : ['<', '>', '='], optional
+        Enforce byte order for data file. This is important for Q files written
+        in older versions of Seismic Handler, which don't explicit state the
+        BYTEORDER flag within the header file. Defaults to '=' (local byte
+        order).
+
+    Returns
+    -------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+    """
+    if not data_directory:
+        data_file = os.path.splitext(filename)[0] + '.QBN'
+    else:
+        data_file = os.path.basename(os.path.splitext(filename)[0]) + '.QBN'
+        data_file = os.path.join(data_directory, data_file)
+    if not os.path.isfile(data_file):
+        raise IOError("Can't find corresponding QBN file at %s." % data_file)
+    fh_header = open(filename, 'rt')
+    fh_data = open(data_file, 'rb')
+    # loop through read header file
+    line = fh_header.readline()
+    #line[]
+
+
+
+
+
+def writeQ(stream, filename):
+    """
+    Writes a Q file from given ObsPy Stream object.
+
+    Parameters
+    ----------
+
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+    filename : string
+        Name of Q file to be written.
+    """
+    raise NotImplementedError

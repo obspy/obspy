@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import obspy, unittest
-from obspy.sh.tests import test_asc
+from obspy.sh.tests import test_core
 
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(test_asc.suite())
+    suite.addTest(test_core.suite())
     return suite
 
 
