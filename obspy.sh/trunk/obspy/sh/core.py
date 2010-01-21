@@ -44,6 +44,8 @@ SH_IDX = {
     'ORIGIN':'S024'
 }
 
+INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
+
 
 def isASC(filename):
     """
@@ -158,7 +160,7 @@ def readASC(filename, headonly=False):
             stream.append(Trace(header=header))
         else:
             # read data
-            data = np.loadtxt(data, dtype='float64')
+            data = np.loadtxt(data, dtype='float32')
             stream.append(Trace(data=data, header=header))
     return stream
 
@@ -181,14 +183,14 @@ def writeASC(stream, filename):
         fh.write("DELTA: %s\n" % formatScientific("%-.6e" % trace.stats.delta))
         fh.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
-        for key, value in trace.stats.sh.iteritems():
+        for key, value in trace.stats.get('sh', []).iteritems():
             fh.write("%s: %s\n" % (key, value))
         # special format for start time
         dt = trace.stats.starttime
         pattern = "START: %2d-%3s-%4d_%02d:%02d:%02d.%03d\n"
         fh.write(pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                             dt.minute, dt.second, dt.microsecond / 1000))
-        # component must be splitted
+        # component must be split
         if len(trace.stats.channel) >= 2:
             fh.write("COMP: %c\n" % trace.stats.channel[2])
         if len(trace.stats.channel) >= 0:
@@ -197,7 +199,7 @@ def writeASC(stream, filename):
             fh.write("CHAN2: %c\n" % trace.stats.channel[1])
         fh.write("STATION: %s\n" % trace.stats.station)
         fh.write("CALIB: %s\n" % formatScientific("%-.6e" % trace.stats.calib))
-        # write data in four coloums
+        # write data in four columns
         delimiter = ['', '', '', '\n'] * ((trace.stats.npts / 4) + 1)
         delimiter = delimiter[0:trace.stats.npts - 1]
         delimiter.append('\n')
@@ -258,27 +260,97 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
 
     Returns
     -------
-    stream : :class:`~obspy.core.stream.Stream`
+    :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
     """
-    if not data_directory:
-        data_file = os.path.splitext(filename)[0] + '.QBN'
-    else:
-        data_file = os.path.basename(os.path.splitext(filename)[0]) + '.QBN'
-        data_file = os.path.join(data_directory, data_file)
-    if not os.path.isfile(data_file):
-        raise IOError("Can't find corresponding QBN file at %s." % data_file)
-    fh_header = open(filename, 'rt')
-    fh_data = open(data_file, 'rb')
+    if not headonly:
+        if not data_directory:
+            data_file = os.path.splitext(filename)[0] + '.QBN'
+        else:
+            data_file = os.path.basename(os.path.splitext(filename)[0])
+            data_file = os.path.join(data_directory, data_file + '.QBN')
+        if not os.path.isfile(data_file):
+            msg = "Can't find corresponding QBN file at %s."
+            raise IOError(msg % data_file)
+        fh_data = open(data_file, 'rb')
     # loop through read header file
-    line = fh_header.readline()
-    #line[]
+    fh = open(filename, 'rt')
+    line = fh.readline()
+    cmtlines = int(line[5:7]) - 1
+    # comment lines
+    comments = []
+    for _i in xrange(0, cmtlines):
+        comments += [fh.readline()]
+    # trace lines
+    traces = {}
+    for line in fh.xreadlines():
+        id = int(line[0:2])
+        traces.setdefault(id, '')
+        traces[id] += line[3:].strip()
+    # create stream object
+    stream = Stream()
+    for id in sorted(traces.keys()):
+        # fetch headers 
+        header = {}
+        header['sh'] = {}
+        channel = [' ', ' ', ' ']
+        npts = 0
+        for item in traces[id].split('~'):
+            key = item.strip()[0:4]
+            value = item.strip()[5:].strip()
+            if key == 'L001':
+                npts = header['npts'] = int(value)
+            elif key == 'R000':
+                header['delta'] = float(value)
+            elif key == 'R026':
+                header['calib'] = float(value)
+            elif key == 'S001':
+                header['station'] = value
+            elif key == 'C000':
+                channel[2] = value[0]
+            elif key == 'C001':
+                channel[0] = value[0]
+            elif key == 'C002':
+                channel[1] = value[0]
+            elif key == 'C003':
+                if value == '<' or value == '>':
+                    byteorder = header['sh']['BYTEORDER'] = value
+            elif key == 'S021':
+                # 01-JAN-2009_01:01:01.0
+                # 1-OCT-2009_12:46:01.000
+                date, time = value.split('_')
+                day, month, year = date.split('-')
+                hour, mins, secs = time.split(':')
+                day = int(day)
+                month = MONTHS.index(month) + 1
+                year = int(year)
+                hour = int(hour)
+                mins = int(mins)
+                secs = float(secs)
+                header['starttime'] = UTCDateTime(year, month, day, hour,
+                                                  mins) + secs
+            elif key:
+                key = INVERTED_SH_IDX.get(key, key)
+                header['sh'][key] = value
+        # set channel code
+        header['channel'] = ''.join(channel)
+        if headonly:
+            # skip data
+            stream.append(Trace(header=header))
+        else:
+            if not npts:
+                continue
+            # read data
+            data = fh_data.read(npts * 4)
+            dtype = byteorder + 'f4'
+            data = np.fromstring(data, dtype=dtype).astype('=f4')
+            stream.append(Trace(data=data, header=header))
+    if not headonly:
+        fh_data.close()
+    return stream
 
 
-
-
-
-def writeQ(stream, filename):
+def writeQ(stream, filename, data_directory=None, byteorder='='):
     """
     Writes a Q file from given ObsPy Stream object.
 
@@ -289,5 +361,67 @@ def writeQ(stream, filename):
         A ObsPy Stream object.
     filename : string
         Name of Q file to be written.
+    data_directory : string, optional
+        Data directory where the corresponding QBN will be written.
+    byteorder : ['<', '>', '='], optional
+        Enforce byte order for data file. Defaults to '=' (local byte order).
     """
-    raise NotImplementedError
+    if filename.endswith('.QHD'):
+        filename = os.path.splitext(filename)[0]
+    if data_directory:
+        temp = os.path.basename(filename)
+        filename_data = os.path.join(data_directory, temp + '.QBN')
+    else:
+        filename_data = filename
+    fh = open(filename + '.QHD', 'wb')
+    fh_data = open(filename_data + '.QBN', 'wb')
+
+    # build up header strings
+    headers = []
+    maxnol = 0
+    for trace in stream:
+        temp = "L001:%d~ R000:%f~ R026:%f~ " % (trace.stats.npts,
+                                                trace.stats.delta,
+                                                trace.stats.calib)
+        if trace.stats.station:
+            temp += "S001:%s~ " % trace.stats.station
+        # component must be split
+        if len(trace.stats.channel) >= 2:
+            temp += "C000:%c~ " % trace.stats.channel[2]
+        if len(trace.stats.channel) >= 0:
+            temp += "C001:%c~ " % trace.stats.channel[0]
+        if len(trace.stats.channel) >= 1:
+            temp += "C002:%c~ " % trace.stats.channel[1]
+        # special format for start time
+        dt = trace.stats.starttime
+        pattern = "S021: %2d-%3s-%4d_%02d:%02d:%02d.%03d~ "
+        temp += pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
+                           dt.minute, dt.second, dt.microsecond / 1000)
+        for key, value in trace.stats.get('sh', []).iteritems():
+            # skip unknown keys
+            if not key or key not in SH_IDX.keys():
+                continue
+            temp += "%s:%s~ " % (SH_IDX[key], value)
+        headers.append(temp)
+        # get maximal number of trclines  
+        nol = len(temp) / 74 + 1
+        if nol > maxnol:
+            maxnol = nol
+    # first line: magic number, cmtlines, trclines
+    # XXX: comment lines are ignored
+    fh.write("43981 1 %d\n" % maxnol)
+
+    for i, trace in enumerate(stream):
+        # write headers
+        temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
+        for j in xrange(0, maxnol):
+            try:
+                fh.write("%02d|%s\n" % (i + 1, temp[j]))
+            except:
+                fh.write("%02d|\n" % (i + 1))
+        # write data in given byte order
+        dtype = byteorder + 'f4'
+        data = np.require(trace.data, dtype=dtype)
+        data.tofile(fh_data)
+    fh.close()
+    fh_data.close()
