@@ -7,12 +7,9 @@
 Classes & functions
 -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
-
-TODO --- Not yet done. Please navigate via Modules
-
+Nearly all functions defined in the modules below can be imported directly
+from `obspy.signal`. For more information, see the documentation of the
+modules below.
 
 Modules
 -------
@@ -21,10 +18,10 @@ Modules
   :toctree: .
   :nosignatures:
 
-    cpxtrace
     filter
     invsim
     rotate
     seismometer
     trigger
     util
+    cpxtrace

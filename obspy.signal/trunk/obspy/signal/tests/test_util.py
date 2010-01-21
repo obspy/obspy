@@ -71,7 +71,7 @@ class UtilTestCase(unittest.TestCase):
         window_len = 100
 
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        name = os.path.join(os.pardir, path, 'lib', lib_name)
+        name = os.path.join(path, os.pardir, 'lib', lib_name)
         lib = C.CDLL(name)
         #
         shift = C.c_int()
