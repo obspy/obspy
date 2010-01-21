@@ -6,7 +6,7 @@ matplotlibrc('figure.subplot', right=0.95, bottom=0.07, top=0.97) # set default
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, \
     NavigationToolbar2TkAgg
 from obspy.core import UTCDateTime, Stream, Trace
-from obspy.imaging.waveform import _getMinMaxList as minmaxlist
+#from obspy.imaging.waveform import _getMinMaxList as minmaxlist
 from obspy.seishub import Client
 import inspect
 import numpy as np
@@ -118,21 +118,21 @@ def main():
         if NV.stream:
             create_graph()
 
-    def openfile():
-        """
-        Opens the file, reads it and calculates a minmax list.
-        """
-        filename = tkFileDialog.askopenfilename()
-        if not filename:
-            return
-        # Read the file.
-        NV.st = read(filename)
-        st = NV.st
-        # Get minmaxlist.
-        NV.minmax = minmaxlist(st, 799, st[0].stats.starttime.timestamp,
-                            st[0].stats.endtime.timestamp)[2]
-        del NV.minmax[-1]
-        create_graph()
+#    def openfile():
+#        """
+#        Opens the file, reads it and calculates a minmax list.
+#        """
+#        filename = tkFileDialog.askopenfilename()
+#        if not filename:
+#            return
+#        # Read the file.
+#        NV.st = read(filename)
+#        st = NV.st
+#        # Get minmaxlist.
+#        NV.minmax = minmaxlist(st, 799, st[0].stats.starttime.timestamp,
+#                            st[0].stats.endtime.timestamp)[2]
+#        del NV.minmax[-1]
+#        create_graph()
 
     def create_graph():
         """
@@ -421,7 +421,7 @@ def main():
                 trace.data = np.concatenate([start, trace.data, end])
                 trace.stats.npts = trace.data.size
                 trace.stats.starttime = UTCDateTime(NV.starttime.get())
-                trace.stats.endtime = UTCDateTime(NV.endtime.get())
+                #trace.stats.endtime = UTCDateTime(NV.endtime.get())
         status_bar.configure(text='')
         status_bar.update_idletasks()
         create_graph()
