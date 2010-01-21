@@ -111,7 +111,6 @@ class SacioTestCase(unittest.TestCase):
         os.remove(tempfile)
         os.remove(tempfile2)
 
-
     def test_readBigEnd(self):
         """
         Test reading big endian binary files
@@ -123,40 +122,39 @@ class SacioTestCase(unittest.TestCase):
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
         self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
-        np.testing.assert_array_equal(tl.seis,tb.seis)
-
+        np.testing.assert_array_equal(tl.seis, tb.seis)
 
     def test_swapbytes(self):
-        tfilel = os.path.join(os.path.dirname(__file__),'data','test.sac')
-        tfileb = os.path.join(os.path.dirname(__file__),'data','test.sac.swap')
+        tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
+        tfileb = os.path.join(os.path.dirname(__file__), 'data', 'test.sac.swap')
         tempfile = NamedTemporaryFile().name
         tb = sacio.ReadSac(tfileb)
         tb.swap_byte_order()
         tb.WriteSacBinary(tempfile)
         tr1 = sacio.ReadSac(tempfile)
         tl = sacio.ReadSac(tfilel)
-        np.testing.assert_array_equal(tl.seis,tr1.seis)
+        np.testing.assert_array_equal(tl.seis, tr1.seis)
         self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
         self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
-
+        os.remove(tempfile)
 
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         tempfile = NamedTemporaryFile().name
         t = sacio.ReadSac(tfile)
-        t.SetHvalue('evla',48.15)
-        t.SetHvalue('evlo',11.58333)
-        t.SetHvalue('stla',-41.2869)
-        t.SetHvalue('stlo',174.7746)
-        t.SetHvalue('lcalda',1)
+        t.SetHvalue('evla', 48.15)
+        t.SetHvalue('evlo', 11.58333)
+        t.SetHvalue('stla', -41.2869)
+        t.SetHvalue('stlo', 174.7746)
+        t.SetHvalue('lcalda', 1)
         t.WriteSacBinary(tempfile)
         t2 = sacio.ReadSac(tempfile)
-        self.assertEqual(t2.GetHvalue('dist'),18486532.0)
-        self.assertAlmostEqual(t2.GetHvalue('az'),65.654154562,5)
-        self.assertAlmostEqual(t2.GetHvalue('baz'),305.975459869,5)
+        self.assertEqual(t2.GetHvalue('dist'), 18486532.0)
+        self.assertAlmostEqual(t2.GetHvalue('az'), 65.654154562, 5)
+        self.assertAlmostEqual(t2.GetHvalue('baz'), 305.975459869, 5)
+        os.remove(tempfile)
 
-        
     def test_isSAC(self):
         """
         See if assertation is Raised if file ist not a sac file

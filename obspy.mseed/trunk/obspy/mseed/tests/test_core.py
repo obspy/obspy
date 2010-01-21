@@ -204,6 +204,7 @@ class CoreTestCase(unittest.TestCase):
         # Not a number.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
                           reclen='A')
+        os.remove(tempfile)
 
     def test_writeAndReadDifferentEncodings(self):
         """
@@ -248,6 +249,7 @@ class CoreTestCase(unittest.TestCase):
         # Wrong Text.
         self.assertRaises(ValueError, st.write, tempfile, format="MSEED",
                           encoding='FLOAT_64')
+        os.remove(tempfile)
 
     def test_readPartsOfFile(self):
         """
@@ -308,6 +310,7 @@ class CoreTestCase(unittest.TestCase):
                 # Read the binary chunk of data with ObsPy
                 st2 = read(tempfile)
                 np.testing.assert_array_equal(st2[0].data, st[0].data)
+        os.remove(tempfile)
 
     def test_invalidDataType(self):
         """
@@ -324,6 +327,7 @@ class CoreTestCase(unittest.TestCase):
         data = np.random.randint(-1000, 1000, npts).astype('int8')
         st = Stream([Trace(data=data)])
         self.assertRaises(Exception, st.write, tempfile, format="MSEED")
+        os.remove(tempfile)
 
     def test_SavingSmallASCII(self):
         """
@@ -333,6 +337,7 @@ class CoreTestCase(unittest.TestCase):
         st = Stream()
         st.append(Trace(data=np.fromstring("A" * 8, "|S1")))
         st.write(tempfile, format="MSEED")
+        os.remove(tempfile)
 
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
@@ -353,6 +358,7 @@ class CoreTestCase(unittest.TestCase):
                 self.assertEqual(tr.dtype.kind + str(tr.dtype.itemsize), dtype)
                 # byte order is always native (=)
                 np.testing.assert_array_equal(tr, data.astype("=" + dtype))
+        os.remove(tempfile)
 
     def test_writeWrongEncoding(self):
         """
@@ -369,6 +375,7 @@ class CoreTestCase(unittest.TestCase):
         # therefor an exception must be raised.
         self.assertRaises(Exception, st.write, tempfile, format="MSEED",
                           encoding=10, reclen=256, byteorder=0)
+        os.remove(tempfile)
 
     def test_filesFromLibmseed(self):
         """
@@ -379,26 +386,26 @@ class CoreTestCase(unittest.TestCase):
         path = os.path.join(self.path, "data", "libmseed")
         # Dictionary. The key is the filename, the value a tuple: dtype,
         # sampletype, encoding, content
-        def_content = np.arange(1, 51, dtype = 'int32')
+        def_content = np.arange(1, 51, dtype='int32')
         files = {
             os.path.join(path, "smallASCII.mseed") : ('|S1', 'a', 0,
-                        np.fromstring('ABCDEFGH', dtype = '|S1')), 
+                        np.fromstring('ABCDEFGH', dtype='|S1')),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed") : ('|S1', 'a', 0,
                np.fromstring(
-               """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV""" +\
-               """WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~""", dtype = '|S1')),  
+               """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV""" + \
+               """WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
             # XXX: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed") : ('int32', 'i', 1,
-                                                    def_content.astype('int16')), 
+                                                    def_content.astype('int16')),
             os.path.join(path, "int32_INT32.mseed") : ('int32', 'i', 3,
-                                                    def_content), 
+                                                    def_content),
             os.path.join(path, "int32_Steim1.mseed") : ('int32', 'i', 10,
-                                                    def_content), 
+                                                    def_content),
             os.path.join(path, "int32_Steim2.mseed") : ('int32', 'i', 11,
-                                                    def_content), 
+                                                    def_content),
             os.path.join(path, "float32_Float32.mseed") : ('float32', 'f', 4,
-                                                def_content.astype('float32')), 
+                                                def_content.astype('float32')),
             os.path.join(path, "float64_Float64.mseed") : ('float64', 'd', 5,
                                                 def_content.astype('float64'))
         }
@@ -420,8 +427,8 @@ class CoreTestCase(unittest.TestCase):
                     self.assertEqual(st[0].data.dtype.byteorder, '=')
                 del st
                 # Read just the first record to check encoding. The sampletype
-                # should follow from the encoding. But libmseed seems not to read
-                # the sampletype when reading a file.
+                # should follow from the encoding. But libmseed seems not to
+                # read the sampletype when reading a file.
                 ms = MSStruct(cur_file, filepointer=False)
                 ms.read(-1, 0, 1, 0)
                 # Check values.
@@ -440,7 +447,7 @@ class CoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, 'data', 'libmseed',
                             'float32_Float32_bigEndian.mseed')
-        self.assertRaises(Exception, read, file, reclen = 4096)
+        self.assertRaises(Exception, read, file, reclen=4096)
 
 
 def suite():
