@@ -59,10 +59,8 @@ else:
 
 
 # expected data types for libmseed id: (numpy, ctypes)
-DATATYPES = {"a": C.c_char,
-             "i": C.c_int32,
-             "f": C.c_float,
-             "d": C.c_double}
+DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
+SAMPLESIZES = {'a':1, 'i':4, 'f':4, 'd':8}
 
 # allowed encodings:
 # SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
@@ -458,6 +456,7 @@ clibmseed.msr_endtime.restype = C.c_int64
 
 clibmseed.ms_find_reclen.argtypes = [C.c_char_p, C.c_int, C.POINTER(C.c_int)]
 clibmseed.ms_find_reclen.restype = C.c_int
+
 
 clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
         C.c_int, C.c_int,

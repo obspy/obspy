@@ -9,15 +9,15 @@ DEBUG=0
 !endif
 
 INCLUDES = 
-DLL = signal.dll
-DEF = signal.def
+DLL = libsignal.dll
+DEF = libsignal.def
 OBJS = recstalta.obj \
 	   xcorr.obj \
 	   coordtrans.obj \
 	   pk_mbaer.obj \
 	   filt_util.obj \
 	   arpicker.obj
-DEST = ..\lib\signal.win32.dll
+DEST = ..\lib\libsignal.win32.dll
 
 #-------------------------------------------------------------------------
 # Compiler-Flags

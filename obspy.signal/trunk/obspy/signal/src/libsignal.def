@@ -1,4 +1,4 @@
-LIBRARY signal.dll
+LIBRARY libsignal.dll
 EXPORTS
     X_corr
     utl_geo_km
@@ -13,4 +13,3 @@ EXPORTS
     spr_coef_paz
     ppick
     preset
-    

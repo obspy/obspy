@@ -46,7 +46,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'lxml<2.2.3',
+        'lxml',
         'obspy.core>0.2.1',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \

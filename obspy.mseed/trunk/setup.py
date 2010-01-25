@@ -43,8 +43,11 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 macros = []
+extra_link_args = []
 if platform.system() == "Windows":
     macros.append(('WIN32', '1'))
+    # disable some warnings for MSVC
+    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # Workaround Win32 + MinGW + Python 2.6 
     # :see: http://bugs.python.org/issue3308
     if 'mingw32' in sys.argv or \
@@ -66,7 +69,7 @@ lib = MyExtension('libmseed',
                            src + 'unpack.c', src + 'unpackdata.c',
                            src + 'selection.c', src + 'logging.c'],
                   export_symbols=symbols,
-                  extra_link_args=[])
+                  extra_link_args=extra_link_args)
 
 
 setup(

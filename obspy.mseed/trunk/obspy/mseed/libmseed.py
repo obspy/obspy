@@ -37,7 +37,7 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import quantile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES
+    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES
 from struct import unpack
 import ctypes as C
 import math
@@ -126,8 +126,8 @@ class LibMSEED(object):
         return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
-                               skipnotdata=1, verbose=0, starttime = None,
-                               endtime = None):
+                               skipnotdata=1, verbose=0, starttime=None,
+                               endtime=None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -472,7 +472,7 @@ class LibMSEED(object):
         sys.stdout.write("Total: %d gap(s)\n" % len(result))
 
     def readMSHeader(self, filename, time_tolerance= -1,
-                     samprate_tolerance= -1, reclen = -1):
+                     samprate_tolerance= -1, reclen= -1):
         """
         Returns trace header information of a given file.
         
@@ -906,11 +906,10 @@ class LibMSEED(object):
         """
         # Allocate numpy array to move memory to
         numpy_array = np.empty(buffer_elements, dtype=sampletype)
-        samplesize = clibmseed.ms_samplesize(C.c_char(sampletype))
         datptr = numpy_array.ctypes.get_data()
         # Manually copy the contents of the C malloced memory area to
         # the address of the previously created numpy array
-        C.memmove(datptr, buffer, buffer_elements * samplesize)
+        C.memmove(datptr, buffer, buffer_elements * SAMPLESIZES[sampletype])
         return numpy_array
 
     def _convertDatetimeToMSTime(self, dt):
@@ -1034,7 +1033,7 @@ class LibMSEED(object):
         # Create a single datapoint and resize its memory to be able to
         # hold all datapoints.
         tempdatpoint = c_dtype()
-        datasize = clibmseed.ms_samplesize(C.c_char(sampletype)) * npts
+        datasize = SAMPLESIZES[sampletype] * npts
         # XXX: Ugly workaround for bug writing ASCII.
         if sampletype == 'a' and datasize < 17:
             datasize = 17
