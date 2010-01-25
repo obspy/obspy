@@ -43,15 +43,23 @@ gse2_extra = [
 
 def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     """
-    Reads a GSE2 file and returns an obspy.Trace object.
-    GSE2 "stream files", which consists of multiple WID2 entries (GSE2
-    parts) are supported. Check that the file is a valid GSE2 file before
-    hand, e.g. by the isGSE2 function. in this module.
+    Reads a GSE2 file and returns a Stream object.
+    
+    GSE2 files containing multiple WID2 entries/traces are supported.
+    This function should NOT be called directly, it registers via the
+    obspy :function:`~obspy.core.stream.read` function, call this instead.
     
     :param filename: GSE2 file to be read.
     :param headonly: If True read only head of GSE2 file
     :param verify_chksum: If True verify Checksum and raise Exception if it
         is not correct
+    :return: :class:`obspy.core.stream.Stream` object containing header and
+        data
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
     """
     traces = []
     # read GSE2 file

@@ -19,9 +19,30 @@ def isMSEED(filename):
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
               reclen= -1, **kwargs):
     """
-    Reads a given Mini-SEED file and returns an obspy.Stream object.
+    Reads a given Mini-SEED file and returns an Stream object.
     
-    :param filename: Mini-SEED file to be read.
+    This function should NOT be called directly, it registers via the
+    obspy :function:`~obspy.core.stream.read` function, call this instead.
+
+    :param filename: string
+        Mini-SEED file to be read.
+    :param headonly: bool, optional
+        If set to True, read only the head. This is most useful for
+        scanning available data in huge (temporary) data sets.
+    :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        Specify the starttime to read. The remaining records are not
+        unpacked. Usually this resuls in a faster reading.
+    :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        See description of starttime.
+    :param reclen: int, optional
+        Record length in bytes of Mini-SEED file to read. This option might
+        be usefull if blockette 10 is missing and thus read cannot
+        determine the reclen automatically.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("test.mseed") # doctest: +SKIP
     """
     __libmseed__ = LibMSEED()
     # read MiniSEED file
@@ -74,6 +95,9 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
     Write Mini-SEED file from a Stream object.
     
     All kwargs are passed directly to obspy.mseed.writeMSTraces.
+    This function should NOT be called directly, it registers via the
+    obspy :method:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
     
     :param stream_object: obspy.Stream object. Data in stream object must
         be of type int32. NOTE: They are automatically adapted if necessary

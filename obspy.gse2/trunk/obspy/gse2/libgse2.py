@@ -178,7 +178,7 @@ def writeHeader(f, head):
     """
     Rewriting the write_header Function of gse_functions.c
 
-    Different operation systems are delivering different output for the
+    Different operating systems are delivering different output for the
     scientific format of floats (fprinf libc6). Here we ensure to deliver
     in a for GSE2 valid format independent of the OS. For speed issues we
     simple cut any number ending with E+0XX or E-0XX down to E+XX or E-XX.
