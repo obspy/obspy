@@ -34,11 +34,23 @@ streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
 #===============================================================================
 
 
-#Define some flags for filtering
+#Define some flags and dictionaries
 flagFilt=False #False:no filter  True:filter
 flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
+dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
 flagFiltZPH=True #False: no zero-phase True: zero-phase filtering
 flagWheelZoom=True #Switch use of mousewheel for zooming
+flagPhase=0 #0: P 1: A 2: Magnitude
+dictPhase={'P':0, 'S':1, 'Mag':2}
+dictPhaseColors={0:'red', 1:'blue', 2:'green'}
+magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
+magMarker='x'
+magMarkerEdgeWidth=1.8
+magMarkerSize=20
+axvlinewidths=1.8
+
+
+
 
 def switch_flagFilt():
     global flagFilt
@@ -101,13 +113,21 @@ def addFiltButtons():
     check.on_clicked(funcFilt)
     axFiltTyp = fig.add_axes([0.20, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
     radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'))
+    radio.on_clicked(funcFiltTyp)
+    
+def addPhaseButtons():
+    global axPhase
+    global radioPhase
+    #add phase buttons
+    axPhase = fig.add_axes([0.90, 0.02, 0.10, 0.15],frameon=False,axisbg='lightgrey')
+    radioPhase = RadioButtons(axPhase, ('P', 'S', 'Mag'))
+    radioPhase.on_clicked(funcPhase)
     
 def update(val):
     if flagFilt==1:
         updatePlot()
     else:
         pass
-
 
 def delSliders():
     try:
@@ -122,20 +142,24 @@ def addSliders():
     global slideLow
     global slideHigh
     #add filter slider
-    axLowcut = fig.add_axes([0.45, 0.05, 0.45, 0.03], xscale='log')
-    axHighcut  = fig.add_axes([0.45, 0.10, 0.45, 0.03], xscale='log')
+    axLowcut = fig.add_axes([0.45, 0.05, 0.35, 0.03], xscale='log')
+    axHighcut  = fig.add_axes([0.45, 0.10, 0.35, 0.03], xscale='log')
     low  = 1.0/ (streams[stPt][0].stats.npts/float(streams[stPt][0].stats.sampling_rate))
     high = streams[stPt][0].stats.sampling_rate/2.0
     slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low)
     slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high)
-    radio.on_clicked(funcFiltTyp)
     slideLow.on_changed(update)
     slideHigh.on_changed(update)
     
 
 def redraw():
+    #xlims=list(axs[0].get_xlim())
+    #ylims=list(axs[0].get_ylim())
     for a in axs:
         a.figure.canvas.draw()
+    #axs[0].set_xlim(xlims)
+    #axs[0].set_ylim(ylims)
+    #axs[0].figure.canvas.draw()
 
 def updatePlot():
     global pltZ
@@ -210,10 +234,13 @@ def funcFilt(label):
 
 def funcFiltTyp(label):
     global flagFiltTyp
-    dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
     flagFiltTyp=dictFiltTyp[label]
     if flagFilt==True:
         updatePlot()
+
+def funcPhase(label):
+    global flagPhase
+    flagPhase=dictPhase[label]
 
 
 
@@ -326,6 +353,7 @@ def funcFiltTyp(label):
 fig = plt.figure()
 drawAxes()
 addFiltButtons()
+addPhaseButtons()
 addSliders()
 redraw()
 
@@ -343,8 +371,14 @@ def pick(event):
     global SErr1
     global SErr2Lines
     global SErr2
+    global MagMin
+    global MagMinT
+    global MagMinCross
+    global MagMax
+    global MagMaxT
+    global MagMaxCross
     # Set new P Pick
-    if event.inaxes==axs[0] and event.key==' ':
+    if flagPhase==0 and event.key=='alt':
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
@@ -355,7 +389,7 @@ def pick(event):
         # Plot the lines for the P pick in all three traces
         PLines=[]
         for i in range(len(axs)):
-            PLines.append(axs[i].axvline(event.xdata,color='red',linewidth=1.3))
+            PLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
         # Save sample value of pick (round to integer sample value)
         P=int(round(event.xdata))
         # Update all subplots
@@ -363,7 +397,7 @@ def pick(event):
         # Console output
         print "P Pick set at %i"%P
     # Set new S Pick
-    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key==' ':
+    if flagPhase==1 and event.key=='alt':
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
@@ -374,7 +408,7 @@ def pick(event):
         # Plot the lines for the S pick in all three traces
         SLines=[]
         for i in range(len(axs)):
-            SLines.append(axs[i].axvline(event.xdata,color='blue',linewidth=1.3))
+            SLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
         # Save sample value of pick (round to integer sample value)
         S=int(round(event.xdata))
         # Update all subplots
@@ -382,7 +416,7 @@ def pick(event):
         # Console output
         print "S Pick set at %i"%S
     # Remove P Pick
-    if event.inaxes==axs[0] and event.key=='escape':
+    if flagPhase==0 and event.key=='escape':
         # Try to remove all existing Pick lines and P Pick variable
         try:
             for i in range(len(axs)):
@@ -412,7 +446,7 @@ def pick(event):
         # Update all subplots
         redraw()
     # Remove S Pick
-    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key=='escape':
+    if flagPhase==1 and event.key=='escape':
         # Try to remove all existing Pick lines and P Pick variable
         try:
             for i in range(len(axs)):
@@ -442,7 +476,7 @@ def pick(event):
         # Update all subplots
         redraw()
     # Set new P Pick uncertainties
-    if event.inaxes==axs[0] and event.key=='alt':
+    if flagPhase==0 and event.key==' ':
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
@@ -466,7 +500,7 @@ def pick(event):
             # Plot the lines for the P Error pick in all three traces
             PErr1Lines=[]
             for i in range(len(axs)):
-                PErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linewidth=1.3))
+                PErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Save sample value of error pick (round to integer sample value)
             PErr1=int(round(event.xdata))
             # Update all subplots
@@ -485,7 +519,7 @@ def pick(event):
             # Plot the lines for the P Error pick in all three traces
             PErr2Lines=[]
             for i in range(len(axs)):
-                PErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linewidth=1.3))
+                PErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Save sample value of error pick (round to integer sample value)
             PErr2=int(round(event.xdata))
             # Update all subplots
@@ -493,7 +527,7 @@ def pick(event):
             # Console output
             print "P Error Pick 2 set at %i"%PErr2
     # Set new S Pick uncertainties
-    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key=='alt':
+    if flagPhase==1 and event.key==' ':
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
@@ -517,7 +551,7 @@ def pick(event):
             # Plot the lines for the S Error pick in all three traces
             SErr1Lines=[]
             for i in range(len(axs)):
-                SErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linewidth=1.3))
+                SErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Save sample value of error pick (round to integer sample value)
             SErr1=int(round(event.xdata))
             # Update all subplots
@@ -536,13 +570,70 @@ def pick(event):
             # Plot the lines for the S Error pick in all three traces
             SErr2Lines=[]
             for i in range(len(axs)):
-                SErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linewidth=1.3))
+                SErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Save sample value of error pick (round to integer sample value)
             SErr2=int(round(event.xdata))
             # Update all subplots
             redraw()
             # Console output
             print "S Error Pick 2 set at %i"%SErr2
+    # Magnitude estimation picking:
+    if flagPhase==2 and event.key=='alt':
+        for a in axs:
+            try:
+                a.lines.remove(MagMinCross)
+            except:
+                pass
+        xpos=int(event.xdata)
+        ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+        cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+        MagMin=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        MagMinT=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        MagMinCross=event.inaxes.plot([MagMinT],[MagMin],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        redraw()
+        print "Minimum for magnitude estimation set: %s at %s"%(MagMin,MagMinT)
+    if flagPhase==2 and event.key==' ':
+        for a in axs:
+            try:
+                a.lines.remove(MagMaxCross)
+            except:
+                pass
+        xpos=int(event.xdata)
+        ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+        cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+        MagMax=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        MagMaxT=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        #save axes info:
+        #xlims=list(axs[0].get_xlim())
+        #ylims=list(axs[0].get_ylim())
+        MagMaxCross=event.inaxes.plot([MagMaxT],[MagMax],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        redraw()
+        #axs[0].set_xlim(xlims)
+        #axs[0].set_ylim(ylims)
+        #axs[0].figure.canvas.draw()
+        print "Maximum for magnitude estimation set: %s at %s"%(MagMax,MagMaxT)
+    if flagPhase==2 and event.key=='escape':
+        for a in axs:
+            try:
+                a.lines.remove(MagMinCross)
+            except:
+                pass
+            try:
+                a.lines.remove(MagMaxCross)
+            except:
+                pass
+        try:
+            del MagMin
+            del MagMinT
+        except:
+            pass
+        try:
+            del MagMax
+            del MagMaxT
+        except:
+            pass
+        redraw()
+        print "Magnitude estimation info removed"
 
 # Define zoom events for the mouse scroll wheel
 def zoom(event):
@@ -608,6 +699,7 @@ def switchStream(event):
         addSliders()
         redraw()
         print "Going to next stream"
+        
 
 
 #remove unwanted buttons from Toolbar
