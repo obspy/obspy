@@ -15,11 +15,9 @@ class UTCDateTime(datetime.datetime):
 
 
 .. autosummary::
-     :toctree: .
-     :nosignatures:
 
-       ~UTCDateTime.__add__
-       ~UTCDateTime.__sub__
+    ~UTCDateTime.__add__
+    ~UTCDateTime.__sub__
 
 
     Parameters

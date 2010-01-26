@@ -398,9 +398,11 @@ SphinxDocString._str_param_list = obspy_str_param_list
 SphinxDocString._str_examples = obspy_str_examples
 SphinxDocString._str_table = obspy_str_table
 
+#from sphinx.ext.autodoc import cut_lines
 # Attach this to the builder
 def setup(app):
     pass
+    #app.connect('autodoc-process-docstring', cut_lines(2))
     #app.connect('autodoc-process-signature', mangle_signature)
     #app.connect('autodoc-process-docstring', process_inherited)
     #app.connect('autodoc-skip-member', skip_underscore)
