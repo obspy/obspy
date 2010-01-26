@@ -53,7 +53,7 @@ R2D = 180 / pi
 EPSILON = 0.00001
 
 
-def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
+def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
               format=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
@@ -121,12 +121,12 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, file=None,
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
     # export
-    if file:
+    if outfile:
         if format:
-            fig.savefig(file, dpi=100, transparent=True, format=format)
+            fig.savefig(outfile, dpi=100, transparent=True, format=format)
         else:
-            fig.savefig(file, dpi=100, transparent=True)
-    elif format and not file:
+            fig.savefig(outfile, dpi=100, transparent=True)
+    elif format and not outfile:
         imgdata = StringIO.StringIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
         imgdata.seek(0)
