@@ -9,15 +9,18 @@
 # Copyright (C) 2008-2010 Robert Barsch, Moritz Beyreuther, Lion Krischer
 #---------------------------------------------------------------------
 """
-obspy.core - Core classes of ObsPy, Python for Seismological Observatories
-==========================================================================
+obspy.core - Core classes of ObsPy
+==================================
 
 This class contains common methods and classes for ObsPy. It includes
-UTCDateTime, Stats, Stream and Trace classes and methods for reading
+UTCDateTime, Stats, Stream and Trace classes and methods for reading 
 seismograms.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 # don't change order

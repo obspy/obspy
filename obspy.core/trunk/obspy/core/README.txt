@@ -18,7 +18,7 @@ Overview
     This class contains common methods and classes for ObsPy. It includes
     UTCDateTime, Stats, Stream and Trace classes and methods for reading 
     seismograms.
-    
+
     For more information visit http://www.obspy.org.
 
 

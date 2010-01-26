@@ -2,8 +2,11 @@
 """
 Module for handling ObsPy Trace objects.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import deepcopy
 from obspy.core.utcdatetime import UTCDateTime
@@ -115,6 +118,7 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
+
     readonly = ['endtime']
 
     def __init__(self, header={}):
@@ -134,6 +138,8 @@ class Stats(AttribDict):
         self._calculateDerivedValues()
 
     def __setitem__(self, key, value):
+        """
+        """
         # filter read only attributes
         if key in self.readonly:
             msg = "Attribute \"%s\" in Stats object is read only!" % (key)
@@ -177,10 +183,12 @@ class Trace(object):
     """
     An object containing data of a continuous series, such as a seismic trace.
 
-    :type data: `numpy.array` or `ma.masked_array`
-    :param data: Numpy array of data samples
-    :type header: `dict` or :class:`Stats`
-    :param header: Dictionary containing header fields
+    Parameters
+    ----------
+    data : `numpy.array` or `ma.masked_array`
+        Numpy array of data samples
+    header : dict or :class:`~obspy.core.trace.Stats`
+        Dictionary containing header fields
     """
 
     def __init__(self, data=np.array([]), header=None):
@@ -197,7 +205,20 @@ class Trace(object):
 
     def __str__(self):
         """
-        Returns short summary of the current trace.
+        Returns short summary string of the current trace.
+
+        Returns
+        -------
+        string
+            short summary string of the current trace containing the SEED
+            identifier, start time, end time, sampling rate and number of
+            points of the current trace.
+
+        Example
+        -------
+        >>> tr = Trace(header={'station':'FUR', 'network':'GR'})
+        >>> str(tr) #doctest: +ELLIPSIS
+        'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.00000...'
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
               "%(starttime)s - %(endtime)s | " + \
@@ -208,8 +229,10 @@ class Trace(object):
         """
         Returns number of data samples of the current trace.
 
-        :rtype: int
-        :return: Number of data samples.
+        Returns
+        -------
+        int
+            Number of data samples.
 
         Example
         -------
@@ -331,6 +354,15 @@ class Trace(object):
     def plot(self, *args, **kwargs):
         """
         Creates a simple graph of the current trace.
+        
+        >>> data = np.sin(np.linspace(0,2*np.pi,1000))
+        >>> tr = Trace(data=data)
+        >>> tr.plot() # doctest: +SKIP
+        .. plot::
+
+            data = np.sin(np.linspace(0,2*np.pi,1000))
+            tr = Trace(data=data)
+            tr.plot()
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
@@ -344,6 +376,18 @@ class Trace(object):
     def write(self, filename, format, **kwargs):
         """
         Saves current trace into a file.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        format : string
+            Name of the output format.
+            .. :seealso:: 
+                :func:`~obspy.core.streram.read` for all possible formats.
+
+        >>> tr = Trace()
+        >>> tr.write(filename, format="MSEED")
         """
         # we need to import here in order to prevent a circular import of 
         # Stream and Trace classes

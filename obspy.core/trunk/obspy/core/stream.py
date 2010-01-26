@@ -2,8 +2,11 @@
 """
 Module for handling ObsPy Stream objects.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from glob import iglob
 from obspy.core.trace import Trace
@@ -198,7 +201,36 @@ class Stream(object):
     """
     List of multiple continuous time series, such as a seismic traces.
 
-    ObsPy Stream class to collect L{Trace} objects.
+    Parameters
+    ----------
+    traces : list of :class:`~obspy.core.trace.Trace`, optional
+        Initial list of ObsPy Trace objects.
+
+    Basic Usage
+    -----------
+    >>> trace1 = Trace()
+    >>> trace2 = Trace()
+    >>> stream = Stream(traces=[trace1, trace2])
+    >>> print stream    #doctest: +ELLIPSIS
+    2 Trace(s) in Stream:
+    ...
+
+    Supported Operations
+    --------------------
+    ``stream = streamA + streamB``
+        Merges all traces within the two Stream objects ``streamA`` and
+        ``streamB`` into the new Stream object ``stream``.
+        See also: :meth:`Stream.__add__`.
+    ``stream += streamA``
+        Extends the Stream object ``stream`` with all traces from ``streamA``.
+        See also: :meth:`Stream.__iadd__`.
+    ``len(stream)``
+        Returns the number of Traces in the Stream object ``stream``.
+        See also: :meth:`Stream.__len__`.
+    ``str(stream)``
+        Contains the number of traces in the Stream object and returns the
+        value of each Trace's __str__ method.
+        See also: :meth:`Stream.__str__`.
     """
 
     def __init__(self, traces=None):
@@ -251,6 +283,7 @@ class Stream(object):
 
     def __eq__(self, other):
         """
+        Compares two ObsPy Stream objects.
         """
         if not isinstance(other, Stream):
             return False
@@ -276,7 +309,7 @@ class Stream(object):
 
     def append(self, trace):
         """
-        This method appends a single Trace object to the Stream object.
+        Appends a single Trace object to the current Stream object.
 
         :param trace: obspy.Trace object.
         """
@@ -288,8 +321,7 @@ class Stream(object):
 
     def extend(self, trace_list):
         """
-        This method will extend the traces attribute of the Stream object with
-        a list of Trace objects.
+        Extends the current Stream object with a list of Trace objects.
 
         :param trace_list: list of obspy.Trace objects.
         """
@@ -382,8 +414,10 @@ class Stream(object):
 
     def plot(self, *args, **kwargs):
         """
-        Creates a graph of ObsPy Stream object. It either saves the image
-        directly to the file system or returns an binary image string.
+        Creates a graph of the current ObsPy Stream object.
+
+        It either saves the image directly to the file system or returns a
+        binary image string.
 
         For all color values you can use valid HTML names, HTML hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
