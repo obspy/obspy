@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+ArcLink client.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime

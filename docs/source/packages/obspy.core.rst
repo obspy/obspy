@@ -8,7 +8,7 @@
       :toctree: .
       :nosignatures:
 
-        ~stream.read()
+        ~stream.read
         ~trace.Trace
         ~trace.Stats
         ~stream.Stream

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+SeisHub database client for ObsPy.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 
 from lxml import objectify
 from obspy.core import read
@@ -9,6 +15,7 @@ import urllib2
 
 class Client(object):
     """
+    SeisHub database request Client class.
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10):
