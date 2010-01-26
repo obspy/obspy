@@ -1,28 +1,28 @@
 .. currentmodule:: obspy.core
 .. automodule:: obspy.core
 
-Classes & functions
--------------------
+    Classes & functions
+    -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    ~stream.read()
-    ~trace.Trace
-    ~trace.Stats
-    ~stream.Stream
-    ~utcdatetime.UTCDateTime
+        ~stream.read()
+        ~trace.Trace
+        ~trace.Stats
+        ~stream.Stream
+        ~utcdatetime.UTCDateTime
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    trace
-    stream
-    utcdatetime
-    util
+        trace
+        stream
+        utcdatetime
+        util

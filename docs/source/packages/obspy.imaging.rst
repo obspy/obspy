@@ -1,13 +1,12 @@
 .. currentmodule:: obspy.imaging
 .. automodule:: obspy.imaging
 
-Modules
--------
+    Modules
+    -------
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
-
-    spectrogram
-    beachball
-    waveform
+        spectrogram
+        beachball
+        waveform

@@ -1,22 +1,22 @@
 .. currentmodule:: obspy.mseed
 .. automodule:: obspy.mseed
 
-Classes & functions
--------------------
+    Classes & functions
+    -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    libmseed.LibMSEED
+        libmseed.LibMSEED
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    core
-    libmseed
+        core
+        libmseed

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+SAC bindings to ObsPy core module.
+"""
 
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.sac.sacio import ReadSac

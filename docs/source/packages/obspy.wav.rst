@@ -1,11 +1,11 @@
 .. currentmodule:: obspy.wav
 .. automodule:: obspy.wav
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    core
+        core

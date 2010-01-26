@@ -1,26 +1,23 @@
-:mod:`obspy.xseed` - Converter from Dataless SEED to XML-SEED and RESP files 
-============================================================================
-
 .. currentmodule:: obspy.xseed
 .. automodule:: obspy.xseed
 
-Classes & functions
--------------------
+    Classes & functions
+    -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    parser.Parser
+        parser.Parser
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    fields
-    parser
-    utils
+        fields
+        parser
+        utils

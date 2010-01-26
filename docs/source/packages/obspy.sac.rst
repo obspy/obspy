@@ -1,22 +1,22 @@
 .. currentmodule:: obspy.sac
 .. automodule:: obspy.sac
 
-Classes & functions
--------------------
+    Classes & functions
+    -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    sacio.ReadSac
+        sacio.ReadSac
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    core
-    sacio
+        core
+        sacio

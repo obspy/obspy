@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+MSEED bindings to ObsPy core module.
+"""
 
 from obspy.core import Stream, Trace
 from obspy.mseed import LibMSEED

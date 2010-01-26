@@ -1,21 +1,21 @@
 .. currentmodule:: obspy.seishub
 .. automodule:: obspy.seishub
 
-Classes & functions
--------------------
+    Classes & functions
+    -------------------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    client.Client
+        client.Client
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    client
+        client

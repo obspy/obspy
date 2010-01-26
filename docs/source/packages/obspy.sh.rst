@@ -1,11 +1,11 @@
 .. currentmodule:: obspy.sh
 .. automodule:: obspy.sh
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    core
+        core

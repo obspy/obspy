@@ -8,7 +8,10 @@
 # Copyright (C) 2009 Moritz Beyreuther
 #-------------------------------------------------------------------------
 """ 
-Python Class for transforming seismograms to audio WAV files
+WAV bindings to ObsPy core module.
+
+This module contains python functions for transforming seismograms to audio
+WAV files.
 
 :copyright: The ObsPy Development Team (devs@obspy.org)
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)

@@ -9,7 +9,9 @@ See: http://www.iris.edu/dhi/
 
 Example
 -------
-As obspy.fissures is still under development here a simple example:
+As obspy.fissures is still under development here a simple example which
+request the SHZ channel of station APE in network GE at time t. For the
+example only 10s are requested.
 
 >>> from obspy.core import UTCDateTime, read
 >>> from obspy.fissures import Client

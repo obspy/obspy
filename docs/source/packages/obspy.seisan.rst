@@ -2,11 +2,11 @@
 .. automodule:: obspy.seisan
 
 
-Modules
--------
+    Modules
+    -------
 
-.. autosummary::
-  :toctree: .
-  :nosignatures:
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
 
-    core
+        core
