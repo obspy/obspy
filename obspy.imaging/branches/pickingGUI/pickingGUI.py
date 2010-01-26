@@ -20,53 +20,25 @@ from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 
 from obspy.signal.filter import bandpass,bandpassZPHSH,bandstop,bandstopZPHSH,lowpass,lowpassZPHSH,highpass,highpassZPHSH
 
-try:
-    fileZ = 'RJOB_061005_072159.ehz.new'
-    fileN = 'RJOB_061005_072159.ehn.new'
-    fileE = 'RJOB_061005_072159.ehe.new'
-    #fileZ = sys.argv[1]
-    #fileN = sys.argv[2]
-    #fileE = sys.argv[3]
-except:
-    print __doc__
-    raise
 
-# Read all traces
-stZ = read(fileZ)
-stN = read(fileN)
-stE = read(fileE)
+#==============================================================================
+#Prepare the example streams, this should be done by seishub beforehand in the future
+streams=[]
+streams.append(read('RJOB_061005_072159.ehz.new'))
+streams[0].append(read('RJOB_061005_072159.ehn.new')[0])
+streams[0].append(read('RJOB_061005_072159.ehe.new')[0])
+streams.append(read('RNON_160505_000059.ehz.new'))
+streams.append(read('RMOA_160505_014459.ehz.new'))
+streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
+streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
+#===============================================================================
+
 
 #Define some flags for filtering
 flagFilt=False #False:no filter  True:filter
 flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
 flagFiltZPH=True #False: no zero-phase True: zero-phase filtering
 flagWheelZoom=True #Switch use of mousewheel for zooming
-
-# Trim all to same length, us Z as reference
-start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
-stN.trim(start, end)
-stE.trim(start, end)
-
-# Plot all traces
-t = np.arange(stZ[0].stats.npts)
-fig = plt.figure()
-axZ = fig.add_subplot(311)
-pltZ = axZ.plot(t, stZ[0].data, color='k')[0]
-axN = fig.add_subplot(312, sharex=axZ,sharey=axZ)
-pltN = axN.plot(t, stN[0].data, color='k')[0]
-axE = fig.add_subplot(313, sharex=axZ,sharey=axZ)
-pltE = axE.plot(t, stE[0].data, color='k')[0]
-fig.suptitle("%s -- %s, %s" % (str(start), str(end), stZ[0].stats.station))
-axZ.set_ylabel(stZ[0].stats.station+" "+stZ[0].stats.channel)
-axN.set_ylabel(stN[0].stats.station+" "+stN[0].stats.channel)
-axE.set_ylabel(stE[0].stats.station+" "+stE[0].stats.channel)
-xMin,xMax=axZ.get_xlim()
-yMin,yMax=axZ.get_ylim()
-
-def redraw():
-    axZ.figure.canvas.draw()
-    axN.figure.canvas.draw()
-    axE.figure.canvas.draw()
 
 def switch_flagFilt():
     global flagFilt
@@ -75,44 +47,101 @@ def switch_flagFiltZPH():
     global flagFiltZPH
     flagFiltZPH=not flagFiltZPH
 
-#add filter buttons
-axFilt = fig.add_axes([0.02, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-check = CheckButtons(axFilt, ('Filter','Zero-Phase'),(False,True))
-def funcFilt(label):
-    if label=='Filter':
-        switch_flagFilt()
+#Define a pointer to navigate through the streams
+stNum=len(streams)
+stPt=0
+
+## Trim all to same length, us Z as reference
+#start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
+#stN.trim(start, end)
+#stE.trim(start, end)
+
+def drawAxes():
+    global axs
+    global t
+    global plts
+    global multicursor
+    global supTit
+    t = np.arange(streams[stPt][0].stats.npts)
+    axs=[]
+    plts=[]
+    trNum=len(streams[stPt].traces)
+    for i in range(trNum):
+        if i==0:
+            axs.append(fig.add_subplot(trNum,1,i+1))
+        else:
+            axs.append(fig.add_subplot(trNum,1,i+1,sharex=axs[0],sharey=axs[0]))
+        axs[i].set_ylabel(streams[stPt][0].stats.station+" "+streams[stPt][0].stats.channel)
+        plts.append(axs[i].plot(t, streams[stPt][i].data, color='k')[0])
+    supTit=fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
+    xMin,xMax=axs[0].get_xlim()
+    yMin,yMax=axs[0].get_ylim()
+    fig.subplots_adjust(bottom=0.25,hspace=0)
+    #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
+
+def delAxes():
+    for a in axs:
+        try:
+            fig.delaxes(a)
+        except:
+            print "Warning: Could not delete axes: %s"%a
+    try:
+        fig.texts.remove(supTit)
+    except:
+        pass
+
+def addFiltButtons():
+    global axFilt
+    global check
+    global axFiltTyp
+    global radio
+    #add filter buttons
+    axFilt = fig.add_axes([0.02, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+    check = CheckButtons(axFilt, ('Filter','Zero-Phase'),(False,True))
+    check.on_clicked(funcFilt)
+    axFiltTyp = fig.add_axes([0.20, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+    radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'))
+    
+def update(val):
+    if flagFilt==1:
         updatePlot()
-    elif label=='Zero-Phase':
-        switch_flagFiltZPH()
-        if flagFilt==True:
-            updatePlot()
-check.on_clicked(funcFilt)
-
-axFiltTyp = fig.add_axes([0.20, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'))
-def funcFiltTyp(label):
-    global flagFiltTyp
-    dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
-    flagFiltTyp=dictFiltTyp[label]
-    if flagFilt==True:
-        updatePlot()
-radio.on_clicked(funcFiltTyp)
+    else:
+        pass
 
 
-#add filter slider
-fig.subplots_adjust(bottom=0.25,hspace=0)
-axLowcut = fig.add_axes([0.45, 0.05, 0.45, 0.03], xscale='log')
-axHighcut  = fig.add_axes([0.45, 0.10, 0.45, 0.03], xscale='log')
+def delSliders():
+    try:
+        fig.delaxes(axLowcut)
+        fig.delaxes(axHighcut)
+    except:
+        pass
 
-low  = 1.0/ (stZ[0].stats.npts/float(stZ[0].stats.sampling_rate))
-high = stZ[0].stats.sampling_rate/2.0
-slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low)
-slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high)
+def addSliders():
+    global axLowcut
+    global axHighcut
+    global slideLow
+    global slideHigh
+    #add filter slider
+    axLowcut = fig.add_axes([0.45, 0.05, 0.45, 0.03], xscale='log')
+    axHighcut  = fig.add_axes([0.45, 0.10, 0.45, 0.03], xscale='log')
+    low  = 1.0/ (streams[stPt][0].stats.npts/float(streams[stPt][0].stats.sampling_rate))
+    high = streams[stPt][0].stats.sampling_rate/2.0
+    slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low)
+    slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high)
+    radio.on_clicked(funcFiltTyp)
+    slideLow.on_changed(update)
+    slideHigh.on_changed(update)
+    
+
+def redraw():
+    for a in axs:
+        a.figure.canvas.draw()
 
 def updatePlot():
     global pltZ
     global pltN
     global pltE
+    filt=[]
     #save current x- and y-limits
     #axZx=list(axZ.get_xlim())
     #axZy=list(axZ.get_ylim())
@@ -122,55 +151,45 @@ def updatePlot():
     if flagFilt==True:
         if flagFiltZPH==True:
             if flagFiltTyp==0:
-                filtZ=bandpassZPHSH(stZ[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=bandpassZPHSH(stN[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=bandpassZPHSH(stE[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(bandpassZPHSH(tr.data,slideLow.val,slideHigh.val,df=tr.stats.sampling_rate))
                 print "Zero-Phase Bandpass: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
             if flagFiltTyp==1:
-                filtZ=bandstopZPHSH(stZ[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=bandstopZPHSH(stN[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=bandstopZPHSH(stE[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(bandstopZPHSH(tr.data,slideLow.val,slideHigh.val,df=tr.stats.sampling_rate))
                 print "Zero-Phase Bandstop: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
             if flagFiltTyp==2:
-                filtZ=lowpassZPHSH(stZ[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
-                filtN=lowpassZPHSH(stN[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
-                filtE=lowpassZPHSH(stE[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(lowpassZPHSH(tr.data,slideLow.val,df=tr.stats.sampling_rate))
                 print "Zero-Phase Lowpass: %.2f Hz"%(slideLow.val)
             if flagFiltTyp==3:
-                filtZ=highpassZPHSH(stZ[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=highpassZPHSH(stN[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=highpassZPHSH(stE[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(highpassZPHSH(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
                 print "Zero-Phase Highpass: %.2f Hz"%(slideHigh.val)
         elif flagFiltZPH==False:
             if flagFiltTyp==0:
-                filtZ=bandpass(stZ[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=bandpass(stN[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=bandpass(stE[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(bandpass(tr.data,slideLow.val,slideHigh.val,df=tr.stats.sampling_rate))
                 print "One-Pass Bandpass: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
             if flagFiltTyp==1:
-                filtZ=bandstop(stZ[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=bandstop(stN[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=bandstop(stE[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(bandstop(tr.data,slideLow.val,slideHigh.val,df=tr.stats.sampling_rate))
                 print "One-Pass Bandstop: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
             if flagFiltTyp==2:
-                filtZ=lowpass(stZ[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
-                filtN=lowpass(stN[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
-                filtE=lowpass(stE[0].data,slideLow.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(lowpass(tr.data,slideLow.val,df=tr.stats.sampling_rate))
                 print "One-Pass Lowpass: %.2f Hz"%(slideLow.val)
             if flagFiltTyp==3:
-                filtZ=highpass(stZ[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtN=highpass(stN[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
-                filtE=highpass(stE[0].data,slideHigh.val,df=stZ[0].stats.sampling_rate)
+                for tr in streams[stPt].traces:
+                    filt.append(highpass(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
                 print "One-Pass Highpass: %.2f Hz"%(slideHigh.val)
         #make new plots
-        pltZ.set_data(t, filtZ)
-        pltN.set_data(t, filtN)
-        pltE.set_data(t, filtE)
+        for i in range(len(plts)):
+            plts[i].set_data(t, filt[i])
     else:
         #make new plots
-        pltZ.set_data(t, stZ[0].data)
-        pltN.set_data(t, stN[0].data)
-        pltE.set_data(t, stE[0].data)
+        for i in range(len(plts)):
+            plts[i].set_data(t, streams[stPt][i].data)
         print "Unfiltered Traces"
     #set to saved x- and y-limits
     #axZ.set_xlim(axZx)
@@ -179,6 +198,24 @@ def updatePlot():
     #axE.set_ylim(axEy)
     # Update all subplots
     redraw()
+
+def funcFilt(label):
+    if label=='Filter':
+        switch_flagFilt()
+        updatePlot()
+    elif label=='Zero-Phase':
+        switch_flagFiltZPH()
+        if flagFilt==True:
+            updatePlot()
+
+def funcFiltTyp(label):
+    global flagFiltTyp
+    dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
+    flagFiltTyp=dictFiltTyp[label]
+    if flagFilt==True:
+        updatePlot()
+
+
 
 #def update(val):
 #    global pltZ
@@ -213,14 +250,6 @@ def updatePlot():
 #    redraw()
 #    # Console output
 #    print "Showing traces filtered to %.2f-%.2f Hz (Zero-Phase Bandpass)"%(slideLow.val,slideHigh.val)
-def update(val):
-    if flagFilt==1:
-        updatePlot()
-    else:
-        pass
-
-slideLow.on_changed(update)
-slideHigh.on_changed(update)
 #slideLow.on_changed(updatePlot)
 #slideHigh.on_changed(updatePlot)
 
@@ -293,46 +322,40 @@ slideHigh.on_changed(update)
 #global SEErr2Line
 #global SErr2
 
+# Set up initial plot
+fig = plt.figure()
+drawAxes()
+addFiltButtons()
+addSliders()
+redraw()
+
 # Define the event for setting P- and S-wave picks
 def pick(event):
-    global PZLine
-    global PNLine
-    global PELine
+    global PLines
     global P
-    global SZLine
-    global SNLine
-    global SELine
+    global SLines
     global S
-    global PZErr1Line
-    global PNErr1Line
-    global PEErr1Line
+    global PErr1Lines
     global PErr1
-    global PZErr2Line
-    global PNErr2Line
-    global PEErr2Line
+    global PErr2Lines
     global PErr2
-    global SZErr1Line
-    global SNErr1Line
-    global SEErr1Line
+    global SErr1Lines
     global SErr1
-    global SZErr2Line
-    global SNErr2Line
-    global SEErr2Line
+    global SErr2Lines
     global SErr2
     # Set new P Pick
-    if event.inaxes==axZ and event.key==' ':
+    if event.inaxes==axs[0] and event.key==' ':
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
-            axZ.lines.remove(PZLine)
-            axN.lines.remove(PNLine)
-            axE.lines.remove(PELine)
+            for i in range(len(axs)):
+                axs[i].lines.remove(PLines[i])
         except:
             pass
         # Plot the lines for the P pick in all three traces
-        PZLine=axZ.axvline(event.xdata,color='red',linewidth=1.3)
-        PNLine=axN.axvline(event.xdata,color='red',linestyle='dotted')
-        PELine=axE.axvline(event.xdata,color='red',linestyle='dotted')
+        PLines=[]
+        for i in range(len(axs)):
+            PLines.append(axs[i].axvline(event.xdata,color='red',linewidth=1.3))
         # Save sample value of pick (round to integer sample value)
         P=int(round(event.xdata))
         # Update all subplots
@@ -340,19 +363,18 @@ def pick(event):
         # Console output
         print "P Pick set at %i"%P
     # Set new S Pick
-    if ( event.inaxes==axN or event.inaxes==axE ) and event.key==' ':
+    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key==' ':
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
-            axZ.lines.remove(SZLine)
-            axN.lines.remove(SNLine)
-            axE.lines.remove(SELine)
+            for i in range(len(axs)):
+                axs[i].lines.remove(SLines[i])
         except:
             pass
         # Plot the lines for the S pick in all three traces
-        SZLine=axZ.axvline(event.xdata,color='blue',linestyle='dotted')
-        SNLine=axN.axvline(event.xdata,color='blue',linewidth=1.3)
-        SELine=axE.axvline(event.xdata,color='blue',linestyle='dotted')
+        SLines=[]
+        for i in range(len(axs)):
+            SLines.append(axs[i].axvline(event.xdata,color='blue',linewidth=1.3))
         # Save sample value of pick (round to integer sample value)
         S=int(round(event.xdata))
         # Update all subplots
@@ -360,15 +382,12 @@ def pick(event):
         # Console output
         print "S Pick set at %i"%S
     # Remove P Pick
-    if event.inaxes==axZ and event.key=='escape':
+    if event.inaxes==axs[0] and event.key=='escape':
         # Try to remove all existing Pick lines and P Pick variable
         try:
-            axZ.lines.remove(PZLine)
-            axN.lines.remove(PNLine)
-            axE.lines.remove(PELine)
-            del PZLine
-            del PNLine
-            del PELine
+            for i in range(len(axs)):
+                axs[i].lines.remove(PLines[i])
+            del PLines
             del P
             # Console output
             print "P Pick deleted"
@@ -376,38 +395,29 @@ def pick(event):
             pass
         # Try to remove existing Pick Error 1 lines and variable
         try:
-            axZ.lines.remove(PZErr1Line)
-            axN.lines.remove(PNErr1Line)
-            axE.lines.remove(PEErr1Line)
-            del PZErr1Line
-            del PNErr1Line
-            del PEErr1Line
+            for i in range(len(axs)):
+                axs[i].lines.remove(PErr1Lines[i])
+            del PErr1Lines
             del PErr1
         except:
             pass
         # Try to remove existing Pick Error 2 lines and variable
         try:
-            axZ.lines.remove(PZErr2Line)
-            axN.lines.remove(PNErr2Line)
-            axE.lines.remove(PEErr2Line)
-            del PZErr2Line
-            del PNErr2Line
-            del PEErr2Line
+            for i in range(len(axs)):
+                axs[i].lines.remove(PErr2Lines[i])
+            del PErr2Lines
             del PErr2
         except:
             pass
         # Update all subplots
         redraw()
     # Remove S Pick
-    if ( event.inaxes==axN or event.inaxes==axE ) and event.key=='escape':
+    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key=='escape':
         # Try to remove all existing Pick lines and P Pick variable
         try:
-            axZ.lines.remove(SZLine)
-            axN.lines.remove(SNLine)
-            axE.lines.remove(SELine)
-            del SZLine
-            del SNLine
-            del SELine
+            for i in range(len(axs)):
+                axs[i].lines.remove(SLines[i])
+            del SLines
             del S
             # Console output
             print "S Pick deleted"
@@ -415,30 +425,24 @@ def pick(event):
             pass
         # Try to remove existing Pick Error 1 lines and variable
         try:
-            axZ.lines.remove(SZErr1Line)
-            axN.lines.remove(SNErr1Line)
-            axE.lines.remove(SEErr1Line)
-            del SZErr1Line
-            del SNErr1Line
-            del SEErr1Line
+            for i in range(len(axs)):
+                axs[i].lines.remove(SErr1Lines[i])
+            del SErr1Lines
             del SErr1
         except:
             pass
         # Try to remove existing Pick Error 2 lines and variable
         try:
-            axZ.lines.remove(SZErr2Line)
-            axN.lines.remove(SNErr2Line)
-            axE.lines.remove(SEErr2Line)
-            del SZErr2Line
-            del SNErr2Line
-            del SEErr2Line
+            for i in range(len(axs)):
+                axs[i].lines.remove(SErr2Lines[i])
+            del SErr2Lines
             del SErr2
         except:
             pass
         # Update all subplots
         redraw()
     # Set new P Pick uncertainties
-    if event.inaxes==axZ and event.key=='alt':
+    if event.inaxes==axs[0] and event.key=='alt':
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
@@ -455,15 +459,14 @@ def pick(event):
             # Define global variables seen outside
             # Remove old lines from the plot before plotting the new ones
             try:
-                axZ.lines.remove(PZErr1Line)
-                axN.lines.remove(PNErr1Line)
-                axE.lines.remove(PEErr1Line)
+                for i in range(len(axs)):
+                    axs[i].lines.remove(PErr1Lines[i])
             except:
                 pass
             # Plot the lines for the P Error pick in all three traces
-            PZErr1Line=axZ.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red')
-            PNErr1Line=axN.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linestyle='dotted')
-            PEErr1Line=axE.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linestyle='dotted')
+            PErr1Lines=[]
+            for i in range(len(axs)):
+                PErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linewidth=1.3))
             # Save sample value of error pick (round to integer sample value)
             PErr1=int(round(event.xdata))
             # Update all subplots
@@ -475,15 +478,14 @@ def pick(event):
             # Define global variables seen outside
             # Remove old lines from the plot before plotting the new ones
             try:
-                axZ.lines.remove(PZErr2Line)
-                axN.lines.remove(PNErr2Line)
-                axE.lines.remove(PEErr2Line)
+                for i in range(len(axs)):
+                    axs[i].lines.remove(PErr2Lines[i])
             except:
                 pass
             # Plot the lines for the P Error pick in all three traces
-            PZErr2Line=axZ.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red')
-            PNErr2Line=axN.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linestyle='dotted')
-            PEErr2Line=axE.axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linestyle='dotted')
+            PErr2Lines=[]
+            for i in range(len(axs)):
+                PErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='red',linewidth=1.3))
             # Save sample value of error pick (round to integer sample value)
             PErr2=int(round(event.xdata))
             # Update all subplots
@@ -491,7 +493,7 @@ def pick(event):
             # Console output
             print "P Error Pick 2 set at %i"%PErr2
     # Set new S Pick uncertainties
-    if ( event.inaxes==axN or event.inaxes==axE ) and event.key=='alt':
+    if len(axs)>1 and ( event.inaxes==axs[1] or event.inaxes==axs[2] ) and event.key=='alt':
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
@@ -508,15 +510,14 @@ def pick(event):
             # Define global variables seen outside
             # Remove old lines from the plot before plotting the new ones
             try:
-                axZ.lines.remove(SZErr1Line)
-                axN.lines.remove(SNErr1Line)
-                axE.lines.remove(SEErr1Line)
+                for i in range(len(axs)):
+                    axs[i].lines.remove(SErr1Lines[i])
             except:
                 pass
             # Plot the lines for the S Error pick in all three traces
-            SZErr1Line=axZ.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linestyle='dotted')
-            SNErr1Line=axN.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue')
-            SEErr1Line=axE.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linestyle='dotted')
+            SErr1Lines=[]
+            for i in range(len(axs)):
+                SErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linewidth=1.3))
             # Save sample value of error pick (round to integer sample value)
             SErr1=int(round(event.xdata))
             # Update all subplots
@@ -528,15 +529,14 @@ def pick(event):
             # Define global variables seen outside
             # Remove old lines from the plot before plotting the new ones
             try:
-                axZ.lines.remove(SZErr2Line)
-                axN.lines.remove(SNErr2Line)
-                axE.lines.remove(SEErr2Line)
+                for i in range(len(axs)):
+                    axs[i].lines.remove(SErr2Lines[i])
             except:
                 pass
             # Plot the lines for the S Error pick in all three traces
-            SZErr2Line=axZ.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linestyle='dotted')
-            SNErr2Line=axN.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue')
-            SEErr2Line=axE.axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linestyle='dotted')
+            SErr2Lines=[]
+            for i in range(len(axs)):
+                SErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color='blue',linewidth=1.3))
             # Save sample value of error pick (round to integer sample value)
             SErr2=int(round(event.xdata))
             # Update all subplots
@@ -549,19 +549,19 @@ def zoom(event):
     # Zoom in on scroll-up
     if event.button=='up' and flagWheelZoom:
         # Calculate and set new axes boundaries from old ones
-        (left,right)=axZ.get_xbound()
+        (left,right)=axs[0].get_xbound()
         left+=(event.xdata-left)/2
         right-=(right-event.xdata)/2
-        axZ.set_xbound(lower=left,upper=right)
+        axs[0].set_xbound(lower=left,upper=right)
         # Update all subplots
         redraw()
     # Zoom out on scroll-down
     if event.button=='down' and flagWheelZoom:
         # Calculate and set new axes boundaries from old ones
-        (left,right)=axZ.get_xbound()
+        (left,right)=axs[0].get_xbound()
         left-=(event.xdata-left)/2
         right+=(right-event.xdata)/2
-        axZ.set_xbound(lower=left,upper=right)
+        axs[0].set_xbound(lower=left,upper=right)
         # Update all subplots
         redraw()
 
@@ -569,8 +569,8 @@ def zoom(event):
 def zoom_reset(event):
     if event.button==2:
         # Use Z trace limits as boundaries
-        axZ.set_xbound(lower=xMin,upper=xMax)
-        axZ.set_ybound(lower=yMin,upper=yMax)
+        axs[0].set_xbound(lower=xMin,upper=xMax)
+        axs[0].set_ybound(lower=yMin,upper=yMax)
         # Update all subplots
         redraw()
         print "Resetting axes"
@@ -590,16 +590,24 @@ def switchPan(event):
         redraw()
         print "Switching pan mode"
 
-# Activate all mouse/key/Cursor-events
-keypress = fig.canvas.mpl_connect('key_press_event', pick)
-keypressWheelZoom = fig.canvas.mpl_connect('key_press_event', switchWheelZoom)
-scroll = fig.canvas.mpl_connect('scroll_event', zoom)
-scroll_button = fig.canvas.mpl_connect('button_press_event', zoom_reset)
-#cursorZ = mplCursor(axZ, useblit=True, color='black', linewidth=1, ls='dotted')
-#cursorN = mplCursor(axN, useblit=True, color='black', linewidth=1, ls='dotted')
-#cursorE = mplCursor(axE, useblit=True, color='black', linewidth=1, ls='dotted')
-fig.canvas.toolbar.pan()
-multicursor = mplMultiCursor(fig.canvas,(axZ,axN,axE), useblit=True, color='black', linewidth=1, ls='dotted')
+def switchStream(event):
+    global stPt
+    if event.key=="y":
+        stPt=(stPt-1)%stNum
+        delAxes()
+        drawAxes()
+        delSliders()
+        addSliders()
+        redraw()
+        print "Going to previous stream"
+    if event.key=="x":
+        stPt=(stPt+1)%stNum
+        delAxes()
+        drawAxes()
+        delSliders()
+        addSliders()
+        redraw()
+        print "Going to next stream"
 
 
 #remove unwanted buttons from Toolbar
@@ -674,5 +682,32 @@ multicursor = mplMultiCursor(fig.canvas,(axZ,axN,axE), useblit=True, color='blac
 #idFilter=wx.NewId()
 #tbFilter=tb.AddSimpleTool(idFilter, _load_bitmap('hand.xpm'),'Filter', 'Filter traces (zero-phase bandpass)')
 #wx.EVT_TOOL(tb,idFilter,filterTraces)
+
+#t = np.arange(streams[stPt][0].stats.npts)
+#axs=[]
+#plts=[]
+#trNum=len(streams[stPt].traces)
+#for i in range(1,trNum+1):
+#    if i=0:
+#        axs.append(fig.add_subplot(trNum,1,i))
+#    else:
+#        axs.append(fig.add_subplot(trNum,1,i,sharex=axs[0],sharey=axs[1]))
+#    axs[i].set_ylabel(streams[stPt][0].stats.station+" "+streams[stPt][0].stats.channel)
+#    plts.append(axs[i].plot(t, streams[stPt][i].data, color='k'))
+#fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
+#xMin,xMax=axs[0].get_xlim()
+#yMin,yMax=axs[0].get_ylim()
+#fig.subplots_adjust(bottom=0.25,hspace=0)
+# Activate all mouse/key/Cursor-events
+keypress = fig.canvas.mpl_connect('key_press_event', pick)
+keypressWheelZoom = fig.canvas.mpl_connect('key_press_event', switchWheelZoom)
+keypressPan = fig.canvas.mpl_connect('key_press_event', switchPan)
+keypressNextPrev = fig.canvas.mpl_connect('key_press_event', switchStream)
+scroll = fig.canvas.mpl_connect('scroll_event', zoom)
+scroll_button = fig.canvas.mpl_connect('button_press_event', zoom_reset)
+#cursorZ = mplCursor(axZ, useblit=True, color='black', linewidth=1, ls='dotted')
+#cursorN = mplCursor(axN, useblit=True, color='black', linewidth=1, ls='dotted')
+#cursorE = mplCursor(axE, useblit=True, color='black', linewidth=1, ls='dotted')
+fig.canvas.toolbar.pan()
 
 plt.show()
