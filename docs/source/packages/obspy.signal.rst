@@ -5,8 +5,7 @@
     -------------------
 
     Nearly all functions defined in the modules below can be imported directly
-    from `obspy.signal`. For more information, see the documentation of the
-    modules below.
+    from `obspy.signal`.
 
     Modules
     -------

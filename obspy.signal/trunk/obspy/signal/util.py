@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+Various additional utilities for obspy.signal.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 
 from numpy import size
 from scipy import signal, fix

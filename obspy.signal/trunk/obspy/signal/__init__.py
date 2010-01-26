@@ -16,8 +16,8 @@ bandstopZPHSH). The following example shows how to lowpass a seismogram
 at 1.5Hz.
 
 :Note: The filter takes the data explicitly as argument (i.e. a
-numpy.ndarray) and therefore the sampling_rate needs to be also specified.
-It returns the filetered data.
+       numpy.ndarray) and therefore the sampling_rate needs to be also specified.
+       It returns the filetered data.
 
 >>> from obspy.core import read
 >>> import obspy.signal
