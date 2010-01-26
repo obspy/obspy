@@ -5,7 +5,6 @@
 
 import matplotlib
 matplotlib.use('gtkagg')
-#matplotlib.use('wxagg')
 
 from obspy.core import read
 import matplotlib.pyplot as plt
@@ -47,7 +46,7 @@ magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
 magMarker='x'
 magMarkerEdgeWidth=1.8
 magMarkerSize=20
-axvlinewidths=1.8
+axvlinewidths=1.4
 
 
 
@@ -74,6 +73,10 @@ def drawAxes():
     global plts
     global multicursor
     global supTit
+    global xMin
+    global xMax
+    global yMin
+    global yMax
     t = np.arange(streams[stPt][0].stats.npts)
     axs=[]
     plts=[]
@@ -83,12 +86,12 @@ def drawAxes():
             axs.append(fig.add_subplot(trNum,1,i+1))
         else:
             axs.append(fig.add_subplot(trNum,1,i+1,sharex=axs[0],sharey=axs[0]))
-        axs[i].set_ylabel(streams[stPt][0].stats.station+" "+streams[stPt][0].stats.channel)
-        plts.append(axs[i].plot(t, streams[stPt][i].data, color='k')[0])
+        axs[i].set_ylabel(streams[stPt][i].stats.station+" "+streams[stPt][i].stats.channel)
+        plts.append(axs[i].plot(t, streams[stPt][i].data, color='k',zorder=1000)[0])
     supTit=fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
     xMin,xMax=axs[0].get_xlim()
     yMin,yMax=axs[0].get_ylim()
-    fig.subplots_adjust(bottom=0.25,hspace=0)
+    fig.subplots_adjust(bottom=0.25,hspace=0,right=0.999,top=0.95)
     #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
 
 def delAxes():
@@ -112,7 +115,7 @@ def addFiltButtons():
     check = CheckButtons(axFilt, ('Filter','Zero-Phase'),(False,True))
     check.on_clicked(funcFilt)
     axFiltTyp = fig.add_axes([0.20, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-    radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'))
+    radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
     radio.on_clicked(funcFiltTyp)
     
 def addPhaseButtons():
@@ -120,7 +123,7 @@ def addPhaseButtons():
     global radioPhase
     #add phase buttons
     axPhase = fig.add_axes([0.90, 0.02, 0.10, 0.15],frameon=False,axisbg='lightgrey')
-    radioPhase = RadioButtons(axPhase, ('P', 'S', 'Mag'))
+    radioPhase = RadioButtons(axPhase, ('P', 'S', 'Mag'),activecolor='k')
     radioPhase.on_clicked(funcPhase)
     
 def update(val):
@@ -146,31 +149,20 @@ def addSliders():
     axHighcut  = fig.add_axes([0.45, 0.10, 0.35, 0.03], xscale='log')
     low  = 1.0/ (streams[stPt][0].stats.npts/float(streams[stPt][0].stats.sampling_rate))
     high = streams[stPt][0].stats.sampling_rate/2.0
-    slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low)
-    slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high)
+    slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
+    slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
     slideLow.on_changed(update)
     slideHigh.on_changed(update)
     
 
 def redraw():
-    #xlims=list(axs[0].get_xlim())
-    #ylims=list(axs[0].get_ylim())
-    for a in axs:
-        a.figure.canvas.draw()
-    #axs[0].set_xlim(xlims)
-    #axs[0].set_ylim(ylims)
-    #axs[0].figure.canvas.draw()
+    fig.canvas.draw()
 
 def updatePlot():
     global pltZ
     global pltN
     global pltE
     filt=[]
-    #save current x- and y-limits
-    #axZx=list(axZ.get_xlim())
-    #axZy=list(axZ.get_ylim())
-    #axNy=list(axN.get_ylim())
-    #axEy=list(axE.get_ylim())
     #filter data
     if flagFilt==True:
         if flagFiltZPH==True:
@@ -215,11 +207,6 @@ def updatePlot():
         for i in range(len(plts)):
             plts[i].set_data(t, streams[stPt][i].data)
         print "Unfiltered Traces"
-    #set to saved x- and y-limits
-    #axZ.set_xlim(axZx)
-    #axZ.set_ylim(axZy)
-    #axN.set_ylim(axNy)
-    #axE.set_ylim(axEy)
     # Update all subplots
     redraw()
 
@@ -244,110 +231,6 @@ def funcPhase(label):
 
 
 
-#def update(val):
-#    global pltZ
-#    global pltN
-#    global pltE
-#    #filter data
-#    filtZ=bp(stZ[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-#    filtN=bp(stN[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-#    filtE=bp(stE[0].data,slideLow.val,slideHigh.val,df=stZ[0].stats.sampling_rate)
-#    #save current x- and y-limits
-#    axZx=list(axZ.get_xlim())
-#    axZy=list(axZ.get_ylim())
-#    axNy=list(axN.get_ylim())
-#    axEy=list(axE.get_ylim())
-#    #remove old plots
-#    try:
-#        axZ.lines.remove(pltZ)
-#        axN.lines.remove(pltN)
-#        axE.lines.remove(pltE)
-#    except:
-#        pass
-#    #make new plots
-#    pltZ=axZ.plot(t,filtZ,color='k')[0]
-#    pltN=axN.plot(t,filtN,color='k')[0]
-#    pltE=axE.plot(t,filtE,color='k')[0]
-#    #set to saved x- and y-limits
-#    axZ.set_xlim(axZx)
-#    axZ.set_ylim(axZy)
-#    axN.set_ylim(axNy)
-#    axE.set_ylim(axEy)
-#    # Update all subplots
-#    redraw()
-#    # Console output
-#    print "Showing traces filtered to %.2f-%.2f Hz (Zero-Phase Bandpass)"%(slideLow.val,slideHigh.val)
-#slideLow.on_changed(updatePlot)
-#slideHigh.on_changed(updatePlot)
-
-#axReset = plt.axes([0.8, 0.025, 0.1, 0.04])
-#button = Button(axReset, 'Reset', hovercolor='0.975')
-#def reset(event):
-#    slideLow.reset()
-#    slideHigh.reset()
-#button.on_clicked(reset)
-
-
-#axUnfilter = plt.axes([0.8, 0.025, 0.1, 0.04])
-#buttonUnfilter = Button(axUnfilter, 'Original', hovercolor='0.975')
-#def unfilter(event):
-#    slideLow.reset()
-#    slideHigh.reset()
-#    global pltZ
-#    global pltN
-#    global pltE
-#    #remove old plots
-#    try:
-#        axZ.lines.remove(pltZ)
-#        axN.lines.remove(pltN)
-#        axE.lines.remove(pltE)
-#    except:
-#        pass
-#    #save current x- and y-limits
-#    axZx=list(axZ.get_xlim())
-#    axZy=list(axZ.get_ylim())
-#    axNy=list(axN.get_ylim())
-#    axEy=list(axE.get_ylim())
-#    #make new plots
-#    pltZ=axZ.plot(t,stZ[0].data,color='k')[0]
-#    pltN=axN.plot(t,stN[0].data,color='k')[0]
-#    pltE=axE.plot(t,stE[0].data,color='k')[0]
-#    #set to saved x- and y-limits
-#    axZ.set_xlim(axZx)
-#    axZ.set_ylim(axZy)
-#    axN.set_ylim(axNy)
-#    axE.set_ylim(axEy)
-#    # Update all subplots
-#    redraw()
-#    # Console output
-#    print "Showing original unfiltered traces"
-#buttonUnfilter.on_clicked(unfilter)
-
-
-#global PZLine
-#global PNLine
-#global PELine
-#global P
-#global PZErr1Line
-#global PNErr1Line
-#global PEErr1Line
-#global PErr1
-#global PZErr2Line
-#global PNErr2Line
-#global PEErr2Line
-#global PErr2
-#global SZLine
-#global SNLine
-#global SELine
-#global S
-#global SZErr1Line
-#global SNErr1Line
-#global SEErr1Line
-#global SErr1
-#global SZErr2Line
-#global SNErr2Line
-#global SEErr2Line
-#global SErr2
 
 # Set up initial plot
 fig = plt.figure()
@@ -389,7 +272,7 @@ def pick(event):
         # Plot the lines for the P pick in all three traces
         PLines=[]
         for i in range(len(axs)):
-            PLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
+            PLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths,label='P'))
         # Save sample value of pick (round to integer sample value)
         P=int(round(event.xdata))
         # Update all subplots
@@ -589,7 +472,12 @@ def pick(event):
         cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
         MagMin=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
         MagMinT=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        #we have to to force the graph to the old axes limits because of the completely new line object creation
+        xlims=list(axs[0].get_xlim())
+        ylims=list(axs[0].get_ylim())
         MagMinCross=event.inaxes.plot([MagMinT],[MagMin],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
         redraw()
         print "Minimum for magnitude estimation set: %s at %s"%(MagMin,MagMinT)
     if flagPhase==2 and event.key==' ':
@@ -603,14 +491,13 @@ def pick(event):
         cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
         MagMax=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
         MagMaxT=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
-        #save axes info:
-        #xlims=list(axs[0].get_xlim())
-        #ylims=list(axs[0].get_ylim())
+        #we have to to force the graph to the old axes limits because of the completely new line object creation
+        xlims=list(axs[0].get_xlim())
+        ylims=list(axs[0].get_ylim())
         MagMaxCross=event.inaxes.plot([MagMaxT],[MagMax],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
         redraw()
-        #axs[0].set_xlim(xlims)
-        #axs[0].set_ylim(ylims)
-        #axs[0].figure.canvas.draw()
         print "Maximum for magnitude estimation set: %s at %s"%(MagMax,MagMaxT)
     if flagPhase==2 and event.key=='escape':
         for a in axs:
@@ -701,95 +588,6 @@ def switchStream(event):
         print "Going to next stream"
         
 
-
-#remove unwanted buttons from Toolbar
-#tb=fig.canvas.toolbar
-#tb.pan()
-#tb.DeleteToolByPos(1)
-#tb.DeleteToolByPos(1)
-#tb.DeleteToolByPos(4)
-#tb.DeleteToolByPos(4)
-
-#define events for filter buttons
-#def unfilterTraces(self):
-#    global pltZ
-#    global pltN
-#    global pltE
-#    #remove old plots
-#    axZ.lines.remove(pltZ)
-#    axN.lines.remove(pltN)
-#    axE.lines.remove(pltE)
-#    #save current x- and y-limits
-#    axZx=list(axZ.get_xlim())
-#    axZy=list(axZ.get_ylim())
-#    axNy=list(axN.get_ylim())
-#    axEy=list(axE.get_ylim())
-#    #make new plots
-#    pltZ=axZ.plot(t,stZ[0].data,color='k')[0]
-#    pltN=axN.plot(t,stN[0].data,color='k')[0]
-#    pltE=axE.plot(t,stE[0].data,color='k')[0]
-#    #set to saved x- and y-limits
-#    axZ.set_xlim(axZx)
-#    axZ.set_ylim(axZy)
-#    axN.set_ylim(axNy)
-#    axE.set_ylim(axEy)
-#    # Update all subplots
-#    redraw()
-#    # Console output
-#    print "Showing original unfiltered traces"
-#def filterTraces(self):
-#    global pltZ
-#    global pltN
-#    global pltE
-#    #filter data
-#    filtZ=bp(stZ[0].data,1,3,df=stZ[0].stats.sampling_rate)
-#    filtN=bp(stN[0].data,1,3,df=stZ[0].stats.sampling_rate)
-#    filtE=bp(stE[0].data,1,3,df=stZ[0].stats.sampling_rate)
-#    #save current x- and y-limits
-#    axZx=list(axZ.get_xlim())
-#    axZy=list(axZ.get_ylim())
-#    axNy=list(axN.get_ylim())
-#    axEy=list(axE.get_ylim())
-#    #remove old plots
-#    axZ.lines.remove(pltZ)
-#    axN.lines.remove(pltN)
-#    axE.lines.remove(pltE)
-#    #make new plots
-#    pltZ=axZ.plot(t,filtZ,color='k')[0]
-#    pltN=axN.plot(t,filtN,color='k')[0]
-#    pltE=axE.plot(t,filtE,color='k')[0]
-#    #set to saved x- and y-limits
-#    axZ.set_xlim(axZx)
-#    axZ.set_ylim(axZy)
-#    axN.set_ylim(axNy)
-#    axE.set_ylim(axEy)
-#    # Update all subplots
-#    redraw()
-#    # Console output
-#    print "Showing traces filtered to 1-10 Hz (Zero-Phase Bandpass)"
-#add new buttons
-#idUnfilter=wx.NewId()
-#tbUnfilter=tb.AddSimpleTool(idUnfilter, _load_bitmap('home.xpm'),'UnFilter', 'Show unfiltered traces')
-#wx.EVT_TOOL(tb,idUnfilter,unfilterTraces)
-#idFilter=wx.NewId()
-#tbFilter=tb.AddSimpleTool(idFilter, _load_bitmap('hand.xpm'),'Filter', 'Filter traces (zero-phase bandpass)')
-#wx.EVT_TOOL(tb,idFilter,filterTraces)
-
-#t = np.arange(streams[stPt][0].stats.npts)
-#axs=[]
-#plts=[]
-#trNum=len(streams[stPt].traces)
-#for i in range(1,trNum+1):
-#    if i=0:
-#        axs.append(fig.add_subplot(trNum,1,i))
-#    else:
-#        axs.append(fig.add_subplot(trNum,1,i,sharex=axs[0],sharey=axs[1]))
-#    axs[i].set_ylabel(streams[stPt][0].stats.station+" "+streams[stPt][0].stats.channel)
-#    plts.append(axs[i].plot(t, streams[stPt][i].data, color='k'))
-#fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
-#xMin,xMax=axs[0].get_xlim()
-#yMin,yMax=axs[0].get_ylim()
-#fig.subplots_adjust(bottom=0.25,hspace=0)
 # Activate all mouse/key/Cursor-events
 keypress = fig.canvas.mpl_connect('key_press_event', pick)
 keypressWheelZoom = fig.canvas.mpl_connect('key_press_event', switchWheelZoom)
