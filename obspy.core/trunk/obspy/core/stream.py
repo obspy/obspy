@@ -21,20 +21,23 @@ import urllib2
 
 def read(pathname_or_url, format=None, headonly=False, **kwargs):
     """
-    Read waveform files using wildcards into an ObsPy Stream object.
+    Readw waveform files into an ObsPy Stream object.
 
-    The `read` function opens one or multiple files given via wildcards in the
-    `pathname` attribute and returns a ObsPy :class:`~obspy.core.stream.Stream`
-    object. The file format format is automatically detected if not given.
-    Allowed formats depend on the ObsPy packages installed. Commonly, packages
-    for the formats "GSE2", "MSEED" and "SAC" are available.
+    The `read` function opens either one or multiple files given via wildcards
+    or a URL of a waveform file given in the *pathname_or_url* attribute. This
+    function returns a ObsPy :class:`~obspy.core.stream.Stream` object.
+
+    The format of the waveform file will be automatically detected if not
+    given. Allowed formats depend on ObsPy packages installed. See the notes
+    section below.
 
     Basic Usage
     -----------
     Examples files may be retrieved via http://examples.obspy.org.
 
     >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
+    >>> read("loc_RJOB20050831023349.z") # doctest: +SKIP
+    <obspy.core.stream.Stream object at 0x101700150>
 
     Parameters
     ----------
@@ -44,13 +47,11 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
     format : string, optional
         Format of the file to read. Commonly one of "GSE2", "MSEED",
         or "SAC". If it is None the format will be automatically
-        detected which results in a slightly faster reading. If you specify
-        a format no further format checking is done. To avoid problems
-        please use the option only when you are sure which format your file
-        has.
+        detected which results in a slightly slower reading. If you specify
+        a format no further format checking is done.
     headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
+        If set to True, read only the data header. This is most useful for
+        scanning available meta information of huge data sets.
 
     Notes
     -----
@@ -72,13 +73,13 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
     Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
     SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
     =======  ===================  ====================================
-    
+
     Next to the `read` function the :meth:`~Stream.write` function is a method
     of the returned :class:`~obspy.core.stream.Stream` object.
 
     Examples
     --------
-    Examples files may be downloaded via http://examples.obspy.org.
+    Examples files may be retrieved via http://examples.obspy.org.
 
     (1) The following code uses wildcards, in this case it matches two files.
         Both files are then read into a single
@@ -88,25 +89,23 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         >>> st = read(("loc_R*.z"))  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         2 Trace(s) in Stream:
-        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
-        .RNON ..  Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.844998Z | 200.0 Hz, 12000 samples
+        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
+        .RNON ..  Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.8449...
 
     (2) Using the ``format`` parameter disables the autodetection and enforces
         reading a file in a given format.
 
         >>> from obspy.core import read  # doctest: +SKIP
-        >>> st = read("loc_RJOB20050831023349.z", format="GSE2")  # doctest: +SKIP
-        >>> print st  # doctest: +SKIP
-        1 Trace(s) in Stream:
-        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
+        >>> read("loc_RJOB20050831023349.z", format="GSE2") # doctest: +SKIP
+        <obspy.core.stream.Stream object at 0x101700150>
 
     (3) Reading via HTTP protocol.
 
         >>> from obspy.core import read
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
-        >>> print st
+        >>> print st  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
+        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
     st = Stream()
     if "//" in pathname_or_url:
@@ -129,21 +128,6 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
 def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a single file into a :class:`~obspy.core.stream.Stream` object.
-
-    Parameters
-    ----------
-    filename : string
-        String containing a file name.
-    format : string, optional
-        Format of the file to read. Commonly one of "GSE2", "MSEED",
-        or "SAC". If it is None the format will be automatically
-        detected which results in a slightly faster reading. If you specify
-        a format no further format checking is done. To avoid problems
-        please use the option only when you are sure which format your file
-        has.
-    headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -340,8 +324,7 @@ class Stream(object):
 
     def getGaps(self, min_gap=None, max_gap=None):
         """
-        Returns a list which contains information about all gaps/overlaps that
-        result from the Traces in the Stream object.
+        Returns a list of all trace gaps/overlaps of the Stream object.
 
         The returned list contains one item in the following form for each gap/
         overlap:
@@ -382,21 +365,19 @@ class Stream(object):
             else:
                 nsamples += 1
             gap_list.append([stats['network'], stats['station'],
-                            stats['location'], stats['channel'],
-                            stime, etime, duration,
-                            nsamples])
+                             stats['location'], stats['channel'], stime, etime,
+                             duration, nsamples])
         return gap_list
 
-    def insert(self, index, object):
+    def insert(self, position, object):
         """
-        Inserts either a single Trace object or a list of Trace objects before
-        index.
+        Inserts either a single Trace or a list of Traces before index.
 
-        :param index: The Trace will be inserted before index.
+        :param position: The Trace will be inserted at position.
         :param object: Single Trace object or list of Trace objects.
         """
         if isinstance(object, Trace):
-            self.traces.insert(index, object)
+            self.traces.insert(position, object)
         elif isinstance(object, list):
             # Make sure each item in the list is a trace.
             for _i in object:
@@ -405,9 +386,9 @@ class Stream(object):
                     raise TypeError(msg)
             # Insert each item of the list.
             for _i in xrange(len(object)):
-                self.traces.insert(index + _i, object[_i])
+                self.traces.insert(position + _i, object[_i])
         elif isinstance(object, Stream):
-            self.insert(index, object.traces)
+            self.insert(position, object.traces)
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)

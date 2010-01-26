@@ -354,10 +354,13 @@ class Trace(object):
     def plot(self, *args, **kwargs):
         """
         Creates a simple graph of the current trace.
-        
+
+        Basic Usage
+        -----------
         >>> data = np.sin(np.linspace(0,2*np.pi,1000))
         >>> tr = Trace(data=data)
         >>> tr.plot() # doctest: +SKIP
+
         .. plot::
 
             data = np.sin(np.linspace(0,2*np.pi,1000))
@@ -387,7 +390,7 @@ class Trace(object):
                 :func:`~obspy.core.streram.read` for all possible formats.
 
         >>> tr = Trace()
-        >>> tr.write(filename, format="MSEED")
+        >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of 
         # Stream and Trace classes

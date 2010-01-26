@@ -433,10 +433,6 @@ clibmseed.mst_freegroup.restype = C.c_void_p
 clibmseed.msr_init.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_init.restype = C.POINTER(MSRecord)
 
-clibmseed.mst_printtracelist.argtypes = [
-    C.POINTER(MSTraceGroup), C.c_int, C.c_int, C.c_int]
-clibmseed.mst_printtracelist.restype = C.c_void_p
-
 clibmseed.ms_readmsr_r.argtypes = [
     C.POINTER(C.POINTER(MSFileParam)), C.POINTER(C.POINTER(MSRecord)),
     C.c_char_p, C.c_int, C.POINTER(Py_ssize_t), C.POINTER(C.c_int), C.c_short,
@@ -456,7 +452,6 @@ clibmseed.msr_endtime.restype = C.c_int64
 
 clibmseed.ms_find_reclen.argtypes = [C.c_char_p, C.c_int, C.POINTER(C.c_int)]
 clibmseed.ms_find_reclen.restype = C.c_int
-
 
 clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
         C.c_int, C.c_int,

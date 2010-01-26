@@ -7,17 +7,17 @@ from obspy.core import Stream, Trace
 from obspy.mseed import LibMSEED
 from obspy.mseed.headers import ENCODINGS
 import numpy as np
-import sys
 
 
 def isMSEED(filename):
     """
     Returns true if the file is a Mini-SEED file and false otherwise.
-    
+
     :param filename: File to be read.
     """
     __libmseed__ = LibMSEED()
     return __libmseed__.isMSEED(filename)
+
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
               reclen= -1, **kwargs):
@@ -98,12 +98,12 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
 def writeMSEED(stream_object, filename, encoding=None, **kwargs):
     """
     Write Mini-SEED file from a Stream object.
-    
+
     All kwargs are passed directly to obspy.mseed.writeMSTraces.
     This function should NOT be called directly, it registers via the
     obspy :method:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
-    
+
     :param stream_object: obspy.Stream object. Data in stream object must
         be of type int32. NOTE: They are automatically adapted if necessary
     :param filename: Name of the output file

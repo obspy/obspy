@@ -51,20 +51,6 @@ class LibMSEED(object):
     """
     Class for handling MiniSEED files.
     """
-    def printFileInformation(self, filename):
-        """
-        Prints some informations about the file.
-        
-        :param filename: MiniSEED file.
-        """
-        try:
-            #Read Trace Group
-            mstg = self.readFileToTraceGroup(str(filename), dataflag=0)
-            clibmseed.mst_printtracelist(mstg, 1, 1, 1)
-            clibmseed.mst_freegroup(C.pointer(mstg))
-            del mstg
-        except:
-            raise
 
     def isMSEED(self, filename):
         """
@@ -334,7 +320,6 @@ class LibMSEED(object):
             raise Exception("Error in ms_readtraces")
         return mstg
 
-
     def getFirstRecordHeaderInfo(self, filename):
         """
         Takes a MiniSEED file and returns header of the first record.
@@ -359,7 +344,6 @@ class LibMSEED(object):
         del ms
         return header
 
-
     def getStartAndEndTime(self, filename):
         """
         Returns the start- and endtime of a MiniSEED file as a tuple
@@ -383,93 +367,6 @@ class LibMSEED(object):
         endtime = ms.getEnd()
         del ms # for valgrind
         return starttime, endtime
-
-
-    def getGapList(self, filename, time_tolerance= -1,
-                   samprate_tolerance= -1, min_gap=None, max_gap=None):
-        """
-        Returns gaps, overlaps and trace header information of a given file.
-        
-        Each item has a starttime and a duration value to characterize the gap.
-        The starttime is the last correct data sample. If no gaps are found it
-        will return an empty list.
-        
-        :param time_tolerance: Time tolerance while reading the traces, default 
-            to -1 (1/2 sample period).
-        :param samprate_tolerance: Sample rate tolerance while reading the 
-            traces, defaults to -1 (rate dependent).
-        :param min_gap: Omit gaps with less than this value if not None. 
-        :param max_gap: Omit gaps with greater than this value if not None.
-        :return: List of tuples in form of (network, station, location, 
-            channel, starttime, endtime, gap, samples) 
-        """
-        # read file
-        mstg = self.readFileToTraceGroup(filename, dataflag=0,
-                                         skipnotdata=0,
-                                         timetol=time_tolerance,
-                                         sampratetol=samprate_tolerance)
-        gap_list = []
-        # iterate through traces
-        cur = mstg.contents.traces.contents
-        for _ in xrange(mstg.contents.numtraces - 1):
-            next = cur.next.contents
-            # Skip MSTraces with 0 sample rate, usually from SOH records
-            if cur.samprate == 0:
-                cur = next
-                continue
-            # Check that sample rates match using default tolerance
-            if not self._isRateTolerable(cur.samprate, next.samprate):
-                msg = "%s: Sample rate changed! %.10g -> %.10g\n"
-                sys.stderr.write(msg % (filename, cur.samprate, next.samprate))
-            gap = (next.starttime - cur.endtime) / HPTMODULUS
-            # Check that any overlap is not larger than the trace coverage
-            if gap < 0:
-                if next.samprate:
-                    delta = 1 / float(next.samprate)
-                else:
-                    delta = 0
-                temp = (next.endtime - next.starttime) / HPTMODULUS + delta
-                if (gap * -1) > temp:
-                    gap = -1 * temp
-            # Check gap/overlap criteria
-            if min_gap and gap < min_gap:
-                cur = next
-                continue
-            if max_gap and gap > max_gap:
-                cur = next
-                continue
-            # Number of missing samples
-            nsamples = math.fabs(gap) * cur.samprate
-            if gap > 0:
-                nsamples -= 1
-            else:
-                nsamples += 1
-            # Convert to python datetime objects
-            time1 = UTCDateTime(cur.endtime / HPTMODULUS)
-            time2 = UTCDateTime(next.starttime / HPTMODULUS)
-            gap_list.append((cur.network, cur.station, cur.location,
-                             cur.channel, time1, time2, gap, nsamples))
-            cur = next
-        clibmseed.mst_freegroup(C.pointer(mstg))
-        del mstg
-        return gap_list
-
-    def printGapList(self, filename, time_tolerance= -1,
-                     samprate_tolerance= -1, min_gap=None, max_gap=None):
-        """
-        Print gap/overlap list summary information for the given filename.
-        """
-        result = self.getGapList(filename, time_tolerance, samprate_tolerance,
-                                 min_gap, max_gap)
-        msg = "%-17s %-26s %-26s %-5s %-8s\n" % ('Source', 'Last Sample',
-                                                 'Next Sample', 'Gap',
-                                                 'Samples')
-        sys.stdout.write(msg)
-        msg = "%-17s %-26s %-26s %-5s %-.8g"
-        for r in result:
-            sys.stdout.write(msg % ('_'.join(r[0:4]), r[4].isoformat(),
-                                    r[5].isoformat(), r[6], r[7]))
-        sys.stdout.write("Total: %d gap(s)\n" % len(result))
 
     def readMSHeader(self, filename, time_tolerance= -1,
                      samprate_tolerance= -1, reclen= -1):
@@ -619,7 +516,6 @@ class LibMSEED(object):
         result['lower_quantile'] = quantile(data, 0.25, issorted=False)
         result['upper_quantile'] = quantile(data, 0.75, issorted=False)
         return result
-
 
     def _bytePosFromTime(self, filename, starttime=None, endtime=None):
         """
@@ -867,7 +763,6 @@ class LibMSEED(object):
         if nsamples != npts:
             raise Exception("Error in unpack_steim2")
         return datasamples
-
 
     def unpack_steim1(self, data_string, npts, swapflag=0, verbose=0):
         """
@@ -1164,4 +1059,3 @@ class MSStruct(object):
         """
         clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
                                None, -1, None, None, 0, 0, 0)
-

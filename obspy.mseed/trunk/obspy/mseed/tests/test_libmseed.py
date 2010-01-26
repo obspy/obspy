@@ -227,56 +227,18 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Read file and test if all traces are being read.
         trace_list = mseed.readMSTraces(filename)
         self.assertEqual(len(trace_list), 4)
-        # Four traces need to have three gaps.
-        gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), len(trace_list) - 1)
         # Write File to temporary file.
         outfile = unicode('tempfile.mseed')
         mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
         # Read the same file again and compare it to the original file.
         new_trace_list = mseed.readMSTraces(outfile)
         self.assertEqual(len(trace_list), len(new_trace_list))
-        new_gap_list = mseed.getGapList(outfile)
-        self.assertEqual(gap_list, new_gap_list)
         # Compare new_trace_list with trace_list
         for _i in xrange(len(trace_list)):
             self.assertEqual(trace_list[_i][0], new_trace_list[_i][0])
             np.testing.assert_array_equal(trace_list[_i][1],
                                          new_trace_list[_i][1])
         os.remove(outfile)
-
-    def test_getGapList(self):
-        """
-        Searches gaps via libmseed and compares the result with known values.
-        
-        The values are compared with the original printgaplist method of the 
-        libmseed library and manually with the SeisGram2K viewer.
-        """
-        mseed = LibMSEED()
-        # test file with 3 gaps
-        filename = os.path.join(self.path, 'gaps.mseed')
-        gap_list = mseed.getGapList(filename)
-        self.assertEqual(len(gap_list), 3)
-        # index are now changed, 0 contains head of trace[0]
-        self.assertEqual(gap_list[0][0], 'BW')
-        self.assertEqual(gap_list[0][1], 'BGLD')
-        self.assertEqual(gap_list[0][2], '')
-        self.assertEqual(gap_list[0][3], 'EHE')
-        self.assertEqual(gap_list[0][4],
-                         UTCDateTime(2008, 1, 1, 0, 0, 1, 970000))
-        self.assertEqual(gap_list[0][5],
-                         UTCDateTime(2008, 1, 1, 0, 0, 4, 35000))
-        self.assertEqual(gap_list[0][6], 2.065)
-        self.assertEqual(gap_list[0][7], 412)
-        self.assertEqual(gap_list[1][6], 2.065)
-        self.assertEqual(gap_list[1][7], 412)
-        self.assertEqual(gap_list[2][6], 4.125)
-        self.assertEqual(gap_list[2][7], 824)
-        # real example without gaps
-        filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        gap_list = mseed.getGapList(filename)
-        self.assertEqual(gap_list[1:], [])
 
     def test_readFirstHeaderInfo(self):
         """
