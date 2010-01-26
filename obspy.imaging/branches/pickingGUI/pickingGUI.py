@@ -475,7 +475,7 @@ def pick(event):
         #we have to to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
-        MagMinCross=event.inaxes.plot([MagMinT],[MagMin],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        MagMinCross=event.inaxes.plot([MagMinT],[MagMin],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
         redraw()
@@ -494,7 +494,7 @@ def pick(event):
         #we have to to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
-        MagMaxCross=event.inaxes.plot([MagMaxT],[MagMax],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker)[0]
+        MagMaxCross=event.inaxes.plot([MagMaxT],[MagMax],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
         redraw()
