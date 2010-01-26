@@ -20,6 +20,14 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 USA.
+
+
+.. plot::
+
+    from obspy.core import read
+    st = read('../obspy.gse2/trunk/obspy/gse2/tests/data/loc_RJOB20050831023349.z')
+    st.plot()
+
 """
 # Please do not import anything here. It is needed to run the tests
 # without X11 or any other display, see tests/__init__.py for details

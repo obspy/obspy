@@ -1,6 +1,3 @@
-:mod:`obspy.arclink` - ArcLink/WebDC Request Client 
-===================================================
-
 .. currentmodule:: obspy.arclink
 .. automodule:: obspy.arclink
 

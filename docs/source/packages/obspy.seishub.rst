@@ -1,6 +1,3 @@
-:mod:`obspy.seishub` - SeisHub Client
-=====================================
-
 .. currentmodule:: obspy.seishub
 .. automodule:: obspy.seishub
 

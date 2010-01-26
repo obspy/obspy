@@ -26,6 +26,8 @@ import sys, os
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary', 'numpydoc']
+#              'matplotlib.sphinxext.plot_directive',
+#              'matplotlib.sphinxext.only_directives']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,6 +1,3 @@
-:mod:`obspy.mseed` - MiniSEED read and write support 
-====================================================
-
 .. currentmodule:: obspy.mseed
 .. automodule:: obspy.mseed
 

@@ -1,6 +1,3 @@
-:mod:`obspy.signal` - Filters, triggers, instrument correction, rotation
-========================================================================
-
 .. currentmodule:: obspy.signal
 .. automodule:: obspy.signal
 
