@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
+"""
+Module for handling ObsPy Trace objects.
 
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 from copy import deepcopy
-
-import numpy as np
-
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
+import numpy as np
 
 
 class Stats(AttribDict):
     """
-    A container for additional header information of a single Trace object.
+    A container for additional header information of a ObsPy Trace object.
 
     A ``Stats`` object may contain all header information (also known as meta
     data) of a :class:`~obspy.core.trace.Trace` object. Those headers may be
@@ -172,8 +175,7 @@ class Stats(AttribDict):
 
 class Trace(object):
     """
-    A `Trace` object contains data and meta data about a single continuous 
-    time series such as a seismic trace.
+    An object containing data of a continuous series, such as a seismic trace.
 
     :type data: `numpy.array` or `ma.masked_array`
     :param data: Numpy array of data samples
@@ -194,6 +196,9 @@ class Trace(object):
         super(Trace, self).__setattr__('data', data)
 
     def __str__(self):
+        """
+        Returns short summary of the current trace.
+        """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
               "%(starttime)s - %(endtime)s | " + \
               "%(sampling_rate).1f Hz, %(npts)d samples"
@@ -201,18 +206,18 @@ class Trace(object):
 
     def __len__(self):
         """
-        Returns the number of data samples of a :class:`obspy.core.trace.Trace`
-        object.
+        Returns number of data samples of the current trace.
 
         :rtype: int
         :return: Number of data samples.
 
-        Example:
-            >>> trace = Trace(data=[1, 2, 3, 4])
-            >>> trace.count()
-            4
-            >>> len(trace)
-            4
+        Example
+        -------
+        >>> trace = Trace(data=[1, 2, 3, 4])
+        >>> trace.count()
+        4
+        >>> len(trace)
+        4
         """
         return len(self.data)
 
@@ -220,17 +225,16 @@ class Trace(object):
 
     def __setattr__(self, key, value):
         """
-        __setattr__ method of L{Trace} object.
-        
-        Any change in Trace.data will dynamically set Trace.stats.npts.
+        __setattr__ method of Trace object.
         """
+        # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
     def __getitem__(self, index):
         """
-        __getitem__ method of L{Trace} object.
+        __getitem__ method of Trace object.
 
         :rtype: list
         :return: List of data points
@@ -239,11 +243,11 @@ class Trace(object):
 
     def __add__(self, trace):
         """
-        Adds a Trace object to this Trace
+        Adds another Trace object to current trace.
 
-        It will automatically append the data by interpolating overlaps or
-        filling gaps with numpy.NaN samples. Sampling rate and Trace ID must
-        be the same.
+        Data is automatically appended by interpolating overlaps or filling
+        gaps with numpy.NaN samples. Sampling rate and trace.id of both
+        traces must match.
         """
         if not isinstance(trace, Trace):
             raise TypeError
@@ -300,19 +304,24 @@ class Trace(object):
 
     def getId(self):
         """
-        Returns a SEED compatible identifier containing network, station,
-        location and channel code for the current Trace object.
-        
-        :rtype: string
-        :returns: SEED identifier
-        
-        Example:
-            >>> meta = {'station':'MANZ', 'network':'BW', 'channel':'EHZ'}
-            >>> trace = Trace(header=meta)
-            >>> trace.getId()
-            'BW.MANZ..EHZ'
-            >>> trace.id
-            'BW.MANZ..EHZ'
+        Returns a SEED compatible identifier of the trace.
+
+        The SEED identifier contains the network, station, location and channel
+        code for the current Trace object.
+
+        Returns
+        -------
+        string
+            SEED identifier
+
+        Example
+        -------
+        >>> meta = {'station':'MANZ', 'network':'BW', 'channel':'EHZ'}
+        >>> trace = Trace(header=meta)
+        >>> trace.getId()
+        'BW.MANZ..EHZ'
+        >>> trace.id
+        'BW.MANZ..EHZ'
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
@@ -321,7 +330,7 @@ class Trace(object):
 
     def plot(self, *args, **kwargs):
         """
-        Creates a graph of this L{Trace} object.
+        Creates a simple graph of the current trace.
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
@@ -334,7 +343,7 @@ class Trace(object):
 
     def write(self, filename, format, **kwargs):
         """
-        Saves trace into a file.
+        Saves current trace into a file.
         """
         # we need to import here in order to prevent a circular import of 
         # Stream and Trace classes
@@ -343,7 +352,7 @@ class Trace(object):
 
     def ltrim(self, starttime):
         """
-        Cuts L{Trace} object to given start time.
+        Cuts current trace to given start time.
         """
         if isinstance(starttime, float) or isinstance(starttime, int):
             starttime = UTCDateTime(self.stats.starttime) + starttime
@@ -362,7 +371,7 @@ class Trace(object):
 
     def rtrim(self, endtime):
         """
-        Cuts L{Trace} object to given end time.
+        Cuts current trace to given end time.
         """
         if isinstance(endtime, float) or isinstance(endtime, int):
             endtime = UTCDateTime(self.stats.endtime) - endtime
@@ -382,7 +391,7 @@ class Trace(object):
 
     def trim(self, starttime, endtime):
         """
-        Cuts L{Trace} object to given start and end time.
+        Cuts current trace to given start and end time.
         """
         # check time order and switch eventually
         if starttime > endtime:
@@ -393,7 +402,7 @@ class Trace(object):
 
     def verify(self):
         """
-        Verifies current Trace object with header values in stats attribute.
+        Verifies current trace with header values in stats attribute.
         """
         if len(self) != self.stats.npts:
             msg = "ntps(%d) differs from data size(%d)"

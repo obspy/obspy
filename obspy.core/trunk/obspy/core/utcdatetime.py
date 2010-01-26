@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Module containing a UTC-based datetime class.
 
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 from calendar import timegm
 import datetime
 
@@ -10,15 +15,8 @@ class UTCDateTime(datetime.datetime):
 
     This class inherits from Python :class:`datetime.datetime` class and
     refines the UTC time zone (Coordinated Universal Time) support. It features
-    the full ISO8601:2004 specification and some additional string patterns
+    the full `ISO8601:2004`_ specification and some additional string patterns
     during object initialization.
-
-
-.. autosummary::
-
-    ~UTCDateTime.__add__
-    ~UTCDateTime.__sub__
-
 
     Parameters
     ----------
@@ -27,23 +25,25 @@ class UTCDateTime(datetime.datetime):
         parameters. All possible options are summarized in the examples section
         underneath.
     iso8601 : boolean, optional
-        Enforce ISO8601:2004 detection. Works only with a string as first input
-        argument.
+        Enforce `ISO8601:2004`_ detection. Works only with a string as first
+        input argument.
 
     Supported Operations
     --------------------
     ``UTCDateTime = UTCDateTime + delta``
         Adds/removes ``delta`` seconds (given as int or float) to/from the
         current ``UTCDateTime`` object and returns a new ``UTCDateTime``
-        object.
+        object. 
+        See also: :meth:`UTCDateTime.__add__`.
     ``delta = UTCDateTime - UTCDateTime``
         Calculates the time difference in seconds between two ``UTCDateTime``
         objects. The time difference is given as float data type and may also
-        contain a negative number.
+        contain a negative number. 
+        See also: :meth:`UTCDateTime.__sub__`.
 
     Examples
     --------
-    (1) Using a timestamp value.
+    (1) Using a timestamp.
 
         >>> UTCDateTime(0)
         UTCDateTime(1970, 1, 1, 0, 0)
@@ -54,9 +54,8 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(1240561632.5)
         UTCDateTime(2009, 4, 24, 8, 27, 12, 500000)
 
-    (2) Using a `ISO8601:2004 <http://en.wikipedia.org/wiki/ISO_8601>`__
-        string. The detection may be enforced by setting the ``iso8601``
-        parameter to True.
+    (2) Using a `ISO8601:2004`_ string. The detection may be enforced by
+        setting the ``iso8601`` parameter to True.
 
         * Calendar date representation.
 
@@ -136,6 +135,8 @@ class UTCDateTime(datetime.datetime):
         >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
+    
+    .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
 
     def __new__(cls, *args, **kwargs):
@@ -362,7 +363,7 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getDate()
         datetime.date(2008, 10, 1)
 
-        :rtype: datetime.date
+        :rtype: :class:`datetime.date`
         :return: Python date object of current UTCDateTime object.
         """
         return datetime.date(self.year, self.month, self.day)
@@ -377,7 +378,7 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getTime()
         datetime.time(12, 30, 35, 45020)
 
-        :rtype: datetime.time
+        :rtype: :class:`datetime.time`
         :return: Python time object of current UTCDateTime object.
         """
         return datetime.time(self.hour, self.minute, self.second,
@@ -414,7 +415,7 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(0.5) + UTCDateTime(10.5)
         11.0
 
-        :return: UTCDateTime
+        :return: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
         if len(args) == 1:
             arg = args[0]
@@ -456,7 +457,7 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(10.0) - UTCDateTime(9.5)
         0.5
 
-        :return: UTCDateTime or float
+        :return: :class:`~obspy.core.utcdatetime.UTCDateTime` or float
         """
         if len(args) == 1:
             arg = args[0]
@@ -523,7 +524,7 @@ class UTCDateTime(datetime.datetime):
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
         :rtype: string
-        :return: Date time string in the SEED format.
+        :return: Datetime string in the SEED format.
         """
         if not compact:
             if not self.time:

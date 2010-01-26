@@ -10,6 +10,7 @@
 #---------------------------------------------------------------------
 """
 obspy.core - Core classes of ObsPy, Python for Seismological Observatories
+==========================================================================
 
 This class contains common methods and classes for ObsPy. It includes
 UTCDateTime, Stats, Stream and Trace classes and methods for reading

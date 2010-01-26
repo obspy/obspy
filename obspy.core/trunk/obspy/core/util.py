@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Various additional utilities for ObsPy.
 
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 from math import modf, floor
 import ctypes as C
 import os
@@ -10,6 +15,8 @@ class AttribDict(dict, object):
     """
     A class which behaves like a dictionary.
 
+    Basic Usage
+    -----------
     You may use the following syntax to change or access data in this
     class.
 
@@ -26,6 +33,11 @@ class AttribDict(dict, object):
     >>> x.sort()
     >>> x[0:3]
     ['network', 'station']
+
+    Parameters
+    ----------
+    data : dict, optional
+        Dictionary with initial keywords.
     """
     readonly = []
 
@@ -74,13 +86,34 @@ class AttribDict(dict, object):
 
 def quantile(x, q, qtype=7, issorted=False):
     """
-    Compute quantiles from input array x given q. For median, specify q=50.
+    Compute quantiles from input array using a given algorithm type.
 
-    :param x: input data
-    :param q: quantile
-    :param qtype: algorithm
-    :param issorted: True if x already sorted.
+    Parameters
+    ----------
+    x : array
+        Input data.
+    q : float, `0.0 <= q <= 1.0`
+        Quantile. For median, specify `q=0.5`.
+    qtype : int , optional
+        Selected algorithm. Defaults to 7.
+            ==============  =======================================
+            Algorithm Type  Algorithm
+            ==============  =======================================
+            1               Inverse empirical distribution function
+            2               Similar to type 1, averaged
+            3               Nearest order statistic, (SAS)
+            4               California linear interpolation
+            5               Hydrologists method
+            6               Mean-based estimate(Weibull method)
+            7               Mode-based method (S, S-Plus)
+            8               Median-unbiased
+            9               Normal-unbiased
+            ==============  =======================================
+    issorted : boolean, optional
+        True if `x` already sorted. Defaults to false.
 
+    Examples
+    --------
     >>> a = [1, 2, 3, 4]
     >>> quantile(a, 0.25)
     1.75
@@ -88,6 +121,7 @@ def quantile(x, q, qtype=7, issorted=False):
     2.5
     >>> quantile(a, 0.75)
     3.25
+
     >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
     >>> quantile(a, 0.25)
     25.5
@@ -97,9 +131,9 @@ def quantile(x, q, qtype=7, issorted=False):
     42.5
 
     :Author:
-        Ernesto P.Adorio Ph.D.
-        UP Extension Program in Pampanga, Clark Field.
-        http://adorio-research.org/wordpress/?p=125
+        'Ernesto P.Adorio Ph.D.'_, UP Extension Program in Pampanga, Clark Field
+    
+..  _'Ernesto P.Adorio Ph.D.': http://adorio-research.org/wordpress/?p=125 
     """
     # sort list
     if not issorted:
@@ -149,29 +183,36 @@ c_file_p = C.POINTER(FILE)
 
 def formatScientific(value):
     """
-    Formats floats in a fixed exponential format.
+    Returns a float string in a fixed exponential style.
 
     Different operation systems are delivering different output for the
-    exponential format of floats. Here we ensure to deliver in a for SEED
-    valid format independent of the OS. For speed issues we simple cut any
-    number ending with E+0XX or E-0XX down to E+XX or E-XX. This fails for
-    numbers XX>99, but should not occur, because the SEED standard does
-    not allow this values either.
+    exponential format of floats.
 
-    Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45)
-    [MSC v.1310 32 bit (Intel)] on win32
-    > '%E' % 2.5
-    '2.500000E+000'
+    (1) Python 2.5.2, WinXP, 32bit::
+        Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45)
+        [MSC v.1310 32 bit (Intel)] on win32
 
-    Python 2.5.2 (r252:60911, Apr  2 2008, 18:38:52)
-    [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on linux2
-    > '%E' % 2.5
-    '2.500000E+00'
+        >>> '%E' % 2.5 # doctest: +SKIP
+        '2.500000E+000'`
 
+    (2) **Python 2.5.2** (r252:60911, Apr  2 2008, 18:38:52)
+        [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on **linux2**
+
+        >>> '%E' % 2.5 # doctest: +SKIP
+        '2.500000E+00'
+
+    This function ensures a valid format independent of the operation system.
+    For speed issues any number ending with `E+0XX` or `E-0XX` is simply cut
+    down to `E+XX` or `E-XX`. This will fail for numbers `XX>99`.
+
+    Basic Usage
+    -----------
     >>> formatScientific("3.4e+002")
     '3.4e+02'
+
     >>> formatScientific("3.4E+02")
     '3.4E+02'
+
     >>> formatScientific("%-10.4e" % 0.5960000)
     '5.9600e-01'
     """
@@ -188,10 +229,13 @@ def formatScientific(value):
 
 def NamedTemporaryFile(dir=None, suffix='.tmp'):
     """
-    Weak replacement for L{tempfile.NamedTemporaryFile}.
+    Weak replacement for the Python class :class:`tempfile.NamedTemporaryFile`.
 
-    But this class will work also with Windows Vista's UAC. The calling
-    program is responsible to close the returned file pointer after usage.
+    This class will work also with Windows Vista's UAC.
+
+    .. warning::
+        The calling program is responsible to close the returned file pointer
+        after usage.
     """
 
     class NamedTemporaryFile(object):
@@ -207,10 +251,13 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
 
 def complexifyString(line):
     """
-    Converts a string of the form '(real, imag)' into a complex type.
+    Converts a string in the form "(real, imag)" into a complex type.
 
+    Basic Usage
+    -----------
     >>> complexifyString("(1,2)")
     (1+2j)
+
     >>> complexifyString(" ( 1 , 2 ) ")
     (1+2j)
     """

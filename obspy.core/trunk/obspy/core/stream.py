@@ -1,33 +1,43 @@
 # -*- coding: utf-8 -*-
+"""
+Module for handling ObsPy Stream objects.
 
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 from glob import iglob
 from obspy.core.trace import Trace
+from obspy.core.util import NamedTemporaryFile
 from pkg_resources import iter_entry_points, load_entry_point
 import copy
 import math
 import numpy as np
 import os
+import urllib2
 
 
-def read(pathname, format=None, headonly=False, **kwargs):
+def read(pathname_or_url, format=None, headonly=False, **kwargs):
     """
-    Reads a file(s) given as wildcards into a ObsPy Stream object.
+    Read waveform files using wildcards into an ObsPy Stream object.
 
-    The `read` method opens one or multiple files given via wildcards in the
+    The `read` function opens one or multiple files given via wildcards in the
     `pathname` attribute and returns a ObsPy :class:`~obspy.core.stream.Stream`
-    object. The file format format is auto detected if not given. Allowed
-    formats depend on the ObsPy packages installed. Commonly, packages for the
-    formats "GSE2", "MSEED" and "SAC" are installed.
+    object. The file format format is automatically detected if not given.
+    Allowed formats depend on the ObsPy packages installed. Commonly, packages
+    for the formats "GSE2", "MSEED" and "SAC" are available.
 
     Basic Usage
     -----------
+    Examples files may be retrieved via http://examples.obspy.org.
+
     >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("RJOB_061005_072159.ehz") # doctest: +SKIP
+    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
 
     Parameters
     ----------
-    pathname : string
-        String containing Filename. Wildcards are allowed.
+    pathname_or_url : string
+        String containing a file name or a URL. Wildcards are allowed for a
+        file name.
     format : string, optional
         Format of the file to read. Commonly one of "GSE2", "MSEED",
         or "SAC". If it is None the format will be automatically
@@ -41,8 +51,9 @@ def read(pathname, format=None, headonly=False, **kwargs):
 
     Notes
     -----
-    Additional ObsPy modules extend the functionality of the `read` method. The
-    following table summarizes all known formats currently available for ObsPy.
+    Additional ObsPy modules extend the functionality of the
+    :func:`~obspy.core.stream.read` function. The following table summarizes
+    all known formats currently available for ObsPy.
 
     Please refer to the linked function call of each module for any extra
     options available at the import stage.
@@ -59,48 +70,77 @@ def read(pathname, format=None, headonly=False, **kwargs):
     SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
     =======  ===================  ====================================
     
-    Next to the read function the :meth:`~Stream.write` function is a method of
-    the returned Stream object.
+    Next to the `read` function the :meth:`~Stream.write` function is a method
+    of the returned :class:`~obspy.core.stream.Stream` object.
 
     Examples
     --------
+    Examples files may be downloaded via http://examples.obspy.org.
+
     (1) The following code uses wildcards, in this case it matches two files.
-        Both files are then read into a :class:`~obspy.core.stream.Stream` object.
+        Both files are then read into a single
+        :class:`~obspy.core.stream.Stream` object.
 
         >>> from obspy.core import read  # doctest: +SKIP
-        >>> st = read("RJOB_061005_07*.ehz")  # doctest: +SKIP
+        >>> st = read(("loc_R*.z"))  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         2 Trace(s) in Stream:
-        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
-        --RJOB   Z | 2005-10-06,08:21:59--2005-10-06,08:24:59 | 200.0 Hz, 36000 samples
+        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
+        .RNON ..  Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.844998Z | 200.0 Hz, 12000 samples
 
-    (2) Using the ``format`` parameter disables the autodetection. The file
-        can be found [1]_.
+    (2) Using the ``format`` parameter disables the autodetection and enforces
+        reading a file in a given format.
 
         >>> from obspy.core import read  # doctest: +SKIP
-        >>> st = read("test.mseed", format="MSEED")  # doctest: +SKIP
+        >>> st = read("loc_RJOB20050831023349.z", format="GSE2")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         1 Trace(s) in Stream:
-        --RJOB   Z | 2005-10-06,07:21:59--2005-10-06,07:24:59 | 200.0 Hz, 36000 samples
+        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
 
-    .. [1] http://svn.geophysik.uni-muenchen.de/trac/obspy/browser/obspy.mseed/trunk/obspy/mseed/tests/data/test.mseed?format=raw
+    (3) Reading via HTTP protocol.
+
+        >>> from obspy.core import read
+        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
+        >>> print st
+        1 Trace(s) in Stream:
+        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
     """
     st = Stream()
-    for file in iglob(pathname):
-        st.extend(_read(file, format, headonly, **kwargs).traces)
-    if len(st) == 0:
-        raise Exception("Cannot open file/files", pathname)
+    if "//" in pathname_or_url:
+        # some URL
+        fh = NamedTemporaryFile()
+        fh.write(urllib2.urlopen(pathname_or_url).read())
+        fh.seek(0)
+        st.extend(_read(fh.name, format, headonly, **kwargs).traces)
+        fh.close()
+        os.remove(fh.name)
+    else:
+        pathname = pathname_or_url
+        for file in iglob(pathname):
+            st.extend(_read(file, format, headonly, **kwargs).traces)
+        if len(st) == 0:
+            raise Exception("Cannot open file/files", pathname)
     return st
 
 
 def _read(filename, format=None, headonly=False, **kwargs):
     """
-    Reads a file into a L{obspy.core.Stream} object.
+    Reads a single file into a :class:`~obspy.core.stream.Stream` object.
 
-    :param format: Format of the file to read. If it is None the format will be
-        automatically detected. If you specify a format no further format
-        checking is done. To avoid problems please use the option only when
-        you are sure which format your file has. Defaults to None.
+    Parameters
+    ----------
+    filename : string
+        String containing a file name.
+    format : string, optional
+        Format of the file to read. Commonly one of "GSE2", "MSEED",
+        or "SAC". If it is None the format will be automatically
+        detected which results in a slightly faster reading. If you specify
+        a format no further format checking is done. To avoid problems
+        please use the option only when you are sure which format your file
+        has.
+    headonly : bool, optional
+        If set to True, read only the head. This is most useful for
+        scanning available data in huge (temporary) data sets.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -156,6 +196,8 @@ def _read(filename, format=None, headonly=False, **kwargs):
 
 class Stream(object):
     """
+    List of multiple continuous time series, such as a seismic traces.
+
     ObsPy Stream class to collect L{Trace} objects.
     """
 
