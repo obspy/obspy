@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.mseed: Mini-SEED Read & Write support
-===========================================
+obspy.mseed - MiniSEED read and write support
+=============================================
 This module provides read and write support for Mini-SEED waveform data and
 some other convinient methods to handle Mini-SEED files. Most methods are based
 on libmseed, a C library framework by Chad Trabant and interfaced via python
@@ -30,10 +30,16 @@ attribute contains all Mini-SEED specific attributes which actually is just the
 dataquality.
 
 >>> print st[0].stats
-Stats({'network': 'DK', 'mseed': Stats({'dataquality': 'D'}), 'station': 'COP',
-'location': '',
-'starttime': UTCDateTime(2009, 2, 19, 0, 0, 0, 35100), 'npts': 1728000, 'sampling_rate': 20.0,
-'endtime': UTCDateTime(2009, 2, 19, 23, 59, 59, 985100), 'channel': 'BHE'})
+Stats({'network': 'DK',
+    'mseed': Stats({'dataquality': 'D'}),
+    'station': 'COP',
+    'location': '',
+    'starttime': UTCDateTime(2009, 2, 19, 0, 0, 0, 35100), 
+    'npts': 1728000, 
+    'sampling_rate': 20.0,
+    'endtime': UTCDateTime(2009, 2, 19, 23, 59, 59, 985100), 
+    'channel': 'BHE'
+})
 
 The data is stored in the data attribut.
 
@@ -117,9 +123,10 @@ count all set data quality flag bits in the fixed section of the data header in
 a MiniSEED file and returns the total count for each flag type.
 
 Data quality flags:
-=======   =================================================
+
+========  =================================================
 Bit       Description
-=======   =================================================
+========  =================================================
 [Bit 0]   Amplifier saturation detected (station dependent)
 [Bit 1]   Digitizer clipping detected
 [Bit 2]   Spikes detected
@@ -128,7 +135,7 @@ Bit       Description
 [Bit 5]   Telemetry synchronization error
 [Bit 6]   A digital filter may be charging
 [Bit 7]   Time tag is questionable
-=======  ==================================================
+========  =================================================
 
 This will only work correctly if each record in the file has the same record length.
 Parameters:

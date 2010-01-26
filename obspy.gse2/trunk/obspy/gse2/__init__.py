@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.gse2 - Read & write seismograms, Format GSE2
-==================================================
+obspy.gse2 - GSE2 read and write support
+========================================
 This module provides read and write support for GSE2 CM6 compressed
 waveform data and header info. Most methods are based on the C library
 GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
@@ -57,6 +57,11 @@ Stats({
     'endtime': UTCDateTime(2005, 8, 31, 2, 34, 49, 844998), 
     'channel': '  Z'
 })
+
+The data are available via the data attribute.
+
+>>>  print st[0].data
+[ 12 -10  16 ...,   8   0 -40]
 
 Writing
 -------

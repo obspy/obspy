@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Various additional utilities for ObsPy xseed.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 
 from obspy.core import UTCDateTime
 from obspy.core.util import formatScientific

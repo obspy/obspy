@@ -26,6 +26,10 @@ class ClientTestCase(unittest.TestCase):
         print data
         data = client.waveform.getChannelIds()
         print data
+        t = UTCDateTime('20090808')
+        st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t,
+                                          t + 60*30)
+        print st
         data = client.waveform.getStationIds(network_id='BW')
         print data
         data = client.waveform.getChannelIds(network_id='BW',

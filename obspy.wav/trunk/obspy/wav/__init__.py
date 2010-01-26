@@ -1,6 +1,6 @@
 """
-obspy.wav Read & Write Seismograms to WAVE audio Format
-=======================================================
+obspy.wav - WAVE (audio) read and write support
+===============================================
 Python method in order to read and write seismograms to WAV audio
 files. The data are squeezed to audible frequencies.
 

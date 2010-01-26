@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 SAC bindings to ObsPy core module.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
 from obspy.core import Trace, UTCDateTime, Stream

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+Main module containing XML-SEED parser.
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
