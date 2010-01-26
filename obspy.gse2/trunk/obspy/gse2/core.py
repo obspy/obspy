@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+GSE2 bindings to ObsPy core module.
+"""
 
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.gse2 import libgse2
@@ -47,13 +50,13 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     
     GSE2 files containing multiple WID2 entries/traces are supported.
     This function should NOT be called directly, it registers via the
-    obspy :function:`~obspy.core.stream.read` function, call this instead.
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
     
     :param filename: GSE2 file to be read.
     :param headonly: If True read only head of GSE2 file
     :param verify_chksum: If True verify Checksum and raise Exception if it
         is not correct
-    :return: :class:`obspy.core.stream.Stream` object containing header and
+    :return: :class:`~obspy.core.stream.Stream` object containing header and
         data
 
     Example

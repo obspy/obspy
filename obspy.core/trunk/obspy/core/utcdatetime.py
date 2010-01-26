@@ -13,6 +13,15 @@ class UTCDateTime(datetime.datetime):
     the full ISO8601:2004 specification and some additional string patterns
     during object initialization.
 
+
+.. autosummary::
+     :toctree: .
+     :nosignatures:
+
+       ~UTCDateTime.__add__
+       ~UTCDateTime.__sub__
+
+
     Parameters
     ----------
     *args : int, float, string, :class:`datetime.datetime`, optional

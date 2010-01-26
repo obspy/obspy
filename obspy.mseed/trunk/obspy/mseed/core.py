@@ -24,17 +24,19 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     This function should NOT be called directly, it registers via the
     obspy :function:`~obspy.core.stream.read` function, call this instead.
 
-    :param filename: string
+    Parameter
+    ---------
+    filename : string
         Mini-SEED file to be read.
-    :param headonly: bool, optional
+    headonly : bool, optional
         If set to True, read only the head. This is most useful for
         scanning available data in huge (temporary) data sets.
-    :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Specify the starttime to read. The remaining records are not
         unpacked. Usually this resuls in a faster reading.
-    :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         See description of starttime.
-    :param reclen: int, optional
+    reclen : int, optional
         Record length in bytes of Mini-SEED file to read. This option might
         be usefull if blockette 10 is missing and thus read cannot
         determine the reclen automatically.

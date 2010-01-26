@@ -55,8 +55,8 @@ def read(pathname, format=None, headonly=False, **kwargs):
     SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
     SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
     WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
-    Q        :mod:`obspy.sh`      :func:`obspy.sh.q.readQ`
-    SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.asc.readASC`
+    Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
+    SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
     =======  ===================  ====================================
     
     Next to the read function the :meth:`~Stream.write` function is a method of
