@@ -66,4 +66,9 @@ setup(
         "/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev",
     include_package_data=True,
     test_suite="obspy.imaging.tests.suite",
+    entry_points={
+        'console_scripts': [
+            'obspy-scan = obspy.imaging.scripts.obspyscan:main'
+        ],
+    },
 )
