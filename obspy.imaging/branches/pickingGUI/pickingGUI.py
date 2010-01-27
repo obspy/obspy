@@ -98,7 +98,6 @@ def drawAxes():
     xMin,xMax=axs[0].get_xlim()
     yMin,yMax=axs[0].get_ylim()
     fig.subplots_adjust(bottom=0.25,hspace=0,right=0.999,top=0.95)
-    #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
 
 def drawSavedPicks():
     if dicts[stPt].has_key('P'):
@@ -737,6 +736,18 @@ def switchPan(event):
         redraw()
         print "Switching pan mode"
 
+#lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
+def multicursorReinit():
+    global multicursor
+    fig.canvas.mpl_disconnect(multicursor)
+    multicursor.__init__(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
+    #fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
+    fig.canvas.draw_idle()
+    multicursor._update()
+    multicursor.needclear=True
+    multicursor.background = fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
+    for line in multicursor.lines: line.set_visible(False)
+
 def switchStream(event):
     global stPt
     if event.key==dictKeybindings['prevStream']:
@@ -748,6 +759,7 @@ def switchStream(event):
         addSliders()
         redraw()
         print "Going to previous stream"
+        multicursorReinit()
     if event.key==dictKeybindings['nextStream']:
         stPt=(stPt+1)%stNum
         delAxes()
@@ -757,6 +769,7 @@ def switchStream(event):
         addSliders()
         redraw()
         print "Going to next stream"
+        multicursorReinit()
         
 
 # Activate all mouse/key/Cursor-events
@@ -770,5 +783,6 @@ scroll_button = fig.canvas.mpl_connect('button_press_event', zoom_reset)
 #cursorN = mplCursor(axN, useblit=True, color='black', linewidth=1, ls='dotted')
 #cursorE = mplCursor(axE, useblit=True, color='black', linewidth=1, ls='dotted')
 fig.canvas.toolbar.pan()
+multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
 
 plt.show()
