@@ -33,7 +33,7 @@ streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
 #===============================================================================
 
 
-#Define some flags and dictionaries
+#Define some flags, dictionaries and plotting options
 flagFilt=False #False:no filter  True:filter
 flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
 dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
@@ -47,8 +47,13 @@ magMarker='x'
 magMarkerEdgeWidth=1.8
 magMarkerSize=20
 axvlinewidths=1.4
+#dictionary for key-bindings
+dictKeybindings={'setPick':'alt','setPickError':' ','delPick':'escape','setMagMin':'alt','setMagMax':' ','delMagMinMax':'escape','switchWheelZoom':'z','switchPan':'p','prevStream':'y','nextStream':'x'}
 
-
+#set up a list of dictionaries to store all picking data
+dicts=[]
+for i in range(len(streams)):
+    dicts.append({})
 
 
 def switch_flagFilt():
@@ -93,6 +98,9 @@ def drawAxes():
     yMin,yMax=axs[0].get_ylim()
     fig.subplots_adjust(bottom=0.25,hspace=0,right=0.999,top=0.95)
     #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
+
+#def drawSavedPicks():
+    
 
 def delAxes():
     for a in axs:
@@ -159,9 +167,6 @@ def redraw():
     fig.canvas.draw()
 
 def updatePlot():
-    global pltZ
-    global pltN
-    global pltE
     filt=[]
     #filter data
     if flagFilt==True:
@@ -261,7 +266,7 @@ def pick(event):
     global MagMaxT
     global MagMaxCross
     # Set new P Pick
-    if flagPhase==0 and event.key=='alt':
+    if flagPhase==0 and event.key==dictKeybindings['setPick']:
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
@@ -269,18 +274,18 @@ def pick(event):
                 axs[i].lines.remove(PLines[i])
         except:
             pass
+        # Save sample value of pick (round to integer sample value)
+        dicts[stPt]['P']=int(round(event.xdata))
         # Plot the lines for the P pick in all three traces
         PLines=[]
         for i in range(len(axs)):
-            PLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths,label='P'))
-        # Save sample value of pick (round to integer sample value)
-        P=int(round(event.xdata))
+            PLines.append(axs[i].axvline(dicts[stPt]['P'],color=dictPhaseColors[flagPhase],linewidth=axvlinewidths,label='P'))
         # Update all subplots
         redraw()
         # Console output
-        print "P Pick set at %i"%P
+        print "P Pick set at %i"%dicts[stPt]['P']
     # Set new S Pick
-    if flagPhase==1 and event.key=='alt':
+    if flagPhase==1 and event.key==dictKeybindings['setPick']:
         # Define global variables seen outside
         # Remove old lines from the plot before plotting the new ones
         try:
@@ -288,24 +293,24 @@ def pick(event):
                 axs[i].lines.remove(SLines[i])
         except:
             pass
+        # Save sample value of pick (round to integer sample value)
+        dicts[stPt]['S']=int(round(event.xdata))
         # Plot the lines for the S pick in all three traces
         SLines=[]
         for i in range(len(axs)):
-            SLines.append(axs[i].axvline(event.xdata,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
-        # Save sample value of pick (round to integer sample value)
-        S=int(round(event.xdata))
+            SLines.append(axs[i].axvline(dicts[stPt]['S'],color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
         # Update all subplots
         redraw()
         # Console output
-        print "S Pick set at %i"%S
+        print "S Pick set at %i"%dicts[stPt]['S']
     # Remove P Pick
-    if flagPhase==0 and event.key=='escape':
+    if flagPhase==0 and event.key==dictKeybindings['delPick']:
         # Try to remove all existing Pick lines and P Pick variable
         try:
             for i in range(len(axs)):
                 axs[i].lines.remove(PLines[i])
             del PLines
-            del P
+            del dicts[stPt]['P']
             # Console output
             print "P Pick deleted"
         except:
@@ -315,7 +320,7 @@ def pick(event):
             for i in range(len(axs)):
                 axs[i].lines.remove(PErr1Lines[i])
             del PErr1Lines
-            del PErr1
+            del dicts[stPt]['PErr1']
         except:
             pass
         # Try to remove existing Pick Error 2 lines and variable
@@ -323,19 +328,19 @@ def pick(event):
             for i in range(len(axs)):
                 axs[i].lines.remove(PErr2Lines[i])
             del PErr2Lines
-            del PErr2
+            del dicts[stPt]['PErr2']
         except:
             pass
         # Update all subplots
         redraw()
     # Remove S Pick
-    if flagPhase==1 and event.key=='escape':
+    if flagPhase==1 and event.key==dictKeybindings['delPick']:
         # Try to remove all existing Pick lines and P Pick variable
         try:
             for i in range(len(axs)):
                 axs[i].lines.remove(SLines[i])
             del SLines
-            del S
+            del dicts[stPt]['S']
             # Console output
             print "S Pick deleted"
         except:
@@ -345,7 +350,7 @@ def pick(event):
             for i in range(len(axs)):
                 axs[i].lines.remove(SErr1Lines[i])
             del SErr1Lines
-            del SErr1
+            del dicts[stPt]['SErr1']
         except:
             pass
         # Try to remove existing Pick Error 2 lines and variable
@@ -353,17 +358,17 @@ def pick(event):
             for i in range(len(axs)):
                 axs[i].lines.remove(SErr2Lines[i])
             del SErr2Lines
-            del SErr2
+            del dicts[stPt]['SErr1']
         except:
             pass
         # Update all subplots
         redraw()
     # Set new P Pick uncertainties
-    if flagPhase==0 and event.key==' ':
+    if flagPhase==0 and event.key==dictKeybindings['setPickError']:
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
-            if event.xdata<P:
+            if event.xdata<dicts[stPt]['P']:
                 errFlag=1
             # Set right Error Pick
             else:
@@ -380,16 +385,16 @@ def pick(event):
                     axs[i].lines.remove(PErr1Lines[i])
             except:
                 pass
+            # Save sample value of error pick (round to integer sample value)
+            dicts[stPt]['PErr1']=int(round(event.xdata))
             # Plot the lines for the P Error pick in all three traces
             PErr1Lines=[]
             for i in range(len(axs)):
-                PErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
-            # Save sample value of error pick (round to integer sample value)
-            PErr1=int(round(event.xdata))
+                PErr1Lines.append(axs[i].axvline(dicts[stPt]['PErr1'],ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Update all subplots
             redraw()
             # Console output
-            print "P Error Pick 1 set at %i"%PErr1
+            print "P Error Pick 1 set at %i"%dicts[stPt]['PErr1']
         # Case 2
         if errFlag==2:
             # Define global variables seen outside
@@ -399,22 +404,22 @@ def pick(event):
                     axs[i].lines.remove(PErr2Lines[i])
             except:
                 pass
+            # Save sample value of error pick (round to integer sample value)
+            dicts[stPt]['PErr2']=int(round(event.xdata))
             # Plot the lines for the P Error pick in all three traces
             PErr2Lines=[]
             for i in range(len(axs)):
-                PErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
-            # Save sample value of error pick (round to integer sample value)
-            PErr2=int(round(event.xdata))
+                PErr2Lines.append(axs[i].axvline(dicts[stPt]['PErr2'],ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Update all subplots
             redraw()
             # Console output
-            print "P Error Pick 2 set at %i"%PErr2
+            print "P Error Pick 2 set at %i"%dicts[stPt]['PErr2']
     # Set new S Pick uncertainties
-    if flagPhase==1 and event.key==' ':
+    if flagPhase==1 and event.key==dictKeybindings['setPickError']:
         # Set Flag to determine scenario
         try:
             # Set left Error Pick
-            if event.xdata<S:
+            if event.xdata<dicts[stPt]['S']:
                 errFlag=1
             # Set right Error Pick
             else:
@@ -431,16 +436,16 @@ def pick(event):
                     axs[i].lines.remove(SErr1Lines[i])
             except:
                 pass
+            # Save sample value of error pick (round to integer sample value)
+            dicts[stPt]['SErr1']=int(round(event.xdata))
             # Plot the lines for the S Error pick in all three traces
             SErr1Lines=[]
             for i in range(len(axs)):
-                SErr1Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
-            # Save sample value of error pick (round to integer sample value)
-            SErr1=int(round(event.xdata))
+                SErr1Lines.append(axs[i].axvline(dicts[stPt]['SErr1'],ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Update all subplots
             redraw()
             # Console output
-            print "S Error Pick 1 set at %i"%SErr1
+            print "S Error Pick 1 set at %i"%dicts[stPt]['SErr1']
         # Case 2
         if errFlag==2:
             # Define global variables seen outside
@@ -450,18 +455,18 @@ def pick(event):
                     axs[i].lines.remove(SErr2Lines[i])
             except:
                 pass
+            # Save sample value of error pick (round to integer sample value)
+            dicts[stPt]['SErr2']=int(round(event.xdata))
             # Plot the lines for the S Error pick in all three traces
             SErr2Lines=[]
             for i in range(len(axs)):
-                SErr2Lines.append(axs[i].axvline(event.xdata,ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
-            # Save sample value of error pick (round to integer sample value)
-            SErr2=int(round(event.xdata))
+                SErr2Lines.append(axs[i].axvline(dicts[stPt]['SErr2'],ymin=0.25,ymax=0.75,color=dictPhaseColors[flagPhase],linewidth=axvlinewidths))
             # Update all subplots
             redraw()
             # Console output
-            print "S Error Pick 2 set at %i"%SErr2
+            print "S Error Pick 2 set at %i"%dicts[stPt]['SErr2']
     # Magnitude estimation picking:
-    if flagPhase==2 and event.key=='alt':
+    if flagPhase==2 and event.key==dictKeybindings['setMagMin']:
         for a in axs:
             try:
                 a.lines.remove(MagMinCross)
@@ -470,17 +475,17 @@ def pick(event):
         xpos=int(event.xdata)
         ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
         cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-        MagMin=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
-        MagMinT=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        dicts[stPt]['MagMin']=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        dicts[stPt]['MagMinT']=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
         #we have to to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
-        MagMinCross=event.inaxes.plot([MagMinT],[MagMin],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
+        MagMinCross=event.inaxes.plot([dicts[stPt]['MagMinT']],[dicts[stPt]['MagMin']],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
         redraw()
-        print "Minimum for magnitude estimation set: %s at %s"%(MagMin,MagMinT)
-    if flagPhase==2 and event.key==' ':
+        print "Minimum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMin'],dicts[stPt]['MagMinT'])
+    if flagPhase==2 and event.key==dictKeybindings['setMagMax']:
         for a in axs:
             try:
                 a.lines.remove(MagMaxCross)
@@ -489,17 +494,17 @@ def pick(event):
         xpos=int(event.xdata)
         ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
         cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-        MagMax=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
-        MagMaxT=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        dicts[stPt]['MagMax']=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
+        dicts[stPt]['MagMaxT']=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
         #we have to to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
-        MagMaxCross=event.inaxes.plot([MagMaxT],[MagMax],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
+        MagMaxCross=event.inaxes.plot([dicts[stPt]['MagMaxT']],[dicts[stPt]['MagMax']],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors[flagPhase],marker=magMarker,zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
         redraw()
-        print "Maximum for magnitude estimation set: %s at %s"%(MagMax,MagMaxT)
-    if flagPhase==2 and event.key=='escape':
+        print "Maximum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMax'],dicts[stPt]['MagMaxT'])
+    if flagPhase==2 and event.key==dictKeybindings['delMagMinMax']:
         for a in axs:
             try:
                 a.lines.remove(MagMinCross)
@@ -510,13 +515,13 @@ def pick(event):
             except:
                 pass
         try:
-            del MagMin
-            del MagMinT
+            del dicts[stPt]['MagMin']
+            del dicts[stPt]['MagMinT']
         except:
             pass
         try:
-            del MagMax
-            del MagMaxT
+            del dicts[stPt]['MagMax']
+            del dicts[stPt]['MagMaxT']
         except:
             pass
         redraw()
@@ -554,7 +559,7 @@ def zoom_reset(event):
         print "Resetting axes"
 
 def switchWheelZoom(event):
-    if event.key=="z":
+    if event.key==dictKeybindings['switchWheelZoom']:
         global flagWheelZoom
         flagWheelZoom=not flagWheelZoom
         if flagWheelZoom:
@@ -563,14 +568,14 @@ def switchWheelZoom(event):
             print "Mouse wheel zooming deactivated"
 
 def switchPan(event):
-    if event.key=="p":
+    if event.key==dictKeybindings['switchPan']:
         fig.canvas.toolbar.pan()
         redraw()
         print "Switching pan mode"
 
 def switchStream(event):
     global stPt
-    if event.key=="y":
+    if event.key==dictKeybindings['prevStream']:
         stPt=(stPt-1)%stNum
         delAxes()
         drawAxes()
@@ -578,7 +583,7 @@ def switchStream(event):
         addSliders()
         redraw()
         print "Going to previous stream"
-    if event.key=="x":
+    if event.key==dictKeybindings['nextStream']:
         stPt=(stPt+1)%stNum
         delAxes()
         drawAxes()
