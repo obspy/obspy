@@ -2,8 +2,11 @@
 """
 ArcLink client.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from lxml import objectify, etree
@@ -23,21 +26,35 @@ class ArcLinkException(Exception):
 class Client(Telnet):
     """
     The ArcLink/WebDC client.
-    
-    ArcLink is a distributed data request protocol usable to access archived 
-    waveform data in the MiniSEED or SEED format and associated meta 
-    information as Dataless SEED files. It has been originally founded within 
-    the German WebDC initiative of GEOFON (http://geofon.gfz-potsdam.de/) and 
-    BGR (http://www.bgr.de/). ArcLink has been designed as a "straight 
-    consequent continuation" of the NetDC concept originally developed by the 
-    IRIS DMC. Instead of requiring waveform data via E-mail or FTP requests, 
-    ArcLink offers a direct TCP/IP communication approach. A prototypic 
-    web-based request tool is available via the WebDC homepage at 
-    http://www.webdc.eu. 
-    
+
+    Parameters
+    ----------
+    host : string, optional
+        Host name of the remote ArcLink server (default host is 'webdc.eu').
+    port : int, optional
+        Port of the remote ArcLink server (default port is 18001).
+    timeout: int, optional
+        Seconds before a connection timeout is raised (default is 20 seconds).
+        This works only for Python >= 2.6.x.
+    user : string, optional
+        The user name used for authentication with the ArcLink server (default
+        is an 'Anonymous' for accessing public ArcLink server).
+    password : string, optional
+        A password used for authentication with the ArcLink server (default is
+        an empty string).
+    institution : string, optional
+        A string containing the name of the institution of the requesting
+        person (default is an 'Anonymous').
+    debug : boolean, optional
+        Enables verbose output of the connection handling (default is False). 
+
+    Notes
+    -----
+    The following ArcLink servers may be accessed via ObsPy:
+
     Public servers:
       * WebDC server: webdc.eu:18001
-    
+
     Further mirrors listed at webdc.eu (restricted access only):
       * ODC Server:  bhlsa03.knmi.nl:18001
       * INGV Server: discovery1.rm.ingv.it:18001
@@ -46,26 +63,13 @@ class Client(Telnet):
     status_timeout = 1
     status_delay = 0.1
 
-    def __init__(self, host="webdc.eu", port=18001,
-                 timeout=20, user="Anonymous", institution="Anonymous",
+    def __init__(self, host="webdc.eu", port=18001, timeout=20,
+                 user="Anonymous", password="", institution="Anonymous",
                  debug=False):
         """
-        Initialization of the ArcLink client.
-        
-        :param host: Host name of the remote ArcLink server. Uses webdc.eu as 
-            default host.
-        :param port: Port of the remote ArcLink server. Default port is 18001.
-        :param timeout: Seconds before a connection timeout is raised. This 
-            works only for Python >= 2.6.x.
-        :param user: The user name used for authentication with the ArcLink 
-            server.
-        :param password: A password used for authentication with the ArcLink 
-            server.
-        :param institution: A string containing the name of the institution of 
-            the requesting person.
-        :param debug: Verbose output of the connection handling, if enabled. 
         """
         self.user = user
+        self.password = password
         self.institution = institution
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
@@ -103,7 +107,10 @@ class Client(Telnet):
         self._writeln('HELLO')
         self.version = self._readln(')')
         self.node = self._readln()
-        self._writeln('USER %s' % self.user)
+        if self.password:
+            self._writeln('USER %s %s' % (self.user, self.password))
+        else:
+            self._writeln('USER %s' % self.user)
         self._readln('OK')
         self._writeln('INSTITUTION %s' % self.institution)
         self._readln('OK')
@@ -176,18 +183,32 @@ class Client(Telnet):
                      channel_id, start_datetime, end_datetime, format="MSEED",
                      compressed=True):
         """
-        Writes a fetched waveform into a file.
-        
-        :param filename: String containing the filename.
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :param format: 'FSEED', 'MSEED', or 'XSEED'.
-        :param compressed: Request compressed files from ArcLink server.
-        :return: L{obspy.Stream} object.
+        Writes a retrieved waveform directly into a file.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network_id : string
+            Network code, e.g. 'BW'.
+        station_id : string
+            Station code, e.g. 'MANZ'.
+        location_id : string
+            Location code, e.g. '01'.
+        channel_id : string
+            Channel code, e.g. 'EHE'.
+        start_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        end_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['FSEED' | 'MSEED'], optional
+            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
+            volume (default is an 'MSEED'). 
+            .. note:: 
+                Format 'XSEED' is documented, but not yet implemented in
+                ArcLink.
+        compressed : boolean, optional 
+            Request compressed files from ArcLink server (default is True).
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -208,18 +229,37 @@ class Client(Telnet):
                     start_datetime, end_datetime, format="MSEED",
                     compressed=True):
         """
-        Gets a L{obspy.Stream} object.
-        
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :param format: 'FSEED' or 'MSEED' ('XSEED' is documented, but not yet 
-            implemented in ArcLink).
-        :param compressed: Request compressed files from ArcLink server.
-        :return: L{obspy.Stream} object.
+        Retrieve waveform via ArcLink and returns a ObsPy Stream object.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network_id : string
+            Network code, e.g. 'BW'.
+        station_id : string
+            Station code, e.g. 'MANZ'.
+        location_id : string
+            Location code, e.g. '01'.
+        channel_id : string
+            Channel code, e.g. 'EHE'.
+        start_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        end_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['FSEED' | 'MSEED'], optional
+            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
+            volume (default is an 'MSEED'). 
+            .. note:: 
+                Format 'XSEED' is documented, but not yet implemented in
+                ArcLink.
+        compressed : boolean, optional 
+            Request compressed files from ArcLink server (default is True).
+
+        Returns
+        -------
+        :class:`~obspy.core.stream.Stream`
+            Returns an ObsPy Stream object.
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -257,7 +297,7 @@ class Client(Telnet):
                     channel_id, start_datetime, end_datetime):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
-        
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
@@ -318,7 +358,7 @@ class Client(Telnet):
                      channel_id, start_datetime, end_datetime, format='SEED'):
         """
         Writes a response information into a file.
-        
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
@@ -342,10 +382,10 @@ class Client(Telnet):
     def getNetworks(self, start_datetime, end_datetime):
         """
         Returns a dictionary of available networks within the given time span.
-        
+
         Currently the time span is ignored by the ArcLink servers, therefore
-        all networks are returned.
-        
+        all possible networks are returned.
+
         :param start_datetime: start time as L{obspy.UTCDateTime} object.
         :param end_datetime: end time as L{obspy.UTCDateTime} object.
         :return: dictionary of network data.

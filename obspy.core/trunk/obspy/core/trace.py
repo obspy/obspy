@@ -387,7 +387,7 @@ class Trace(object):
         format : string
             Name of the output format.
             .. :seealso:: 
-                :func:`~obspy.core.streram.read` for all possible formats.
+                :func:`~obspy.core.stream.read` for all possible formats.
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
