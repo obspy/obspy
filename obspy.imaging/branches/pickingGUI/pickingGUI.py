@@ -100,7 +100,9 @@ def drawAxes():
     #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
 
 #def drawSavedPicks():
-    
+#    global PLines
+#    if dicts[stPt].has_key('P'):
+        
 
 def delAxes():
     for a in axs:
