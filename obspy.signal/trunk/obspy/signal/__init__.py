@@ -45,8 +45,7 @@ le3d and simulate an instrument with 2Hz corner frequency.
                     inst_sim=inst2hz, water_level=60.0)
 
 There are many more functions available (rotation, pazToFreqResp, triggers,
-cpxtrace analysis, ...), please check the tutorial and the API
-documentation given below.
+cpxtrace analysis, ...), please also check the tutorial.
 """
 
 from filter import *

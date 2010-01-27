@@ -363,6 +363,8 @@ class Trace(object):
 
         .. plot::
 
+            import numpy as np
+            from obspy.core import Trace
             data = np.sin(np.linspace(0,2*np.pi,1000))
             tr = Trace(data=data)
             tr.plot()

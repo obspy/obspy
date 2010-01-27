@@ -1,9 +1,10 @@
 .. currentmodule:: obspy.core
 .. automodule:: obspy.core
 
+    .. comment to end block
+
     Classes & functions
     -------------------
-
     .. autosummary::
       :toctree: .
       :nosignatures:
@@ -14,10 +15,10 @@
         ~stream.Stream
         ~utcdatetime.UTCDateTime
 
+    .. comment to end block
 
     Modules
     -------
-
     .. autosummary::
       :toctree: .
       :nosignatures:
