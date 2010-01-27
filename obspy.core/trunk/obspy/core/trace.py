@@ -387,8 +387,10 @@ class Trace(object):
         format : string
             Name of the output format.
             .. :seealso:: 
-                :func:`~obspy.core.stream.read` for all possible formats.
+                :func:`~obspy.core.stream.read()` for all possible formats.
 
+        Basic Usage
+        -----------
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
         """
@@ -449,7 +451,7 @@ class Trace(object):
 
     def verify(self):
         """
-        Verifies current trace with header values in stats attribute.
+        Verifies current trace object against available meta data.
         """
         if len(self) != self.stats.npts:
             msg = "ntps(%d) differs from data size(%d)"
@@ -464,6 +466,12 @@ class Trace(object):
             raise Exception(msg % (sr, delta, len(self.data)))
         if not isinstance(self.stats, Stats):
             msg = "Attribute stats must be an instance of obspy.core.Stats"
+            raise Exception(msg)
+        if isinstance(self.data, np.ndarray) and \
+           self.data.dtype.byteorder not in ["=", "|"]:
+            msg = "Trace data should be stored as numpy.ndarray in the " + \
+                  "system specific byte order."
+            print self.data.dtype.byteorder
             raise Exception(msg)
 
 

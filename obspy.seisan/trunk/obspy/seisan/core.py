@@ -13,8 +13,9 @@ import numpy as np
 def isSEISAN(filename):
     """
     Checks whether a file is SEISAN or not. Returns True or False.
-    
+
     From the SEISAN documentation:
+
     When Fortran writes a files opened with "form=unformatted", additional 
     data is added to the file to serve as record separators which have to be 
     taken into account if the file is read from a C-program or if read binary 
@@ -32,20 +33,21 @@ def isSEISAN(filename):
     file. However, since the structure is different on Sun, Linux, MacOSX and 
     PC, a file written as unformatted on Sun, Linux or MacOSX cannot be read 
     as unformatted on PC or vice versa.
+
     The files are very easy to write and read on the same computer but 
     difficult to read if written on a different computer. To further 
     complicate matters, the byte order is different on Sun and PC. With 64 bit 
     systems, 8 bytes is used to define number of bytes written. This type of 
     file can also be read with SEISAN, but so far only data written on Linux 
     have been tested for reading on all systems.
+
     From version 7.0,the Linux and PC file structures are exactly the same. 
     On Sun the structure is the same except that the bytes are swapped. This 
     is used by SEISAN to find out where the file was written. Since there is 
     always 80 characters in the first write, character one in the Linux and PC 
     file will be the character P (which is represented by 80) while on Sun 
     character 4 is P.
-    
-    
+
     :param filename: SEISAN file to be read.
     """
     try:
@@ -63,10 +65,10 @@ def isSEISAN(filename):
 def _getVersion(data):
     """
     Extracts SEISAN version from given data chunk.
-    
+
     :type data: String.
     :param data: Data chunk. 
-    :rtype: (["<"|">"], [32|64], [6|7]).
+    :rtype: ([ '<' | '>' ], [ 32 | 64 ], [ 6 | 7 ]).
     :return: (byte order, architecture, version).
     """
     # check size of data chunk
@@ -90,7 +92,7 @@ def _getVersion(data):
 def readSEISAN(filename, headonly=False, **kwargs):
     """
     Reads a SEISAN file and returns an L{obspy.Stream} object.
-    
+
     :param filename: SEISAN file to be read.
     :rtype: L{obspy.Stream}.
     :return: A ObsPy Stream object.
@@ -99,7 +101,7 @@ def readSEISAN(filename, headonly=False, **kwargs):
     fh = open(filename, 'rb')
     data = fh.read(80 * 12)
     # get version info from file
-    (endian, arch, _version) = _getVersion(data)
+    (byteorder, arch, _version) = _getVersion(data)
     # fetch lines
     fh.seek(0)
     # start with event file header
@@ -118,7 +120,8 @@ def readSEISAN(filename, headonly=False, **kwargs):
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch / 8
-    dtype = endian + 'i' + str(dlen)
+    dtype = byteorder + 'i' + str(dlen)
+    stype = '=i' + str(dlen)
     for _i in xrange(number_of_channels):
         # get channel header
         temp = _readline(fh, 1040)
@@ -145,6 +148,8 @@ def readSEISAN(filename, headonly=False, **kwargs):
         else:
             # fetch data
             data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)
+            # convert to system byte order
+            data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))
     return stream
 

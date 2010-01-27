@@ -240,8 +240,9 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     Reads a Q file and returns an ObsPy Stream object.
 
     Q files consists of two files per data set:
-    * a ASCII header file with file extension `QHD` and the
-    * binary data file with file extension `QBN`.
+
+     * a ASCII header file with file extension `QHD` and the
+     * binary data file with file extension `QBN`.
 
     The read method only accepts header files for the ``filename`` parameter.
     ObsPy assumes that the corresponding data file is within the same directory
@@ -258,7 +259,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
         scanning available data in huge (temporary) data sets.
     data_directory : string, optional
         Data directory where the corresponding QBN file can be found.
-    byteorder : ['<', '>', '='], optional
+    byteorder : [ '<' | '>' | '=' ], optional
         Enforce byte order for data file. This is important for Q files written
         in older versions of Seismic Handler, which don't explicit state the
         BYTEORDER flag within the header file. Defaults to '=' (local byte
@@ -349,7 +350,9 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
             # read data
             data = fh_data.read(npts * 4)
             dtype = byteorder + 'f4'
-            data = np.fromstring(data, dtype=dtype).astype('=f4')
+            data = np.fromstring(data, dtype=dtype)
+            # convert to system byte order
+            data = np.require(data, '=f4')
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
@@ -369,7 +372,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
         Name of Q file to be written.
     data_directory : string, optional
         Data directory where the corresponding QBN will be written.
-    byteorder : ['<', '>', '='], optional
+    byteorder : [ '<' | '>' | '=' ], optional
         Enforce byte order for data file. Defaults to '=' (local byte order).
     """
     if filename.endswith('.QHD'):
