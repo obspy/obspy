@@ -40,12 +40,14 @@ import matplotlib.image as image
 
 
 def picker(streams = None):
-    global flagFilt,flagFiltTyp,dictFiltTyp,flagFiltZPH,flagWheelZoom,flagPhase,dictPhase,dictPhaseColors,pickingColor,magPickWindow,magMinMarker,magMaxMarker,magMarkerEdgeWidth,magMarkerSize,axvlinewidths,dictKeybindings,dicts,stNum,stPt,fig,keypress,keypressWheelZoom,keypressPan,keypressNextPrev,buttonpressBlockRedraw,buttonreleaseAllowRedraw,scroll,scroll_button,multicursor,props,hoverprops,menuitems,item,menu
+    global flagFilt,flagFiltTyp,dictFiltTyp,flagFiltZPH,flagWheelZoom,flagPhase,dictPhase,dictPhaseColors,pickingColor,magPickWindow,magMinMarker,magMaxMarker,magMarkerEdgeWidth,magMarkerSize,axvlinewidths,dictKeybindings,dicts,stNum,stPt,fig,keypress,keypressWheelZoom,keypressPan,keypressNextPrev,buttonpressBlockRedraw,buttonreleaseAllowRedraw,scroll,scroll_button,multicursor,props,hoverprops,menuitems,item,menu,valFiltLow,valFiltHigh
     #Define some flags, dictionaries and plotting options
     flagFilt=False #False:no filter  True:filter
     flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
     dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
     flagFiltZPH=True #False: no zero-phase True: zero-phase filtering
+    valFiltLow=np.NaN # These are overridden with low/high estimated from sampling rate
+    valFiltHigh=np.NaN
     flagWheelZoom=True #Switch use of mousewheel for zooming
     flagPhase=0 #0:P 1:S 2:Magnitude
     dictPhase={'P':0, 'S':1, 'Mag':2}
@@ -511,33 +513,47 @@ def picker(streams = None):
         radioPhase = RadioButtons(axPhase, ('P', 'S', 'Mag'),activecolor='k')
         radioPhase.on_clicked(funcPhase)
         
-    def update(val):
-        if flagFilt==1:
-            updatePlot()
+    def updateLow(val):
+        if not flagFilt or flagFiltTyp == 2:
+            return
         else:
-            pass
+            updatePlot()
+    
+    def updateHigh(val):
+        if not flagFilt or flagFiltTyp == 3:
+            return
+        else:
+            updatePlot()
     
     def delSliders():
+        global valFiltLow
+        global valFiltHigh
+        valFiltLow = slideLow.val
+        valFiltHigh = slideHigh.val
         try:
             fig.delaxes(axLowcut)
             fig.delaxes(axHighcut)
         except:
-            pass
+            return
     
     def addSliders():
         global axLowcut
         global axHighcut
         global slideLow
         global slideHigh
+        global valFiltLow
+        global valFiltHigh
         #add filter slider
         axLowcut = fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
         axHighcut  = fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
         low  = 1.0/ (streams[stPt][0].stats.npts/float(streams[stPt][0].stats.sampling_rate))
         high = streams[stPt][0].stats.sampling_rate/2.0
-        slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
-        slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=high, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
-        slideLow.on_changed(update)
-        slideHigh.on_changed(update)
+        valFiltLow = max(low,valFiltLow)
+        valFiltHigh = min(high,valFiltHigh)
+        slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=valFiltLow, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
+        slideHigh = Slider(axHighcut, 'Highcut', low, high, valinit=valFiltHigh, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
+        slideLow.on_changed(updateLow)
+        slideHigh.on_changed(updateHigh)
         
     
     def redraw():
@@ -561,12 +577,12 @@ def picker(streams = None):
                     print "Zero-Phase Bandstop: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
                 if flagFiltTyp==2:
                     for tr in streams[stPt].traces:
-                        filt.append(lowpassZPHSH(tr.data,slideLow.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Lowpass: %.2f Hz"%(slideLow.val)
+                        filt.append(lowpassZPHSH(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Lowpass: %.2f Hz"%(slideHigh.val)
                 if flagFiltTyp==3:
                     for tr in streams[stPt].traces:
-                        filt.append(highpassZPHSH(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Highpass: %.2f Hz"%(slideHigh.val)
+                        filt.append(highpassZPHSH(tr.data,slideLow.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Highpass: %.2f Hz"%(slideLow.val)
             elif flagFiltZPH==False:
                 if flagFiltTyp==0:
                     for tr in streams[stPt].traces:
@@ -578,12 +594,12 @@ def picker(streams = None):
                     print "One-Pass Bandstop: %.2f-%.2f Hz"%(slideLow.val,slideHigh.val)
                 if flagFiltTyp==2:
                     for tr in streams[stPt].traces:
-                        filt.append(lowpass(tr.data,slideLow.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Lowpass: %.2f Hz"%(slideLow.val)
+                        filt.append(lowpass(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Lowpass: %.2f Hz"%(slideHigh.val)
                 if flagFiltTyp==3:
                     for tr in streams[stPt].traces:
-                        filt.append(highpass(tr.data,slideHigh.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Highpass: %.2f Hz"%(slideHigh.val)
+                        filt.append(highpass(tr.data,slideLow.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Highpass: %.2f Hz"%(slideLow.val)
             #make new plots
             for i in range(len(plts)):
                 plts[i].set_data(t, filt[i])
@@ -919,7 +935,7 @@ def picker(streams = None):
             delSliders()
             addSliders()
             multicursorReinit()
-            redraw()
+            updatePlot()
             print "Going to previous stream"
         if event.key==dictKeybindings['nextStream']:
             stPt=(stPt+1)%stNum
@@ -929,7 +945,7 @@ def picker(streams = None):
             delSliders()
             addSliders()
             multicursorReinit()
-            redraw()
+            updatePlot()
             print "Going to next stream"
             
     def blockRedraw(event):
@@ -1002,28 +1018,42 @@ def main():
                       help="Ids to retrieve, e.g. "
                            "'BW.RJOB..EH*,BW.RMOA..EH*'",
                       default='BW.RJOB..EH*,BW.RMOA..EH*')
+    parser.add_option("-l", "--local", action="store_true", dest="local",
+                      default=False,
+                      help="use local files for design purposes")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
             parser.print_help()
             return
+    
+    if options.local:
+        streams=[]
+        streams.append(read('RJOB_061005_072159.ehz.new'))
+        streams[0].append(read('RJOB_061005_072159.ehn.new')[0])
+        streams[0].append(read('RJOB_061005_072159.ehe.new')[0])
+        streams.append(read('RNON_160505_000059.ehz.new'))
+        streams.append(read('RMOA_160505_014459.ehz.new'))
+        streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
+        streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
+        picker(streams)
+    else:
+        try:
+            t = UTCDateTime(options.time)
+            client = Client()
+            container = []
+            for id in options.ids.split(","):
+                net, sta, loc, cha = id.split(".")
+                st = client.waveform.getWaveform(net, sta, loc, cha, 
+                                                 t, t + options.duration)
+                st.sort()
+                st.reverse()
+                container.append(st)
+        except:
+            parser.print_help()
+            raise
 
-    try:
-        t = UTCDateTime(options.time)
-        client = Client()
-        container = []
-        for id in options.ids.split(","):
-            net, sta, loc, cha = id.split(".")
-            st = client.waveform.getWaveform(net, sta, loc, cha, 
-                                             t, t + options.duration)
-            st.sort()
-            st.reverse()
-            container.append(st)
-    except:
-        parser.print_help()
-        raise
-
-    picker(container)
+        picker(container)
 
 if __name__ == "__main__":
     main()
