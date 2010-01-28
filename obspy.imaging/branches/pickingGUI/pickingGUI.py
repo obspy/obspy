@@ -40,7 +40,42 @@ import matplotlib.image as image
 
 
 def picker(streams = None):
-    global flagFilt,flagFiltTyp,dictFiltTyp,flagFiltZPH,flagWheelZoom,flagPhase,dictPhase,dictPhaseColors,pickingColor,magPickWindow,magMinMarker,magMaxMarker,magMarkerEdgeWidth,magMarkerSize,axvlinewidths,dictKeybindings,dicts,stNum,stPt,fig,keypress,keypressWheelZoom,keypressPan,keypressNextPrev,buttonpressBlockRedraw,buttonreleaseAllowRedraw,scroll,scroll_button,multicursor,props,hoverprops,menuitems,item,menu,valFiltLow,valFiltHigh
+    global flagFilt
+    global flagFiltTyp
+    global dictFiltTyp
+    global flagFiltZPH
+    global flagWheelZoom
+    global flagPhase
+    global dictPhase
+    global dictPhaseColors
+    global pickingColor
+    global magPickWindow
+    global magMinMarker
+    global magMaxMarker
+    global magMarkerEdgeWidth
+    global magMarkerSize
+    global axvlinewidths
+    global dictKeybindings
+    global dicts
+    global stNum
+    global stPt
+    global fig
+    global keypress
+    global keypressWheelZoom
+    global keypressPan
+    global keypressNextPrev
+    global buttonpressBlockRedraw
+    global buttonreleaseAllowRedraw
+    global scroll
+    global scroll_button
+    global multicursor
+    global props
+    global hoverprops
+    global menuitems
+    global item
+    global menu
+    global valFiltLow
+    global valFiltHigh
     #Define some flags, dictionaries and plotting options
     flagFilt=False #False:no filter  True:filter
     flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
@@ -60,7 +95,18 @@ def picker(streams = None):
     magMarkerSize=20
     axvlinewidths=1.2
     #dictionary for key-bindings
-    dictKeybindings={'setPick':'alt','setPickError':' ','delPick':'escape','setMagMin':'alt','setMagMax':' ','delMagMinMax':'escape','switchWheelZoom':'z','switchPan':'p','prevStream':'y','nextStream':'x'}
+    dictKeybindings = {'setPick':'alt', 'setPickError':' ', 'delPick':'escape',
+                       'setMagMin':'alt', 'setMagMax':' ',
+                       'delMagMinMax':'escape', 'switchWheelZoom':'z',
+                       'switchPan':'p', 'prevStream':'y', 'nextStream':'x',
+                       'setPWeight0':'0', 'setPWeight1':'1', 'setPWeight2':'2',
+                       'setPWeight3':'3', 'setPWeight4':'4', 'setPWeight5':'5',
+                       'setSWeight0':'0', 'setSWeight1':'1', 'setSWeight2':'2',
+                       'setSWeight3':'3', 'setSWeight4':'4', 'setSWeight5':'5',
+                       'setPPolUp':'q', 'setPPolPoorUp':'w',
+                       'setPPolDown':'a', 'setPPolPoorDown':'s',
+                       'setSPolUp':'q', 'setSPolPoorUp':'w',
+                       'setSPolDown':'a', 'setSPolPoorDown':'s'}
     
     #set up a list of dictionaries to store all picking data
     dicts=[]
@@ -410,6 +456,22 @@ def picker(streams = None):
         except:
             pass
             
+    def delPWeight():
+        global dicts
+        try:
+            del dicts[stPt]['PWeight']
+            print "P Pick weight deleted"
+        except:
+            pass
+            
+    def delPPol():
+        global dicts
+        try:
+            del dicts[stPt]['PPol']
+            print "P Pick polarity deleted"
+        except:
+            pass
+            
     def delPErr1():
         global dicts
         try:
@@ -431,6 +493,22 @@ def picker(streams = None):
         try:
             del dicts[stPt]['S']
             print "S Pick deleted"
+        except:
+            pass
+            
+    def delSWeight():
+        global dicts
+        try:
+            del dicts[stPt]['SWeight']
+            print "S Pick weight deleted"
+        except:
+            pass
+            
+    def delSPol():
+        global dicts
+        try:
+            del dicts[stPt]['SPol']
+            print "S Pick polarity deleted"
         except:
             pass
             
@@ -474,15 +552,7 @@ def picker(streams = None):
     def delAxes():
         global axs
         for a in axs:
-            #try:
-            #    while True:
-            #        a.lines.pop()
-            #except:
-            #    pass
             try:
-            #    for l in a.lines:
-            #        del l
-            #    del a.lines
                 fig.delaxes(a)
                 del a
             except:
@@ -642,23 +712,10 @@ def picker(streams = None):
     # Define the event that handles the setting of P- and S-wave picks
     def pick(event):
         global dicts
-        #global MagMin
-        #global MagMinT
-        #global MagMinCross
-        #global MagMax
-        #global MagMaxT
-        #global MagMaxCross
         # Set new P Pick
         if flagPhase==0 and event.key==dictKeybindings['setPick']:
-            # Define global variables seen outside
-            # Remove old lines from the plot before plotting the new ones
             delPLine()
-            # Save sample value of pick (round to integer sample value)
-            try:
-                dicts[stPt]['P']=int(round(event.xdata))
-            except:
-                return
-            # Plot the lines for the P pick in all three traces
+            dicts[stPt]['P']=int(round(event.xdata))
             drawPLine()
             #check if the new P pick lies outside of the Error Picks
             try:
@@ -677,14 +734,52 @@ def picker(streams = None):
             redraw()
             # Console output
             print "P Pick set at %i"%dicts[stPt]['P']
+        # Set P Pick weight
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight0']:
+            dicts[stPt]['PWeight']=0
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight1']:
+            dicts[stPt]['PWeight']=1
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight2']:
+            dicts[stPt]['PWeight']=2
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight3']:
+            dicts[stPt]['PWeight']=3
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight4']:
+            dicts[stPt]['PWeight']=4
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if flagPhase==0 and event.key==dictKeybindings['setPWeight5']:
+            dicts[stPt]['PWeight']=5
+            #redraw()
+            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        # Set P Pick polarity
+        if flagPhase==0 and event.key==dictKeybindings['setPPolUp']:
+            dicts[stPt]['PPol']='Up'
+            #redraw()
+            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+        if flagPhase==0 and event.key==dictKeybindings['setPPolPoorUp']:
+            dicts[stPt]['PPol']='PoorUp'
+            #redraw()
+            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+        if flagPhase==0 and event.key==dictKeybindings['setPPolDown']:
+            dicts[stPt]['PPol']='Down'
+            #redraw()
+            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+        if flagPhase==0 and event.key==dictKeybindings['setPPolPoorDown']:
+            dicts[stPt]['PPol']='PoorDown'
+            #redraw()
+            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
         # Set new S Pick
         if flagPhase==1 and event.key==dictKeybindings['setPick']:
-            # Define global variables seen outside
-            # Remove old lines from the plot before plotting the new ones
             delSLine()
-            # Save sample value of pick (round to integer sample value)
             dicts[stPt]['S']=int(round(event.xdata))
-            # Plot the lines for the S pick in all three traces
             drawSLine()
             #check if the new S pick lies outside of the Error Picks
             try:
@@ -703,11 +798,55 @@ def picker(streams = None):
             redraw()
             # Console output
             print "S Pick set at %i"%dicts[stPt]['S']
+        # Set S Pick weight
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight0']:
+            dicts[stPt]['SWeight']=0
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight1']:
+            dicts[stPt]['SWeight']=1
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight2']:
+            dicts[stPt]['SWeight']=2
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight3']:
+            dicts[stPt]['SWeight']=3
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight4']:
+            dicts[stPt]['SWeight']=4
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if flagPhase==1 and event.key==dictKeybindings['setSWeight5']:
+            dicts[stPt]['SWeight']=5
+            redraw()
+            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        # Set S Pick polarity
+        if flagPhase==1 and event.key==dictKeybindings['setSPolUp']:
+            dicts[stPt]['SPol']='Up'
+            #redraw()
+            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+        if flagPhase==1 and event.key==dictKeybindings['setSPolPoorUp']:
+            dicts[stPt]['SPol']='PoorUp'
+            #redraw()
+            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+        if flagPhase==1 and event.key==dictKeybindings['setSPolDown']:
+            dicts[stPt]['SPol']='Down'
+            #redraw()
+            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+        if flagPhase==1 and event.key==dictKeybindings['setSPolPoorDown']:
+            dicts[stPt]['SPol']='PoorDown'
+            #redraw()
+            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
         # Remove P Pick
         if flagPhase==0 and event.key==dictKeybindings['delPick']:
             # Try to remove all existing Pick lines and P Pick variable
             delPLine()
             delP()
+            delPWeight()
+            delPPol()
             # Try to remove existing Pick Error 1 lines and variable
             delPErr1Line()
             delPErr1()
@@ -721,6 +860,8 @@ def picker(streams = None):
             # Try to remove all existing Pick lines and P Pick variable
             delSLine()
             delS()
+            delSWeight()
+            delSPol()
             # Try to remove existing Pick Error 1 lines and variable
             delSErr1Line()
             delSErr1()
