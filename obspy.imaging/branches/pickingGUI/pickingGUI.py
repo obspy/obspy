@@ -10,7 +10,7 @@ from obspy.core import read
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-from matplotlib.widgets import Cursor as mplCursor
+#from matplotlib.widgets import Cursor as mplCursor
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 
@@ -39,15 +39,16 @@ flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
 dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
 flagFiltZPH=True #False: no zero-phase True: zero-phase filtering
 flagWheelZoom=True #Switch use of mousewheel for zooming
-flagPhase=0 #0: P 1: A 2: Magnitude
+flagPhase=0 #0:P 1:S 2:Magnitude
 dictPhase={'P':0, 'S':1, 'Mag':2}
 dictPhaseColors={'P':'red', 'S':'blue', 'Mag':'green'}
+pickingColor=dictPhaseColors['P']
 magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
-magMinMarker='1'
-magMaxMarker='2'
+magMinMarker='x'
+magMaxMarker='x'
 magMarkerEdgeWidth=1.8
 magMarkerSize=20
-axvlinewidths=1.4
+axvlinewidths=1.2
 #dictionary for key-bindings
 dictKeybindings={'setPick':'alt','setPickError':' ','delPick':'escape','setMagMin':'alt','setMagMax':' ','delMagMinMax':'escape','switchWheelZoom':'z','switchPan':'p','prevStream':'y','nextStream':'x'}
 
@@ -55,6 +56,13 @@ dictKeybindings={'setPick':'alt','setPickError':' ','delPick':'escape','setMagMi
 dicts=[]
 for i in range(len(streams)):
     dicts.append({})
+
+#Define a pointer to navigate through the streams
+stNum=len(streams)
+stPt=0
+
+
+
 
 
 def switch_flagFilt():
@@ -64,14 +72,29 @@ def switch_flagFiltZPH():
     global flagFiltZPH
     flagFiltZPH=not flagFiltZPH
 
-#Define a pointer to navigate through the streams
-stNum=len(streams)
-stPt=0
-
 ## Trim all to same length, us Z as reference
 #start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
 #stN.trim(start, end)
 #stE.trim(start, end)
+
+#Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
+#See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
+class MultiCursor(mplMultiCursor):
+    def __init__(self, canvas, axes, useblit=True, **lineprops):
+        self.canvas = canvas
+        self.axes = axes
+        xmin, xmax = axes[-1].get_xlim()
+        xmid = 0.5*(xmin+xmax)
+        self.lines = [ax.axvline(xmid, visible=False, **lineprops) for ax in axes]
+
+        self.visible = True
+        self.useblit = useblit
+        self.background = None
+        self.needclear = False
+
+        self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
+        self.id2=self.canvas.mpl_connect('draw_event', self.clear)
+
 
 def drawAxes():
     global axs
@@ -327,9 +350,19 @@ def delMagMax():
         
 
 def delAxes():
+    global axs
     for a in axs:
+        #try:
+        #    while True:
+        #        a.lines.pop()
+        #except:
+        #    pass
         try:
+        #    for l in a.lines:
+        #        del l
+        #    del a.lines
             fig.delaxes(a)
+            del a
         except:
             pass
     try:
@@ -388,6 +421,9 @@ def addSliders():
     
 
 def redraw():
+    global multicursor
+    for line in multicursor.lines:
+        line.set_visible(False)
     fig.canvas.draw()
 
 def updatePlot():
@@ -456,18 +492,16 @@ def funcFiltTyp(label):
 
 def funcPhase(label):
     global flagPhase
+    global pickingColor
     flagPhase=dictPhase[label]
+    pickingColor=dictPhaseColors[label]
+    for l in multicursor.lines:
+        l.set_color(pickingColor)
+    radioPhase.circles[flagPhase].set_facecolor(pickingColor)
+    redraw()
 
 
 
-
-# Set up initial plot
-fig = plt.figure()
-drawAxes()
-addFiltButtons()
-addPhaseButtons()
-addSliders()
-redraw()
 
 # Define the event that handles the setting of P- and S-wave picks
 def pick(event):
@@ -733,20 +767,24 @@ def switchWheelZoom(event):
 def switchPan(event):
     if event.key==dictKeybindings['switchPan']:
         fig.canvas.toolbar.pan()
+        fig.canvas.widgetlock.release(fig.canvas.toolbar)
         redraw()
         print "Switching pan mode"
 
 #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
 def multicursorReinit():
     global multicursor
-    fig.canvas.mpl_disconnect(multicursor)
+    fig.canvas.mpl_disconnect(multicursor.id1)
+    fig.canvas.mpl_disconnect(multicursor.id2)
     multicursor.__init__(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
-    #fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
-    fig.canvas.draw_idle()
-    multicursor._update()
-    multicursor.needclear=True
-    multicursor.background = fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
-    for line in multicursor.lines: line.set_visible(False)
+    #fig.canvas.draw_idle()
+    #multicursor._update()
+    #multicursor.needclear=True
+    #multicursor.background = fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
+    #fig.canvas.restore_region(multicursor.background)
+    #fig.canvas.blit(fig.canvas.figure.bbox)
+    for l in multicursor.lines:
+        l.set_color(pickingColor)
 
 def switchStream(event):
     global stPt
@@ -757,9 +795,9 @@ def switchStream(event):
         drawSavedPicks()
         delSliders()
         addSliders()
+        multicursorReinit()
         redraw()
         print "Going to previous stream"
-        multicursorReinit()
     if event.key==dictKeybindings['nextStream']:
         stPt=(stPt+1)%stNum
         delAxes()
@@ -767,22 +805,48 @@ def switchStream(event):
         drawSavedPicks()
         delSliders()
         addSliders()
+        multicursorReinit()
         redraw()
         print "Going to next stream"
-        multicursorReinit()
         
+def blockRedraw(event):
+    if event.button==1 or event.button==3:
+        multicursor.visible=False
+        fig.canvas.widgetlock(fig.canvas.toolbar)
+        
+def allowRedraw(event):
+    if event.button==1 or event.button==3:
+        multicursor.visible=True
+        fig.canvas.widgetlock.release(fig.canvas.toolbar)
 
+
+        
+# Set up initial plot
+fig = plt.figure()
+drawAxes()
+addFiltButtons()
+addPhaseButtons()
+addSliders()
+#redraw()
+fig.canvas.draw()
 # Activate all mouse/key/Cursor-events
 keypress = fig.canvas.mpl_connect('key_press_event', pick)
 keypressWheelZoom = fig.canvas.mpl_connect('key_press_event', switchWheelZoom)
 keypressPan = fig.canvas.mpl_connect('key_press_event', switchPan)
 keypressNextPrev = fig.canvas.mpl_connect('key_press_event', switchStream)
+buttonpressBlockRedraw = fig.canvas.mpl_connect('button_press_event', blockRedraw)
+buttonreleaseAllowRedraw = fig.canvas.mpl_connect('button_release_event', allowRedraw)
 scroll = fig.canvas.mpl_connect('scroll_event', zoom)
 scroll_button = fig.canvas.mpl_connect('button_press_event', zoom_reset)
 #cursorZ = mplCursor(axZ, useblit=True, color='black', linewidth=1, ls='dotted')
 #cursorN = mplCursor(axN, useblit=True, color='black', linewidth=1, ls='dotted')
 #cursorE = mplCursor(axE, useblit=True, color='black', linewidth=1, ls='dotted')
 fig.canvas.toolbar.pan()
-multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
+fig.canvas.widgetlock.release(fig.canvas.toolbar)
+#multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
+multicursor = MultiCursor(fig.canvas,axs, useblit=True, color=dictPhaseColors['P'], linewidth=1, ls='dotted')
+for l in multicursor.lines:
+    l.set_color(dictPhaseColors['P'])
+radioPhase.circles[0].set_facecolor(dictPhaseColors['P'])
 
 plt.show()
