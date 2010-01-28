@@ -40,6 +40,7 @@ import matplotlib.image as image
 
 
 def picker(streams = None):
+    global flagFilt,flagFiltTyp,dictFiltTyp,flagFiltZPH,flagWheelZoom,flagPhase,dictPhase,dictPhaseColors,pickingColor,magPickWindow,magMinMarker,magMaxMarker,magMarkerEdgeWidth,magMarkerSize,axvlinewidths,dictKeybindings,dicts,stNum,stPt,fig,keypress,keypressWheelZoom,keypressPan,keypressNextPrev,buttonpressBlockRedraw,buttonreleaseAllowRedraw,scroll,scroll_button,multicursor,props,hoverprops,menuitems,item,menu
     #Define some flags, dictionaries and plotting options
     flagFilt=False #False:no filter  True:filter
     flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
@@ -134,7 +135,7 @@ def picker(streams = None):
                 self.on_select(self)
     
         def set_extent(self, x, y, w, h):
-            print x, y, w, h
+            #print x, y, w, h
             self.rect.set_x(x)
             self.rect.set_y(y)
             self.rect.set_width(w)
@@ -178,16 +179,18 @@ def picker(streams = None):
             maxw = max([item.labelwidth for item in menuitems])
             maxh = max([item.labelheight for item in menuitems])
             totalh = self.numitems*maxh + (self.numitems+1)*2*MenuItem.pady
-            x0 = 10
-            y0 = 10
+            x0 = 5
+            y0 = 5
+            y1 = y0 + (self.numitems-1)*(maxh + MenuItem.pady)
             width = maxw + 2*MenuItem.padx
             height = maxh+MenuItem.pady
             for item in menuitems:
                 left = x0
-                bottom = y0-maxh-MenuItem.pady
+                #bottom = y0-maxh-MenuItem.pady
+                bottom = y1
                 item.set_extent(left, bottom, width, height)
                 fig.artists.append(item)
-                y0 -= maxh + MenuItem.pady
+                y1 -= maxh + MenuItem.pady
             fig.canvas.mpl_connect('motion_notify_event', self.on_move)
     
         def on_move(self, event):
@@ -493,10 +496,10 @@ def picker(streams = None):
         global axFiltTyp
         global radio
         #add filter buttons
-        axFilt = fig.add_axes([0.02, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+        axFilt = fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         check = CheckButtons(axFilt, ('Filter','Zero-Phase'),(False,True))
         check.on_clicked(funcFilt)
-        axFiltTyp = fig.add_axes([0.20, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+        axFiltTyp = fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         radio = RadioButtons(axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
         radio.on_clicked(funcFiltTyp)
         
@@ -504,7 +507,7 @@ def picker(streams = None):
         global axPhase
         global radioPhase
         #add phase buttons
-        axPhase = fig.add_axes([0.90, 0.02, 0.10, 0.15],frameon=False,axisbg='lightgrey')
+        axPhase = fig.add_axes([0.10, 0.02, 0.10, 0.15],frameon=False,axisbg='lightgrey')
         radioPhase = RadioButtons(axPhase, ('P', 'S', 'Mag'),activecolor='k')
         radioPhase.on_clicked(funcPhase)
         
@@ -527,8 +530,8 @@ def picker(streams = None):
         global slideLow
         global slideHigh
         #add filter slider
-        axLowcut = fig.add_axes([0.45, 0.05, 0.35, 0.03], xscale='log')
-        axHighcut  = fig.add_axes([0.45, 0.10, 0.35, 0.03], xscale='log')
+        axLowcut = fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
+        axHighcut  = fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
         low  = 1.0/ (streams[stPt][0].stats.npts/float(streams[stPt][0].stats.sampling_rate))
         high = streams[stPt][0].stats.sampling_rate/2.0
         slideLow = Slider(axLowcut, 'Lowcut', low, high, valinit=low, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
@@ -972,7 +975,7 @@ def picker(streams = None):
     props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=15, alpha=0.2)
     hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=15, alpha=0.2)
     menuitems = []
-    for label in ('open', 'close', 'save', 'save as', 'quit'):
+    for label in ('save', 'quit'):
         def on_select(item):
             print 'you selected', item.labelstr
         item = MenuItem(fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
@@ -990,12 +993,15 @@ def main():
     parser.add_option("-t", "--time", dest="time",
                       help="Starttime of seismogram to retrieve. It takes a "
                            "string which UTCDateTime can convert. "
-                           "E.g. '2010-01-10T05:00:00'")
+                           "E.g. '2010-01-10T05:00:00'",
+                      default='2009-07-21T04:33:00')
     parser.add_option("-d", "--duration", type="float", dest="duration",
-                      help="Duration of seismogram in seconds")
+                      help="Duration of seismogram in seconds",
+                      default=120)
     parser.add_option("-i", "--ids", dest="ids",
                       help="Ids to retrieve, e.g. "
-                           "'BW.RJOB..EH*,BW.RMOA..EH*'")
+                           "'BW.RJOB..EH*,BW.RMOA..EH*'",
+                      default='BW.RJOB..EH*,BW.RMOA..EH*')
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
@@ -1010,6 +1016,8 @@ def main():
             net, sta, loc, cha = id.split(".")
             st = client.waveform.getWaveform(net, sta, loc, cha, 
                                              t, t + options.duration)
+            st.sort()
+            st.reverse()
             container.append(st)
     except:
         parser.print_help()
