@@ -35,6 +35,7 @@ from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 
 
 class WaveformPlotting(object):
@@ -121,9 +122,9 @@ class WaveformPlotting(object):
 
     def plotWaveform(self, *args, **kwargs):
         """
-        Creates a graph of any given ObsPy Stream object. It either saves the 
+        Creates a graph of any given ObsPy Stream object. It either saves the
         image directly to the file system or returns an binary image string.
-        
+
         For all color values you can use legit HTML names, HTML hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
         R , G , B are in the range [0, 1]. You can also use single letters for
@@ -272,7 +273,7 @@ class WaveformPlotting(object):
         # Set ranges.
         plt.xlim(0, self.width - 1)
         plt.ylim(-0.3 , self.steps + 0.3)
-        # Set ticks. 
+        # Set ticks.
         # XXX: Ugly workaround to get the ticks displayed correctly.
         self.__dayplotSetXTicks()
         self.__dayplotSetYTicks()
@@ -291,11 +292,11 @@ class WaveformPlotting(object):
         Just plots the data samples in the self.stream. Useful for smaller
         datasets up to around 1000000 samples (depending on the machine its
         being run on).
-        
+
         Slow and high memory consumption for large datasets.
         """
         # Use deepcopy here, because the Traces are generally small and if more
-        # than one Trace is present, they will be merged and the original 
+        # than one Trace is present, they will be merged and the original
         # Stream object should not change.
         if len(trace) > 1:
             traces = deepcopy(trace)
@@ -413,11 +414,11 @@ class WaveformPlotting(object):
         aranged = np.arange(self.width)
         x_values[0::2] = aranged
         x_values[1::2] = aranged
-        # Initialze completely masked array. This version is a little bit 
-        # slower than first creating an empty array and then setting the mask 
-        # to True. But on numpy 1.1 this results in a 0-D array which can not 
-        # be indexed. 
-        y_values = np.ma.masked_all(2 *self.width) 
+        # Initialze completely masked array. This version is a little bit
+        # slower than first creating an empty array and then setting the mask
+        # to True. But on numpy 1.1 this results in a 0-D array which can not
+        # be indexed.
+        y_values = np.ma.masked_all(2 *self.width)
         y_values[0::2] = minmax[:, 0]
         y_values[1::2] = minmax[:, 1]
         plt.plot(x_values, y_values, color=self.color)
@@ -471,11 +472,11 @@ class WaveformPlotting(object):
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):
         """
-        Takes a Stream object and calculates the min and max values for each 
+        Takes a Stream object and calculates the min and max values for each
         pixel in the dayplot.
 
-        Writes a three dimensional array. The first axis is the step, i.e 
-        number of trace, the second is the pixel in that step and the third 
+        Writes a three dimensional array. The first axis is the step, i.e
+        number of trace, the second is the pixel in that step and the third
         contains the minimum and maximum value of the pixel.
         """
         # XXX: Currently only works for Streams containing just one Trace.
@@ -660,5 +661,8 @@ class WaveformPlotting(object):
         pattern = '%Y-%m-%dT%H:%M:%SZ'
         suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                   self.endtime.strftime(pattern))
-        plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
-                     horizontalalignment='left')
+        try:
+            plt.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
+                         horizontalalignment='left')
+        except AttributeError:
+            warnings.warn("Available matplotlib version too old. You'll get a simpler plot.")
