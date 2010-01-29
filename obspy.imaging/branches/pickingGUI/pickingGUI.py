@@ -246,6 +246,10 @@ def picker(streams = None):
                        'setSPolUp':'q', 'setSPolPoorUp':'w',
                        'setSPolDown':'a', 'setSPolPoorDown':'s'}
     
+    # Return, if no streams are given
+    if not streams:
+        return
+
     #set up a list of dictionaries to store all picking data
     dicts=[]
     for i in range(len(streams)):
@@ -1560,12 +1564,20 @@ def main():
     parser.add_option("-l", "--local", action="store_true", dest="local",
                       default=False,
                       help="use local files for design purposes")
+    parser.add_option("-k", "--keys", action="store_true", dest="keybindings",
+                      default=False, help="Show keybindings and quit")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
             parser.print_help()
             return
     
+    if options.keybindings:
+        picker()
+        for i in dictKeybindings.items():
+            print i
+        return
+
     if options.local:
         streams=[]
         streams.append(read('RJOB_061005_072159.ehz.new'))
