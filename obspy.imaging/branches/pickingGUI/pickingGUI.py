@@ -38,6 +38,137 @@ import matplotlib.image as image
 #streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
 #===============================================================================
 
+#Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
+#See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
+class MultiCursor(mplMultiCursor):
+    def __init__(self, canvas, axes, useblit=True, **lineprops):
+        self.canvas = canvas
+        self.axes = axes
+        xmin, xmax = axes[-1].get_xlim()
+        xmid = 0.5*(xmin+xmax)
+        self.lines = [ax.axvline(xmid, visible=False, **lineprops) for ax in axes]
+        self.visible = True
+        self.useblit = useblit
+        self.background = None
+        self.needclear = False
+        self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
+        self.id2=self.canvas.mpl_connect('draw_event', self.clear)
+
+#Some class definitions for the menu buttons
+#code from: http://matplotlib.sourceforge.net/examples/widgets/menu.html
+class ItemProperties:
+    def __init__(self, fontsize=12, labelcolor='black', bgcolor='yellow', alpha=1.0):
+        self.fontsize = fontsize
+        self.labelcolor = labelcolor
+        self.bgcolor = bgcolor
+        self.alpha = alpha
+        self.labelcolor_rgb = colors.colorConverter.to_rgb(labelcolor)
+        self.bgcolor_rgb = colors.colorConverter.to_rgb(bgcolor)
+
+class MenuItem(artist.Artist):
+    parser = mathtext.MathTextParser("Bitmap")
+    padx = 5
+    pady = 5
+    def __init__(self, fig, labelstr, props=None, hoverprops=None, on_select=None):
+        artist.Artist.__init__(self)
+        self.set_figure(fig)
+        self.labelstr = labelstr
+        if props is None:
+            props = ItemProperties()
+        if hoverprops is None:
+            hoverprops = ItemProperties()
+        self.props = props
+        self.hoverprops = hoverprops
+        self.on_select = on_select
+        x, self.depth = self.parser.to_mask(
+            labelstr, fontsize=props.fontsize, dpi=fig.dpi)
+        if props.fontsize!=hoverprops.fontsize:
+            raise NotImplementedError('support for different font sizes not implemented')
+        self.labelwidth = x.shape[1]
+        self.labelheight = x.shape[0]
+        self.labelArray = np.zeros((x.shape[0], x.shape[1], 4))
+        self.labelArray[:,:,-1] = x/255.
+        self.label = image.FigureImage(fig, origin='upper')
+        self.label.set_array(self.labelArray)
+        # we'll update these later
+        self.rect = patches.Rectangle((0,0), 1,1)
+        self.set_hover_props(False)
+        fig.canvas.mpl_connect('button_release_event', self.check_select)
+
+    def check_select(self, event):
+        over, junk = self.rect.contains(event)
+        if not over:
+            return
+        if self.on_select is not None:
+            self.on_select(self)
+
+    def set_extent(self, x, y, w, h):
+        #print x, y, w, h
+        self.rect.set_x(x)
+        self.rect.set_y(y)
+        self.rect.set_width(w)
+        self.rect.set_height(h)
+        self.label.ox = x+self.padx
+        self.label.oy = y-self.depth+self.pady/2.
+        self.rect._update_patch_transform()
+        self.hover = False
+
+    def draw(self, renderer):
+        self.rect.draw(renderer)
+        self.label.draw(renderer)
+
+    def set_hover_props(self, b):
+        if b:
+            props = self.hoverprops
+        else:
+            props = self.props
+        r, g, b = props.labelcolor_rgb
+        self.labelArray[:,:,0] = r
+        self.labelArray[:,:,1] = g
+        self.labelArray[:,:,2] = b
+        self.label.set_array(self.labelArray)
+        self.rect.set(facecolor=props.bgcolor, alpha=props.alpha)
+
+    def set_hover(self, event):
+        'check the hover status of event and return true if status is changed'
+        b,junk = self.rect.contains(event)
+        changed = (b != self.hover)
+        if changed:
+            self.set_hover_props(b)
+        self.hover = b
+        return changed
+
+class Menu:
+    def __init__(self, fig, menuitems):
+        self.figure = fig
+        fig.suppressComposite = True
+        self.menuitems = menuitems
+        self.numitems = len(menuitems)
+        maxw = max([item.labelwidth for item in menuitems])
+        maxh = max([item.labelheight for item in menuitems])
+        totalh = self.numitems*maxh + (self.numitems+1)*2*MenuItem.pady
+        x0 = 5
+        y0 = 5
+        y1 = y0 + (self.numitems-1)*(maxh + MenuItem.pady)
+        width = maxw + 2*MenuItem.padx
+        height = maxh+MenuItem.pady
+        for item in menuitems:
+            left = x0
+            #bottom = y0-maxh-MenuItem.pady
+            bottom = y1
+            item.set_extent(left, bottom, width, height)
+            fig.artists.append(item)
+            y1 -= maxh + MenuItem.pady
+        fig.canvas.mpl_connect('motion_notify_event', self.on_move)
+
+    def on_move(self, event):
+        draw = False
+        for item in self.menuitems:
+            draw = item.set_hover(event)
+            if draw:
+                self.figure.canvas.draw()
+                break
+    
 
 def picker(streams = None):
     global flagFilt
@@ -47,6 +178,7 @@ def picker(streams = None):
     global flagWheelZoom
     global flagPhase
     global dictPhase
+    global dictPhaseInverse
     global dictPhaseColors
     global pickingColor
     global magPickWindow
@@ -87,6 +219,9 @@ def picker(streams = None):
     flagWheelZoom=True #Switch use of mousewheel for zooming
     flagPhase=0 #0:P 1:S 2:Magnitude
     dictPhase={'P':0, 'S':1, 'Mag':2}
+    dictPhaseInverse = {} # We need the reverted dictionary for switching throug the Phase radio button
+    for i in dictPhase.items():
+        dictPhaseInverse[i[1]] = i[0]
     dictPhaseColors={'P':'red', 'S':'blue', 'Mag':'green'}
     pickingColor=dictPhaseColors['P']
     magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
@@ -99,7 +234,7 @@ def picker(streams = None):
     axvlinewidths=1.2
     #dictionary for key-bindings
     dictKeybindings = {'setPick':'alt', 'setPickError':' ', 'delPick':'escape',
-                       'setMagMin':'alt', 'setMagMax':' ',
+                       'setMagMin':'alt', 'setMagMax':' ', 'switchPhase':'control',
                        'delMagMinMax':'escape', 'switchWheelZoom':'z',
                        'switchPan':'p', 'prevStream':'y', 'nextStream':'x',
                        'setPWeight0':'0', 'setPWeight1':'1', 'setPWeight2':'2',
@@ -120,137 +255,6 @@ def picker(streams = None):
     stNum=len(streams)
     stPt=0
     
-    
-    #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
-    #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
-    class MultiCursor(mplMultiCursor):
-        def __init__(self, canvas, axes, useblit=True, **lineprops):
-            self.canvas = canvas
-            self.axes = axes
-            xmin, xmax = axes[-1].get_xlim()
-            xmid = 0.5*(xmin+xmax)
-            self.lines = [ax.axvline(xmid, visible=False, **lineprops) for ax in axes]
-            self.visible = True
-            self.useblit = useblit
-            self.background = None
-            self.needclear = False
-            self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
-            self.id2=self.canvas.mpl_connect('draw_event', self.clear)
-    
-    #Some class definitions for the menu buttons
-    #code from: http://matplotlib.sourceforge.net/examples/widgets/menu.html
-    class ItemProperties:
-        def __init__(self, fontsize=14, labelcolor='black', bgcolor='yellow', alpha=1.0):
-            self.fontsize = fontsize
-            self.labelcolor = labelcolor
-            self.bgcolor = bgcolor
-            self.alpha = alpha
-            self.labelcolor_rgb = colors.colorConverter.to_rgb(labelcolor)
-            self.bgcolor_rgb = colors.colorConverter.to_rgb(bgcolor)
-    
-    class MenuItem(artist.Artist):
-        parser = mathtext.MathTextParser("Bitmap")
-        padx = 5
-        pady = 5
-        def __init__(self, fig, labelstr, props=None, hoverprops=None, on_select=None):
-            artist.Artist.__init__(self)
-            self.set_figure(fig)
-            self.labelstr = labelstr
-            if props is None:
-                props = ItemProperties()
-            if hoverprops is None:
-                hoverprops = ItemProperties()
-            self.props = props
-            self.hoverprops = hoverprops
-            self.on_select = on_select
-            x, self.depth = self.parser.to_mask(
-                labelstr, fontsize=props.fontsize, dpi=fig.dpi)
-            if props.fontsize!=hoverprops.fontsize:
-                raise NotImplementedError('support for different font sizes not implemented')
-            self.labelwidth = x.shape[1]
-            self.labelheight = x.shape[0]
-            self.labelArray = np.zeros((x.shape[0], x.shape[1], 4))
-            self.labelArray[:,:,-1] = x/255.
-            self.label = image.FigureImage(fig, origin='upper')
-            self.label.set_array(self.labelArray)
-            # we'll update these later
-            self.rect = patches.Rectangle((0,0), 1,1)
-            self.set_hover_props(False)
-            fig.canvas.mpl_connect('button_release_event', self.check_select)
-    
-        def check_select(self, event):
-            over, junk = self.rect.contains(event)
-            if not over:
-                return
-            if self.on_select is not None:
-                self.on_select(self)
-    
-        def set_extent(self, x, y, w, h):
-            #print x, y, w, h
-            self.rect.set_x(x)
-            self.rect.set_y(y)
-            self.rect.set_width(w)
-            self.rect.set_height(h)
-            self.label.ox = x+self.padx
-            self.label.oy = y-self.depth+self.pady/2.
-            self.rect._update_patch_transform()
-            self.hover = False
-    
-        def draw(self, renderer):
-            self.rect.draw(renderer)
-            self.label.draw(renderer)
-    
-        def set_hover_props(self, b):
-            if b:
-                props = self.hoverprops
-            else:
-                props = self.props
-            r, g, b = props.labelcolor_rgb
-            self.labelArray[:,:,0] = r
-            self.labelArray[:,:,1] = g
-            self.labelArray[:,:,2] = b
-            self.label.set_array(self.labelArray)
-            self.rect.set(facecolor=props.bgcolor, alpha=props.alpha)
-    
-        def set_hover(self, event):
-            'check the hover status of event and return true if status is changed'
-            b,junk = self.rect.contains(event)
-            changed = (b != self.hover)
-            if changed:
-                self.set_hover_props(b)
-            self.hover = b
-            return changed
-    
-    class Menu:
-        def __init__(self, fig, menuitems):
-            self.figure = fig
-            fig.suppressComposite = True
-            self.menuitems = menuitems
-            self.numitems = len(menuitems)
-            maxw = max([item.labelwidth for item in menuitems])
-            maxh = max([item.labelheight for item in menuitems])
-            totalh = self.numitems*maxh + (self.numitems+1)*2*MenuItem.pady
-            x0 = 5
-            y0 = 5
-            y1 = y0 + (self.numitems-1)*(maxh + MenuItem.pady)
-            width = maxw + 2*MenuItem.padx
-            height = maxh+MenuItem.pady
-            for item in menuitems:
-                left = x0
-                #bottom = y0-maxh-MenuItem.pady
-                bottom = y1
-                item.set_extent(left, bottom, width, height)
-                fig.artists.append(item)
-                y1 -= maxh + MenuItem.pady
-            fig.canvas.mpl_connect('motion_notify_event', self.on_move)
-    
-        def on_move(self, event):
-            draw = False
-            for item in self.menuitems:
-                draw = item.set_hover(event)
-                if draw:
-                    self.figure.canvas.draw()
-                    break
     
     
     
@@ -297,7 +301,7 @@ def picker(streams = None):
         supTit=fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
         xMin,xMax=axs[0].get_xlim()
         yMin,yMax=axs[0].get_ylim()
-        fig.subplots_adjust(bottom=0.25,hspace=0,right=0.999,top=0.95)
+        fig.subplots_adjust(bottom=0.20,hspace=0,right=0.999,top=0.95)
     
     def drawSavedPicks():
         drawPLine()
@@ -341,7 +345,7 @@ def picker(streams = None):
         global PLabel
         if not dicts[stPt].has_key('P'):
             return
-        PLabel = axs[0].text(dicts[stPt]['P'], 0.87, '  P',
+        PLabel = axs[0].text(dicts[stPt]['P'], 1 - 0.04 * len(axs), '  P',
                              transform = trans[0], color=dictPhaseColors['P'])
     
     def delPLabel():
@@ -359,7 +363,7 @@ def picker(streams = None):
         global PWeightLabel
         if not dicts[stPt].has_key('P') or not dicts[stPt].has_key('PWeight'):
             return
-        PWeightLabel = axs[0].text(dicts[stPt]['P'], 0.77, '  %s'%dicts[stPt]['PWeight'],
+        PWeightLabel = axs[0].text(dicts[stPt]['P'], 1 - 0.06 * len(axs), '  %s'%dicts[stPt]['PWeight'],
                                    transform = trans[0], color = dictPhaseColors['P'])
     
     def delPWeightLabel():
@@ -421,33 +425,37 @@ def picker(streams = None):
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
         if dicts[stPt]['PPol'] == 'Up':
-            PPolMarker = axs[0].plot([dicts[stPt]['P']], [0.97], zorder = 4000,
-                                     linewidth = 0, transform = trans[0],
+            PPolMarker = axs[0].plot([dicts[stPt]['P']], [1 - 0.01 * len(axs)],
+                                     zorder = 4000, linewidth = 0,
+                                     transform = trans[0],
                                      markerfacecolor = dictPhaseColors['P'],
                                      marker = dictPolMarker['Up'], 
                                      markersize = polMarkerSize,
                                      markeredgecolor = dictPhaseColors['P'])[0]
         if dicts[stPt]['PPol'] == 'PoorUp':
-            PPolMarker = axs[0].plot([dicts[stPt]['P']], [0.97], zorder = 4000,
-                                     linewidth = 0, transform = trans[0],
+            PPolMarker = axs[0].plot([dicts[stPt]['P']], [1 - 0.01 * len(axs)],
+                                     zorder = 4000, linewidth = 0,
+                                     transform = trans[0],
                                      markerfacecolor = axs[0]._axisbg,
                                      marker = dictPolMarker['Up'], 
                                      markersize = polMarkerSize,
                                      markeredgecolor = dictPhaseColors['P'])[0]
         if dicts[stPt]['PPol'] == 'Down':
-            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.03], zorder = 4000,
-                                     linewidth = 0, transform = trans[-1],
-                                     markerfacecolor = dictPhaseColors['P'],
-                                     marker = dictPolMarker['Down'], 
-                                     markersize = polMarkerSize,
-                                     markeredgecolor = dictPhaseColors['P'])[0]
+            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.01 * len(axs)],
+                                      zorder = 4000, linewidth = 0,
+                                      transform = trans[-1],
+                                      markerfacecolor = dictPhaseColors['P'],
+                                      marker = dictPolMarker['Down'], 
+                                      markersize = polMarkerSize,
+                                      markeredgecolor = dictPhaseColors['P'])[0]
         if dicts[stPt]['PPol'] == 'PoorDown':
-            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.03], zorder = 4000,
-                                     linewidth = 0, transform = trans[-1],
-                                     markerfacecolor = axs[-1]._axisbg,
-                                     marker = dictPolMarker['Down'], 
-                                     markersize = polMarkerSize,
-                                     markeredgecolor = dictPhaseColors['P'])[0]
+            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.01 * len(axs)],
+                                      zorder = 4000, linewidth = 0,
+                                      transform = trans[-1],
+                                      markerfacecolor = axs[-1]._axisbg,
+                                      marker = dictPolMarker['Down'], 
+                                      markersize = polMarkerSize,
+                                      markeredgecolor = dictPhaseColors['P'])[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
     
@@ -474,33 +482,37 @@ def picker(streams = None):
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
         if dicts[stPt]['SPol'] == 'Up':
-            SPolMarker = axs[0].plot([dicts[stPt]['S']], [0.97], zorder = 4000,
-                                     linewidth = 0, transform = trans[0],
+            SPolMarker = axs[0].plot([dicts[stPt]['S']], [1 - 0.01 * len(axs)],
+                                     zorder = 4000, linewidth = 0,
+                                     transform = trans[0],
                                      markerfacecolor = dictPhaseColors['S'],
                                      marker = dictPolMarker['Up'], 
                                      markersize = polMarkerSize,
                                      markeredgecolor = dictPhaseColors['S'])[0]
         if dicts[stPt]['SPol'] == 'PoorUp':
-            SPolMarker = axs[0].plot([dicts[stPt]['S']], [0.97], zorder = 4000,
-                                     linewidth = 0, transform = trans[0],
+            SPolMarker = axs[0].plot([dicts[stPt]['S']], [1 - 0.01 * len(axs)],
+                                     zorder = 4000, linewidth = 0,
+                                     transform = trans[0],
                                      markerfacecolor = axs[0]._axisbg,
                                      marker = dictPolMarker['Up'], 
                                      markersize = polMarkerSize,
                                      markeredgecolor = dictPhaseColors['S'])[0]
         if dicts[stPt]['SPol'] == 'Down':
-            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.03], zorder = 4000,
-                                     linewidth = 0, transform = trans[-1],
-                                     markerfacecolor = dictPhaseColors['S'],
-                                     marker = dictPolMarker['Down'], 
-                                     markersize = polMarkerSize,
-                                     markeredgecolor = dictPhaseColors['S'])[0]
+            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.01 * len(axs)],
+                                      zorder = 4000, linewidth = 0,
+                                      transform = trans[-1],
+                                      markerfacecolor = dictPhaseColors['S'],
+                                      marker = dictPolMarker['Down'], 
+                                      markersize = polMarkerSize,
+                                      markeredgecolor = dictPhaseColors['S'])[0]
         if dicts[stPt]['SPol'] == 'PoorDown':
-            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.03], zorder = 4000,
-                                     linewidth = 0, transform = trans[-1],
-                                     markerfacecolor = axs[-1]._axisbg,
-                                     marker = dictPolMarker['Down'], 
-                                     markersize = polMarkerSize,
-                                     markeredgecolor = dictPhaseColors['S'])[0]
+            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.01 * len(axs)],
+                                      zorder = 4000, linewidth = 0,
+                                      transform = trans[-1],
+                                      markerfacecolor = axs[-1]._axisbg,
+                                      marker = dictPolMarker['Down'], 
+                                      markersize = polMarkerSize,
+                                      markeredgecolor = dictPhaseColors['S'])[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
     
@@ -543,7 +555,7 @@ def picker(streams = None):
         global SLabel
         if not dicts[stPt].has_key('S'):
             return
-        SLabel = axs[0].text(dicts[stPt]['S'], 0.87, '  S',
+        SLabel = axs[0].text(dicts[stPt]['S'], 1 - 0.04 * len(axs), '  S',
                              transform = trans[0], color=dictPhaseColors['S'])
     
     def delSLabel():
@@ -561,7 +573,7 @@ def picker(streams = None):
         global SWeightLabel
         if not dicts[stPt].has_key('S') or not dicts[stPt].has_key('SWeight'):
             return
-        SWeightLabel = axs[0].text(dicts[stPt]['S'], 0.77, '  %s'%dicts[stPt]['SWeight'],
+        SWeightLabel = axs[0].text(dicts[stPt]['S'], 1 - 0.06 * len(axs), '  %s'%dicts[stPt]['SWeight'],
                                    transform = trans[0], color = dictPhaseColors['S'])
     
     def delSWeightLabel():
@@ -976,6 +988,17 @@ def picker(streams = None):
         global pickingColor
         flagPhase=dictPhase[label]
         pickingColor=dictPhaseColors[label]
+        for l in multicursor.lines:
+            l.set_color(pickingColor)
+        radioPhase.circles[flagPhase].set_facecolor(pickingColor)
+        redraw()
+    
+    def funcSwitchPhase():
+        global flagPhase
+        global pickingColor
+        radioPhase.circles[flagPhase].set_facecolor(axPhase._axisbg)
+        flagPhase=(flagPhase+1)%len(dictPhase)
+        pickingColor=dictPhaseColors[dictPhaseInverse[flagPhase]]
         for l in multicursor.lines:
             l.set_color(pickingColor)
         radioPhase.circles[flagPhase].set_facecolor(pickingColor)
@@ -1433,6 +1456,11 @@ def picker(streams = None):
         for l in multicursor.lines:
             l.set_color(pickingColor)
     
+    def switchPhase(event):
+        if event.key==dictKeybindings['switchPhase']:
+            funcSwitchPhase()
+            print "Switching Phase button"
+            
     def switchStream(event):
         global stPt
         if event.key==dictKeybindings['prevStream']:
@@ -1481,6 +1509,7 @@ def picker(streams = None):
     keypressWheelZoom = fig.canvas.mpl_connect('key_press_event', switchWheelZoom)
     keypressPan = fig.canvas.mpl_connect('key_press_event', switchPan)
     keypressNextPrev = fig.canvas.mpl_connect('key_press_event', switchStream)
+    keypressSwitchPhase = fig.canvas.mpl_connect('key_press_event', switchPhase)
     buttonpressBlockRedraw = fig.canvas.mpl_connect('button_press_event', blockRedraw)
     buttonreleaseAllowRedraw = fig.canvas.mpl_connect('button_release_event', allowRedraw)
     scroll = fig.canvas.mpl_connect('scroll_event', zoom)
@@ -1496,11 +1525,13 @@ def picker(streams = None):
         l.set_color(dictPhaseColors['P'])
     radioPhase.circles[0].set_facecolor(dictPhaseColors['P'])
     #add menu buttons:
-    props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=15, alpha=0.2)
-    hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=15, alpha=0.2)
+    props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
+    hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
     menuitems = []
     for label in ('save', 'quit'):
         def on_select(item):
+            if item.labelstr == 'quit':
+                plt.close()
             print 'you selected', item.labelstr
         item = MenuItem(fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
         menuitems.append(item)
@@ -1544,24 +1575,23 @@ def main():
         streams.append(read('RMOA_160505_014459.ehz.new'))
         streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
         streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
-        picker(streams)
     else:
         try:
             t = UTCDateTime(options.time)
             client = Client()
-            container = []
+            streams = []
             for id in options.ids.split(","):
                 net, sta, loc, cha = id.split(".")
                 st = client.waveform.getWaveform(net, sta, loc, cha, 
                                                  t, t + options.duration)
                 st.sort()
                 st.reverse()
-                container.append(st)
+                streams.append(st)
         except:
             parser.print_help()
             raise
 
-        picker(container)
+    picker(streams)
 
 if __name__ == "__main__":
     main()
