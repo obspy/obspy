@@ -76,6 +76,7 @@ def picker(streams = None):
     global menu
     global valFiltLow
     global valFiltHigh
+    global trans
     #Define some flags, dictionaries and plotting options
     flagFilt=False #False:no filter  True:filter
     flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
@@ -93,6 +94,8 @@ def picker(streams = None):
     magMaxMarker='x'
     magMarkerEdgeWidth=1.8
     magMarkerSize=20
+    dictPolMarker = {'Up': '^', 'Down': 'v'}
+    polMarkerSize=8
     axvlinewidths=1.2
     #dictionary for key-bindings
     dictKeybindings = {'setPick':'alt', 'setPickError':' ', 'delPick':'escape',
@@ -100,9 +103,9 @@ def picker(streams = None):
                        'delMagMinMax':'escape', 'switchWheelZoom':'z',
                        'switchPan':'p', 'prevStream':'y', 'nextStream':'x',
                        'setPWeight0':'0', 'setPWeight1':'1', 'setPWeight2':'2',
-                       'setPWeight3':'3', 'setPWeight4':'4', 'setPWeight5':'5',
+                       'setPWeight3':'3',# 'setPWeight4':'4', 'setPWeight5':'5',
                        'setSWeight0':'0', 'setSWeight1':'1', 'setSWeight2':'2',
-                       'setSWeight3':'3', 'setSWeight4':'4', 'setSWeight5':'5',
+                       'setSWeight3':'3',# 'setSWeight4':'4', 'setSWeight5':'5',
                        'setPPolUp':'q', 'setPPolPoorUp':'w',
                        'setPPolDown':'a', 'setPPolPoorDown':'s',
                        'setSPolUp':'q', 'setSPolPoorUp':'w',
@@ -274,15 +277,21 @@ def picker(streams = None):
         global xMax
         global yMin
         global yMax
+        global trans
         t = np.arange(streams[stPt][0].stats.npts)
-        axs=[]
-        plts=[]
-        trNum=len(streams[stPt].traces)
+        axs = []
+        plts = []
+        trans = []
+        trNum = len(streams[stPt].traces)
         for i in range(trNum):
-            if i==0:
+            if i == 0:
                 axs.append(fig.add_subplot(trNum,1,i+1))
+                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
+                                                                             axs[i].transAxes))
             else:
                 axs.append(fig.add_subplot(trNum,1,i+1,sharex=axs[0],sharey=axs[0]))
+                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
+                                                                             axs[i].transAxes))
             axs[i].set_ylabel(streams[stPt][i].stats.station+" "+streams[stPt][i].stats.channel)
             plts.append(axs[i].plot(t, streams[stPt][i].data, color='k',zorder=1000)[0])
         supTit=fig.suptitle("%s -- %s, %s" % (streams[stPt][0].stats.starttime, streams[stPt][0].stats.endtime, streams[stPt][0].stats.station))
@@ -291,25 +300,25 @@ def picker(streams = None):
         fig.subplots_adjust(bottom=0.25,hspace=0,right=0.999,top=0.95)
     
     def drawSavedPicks():
-        if dicts[stPt].has_key('P'):
-            drawPLine()
-        if dicts[stPt].has_key('PErr1'):
-            drawPErr1Line()
-        if dicts[stPt].has_key('PErr2'):
-            drawPErr2Line()
-        if dicts[stPt].has_key('S'):
-            drawSLine()
-        if dicts[stPt].has_key('SErr1'):
-            drawSErr1Line()
-        if dicts[stPt].has_key('SErr2'):
-            drawSErr2Line()
-        if dicts[stPt].has_key('MagMin'):
-            drawMagMinCross()
-        if dicts[stPt].has_key('MagMax'):
-            drawMagMaxCross()
+        drawPLine()
+        drawPLabel()
+        drawPWeightLabel()
+        drawPPolMarker()
+        drawPErr1Line()
+        drawPErr2Line()
+        drawSLine()
+        drawSLabel()
+        drawSWeightLabel()
+        drawSPolMarker()
+        drawSErr1Line()
+        drawSErr2Line()
+        drawMagMinCross()
+        drawMagMaxCross()
     
     def drawPLine():
         global PLines
+        if not dicts[stPt].has_key('P'):
+            return
         PLines=[]
         for i in range(len(axs)):
             PLines.append(axs[i].axvline(dicts[stPt]['P'],color=dictPhaseColors['P'],linewidth=axvlinewidths,label='P'))
@@ -326,8 +335,46 @@ def picker(streams = None):
         except:
             pass
     
+    def drawPLabel():
+        global PLabel
+        if not dicts[stPt].has_key('P'):
+            return
+        PLabel = axs[0].text(dicts[stPt]['P'], 0.87, '  P',
+                             transform = trans[0], color=dictPhaseColors['P'])
+    
+    def delPLabel():
+        global PLabel
+        try:
+            axs[0].texts.remove(PLabel)
+        except:
+            pass
+        try:
+            del PLabel
+        except:
+            pass
+    
+    def drawPWeightLabel():
+        global PWeightLabel
+        if not dicts[stPt].has_key('P') or not dicts[stPt].has_key('PWeight'):
+            return
+        PWeightLabel = axs[0].text(dicts[stPt]['P'], 0.77, '  %s'%dicts[stPt]['PWeight'],
+                                   transform = trans[0], color = dictPhaseColors['P'])
+    
+    def delPWeightLabel():
+        global PWeightLabel
+        try:
+            axs[0].texts.remove(PWeightLabel)
+        except:
+            pass
+        try:
+            del PWeightLabel
+        except:
+            pass
+    
     def drawPErr1Line():
         global PErr1Lines
+        if not dicts[stPt].has_key('P') or not dicts[stPt].has_key('PErr1'):
+            return
         PErr1Lines=[]
         for i in range(len(axs)):
             PErr1Lines.append(axs[i].axvline(dicts[stPt]['PErr1'],ymin=0.25,ymax=0.75,color=dictPhaseColors['P'],linewidth=axvlinewidths,label='PErr1'))
@@ -346,6 +393,8 @@ def picker(streams = None):
     
     def drawPErr2Line():
         global PErr2Lines
+        if not dicts[stPt].has_key('P') or not dicts[stPt].has_key('PErr2'):
+            return
         PErr2Lines=[]
         for i in range(len(axs)):
             PErr2Lines.append(axs[i].axvline(dicts[stPt]['PErr2'],ymin=0.25,ymax=0.75,color=dictPhaseColors['P'],linewidth=axvlinewidths,label='PErr2'))
@@ -361,9 +410,117 @@ def picker(streams = None):
             del PErr2Lines
         except:
             pass
+
+    def drawPPolMarker():
+        global PPolMarker
+        if not dicts[stPt].has_key('P') or not dicts[stPt].has_key('PPol'):
+            return
+        #we have to force the graph to the old axes limits because of the completely new line object creation
+        xlims=list(axs[0].get_xlim())
+        ylims=list(axs[0].get_ylim())
+        if dicts[stPt]['PPol'] == 'Up':
+            PPolMarker = axs[0].plot([dicts[stPt]['P']], [0.97], zorder = 4000,
+                                     linewidth = 0, transform = trans[0],
+                                     markerfacecolor = dictPhaseColors['P'],
+                                     marker = dictPolMarker['Up'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['P'])[0]
+        if dicts[stPt]['PPol'] == 'PoorUp':
+            PPolMarker = axs[0].plot([dicts[stPt]['P']], [0.97], zorder = 4000,
+                                     linewidth = 0, transform = trans[0],
+                                     markerfacecolor = axs[0]._axisbg,
+                                     marker = dictPolMarker['Up'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['P'])[0]
+        if dicts[stPt]['PPol'] == 'Down':
+            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.03], zorder = 4000,
+                                     linewidth = 0, transform = trans[-1],
+                                     markerfacecolor = dictPhaseColors['P'],
+                                     marker = dictPolMarker['Down'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['P'])[0]
+        if dicts[stPt]['PPol'] == 'PoorDown':
+            PPolMarker = axs[-1].plot([dicts[stPt]['P']], [0.03], zorder = 4000,
+                                     linewidth = 0, transform = trans[-1],
+                                     markerfacecolor = axs[-1]._axisbg,
+                                     marker = dictPolMarker['Down'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['P'])[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
+    
+    def delPPolMarker():
+        global PPolMarker
+        try:
+            axs[0].lines.remove(PPolMarker)
+        except:
+            pass
+        try:
+            axs[-1].lines.remove(PPolMarker)
+        except:
+            pass
+        try:
+            del PPolMarker
+        except:
+            pass
+    
+    def drawSPolMarker():
+        global SPolMarker
+        if not dicts[stPt].has_key('S') or not dicts[stPt].has_key('SPol'):
+            return
+        #we have to force the graph to the old axes limits because of the completely new line object creation
+        xlims=list(axs[0].get_xlim())
+        ylims=list(axs[0].get_ylim())
+        if dicts[stPt]['SPol'] == 'Up':
+            SPolMarker = axs[0].plot([dicts[stPt]['S']], [0.97], zorder = 4000,
+                                     linewidth = 0, transform = trans[0],
+                                     markerfacecolor = dictPhaseColors['S'],
+                                     marker = dictPolMarker['Up'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['S'])[0]
+        if dicts[stPt]['SPol'] == 'PoorUp':
+            SPolMarker = axs[0].plot([dicts[stPt]['S']], [0.97], zorder = 4000,
+                                     linewidth = 0, transform = trans[0],
+                                     markerfacecolor = axs[0]._axisbg,
+                                     marker = dictPolMarker['Up'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['S'])[0]
+        if dicts[stPt]['SPol'] == 'Down':
+            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.03], zorder = 4000,
+                                     linewidth = 0, transform = trans[-1],
+                                     markerfacecolor = dictPhaseColors['S'],
+                                     marker = dictPolMarker['Down'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['S'])[0]
+        if dicts[stPt]['SPol'] == 'PoorDown':
+            SPolMarker = axs[-1].plot([dicts[stPt]['S']], [0.03], zorder = 4000,
+                                     linewidth = 0, transform = trans[-1],
+                                     markerfacecolor = axs[-1]._axisbg,
+                                     marker = dictPolMarker['Down'], 
+                                     markersize = polMarkerSize,
+                                     markeredgecolor = dictPhaseColors['S'])[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
+    
+    def delSPolMarker():
+        global SPolMarker
+        try:
+            axs[0].lines.remove(SPolMarker)
+        except:
+            pass
+        try:
+            axs[-1].lines.remove(SPolMarker)
+        except:
+            pass
+        try:
+            del SPolMarker
+        except:
+            pass
     
     def drawSLine():
         global SLines
+        if not dicts[stPt].has_key('S'):
+            return
         SLines=[]
         for i in range(len(axs)):
             SLines.append(axs[i].axvline(dicts[stPt]['S'],color=dictPhaseColors['S'],linewidth=axvlinewidths,label='S'))
@@ -380,8 +537,46 @@ def picker(streams = None):
         except:
             pass
     
+    def drawSLabel():
+        global SLabel
+        if not dicts[stPt].has_key('S'):
+            return
+        SLabel = axs[0].text(dicts[stPt]['S'], 0.87, '  S',
+                             transform = trans[0], color=dictPhaseColors['S'])
+    
+    def delSLabel():
+        global SLabel
+        try:
+            axs[0].texts.remove(SLabel)
+        except:
+            pass
+        try:
+            del SLabel
+        except:
+            pass
+    
+    def drawSWeightLabel():
+        global SWeightLabel
+        if not dicts[stPt].has_key('S') or not dicts[stPt].has_key('SWeight'):
+            return
+        SWeightLabel = axs[0].text(dicts[stPt]['S'], 0.77, '  %s'%dicts[stPt]['SWeight'],
+                                   transform = trans[0], color = dictPhaseColors['S'])
+    
+    def delSWeightLabel():
+        global SWeightLabel
+        try:
+            axs[0].texts.remove(SWeightLabel)
+        except:
+            pass
+        try:
+            del SWeightLabel
+        except:
+            pass
+    
     def drawSErr1Line():
         global SErr1Lines
+        if not dicts[stPt].has_key('S') or not dicts[stPt].has_key('SErr1'):
+            return
         SErr1Lines=[]
         for i in range(len(axs)):
             SErr1Lines.append(axs[i].axvline(dicts[stPt]['SErr1'],ymin=0.25,ymax=0.75,color=dictPhaseColors['S'],linewidth=axvlinewidths,label='SErr1'))
@@ -400,6 +595,8 @@ def picker(streams = None):
     
     def drawSErr2Line():
         global SErr2Lines
+        if not dicts[stPt].has_key('S') or not dicts[stPt].has_key('SErr2'):
+            return
         SErr2Lines=[]
         for i in range(len(axs)):
             SErr2Lines.append(axs[i].axvline(dicts[stPt]['SErr2'],ymin=0.25,ymax=0.75,color=dictPhaseColors['S'],linewidth=axvlinewidths,label='SErr2'))
@@ -418,6 +615,8 @@ def picker(streams = None):
     
     def drawMagMinCross():
         global MagMinCross
+        if not dicts[stPt].has_key('MagMin'):
+            return
         #we have to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
@@ -434,6 +633,8 @@ def picker(streams = None):
     
     def drawMagMaxCross():
         global MagMaxCross
+        if not dicts[stPt].has_key('MagMax'):
+            return
         #we have to force the graph to the old axes limits because of the completely new line object creation
         xlims=list(axs[0].get_xlim())
         ylims=list(axs[0].get_ylim())
@@ -715,8 +916,14 @@ def picker(streams = None):
         # Set new P Pick
         if flagPhase==0 and event.key==dictKeybindings['setPick']:
             delPLine()
+            delPPolMarker()
+            delPLabel()
+            delPWeightLabel()
             dicts[stPt]['P']=int(round(event.xdata))
             drawPLine()
+            drawPPolMarker()
+            drawPLabel()
+            drawPWeightLabel()
             #check if the new P pick lies outside of the Error Picks
             try:
                 if dicts[stPt]['P']<dicts[stPt]['PErr1']:
@@ -735,52 +942,80 @@ def picker(streams = None):
             # Console output
             print "P Pick set at %i"%dicts[stPt]['P']
         # Set P Pick weight
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight0']:
-            dicts[stPt]['PWeight']=0
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight1']:
-            dicts[stPt]['PWeight']=1
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight2']:
-            dicts[stPt]['PWeight']=2
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight3']:
-            dicts[stPt]['PWeight']=3
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight4']:
-            dicts[stPt]['PWeight']=4
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
-        if flagPhase==0 and event.key==dictKeybindings['setPWeight5']:
-            dicts[stPt]['PWeight']=5
-            #redraw()
-            print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+        if dicts[stPt].has_key('P'):
+            if flagPhase==0 and event.key==dictKeybindings['setPWeight0']:
+                delPWeightLabel()
+                dicts[stPt]['PWeight']=0
+                drawPWeightLabel()
+                redraw()
+                print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+            if flagPhase==0 and event.key==dictKeybindings['setPWeight1']:
+                delPWeightLabel()
+                dicts[stPt]['PWeight']=1
+                print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+                drawPWeightLabel()
+                redraw()
+            if flagPhase==0 and event.key==dictKeybindings['setPWeight2']:
+                delPWeightLabel()
+                dicts[stPt]['PWeight']=2
+                print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+                drawPWeightLabel()
+                redraw()
+            if flagPhase==0 and event.key==dictKeybindings['setPWeight3']:
+                delPWeightLabel()
+                dicts[stPt]['PWeight']=3
+                print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+                drawPWeightLabel()
+                redraw()
+            #if flagPhase==0 and event.key==dictKeybindings['setPWeight4']:
+            #    delPWeightLabel()
+            #    dicts[stPt]['PWeight']=4
+            #    print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+            #    drawPWeightLabel()
+            #    redraw()
+            #if flagPhase==0 and event.key==dictKeybindings['setPWeight5']:
+            #    delPWeightLabel()
+            #    dicts[stPt]['PWeight']=5
+            #    print "P Pick weight set to %i"%dicts[stPt]['PWeight']
+            #    drawPWeightLabel()
+            #    redraw()
         # Set P Pick polarity
-        if flagPhase==0 and event.key==dictKeybindings['setPPolUp']:
-            dicts[stPt]['PPol']='Up'
-            #redraw()
-            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
-        if flagPhase==0 and event.key==dictKeybindings['setPPolPoorUp']:
-            dicts[stPt]['PPol']='PoorUp'
-            #redraw()
-            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
-        if flagPhase==0 and event.key==dictKeybindings['setPPolDown']:
-            dicts[stPt]['PPol']='Down'
-            #redraw()
-            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
-        if flagPhase==0 and event.key==dictKeybindings['setPPolPoorDown']:
-            dicts[stPt]['PPol']='PoorDown'
-            #redraw()
-            print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+        if dicts[stPt].has_key('P'):
+            if flagPhase==0 and event.key==dictKeybindings['setPPolUp']:
+                delPPolMarker()
+                dicts[stPt]['PPol']='Up'
+                drawPPolMarker()
+                redraw()
+                print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+            if flagPhase==0 and event.key==dictKeybindings['setPPolPoorUp']:
+                delPPolMarker()
+                dicts[stPt]['PPol']='PoorUp'
+                drawPPolMarker()
+                redraw()
+                print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+            if flagPhase==0 and event.key==dictKeybindings['setPPolDown']:
+                delPPolMarker()
+                dicts[stPt]['PPol']='Down'
+                drawPPolMarker()
+                redraw()
+                print "P Pick polarity set to %s"%dicts[stPt]['PPol']
+            if flagPhase==0 and event.key==dictKeybindings['setPPolPoorDown']:
+                delPPolMarker()
+                dicts[stPt]['PPol']='PoorDown'
+                drawPPolMarker()
+                redraw()
+                print "P Pick polarity set to %s"%dicts[stPt]['PPol']
         # Set new S Pick
         if flagPhase==1 and event.key==dictKeybindings['setPick']:
             delSLine()
+            delSPolMarker()
+            delSLabel()
+            delSWeightLabel()
             dicts[stPt]['S']=int(round(event.xdata))
             drawSLine()
+            drawSPolMarker()
+            drawSLabel()
+            drawSWeightLabel()
             #check if the new S pick lies outside of the Error Picks
             try:
                 if dicts[stPt]['S']<dicts[stPt]['SErr1']:
@@ -799,54 +1034,79 @@ def picker(streams = None):
             # Console output
             print "S Pick set at %i"%dicts[stPt]['S']
         # Set S Pick weight
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight0']:
-            dicts[stPt]['SWeight']=0
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight1']:
-            dicts[stPt]['SWeight']=1
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight2']:
-            dicts[stPt]['SWeight']=2
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight3']:
-            dicts[stPt]['SWeight']=3
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight4']:
-            dicts[stPt]['SWeight']=4
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
-        if flagPhase==1 and event.key==dictKeybindings['setSWeight5']:
-            dicts[stPt]['SWeight']=5
-            redraw()
-            print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+        if dicts[stPt].has_key('S'):
+            if flagPhase==1 and event.key==dictKeybindings['setSWeight0']:
+                delSWeightLabel()
+                dicts[stPt]['SWeight']=0
+                drawSWeightLabel()
+                redraw()
+                print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+            if flagPhase==1 and event.key==dictKeybindings['setSWeight1']:
+                delSWeightLabel()
+                dicts[stPt]['SWeight']=1
+                drawSWeightLabel()
+                redraw()
+                print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+            if flagPhase==1 and event.key==dictKeybindings['setSWeight2']:
+                delSWeightLabel()
+                dicts[stPt]['SWeight']=2
+                drawSWeightLabel()
+                redraw()
+                print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+            if flagPhase==1 and event.key==dictKeybindings['setSWeight3']:
+                delSWeightLabel()
+                dicts[stPt]['SWeight']=3
+                drawSWeightLabel()
+                redraw()
+                print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+            #if flagPhase==1 and event.key==dictKeybindings['setSWeight4']:
+            #    delSWeightLabel()
+            #    dicts[stPt]['SWeight']=4
+            #    drawSWeightLabel()
+            #    redraw()
+            #    print "S Pick weight set to %i"%dicts[stPt]['SWeight']
+            #if flagPhase==1 and event.key==dictKeybindings['setSWeight5']:
+            #    delSWeightLabel()
+            #    dicts[stPt]['SWeight']=5
+            #    drawSWeightLabel()
+            #    redraw()
+            #    print "S Pick weight set to %i"%dicts[stPt]['SWeight']
         # Set S Pick polarity
-        if flagPhase==1 and event.key==dictKeybindings['setSPolUp']:
-            dicts[stPt]['SPol']='Up'
-            #redraw()
-            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
-        if flagPhase==1 and event.key==dictKeybindings['setSPolPoorUp']:
-            dicts[stPt]['SPol']='PoorUp'
-            #redraw()
-            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
-        if flagPhase==1 and event.key==dictKeybindings['setSPolDown']:
-            dicts[stPt]['SPol']='Down'
-            #redraw()
-            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
-        if flagPhase==1 and event.key==dictKeybindings['setSPolPoorDown']:
-            dicts[stPt]['SPol']='PoorDown'
-            #redraw()
-            print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+        if dicts[stPt].has_key('S'):
+            if flagPhase==1 and event.key==dictKeybindings['setSPolUp']:
+                delSPolMarker()
+                dicts[stPt]['SPol']='Up'
+                drawSPolMarker()
+                redraw()
+                print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+            if flagPhase==1 and event.key==dictKeybindings['setSPolPoorUp']:
+                delSPolMarker()
+                dicts[stPt]['SPol']='PoorUp'
+                drawSPolMarker()
+                redraw()
+                print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+            if flagPhase==1 and event.key==dictKeybindings['setSPolDown']:
+                delSPolMarker()
+                dicts[stPt]['SPol']='Down'
+                drawSPolMarker()
+                redraw()
+                print "S Pick polarity set to %s"%dicts[stPt]['SPol']
+            if flagPhase==1 and event.key==dictKeybindings['setSPolPoorDown']:
+                delSPolMarker()
+                dicts[stPt]['SPol']='PoorDown'
+                drawSPolMarker()
+                redraw()
+                print "S Pick polarity set to %s"%dicts[stPt]['SPol']
         # Remove P Pick
         if flagPhase==0 and event.key==dictKeybindings['delPick']:
             # Try to remove all existing Pick lines and P Pick variable
             delPLine()
             delP()
             delPWeight()
+            delPPolMarker()
             delPPol()
+            delPLabel()
+            delPWeightLabel()
             # Try to remove existing Pick Error 1 lines and variable
             delPErr1Line()
             delPErr1()
@@ -861,7 +1121,10 @@ def picker(streams = None):
             delSLine()
             delS()
             delSWeight()
+            delSPolMarker()
             delSPol()
+            delSLabel()
+            delSWeightLabel()
             # Try to remove existing Pick Error 1 lines and variable
             delSErr1Line()
             delSErr1()
