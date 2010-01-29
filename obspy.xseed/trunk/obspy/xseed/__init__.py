@@ -17,7 +17,6 @@ Allocate a Parser object and read/write
 >>> from obspy.xseed import Parser
 
 >>> sp = Parser("dataless.seed.BW_RJOB")
->>> sp.writeRESP(folder="BW_RJOB", zipped=False)
 >>> sp.writeXSEED("dataless.seed.BW_RJOB.xml")
 
 The lines above will convert Dataless SEED, e.g.::
@@ -40,13 +39,22 @@ to the XML-SEED representation, e.g.::
           <originating_organization>BayernNetz</originating_organization>
     ...
 
-xseed.Parser object
+
+A response file can be written in a similar manner, just replace writeXSEED
+by writeRESP:
+
+>>> sp.writeRESP(folder="BW_RJOB", zipped=False)
+
+
+
+xseed.Parser Object
 -------------------
 Every SEED and XSEED object will be parsed in a xseed.Parser structure. ObsPy
 currently only supports dataless SEED/XSEED values but this will hopefully
 change soon.
 
 SEED volumes have four different volume types:
+
 * Volume Index Control Headers
 * Abbreviation Dictionary Control Headers
 * Station Control Headers

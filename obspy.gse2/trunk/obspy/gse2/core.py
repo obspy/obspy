@@ -102,6 +102,12 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
 
 
 def writeGSE2(stream_object, filename, **kwargs):
+    """
+    Write GSE2 file from a Stream object.
+
+    :param stream_object: The ObsPy Stream object to write.
+    :param filename: Name of file to write.
+    """
     #
     # Translate the common (renamed) entries
     f = open(filename, 'wb')

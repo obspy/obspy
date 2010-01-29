@@ -535,6 +535,43 @@ class Stream(object):
     def write(self, filename, format="", **kwargs):
         """
         Saves stream into a file.
+
+        Basic Usage
+        -----------
+
+        >>> from obspy.core import read # doctest: +SKIP
+        >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
+        >>> st.write("loc.ms", format="MSEED") # doctest: +SKIP
+
+        Parameters
+        ----------
+        filename : string
+            The name of the file to write.
+        format : string
+            The format to write must be specified. Depending on you obspy
+            installation one of "MSEED", "GSE2", "SAC", "SEIAN", "WAV",
+            "Q", "SH_ASC"
+
+        Notes
+        -----
+        Additional ObsPy modules extend the parameters of the
+        :func:`~obspy.core.stream.Stream.write` function. The following
+        table summarizes all known formats currently available for ObsPy.
+
+        Please refer to the linked function call of each module for any extra
+        options available.
+
+        =======  ===================  ====================================
+        Format   Required Module      Linked Function Call
+        =======  ===================  ====================================
+        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
+        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
+        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
+        SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.writeSEISAN`
+        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
+        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
+        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
+        =======  ===================  ====================================
         """
         format = format.upper()
         # Gets all available formats and the corresponding entry points.

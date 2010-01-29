@@ -76,6 +76,7 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     
     :note: The attributes self.stats.npts = number of samples and
            self.data = array of data samples are required
+
     :param filename: Name of WAV file to write.
     :param framerate: Sample rate of WAV file to use. This this will
                       squeeze the seismogram, DEFAULT=7000. 

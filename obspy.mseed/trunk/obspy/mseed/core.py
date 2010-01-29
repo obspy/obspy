@@ -25,10 +25,10 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     Reads a given Mini-SEED file and returns an Stream object.
     
     This function should NOT be called directly, it registers via the
-    obspy :function:`~obspy.core.stream.read` function, call this instead.
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     filename : string
         Mini-SEED file to be read.
     headonly : bool, optional
@@ -101,7 +101,7 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
 
     All kwargs are passed directly to obspy.mseed.writeMSTraces.
     This function should NOT be called directly, it registers via the
-    obspy :method:`~obspy.core.stream.Stream.write` method of an ObsPy
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
     :param stream_object: obspy.Stream object. Data in stream object must
