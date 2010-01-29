@@ -312,8 +312,10 @@ def picker(streams = None):
         drawSPolMarker()
         drawSErr1Line()
         drawSErr2Line()
-        drawMagMinCross()
-        drawMagMaxCross()
+        drawMagMinCross1()
+        drawMagMaxCross1()
+        drawMagMinCross2()
+        drawMagMaxCross2()
     
     def drawPLine():
         global PLines
@@ -613,39 +615,95 @@ def picker(streams = None):
         except:
             pass
     
-    def drawMagMinCross():
-        global MagMinCross
-        if not dicts[stPt].has_key('MagMin'):
+    def drawMagMinCross1():
+        global MagMinCross1
+        if not dicts[stPt].has_key('MagMin1') or len(axs) < 2:
             return
         #we have to force the graph to the old axes limits because of the completely new line object creation
-        xlims=list(axs[0].get_xlim())
-        ylims=list(axs[0].get_ylim())
-        MagMinCross=axs[dicts[stPt]['MagMinAxIndex']].plot([dicts[stPt]['MagMinT']],[dicts[stPt]['MagMin']],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors['Mag'],marker=magMinMarker,zorder=2000)[0]
+        xlims = list(axs[0].get_xlim())
+        ylims = list(axs[0].get_ylim())
+        MagMinCross1 = axs[1].plot([dicts[stPt]['MagMin1T']] ,
+                                   [dicts[stPt]['MagMin1']] ,
+                                   markersize = magMarkerSize ,
+                                   markeredgewidth = magMarkerEdgeWidth ,
+                                   color = dictPhaseColors['Mag'],
+                                   marker = magMinMarker, zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
     
-    def delMagMinCross():
-        global MagMinCross
+    def delMagMinCross1():
+        global MagMinCross1
         try:
-            axs[dicts[stPt]['MagMinAxIndex']].lines.remove(MagMinCross)
+            axs[1].lines.remove(MagMinCross1)
         except:
             pass
     
-    def drawMagMaxCross():
-        global MagMaxCross
-        if not dicts[stPt].has_key('MagMax'):
+    def drawMagMaxCross1():
+        global MagMaxCross1
+        if not dicts[stPt].has_key('MagMax1') or len(axs) < 2:
             return
         #we have to force the graph to the old axes limits because of the completely new line object creation
-        xlims=list(axs[0].get_xlim())
-        ylims=list(axs[0].get_ylim())
-        MagMaxCross=axs[dicts[stPt]['MagMaxAxIndex']].plot([dicts[stPt]['MagMaxT']],[dicts[stPt]['MagMax']],markersize=magMarkerSize,markeredgewidth=magMarkerEdgeWidth,color=dictPhaseColors['Mag'],marker=magMaxMarker,zorder=2000)[0]
+        xlims = list(axs[0].get_xlim())
+        ylims = list(axs[0].get_ylim())
+        MagMaxCross1 = axs[1].plot([dicts[stPt]['MagMax1T']],
+                                   [dicts[stPt]['MagMax1']],
+                                   markersize = magMarkerSize,
+                                   markeredgewidth = magMarkerEdgeWidth,
+                                   color = dictPhaseColors['Mag'],
+                                   marker = magMaxMarker, zorder=2000)[0]
         axs[0].set_xlim(xlims)
         axs[0].set_ylim(ylims)
     
-    def delMagMaxCross():
-        global MagMaxCross
+    def delMagMaxCross1():
+        global MagMaxCross1
         try:
-            axs[dicts[stPt]['MagMaxAxIndex']].lines.remove(MagMaxCross)
+            axs[1].lines.remove(MagMaxCross1)
+        except:
+            pass
+    
+    def drawMagMinCross2():
+        global MagMinCross2
+        if not dicts[stPt].has_key('MagMin2') or len(axs) < 3:
+            return
+        #we have to force the graph to the old axes limits because of the completely new line object creation
+        xlims = list(axs[0].get_xlim())
+        ylims = list(axs[0].get_ylim())
+        MagMinCross2 = axs[2].plot([dicts[stPt]['MagMin2T']] ,
+                                   [dicts[stPt]['MagMin2']] ,
+                                   markersize = magMarkerSize ,
+                                   markeredgewidth = magMarkerEdgeWidth ,
+                                   color = dictPhaseColors['Mag'],
+                                   marker = magMinMarker, zorder=2000)[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
+    
+    def delMagMinCross2():
+        global MagMinCross2
+        try:
+            axs[2].lines.remove(MagMinCross2)
+        except:
+            pass
+    
+    def drawMagMaxCross2():
+        global MagMaxCross2
+        if not dicts[stPt].has_key('MagMax2') or len(axs) < 3:
+            return
+        #we have to force the graph to the old axes limits because of the completely new line object creation
+        xlims = list(axs[0].get_xlim())
+        ylims = list(axs[0].get_ylim())
+        MagMaxCross2 = axs[2].plot([dicts[stPt]['MagMax2T']],
+                                   [dicts[stPt]['MagMax2']],
+                                   markersize = magMarkerSize,
+                                   markeredgewidth = magMarkerEdgeWidth,
+                                   color = dictPhaseColors['Mag'],
+                                   marker = magMaxMarker, zorder=2000)[0]
+        axs[0].set_xlim(xlims)
+        axs[0].set_ylim(ylims)
+    
+    def delMagMaxCross2():
+        global MagMaxCross2
+        try:
+            axs[2].lines.remove(MagMaxCross2)
         except:
             pass
     
@@ -729,22 +787,38 @@ def picker(streams = None):
         except:
             pass
             
-    def delMagMin():
+    def delMagMin1():
         global dicts
         try:
-            del dicts[stPt]['MagMin']
-            del dicts[stPt]['MagMinT']
-            del dicts[stPt]['MagMinAxIndex']
+            del dicts[stPt]['MagMin1']
+            del dicts[stPt]['MagMin1T']
             print "Magnitude Minimum Estimation Pick deleted"
         except:
             pass
             
-    def delMagMax():
+    def delMagMax1():
         global dicts
         try:
-            del dicts[stPt]['MagMax']
-            del dicts[stPt]['MagMaxT']
-            del dicts[stPt]['MagMaxAxIndex']
+            del dicts[stPt]['MagMax1']
+            del dicts[stPt]['MagMax1T']
+            print "Magnitude Maximum Estimation Pick deleted"
+        except:
+            pass
+            
+    def delMagMin2():
+        global dicts
+        try:
+            del dicts[stPt]['MagMin2']
+            del dicts[stPt]['MagMin2T']
+            print "Magnitude Minimum Estimation Pick deleted"
+        except:
+            pass
+            
+    def delMagMax2():
+        global dicts
+        try:
+            del dicts[stPt]['MagMax2']
+            del dicts[stPt]['MagMax2T']
             print "Magnitude Maximum Estimation Pick deleted"
         except:
             pass
@@ -1212,59 +1286,89 @@ def picker(streams = None):
                 # Console output
                 print "S Error Pick 2 set at %i"%dicts[stPt]['SErr2']
         # Magnitude estimation picking:
-        if flagPhase==2 and event.key==dictKeybindings['setMagMin']:
-            delMagMinCross()
-            xpos=int(event.xdata)
-            ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-            cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-            dicts[stPt]['MagMin']=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
-            dicts[stPt]['MagMinT']=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
-            dicts[stPt]['MagMinAxIndex']=axs.index(event.inaxes)
-            #delete old MagMax Pick, if new MagMin Pick is higher or if it is on another axes
-            try:
-                if dicts[stPt].has_key('MagMax') and dicts[stPt]['MagMinAxIndex']!=dicts[stPt]['MagMaxAxIndex']:
-                    delMagMaxCross()
-                    delMagMax()
-            except:
-                pass
-            try:
-                if dicts[stPt]['MagMin']>dicts[stPt]['MagMax']:
-                    delMagMaxCross()
-                    delMagMax()
-            except:
-                pass
-            drawMagMinCross()
-            redraw()
-            print "Minimum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMin'],dicts[stPt]['MagMinT'])
-        if flagPhase==2 and event.key==dictKeybindings['setMagMax']:
-            delMagMaxCross()
-            xpos=int(event.xdata)
-            ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-            cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-            dicts[stPt]['MagMax']=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
-            dicts[stPt]['MagMaxT']=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
-            dicts[stPt]['MagMaxAxIndex']=axs.index(event.inaxes)
-            #delete old MagMin Pick, if new MagMax Pick is lower or if it is on another axes
-            try:
-                if dicts[stPt].has_key('MagMin') and dicts[stPt]['MagMinAxIndex']!=dicts[stPt]['MagMaxAxIndex']:
-                    delMagMinCross()
-                    delMagMin()
-            except:
-                pass
-            try:
-                if dicts[stPt]['MagMin']>dicts[stPt]['MagMax']:
-                    delMagMinCross()
-                    delMagMin()
-            except:
-                pass
-            drawMagMaxCross()
-            redraw()
-            print "Maximum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMax'],dicts[stPt]['MagMaxT'])
-        if flagPhase==2 and event.key==dictKeybindings['delMagMinMax']:
-            delMagMaxCross()
-            delMagMinCross()
-            delMagMin()
-            delMagMax()
+        if flagPhase==2 and event.key==dictKeybindings['setMagMin'] and len(axs) > 2:
+            if event.inaxes == axs[1]:
+                delMagMinCross1()
+                xpos=int(event.xdata)
+                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                dicts[stPt]['MagMin1']=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                dicts[stPt]['MagMin1T']=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                #delete old MagMax Pick, if new MagMin Pick is higher
+                try:
+                    if dicts[stPt]['MagMin1'] > dicts[stPt]['MagMax1']:
+                        delMagMaxCross1()
+                        delMagMax1()
+                except:
+                    pass
+                drawMagMinCross1()
+                redraw()
+                print "Minimum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMin1'],dicts[stPt]['MagMin1T'])
+            elif event.inaxes == axs[2]:
+                delMagMinCross2()
+                xpos=int(event.xdata)
+                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                dicts[stPt]['MagMin2']=np.min(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                dicts[stPt]['MagMin2T']=cutoffSamples+np.argmin(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                #delete old MagMax Pick, if new MagMin Pick is higher
+                try:
+                    if dicts[stPt]['MagMin2'] > dicts[stPt]['MagMax2']:
+                        delMagMaxCross2()
+                        delMagMax2()
+                except:
+                    pass
+                drawMagMinCross2()
+                redraw()
+                print "Minimum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMin1'],dicts[stPt]['MagMin1T'])
+        if flagPhase==2 and event.key==dictKeybindings['setMagMax'] and len(axs) > 2:
+            if event.inaxes == axs[1]:
+                delMagMaxCross1()
+                xpos=int(event.xdata)
+                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                dicts[stPt]['MagMax1']=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                dicts[stPt]['MagMax1T']=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                #delete old MagMax Pick, if new MagMax Pick is higher
+                try:
+                    if dicts[stPt]['MagMin1'] > dicts[stPt]['MagMax1']:
+                        delMagMinCross1()
+                        delMagMin1()
+                except:
+                    pass
+                drawMagMaxCross1()
+                redraw()
+                print "Maximum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMax1'],dicts[stPt]['MagMax1T'])
+            elif event.inaxes == axs[2]:
+                delMagMaxCross2()
+                xpos=int(event.xdata)
+                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples=xpos-magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                dicts[stPt]['MagMax2']=np.max(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                dicts[stPt]['MagMax2T']=cutoffSamples+np.argmax(ydata[xpos-magPickWindow:xpos+magPickWindow])
+                #delete old MagMax Pick, if new MagMax Pick is higher
+                try:
+                    if dicts[stPt]['MagMin2'] > dicts[stPt]['MagMax2']:
+                        delMagMinCross2()
+                        delMagMin2()
+                except:
+                    pass
+                drawMagMaxCross2()
+                redraw()
+                print "Maximum for magnitude estimation set: %s at %s"%(dicts[stPt]['MagMax1'],dicts[stPt]['MagMax1T'])
+        if flagPhase == 2 and event.key == dictKeybindings['delMagMinMax']:
+            if event.inaxes == axs[1]:
+                delMagMaxCross1()
+                delMagMinCross1()
+                delMagMin1()
+                delMagMax1()
+            elif event.inaxes == axs[2]:
+                delMagMaxCross2()
+                delMagMinCross2()
+                delMagMin2()
+                delMagMax2()
+            else:
+                return
             redraw()
     
     # Define zoom events for the mouse scroll wheel
