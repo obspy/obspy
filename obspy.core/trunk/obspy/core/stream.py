@@ -21,7 +21,7 @@ import urllib2
 
 def read(pathname_or_url, format=None, headonly=False, **kwargs):
     """
-    Readw waveform files into an ObsPy Stream object.
+    Read waveform files into an ObsPy Stream object.
 
     The `read` function opens either one or multiple files given via wildcards
     or a URL of a waveform file given in the *pathname_or_url* attribute. This
@@ -626,11 +626,11 @@ class Stream(object):
 
     def merge(self):
         """
-        Merges L{Trace} objects with same IDs.
+        Merges ObsPy Trace objects with same IDs.
 
         Gaps and overlaps are usually separated in distinct traces. This method
-        tries to merge them and to create distinct traces within this L{Stream}
-        object.
+        tries to merge them and to create distinct traces within this 
+        :class:`~Stream` object.
         """
         # order matters!
         self.sort(keys=['network', 'station', 'location', 'channel',

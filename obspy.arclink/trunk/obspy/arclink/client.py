@@ -33,7 +33,7 @@ class Client(Telnet):
         Host name of the remote ArcLink server (default host is 'webdc.eu').
     port : int, optional
         Port of the remote ArcLink server (default port is 18001).
-    timeout: int, optional
+    timeout : int, optional
         Seconds before a connection timeout is raised (default is 20 seconds).
         This works only for Python >= 2.6.x.
     user : string, optional

@@ -65,10 +65,10 @@ def isSAC(filename):
 
 def readSAC(filename, headonly=False, **kwargs):
     """
-    Reads a SAC file and returns an L{obspy.Stream} object.
+    Reads a SAC file and returns an ObsPy Stream object.
     
     :param filename: SAC file to be read.
-    :rtype: L{obspy.Stream}.
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
     # read SAC file
@@ -102,7 +102,7 @@ def writeSAC(stream_object, filename, **kwargs):
     """
     Writes SAC file.
     
-    :type stream_object: L{obspy.Stream}.
+    :type stream_object: :class:`~obspy.core.stream.Stream`
     :param stream_object: A ObsPy Stream object.
     :param filename: SAC file to be written.
     """

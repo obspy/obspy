@@ -91,10 +91,10 @@ def _getVersion(data):
 
 def readSEISAN(filename, headonly=False, **kwargs):
     """
-    Reads a SEISAN file and returns an L{obspy.Stream} object.
+    Reads a SEISAN file and returns an ObsPy Stream object.
 
     :param filename: SEISAN file to be read.
-    :rtype: L{obspy.Stream}.
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
     # read data chunk from given file
@@ -165,7 +165,7 @@ def writeSEISAN(stream_object, filename, **kwargs):
     """
     Writes a SEISAN file.
     
-    :type stream_object: L{obspy.Stream}.
+    :type stream_object: :class:`~obspy.core.stream.Stream`
     :param stream_object: A ObsPy Stream object.
     :param filename: SEISAN file to be written.
     """

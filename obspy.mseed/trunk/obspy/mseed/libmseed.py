@@ -538,8 +538,8 @@ class LibMSEED(object):
         :return: Byte position of beginning and total length of bytes
         
         :param filename: File string of the MiniSEED file to be cut.
-        :param starttime: L{obspy.core.UTCDateTime} object.
-        :param endtime: L{obspy.core.UTCDateTime} object.
+        :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
+        :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         """
         #XXX: Move to MSStruct class?
         # Read the start and end time of the file.
@@ -646,8 +646,8 @@ class LibMSEED(object):
         :return: Byte string containing the cut file.
         
         :param filename: File string of the MiniSEED file to be cut.
-        :param starttime: L{obspy.core.UTCDateTime} object.
-        :param endtime: L{obspy.core.UTCDateTime} object.
+        :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
+        :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         """
         bytes = self._bytePosFromTime(filename, starttime=starttime,
                                       endtime=endtime)
@@ -679,8 +679,8 @@ class LibMSEED(object):
         
         :param file_list: A list containing MiniSEED filename strings.
         :param outfile: String of the file to be created.
-        :param starttime: L{obspy.core.UTCDateTime} object.
-        :param endtime: L{obspy.core.UTCDateTime} object.
+        :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` bject.
+        :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :return: Byte string containing the merged and cut file.
         """
         # Copy file_list to not alter the provided list.
@@ -951,15 +951,16 @@ class LibMSEED(object):
 class MSStruct(object):
     """
     Class for handling MSRecord and MSFileparam.
-    
+ 
     It consists of a MSRecord and MSFileparam and an attached python file pointer.
 
-    :param filename: file to attach to
-    :param filepointer: attach filepointer f to object
     :ivar msr: MSRecord
     :ivar msf: MSFileparam
     :ivar file: filename
     :ivar f: Python file pointer to MSFileparam file pointer
+
+    :param filename: file to attach to
+    :param filepointer: attach filepointer f to object
     """
     def __init__(self, filename, filepointer=True):
         # Initialize MSRecord structure

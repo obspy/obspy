@@ -281,6 +281,7 @@ class ReadSac(object):
         Read a header value into the header arrays
 
         The header is split into three arrays - floats, ints, and strings
+
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
         >>> t = ReadSac()
@@ -764,6 +765,7 @@ class ReadSac(object):
     def _get_dist_(self):
         """
         calculate distance from station and event coordinates
+
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
         >>> t = ReadSac(file)

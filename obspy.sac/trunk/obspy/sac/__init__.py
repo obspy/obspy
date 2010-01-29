@@ -56,128 +56,100 @@ Writing is also straight forward.
 
 Additonal methods of obspy.sac
 ------------------------------
-More SAC-specific functionality is available if you import the obspy.sac
-module. All of the following methods can only be accessed with an instance of
-the ReadSac class.
+More SAC-specific functionality is available if you import the ReadSac
+class from the obspy.sac module. All of the following methods can only be
+accessed as an instance of the ReadSac class.
 
->>> from obspy.sac import *
+>>> from obspy.sac import ReadSac
 >>> tr = ReadSac()
 >>> tr 
 <obspy.sac.sacio.ReadSac object at 0xb56772cc>
 
-ReadSacFile( fn )
-^^^^^^^^^^^^^^^^^
-Read binary SAC-file.
+* :meth:`~sacio.ReadSac.ReadSacFile` Read binary SAC-file.
 
-Parameters:
+    Parameter: *filename (SAC binary)*
 
-    * fn = filename (SAC binary). 
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac()
+    >>> tr.ReadSacFile('test.sac')
+    ### this is equivalent to: 
+    >>> tr = ReadSac('test.sac') 
 
->>> from obspy.sac import *
->>> tr = ReadSac()
->>> tr.ReadSacFile('test.sac')
-### this is equivalent to:
->>> tr = ReadSac('test.sac') 
+* :meth:`~sacio.ReadSac.GetHvalue` Read SAC-header variable.
 
-GetHvalue( 'header-var' )
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Read SAC-header variable.
+    Parameters: *header variable name (e.g. 'npts' or 'delta')*
 
-Parameters:
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac('test.sac')
+    >>> tr.GetHvalue('npts')
+    100
+    ### this is equivalent to:
+    >>> ReadSac().GetHvalueFromFile('test.sac','npts')
+    100
 
-    * header-var = header variable name (e.g. 'npts' or 'delta'). 
+* :meth:`~sacio.ReadSac.ReadSacHeader` Reads only the header portion of a
+    binary SAC-file.
 
->>> from obspy.sac import *
->>> tr = ReadSac('test.sac')
->>> tr.GetHvalue('npts')
-100
-### this is equivalent to:
->>> ReadSac().GetHvalueFromFile('test.sac','npts')
-100
+    Parameters: *filename (SAC binary).*
 
-ReadSacHeader(fn)
-^^^^^^^^^^^^^^^^^
-Reads only the header portion of a binary SAC-file.
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac()
+    >>> tr.ReadSacHeader('test.sac')
+    ### this is equivalent to:
+    >>> tr = ReadSac('test.sac',headonly=True) 
 
-Parameters:
+* :meth:`~sacio.ReadSac.ReadSacXY` Read ascii (i.e. alphanumeric) SAC-file.
 
-    * fn = filename (SAC binary). 
+    Parameters: *filename (SAC ascii).*
 
->>> from obspy.sac import *
->>> tr = ReadSac()
->>> tr.ReadSacHeader('test.sac')
-### this is equivalent to:
->>> tr = ReadSac('test.sac',headonly=True) 
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac()
+    >>> tr.ReadSacXY('testxy.sac')
+    ### this is equivalent to:
+    >>> tr = ReadSac('testxy.sac',alpha=True) 
 
-ReadSacXY(fn)
-^^^^^^^^^^^^^
-Read ascii (i.e. alphanumeric) SAC-file.
+    Reading only the header portion of alphanumeric SAC-files is currently not supported.
 
-Parameters:
+* :meth:`~sacio.ReadSac.WriteSacBinary` Write binary SAC-file
 
-    * fn = filename (SAC ascii). 
+    Parameters: *filename (SAC binary).*
 
->>> from obspy.sac import *
->>> tr = ReadSac()
->>> tr.ReadSacXY('testxy.sac')
-### this is equivalent to:
->>> tr = ReadSac('testxy.sac',alpha=True) 
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac('test.sac')
+    >>> tr.WriteSacBinary('test2.sac')
 
-Reading only the header portion of alphanumeric SAC-files is currently not supported.
+* :meth:`~sacio.ReadSac.SetHvalue` ('header-var', value) Assign new value
+    to SAC-header variable.
 
-WriteSacBinary(fn)
-^^^^^^^^^^^^^^^^^^
-Write binary SAC-file
+    Parameters:
+    *header-var = SAC-header variable name.*
+    *value = numeric or string value to be assigned to header-var*
 
-Parameters:
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac('test.sac')
+    >>> tr.GetHvalue('kstnm')
+    'STA     '
+    >>> tr.SetHvalue('kstnm','STA_NEW')
+    >>> tr.GetHvalue('kstnm')
+    'STA_NEW '
 
-    * fn = filename (SAC binary). 
+* :meth:`~sacio.ReadSac.WriteSacXY` Write ascii (i.e. alphanumeric) SAC-file
 
->>> from obspy.sac import *
->>> tr = ReadSac('test.sac')
->>> tr.WriteSacBinary('test2.sac')
+    Parameters: *filename*
 
-SetHvalue( 'header-var', value )
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Assign new value to SAC-header variable.
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac('test.sac')
+    >>> tr.WriteSacXY('test2.sac')
 
-Parameters:
+* :meth:`~sacio.ReadSac.WriteSacHeader` Writes an updated header to an
+    existing binary SAC-file.
 
-    * header-var = SAC-header variable name.
-    * value = numeric or string value to be assigned to header-var 
+    Parameters: *filename (SAC binary).*
 
->>> from obspy.sac import *
->>> tr = ReadSac('test.sac')
->>> tr.GetHvalue('kstnm')
-'STA     '
->>> tr.SetHvalue('kstnm','STA_NEW')
->>> tr.GetHvalue('kstnm')
-'STA_NEW '
-
-WriteSacXY(fn)
-^^^^^^^^^^^^^^
-Write ascii (i.e. alphanumeric) SAC-file
-
-Parameters:
-
-    * fn = filename. 
-
->>> from obspy.sac import *
->>> tr = ReadSac('test.sac')
->>> tr.WriteSacXY('test2.sac')
-
-WriteSacHeader(fn)
-^^^^^^^^^^^^^^^^^^
-Writes an updated header to an existing binary SAC-file.
-
-Parameters:
-
-    * fn = filename (SAC binary). 
-
->>> from obspy.sac import *
->>> tr = ReadSac('test.sac')
->>> tr.SetHvalue('kevnm','hullahulla')
->>> tr.WriteSacHeader('test.sac')
+    >>> from obspy.sac import ReadSac
+    >>> tr = ReadSac('test.sac')
+    >>> tr.SetHvalue('kevnm','hullahulla')
+    >>> tr.WriteSacHeader('test.sac')
 """
 
 from sacio import ReadSac, SacError, SacIOError

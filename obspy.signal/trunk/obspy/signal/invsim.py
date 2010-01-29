@@ -159,8 +159,8 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     
     This function works in the frequency domain, where nfft is the next power 
     of len(data) to avoid warp around effects during convolution. The inverse 
-    of the frequency response of the seismometer is convelved by the spectrum 
-    of the data and convolved by the frequency response of the seismometer to 
+    of the frequency response of the seismometer is convolved with the spectrum 
+    of the data and with the frequency response of the seismometer to
     simulate.
     
     :type data: Numpy Ndarray
@@ -180,7 +180,7 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
                      floating point numbers, gain must be of type float. Or
                      None for no simulation.
     
-    Ready to go poles, zeros, gain dictionaries for instruments to simulate
+    Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
     # Translated from PITSA: spr_resg.c

@@ -206,7 +206,7 @@ class UTCDateTime(datetime.datetime):
                 # The module copy.deepcopy passes a (binary) string to
                 # UTCDateTime which contains the class specifications. If
                 # argument is not a digit by now, it must be a binary string
-                # and we pass it to L{datetime.datetime},
+                # and we pass it to datetime.datetime,
                 if not value.isdigit():
                     return datetime.datetime.__new__(cls, *args, **kwargs)
                 dt = None

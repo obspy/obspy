@@ -105,15 +105,17 @@ class _WaveformMapperClient(object):
 
     def getWaveform(self, *args, **kwargs):
         """
-        Gets a L{obspy.Stream} object.
+        Gets a Obspy Stream object.
         
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
         :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :return: L{obspy.Stream} object.
+        :param start_datetime: start time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
+        :param end_datetime: end time as 
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object
+        :return: :class:`~obspy.core.stream.Stream` object.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id',
                'start_datetime', 'end_datetime']
@@ -211,7 +213,8 @@ class _StationMapperClient(_BaseRESTClient):
         :param station_id: Station id, e.g. 'RJOB'.
         :param location_id: Location id, e.g. ''.
         :param channel_id: Channel id, e.g. 'EHE'.
-        :param datetime: L{obspy.core.UTCDateTime} or time string.
+        :param datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+            time string.
         :return: Dictionary containing zeros, poles, gain and sensitivity.
         """
         # request station information
