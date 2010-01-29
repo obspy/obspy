@@ -1259,7 +1259,7 @@ class PickingGUI:
                     pass
                 self.drawMagMinCross2()
                 self.redraw()
-                print "Minimum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMin1'],self.dicts[self.stPt]['MagMin1T'])
+                print "Minimum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMin2'],self.dicts[self.stPt]['MagMin2T'])
         if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMax'] and len(self.axs) > 2:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
@@ -1294,7 +1294,7 @@ class PickingGUI:
                     pass
                 self.drawMagMaxCross2()
                 self.redraw()
-                print "Maximum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMax1'],self.dicts[self.stPt]['MagMax1T'])
+                print "Maximum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMax2'],self.dicts[self.stPt]['MagMax2T'])
         if self.flagPhase == 2 and event.key == self.dictKeybindings['delMagMinMax']:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
