@@ -617,6 +617,17 @@ class Stream(object):
         for trace in self:
             trace.rtrim(endtime)
 
+    def slice(self, starttime, endtime):
+        """
+        Returns new Stream object cut to the given start- and endtime.
+
+        Does not copy the data but only passes a reference.
+        """
+        traces = []
+        for trace in self:
+            traces.append(trace.slice(starttime, endtime))
+        return Stream(traces = traces)
+
     def verify(self):
         """
         Verifies all Trace objects in current Streams using header information.

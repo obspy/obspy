@@ -458,6 +458,9 @@ class Trace(object):
 
         Does not copy data but just passes a reference to it.
         """
+        # Sanity check and swap eventually.
+        if starttime > endtime:
+            endtime, starttime = starttime, endtime
         left_delta = starttime - self.stats.starttime
         right_delta = self.stats.endtime - endtime
         # Check boundaries.
@@ -477,8 +480,6 @@ class Trace(object):
         tr.stats.starttime  += left_samples / self.stats.sampling_rate
         tr.stats.npts = len(tr.data) 
         return tr
-        
-
 
     def verify(self):
         """
