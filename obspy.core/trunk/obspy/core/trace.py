@@ -9,6 +9,7 @@ Module for handling ObsPy Trace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import deepcopy
+from math import ceil
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import numpy as np
@@ -450,6 +451,34 @@ class Trace(object):
         # cut it
         self.ltrim(starttime)
         self.rtrim(endtime)
+
+    def slice(self, starttime, endtime):
+        """
+        Returns a new Trace object with data going from starttime to endtime.
+
+        Does not copy data but just passes a reference to it.
+        """
+        left_delta = starttime - self.stats.starttime
+        right_delta = self.stats.endtime - endtime
+        # Check boundaries.
+        if left_delta <= 0:
+            left_delta = 0
+        if right_delta <= 0:
+            right_delta = 0
+        # Calculate number of samples to be left out.
+        # Round to avoid floating points inaccuracies. 7 digits seem to be a
+        # safe value.
+        left_samples = int(round(left_delta * self.stats.sampling_rate, 7))
+        right_samples = int(round(right_delta * self.stats.sampling_rate, 7))
+        tr = Trace()
+
+        tr.data = self.data[left_samples: len(self.data) - right_samples]
+        tr.stats = deepcopy(self.stats)
+        tr.stats.starttime  += left_samples / self.stats.sampling_rate
+        tr.stats.npts = len(tr.data) 
+        return tr
+        
+
 
     def verify(self):
         """
