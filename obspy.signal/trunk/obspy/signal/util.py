@@ -104,10 +104,10 @@ def xcorr(tr1, tr2, window_len):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
     
-    >>> tr1 = np.random.randn(10000).astype('float32')
-    >>> tr2 = tr1.copy()
-    >>> a,b = xcorr(tr1, tr2, 1000)
-    >>> a, round(1e6*b) # Rounding Errors
+    >>> tr1 = np.random.randn(10000).astype('float32') # doctest: +SKIP
+    >>> tr2 = tr1.copy() # doctest: +SKIP
+    >>> a, b = xcorr(tr1, tr2, 1000) # doctest: +SKIP
+    >>> a, round(1e6*b) # Rounding Errors # doctest: +SKIP
     (0, 1000000.0)
     
     :type tr1: numpy ndarray float32
