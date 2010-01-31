@@ -361,13 +361,14 @@ class WaveformPlotting(object):
                            sampling_rate) - ts) * sampling_rate)
             else:
                 start = 0
+                prestart = 0
             # Figure out the number of pixels in the current trace.
-            length = len(_t.data) - start
+            length = len(_t.data) - prestart
             pixel_count = int(length // pixel_length)
             rest = int(length % pixel_length)
             # Reference to new data array which does not copy data but is
             # reshapeable.
-            data = _t.data[start: start + pixel_count * pixel_length]
+            data = _t.data[prestart: prestart + pixel_count * pixel_length]
             data = data.reshape(pixel_count, pixel_length)
             # Calculate extreme_values and put them into new array.
             extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)

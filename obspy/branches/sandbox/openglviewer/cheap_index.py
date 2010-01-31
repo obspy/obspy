@@ -1,7 +1,7 @@
 from obspy.core import read, Stream, Trace
 from glob import iglob
 
-folder = '/Users/lion/Documents/workspace/TestFiles/archive/*'
+folder = '/Users/lion/Documents/workspace/TestFiles/archive/RJOB/EHE.D/BW.*'
 
 for file in iglob(folder):
     print '\n'
