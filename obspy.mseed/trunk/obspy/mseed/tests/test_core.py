@@ -112,9 +112,10 @@ class CoreTestCase(unittest.TestCase):
         """
         Reads wildcard filenames.
         """
-        files = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001.*')
+        files = os.path.join(self.path, 'data',
+                             'BW.BGLD.__.EHE.D.2008.001.*_record')
         st = read(files)
-        self.assertEquals(len(st), 4)
+        self.assertEquals(len(st), 3)
         st.merge()
         self.assertEquals(len(st), 1)
 

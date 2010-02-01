@@ -7,6 +7,7 @@ from obspy.core import Stream, Trace
 from obspy.mseed import LibMSEED
 from obspy.mseed.headers import ENCODINGS
 import numpy as np
+import platform
 
 
 def isMSEED(filename):
@@ -56,11 +57,12 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     else:
         kwargs['starttime'] = kwargs.get('starttime', None)
         kwargs['endtime'] = kwargs.get('endtime', None)
-        if starttime or endtime:
+        if starttime or endtime or platform.system() == "Windows":
+            # 4x slower on Mac
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
                          starttime=starttime, endtime=endtime, reclen=reclen)
         else:
-            #10% faster, problem on windows
+            # problem on windows with big files (>=20 MB)
             trace_list = __libmseed__.readMSTraces(filename, reclen=reclen)
     # Create a list containing all the traces.
     traces = []
