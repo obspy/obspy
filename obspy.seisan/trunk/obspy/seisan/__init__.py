@@ -41,3 +41,7 @@ The data is stored in the data attribut.
 [  492   519   542 ..., -6960 -6858 24000]
 """
 
+from obspy.core import util
+
+
+__version__ = util.getVersionString("obspy.seisan")

@@ -67,5 +67,11 @@ a list that contains all Blockettes and Parser.stations is a list that contain
 a list for each station. 
 """
 
+# needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
+
+from obspy.core import util
 from obspy.xseed.parser import Parser
+
+
+__version__ = util.getVersionString("obspy.xseed")

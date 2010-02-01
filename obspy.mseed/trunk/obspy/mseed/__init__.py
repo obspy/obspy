@@ -190,4 +190,8 @@ Parameters:
 {'channel': 'BHE', 'location': '', 'network': 'DK', 'station': 'COP'}
 """
 
+from obspy.core import util
 from obspy.mseed.libmseed import LibMSEED
+
+
+__version__ = util.getVersionString("obspy.mseed")

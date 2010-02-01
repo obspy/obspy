@@ -152,4 +152,8 @@ accessed as an instance of the ReadSac class.
     >>> tr.WriteSacHeader('test.sac')
 """
 
+from obspy.core import util
 from sacio import ReadSac, SacError, SacIOError
+
+
+__version__ = util.getVersionString("obspy.sac")

@@ -75,4 +75,8 @@ Advanced Examples
  'gain': 60077000.0}
 """
 
+from obspy.core import util
 from obspy.seishub.client import Client
+
+
+__version__ = util.getVersionString("obspy.seishub")

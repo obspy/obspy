@@ -9,6 +9,7 @@ Various additional utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from math import modf, floor
+from pkg_resources import require
 import ctypes as C
 import os
 import tempfile
@@ -266,6 +267,29 @@ def complexifyString(line):
     """
     temp = line.split(',')
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
+
+
+def getVersionString(module="obspy.core"):
+    """
+    Returns either the EGG version or current SVN revision for a given module.
+    """
+    try:
+        mod = require(module)[0]
+    except:
+        return "Module %s is not installed via setup.py!" % module
+    egg_version = mod.version
+    # check installation location for .svn directory
+    if '.svn' in os.listdir(mod.location):
+        path = os.path.join(mod.location, '.svn', 'entries')
+        try:
+            svn_version = open(path).readlines()[3].strip()
+        except:
+            return egg_version
+        else:
+            temp = egg_version.split('.dev-r')
+            return temp[0] + ".dev-r" + svn_version
+    # else return egg-info version
+    return egg_version
 
 
 if __name__ == '__main__':

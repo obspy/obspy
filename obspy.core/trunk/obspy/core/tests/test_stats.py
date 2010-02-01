@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from StringIO import StringIO
-from obspy.core import Stats, Stream, Trace, AttribDict
+from obspy.core import Stats, Stream, Trace
+from obspy.core.util import AttribDict
 import copy
 import pickle
 import unittest

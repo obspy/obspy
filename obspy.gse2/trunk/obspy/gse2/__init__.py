@@ -69,3 +69,8 @@ Writing is also done in the usual way:
 
 >>> st.write('GSE2-filename.gse', format = 'GSE2')
 """
+
+from obspy.core import util
+
+
+__version__ = util.getVersionString("obspy.gse2")

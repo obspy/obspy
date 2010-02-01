@@ -44,3 +44,8 @@ squeezed. Using the originial sampling_rate results in an WAVE file with
 frequencies which cannot be heard by a human, therefore it makes sence to
 set the framerate to a high value.
 """
+
+from obspy.core import util
+
+
+__version__ = util.getVersionString("obspy.wav")

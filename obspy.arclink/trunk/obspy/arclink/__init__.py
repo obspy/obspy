@@ -132,4 +132,8 @@ Further Resources
         http://www.gnu.org/copyleft/lesser.html
 """
 
+from obspy.core import util
 from client import Client
+
+
+__version__ = util.getVersionString("obspy.arclink")

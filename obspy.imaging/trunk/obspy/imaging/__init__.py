@@ -135,6 +135,12 @@ The following keyword arguments are possible:
 * outfile = None: Filename of the output file. Also used to determine the file format.
 * format = None: File format.
 """
-# Please do not import anything here. It is needed to run the tests
-# without X11 or any other display, see tests/__init__.py for details
-#from spectrogram import spectrogram
+
+# Please do not import any modules using matplotlib - otherwise it will disturb
+# the test suite (running without X11 or any other display)
+# see tests/__init__.py for details
+
+from obspy.core import util
+
+
+__version__ = util.getVersionString("obspy.imaging")
