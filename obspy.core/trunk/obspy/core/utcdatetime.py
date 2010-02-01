@@ -433,7 +433,7 @@ class UTCDateTime(datetime.datetime):
                 dt = datetime.datetime.__add__(self, td)
                 return UTCDateTime(dt)
             elif isinstance(arg, UTCDateTime):
-                return self.timestamp + arg.timestamp
+                return round(self.timestamp + arg.timestamp, 6)
             else:
                 dt = datetime.datetime.__add__(self, arg)
                 return UTCDateTime(dt)
@@ -475,7 +475,7 @@ class UTCDateTime(datetime.datetime):
                 dt = datetime.datetime.__sub__(self, td)
                 return UTCDateTime(dt)
             elif isinstance(arg, UTCDateTime):
-                return self.timestamp - arg.timestamp
+                return round(self.timestamp - arg.timestamp, 6)
             else:
                 dt = datetime.datetime.__sub__(self, arg)
                 return UTCDateTime(dt)

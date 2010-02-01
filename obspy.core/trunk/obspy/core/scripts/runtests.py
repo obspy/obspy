@@ -49,13 +49,14 @@ Examples
 """
 
 from optparse import OptionParser
-import os
 import unittest
-import platform
+import os
 
 
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh']
+ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
+DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
 
 def _getSuite(verbosity=1, tests=[]):
@@ -86,10 +87,22 @@ def _getSuite(verbosity=1, tests=[]):
 
 
 def _createReport(ttr):
-    result = {}
+    # import additional libraries here to speed up normal tests
+    import xmlrpclib
+    import datetime
+    import platform
+    result = {'timestamp':datetime.datetime.now()}
+    # get ObsPy module versions
+    result['obspy'] = {}
+    for module in ALL_MODULES:
+        try:
+            mod = __import__('obspy.' + module, fromlist='obspy')
+            result['obspy'][module] = mod.__version__
+        except:
+            result['obspy'][module] = ''
     # get dependencies
     result['dependencies'] = {}
-    for module in ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']:
+    for module in DEPENDENCIES:
         temp = module.split('.')
         try:
             mod = __import__(module, fromlist=temp[1:])
@@ -98,35 +111,36 @@ def _createReport(ttr):
             else:
                 result['dependencies'][module] = mod.__version__
         except:
-            result['dependencies'][module] = None
+            result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
-    for func in ['uname', 'python_version', 'python_implementation',
-                 'python_compiler']:
+    for func in ['system', 'node', 'release', 'version', 'machine',
+                 'processor', 'python_version', 'python_implementation',
+                 'python_compiler', 'architecture']:
         try:
-            result['platform'][func] = getattr(platform, func)()
+            temp = getattr(platform, func)()
+            if isinstance(temp, tuple):
+                temp = temp[0]
+            result['platform'][func] = temp
         except:
-            result['platform'][func] = None
+            result['platform'][func] = ''
     # test results
-#    print result
-#    import pkg_resources
-#    for func in dir(pkg_resources):
-#        try:
-#            print func, getattr(pkg_resources, func)('obspy.core')
-#        except:
-#            pass
-#    # test results
-#
-#    from pkg_resources import require
-#    __version__ = require('MyProjectname')[0].version
-
-#    if ttr.wasSuccessful():
-#        # send short report
-#        pass
-#    else:
-#        # send full report
-#        for param in os.environ.keys():
-#            print "%20s %s" % (param, os.environ[param])
+    result['errors'] = {}
+    for method, text in ttr.errors:
+        result['errors'][str(method)] = text
+    result['failures'] = {}
+    for method, text in ttr.failures:
+        result['errors'][str(method)] = text
+    print
+    # send result to report server 
+    try:
+        sp = xmlrpclib.ServerProxy('http://localhost:8000/')
+        sp.report(ttr.wasSuccessful(), result)
+    except Exception, e:
+        print "Error: Could not sent a test report to http://tests.obspy.org."
+        print e
+    else:
+        print "Test report has been sent to http://tests.obspy.org."
 
 
 def runTests(verbosity=1, tests=[], report=False):
@@ -177,7 +191,6 @@ def main():
         report = True
     else:
         report = False
-    #_createReport(None)
     runTests(verbosity, parser.largs, report)
 
 

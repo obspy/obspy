@@ -336,7 +336,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the slicing of trace objects.
         """
         # Create test array that allows for easy testing.
-        tr = Trace(data = np.arange(11))
+        tr = Trace(data=np.arange(11))
         org_stats = deepcopy(tr.stats)
         org_data = deepcopy(tr.data)
         # Save memory position of array.
@@ -346,11 +346,10 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime, UTCDateTime(10))
         # Create temp trace object used for testing.
         st = tr.stats.starttime
-        
+
         # This is supposed to include the start- and endtimes and should
         # therefore cut right at 2 and 8.
-        #XXX temp = tr.slice(st + 2.9, st + 7.1)
-        temp = tr.slice(st + 2, st + 8)
+        temp = tr.slice(st + 2.1, st + 7.1)
         # Should be identical.
         temp2 = tr.slice(st + 2.0, st + 8.0)
         self.assertEqual(temp.stats.starttime, UTCDateTime(2))
@@ -383,7 +382,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats, org_stats)
 
         # Use more complicated times and sampling rate.
-        tr = Trace(data = np.arange(111))
+        tr = Trace(data=np.arange(111))
         tr.stats.starttime = UTCDateTime(111.11111)
         tr.stats.sampling_rate = 50.0
         org_stats = deepcopy(tr.stats)
@@ -391,19 +390,17 @@ class TraceTestCase(unittest.TestCase):
         # Save memory position of array.
         mem_pos = tr.data.ctypes.data
         # Create temp trace object used for testing.
-        #XXX temp = tr.slice(UTCDateTime(111.22222), UTCDateTime(112.99999))
-        temp = tr.slice(UTCDateTime(111.20), UTCDateTime(113))
+        temp = tr.slice(UTCDateTime(111.22222), UTCDateTime(112.99999))
         # Should again be identical.
-        #XXX temp2 = tr.slice(UTCDateTime(111.21111), UTCDateTime(113.01111))
-        temp2 = tr.slice(UTCDateTime(111.20), UTCDateTime(113))
+        temp2 = tr.slice(UTCDateTime(111.21111), UTCDateTime(113.01111))
         np.testing.assert_array_equal(temp.data, temp2.data)
         self.assertEqual(temp.stats, temp2.stats)
         # Check stuff.
-        #XXX self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
-        #XXX self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
+        self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
 
         # Check if the data is the same.
-        temp = tr.slice(UTCDateTime(0), UTCDateTime(1000*1000))
+        temp = tr.slice(UTCDateTime(0), UTCDateTime(1000 * 1000))
         self.assertEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data)
         # Make sure the original Trace object did not change.

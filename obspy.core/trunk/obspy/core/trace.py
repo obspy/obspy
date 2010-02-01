@@ -432,10 +432,10 @@ class Trace(object):
             return
         # cut from left
         delta = (starttime - self.stats.starttime)
-        samples = int(round(delta * self.stats.sampling_rate))
+        samples = int(delta * self.stats.sampling_rate)
         self.data = self.data[samples:]
         self.stats.npts = len(self.data)
-        self.stats.starttime = starttime
+        self.stats.starttime += (samples * self.stats.delta)
 
     def rtrim(self, endtime):
         """
@@ -460,7 +460,7 @@ class Trace(object):
             return
         # cut from right
         delta = (self.stats.endtime - endtime)
-        samples = int(round(delta * self.stats.sampling_rate))
+        samples = int(round(delta * self.stats.sampling_rate, 7))
         total = len(self.data) - samples
         if endtime == self.stats.starttime:
             total = 1
@@ -476,7 +476,7 @@ class Trace(object):
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
-        >>> tr.trim(t + 2, t + 8)
+        >>> tr.trim(t + 2.000001, t + 7.999999)
         >>> tr.data
         array([2, 3, 4, 5, 6, 7, 8])
         """
