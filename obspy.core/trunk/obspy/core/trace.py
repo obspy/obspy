@@ -9,7 +9,6 @@ Module for handling ObsPy Trace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import deepcopy
-from math import ceil
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import numpy as np
@@ -147,9 +146,16 @@ class Stats(AttribDict):
             raise AttributeError(msg)
         # keys which need to refresh derived values
         if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
+            # ensure correct data type
             if key == 'delta':
                 key = 'sampling_rate'
                 value = 1.0 / float(value)
+            elif key == 'sampling_rate':
+                value = float(value)
+            elif key == 'starttime':
+                value = UTCDateTime(value)
+            elif key == 'npts':
+                value = int(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
             # set derived values
@@ -405,6 +411,17 @@ class Trace(object):
     def ltrim(self, starttime):
         """
         Cuts current trace to given start time.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=range(0, 10))
+        >>> tr.stats.delta = 1.0
+        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
+        >>> tr.ltrim(UTCDateTime("2009-01-01 12:00:08"))
+        >>> tr.data
+        [8, 9]
+        >>> tr.stats.starttime
+        UTCDateTime(2009, 1, 1, 12, 0, 8)
         """
         if isinstance(starttime, float) or isinstance(starttime, int):
             starttime = UTCDateTime(self.stats.starttime) + starttime
@@ -424,6 +441,17 @@ class Trace(object):
     def rtrim(self, endtime):
         """
         Cuts current trace to given end time.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=range(0, 10))
+        >>> tr.stats.delta = 1.0
+        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
+        >>> tr.rtrim(UTCDateTime("2009-01-01 12:00:02"))
+        >>> tr.data
+        [0, 1, 2]
+        >>> tr.stats.endtime
+        UTCDateTime(2009, 1, 1, 12, 0, 2)
         """
         if isinstance(endtime, float) or isinstance(endtime, int):
             endtime = UTCDateTime(self.stats.endtime) - endtime
@@ -444,19 +472,45 @@ class Trace(object):
     def trim(self, starttime, endtime):
         """
         Cuts current trace to given start and end time.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=range(0, 10))
+        >>> tr.stats.delta = 1.0
+        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
+        >>> start = UTCDateTime("2009-01-01 12:00:02")
+        >>> end = UTCDateTime("2009-01-01 12:00:08")
+        >>> tr.trim(start, end)
+        >>> tr.data
+        [2, 3, 4, 5, 6, 7, 8]
         """
-        # check time order and switch eventually
+        # check time order and swap eventually
         if starttime > endtime:
             endtime, starttime = starttime, endtime
         # cut it
         self.ltrim(starttime)
         self.rtrim(endtime)
 
+    cut = trim
+    lcut = ltrim
+    rcut = rtrim
+
     def slice(self, starttime, endtime):
         """
-        Returns a new Trace object with data going from starttime to endtime.
+        Returns a new Trace object with data going from start to end time.
 
         Does not copy data but just passes a reference to it.
+
+        Basic Usage
+        -----------
+        >>> tr1 = Trace(data=range(0, 10))
+        >>> tr1.stats.delta = 1.0
+        >>> tr1.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
+        >>> start = UTCDateTime("2009-01-01 12:00:02")
+        >>> end = UTCDateTime("2009-01-01 12:00:08")
+        >>> tr2 = tr1.slice(start, end)
+        >>> tr2.data
+        [2, 3, 4, 5, 6, 7, 8]
         """
         # Sanity check and swap eventually.
         if starttime > endtime:
@@ -474,16 +528,24 @@ class Trace(object):
         left_samples = int(round(left_delta * self.stats.sampling_rate, 7))
         right_samples = int(round(right_delta * self.stats.sampling_rate, 7))
         tr = Trace()
-
         tr.data = self.data[left_samples: len(self.data) - right_samples]
         tr.stats = deepcopy(self.stats)
-        tr.stats.starttime  += left_samples / self.stats.sampling_rate
-        tr.stats.npts = len(tr.data) 
+        tr.stats.starttime += left_samples / self.stats.sampling_rate
+        tr.stats.npts = len(tr.data)
         return tr
 
     def verify(self):
         """
         Verifies current trace object against available meta data.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=[1,2,3,4])
+        >>> tr.stats.npts = 100
+        >>> tr.verify()  #doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        Exception: ntps(100) differs from data size(4)
         """
         if len(self) != self.stats.npts:
             msg = "ntps(%d) differs from data size(%d)"
@@ -497,7 +559,7 @@ class Trace(object):
             msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data size(%d)"
             raise Exception(msg % (sr, delta, len(self.data)))
         # Check if the endtime fits the starttime, npts and sampling_rate.
-        if self.stats.endtime != self.stats.starttime + (self.stats.npts-1) /\
+        if self.stats.endtime != self.stats.starttime + (self.stats.npts - 1) / \
                                  float(self.stats.sampling_rate):
             msg = "Endtime is not the time of the last sample."
             raise Exception(msg)

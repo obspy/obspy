@@ -5,30 +5,60 @@ ObsPy Test Suite Module.
 
 All tests in ObsPy are located in the tests directory of the certain
 module. The __init__.py of the tests directory itself as well as every test
-file located in the tests directory has a function called suite. The suite
-function is the one that needs to be called. Running the test verbose
-exposes the names of the available tests.
+file located in the tests directory has a function called suite, which is
+executed using this script. Running the script with the verbose keyword exposes
+the names of the available tests.
 
-Examples:
-    python runtests.py                         # Run all tests
-    python runtests.py -v                      # Verbose output
-    python runtests.py obspy.mseed.tests.suite # run tests of obspy.mseed
-    python runtests.py mseed                   # obspy shortcut
+Examples
+--------
+(1) Run all tests::
+
+    python runtests.py
+
+    or
+
+    >>> import obspy.core
+    >>> obspy.core.runTests()  # DOCTEST: +SKIP
+
+(2) Verbose output::
+
+    python runtests.py -v
+
+    or
+
+    >>> import obspy.core
+    >>> obspy.core.runTests(verbosity=2)"  # DOCTEST: +SKIP
+
+(3) Run tests of module :mod:`obspy.mseed`::
+
+    python runtests.py obspy.mseed.tests.suite 
+
+    or as shortcut::
+
+    python runtests.py mseed
+
+(4) Run a certain test case::
+
     python runtests.py obspy.core.tests.test_stats.StatsTestCase.test_init
-    python -c "import obspy.core; obspy.core.runTests()"            # Run all tests
-    python -c "import obspy.core; obspy.core.runTests(verbosity=2)" # Verbose output
-    python -c "import obspy.core; obspy.core.runTests(verbosity=2,\\# Special Test case
-        tests=['obspy.core.tests.test_stats.StatsTestCase.test_init'])
+
+    or
+
+    >>> import obspy.core
+    >>> tests = ['obspy.core.tests.test_stats.StatsTestCase.test_init']
+    >>> obspy.core.runTests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 """
 
 from optparse import OptionParser
+import os
 import unittest
+import platform
+
 
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh']
 
 
-def suite(verbosity=1, tests=[]):
+def _getSuite(verbosity=1, tests=[]):
     """
     The obspy test suite.
     """
@@ -55,15 +85,70 @@ def suite(verbosity=1, tests=[]):
     return ut.suiteClass(suites)
 
 
-def runTests(verbosity=1, tests=[]):
-    """
-    This function runs all available tests in obspy, from Python
+def _createReport(ttr):
+    result = {}
+    # get dependencies
+    result['dependencies'] = {}
+    for module in ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']:
+        temp = module.split('.')
+        try:
+            mod = __import__(module, fromlist=temp[1:])
+            if module == '_omnipy':
+                result['dependencies'][module] = mod.coreVersion()
+            else:
+                result['dependencies'][module] = mod.__version__
+        except:
+            result['dependencies'][module] = None
+    # get system / environment settings
+    result['platform'] = {}
+    for func in ['uname', 'python_version', 'python_implementation',
+                 'python_compiler']:
+        try:
+            result['platform'][func] = getattr(platform, func)()
+        except:
+            result['platform'][func] = None
+    # test results
+#    print result
+#    import pkg_resources
+#    for func in dir(pkg_resources):
+#        try:
+#            print func, getattr(pkg_resources, func)('obspy.core')
+#        except:
+#            pass
+#    # test results
+#
+#    from pkg_resources import require
+#    __version__ = require('MyProjectname')[0].version
 
-    :param verbosity: Run tests in verbose mode. 0 quiet, 1 normal, 2 verbose
-    :param tests: List of tests to run. Defaults to runs all.
-                    Example ['obspy.core.tests.suite']
+#    if ttr.wasSuccessful():
+#        # send short report
+#        pass
+#    else:
+#        # send full report
+#        for param in os.environ.keys():
+#            print "%20s %s" % (param, os.environ[param])
+
+
+def runTests(verbosity=1, tests=[], report=False):
     """
-    unittest.TextTestRunner(verbosity=verbosity).run(suite(verbosity, tests))
+    This function executes ObsPy test suites.
+
+    Parameters
+    ----------
+    verbosity : [ 0 | 1 | 2 ], optional
+        Run tests in verbose mode (0=quiet, 1=normal, 2=verbose, default is 1).
+    tests : list of strings, optional
+        Test suites to run. If no suite is given all installed tests suites
+        will be started (default is a empty list).
+        Example ['obspy.core.tests.suite']
+    report : boolean, optional
+        Sends a test report to http://tests.obspy.org if enabled (default is
+        False).
+    """
+    suite = _getSuite(verbosity, tests)
+    ttr = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+    if report:
+        _createReport(ttr)
 
 
 def main():
@@ -76,6 +161,9 @@ def main():
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
+    parser.add_option("-r", "--report", default=False,
+                      action="store_true", dest="report",
+                      help="send a test report to http://tests.obspy.org")
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
@@ -84,7 +172,13 @@ def main():
         verbosity = 0
     else:
         verbosity = 1
-    runTests(verbosity, parser.largs)
+    # check for send report option or environmental settings
+    if options.report or 'OBSPY_REPORT_TEST' in os.environ.keys():
+        report = True
+    else:
+        report = False
+    #_createReport(None)
+    runTests(verbosity, parser.largs, report)
 
 
 if __name__ == "__main__":
