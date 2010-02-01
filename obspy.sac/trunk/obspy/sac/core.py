@@ -67,9 +67,17 @@ def readSAC(filename, headonly=False, **kwargs):
     """
     Reads a SAC file and returns an ObsPy Stream object.
     
+    This function should NOT be called directly, it registers via the
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
     :param filename: SAC file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("sac_file") # doctest: +SKIP
     """
     # read SAC file
     t = ReadSac()
@@ -102,6 +110,10 @@ def writeSAC(stream_object, filename, **kwargs):
     """
     Writes SAC file.
     
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
     :type stream_object: :class:`~obspy.core.stream.Stream`
     :param stream_object: A ObsPy Stream object.
     :param filename: SAC file to be written.

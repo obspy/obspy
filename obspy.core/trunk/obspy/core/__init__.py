@@ -26,13 +26,13 @@ Note
 ----
 Seismograms of the format (SAC, MiniSEED, GSE2, SEISAN, Q, SH_ASC) are
 read with the :func:`~obspy.core.stream.read` function into a
-:class:`~obspy.core.stream.Stream` object. The Stream object is an
-list like objects which contains several :class:`~obspy.core.stream.Trace` 
+:class:`~obspy.core.stream.Stream` object. The Stream object is a
+list like objects which contains several :class:`~obspy.core.trace.Trace` 
 objects, i.e. gap-less continuous sample junks. Each Trace object has an
-attribute data, which contains the actual data and an attribute stats which
-contains the header information as a dict like 
-:class:`~obspy.core.trace.Stats` object. The stats attributes starttime and
-endtime must hereby be :class:`~obspy.core.utcdatetime.UTCDateTime`
+attribute ``data``, which contains the actual data and an attribute
+``stats`` which contains the header information as a dict like 
+:class:`~obspy.core.trace.Stats` object. The stats attributes ``starttime``
+and ``endtime`` must hereby be :class:`~obspy.core.utcdatetime.UTCDateTime`
 objects.
 
 Example
@@ -40,19 +40,28 @@ Example
 
 >>> st = read('gaps.mseed')
 >>> print st
->>> print st
 4 Trace(s) in Stream:
-BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - 2008-01-01T00:00:01.970000Z | 200.0 Hz, 412 samples
-BW.BGLD..EHE | 2008-01-01T00:00:04.035000Z - 2008-01-01T00:00:08.150000Z | 200.0 Hz, 824 samples
-BW.BGLD..EHE | 2008-01-01T00:00:10.215000Z - 2008-01-01T00:00:14.330000Z | 200.0 Hz, 824 samples
-BW.BGLD..EHE | 2008-01-01T00:00:18.455000Z - 2008-01-01T00:04:31.790000Z | 200.0 Hz, 50668 samples
+BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - ... | 200.0 Hz, 412 samples
+BW.BGLD..EHE | 2008-01-01T00:00:04.035000Z - ... | 200.0 Hz, 824 samples
+BW.BGLD..EHE | 2008-01-01T00:00:10.215000Z - ... | 200.0 Hz, 824 samples
+BW.BGLD..EHE | 2008-01-01T00:00:18.455000Z - ... | 200.0 Hz, 50668 samples
 >>> tr = st[0]
 >>> print tr
-BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - 2008-01-01T00:00:01.970000Z | 200.0 Hz, 412 samples
+BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - ... | 200.0 Hz, 412 samples
 >>> tr.data
 array([-363 -382 -388 -420 -417 ... -409 -393 -353 -360 -389])
->>> print tr.stats
-Stats({'network': 'BW', 'mseed': AttribDict({'dataquality': 'D'}), 'delta': 0.0050000000000000001, 'station': 'BGLD', 'location': '', 'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), 'npts': 412, 'calib': 1.0, 'sampling_rate': 200.0, 'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000), 'channel': 'EHE'})
+>>> tr.stats
+Stats({'network': 'BW', 
+       'mseed': AttribDict({'dataquality': 'D'}), 
+       'delta': 0.0050000000000000001, 
+       'station': 'BGLD', 
+       'location': '', 
+       'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), 
+       'npts': 412, 
+       'calib': 1.0, 
+       'sampling_rate': 200.0, 
+       'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000), 
+       'channel': 'EHE'})
 >>> tr.stats.starttime
 UTCDateTime(2007, 12, 31, 23, 59, 59, 915000)
 """

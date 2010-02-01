@@ -50,7 +50,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     
     GSE2 files containing multiple WID2 entries/traces are supported.
     This function should NOT be called directly, it registers via the
-    obspy :func:`~obspy.core.stream.read` function, call this instead.
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
     
     :param filename: GSE2 file to be read.
     :param headonly: If True read only head of GSE2 file

@@ -67,21 +67,22 @@ def _getSuite(verbosity=1, tests=[]):
         names = ['obspy.%s.tests.suite' % d for d in DEFAULT_MODULES]
     else:
         names = []
-        # Search for short cuts in tests, if there are no short cuts
-        # names is equal to tests
+        # Search for short cuts in tests, if there are no short cuts,
+        # names variables is equal to tests variable
         for test in tests:
-            if test in DEFAULT_MODULES:
+            if test in ALL_MODULES:
                 test = 'obspy.%s.tests.suite' % test
             names.append(test)
-    # Construct the test suite from the given names. Note modules need not
-    # be imported before in this case
+    # Construct the test suite from the given names. Modules
+    # need not be imported before in this case
     suites = []
     ut = unittest.TestLoader()
     for name in names:
         try:
             suites.append(ut.loadTestsFromName(name, None))
-        except:
+        except Exception, e:
             if verbosity:
+                print e
                 print "Cannot import test suite for module %s" % name
     return ut.suiteClass(suites)
 
