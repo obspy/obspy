@@ -53,7 +53,7 @@ Writing is also done in the usual way:
 >>> st.write('file.q', format = 'Q')
 """
 
-from obspy.core import util
+from obspy.core.util import _getVersionString
 
 
-__version__ = util.getVersionString("obspy.sh")
+__version__ = _getVersionString("obspy.sh")

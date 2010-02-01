@@ -24,8 +24,8 @@ example only 10s are requested.
 GE.APE..SHZ | 2003-06-20T05:57:43.321000Z - 2003-06-20T06:00:34.481000Z | 50.0 Hz, 8559 samples
 """
 
-from obspy.core import util
+from obspy.core.util import _getVersionString
 from client import Client
 
 
-__version__ = util.getVersionString("obspy.fissures")
+__version__ = _getVersionString("obspy.fissures")

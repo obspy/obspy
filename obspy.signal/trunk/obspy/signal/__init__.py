@@ -48,7 +48,7 @@ There are many more functions available (rotation, pazToFreqResp, triggers,
 cpxtrace analysis, ...), please also check the tutorial.
 """
 
-from obspy.core.util import getVersionString
+from obspy.core.util import _getVersionString
 from filter import *
 from rotate import *
 from trigger import *
@@ -58,4 +58,4 @@ from invsim import pazToFreqResp, seisSim, specInv
 from cpxtrace import *
 
 
-__version__ = getVersionString("obspy.signal")
+__version__ = _getVersionString("obspy.signal")

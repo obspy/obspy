@@ -140,7 +140,7 @@ The following keyword arguments are possible:
 # the test suite (running without X11 or any other display)
 # see tests/__init__.py for details
 
-from obspy.core import util
+from obspy.core.util import _getVersionString
 
 
-__version__ = util.getVersionString("obspy.imaging")
+__version__ = _getVersionString("obspy.imaging")

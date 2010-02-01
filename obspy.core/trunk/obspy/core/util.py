@@ -269,7 +269,7 @@ def complexifyString(line):
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
 
 
-def getVersionString(module="obspy.core"):
+def _getVersionString(module="obspy.core"):
     """
     Returns either the EGG version or current SVN revision for a given module.
     """

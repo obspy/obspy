@@ -45,7 +45,7 @@ frequencies which cannot be heard by a human, therefore it makes sence to
 set the framerate to a high value.
 """
 
-from obspy.core import util
+from obspy.core.util import _getVersionString
 
 
-__version__ = util.getVersionString("obspy.wav")
+__version__ = _getVersionString("obspy.wav")

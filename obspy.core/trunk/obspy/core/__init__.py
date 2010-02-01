@@ -25,10 +25,10 @@ seismograms.
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core import util
+from obspy.core.util import _getVersionString
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
 from obspy.core.scripts.runtests import runTests
 
 
-__version__ = util.getVersionString("obspy.core")
+__version__ = _getVersionString("obspy.core")
