@@ -626,11 +626,21 @@ class Stream(object):
         traces = []
         for trace in self:
             traces.append(trace.slice(starttime, endtime))
-        return Stream(traces = traces)
+        return Stream(traces=traces)
 
     def verify(self):
         """
-        Verifies all Trace objects in current Streams using header information.
+        Verifies all traces of current Stream against available meta data.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=[1,2,3,4])
+        >>> tr.stats.npts = 100
+        >>> st = Stream([tr])
+        >>> st.verify()  #doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        Exception: ntps(100) differs from data size(4)
         """
         for trace in self:
             trace.verify()

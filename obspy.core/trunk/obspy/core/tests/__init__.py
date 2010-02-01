@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import obspy
-from obspy.core import util, utcdatetime, trace
+from obspy.core import util, utcdatetime, trace, stream
 from obspy.core.tests import test_stream, test_utcdatetime, test_trace, \
     test_stats
 import doctest
@@ -14,6 +14,7 @@ def suite():
         suite.addTest(doctest.DocTestSuite(util))
         suite.addTest(doctest.DocTestSuite(utcdatetime))
         suite.addTest(doctest.DocTestSuite(trace))
+        suite.addTest(doctest.DocTestSuite(stream))
     except:
         pass
     suite.addTest(test_utcdatetime.suite())
