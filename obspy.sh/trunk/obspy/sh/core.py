@@ -77,9 +77,11 @@ def readASC(filename, headonly=False):
     """
     Reads a ASC file and returns an ObsPy Stream object.
 
+    This function should NOT be called directly, it registers via the
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
+
     Parameters
     ----------
-
     filename : string
         ASC file to be read.
     headonly : bool, optional
@@ -90,6 +92,11 @@ def readASC(filename, headonly=False):
     -------
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("seisan_file") # doctest: +SKIP
     """
     fh = open(filename, 'rt')
     # read file and split text into channels
@@ -175,9 +182,12 @@ def writeASC(stream, filename):
     """
     Writes a ASC file from given ObsPy Stream object.
 
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
     Parameters
     ----------
-
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
     filename : string
@@ -248,10 +258,11 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     ObsPy assumes that the corresponding data file is within the same directory
     if the ``data_directory`` parameter is not set. Otherwise it will search
     in the given ``data_directory`` for a file with the `QBN` file extension.
+    This function should NOT be called directly, it registers via the
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
 
     Parameters
     ----------
-
     filename : string
         Q header file to be read. Must have a `QHD` file extension.
     headonly : bool, optional
@@ -269,6 +280,11 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     -------
     :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("Q_file") # doctest: +SKIP
     """
     if not headonly:
         if not data_directory:
@@ -363,9 +379,12 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
     """
     Writes a Q file from given ObsPy Stream object.
 
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
     Parameters
     ----------
-
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
     filename : string

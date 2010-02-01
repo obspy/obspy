@@ -93,9 +93,17 @@ def readSEISAN(filename, headonly=False, **kwargs):
     """
     Reads a SEISAN file and returns an ObsPy Stream object.
 
+    This function should NOT be called directly, it registers via the
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
+
     :param filename: SEISAN file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("seisan_file") # doctest: +SKIP
     """
     # read data chunk from given file
     fh = open(filename, 'rb')
@@ -165,6 +173,10 @@ def writeSEISAN(stream_object, filename, **kwargs):
     """
     Writes a SEISAN file.
     
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
     :type stream_object: :class:`~obspy.core.stream.Stream`
     :param stream_object: A ObsPy Stream object.
     :param filename: SEISAN file to be written.

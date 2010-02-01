@@ -105,6 +105,10 @@ def writeGSE2(stream_object, filename, **kwargs):
     """
     Write GSE2 file from a Stream object.
 
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
     :param stream_object: The ObsPy Stream object to write.
     :param filename: Name of file to write.
     """

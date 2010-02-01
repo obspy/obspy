@@ -183,7 +183,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
 
 class Stream(object):
     """
-    List of multiple continuous time series, such as a seismic traces.
+    List like object of multiple ObsPy trace objects.
 
     Parameters
     ----------

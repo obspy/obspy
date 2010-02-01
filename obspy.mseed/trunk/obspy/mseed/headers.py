@@ -26,7 +26,7 @@ else:
     if platform.architecture()[0] == '64bit':
         lib_names = ['libmseed.so', '_libmseed.lin64.so']
     else:
-        lib_names = ['libmseed.so', '_libmseed-2.3.so']
+        lib_names = ['libmseed.so', '_libmseed.so']
 
 # initialize library
 clibmseed = None

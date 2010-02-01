@@ -41,9 +41,16 @@ def readWAV(filename, headonly=False, **kwargs):
     Read audio WAV file.
     
     Currently supports uncompressed unsigned char and short integer and
-    integer data values. This should cover most WAV files.
-    
+    integer data values. This should cover most WAV files. This function
+    should NOT be called directly, it registers via the obspy
+    :func:`~obspy.core.stream.read` function, call this instead.
+
     :param filename: Name of WAV file to read.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("wav_file") # doctest: +SKIP
     """
     # read WAV file
     fh = wave.open(filename, 'rb')
@@ -73,6 +80,9 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     
     The resulting WAV sound file is as a result really short. The data
     are written uncompressed as signed 4byte integers.
+    This function should NOT be called directly, it registers via the
+    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
     
     :note: The attributes self.stats.npts = number of samples and
            self.data = array of data samples are required

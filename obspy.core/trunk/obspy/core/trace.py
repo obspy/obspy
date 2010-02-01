@@ -8,7 +8,7 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from copy import deepcopy
+from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 import numpy as np
@@ -243,7 +243,7 @@ class Trace(object):
 
         Example
         -------
-        >>> trace = Trace(data=[1, 2, 3, 4])
+        >>> trace = Trace(data=np.array([1, 2, 3, 4]))
         >>> trace.count()
         4
         >>> len(trace)
@@ -396,7 +396,7 @@ class Trace(object):
         format : string
             Name of the output format.
             .. :seealso:: 
-                :func:`~obspy.core.stream.read()` for all possible formats.
+                :func:`~obspy.core.stream.read` for all possible formats.
 
         Basic Usage
         -----------
@@ -414,14 +414,13 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=range(0, 10))
+        >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
-        >>> tr.ltrim(UTCDateTime("2009-01-01 12:00:08"))
+        >>> tr.ltrim(tr.stats.starttime + 8)
         >>> tr.data
-        [8, 9]
+        array([8, 9])
         >>> tr.stats.starttime
-        UTCDateTime(2009, 1, 1, 12, 0, 8)
+        UTCDateTime(1970, 1, 1, 0, 0, 8)
         """
         if isinstance(starttime, float) or isinstance(starttime, int):
             starttime = UTCDateTime(self.stats.starttime) + starttime
@@ -444,14 +443,13 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=range(0, 10))
+        >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
-        >>> tr.rtrim(UTCDateTime("2009-01-01 12:00:02"))
+        >>> tr.rtrim(tr.stats.starttime + 2)
         >>> tr.data
-        [0, 1, 2]
+        array([0, 1, 2])
         >>> tr.stats.endtime
-        UTCDateTime(2009, 1, 1, 12, 0, 2)
+        UTCDateTime(1970, 1, 1, 0, 0, 2)
         """
         if isinstance(endtime, float) or isinstance(endtime, int):
             endtime = UTCDateTime(self.stats.endtime) - endtime
@@ -475,14 +473,12 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=range(0, 10))
+        >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
-        >>> start = UTCDateTime("2009-01-01 12:00:02")
-        >>> end = UTCDateTime("2009-01-01 12:00:08")
-        >>> tr.trim(start, end)
+        >>> t = tr.stats.starttime
+        >>> tr.trim(t + 2, t + 8)
         >>> tr.data
-        [2, 3, 4, 5, 6, 7, 8]
+        array([2, 3, 4, 5, 6, 7, 8])
         """
         # check time order and swap eventually
         if starttime > endtime:
@@ -503,35 +499,16 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr1 = Trace(data=range(0, 10))
-        >>> tr1.stats.delta = 1.0
-        >>> tr1.stats.starttime = UTCDateTime("2009-01-01 12:00:00")
-        >>> start = UTCDateTime("2009-01-01 12:00:02")
-        >>> end = UTCDateTime("2009-01-01 12:00:08")
-        >>> tr2 = tr1.slice(start, end)
+        >>> tr = Trace(data=np.arange(0, 10))
+        >>> tr.stats.delta = 1.0
+        >>> t = tr.stats.starttime
+        >>> tr2 = tr.slice(t + 2, t + 8)
         >>> tr2.data
-        [2, 3, 4, 5, 6, 7, 8]
+        array([2, 3, 4, 5, 6, 7, 8])
         """
-        # Sanity check and swap eventually.
-        if starttime > endtime:
-            endtime, starttime = starttime, endtime
-        left_delta = starttime - self.stats.starttime
-        right_delta = self.stats.endtime - endtime
-        # Check boundaries.
-        if left_delta <= 0:
-            left_delta = 0
-        if right_delta <= 0:
-            right_delta = 0
-        # Calculate number of samples to be left out.
-        # Round to avoid floating points inaccuracies. 7 digits seem to be a
-        # safe value.
-        left_samples = int(round(left_delta * self.stats.sampling_rate, 7))
-        right_samples = int(round(right_delta * self.stats.sampling_rate, 7))
-        tr = Trace()
-        tr.data = self.data[left_samples: len(self.data) - right_samples]
+        tr = copy(self)
         tr.stats = deepcopy(self.stats)
-        tr.stats.starttime += left_samples / self.stats.sampling_rate
-        tr.stats.npts = len(tr.data)
+        tr.trim(starttime, endtime)
         return tr
 
     def verify(self):
@@ -540,7 +517,7 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=[1,2,3,4])
+        >>> tr = Trace(data=np.array([1,2,3,4]))
         >>> tr.stats.npts = 100
         >>> tr.verify()  #doctest: +ELLIPSIS
         Traceback (most recent call last):
