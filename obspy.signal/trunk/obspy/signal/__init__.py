@@ -17,7 +17,7 @@ at 1.5Hz.
 
 :Note: The filter takes the data explicitly as argument (i.e. a
        numpy.ndarray) and therefore the sampling_rate needs to be also specified.
-       It returns the filetered data.
+       It returns the filtered data.
 
 >>> from obspy.core import read
 >>> import obspy.signal
@@ -44,8 +44,8 @@ le3d and simulate an instrument with 2Hz corner frequency.
 >>> data2 = seisSim(data, df, le3d,
                     inst_sim=inst2hz, water_level=60.0)
 
-There are many more functions available (rotation, pazToFreqResp, triggers,
-cpxtrace analysis, ...), please also check the tutorial.
+**There are many more functions available (rotation, pazToFreqResp, triggers,
+cpxtrace analysis, ...), please also check the tutorial.**
 """
 
 from obspy.core.util import _getVersionString

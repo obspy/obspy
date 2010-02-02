@@ -45,10 +45,10 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         String containing a file name or a URL. Wildcards are allowed for a
         file name.
     format : string, optional
-        Format of the file to read. Commonly one of "GSE2", "MSEED",
-        or "SAC". If it is None the format will be automatically
-        detected which results in a slightly slower reading. If you specify
-        a format no further format checking is done.
+        Format of the file to read. Commonly one of "GSE2", "MSEED", "SAC",
+        "SEISAN", "WAV", "Q" or "SH_ASC". If it is None the format will be
+        automatically detected which results in a slightly slower reading.
+        If you specify a format no further format checking is done.
     headonly : bool, optional
         If set to True, read only the data header. This is most useful for
         scanning available meta information of huge data sets.

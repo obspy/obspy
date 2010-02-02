@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
-# Filename: spectogram.py
-#  Purpose: Plotting Spectogram of Seismograms.
+# Filename: spectrogram.py
+#  Purpose: Plotting spectrogram of Seismograms.
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
 #
 # Copyright (C) 2008-2010 Christian Sippl
 #---------------------------------------------------------------------
 """
-Plotting Spectogram of Seismograms.
+Plotting Spectrogram of Seismograms.
 
 
 GNU General Public License (GPL)
@@ -61,7 +61,7 @@ def nearestPow2(x):
 def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
                 outfile=None, format=None):
     """
-    Computes and plots logarithmic spectogram of the input trace.
+    Computes and plots logarithmic spectrogram of the input trace.
     
     :param data: Input data
     :param sample_rate: Samplerate in Hz
@@ -88,22 +88,22 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    spectogram, freq, time = mlab.specgram(data, Fs=samp_rate,
+    spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                            NFFT=nfft, noverlap=nlap)
     # db scale and remove offset
-    spectogram = 10 * np.log10(spectogram[1:, :])
+    spectrogram = 10 * np.log10(spectrogram[1:, :])
     freq = freq[1:]
 
     if log:
         X, Y = np.meshgrid(time, freq)
-        plt.pcolor(X, Y, spectogram)
+        plt.pcolor(X, Y, spectrogram)
         plt.semilogy()
         plt.ylim((freq[0], freq[-1]))
     else:
         # this method is much much faster!
-        spectogram = np.flipud(spectogram)
+        spectrogram = np.flipud(spectrogram)
         extent = 0, np.amax(time), freq[0], freq[-1]
-        plt.imshow(spectogram, None, extent=extent)
+        plt.imshow(spectrogram, None, extent=extent)
         plt.axis('auto')
 
     plt.grid(False)

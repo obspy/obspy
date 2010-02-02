@@ -118,6 +118,7 @@ def quantile(x, q, qtype=7, issorted=False):
 
     Examples
     --------
+
     >>> a = [1, 2, 3, 4]
     >>> quantile(a, 0.25)
     1.75
@@ -134,8 +135,8 @@ def quantile(x, q, qtype=7, issorted=False):
     >>> quantile(a, 0.75)
     42.5
 
-    :Author:
-        'Ernesto P.Adorio Ph.D.'_, UP Extension Program in Pampanga, Clark Field
+    :Author: 'Ernesto P.Adorio Ph.D.'_, UP Extension Program in Pampanga,
+             Clark Field
     
 ..  _'Ernesto P.Adorio Ph.D.': http://adorio-research.org/wordpress/?p=125 
     """
