@@ -335,6 +335,20 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the slicing of trace objects.
         """
+        tr = Trace(data=np.arange(10, dtype='int32'))
+        mempos = tr.data.ctypes.data
+        t = tr.stats.starttime
+        tr1 = tr.slice(t+2, t+8)
+        tr1.data[0] = 10
+        self.assertEqual(tr.data[2], 10)
+        self.assertEqual(tr.data.ctypes.data, mempos)
+        self.assertEqual(tr.data[2:9].ctypes.data, tr1.data.ctypes.data)
+        self.assertEqual(tr1.data.ctypes.data - 8, mempos)
+
+    def test_trimFloatingPoint(self):
+        """
+        Tests the slicing of trace objects.
+        """
         # Create test array that allows for easy testing.
         tr = Trace(data=np.arange(11))
         org_stats = deepcopy(tr.stats)
@@ -349,9 +363,11 @@ class TraceTestCase(unittest.TestCase):
 
         # This is supposed to include the start- and endtimes and should
         # therefore cut right at 2 and 8.
-        temp = tr.slice(st + 2.1, st + 7.1)
+        temp = deepcopy(tr)
+        temp.trim(st + 2.1, st + 7.1)
         # Should be identical.
-        temp2 = tr.slice(st + 2.0, st + 8.0)
+        temp2 = deepcopy(tr)
+        temp2.trim(st + 2.0, st + 8.0)
         self.assertEqual(temp.stats.starttime, UTCDateTime(2))
         self.assertEqual(temp.stats.endtime, UTCDateTime(8))
         self.assertEqual(temp.stats.npts, 7)
@@ -359,12 +375,13 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(temp.data, temp2.data)
         # Create test array that allows for easy testing.
         # Check if the data is the same.
-        self.assertEqual(temp.data.ctypes.data, tr.data[2:9].ctypes.data)
+        self.assertNotEqual(temp.data.ctypes.data, tr.data[2:9].ctypes.data)
         np.testing.assert_array_equal(tr.data[2:9], temp.data)
 
         # Using out of bounds times should not do anything but create
         # a copy of the stats.
-        temp = tr.slice(st - 2.5, st + 200)
+        temp = deepcopy(tr)
+        temp.trim(st - 2.5, st + 200)
         self.assertEqual(temp.stats.starttime, UTCDateTime(0))
         self.assertEqual(temp.stats.endtime, UTCDateTime(10))
         self.assertEqual(temp.stats.npts, 11)
@@ -374,7 +391,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(org_stats, tr.stats)
 
         # Check if the data is the same.
-        self.assertEqual(temp.data.ctypes.data, tr.data.ctypes.data)
+        self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data)
         # Make sure the original Trace object did not change.
         np.testing.assert_array_equal(tr.data, org_data)
@@ -390,9 +407,11 @@ class TraceTestCase(unittest.TestCase):
         # Save memory position of array.
         mem_pos = tr.data.ctypes.data
         # Create temp trace object used for testing.
-        temp = tr.slice(UTCDateTime(111.22222), UTCDateTime(112.99999))
+        temp = deepcopy(tr)
+        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999))
         # Should again be identical.
-        temp2 = tr.slice(UTCDateTime(111.21111), UTCDateTime(113.01111))
+        temp2 = deepcopy(tr)
+        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
         np.testing.assert_array_equal(temp.data, temp2.data)
         self.assertEqual(temp.stats, temp2.stats)
         # Check stuff.
@@ -400,14 +419,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
 
         # Check if the data is the same.
-        temp = tr.slice(UTCDateTime(0), UTCDateTime(1000 * 1000))
-        self.assertEqual(temp.data.ctypes.data, tr.data.ctypes.data)
+        temp = deepcopy(tr)
+        temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000))
+        self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         np.testing.assert_array_equal(tr.data, temp.data)
         # Make sure the original Trace object did not change.
         np.testing.assert_array_equal(tr.data, org_data)
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
-
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
