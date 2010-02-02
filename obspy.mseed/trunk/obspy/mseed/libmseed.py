@@ -139,14 +139,16 @@ class LibMSEED(object):
                 return ''
             ms.f.seek(bytes[0])
             end_byte = bytes[0] + bytes[1]
+        else:
+            end_byte = os.path.getsize(filename)
         # Loop over records and append to trace_list.
         last_msrid = None
         while True:
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
-                              raise_flag=False)
+                              raise_flag=True)
             if errcode != 0:
-                break
+                raise Exception("Error in ms.read")
             chain = ms.msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])
