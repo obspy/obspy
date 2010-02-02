@@ -46,6 +46,7 @@ Convenience::
     GetHvalueFromFile - access to specific header item in specified file
     SetHvalueInFile   - change specific header item in specified file
     IsValidSacFile    - test for valid binary SAC file (wraps 'IsSACfile')
+    swap_byte_order   - swap byte order of SAC-file in memory.
 
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
@@ -804,11 +805,11 @@ class ReadSac(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
-        self.SetHvalue('dist', dist)
-        self.SetHvalue('az', az)
-        self.SetHvalue('baz', baz)
-
+        dist, az, baz = rotate.gps2DistAzimuth(eqlat,eqlon,stlat,stlon)
+        self.SetHvalue('dist',dist/1000.)
+        self.SetHvalue('az',az)
+        self.SetHvalue('baz',baz)
+        
     def swap_byte_order(self):
         """
         Swap byte order of SAC-file in memory:

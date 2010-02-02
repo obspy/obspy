@@ -141,6 +141,20 @@ accessed as an instance of the ReadSac class.
     >>> tr = ReadSac('test.sac')
     >>> tr.WriteSacXY('test2.sac')
 
+* :meth:`~sacio.ReadSac.SetHvalue` Assign new value to SAC-header variable.
+
+    Parameters: *SAC-header variable name.
+                *numeric or string value to be assigned to header-variable
+
+
+    >>> from obspy.sac import *
+    >>> tr = ReadSac('test.sac')
+    >>> tr.GetHvalue('kstnm')
+    'STA     '
+    >>> tr.SetHvalue('kstnm','STA_NEW')
+    >>> tr.GetHvalue('kstnm')
+    'STA_NEW '
+
 * :meth:`~sacio.ReadSac.WriteSacHeader` Writes an updated header to an
     existing binary SAC-file.
 
@@ -150,6 +164,16 @@ accessed as an instance of the ReadSac class.
     >>> tr = ReadSac('test.sac')
     >>> tr.SetHvalue('kevnm','hullahulla')
     >>> tr.WriteSacHeader('test.sac')
+
+
+* :meth:`~sacio.ReadSac.IsSACfile` Test if file is a valid binary SAC file
+* :meth:`~sacio.ReadSac.IsXYSACfile` Test if file is a valid ascii SAC file
+* :meth:`~sacio.ReadSac.ListStdValues` Print common header values
+* :meth:`~sacio.ReadSac.GetHvalueFromFile` Access to specific header item in specified file
+* :meth:`~sacio.ReadSac.SetHvalueInFile` Change specific header item in specified file
+* :meth:`~sacio.ReadSac.IsValidSacFile` Test for valid binary SAC file (wraps 'IsSACfile')
+* :meth:`~sacio.ReadSac.swap_byte_order` Swap byte order of SAC-file in memory.
+
 """
 
 from obspy.core.util import _getVersionString
