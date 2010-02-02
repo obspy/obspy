@@ -22,17 +22,17 @@ seismograms.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-Note
-----
+Summary
+-------
 Seismograms of the format (SAC, MiniSEED, GSE2, SEISAN, Q, SH_ASC) are
 read with the :func:`~obspy.core.stream.read` function into a
 :class:`~obspy.core.stream.Stream` object. The Stream object is a
 list like objects which contains several :class:`~obspy.core.trace.Trace` 
-objects, i.e. gap-less continuous sample junks. Each Trace object has an
-attribute ``data``, which contains the actual data and an attribute
-``stats`` which contains the header information as a dict like 
+objects, i.e. gap-less continuous time series. Each Trace object has an
+attribute ``data``, which contains the actual data as a numpy_ ndarray and an
+attribute ``stats`` which contains the header/meta information as a dict-like 
 :class:`~obspy.core.trace.Stats` object. The stats attributes ``starttime``
-and ``endtime`` must hereby be :class:`~obspy.core.utcdatetime.UTCDateTime`
+and ``endtime`` are :class:`~obspy.core.utcdatetime.UTCDateTime`
 objects.
 
 Example
@@ -64,6 +64,8 @@ Stats({'network': 'BW',
        'channel': 'EHE'})
 >>> tr.stats.starttime
 UTCDateTime(2007, 12, 31, 23, 59, 59, 915000)
+
+.. _numpy: http://docs.scipy.org
 """
 
 # don't change order
