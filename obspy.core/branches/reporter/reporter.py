@@ -10,7 +10,6 @@ server.register_introspection_functions()
 # create mysql connection
 conn = pymysql.connect(host='127.0.0.1', port=3306,
                        user='', passwd="", db='')
-import pdb;pdb.set_trace()
 
 class MyFuncs:
     def report(self, ok, result):
