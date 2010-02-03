@@ -146,7 +146,7 @@ class LibMSEED(object):
         while True:
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
-                              raise_flag=True)
+                              raise_flag=False)
             if errcode != 0:
                 raise Exception("Error in ms.read")
             chain = ms.msr.contents
