@@ -152,19 +152,9 @@ def readASC(filename, headonly=False):
             elif key == 'START':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                date, time = value.split('_')
-                day, month, year = date.split('-')
-                hour, mins, secs = time.split(':')
-                day = int(day)
-                month = MONTHS.index(month) + 1
-                year = int(year)
-                hour = int(hour)
-                mins = int(mins)
-                secs = float(secs)
-                header['starttime'] = UTCDateTime(year, month, day, hour,
-                                                  mins) + secs
+                header['starttime'] = toUTCDateTime(value)
             else:
-                # everything else gets stored into sh entry 
+                # everything else gets stored into sh entry
                 header['sh'][key] = value
         # set channel code
         header['channel'] = ''.join(channel)
@@ -203,9 +193,7 @@ def writeASC(stream, filename):
             fh.write("%s: %s\n" % (key, value))
         # special format for start time
         dt = trace.stats.starttime
-        pattern = "START: %2d-%3s-%4d_%02d:%02d:%02d.%03d\n"
-        fh.write(pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
-                            dt.minute, dt.second, dt.microsecond / 1000))
+        fh.write("START: %s\n" % fromUTCDateTime(dt))
         # component must be split
         if len(trace.stats.channel) >= 2:
             fh.write("COMP: %c\n" % trace.stats.channel[2])
@@ -313,7 +301,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     # create stream object
     stream = Stream()
     for id in sorted(traces.keys()):
-        # fetch headers 
+        # fetch headers
         header = {}
         header['sh'] = {}
         channel = [' ', ' ', ' ']
@@ -341,17 +329,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
             elif key == 'S021':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                date, time = value.split('_')
-                day, month, year = date.split('-')
-                hour, mins, secs = time.split(':')
-                day = int(day)
-                month = MONTHS.index(month) + 1
-                year = int(year)
-                hour = int(hour)
-                mins = int(mins)
-                secs = float(secs)
-                header['starttime'] = UTCDateTime(year, month, day, hour,
-                                                  mins) + secs
+                header['starttime'] = toUTCDateTime(value)
             elif key:
                 key = INVERTED_SH_IDX.get(key, key)
                 header['sh'][key] = value
@@ -422,16 +400,14 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        pattern = "S021: %2d-%3s-%4d_%02d:%02d:%02d.%03d~ "
-        temp += pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
-                           dt.minute, dt.second, dt.microsecond / 1000)
+        temp += "S021: %s~ " % fromUTCDateTime(dt)
         for key, value in trace.stats.get('sh', []).iteritems():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
-        # get maximal number of trclines  
+        # get maximal number of trclines
         nol = len(temp) / 74 + 1
         if nol > maxnol:
             maxnol = nol
@@ -453,3 +429,23 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
         data.tofile(fh_data)
     fh.close()
     fh_data.close()
+
+def toUTCDateTime(value):
+    date, time = value.split('_')
+    day, month, year = date.split('-')
+    hour, mins, secs = time.split(':')
+    day = int(day)
+    month = MONTHS.index(month.upper()) + 1
+    year = int(year)
+    hour = int(hour)
+    mins = int(mins)
+    secs = float(secs)
+
+    return UTCDateTime(year, month, day, hour, mins) + secs
+
+def fromUTCDateTime(dt):
+    pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
+
+    return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
+                        dt.minute, dt.second, dt.microsecond / 1000)
+
