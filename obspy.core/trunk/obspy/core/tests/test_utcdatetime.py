@@ -260,17 +260,25 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(a + td, UTCDateTime(1970, 1, 1, 0, 0, 1))
 
     def test_sub(self):
+        #1
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(2000, 1, 1, 0, 0, 4, 995000)
         self.assertAlmostEquals(end - start, 4.995)
+        #2
         start = UTCDateTime(1000, 1, 1, 0, 0, 0, 0)
         end = UTCDateTime(1000, 1, 1, 0, 0, 4, 0)
         self.assertAlmostEquals(end - start, 4)
+        #3
         start = UTCDateTime(0)
         end = UTCDateTime(-1000.5)
         self.assertAlmostEquals(end - start, -1000.5)
+        #4
         td = datetime.timedelta(seconds=1)
         self.assertEquals(start - td, UTCDateTime(1969, 12, 31, 23, 59, 59))
+        #5
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
+        end = UTCDateTime(2000, 1, 1, 0, 0, 1, 000001)
+        self.assertAlmostEquals(end - start, 0.000002)
 
     def test_negativeTimestamp(self):
         dt = UTCDateTime(-1000.1)

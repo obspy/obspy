@@ -178,6 +178,9 @@ def _read(filename, format=None, headonly=False, **kwargs):
         stream = readFormat(filename, headonly=True, **kwargs)
     else:
         stream = readFormat(filename, **kwargs)
+    # set a format keyword for each trace
+    for trace in stream:
+        trace.stats._format = format_ep.name
     return stream
 
 
