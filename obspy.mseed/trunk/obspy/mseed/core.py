@@ -173,13 +173,13 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
             raise Exception(msg)
         # autodetect format if no global encoding is given
         if encoding == -1:
-            if trace.data.dtype.type == np.int32:
+            if trace.data.dtype.type == np.dtype("int32"):
                 enc = 11
-            elif trace.data.dtype.type == np.float32:
+            elif trace.data.dtype.type == np.dtype("float32"):
                 enc = 4
-            elif trace.data.dtype.type == np.float64:
+            elif trace.data.dtype.type == np.dtype("float64"):
                 enc = 5
-            elif trace.data.dtype.type == np.int16:
+            elif trace.data.dtype.type == np.dtype("int16"):
                 enc = 1
             elif trace.data.dtype.type == np.dtype('|S1').type:
                 enc = 0
