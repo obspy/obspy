@@ -42,6 +42,7 @@ from struct import unpack
 import ctypes as C
 import math
 import numpy as np
+import warnings
 import operator
 import os
 import sys
@@ -148,7 +149,9 @@ class LibMSEED(object):
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
                               raise_flag=False)
             if errcode != 0:
-                raise Exception("Error in ms.read")
+                warnings.warn("Either broken last record in mseed file " +
+                              "%s or error in ms_readmsr_r" % filename)
+                break
             chain = ms.msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])

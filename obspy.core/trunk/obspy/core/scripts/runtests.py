@@ -87,12 +87,17 @@ def _getSuite(verbosity=1, tests=[]):
     return ut.suiteClass(suites)
 
 
-def _createReport(ttr):
+def _createReport(ttr, log):
     # import additional libraries here to speed up normal tests
     import xmlrpclib
     import datetime
     import platform
     result = {'timestamp':datetime.datetime.now()}
+    if log:
+        try:
+            result['install_log': open(log,'r').read()]
+        except:
+            print "Cannot open log file"
     # get ObsPy module versions
     result['obspy'] = {}
     for module in ALL_MODULES:
@@ -144,7 +149,7 @@ def _createReport(ttr):
         print "Test report has been sent to http://tests.obspy.org."
 
 
-def runTests(verbosity=1, tests=[], report=False):
+def runTests(verbosity=1, tests=[], report=False, log=None):
     """
     This function executes ObsPy test suites.
 
@@ -159,11 +164,13 @@ def runTests(verbosity=1, tests=[], report=False):
     report : boolean, optional
         Sends a test report to http://tests.obspy.org if enabled (default is
         False).
+    log : string
+        Filename of install log file to append to report
     """
     suite = _getSuite(verbosity, tests)
     ttr = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if report:
-        _createReport(ttr)
+        _createReport(ttr, log)
 
 
 def main():
@@ -179,6 +186,9 @@ def main():
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
                       help="send a test report to http://tests.obspy.org")
+    parser.add_option("-l", "--log", default=None,
+                      type="string", dest="log",
+                      help="append log file to test report")
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
@@ -192,7 +202,7 @@ def main():
         report = True
     else:
         report = False
-    runTests(verbosity, parser.largs, report)
+    runTests(verbosity, parser.largs, report, options.log)
 
 
 if __name__ == "__main__":

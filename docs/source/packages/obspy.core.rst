@@ -17,6 +17,14 @@
 
     .. comment to end block
 
+    Scripts
+    -------
+    .. autosummary::
+      :toctree: .
+      :nosignatures:
+
+        scripts.runtests
+
     Modules
     -------
     .. autosummary::

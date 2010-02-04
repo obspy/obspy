@@ -1,31 +1,37 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspyscanp.py file1 file2 file3 ...
+USAGE: obspyscanp.py [-f MSEED] file1 file2 file3 ...
 
-Supported formats: MSEED, GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN
 Plot range of available data in files. Gaps are plotted as vertical red
 lines, startimes of available data are plotted as crosses. The sampling
 rate must stay the same of each station, but can vary between the stations.
+
+Supported formats: MSEED, GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN. If the
+format option (-f) is specified, the reading is significantly faster,
+otherwise the format is autodetected
 """
 
 import sys
 from obspy.core import read
+from optparse import OptionParser
 from matplotlib.dates import date2num, num2date
 from matplotlib.pyplot import figure, show, savefig
 import numpy as np
 
 def main():
-    if len(sys.argv) == 1:
-        print __doc__
-        sys.exit(1)
+    parser = OptionParser(__doc__.strip())
+    parser.add_option("-f", "--format", default=None,
+                      type="string", dest="format",
+                      help="Format log file to test report")
+    (options, largs) = parser.parse_args()
     
     #
     # Generate dictionary containing nested lists of start and end times per
     # station
     data = {}
     samp_int = {}
-    for i, file in enumerate(sys.argv[1:]):
+    for i, file in enumerate(largs):
         try:
             stream = read(file, headonly=True)
         except:
