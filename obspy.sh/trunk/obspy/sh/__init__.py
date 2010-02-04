@@ -6,8 +6,11 @@ This modules provides facilities to:
 * Import and export seismogram files in the Q format.
 * Import and export seismogram files in the ASC format.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
@@ -16,7 +19,7 @@ Similiar to reading any other waveform data format using obspy.core:
 >>> from obspy.core import read
 >>> st = read("tests/data/QFILE-TEST-ASC.ASC")
 >>> st
->>> <obspy.core.stream.Stream object at 0xa1fecac>
+<obspy.core.stream.Stream object at 0xa1fecac>
 >>> print st
 3 Trace(s) in Stream:
 .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
@@ -27,10 +30,13 @@ The format will be determined automatically. Each trace will have a stats
 attribute containing the meta information. 
 
 >>> st[0].stats
-Stats({'network': '', 
+Stats({
+    'network': '', 
     'station': 'TEST', 
     'npts': 801, 
-    'sh': AttribDict({'COMMENT': 'TEST TRACE IN QFILE #1'}), 
+    'sh': AttribDict({
+        'COMMENT': 'TEST TRACE IN QFILE #1'
+    }), 
     'location': '', 
     'starttime': UTCDateTime(2009, 10, 1, 12, 46, 1), 
     'delta': 0.050000000000000003, 
