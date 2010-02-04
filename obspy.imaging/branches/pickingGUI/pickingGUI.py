@@ -181,8 +181,6 @@ class PickingGUI:
         self.magMaxMarker='x'
         self.magMarkerEdgeWidth=1.8
         self.magMarkerSize=20
-        self.dictPolMarker = {'Up': '^', 'Down': 'v'}
-        self.polMarkerSize=8
         self.axvlinewidths=1.2
         #dictionary for key-bindings
         self.dictKeybindings = {'setPick':'alt', 'setPickError':' ', 'delPick':'escape',
@@ -290,14 +288,10 @@ class PickingGUI:
     def drawSavedPicks(self):
         self.drawPLine()
         self.drawPLabel()
-        self.drawPWeightLabel()
-        self.drawPPolMarker()
         self.drawPErr1Line()
         self.drawPErr2Line()
         self.drawSLine()
         self.drawSLabel()
-        self.drawSWeightLabel()
-        self.drawSPolMarker()
         self.drawSErr1Line()
         self.drawSErr2Line()
         self.drawMagMinCross1()
@@ -326,7 +320,23 @@ class PickingGUI:
     def drawPLabel(self):
         if not self.dicts[self.stPt].has_key('P'):
             return
-        self.PLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.04 * len(self.axs), '  P',
+        PLabelString = 'P:'
+        if not self.dicts[self.stPt].has_key('PPol'):
+            PLabelString += '_'
+        else:
+            if self.dicts[self.stPt]['PPol'] == 'Up':
+                PLabelString += 'U'
+            elif self.dicts[self.stPt]['PPol'] == 'PoorUp':
+                PLabelString += 'u'
+            elif self.dicts[self.stPt]['PPol'] == 'Down':
+                PLabelString += 'D'
+            elif self.dicts[self.stPt]['PPol'] == 'PoorDown':
+                PLabelString += 'd'
+        if not self.dicts[self.stPt].has_key('PWeight'):
+            PLabelString += '_'
+        else:
+            PLabelString += str(self.dicts[self.stPt]['PWeight'])
+        self.PLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.04 * len(self.axs), '  ' + PLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['P'])
     
     def delPLabel(self):
@@ -336,22 +346,6 @@ class PickingGUI:
             pass
         try:
             del self.PLabel
-        except:
-            pass
-    
-    def drawPWeightLabel(self):
-        if not self.dicts[self.stPt].has_key('P') or not self.dicts[self.stPt].has_key('PWeight'):
-            return
-        self.PWeightLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.06 * len(self.axs), '  %s'%self.dicts[self.stPt]['PWeight'],
-                                   transform = self.trans[0], color = self.dictPhaseColors['P'])
-    
-    def delPWeightLabel(self):
-        try:
-            self.axs[0].texts.remove(self.PWeightLabel)
-        except:
-            pass
-        try:
-            del self.PWeightLabel
         except:
             pass
     
@@ -391,116 +385,6 @@ class PickingGUI:
         except:
             pass
 
-    def drawPPolMarker(self):
-        if not self.dicts[self.stPt].has_key('P') or not self.dicts[self.stPt].has_key('PPol'):
-            return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
-        xlims=list(self.axs[0].get_xlim())
-        ylims=list(self.axs[0].get_ylim())
-        if self.dicts[self.stPt]['PPol'] == 'Up':
-            self.PPolMarker = self.axs[0].plot([self.dicts[self.stPt]['P']], [1 - 0.01 * len(self.axs)],
-                                     zorder = 4000, linewidth = 0,
-                                     transform = self.trans[0],
-                                     markerfacecolor = self.dictPhaseColors['P'],
-                                     marker = self.dictPolMarker['Up'], 
-                                     markersize = self.polMarkerSize,
-                                     markeredgecolor = self.dictPhaseColors['P'])[0]
-        if self.dicts[self.stPt]['PPol'] == 'PoorUp':
-            self.PPolMarker = self.axs[0].plot([self.dicts[self.stPt]['P']], [1 - 0.01 * len(self.axs)],
-                                     zorder = 4000, linewidth = 0,
-                                     transform = self.trans[0],
-                                     markerfacecolor = self.axs[0]._axisbg,
-                                     marker = self.dictPolMarker['Up'], 
-                                     markersize = self.polMarkerSize,
-                                     markeredgecolor = self.dictPhaseColors['P'])[0]
-        if self.dicts[self.stPt]['PPol'] == 'Down':
-            self.PPolMarker = self.axs[-1].plot([self.dicts[self.stPt]['P']], [0.01 * len(self.axs)],
-                                      zorder = 4000, linewidth = 0,
-                                      transform = self.trans[-1],
-                                      markerfacecolor = self.dictPhaseColors['P'],
-                                      marker = self.dictPolMarker['Down'], 
-                                      markersize = self.polMarkerSize,
-                                      markeredgecolor = self.dictPhaseColors['P'])[0]
-        if self.dicts[self.stPt]['PPol'] == 'PoorDown':
-            self.PPolMarker = self.axs[-1].plot([self.dicts[self.stPt]['P']], [0.01 * len(self.axs)],
-                                      zorder = 4000, linewidth = 0,
-                                      transform = self.trans[-1],
-                                      markerfacecolor = self.axs[-1]._axisbg,
-                                      marker = self.dictPolMarker['Down'], 
-                                      markersize = self.polMarkerSize,
-                                      markeredgecolor = self.dictPhaseColors['P'])[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delPPolMarker(self):
-        try:
-            self.axs[0].lines.remove(self.PPolMarker)
-        except:
-            pass
-        try:
-            self.axs[-1].lines.remove(self.PPolMarker)
-        except:
-            pass
-        try:
-            del self.PPolMarker
-        except:
-            pass
-    
-    def drawSPolMarker(self):
-        if not self.dicts[self.stPt].has_key('S') or not self.dicts[self.stPt].has_key('SPol'):
-            return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
-        xlims=list(self.axs[0].get_xlim())
-        ylims=list(self.axs[0].get_ylim())
-        if self.dicts[self.stPt]['SPol'] == 'Up':
-            self.SPolMarker = self.axs[0].plot([self.dicts[self.stPt]['S']], [1 - 0.01 * len(self.axs)],
-                                     zorder = 4000, linewidth = 0,
-                                     transform = self.trans[0],
-                                     markerfacecolor = self.dictPhaseColors['S'],
-                                     marker = self.dictPolMarker['Up'], 
-                                     markersize = self.polMarkerSize,
-                                     markeredgecolor = self.dictPhaseColors['S'])[0]
-        if self.dicts[self.stPt]['SPol'] == 'PoorUp':
-            self.SPolMarker = self.axs[0].plot([self.dicts[self.stPt]['S']], [1 - 0.01 * len(self.axs)],
-                                     zorder = 4000, linewidth = 0,
-                                     transform = self.trans[0],
-                                     markerfacecolor = self.axs[0]._axisbg,
-                                     marker = self.dictPolMarker['Up'], 
-                                     markersize = self.polMarkerSize,
-                                     markeredgecolor = self.dictPhaseColors['S'])[0]
-        if self.dicts[self.stPt]['SPol'] == 'Down':
-            self.SPolMarker = self.axs[-1].plot([self.dicts[self.stPt]['S']], [0.01 * len(self.axs)],
-                                      zorder = 4000, linewidth = 0,
-                                      transform = self.trans[-1],
-                                      markerfacecolor = self.dictPhaseColors['S'],
-                                      marker = self.dictPolMarker['Down'], 
-                                      markersize = self.polMarkerSize,
-                                      markeredgecolor = self.dictPhaseColors['S'])[0]
-        if self.dicts[self.stPt]['SPol'] == 'PoorDown':
-            self.SPolMarker = self.axs[-1].plot([self.dicts[self.stPt]['S']], [0.01 * len(self.axs)],
-                                      zorder = 4000, linewidth = 0,
-                                      transform = self.trans[-1],
-                                      markerfacecolor = self.axs[-1]._axisbg,
-                                      marker = self.dictPolMarker['Down'], 
-                                      markersize = self.polMarkerSize,
-                                      markeredgecolor = self.dictPhaseColors['S'])[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delSPolMarker(self):
-        try:
-            self.axs[0].lines.remove(self.SPolMarker)
-        except:
-            pass
-        try:
-            self.axs[-1].lines.remove(self.SPolMarker)
-        except:
-            pass
-        try:
-            del self.SPolMarker
-        except:
-            pass
-    
     def drawSLine(self):
         if not self.dicts[self.stPt].has_key('S'):
             return
@@ -522,7 +406,23 @@ class PickingGUI:
     def drawSLabel(self):
         if not self.dicts[self.stPt].has_key('S'):
             return
-        self.SLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.04 * len(self.axs), '  S',
+        SLabelString = 'S:'
+        if not self.dicts[self.stPt].has_key('SPol'):
+            SLabelString += '_'
+        else:
+            if self.dicts[self.stPt]['SPol'] == 'Up':
+                SLabelString += 'U'
+            elif self.dicts[self.stPt]['SPol'] == 'PoorUp':
+                SLabelString += 'u'
+            elif self.dicts[self.stPt]['SPol'] == 'Down':
+                SLabelString += 'D'
+            elif self.dicts[self.stPt]['SPol'] == 'PoorDown':
+                SLabelString += 'd'
+        if not self.dicts[self.stPt].has_key('SWeight'):
+            SLabelString += '_'
+        else:
+            SLabelString += str(self.dicts[self.stPt]['SWeight'])
+        self.SLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.04 * len(self.axs), '  ' + SLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['S'])
     
     def delSLabel(self):
@@ -532,22 +432,6 @@ class PickingGUI:
             pass
         try:
             del self.SLabel
-        except:
-            pass
-    
-    def drawSWeightLabel(self):
-        if not self.dicts[self.stPt].has_key('S') or not self.dicts[self.stPt].has_key('SWeight'):
-            return
-        self.SWeightLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.06 * len(self.axs), '  %s'%self.dicts[self.stPt]['SWeight'],
-                                   transform = self.trans[0], color = self.dictPhaseColors['S'])
-    
-    def delSWeightLabel(self):
-        try:
-            self.axs[0].texts.remove(self.SWeightLabel)
-        except:
-            pass
-        try:
-            del self.SWeightLabel
         except:
             pass
     
@@ -929,14 +813,10 @@ class PickingGUI:
         # Set new P Pick
         if self.flagPhase==0 and event.key==self.dictKeybindings['setPick']:
             self.delPLine()
-            self.delPPolMarker()
             self.delPLabel()
-            self.delPWeightLabel()
             self.dicts[self.stPt]['P']=int(round(event.xdata))
             self.drawPLine()
-            self.drawPPolMarker()
             self.drawPLabel()
-            self.drawPWeightLabel()
             #check if the new P pick lies outside of the Error Picks
             try:
                 if self.dicts[self.stPt]['P']<self.dicts[self.stPt]['PErr1']:
@@ -957,78 +837,62 @@ class PickingGUI:
         # Set P Pick weight
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight0']:
-                self.delPWeightLabel()
+                self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=0
-                self.drawPWeightLabel()
+                self.drawPLabel()
                 self.redraw()
                 print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight1']:
-                self.delPWeightLabel()
+                self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=1
                 print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                self.drawPWeightLabel()
+                self.drawPLabel()
                 self.redraw()
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight2']:
-                self.delPWeightLabel()
+                self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=2
                 print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                self.drawPWeightLabel()
+                self.drawPLabel()
                 self.redraw()
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight3']:
-                self.delPWeightLabel()
+                self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=3
                 print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                self.drawPWeightLabel()
+                self.drawPLabel()
                 self.redraw()
-            #if flagPhase==0 and event.key==dictKeybindings['setPWeight4']:
-            #    delPWeightLabel()
-            #    dicts[self.stPt]['PWeight']=4
-            #    print "P Pick weight set to %i"%dicts[self.stPt]['PWeight']
-            #    drawPWeightLabel()
-            #    redraw()
-            #if flagPhase==0 and event.key==dictKeybindings['setPWeight5']:
-            #    delPWeightLabel()
-            #    dicts[self.stPt]['PWeight']=5
-            #    print "P Pick weight set to %i"%dicts[self.stPt]['PWeight']
-            #    drawPWeightLabel()
-            #    redraw()
         # Set P Pick polarity
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolUp']:
-                self.delPPolMarker()
+                self.delPLabel()
                 self.dicts[self.stPt]['PPol']='Up'
-                self.drawPPolMarker()
+                self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorUp']:
-                self.delPPolMarker()
+                self.delPLabel()
                 self.dicts[self.stPt]['PPol']='PoorUp'
-                self.drawPPolMarker()
+                self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolDown']:
-                self.delPPolMarker()
+                self.delPLabel()
                 self.dicts[self.stPt]['PPol']='Down'
-                self.drawPPolMarker()
+                self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorDown']:
-                self.delPPolMarker()
+                self.delPLabel()
                 self.dicts[self.stPt]['PPol']='PoorDown'
-                self.drawPPolMarker()
+                self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
         # Set new S Pick
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPick']:
             self.delSLine()
-            self.delSPolMarker()
             self.delSLabel()
-            self.delSWeightLabel()
             self.dicts[self.stPt]['S']=int(round(event.xdata))
             self.drawSLine()
-            self.drawSPolMarker()
             self.drawSLabel()
-            self.drawSWeightLabel()
             #check if the new S pick lies outside of the Error Picks
             try:
                 if self.dicts[self.stPt]['S']<self.dicts[self.stPt]['SErr1']:
@@ -1049,65 +913,53 @@ class PickingGUI:
         # Set S Pick weight
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight0']:
-                self.delSWeightLabel()
+                self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=0
-                self.drawSWeightLabel()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight1']:
-                self.delSWeightLabel()
+                self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=1
-                self.drawSWeightLabel()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight2']:
-                self.delSWeightLabel()
+                self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=2
-                self.drawSWeightLabel()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight3']:
-                self.delSWeightLabel()
+                self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=3
-                self.drawSWeightLabel()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
-            #if flagPhase==1 and event.key==dictKeybindings['setSWeight4']:
-            #    delSWeightLabel()
-            #    dicts[self.stPt]['SWeight']=4
-            #    drawSWeightLabel()
-            #    redraw()
-            #    print "S Pick weight set to %i"%dicts[self.stPt]['SWeight']
-            #if flagPhase==1 and event.key==dictKeybindings['setSWeight5']:
-            #    delSWeightLabel()
-            #    dicts[self.stPt]['SWeight']=5
-            #    drawSWeightLabel()
-            #    redraw()
-            #    print "S Pick weight set to %i"%dicts[self.stPt]['SWeight']
         # Set S Pick polarity
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolUp']:
-                self.delSPolMarker()
+                self.delSLabel()
                 self.dicts[self.stPt]['SPol']='Up'
-                self.drawSPolMarker()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorUp']:
-                self.delSPolMarker()
+                self.delSLabel()
                 self.dicts[self.stPt]['SPol']='PoorUp'
-                self.drawSPolMarker()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolDown']:
-                self.delSPolMarker()
+                self.delSLabel()
                 self.dicts[self.stPt]['SPol']='Down'
-                self.drawSPolMarker()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorDown']:
-                self.delSPolMarker()
+                self.delSLabel()
                 self.dicts[self.stPt]['SPol']='PoorDown'
-                self.drawSPolMarker()
+                self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
         # Remove P Pick
@@ -1116,10 +968,8 @@ class PickingGUI:
             self.delPLine()
             self.delP()
             self.delPWeight()
-            self.delPPolMarker()
             self.delPPol()
             self.delPLabel()
-            self.delPWeightLabel()
             # Try to remove existing Pick Error 1 lines and variable
             self.delPErr1Line()
             self.delPErr1()
@@ -1134,10 +984,8 @@ class PickingGUI:
             self.delSLine()
             self.delS()
             self.delSWeight()
-            self.delSPolMarker()
             self.delSPol()
             self.delSLabel()
-            self.delSWeightLabel()
             # Try to remove existing Pick Error 1 lines and variable
             self.delSErr1Line()
             self.delSErr1()
@@ -1443,13 +1291,29 @@ def main():
 
     if options.local:
         streams=[]
-        streams.append(read('RJOB_061005_072159.ehz.new'))
-        streams[0].append(read('RJOB_061005_072159.ehn.new')[0])
-        streams[0].append(read('RJOB_061005_072159.ehe.new')[0])
-        streams.append(read('RNON_160505_000059.ehz.new'))
-        streams.append(read('RMOA_160505_014459.ehz.new'))
-        streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
-        streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
+        streams.append(read('20091227_105240_Z.RJOB'))
+        streams[0].append(read('20091227_105240_N.RJOB')[0])
+        streams[0].append(read('20091227_105240_E.RJOB')[0])
+        streams.append(read('20091227_105240_Z.RMOA'))
+        streams[1].append(read('20091227_105240_N.RMOA')[0])
+        streams[1].append(read('20091227_105240_E.RMOA')[0])
+        streams.append(read('20091227_105240_Z.RNON'))
+        streams[2].append(read('20091227_105240_N.RNON')[0])
+        streams[2].append(read('20091227_105240_E.RNON')[0])
+        streams.append(read('20091227_105240_Z.RTBE'))
+        streams[3].append(read('20091227_105240_N.RTBE')[0])
+        streams[3].append(read('20091227_105240_E.RTBE')[0])
+        streams.append(read('20091227_105240_Z.RWMO'))
+        streams[4].append(read('20091227_105240_N.RWMO')[0])
+        streams[4].append(read('20091227_105240_E.RWMO')[0])
+        #streams=[]
+        #streams.append(read('RJOB_061005_072159.ehz.new'))
+        #streams[0].append(read('RJOB_061005_072159.ehn.new')[0])
+        #streams[0].append(read('RJOB_061005_072159.ehe.new')[0])
+        #streams.append(read('RNON_160505_000059.ehz.new'))
+        #streams.append(read('RMOA_160505_014459.ehz.new'))
+        #streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
+        #streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
     else:
         try:
             t = UTCDateTime(options.time)
