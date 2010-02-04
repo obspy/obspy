@@ -7,6 +7,7 @@ Copyright
 
     Copyright (c) 2010 by:
         * Robert Barsch
+        * Marcus Walther
 
 
 Overview

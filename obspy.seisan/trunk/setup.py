@@ -10,15 +10,15 @@ obspy.seisan installer
 from setuptools import find_packages, setup
 
 
-VERSION = '0.2.0'
+VERSION = '0.2.2'
 
 
 setup(
     name='obspy.seisan',
     version=VERSION,
-    description="Read & write seismograms, Format SEISAN",
+    description="Read seismograms, Format SEISAN",
     long_description="""
-    obspy.seisan - Read & write seismograms, Format SEISAN
+    obspy.seisan - Read seismograms, Format SEISAN
     
     For more information visit http://www.obspy.org.
     """,

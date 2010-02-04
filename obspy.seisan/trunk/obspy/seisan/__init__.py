@@ -2,15 +2,25 @@
 """
 obspy.seisan - SEIAN read support
 =================================
- 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+This module provides read support for SEISAN waveform files.
 
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
-Similiar to reading any other waveform data format using obspy.core:
+Reading
+-------
+Importing SEISAN files is done similiar to reading any other waveform data
+format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
+the :mod:`obspy.core` module. Test files for the following examples may be
+found at http://examples.obspy.org.
 
 >>> from obspy.core import read
->>> st = read("tests/data/2001-01-13-1742-24S.KONO__004")
+>>> st = read("2001-01-13-1742-24S.KONO__004")
+>>> st
+<obspy.core.stream.Stream object at 0x...>
 >>> print st
 4 Trace(s) in Stream:
 .KONO.0.B0Z | 2001-01-13T17:45:01.999000Z - 2001-01-13T17:50:01.949000Z | 20.0 Hz, 6000 samples
@@ -18,12 +28,13 @@ Similiar to reading any other waveform data format using obspy.core:
 .KONO.0.L0N | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
 .KONO.0.L0E | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
 
-The format will be determined automatically. Each trace (multiple channels are
-mapped to multiple traces) will have a stats attribute containing the usual
+The file format will be determined automatically. Each trace (multiple channels
+are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> print st[0].stats
-Stats({'network': '',
+>>> st[0].stats
+Stats({
+    'network': '',
     'npts': 6000,
     'station': 'KONO',
     'location': '0',
@@ -32,13 +43,14 @@ Stats({'network': '',
     'calib': 1.0, 
     'sampling_rate': 20.0,
     'endtime': UTCDateTime(2001, 1, 13, 17, 50, 1, 949000), 
-    'channel': 'B0Z'
+    'channel': 'B0Z',
+    '_format': 'SEISAN'
 })
 
-The data is stored in the data attribut.
+The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> print st[0].data
-[  492   519   542 ..., -6960 -6858 24000]
+>>> st[0].data
+array([  492,   519,   542, ..., -6960, -6858, 24000])
 """
 
 from obspy.core.util import _getVersionString

@@ -23,15 +23,23 @@ be one. 'st[0]' will have a stats attribute containing the issential meta
 information of the WAVE file.
 
 >>> print st[0].stats
-Stats({'network': '', 'delta': 0.00014285714285714287, 'station': '',
-'location': '', 'starttime': UTCDateTime(1970, 1, 1, 0, 0), 'npts': 2599,
-'calib': 1.0, 'sampling_rate': 7000, 'endtime': UTCDateTime(1970, 1, 1, 0,
-0, 0, 371143), 'channel': ''})
+Stats({
+    'network': '',
+    'delta': 0.00014285714285714287,
+    'station': '',
+    'location': '',
+    'starttime': UTCDateTime(1970, 1, 1, 0, 0),
+    'npts': 2599,
+    'calib': 1.0,
+    'sampling_rate': 7000,
+    'endtime': UTCDateTime(1970, 1, 1, 0, 0, 0, 371143),
+    'channel': ''
+})
 
 The data is stored in the data attribut.
 
 >>> st[0].data
->>> array([ 64,  78,  99, ..., 106, 103, 102], dtype=uint8)
+array([ 64,  78,  99, ..., 106, 103, 102], dtype=uint8)
 
 Writing using obspy.core
 ------------------------
