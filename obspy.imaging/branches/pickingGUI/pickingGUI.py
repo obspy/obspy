@@ -174,7 +174,8 @@ class PickingGUI:
         self.dictPhaseInverse = {} # We need the reverted dictionary for switching throug the Phase radio button
         for i in self.dictPhase.items():
             self.dictPhaseInverse[i[1]] = i[0]
-        self.dictPhaseColors={'P':'red', 'S':'blue', 'Mag':'green'}
+        self.dictPhaseColors={'P':'red', 'S':'blue', 'Psynth':'red', 'Ssynth':'blue', 'Mag':'green'}
+        self.dictPhaseLinestyles={'P':'-', 'S':'-', 'Psynth':'--', 'Ssynth':'--'}
         self.pickingColor = self.dictPhaseColors['P']
         self.magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
         self.magMinMarker='x'
@@ -195,6 +196,7 @@ class PickingGUI:
                            'setPPolDown':'a', 'setPPolPoorDown':'s',
                            'setSPolUp':'q', 'setSPolPoorUp':'w',
                            'setSPolDown':'a', 'setSPolPoorDown':'s'}
+        self.threeDlocOutfile = './3dloc-out'
         
         # Return, if no streams are given
         if not streams:
@@ -238,10 +240,12 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('save', 'quit'):
+        for label in ('load 3dloc-synth', 'save', 'quit'):
             def on_select(item):
                 if item.labelstr == 'quit':
                     plt.close()
+                elif item.labelstr == 'load 3dloc-synth':
+                    self.load3dlocSyntheticPhases()
                 print 'you selected', item.labelstr
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
@@ -290,10 +294,14 @@ class PickingGUI:
         self.drawPLabel()
         self.drawPErr1Line()
         self.drawPErr2Line()
+        self.drawPsynthLine()
+        self.drawPsynthLabel()
         self.drawSLine()
         self.drawSLabel()
         self.drawSErr1Line()
         self.drawSErr2Line()
+        self.drawSsynthLine()
+        self.drawSsynthLabel()
         self.drawMagMinCross1()
         self.drawMagMaxCross1()
         self.drawMagMinCross2()
@@ -304,7 +312,7 @@ class PickingGUI:
             return
         self.PLines=[]
         for i in range(len(self.axs)):
-            self.PLines.append(self.axs[i].axvline(self.dicts[self.stPt]['P'],color=self.dictPhaseColors['P'],linewidth=self.axvlinewidths,label='P'))
+            self.PLines.append(self.axs[i].axvline(self.dicts[self.stPt]['P'],color=self.dictPhaseColors['P'],linewidth=self.axvlinewidths,label='P',linestyle=self.dictPhaseLinestyles['P']))
     
     def delPLine(self):
         try:
@@ -314,6 +322,24 @@ class PickingGUI:
             pass
         try:
             del self.PLines
+        except:
+            pass
+    
+    def drawPsynthLine(self):
+        if not self.dicts[self.stPt].has_key('Psynth'):
+            return
+        self.PsynthLines=[]
+        for i in range(len(self.axs)):
+            self.PsynthLines.append(self.axs[i].axvline(self.dicts[self.stPt]['Psynth'],color=self.dictPhaseColors['Psynth'],linewidth=self.axvlinewidths,label='Psynth',linestyle=self.dictPhaseLinestyles['Psynth']))
+    
+    def delPsynthLine(self):
+        try:
+            for i in range(len(self.axs)):
+                self.axs[i].lines.remove(self.PsynthLines[i])
+        except:
+            pass
+        try:
+            del self.PsynthLines
         except:
             pass
     
@@ -346,6 +372,23 @@ class PickingGUI:
             pass
         try:
             del self.PLabel
+        except:
+            pass
+    
+    def drawPsynthLabel(self):
+        if not self.dicts[self.stPt].has_key('Psynth'):
+            return
+        PsynthLabelString = 'Psynth'
+        self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.04 * len(self.axs), '  ' + PsynthLabelString,
+                             transform = self.trans[0], color=self.dictPhaseColors['Psynth'])
+    
+    def delPsynthLabel(self):
+        try:
+            self.axs[0].texts.remove(self.PsynthLabel)
+        except:
+            pass
+        try:
+            del self.PsynthLabel
         except:
             pass
     
@@ -390,7 +433,7 @@ class PickingGUI:
             return
         self.SLines=[]
         for i in range(len(self.axs)):
-            self.SLines.append(self.axs[i].axvline(self.dicts[self.stPt]['S'],color=self.dictPhaseColors['S'],linewidth=self.axvlinewidths,label='S'))
+            self.SLines.append(self.axs[i].axvline(self.dicts[self.stPt]['S'],color=self.dictPhaseColors['S'],linewidth=self.axvlinewidths,label='S',linestyle=self.dictPhaseLinestyles['S']))
     
     def delSLine(self):
         try:
@@ -400,6 +443,24 @@ class PickingGUI:
             pass
         try:
             del self.SLines
+        except:
+            pass
+    
+    def drawSsynthLine(self):
+        if not self.dicts[self.stPt].has_key('Ssynth'):
+            return
+        self.SsynthLines=[]
+        for i in range(len(self.axs)):
+            self.SsynthLines.append(self.axs[i].axvline(self.dicts[self.stPt]['Ssynth'],color=self.dictPhaseColors['Ssynth'],linewidth=self.axvlinewidths,label='Ssynth',linestyle=self.dictPhaseLinestyles['Ssynth']))
+    
+    def delSsynthLine(self):
+        try:
+            for i in range(len(self.axs)):
+                self.axs[i].lines.remove(self.SsynthLines[i])
+        except:
+            pass
+        try:
+            del self.SsynthLines
         except:
             pass
     
@@ -432,6 +493,23 @@ class PickingGUI:
             pass
         try:
             del self.SLabel
+        except:
+            pass
+    
+    def drawSsynthLabel(self):
+        if not self.dicts[self.stPt].has_key('Ssynth'):
+            return
+        SsynthLabelString = 'Ssynth'
+        self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.04 * len(self.axs), '  ' + SsynthLabelString,
+                             transform = self.trans[0], color=self.dictPhaseColors['Ssynth'])
+    
+    def delSsynthLabel(self):
+        try:
+            self.axs[0].texts.remove(self.SsynthLabel)
+        except:
+            pass
+        try:
+            del self.SsynthLabel
         except:
             pass
     
@@ -562,6 +640,13 @@ class PickingGUI:
         except:
             pass
             
+    def delPsynth(self):
+        try:
+            del self.dicts[self.stPt]['Psynth']
+            print "synthetic P Pick deleted"
+        except:
+            pass
+            
     def delPWeight(self):
         try:
             del self.dicts[self.stPt]['PWeight']
@@ -594,6 +679,13 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['S']
             print "S Pick deleted"
+        except:
+            pass
+            
+    def delSsynth(self):
+        try:
+            del self.dicts[self.stPt]['Ssynth']
+            print "synthetic S Pick deleted"
         except:
             pass
             
@@ -814,9 +906,12 @@ class PickingGUI:
         if self.flagPhase==0 and event.key==self.dictKeybindings['setPick']:
             self.delPLine()
             self.delPLabel()
+            self.delPsynthLine()
             self.dicts[self.stPt]['P']=int(round(event.xdata))
             self.drawPLine()
             self.drawPLabel()
+            self.drawPsynthLine()
+            self.drawPsynthLabel()
             #check if the new P pick lies outside of the Error Picks
             try:
                 if self.dicts[self.stPt]['P']<self.dicts[self.stPt]['PErr1']:
@@ -890,9 +985,12 @@ class PickingGUI:
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPick']:
             self.delSLine()
             self.delSLabel()
+            self.delSsynthLine()
             self.dicts[self.stPt]['S']=int(round(event.xdata))
             self.drawSLine()
             self.drawSLabel()
+            self.drawSsynthLine()
+            self.drawSsynthLabel()
             #check if the new S pick lies outside of the Error Picks
             try:
                 if self.dicts[self.stPt]['S']<self.dicts[self.stPt]['SErr1']:
@@ -1255,6 +1353,55 @@ class PickingGUI:
             self.multicursor.visible=True
             self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
     
+    def load3dlocSyntheticPhases(self):
+        try:
+            fhandle = open(self.threeDlocOutfile, 'r')
+            phaseList = fhandle.readlines()
+            fhandle.close()
+        except:
+            return
+        self.delPsynth()
+        self.delSsynth()
+        self.delPsynthLine()
+        self.delPsynthLabel()
+        self.delSsynthLine()
+        self.delSsynthLabel()
+        for phase in phaseList[1:]:
+            # example for a synthetic pick line from 3dloc:
+            # RJOB P 2009 12 27 10 52 59.425 -0.004950 298.199524 136.000275
+            # station phase YYYY MM DD hh mm ss.sss residual? azimuth? incidenceangle?
+            phase = phase.split()
+            phStat = phase[0]
+            phType = phase[1]
+            phUTCTime = UTCDateTime(int(phase[2]), int(phase[3]),
+                                    int(phase[4]), int(phase[5]),
+                                    int(phase[6]), float(phase[7]))
+            for i in range(len(self.streams)):
+                # check for matching station names
+                if not phStat == self.streams[i][0].stats.station.strip():
+                    continue
+                else:
+                    # check if synthetic pick is within time range of stream
+                    if (phUTCTime > self.streams[i][0].stats.endtime or
+                        phUTCTime < self.streams[i][0].stats.starttime):
+                        continue
+                    else:
+                        # phSamps is the number of samples after the stream-
+                        # starttime at which the time of the synthetic phase
+                        # is located
+                        phSamps = phUTCTime - self.streams[i][0].stats.starttime
+                        phSamps = int(phSamps *
+                                      self.streams[i][0].stats.sampling_rate)
+                        if phType == 'P':
+                            self.dicts[i]['Psynth'] = phSamps
+                        elif phType == 'S':
+                            self.dicts[i]['Ssynth'] = phSamps
+        self.drawPsynthLine()
+        self.drawPsynthLabel()
+        self.drawSsynthLine()
+        self.drawSsynthLabel()
+        self.redraw()
+
 
 
 def main():
