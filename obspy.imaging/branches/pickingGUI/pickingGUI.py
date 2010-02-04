@@ -25,6 +25,8 @@ import matplotlib.mathtext as mathtext
 import matplotlib.artist as artist
 import matplotlib.image as image
 
+import subprocess
+
 
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
@@ -157,6 +159,23 @@ class Menu:
                 self.figure.canvas.draw()
                 break
     
+def getCoord(network, station):
+    """
+    Returns longitude, latitude and elevation of given station
+    """
+    client = Client()
+    coord = []
+
+    resource = "dataless.seed.%s_%s.xml" % (network, station)
+    xml = fromstring(client.station.getResource(resource, format='metadata'))
+
+    for attrib in [u'Longitude (\xb0)', u'Latitude (\xb0)',  u'Elevation (m)']:
+        node =  xml.xpath(u".//item[@title='%s']" % attrib)[0]
+        value = float(node.getchildren()[0].attrib['text'])
+        coord.append(value)
+
+    return coord
+
 class PickingGUI:
 
     def __init__(self, streams = None):
@@ -284,7 +303,7 @@ class PickingGUI:
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
             self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
-        self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
+        self.supTit=self.fig.suptitle("%s -- %s,\n %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
         self.fig.subplots_adjust(bottom=0.20,hspace=0,right=0.999,top=0.95)
@@ -1402,6 +1421,22 @@ class PickingGUI:
         self.drawSsynthLabel()
         self.redraw()
 
+    def print3dLoc(self):
+        f = open("3dloc-in", 'w')
+        for station in XXX:
+            lon, lat, ele = getCoord(network, station)
+
+            t = UTCDateTime(2009, 12, 27, 10, 52, 59.425)
+            date = t.strftime("%Y %m %d %H %M %S")
+            date += ".%03d" % (t.microsecond / 1e3 + 0.5)
+            delta = 0.020
+
+            fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999.  0.000 " + 
+                  "T__DR_ %9.6f %9.6f %8.6f" 
+            f.write(fmt % (station, 'P', date, delta, lon, lat, ele/1e3))
+        f.close()
+
+        subprocess.call("D3_VELOCITY=asdf 3dloc_pitsa")
 
 
 def main():
