@@ -142,7 +142,7 @@ def writeGSE2(stream_object, filename, inplace=False, **kwargs):
         except:
             raise
         dtype = np.dtype('int')
-        if trace.data.dtype == dtype:
+        if trace.data.dtype.name == dtype.name:
             trace.data = np.require(trace.data, dtype, ['C_CONTIGUOUS'])
         else:
             msg = "GSE2 data must be of type %s, but are of type %s" % \
