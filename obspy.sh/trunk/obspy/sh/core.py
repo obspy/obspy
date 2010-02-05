@@ -398,7 +398,6 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
         if len(trace.stats.channel) > 2:
             temp += "C000:%c~ " % trace.stats.channel[2]
         if len(trace.stats.channel) > 0:
-            import pdb;pdb.set_trace()
             temp += "C001:%c~ " % trace.stats.channel[0]
         if len(trace.stats.channel) > 1:
             temp += "C002:%c~ " % trace.stats.channel[1]
