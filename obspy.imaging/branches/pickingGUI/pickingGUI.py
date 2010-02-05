@@ -287,13 +287,16 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'save', 'quit'):
+        for label in ('do3dloc', 'showMap', 'save', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
                 elif item.labelstr == 'do3dloc':
                     self.do3dLoc()
+                elif item.labelstr == 'showMap':
+                    self.load3dlocData()
+                    self.show3dlocEventMap()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
         self.menu = Menu(self.fig, menuitems)
@@ -1452,9 +1455,11 @@ class PickingGUI:
     def do3dLoc(self):
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
-        fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n" 
+        fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
+        self.coords = []
         for i in range(len(self.streams)):
             lon, lat, ele = getCoord(network, self.stationlist[i])
+            self.coords.append([lon, lat])
             if self.dicts[i].has_key('P'):
                 t = self.streams[i][0].stats.starttime
                 t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
@@ -1490,6 +1495,50 @@ class PickingGUI:
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines:
             print line.strip()
+
+    def load3dlocData(self):
+        event = open(self.threeDlocOutfile).readline().split()
+        self.threeDlocEventLon = float(event[8])
+        self.threeDlocEventLat = float(event[9])
+        lines = open(self.threeDlocInfile).readlines()
+        self.threeDlocPLons = []
+        self.threeDlocPLats = []
+        self.threeDlocSLons = []
+        self.threeDlocSLats = []
+        self.threeDlocPNames = []
+        self.threeDlocSNames = []
+        for line in lines[1:]:
+            pick = line.split()
+            if pick[1] == 'P':
+                self.threeDlocPLons.append(float(pick[14]))
+                self.threeDlocPLats.append(float(pick[15]))
+                self.threeDlocPNames.append(pick[0])
+            if pick[1] == 'S':
+                self.threeDlocSLons.append(float(pick[14]))
+                self.threeDlocSLats.append(float(pick[15]))
+                self.threeDlocSNames.append(pick[0])
+
+    def show3dlocEventMap(self):
+        self.fig3dloc = plt.figure()
+        self.ax3dloc = self.fig3dloc.add_subplot(111)
+        self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
+                             180, color = 'black', marker = 'x')
+        self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, 440,
+                             color = self.dictPhaseColors['S'], marker = 'v',
+                             edgecolor= 'black')
+        self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, 180,
+                             color = self.dictPhaseColors['P'], marker = 'v',
+                             edgecolor= 'black')
+        for i in range(len(self.threeDlocPNames)):
+            self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+                              self.threeDlocPNames[i])
+        for i in range(len(self.threeDlocSNames)):
+            self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+                              self.threeDlocSNames[i])
+        self.ax3dloc.set_xlabel('Longitude')
+        self.ax3dloc.set_ylabel('Latitude')
+        plt.show()
+
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
