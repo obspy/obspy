@@ -141,9 +141,12 @@ def writeGSE2(stream_object, filename, inplace=False, **kwargs):
             header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         except:
             raise
-        if trace.data.dtype.name == 'int32':
-            trace.data = np.require(trace.data, '<i4', ['C_CONTIGUOUS'])
+        dtype = np.dtype('int')
+        if trace.data.dtype == dtype:
+            trace.data = np.require(trace.data, dtype, ['C_CONTIGUOUS'])
         else:
-            raise Exception("GSE2 data must be of type int (32 bit)")
+            msg = "GSE2 data must be of type %s, but are of type %s" % \
+                (dtype.name, trace.data.dtype)
+            raise Exception(msg)
         libgse2.write(header, trace.data, f, inplace)
     f.close()
