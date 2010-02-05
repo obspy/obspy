@@ -10,6 +10,7 @@ from obspy.core import read
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 
@@ -25,6 +26,7 @@ import matplotlib.mathtext as mathtext
 import matplotlib.artist as artist
 import matplotlib.image as image
 
+from lxml.etree import fromstring
 import subprocess
 
 
@@ -216,7 +218,7 @@ class PickingGUI:
                            'setSPolUp':'q', 'setSPolPoorUp':'w',
                            'setSPolDown':'a', 'setSPolPoorDown':'s'}
         self.threeDlocOutfile = './3dloc-out'
-        self.threeDlocInfile = './3dloc-in-test'
+        self.threeDlocInfile = './3dloc-in'
         
         # Return, if no streams are given
         if not streams:
@@ -286,13 +288,15 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('load 3dloc-synth', 'save', 'quit'):
+        for label in ('load3dloc', 'do3dloc', 'save', 'quit'):
             def on_select(item):
+                print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
-                elif item.labelstr == 'load 3dloc-synth':
+                elif item.labelstr == 'load3dloc':
                     self.load3dlocSyntheticPhases()
-                print 'you selected', item.labelstr
+                elif item.labelstr == 'do3dloc':
+                    self.do3dLoc()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
         self.menu = Menu(self.fig, menuitems)
@@ -330,7 +334,7 @@ class PickingGUI:
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
             self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
-        self.supTit=self.fig.suptitle("%s -- %s,\n %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
+        self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
         self.fig.subplots_adjust(bottom=0.20,hspace=0,right=0.999,top=0.95)
@@ -1448,26 +1452,33 @@ class PickingGUI:
         self.drawSsynthLabel()
         self.redraw()
 
-    def print3dLoc(self):
+    def do3dLoc(self):
         f = open(self.threeDlocInfile, 'w')
-        stations = [st[0].stats.station.strip() for st in streams]
         network = "BW"
-        for i, station in enumerate(stations):
-            lon, lat, ele = getCoord(network, station)
-
-            picks = self.dicts[i]
-            #XXX
-
-            t = UTCDateTime(2009, 12, 27, 10, 52, 59.425)
-            date = t.strftime("%Y %m %d %H %M %S")
-            date += ".%03d" % (t.microsecond / 1e3 + 0.5)
-            delta = 0.020
-
-            fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999.  0.000 T__DR_ %9.6f %9.6f %8.6f" 
-            f.write(fmt % (station, 'P', date, delta, lon, lat, ele/1e3))
+        fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n" 
+        for i in range(len(self.streams)):
+            lon, lat, ele = getCoord(network, self.stationlist[i])
+            if self.dicts[i].has_key('P'):
+                t = self.streams[i][0].stats.starttime
+                t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
+                date = t.strftime("%Y %m %d %H %M %S")
+                date += ".%03d" % (t.microsecond / 1e3 + 0.5)
+                delta = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
+                delta /= self.streams[i][0].stats.sampling_rate
+                f.write(fmt % (self.stationlist[i], 'P', date, delta,
+                               lon, lat, ele / 1e3))
+            if self.dicts[i].has_key('S'):
+                t = self.streams[i][0].stats.starttime
+                t += self.dicts[i]['S'] / self.streams[i][0].stats.sampling_rate
+                date = t.strftime("%Y %m %d %H %M %S")
+                date += ".%03d" % (t.microsecond / 1e3 + 0.5)
+                delta = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
+                delta /= self.streams[i][0].stats.sampling_rate
+                f.write(fmt % (self.stationlist[i], 'S', date, delta,
+                               lon, lat, ele / 1e3))
         f.close()
-
-        subprocess.call("D3_VELOCITY=asdf 3dloc_pitsa")
+        subprocess.call("D3_VELOCITY=/scratch/rh_vel/vp_5836/ D3_VELOCITY_2=/scratch/rh_vel/vs_32220/ 3dloc_pitsa")
+        self.load3dlocSyntheticPhases()
 
 
 def main():
