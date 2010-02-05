@@ -29,7 +29,6 @@ import matplotlib.image as image
 from lxml.etree import fromstring
 import subprocess
 
-
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
 class MultiCursor(mplMultiCursor):
@@ -195,7 +194,7 @@ class PickingGUI:
         self.dictPhaseInverse = {} # We need the reverted dictionary for switching throug the Phase radio button
         for i in self.dictPhase.items():
             self.dictPhaseInverse[i[1]] = i[0]
-        self.dictPhaseColors={'P':'red', 'S':'blue', 'Psynth':'red', 'Ssynth':'blue', 'Mag':'green'}
+        self.dictPhaseColors={'P':'red', 'S':'blue', 'Psynth':'black', 'Ssynth':'black', 'Mag':'green'}
         self.dictPhaseLinestyles={'P':'-', 'S':'-', 'Psynth':'--', 'Ssynth':'--'}
         self.pickingColor = self.dictPhaseColors['P']
         self.magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
@@ -288,13 +287,11 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('load3dloc', 'do3dloc', 'save', 'quit'):
+        for label in ('do3dloc', 'save', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
-                elif item.labelstr == 'load3dloc':
-                    self.load3dlocSyntheticPhases()
                 elif item.labelstr == 'do3dloc':
                     self.do3dLoc()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
@@ -429,7 +426,7 @@ class PickingGUI:
         if not self.dicts[self.stPt].has_key('Psynth'):
             return
         PsynthLabelString = 'Psynth'
-        self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.04 * len(self.axs), '  ' + PsynthLabelString,
+        self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.08 * len(self.axs), '  ' + PsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Psynth'])
     
     def delPsynthLabel(self):
@@ -550,7 +547,7 @@ class PickingGUI:
         if not self.dicts[self.stPt].has_key('Ssynth'):
             return
         SsynthLabelString = 'Ssynth'
-        self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.04 * len(self.axs), '  ' + SsynthLabelString,
+        self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.08 * len(self.axs), '\n  ' + SsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Ssynth'])
     
     def delSsynthLabel(self):
@@ -1477,9 +1474,22 @@ class PickingGUI:
                 f.write(fmt % (self.stationlist[i], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
-        subprocess.call("D3_VELOCITY=/scratch/rh_vel/vp_5836/ D3_VELOCITY_2=/scratch/rh_vel/vs_32220/ 3dloc_pitsa")
+        self.cat3dlocIn()
+        subprocess.call("D3_VELOCITY=/scratch/rh_vel/vp_5836/ D3_VELOCITY_2=/scratch/rh_vel/vs_32220/ 3dloc_pitsa", shell = True)
+        print '--> 3dloc finished'
+        self.cat3dlocOut()
         self.load3dlocSyntheticPhases()
+        self.redraw()
 
+    def cat3dlocIn(self):
+        lines = open(self.threeDlocInfile).readlines()
+        for line in lines:
+            print line.strip()
+
+    def cat3dlocOut(self):
+        lines = open(self.threeDlocOutfile).readlines()
+        for line in lines:
+            print line.strip()
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
