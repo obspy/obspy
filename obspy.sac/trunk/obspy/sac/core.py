@@ -6,7 +6,7 @@ SAC bindings to ObsPy core module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from obspy.core import Trace, UTCDateTime, Stream
+from obspy.core import Trace, UTCDateTime, Stream, AttribDict
 from obspy.sac.sacio import ReadSac
 import struct
 import numpy as np
@@ -88,7 +88,10 @@ def readSAC(filename, headonly=False, **kwargs):
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = {}
     for i, j in convert_dict.iteritems():
-        header[j] = t.GetHvalue(i)
+        value = t.GetHvalue(i)
+        if isinstance(value, str):
+            value = value.strip()
+        header[j] = value
     header['sac'] = {}
     for i in sac_extra:
         header['sac'][i] = t.GetHvalue(i)
@@ -129,7 +132,8 @@ def writeSAC(stream_object, filename, **kwargs):
         trace.stats.setdefault('sampling_rate', 1.0)
         trace.stats.setdefault('starttime', UTCDateTime(0.0))
         # SAC version needed 0<version<20
-        trace.stats.get('sac', {}).setdefault('nvhdr', 1)
+        trace.stats.setdefault('sac', AttribDict())
+        trace.stats['sac'].setdefault('nvhdr', 1)
         # filling ObsPy defaults
         for _j, _k in convert_dict.iteritems():
             try:

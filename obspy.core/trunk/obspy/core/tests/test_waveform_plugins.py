@@ -26,9 +26,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
         formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             for byteorder in ['<', '>', '=']:
-                # XXX: SAC and GSE2 fail those test!!!
-                if format in ['SAC', 'GSE2']:
-                    continue
                 # new trace object
                 tr = Trace(data=np.arange(0, 2000))
                 tr.stats.network = "BW"
@@ -56,14 +53,14 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 # check meta data
                 if format not in ['MSEED', 'WAV']:
                     # MSEED does not contain the calibration factor
-                    self.assertAlmostEquals(st[0].stats.calib, 0.999999)
+                    self.assertAlmostEquals(st[0].stats.calib, 0.999999, 5)
                 if format not in ['WAV']:
                     self.assertEquals(st[0].stats.starttime, STARTTIME)
                     self.assertEquals(st[0].stats.endtime, STARTTIME + 9.995)
                     self.assertEquals(st[0].stats.delta, 0.005)
                     self.assertEquals(st[0].stats.sampling_rate, 200.0)
                 # network/station/location/channel codes
-                if format in ['Q', 'SH_ASC']:
+                if format in ['Q', 'SH_ASC', 'GSE2', 'SAC']:
                     # no network or location code in Q or SH_ASC
                     self.assertEquals(st[0].id, ".MANZ1..EHE")
                 elif format not in ['WAV']:

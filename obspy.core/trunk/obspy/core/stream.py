@@ -89,8 +89,8 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         >>> st = read(("loc_R*.z"))  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         2 Trace(s) in Stream:
-        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
-        .RNON ..  Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.8449...
+        .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
+        .RNON..Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.8449...
 
     (2) Using the ``format`` parameter disables the autodetection and enforces
         reading a file in a given format.
@@ -105,7 +105,7 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print st  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
+        .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
     st = Stream()
     if "://" in pathname_or_url:

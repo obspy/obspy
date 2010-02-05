@@ -84,7 +84,10 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
             # Obspy Trace object.
             new_header = {}
             for i, j in convert_dict.iteritems():
-                new_header[j] = header[i]
+                value = header[i]
+                if isinstance(value, str):
+                    value = value.strip()
+                new_header[j] = value
             # assign gse specific header entries
             new_header['gse2'] = {}
             for i in gse2_extra:
@@ -101,7 +104,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     return Stream(traces=traces)
 
 
-def writeGSE2(stream_object, filename, **kwargs):
+def writeGSE2(stream_object, filename, inplace=False, **kwargs):
     """
     Write GSE2 file from a Stream object.
 
@@ -111,6 +114,9 @@ def writeGSE2(stream_object, filename, **kwargs):
 
     :param stream_object: The ObsPy Stream object to write.
     :param filename: Name of file to write.
+    :param inplace: If True, do compression not on a copy of the data but
+                    on the data itself --- note this will change the data
+                    values and make them therefor unusable!
     """
     #
     # Translate the common (renamed) entries
@@ -118,10 +124,7 @@ def writeGSE2(stream_object, filename, **kwargs):
     for trace in stream_object:
         header = {}
         for _j, _k in convert_dict.iteritems():
-            try:
-                header[_j] = trace.stats[_k]
-            except:
-                pass
+            header[_j] = trace.stats[_k]
         for _j in gse2_extra:
             try:
                 header[_j] = trace.stats.gse2[_j]
@@ -138,7 +141,9 @@ def writeGSE2(stream_object, filename, **kwargs):
             header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         except:
             raise
-        # be nice and adapt type if necessary
-        trace.data = np.require(trace.data, 'int', ['C_CONTIGUOUS'])
-        libgse2.write(header, trace.data, f, **kwargs)
+        if trace.data.dtype.name == 'int32':
+            trace.data = np.require(trace.data, '<i4', ['C_CONTIGUOUS'])
+        else:
+            raise Exception("GSE2 data must be of type int (32 bit)")
+        libgse2.write(header, trace.data, f, inplace)
     f.close()

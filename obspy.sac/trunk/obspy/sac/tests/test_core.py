@@ -3,7 +3,7 @@
 The sac.core test suite.
 """
 
-from obspy.core import Stream, Trace, read
+from obspy.core import Stream, Trace, read, AttribDict
 from obspy.core.util import NamedTemporaryFile
 import copy
 import inspect
@@ -33,10 +33,10 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC')[0]
-        self.assertEqual(tr.stats['station'], 'STA     ')
+        self.assertEqual(tr.stats['station'], 'STA')
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr.stats.get('channel'), 'Q       ')
+        self.assertEqual(tr.stats.get('channel'), 'Q')
         self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
         np.testing.assert_array_almost_equal(self.testdata[0:10],
@@ -47,10 +47,10 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC', headonly=True)[0]
-        self.assertEqual(tr.stats['station'], 'STA     ')
+        self.assertEqual(tr.stats['station'], 'STA')
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
-        self.assertEqual(tr.stats.get('channel'), 'Q       ')
+        self.assertEqual(tr.stats.get('channel'), 'Q')
         self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
         self.assertEqual(str(tr.data), '[]')
@@ -65,6 +65,16 @@ class CoreTestCase(unittest.TestCase):
         tr = read(tempfile)[0]
         os.remove(tempfile)
         np.testing.assert_array_almost_equal(self.testdata, tr.data)
+
+    def test_setVersion(self):
+        """
+        Tests if sac version is set when writing
+        """
+        tempfile = NamedTemporaryFile().name
+        np.random.seed(815)
+        st = Stream([Trace(data=np.random.randn(1000))])
+        st.write(tempfile, format="SAC")
+        self.assertEqual(st[0].stats['sac'], AttribDict({'nvhdr': 1}))
 
     def test_readAndWriteViaObspy(self):
         """

@@ -35,10 +35,10 @@ class CoreTestCase(unittest.TestCase):
         st = read(gse2file, verify_checksum=True)
         st.verify()
         tr = st[0]
-        self.assertEqual(tr.stats['station'], 'RJOB ')
+        self.assertEqual(tr.stats['station'], 'RJOB')
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
-        self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertEqual(tr.stats.get('channel'), 'Z')
         self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('hang'), -1.0)
@@ -55,10 +55,10 @@ class CoreTestCase(unittest.TestCase):
         # read
         st = read(gse2file, headonly=True)
         tr = st[0]
-        self.assertEqual(tr.stats['station'], 'RJOB ')
+        self.assertEqual(tr.stats['station'], 'RJOB')
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
-        self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertEqual(tr.stats.get('channel'), 'Z')
         self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
@@ -127,8 +127,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]
         tr12 = st1[1]
-        self.assertEqual(tr11.stats['station'], 'RNON ')
-        self.assertEqual(tr12.stats['station'], 'RJOB ')
+        self.assertEqual(tr11.stats['station'], 'RNON')
+        self.assertEqual(tr12.stats['station'], 'RJOB')
         self.assertEqual(tr12.data[0:13].tolist(), testdata)
         # write and read
         st1.write(tmpfile2, format='GSE2')
@@ -137,8 +137,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st2), 2)
         tr21 = st1[0]
         tr22 = st1[1]
-        self.assertEqual(tr21.stats['station'], 'RNON ')
-        self.assertEqual(tr22.stats['station'], 'RJOB ')
+        self.assertEqual(tr21.stats['station'], 'RNON')
+        self.assertEqual(tr22.stats['station'], 'RJOB')
         self.assertEqual(tr22.data[0:13].tolist(), testdata)
         np.testing.assert_equal(tr21.data, tr11.data)
         np.testing.assert_equal(tr22.data, tr12.data)
@@ -184,7 +184,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertTrue('station' in dir(tr.stats))
         self.assertTrue('npts' in dir(tr.stats))
         self.assertTrue('sampling_rate' in dir(tr.stats))
-        self.assertEqual(tr.stats['station'], 'RJOB ')
+        self.assertEqual(tr.stats['station'], 'RJOB')
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
 
