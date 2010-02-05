@@ -1500,6 +1500,9 @@ class PickingGUI:
         event = open(self.threeDlocOutfile).readline().split()
         self.threeDlocEventLon = float(event[8])
         self.threeDlocEventLat = float(event[9])
+        self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
+                                              int(event[4]), int(event[5]),
+                                              int(event[6]), float(event[7]))
         lines = open(self.threeDlocInfile).readlines()
         self.threeDlocPLons = []
         self.threeDlocPLats = []
@@ -1537,6 +1540,8 @@ class PickingGUI:
                               self.threeDlocSNames[i])
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
+        self.ax3dloc.text(0.05, 0.95, '%s' % (self.threeDlocEventTime),
+                          transform = self.ax3dloc.transAxes)
         plt.show()
 
 
