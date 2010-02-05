@@ -53,9 +53,13 @@ setup(
         "/svn/obspy/obspy.db/trunk#egg=obspy.db-dev",
     test_suite="obspy.sh.tests.suite",
     include_package_data=True,
-    entry_points="""
-        [obspy.db.feature]
-        minmax_amplitude = obspy.db.feature:getMinMaxAmplitude
-        mseed_timing_quality = obspy.db.feature:getTimingQualitity
-    """,
+    entry_points={
+        'obspy.db.feature' : [
+            'minmax_amplitude = obspy.db.feature:getMinMaxAmplitude',
+            'mseed_timing_quality = obspy.db.feature:getTimingQualitity'
+        ],
+        'console_scripts': [
+            'obspy-indexer = obspy.db.scripts.indexer:main',
+        ],
+    }
 )

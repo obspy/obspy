@@ -47,10 +47,10 @@ class WaveformPath(Base):
     __tablename__ = 'waveform_paths'
     id = Column(Integer, primary_key=True)
     path = Column(String, nullable=False, index=True)
-    archived = Column(Boolean)
+    archived = Column(Boolean, default=False)
 
-    def __init__(self, path):
-        self.path = str(path)
+    def __init__(self, data={}):
+        self.path = data.get('path')
 
     def __repr__(self):
         return "<WaveformPath('%s')>" % self.path
@@ -64,14 +64,13 @@ class WaveformFile(Base):
     mtime = Column(Integer, nullable=False)
     path_id = Column(Integer, ForeignKey('waveform_paths.id'))
 
-    path = relation(WaveformPath,
-                    backref=backref('waveform_files', order_by=id))
+    path = relation(WaveformPath, backref=backref('files', order_by=id))
 
-    def __init__(self, file, size, mtime, format):
-        self.file = str(file)
-        self.size = int(size)
-        self.mtime = int(mtime)
-        self.format = str(format)
+    def __init__(self, data={}):
+        self.file = data.get('file')
+        self.size = data.get('size')
+        self.mtime = int(data.get('mtime'))
+        self.format = data.get('format')
 
     def __repr__(self):
         return "<WaveformFile('%s')>" % self.file
@@ -91,19 +90,18 @@ class WaveformChannel(Base):
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
 
-    file = relation(WaveformFile,
-                    backref=backref('waveform_channels', order_by=id))
+    file = relation(WaveformFile, backref=backref('channels', order_by=id))
 
-    def __init__(self, trace):
-        self.network = trace.stats.network
-        self.station = trace.stats.station
-        self.location = trace.stats.location
-        self.channel = trace.stats.channel
-        self.starttime = trace.stats.starttime.datetime
-        self.endtime = trace.stats.endtime.datetime
-        self.calib = trace.stats.calib
-        self.npts = trace.stats.npts
-        self.sampling_rate = trace.stats.sampling_rate
+    def __init__(self, data={}):
+        self.network = data.get('network')
+        self.station = data.get('station')
+        self.location = data.get('location')
+        self.channel = data.get('channel')
+        self.starttime = data.get('starttime')
+        self.endtime = data.get('endtime')
+        self.calib = data.get('calib')
+        self.npts = data.get('npts')
+        self.sampling_rate = data.get('sampling_rate')
 
     def __repr__(self):
         return "<WaveformChannel('%s')>" % self.channel
