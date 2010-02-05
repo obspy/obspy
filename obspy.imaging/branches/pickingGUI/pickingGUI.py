@@ -216,9 +216,36 @@ class PickingGUI:
                            'setSPolUp':'q', 'setSPolPoorUp':'w',
                            'setSPolDown':'a', 'setSPolPoorDown':'s'}
         self.threeDlocOutfile = './3dloc-out'
+        self.threeDlocInfile = './3dloc-in-test'
         
         # Return, if no streams are given
         if not streams:
+            return
+
+        # Define some forbidden scenarios.
+        # We assume there are:
+        # - either one Z or three ZNE traces
+        # - no two streams for any station
+        self.stationlist=[]
+        for st in streams:
+            if not (len(st.traces) == 1 or len(st.traces) == 3):
+                print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
+                return
+            if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
+                print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
+                return
+            if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
+                                        st[1].stats.channel[-1] != 'N' or
+                                        st[2].stats.channel[-1] != 'E' or
+                                        st[0].stats.station.strip() !=
+                                        st[1].stats.station.strip() or
+                                        st[0].stats.station.strip() !=
+                                        st[2].stats.station.strip()):
+                print 'Error: All streams must have either one Z trace or a set of ZNE traces (from the same station)'
+                return
+            self.stationlist.append(st[0].stats.station.strip())
+        if len(self.stationlist) != len(set(self.stationlist)):
+            print 'Error: Found two streams for one station'
             return
 
         #set up a list of dictionaries to store all picking data
@@ -1422,17 +1449,21 @@ class PickingGUI:
         self.redraw()
 
     def print3dLoc(self):
-        f = open("3dloc-in", 'w')
-        for station in XXX:
+        f = open(self.threeDlocInfile, 'w')
+        stations = [st[0].stats.station.strip() for st in streams]
+        network = "BW"
+        for i, station in enumerate(stations):
             lon, lat, ele = getCoord(network, station)
+
+            picks = self.dicts[i]
+            #XXX
 
             t = UTCDateTime(2009, 12, 27, 10, 52, 59.425)
             date = t.strftime("%Y %m %d %H %M %S")
             date += ".%03d" % (t.microsecond / 1e3 + 0.5)
             delta = 0.020
 
-            fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999.  0.000 " + 
-                  "T__DR_ %9.6f %9.6f %8.6f" 
+            fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999.  0.000 T__DR_ %9.6f %9.6f %8.6f" 
             f.write(fmt % (station, 'P', date, delta, lon, lat, ele/1e3))
         f.close()
 
