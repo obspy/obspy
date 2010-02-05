@@ -22,6 +22,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     def test_writeFormat(self):
         """
         """
+        STARTTIME = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             for byteorder in ['<', '>', '=']:
@@ -35,26 +36,39 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 tr.stats.location = "00"
                 tr.stats.channel = "EHE"
                 tr.stats.calib = 0.999999
-                tr.stats.starttime = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-                #1 - r/w little endian with auto detection
+                tr.stats.delta = 0.005
+                tr.stats.starttime = STARTTIME
+                # create waveform file with given format and byte order
                 outfile = NamedTemporaryFile().name
                 tr.write(outfile, format=format, byteorder=byteorder)
                 if format == 'Q':
                     outfile += '.QHD'
+                # read in again using auto detection
                 st = read(outfile)
                 self.assertEquals(len(st), 1)
-                tr2 = st[0]
-                self.assertEquals(tr2.data.dtype.byteorder, '=')
+                self.assertEquals(st[0].stats._format, format)
+                # read in using format argument
+                st = read(outfile, format=format)
+                self.assertEquals(len(st), 1)
+                self.assertEquals(st[0].stats._format, format)
+                # check byte order
+                self.assertEquals(st[0].data.dtype.byteorder, '=')
+                # check meta data
                 if format not in ['MSEED', 'WAV']:
-                    self.assertAlmostEquals(tr2.stats.calib, 0.999999)
+                    # MSEED does not contain the calibration factor
+                    self.assertAlmostEquals(st[0].stats.calib, 0.999999)
                 if format not in ['WAV']:
-                    self.assertEquals(tr2.stats.starttime,
-                                      UTCDateTime(2009, 1, 13, 12, 1, 2,
-                                                  999000))
+                    self.assertEquals(st[0].stats.starttime, STARTTIME)
+                    self.assertEquals(st[0].stats.endtime, STARTTIME + 9.995)
+                    self.assertEquals(st[0].stats.delta, 0.005)
+                    self.assertEquals(st[0].stats.sampling_rate, 200.0)
+                # network/station/location/channel codes
                 if format in ['Q', 'SH_ASC']:
-                    self.assertEquals(tr2.id, ".MANZ1..EHE")
+                    # no network or location code in Q or SH_ASC
+                    self.assertEquals(st[0].id, ".MANZ1..EHE")
                 elif format not in ['WAV']:
-                    self.assertEquals(tr2.id, "BW.MANZ1.00.EHE")
+                    self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
+                # remove temporary files
                 os.remove(outfile)
                 if format == 'Q':
                     os.remove(outfile[:-4] + '.QBN')
