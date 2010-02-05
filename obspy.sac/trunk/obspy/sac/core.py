@@ -129,7 +129,7 @@ def writeSAC(stream_object, filename, **kwargs):
         trace.stats.setdefault('sampling_rate', 1.0)
         trace.stats.setdefault('starttime', UTCDateTime(0.0))
         # SAC version needed 0<version<20
-        trace.stats.sac.setdefault('nvhdr', 1)
+        trace.stats.get('sac', {}).setdefault('nvhdr', 1)
         # filling ObsPy defaults
         for _j, _k in convert_dict.iteritems():
             try:

@@ -4,6 +4,7 @@ MSEED bindings to ObsPy core module.
 """
 
 from obspy.core import Stream, Trace
+from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed import LibMSEED
 from obspy.mseed.headers import ENCODINGS
 import numpy as np
@@ -117,8 +118,8 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
         Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3), 
         FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default 
         data types a marked with an asterisk.
-    :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or 
-        big-endian). -1 defaults to big-endian (1)
+    :param byteorder: must be either 0 or '<' for LSBF or little-endian, 1 or
+        '>' for MBF or big-endian. -1 defaults to big-endian (1)
     :param flush: if it is not zero all of the data will be packed into 
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
@@ -137,6 +138,16 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
     else:
         msg = 'Invalid encoding %s. Valid encodings: %s'
         raise ValueError(msg % (encoding, encoding_strings))
+    # translate byteorder
+    if 'byteorder' in kwargs.keys() and kwargs['byteorder'] not in [0, 1, -1]:
+        if kwargs['byteorder'] == '=':
+            kwargs['byteorder'] = NATIVE_BYTEORDER
+        if kwargs['byteorder'] == '<':
+            kwargs['byteorder'] = 0
+        elif kwargs['byteorder'] == '>':
+            kwargs['byteorder'] = 1
+        else:
+            kwargs['byteorder'] = 1
     # Catch invalid record length.
     valid_record_lengths = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768,
                             65536, 131072, 262144, 524288, 1048576]

@@ -9,10 +9,15 @@ Various additional utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from math import modf, floor
-from pkg_resources import require
+from pkg_resources import require, iter_entry_points
 import ctypes as C
 import os
 import tempfile
+import sys
+
+
+_sys_is_le = sys.byteorder == 'little'
+NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
 class AttribDict(dict, object):
@@ -291,6 +296,37 @@ def _getVersionString(module="obspy.core"):
             return temp[0] + ".dev-r" + svn_version
     # else return egg-info version
     return egg_version
+
+
+def _getPlugins(group, subgroup_name=None):
+    """
+    Gets a dictionary of all available waveform features plug-ins.
+
+    Parameter
+    ---------
+    group : string
+        Group name.
+    subgroup_name : string, optional
+        Subgroup name (defaults to None).
+
+    Returns
+    -------
+    dict
+        Dictionary of entry points of each plug-in.
+
+    Basic Usage
+    -----------
+    >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
+    {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
+    """
+    features = {}
+    for ep in iter_entry_points(group):
+        if subgroup_name:
+            if list(iter_entry_points(group + '.' + ep.name, subgroup_name)):
+                features[ep.name] = ep
+        else:
+            features[ep.name] = ep
+    return features
 
 
 if __name__ == '__main__':

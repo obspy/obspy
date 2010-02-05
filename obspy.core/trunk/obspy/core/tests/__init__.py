@@ -3,7 +3,7 @@
 import obspy
 from obspy.core import util, utcdatetime, trace, stream
 from obspy.core.tests import test_stream, test_utcdatetime, test_trace, \
-    test_stats
+    test_stats, test_waveform_plugins
 import doctest
 import unittest
 
@@ -21,6 +21,7 @@ def suite():
     suite.addTest(test_stats.suite())
     suite.addTest(test_trace.suite())
     suite.addTest(test_stream.suite())
+    suite.addTest(test_waveform_plugins.suite())
     return suite
 
 

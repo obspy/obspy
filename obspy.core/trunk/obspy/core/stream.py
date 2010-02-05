@@ -10,8 +10,8 @@ Module for handling ObsPy Stream objects.
 """
 from glob import iglob
 from obspy.core.trace import Trace
-from obspy.core.util import NamedTemporaryFile
-from pkg_resources import iter_entry_points, load_entry_point
+from obspy.core.util import NamedTemporaryFile, _getPlugins
+from pkg_resources import load_entry_point
 import copy
 import math
 import numpy as np
@@ -108,7 +108,7 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         .RJOB ..  Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
     st = Stream()
-    if "//" in pathname_or_url:
+    if "://" in pathname_or_url:
         # some URL
         fh = NamedTemporaryFile()
         fh.write(urllib2.urlopen(pathname_or_url).read())
@@ -133,12 +133,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
     # Gets the available formats and the corresponding methods as entry points.
-    formats_ep = {}
-    for ep in iter_entry_points('obspy.plugin.waveform', None):
-        _l = list(iter_entry_points('obspy.plugin.waveform.' + ep.name,
-                                    'readFormat'))
-        if _l:
-            formats_ep[ep.name] = ep
+    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
     if not formats_ep:
         msg = "Your current ObsPy installation does not support any file " + \
               "reading formats. Please update or extend your ObsPy " + \
@@ -578,12 +573,7 @@ class Stream(object):
         """
         format = format.upper()
         # Gets all available formats and the corresponding entry points.
-        formats_ep = {}
-        for ep in iter_entry_points('obspy.plugin.waveform', None):
-            _l = list(iter_entry_points('obspy.plugin.waveform.' + ep.name,
-                                        'writeFormat'))
-            if _l:
-                formats_ep[ep.name] = ep
+        formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         if not format:
             msg = "Please provide a output format. Supported Formats: "
             print msg + ', '.join(formats_ep.keys())

@@ -27,7 +27,6 @@ ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
 
 
-
 ACTION_INSERT = 0
 ACTION_UPDATE = 1
 
@@ -202,7 +201,6 @@ class WaveformFileCrawler:
         logger.debug("Scanning path '%s' ..." % self._current_path)
         # get all database entries for current path
         self._db_files_in_current_path = self._select(self._current_path)
-        print self._db_files_in_current_path
 
     def iterate(self):
         """
@@ -310,6 +308,13 @@ def worker(i, input_queue, output_queue, preview_dir=None):
         try:
             stream = read(str(filepath))
         except Exception, e:
+            logger.error(filepath + '\n')
+            logger.error(str(e) + '\n')
+            continue
+        try:
+            stream.merge()
+        except Exception , e:
+            logger.error(filepath + '\n')
             logger.error(str(e) + '\n')
             continue
         # loop through traces
@@ -336,6 +341,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
             # apply feature functions
             for feature in features:
                 if feature not in features_ep:
+                    logger.error(filepath + '\n')
                     logger.error('Unknown feature %s\n' % feature)
                     continue
                 try:
@@ -344,6 +350,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
                     # run plug-in and update results
                     result.update(plugin(trace))
                 except Exception, e:
+                    logger.error(filepath + '\n')
                     logger.error(str(e) + '\n')
                     continue
             dataset.append(result)
@@ -366,9 +373,8 @@ def worker(i, input_queue, output_queue, preview_dir=None):
                     trace = createPreview(trace, 60.0)
                     trace.write(preview_file, format="MSEED", reclen=1024)
                 except Exception , e:
+                    logger.error(filepath + '\n')
                     logger.error(str(e) + '\n')
-            # log
-            logger.info(str(stream) + '\n')
         del stream
         # return results to main loop
         try:
@@ -405,7 +411,7 @@ def run():
     # init crawler
     service = WaveformIndexer(session, input_queue, output_queue, options)
     try:
-        service.serve_forever(0.1)
+        service.serve_forever(0.0)
     except KeyboardInterrupt:
         pass
 

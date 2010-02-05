@@ -171,7 +171,7 @@ def readASC(filename, headonly=False):
     return stream
 
 
-def writeASC(stream, filename):
+def writeASC(stream, filename, **kwargs):
     """
     Writes a ASC file from given ObsPy Stream object.
 
@@ -192,17 +192,17 @@ def writeASC(stream, filename):
         fh.write("DELTA: %s\n" % formatScientific("%-.6e" % trace.stats.delta))
         fh.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
-        for key, value in trace.stats.get('sh', []).iteritems():
+        for key, value in trace.stats.get('sh', {}).iteritems():
             fh.write("%s: %s\n" % (key, value))
         # special format for start time
         dt = trace.stats.starttime
         fh.write("START: %s\n" % fromUTCDateTime(dt))
         # component must be split
-        if len(trace.stats.channel) >= 2:
+        if len(trace.stats.channel) > 2:
             fh.write("COMP: %c\n" % trace.stats.channel[2])
-        if len(trace.stats.channel) >= 0:
+        if len(trace.stats.channel) > 0:
             fh.write("CHAN1: %c\n" % trace.stats.channel[0])
-        if len(trace.stats.channel) >= 1:
+        if len(trace.stats.channel) > 1:
             fh.write("CHAN2: %c\n" % trace.stats.channel[1])
         fh.write("STATION: %s\n" % trace.stats.station)
         fh.write("CALIB: %s\n" % formatScientific("%-.6e" % trace.stats.calib))
@@ -395,16 +395,17 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
         if trace.stats.station:
             temp += "S001:%s~ " % trace.stats.station
         # component must be split
-        if len(trace.stats.channel) >= 2:
+        if len(trace.stats.channel) > 2:
             temp += "C000:%c~ " % trace.stats.channel[2]
-        if len(trace.stats.channel) >= 0:
+        if len(trace.stats.channel) > 0:
+            import pdb;pdb.set_trace()
             temp += "C001:%c~ " % trace.stats.channel[0]
-        if len(trace.stats.channel) >= 1:
+        if len(trace.stats.channel) > 1:
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
         temp += "S021: %s~ " % fromUTCDateTime(dt)
-        for key, value in trace.stats.get('sh', []).iteritems():
+        for key, value in trace.stats.get('sh', {}).iteritems():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
