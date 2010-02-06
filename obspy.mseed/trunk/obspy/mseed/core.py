@@ -15,7 +15,10 @@ def isMSEED(filename):
     """
     Returns true if the file is a Mini-SEED file and false otherwise.
 
-    :param filename: File to be read.
+    Parameters
+    ----------
+    filename : string
+        Mini-SEED file to be checked.
     """
     __libmseed__ = LibMSEED()
     return __libmseed__.isMSEED(filename)
@@ -38,7 +41,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         scanning available data in huge (temporary) data sets.
     starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Specify the starttime to read. The remaining records are not
-        unpacked. Usually this resuls in a faster reading.
+        extracted. Providing a starttime usually results into faster reading.
     endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         See description of starttime.
     reclen : int, optional
@@ -98,7 +101,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     return Stream(traces=traces)
 
 
-def writeMSEED(stream_object, filename, encoding=None, **kwargs):
+def writeMSEED(stream, filename, encoding=None, **kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -107,23 +110,31 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
     obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
-    :param stream_object: obspy.Stream object. Data in stream object must
-        be of type int32. NOTE: They are automatically adapted if necessary
-    :param filename: Name of the output file
-    :param reclen: should be set to the desired data record length in bytes
+    Parameters
+    ----------
+    stream_object : :class:`~obspy.core.stream.Stream`
+        A Stream object. Data in stream object must be of type int32.
+        NOTE: They are automatically adapted if necessary
+    filename : string
+        Name of the output file
+    reclen : int, optional
+        Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
         between (and including) 8 to 20. -1 defaults to 4096
-    :type encoding: Integer or String
-    :param encoding: should be set to one of the following supported
+    encoding : int or string, optional
+        Should be set to one of the following supported
         Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3), 
         FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default 
         data types a marked with an asterisk.
-    :param byteorder: must be either 0 or '<' for LSBF or little-endian, 1 or
+    byteorder : [ 0 or '<' | '1 or '>' | -1], optional
+        Must be either 0 or '<' for LSBF or little-endian, 1 or
         '>' for MBF or big-endian. -1 defaults to big-endian (1)
-    :param flush: if it is not zero all of the data will be packed into 
+    flush : int, optional
+        If it is not zero all of the data will be packed into 
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
-    :param verbose: controls verbosity, a value of zero will result in no 
+    verbose : int, optional
+         Controls verbosity, a value of zero will result in no 
         diagnostic output.
     """
     # Check if encoding kwarg is set and catch invalid encodings.
@@ -158,7 +169,7 @@ def writeMSEED(stream_object, filename, encoding=None, **kwargs):
         raise ValueError(msg)
     # libmseed instance.
     __libmseed__ = LibMSEED()
-    traces = stream_object.traces
+    traces = stream.traces
     trace_list = []
     convert_dict = {'station': 'station', 'samprate':'sampling_rate',
                     'numsamples': 'npts', 'network': 'network',

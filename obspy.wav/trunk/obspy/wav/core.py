@@ -24,7 +24,14 @@ import wave
 
 
 def isWAV(filename):
-    # read WAV file
+    """
+    Checks whether a file is WAV or not. Returns True or False.
+
+    Parameters
+    ---------
+    filename : string
+        WAV file to be checked.
+    """
     try:
         fh = wave.open(filename, 'rb')
         (_nchannel, width, _rate, _len, _comptype, _compname) = fh.getparams()
@@ -45,7 +52,10 @@ def readWAV(filename, headonly=False, **kwargs):
     should NOT be called directly, it registers via the obspy
     :func:`~obspy.core.stream.read` function, call this instead.
 
-    :param filename: Name of WAV file to read.
+    Parameters
+    ----------
+    filename : string
+        Name of WAV file to read.
 
     Example
     -------
@@ -87,9 +97,13 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     :note: The attributes self.stats.npts = number of samples and
            self.data = array of data samples are required
 
-    :param filename: Name of WAV file to write.
-    :param framerate: Sample rate of WAV file to use. This this will
-                      squeeze the seismogram, DEFAULT=7000. 
+    Parameters
+    ----------
+    filename : string
+        Name of WAV file to write.
+    framerate : int, optional
+        Sample rate of WAV file to use. This this will squeeze the seismogram
+        (default is 7000). 
     """
     i = 0
     base , ext = os.path.splitext(filename)

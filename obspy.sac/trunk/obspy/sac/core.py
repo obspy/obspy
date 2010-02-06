@@ -42,8 +42,11 @@ sac_extra = [
 def isSAC(filename):
     """
     Checks whether a file is SAC or not. Returns True or False.
-    
-    :param filename: SAC file to be read.
+
+    Parameters
+    ----------
+    filename : string
+        SAC file to be checked.
     """
     try:
         f = open(filename, 'rb')
@@ -70,9 +73,15 @@ def readSAC(filename, headonly=False, **kwargs):
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :param filename: SAC file to be read.
-    :rtype: :class:`~obspy.core.stream.Stream`
-    :return: A ObsPy Stream object.
+    Parameters
+    ----------
+    filename : string
+        SAC file to be read.
+
+    Returns
+    -------
+    :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
 
     Example
     -------
@@ -109,7 +118,7 @@ def readSAC(filename, headonly=False, **kwargs):
     return Stream([tr])
 
 
-def writeSAC(stream_object, filename, **kwargs):
+def writeSAC(stream, filename, **kwargs):
     """
     Writes SAC file.
     
@@ -117,14 +126,17 @@ def writeSAC(stream_object, filename, **kwargs):
     obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
-    :type stream_object: :class:`~obspy.core.stream.Stream`
-    :param stream_object: A ObsPy Stream object.
-    :param filename: SAC file to be written.
+    Parameters
+    ----------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+    filename : string
+        SAC file to be written.
     """
     # Translate the common (renamed) entries
     i = 0
     base, ext = os.path.splitext(filename)
-    for trace in stream_object:
+    for trace in stream:
         t = ReadSac()
         t.InitArrays()
         # Check for necessary values, set a default if they are missing

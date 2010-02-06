@@ -11,8 +11,11 @@ import numpy as np
 def isGSE2(filename):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
-    
-    :param filename: GSE2 file to be read.
+
+    Parameters
+    ---------
+    filename : string
+        GSE2 file to be checked.
     """
     # Open file.
     try:
@@ -47,17 +50,24 @@ gse2_extra = [
 def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     """
     Reads a GSE2 file and returns a Stream object.
-    
+
     GSE2 files containing multiple WID2 entries/traces are supported.
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
-    
-    :param filename: GSE2 file to be read.
-    :param headonly: If True read only head of GSE2 file
-    :param verify_chksum: If True verify Checksum and raise Exception if it
-        is not correct
-    :return: :class:`~obspy.core.stream.Stream` object containing header and
-        data
+
+    Parameters
+    ----------
+    filename : string
+        GSE2 file to be read.
+    headonly : boolean, optional
+        If True read only head of GSE2 file.
+    verify_chksum : boolean, optional
+        If True verify Checksum and raise Exception if it is not correct.
+
+    Returns
+    -------
+    :class:`~obspy.core.stream.Stream`
+        Stream object containing header and data.
 
     Example
     -------
@@ -104,7 +114,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     return Stream(traces=traces)
 
 
-def writeGSE2(stream_object, filename, inplace=False, **kwargs):
+def writeGSE2(stream, filename, inplace=False, **kwargs):
     """
     Write GSE2 file from a Stream object.
 
@@ -112,16 +122,21 @@ def writeGSE2(stream_object, filename, inplace=False, **kwargs):
     obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
-    :param stream_object: The ObsPy Stream object to write.
-    :param filename: Name of file to write.
-    :param inplace: If True, do compression not on a copy of the data but
-                    on the data itself --- note this will change the data
-                    values and make them therefor unusable!
+    Parameters
+    ----------
+    stream : :class:`~obspy.core.stream.Stream`
+        The ObsPy Stream object to write.
+    filename : string
+        Name of file to write.
+    inplace : boolean, optional
+        If True, do compression not on a copy of the data but on the data
+        itself - note this will change the data values and make them therefore
+        unusable!
     """
     #
     # Translate the common (renamed) entries
     f = open(filename, 'wb')
-    for trace in stream_object:
+    for trace in stream:
         header = {}
         for _j, _k in convert_dict.iteritems():
             header[_j] = trace.stats[_k]

@@ -55,7 +55,7 @@ def isSEISAN(filename):
     Parameters
     ----------
     filename : string
-        SEISAN file to be read.
+        SEISAN file to be checked.
 
     Returns
     -------

@@ -64,7 +64,7 @@ def isASC(filename):
     ----------
 
     filename : string
-        Name of the ASC file to be read.
+        Name of the ASC file to be checked.
     """
     # first six chars should contain 'DELTA:'
     try:
@@ -224,7 +224,7 @@ def isQ(filename):
     ----------
 
     filename : string
-        Name of the Q file to be read.
+        Name of the Q file to be checked.
     """
     # file must start with magic number 43981
     try:
