@@ -188,6 +188,15 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)
 
+    def test_writeWrongFormat(self):
+        """
+        Write floating point encoded data
+        """
+        np.random.seed(815)
+        tmpfile = NamedTemporaryFile().name
+        st = Stream([Trace(data=np.random.randn(1000))])
+        self.assertRaises(Exception, st.write, tmpfile, format="GSE2")
+
     def test_readWithWrongChecksum(self):
         """
         Test if additional kwarg verify_chksum can be given

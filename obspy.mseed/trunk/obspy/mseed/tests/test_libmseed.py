@@ -644,6 +644,22 @@ class LibMSEEDTestCase(unittest.TestCase):
         data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
         np.testing.assert_array_equal(data, data_record)
 
+    def test_brokenLastRecord(self):
+        """
+        Test if Libmseed is able to read files with broken last record. Use
+        both methods, readMSTracesViaRecords and readMSTraces
+        """
+        mseed = LibMSEED()
+        file = os.path.join(self.path, "brokenlastrecord.mseed")
+        # independent reading of the data
+        data_string = open(file, 'rb').read()[128:] #128 Bytes header
+        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap, verbose=0)
+        # test readMSTracesViaRecords
+        data_record1 = mseed.readMSTracesViaRecords(file)[0][1]
+        np.testing.assert_array_equal(data, data_record1)
+        # test readMSTraces
+        data_record2 = mseed.readMSTraces(file)[0][1]
+        np.testing.assert_array_equal(data, data_record2)
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
