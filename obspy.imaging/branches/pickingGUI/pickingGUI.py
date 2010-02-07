@@ -1540,8 +1540,18 @@ class PickingGUI:
                               self.threeDlocSNames[i])
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
-        self.ax3dloc.text(0.05, 0.95, '%s' % (self.threeDlocEventTime),
-                          transform = self.ax3dloc.transAxes)
+        self.ax3dloc.set_title(self.threeDlocEventTime)
+        lines = open(self.threeDlocOutfile).readlines()
+        infoEvent = lines[0].rstrip()
+        infoPicks = ''
+        for line in lines[1:]:
+            infoPicks += line
+        self.ax3dloc.text(0.02, 0.95, infoEvent, transform = self.ax3dloc.transAxes,
+                          fontsize = 12, verticalalignment = 'top',
+                          family = 'monospace')
+        self.ax3dloc.text(0.02, 0.90, infoPicks, transform = self.ax3dloc.transAxes,
+                          fontsize = 10, verticalalignment = 'top',
+                          family = 'monospace')
         plt.show()
 
 
