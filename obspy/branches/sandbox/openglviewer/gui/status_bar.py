@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from gui_element import GUIElement
+import glydget
+import pyglet
+
+class StatusBar(GUIElement):
+    """
+    Creates a Status Bar at the Bottom of the screen and positions text on it.
+
+    This has two main attributes to work with:
+        self.text for all messages that should be displayed in the status bar.
+        self.error_text for all error messages.
+    """
+    def __init__(self, *args, **kwargs):
+        super(StatusBar, self).__init__(self, **kwargs)
+        self.height = kwargs.get('height', 16)
+        self.createBar()
+        self.text = ''
+        self.error_text = ''
+        self.createMessages()
+
+    def createBar(self):
+        """
+        Create the status bar and add it to self.batch.
+        """
+        self.bar = glydget.Rectangle(0, self.height-1,
+                        self.win.window.width, self.height-1,
+                        [255, 255, 255, 250, 255, 255, 255, 240,
+                        255, 255, 255, 230, 255, 255, 255, 215])
+        # Add line to separate the status bar.
+        self.line  = self.batch.add(2, pyglet.gl.GL_LINES,
+                                  self.group,
+                                  ('v2i', (0, self.height,
+                                           self.win.window.width, self.height)),
+                                  ('c3B', (0, 0, 0, 0, 0, 0)))
+        # Add to batch.
+        self.bar.build(batch = self.batch, group = self.group)
+        # Add to object_list.
+        self.win.object_list.append(self)
+
+    def createMessages(self):
+        """
+        Creates the two layout types. One for normal messages and one for error
+        messages.
+        """
+        # Error Messages.
+        error_document = pyglet.text.decode_text(self.error_text)
+        error_document.set_style(0, 2, dict(font_name='arial',
+                                 bold=True, font_size=10, color=(200,0,0,255)))
+        self.error_layout = pyglet.text.DocumentLabel(document = error_document,
+                          x = self.win.window.width - 2, y = 3,
+                          batch = self.batch, anchor_x = 'right',
+                          group = self.group)
+        self.error_text = self.error_layout.text
+        # Standart log messages.
+        text_document = pyglet.text.decode_text(self.text)
+        text_document.set_style(0, 2, dict(font_name='arial',
+                                 bold=True, font_size=10, color=(0,0,0,255)))
+        self.text_layout = pyglet.text.DocumentLabel(document = text_document,
+                          x = 2, y = 3, batch = self.batch, anchor_x = 'left',
+                          group = self.group)
+
+        self.text = self.text_layout.text
+
+    def resize(self, width, height):
+        """
+        Should get called on all resize events.
+        """
+        self.bar.begin_update()
+        self.bar.resize(width,self.height-1)
+        self.bar.end_update()
+        self.error_layout.begin_update()
+        self.error_layout.x = width - 2
+        self.error_layout.text = self.error_text
+        self.error_layout.end_update()
+        self.text_layout.begin_update()
+        self.text_layout.x = 2
+        self.text_layout.text = self.text
+        self.text_layout.end_update()
+        self.line.vertices = (0, self.height, self.win.window.width,
+                              self.height)
