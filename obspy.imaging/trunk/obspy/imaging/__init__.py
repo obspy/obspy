@@ -61,7 +61,7 @@ Additionally the start- and endtime of the plot can be given as
     st[2].data = st[2].data * (0.95 + ranf(st[0].stats.npts)/8)
     st.plot(color = 'gray', tick_format = '%I:%M %p')
 
-Spectograms
+Spectrograms
 ----------
 This submodule plots spectrograms.
 
