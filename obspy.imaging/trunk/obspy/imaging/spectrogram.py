@@ -73,7 +73,10 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     :param format: Format of image to save
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
-    plt.ioff()
+    #plt.ioff()
+    # Cannot confirm the above statement, on the contrary with interactive mode
+    # forced off, only the first plot actually shows for me when starting
+    # ipython with -pylab option.
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
@@ -93,27 +96,33 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     # db scale and remove offset
     spectrogram = 10 * np.log10(spectrogram[1:, :])
     freq = freq[1:]
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
+    # XXX someone should take a look at the time axis, it clearly does not
+    # match for the log- and the normal plot!!
     if log:
         X, Y = np.meshgrid(time, freq)
-        plt.pcolor(X, Y, spectrogram)
-        plt.semilogy()
-        plt.ylim((freq[0], freq[-1]))
+        ax.pcolor(X, Y, spectrogram)
+        ax.semilogy()
+        ax.set_ylim((freq[0], freq[-1]))
     else:
         # this method is much much faster!
         spectrogram = np.flipud(spectrogram)
         extent = 0, np.amax(time), freq[0], freq[-1]
-        plt.imshow(spectrogram, None, extent=extent)
-        plt.axis('auto')
+        ax.imshow(spectrogram, None, extent=extent)
+        ax.axis('auto')
 
-    plt.grid(False)
-    plt.xlabel('Time [s]')
-    plt.ylabel('Frequency [Hz]')
+    ax.grid(False)
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Frequency [Hz]')
+    fig.canvas.draw()
 
     if outfile:
         if format:
-            plt.savefig(outfile, format=format)
+            fig.savefig(outfile, format=format)
         else:
-            plt.savefig(outfile)
+            fig.savefig(outfile)
     else:
         plt.show()
