@@ -2,7 +2,7 @@
 obspy.imaging - tools for displaying features used in seismology
 ================================================================
 This module provides routines for plotting and displaying often used in
-seismology. It can currently plot waveform data, generate spectograms and draw
+seismology. It can currently plot waveform data, generate spectrograms and draw
 beachballs.
 
 :copyright: The ObsPy Development Team (devs@obspy.org)
@@ -63,7 +63,7 @@ Additionally the start- and endtime of the plot can be given as
 
 Spectograms
 ----------
-This submodule plots spectograms.
+This submodule plots spectrograms.
 
 The spectrogram will on default have 80% overlap and a maximum sliding window size
 of 4096 points.
@@ -71,7 +71,7 @@ of 4096 points.
 >>> from obspy.imaging import spectrogram
 >>> from obspy.core import read
 >>> st = read('test_file.gse')
->>> spectogram.spectogram(st[0].data, st[0].stats.sampling_rate)
+>>> spectrogram.spectrogram(st[0].data, st[0].stats.sampling_rate)
 
 .. plot::
 
