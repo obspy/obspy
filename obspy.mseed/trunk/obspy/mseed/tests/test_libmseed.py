@@ -5,6 +5,9 @@ The libmseed test suite.
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
+from obspy.core.stream import Stream
+from obspy.core.trace import Trace
+from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
 from obspy.mseed.headers import PyFile_FromFile
 from obspy.mseed.libmseed import clibmseed, MSStruct
@@ -660,6 +663,29 @@ class LibMSEEDTestCase(unittest.TestCase):
         # test readMSTraces
         data_record2 = mseed.readMSTraces(file)[0][1]
         np.testing.assert_array_equal(data, data_record2)
+
+    def test_oneSampleOverlap(self):
+        """
+        Both methods readMSTraces and readMSTracesViaRecords should recognize a
+        single sample overlap.
+        """
+        # create a stream with one sample overlapping
+        trace1 = Trace(data=np.zeros(1000))
+        trace2 = Trace(data=np.zeros(10))
+        trace2.stats.starttime = UTCDateTime(999)
+        st = Stream([trace1, trace2])
+        # write into MSEED
+        tempfile = NamedTemporaryFile().name
+        st.write(tempfile, format="MSEED")
+        # read it again
+        mseed = LibMSEED()
+        trace_list = mseed.readMSTraces(tempfile)
+        self.assertEquals(len(trace_list), 2)
+        trace_list = mseed.readMSTracesViaRecords(tempfile)
+        self.assertEquals(len(trace_list), 2)
+        # clean up
+        os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
