@@ -62,7 +62,7 @@ Additionally the start- and endtime of the plot can be given as
     st.plot(color = 'gray', tick_format = '%I:%M %p')
 
 Spectrograms
-----------
+------------
 This submodule plots spectrograms.
 
 The spectrogram will on default have 80% overlap and a maximum sliding window size

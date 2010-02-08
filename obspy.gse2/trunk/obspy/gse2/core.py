@@ -13,7 +13,7 @@ def isGSE2(filename):
     Checks whether a file is GSE2 or not. Returns True or False.
 
     Parameters
-    ---------
+    ----------
     filename : string
         GSE2 file to be checked.
     """
