@@ -59,7 +59,7 @@ def nearestPow2(x):
 
 
 def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
-                outfile=None, format=None):
+                outfile=None, format=None, ax=None):
     """
     Computes and plots logarithmic spectrogram of the input trace.
     
@@ -71,12 +71,11 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
     :param format: Format of image to save
+    :param ax: Plot into given axis, this deactivates the format and
+        outfile option
     """
-    # Turn interactive mode off or otherwise only the first plot will be fast.
-    #plt.ioff()
-    # Cannot confirm the above statement, on the contrary with interactive mode
-    # forced off, only the first plot actually shows for me when starting
-    # ipython with -pylab option.
+    # enforce float for samp_rate
+    samp_rate = float(samp_rate)
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
@@ -86,43 +85,59 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
+    end = npts/samp_rate
 
     # here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
-                                           NFFT=nfft, noverlap=nlap)
-    # db scale and remove offset
+                                            NFFT=nfft, noverlap=nlap)
+    print time[0], time[-1]
+    # db scale and remove zero/offset for amplitude
     spectrogram = 10 * np.log10(spectrogram[1:, :])
     freq = freq[1:]
     
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+    if not ax:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
 
-    # XXX someone should take a look at the time axis, it clearly does not
-    # match for the log- and the normal plot!!
+    # calculate half bin width
+    halfbin_time = (time[1] - time[0])/2.0
+    halfbin_freq = (freq[1] - freq[0])/2.0
+
     if log:
+        # pcolor expects one bin more at the right end
+        freq = np.concatenate((freq, [freq[-1] + 2 * halfbin_freq]))
+        time = np.concatenate((time, [time[-1] + 2 * halfbin_time]))
+        # center bin
+        time -= halfbin_time
+        freq -= halfbin_freq
         X, Y = np.meshgrid(time, freq)
         ax.pcolor(X, Y, spectrogram)
         ax.semilogy()
         ax.set_ylim((freq[0], freq[-1]))
+        ax.set_xlim(0, end)
     else:
         # this method is much much faster!
         spectrogram = np.flipud(spectrogram)
-        extent = 0, np.amax(time), freq[0], freq[-1]
-        ax.imshow(spectrogram, None, extent=extent)
-        ax.axis('auto')
+        # center bin
+        extent = (time[0] - halfbin_time, time[-1] + halfbin_time, \
+                  freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
+        ax.imshow(spectrogram, interpolation="nearest", extent=extent)
+        ax.set_xlim(0, end)
 
     ax.grid(False)
-    ax.set_xlabel('Time [s]')
-    ax.set_ylabel('Frequency [Hz]')
-    fig.canvas.draw()
 
-    if outfile:
-        if format:
-            fig.savefig(outfile, format=format)
+    if not ax:
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel('Frequency [Hz]')
+        fig.canvas.draw()
+
+        if outfile:
+            if format:
+                fig.savefig(outfile, format=format)
+            else:
+                fig.savefig(outfile)
         else:
-            fig.savefig(outfile)
-    else:
-        plt.show()
+            plt.show()
