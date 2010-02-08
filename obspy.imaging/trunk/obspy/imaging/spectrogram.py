@@ -59,7 +59,7 @@ def nearestPow2(x):
 
 
 def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
-                outfile=None, format=None, ax=None):
+                outfile=None, format=None, axis=None):
     """
     Computes and plots logarithmic spectrogram of the input trace.
     
@@ -71,7 +71,7 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
     :param format: Format of image to save
-    :param ax: Plot into given axis, this deactivates the format and
+    :param axis: Plot into given axis, this deactivates the format and
         outfile option
     """
     # enforce float for samp_rate
@@ -97,9 +97,11 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     spectrogram = 10 * np.log10(spectrogram[1:, :])
     freq = freq[1:]
     
-    if not ax:
+    if not axis:
         fig = plt.figure()
         ax = fig.add_subplot(111)
+    else:
+        ax = axis
 
     # calculate half bin width
     halfbin_time = (time[1] - time[0])/2.0
@@ -115,8 +117,6 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
         X, Y = np.meshgrid(time, freq)
         ax.pcolor(X, Y, spectrogram)
         ax.semilogy()
-        ax.set_ylim((freq[0], freq[-1]))
-        ax.set_xlim(0, end)
     else:
         # this method is much much faster!
         spectrogram = np.flipud(spectrogram)
@@ -124,19 +124,24 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
         extent = (time[0] - halfbin_time, time[-1] + halfbin_time, \
                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
         ax.imshow(spectrogram, interpolation="nearest", extent=extent)
-        ax.set_xlim(0, end)
 
+    # set correct way of axis, whitespace before and after with window
+    # length
+    ax.axis('tight')
+    ax.set_xlim(0, end)
     ax.grid(False)
 
-    if not ax:
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Frequency [Hz]')
-        fig.canvas.draw()
+    if axis:
+        return ax
 
-        if outfile:
-            if format:
-                fig.savefig(outfile, format=format)
-            else:
-                fig.savefig(outfile)
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Frequency [Hz]')
+    fig.canvas.draw()
+
+    if outfile:
+        if format:
+            fig.savefig(outfile, format=format)
         else:
-            plt.show()
+            fig.savefig(outfile)
+    else:
+        plt.show()

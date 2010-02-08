@@ -13,6 +13,7 @@ except TypeError: #needed for matplotlib 0.91.2
 from matplotlib import pyplot as plt
 
 from obspy.imaging.tests import test_backend, test_beachball, test_spectrogram
+from obspy.imaging.tests import test_waveform
 from obspy.imaging import beachball
 import doctest
 import unittest
@@ -23,6 +24,7 @@ def suite():
     suite.addTest(test_backend.suite())
     suite.addTest(test_beachball.suite())
     suite.addTest(test_spectrogram.suite())
+    suite.addTest(test_waveform.suite())
     try:
         suite.addTest(doctest.DocTestSuite(beachball))
     except:
