@@ -93,7 +93,6 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                             NFFT=nfft, noverlap=nlap)
-    print time[0], time[-1]
     # db scale and remove zero/offset for amplitude
     spectrogram = 10 * np.log10(spectrogram[1:, :])
     freq = freq[1:]
