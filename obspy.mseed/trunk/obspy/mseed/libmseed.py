@@ -163,8 +163,10 @@ class LibMSEED(object):
                                                 chain.sampletype)
             msrid = self._MSRId(header)
             last_endtime = trace_list[-1][0]['endtime']
-            if abs(last_endtime - header['starttime']) <= 1.01 * delta and \
-                    last_msrid == msrid:
+            record_delta = abs(last_endtime - header['starttime']) 
+            if record_delta <= 1.01 * delta and\
+               record_delta >= 0.99 * delta and\
+               last_msrid == msrid:
                 # Append to trace
                 trace_list[-1][0]['endtime'] = header['endtime']
                 trace_list[-1][0]['numsamples'] += header['numsamples']
