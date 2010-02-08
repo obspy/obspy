@@ -357,7 +357,7 @@ class Stream(object):
             if max_gap and gap > max_gap:
                 continue
             # Number of missing samples
-            nsamples = math.fabs(gap) * stats['sampling_rate']
+            nsamples = int(round(math.fabs(gap) * stats['sampling_rate']))
             if gap > 0:
                 nsamples -= 1
             else:
