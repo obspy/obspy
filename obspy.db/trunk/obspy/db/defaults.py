@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from pkg_resources import iter_entry_points
-from sqlalchemy import ForeignKey, Column, Integer, Text, DateTime, Float, \
-    String, create_engine, Boolean
+from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
+    Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref
-from sqlalchemy.orm.session import sessionmaker
 
 
 #waveform_tab = Table(WAVEFORM_TABLE, metadata,
@@ -61,7 +59,8 @@ class WaveformFile(Base):
     id = Column(Integer, primary_key=True)
     file = Column(String, nullable=False, index=True)
     size = Column(Integer, nullable=False)
-    mtime = Column(Integer, nullable=False)
+    mtime = Column(Integer, nullable=False, index=True)
+    format = Column(String, nullable=False, index=True)
     path_id = Column(Integer, ForeignKey('waveform_paths.id'))
 
     path = relation(WaveformPath, backref=backref('files', order_by=id))
@@ -89,19 +88,27 @@ class WaveformChannel(Base):
     calib = Column(Float, nullable=False)
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
+    gaps = Column(Integer, nullable=False)
+    gaps_samples = Column(Integer, nullable=False)
+    overlaps = Column(Integer, nullable=False)
+    overlaps_samples = Column(Integer, nullable=False)
 
     file = relation(WaveformFile, backref=backref('channels', order_by=id))
 
     def __init__(self, data={}):
-        self.network = data.get('network')
-        self.station = data.get('station')
-        self.location = data.get('location')
-        self.channel = data.get('channel')
+        self.network = data.get('network', '')
+        self.station = data.get('station', '')
+        self.location = data.get('location', '')
+        self.channel = data.get('channel', '')
         self.starttime = data.get('starttime')
         self.endtime = data.get('endtime')
-        self.calib = data.get('calib')
-        self.npts = data.get('npts')
-        self.sampling_rate = data.get('sampling_rate')
+        self.calib = data.get('calib', 1.0)
+        self.npts = data.get('npts', 0)
+        self.sampling_rate = data.get('sampling_rate', 1.0)
+        self.gaps = data.get('gaps', 0)
+        self.gaps_samples = data.get('gaps_samples', 0)
+        self.overlaps = data.get('overlaps', 0)
+        self.overlaps_samples = data.get('overlaps_samples', 0)
 
     def __repr__(self):
         return "<WaveformChannel('%s')>" % self.channel

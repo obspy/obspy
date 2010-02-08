@@ -55,8 +55,8 @@ setup(
     include_package_data=True,
     entry_points={
         'obspy.db.feature' : [
-            'minmax_amplitude = obspy.db.feature:getMinMaxAmplitude',
-            'mseed_timing_quality = obspy.db.feature:getTimingQualitity'
+            'minmax_amplitude = obspy.db.feature:AmplitudeFeature',
+            'mseed_timing_quality = obspy.db.feature:MSEEDQualityFeature'
         ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main',

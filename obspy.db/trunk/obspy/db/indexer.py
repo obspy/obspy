@@ -4,7 +4,7 @@ from Queue import Empty as QueueEmpty, Full as QueueFull
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from obspy.core import read
 from obspy.db.defaults import Base, WaveformFile, WaveformPath, WaveformChannel
-from obspy.db.utils import _getInstalledWaveformFeaturesPlugins, createPreview
+from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 import copy
@@ -75,6 +75,7 @@ class WaveformFileCrawler:
             q = self.session.query(WaveformFile)
             q = q.filter(WaveformPath.path == path)
             q = q.filter(WaveformFile.file == file)
+            q = q.filter(WaveformPath.archived == False)
             try:
                 file_obj = q.one()
                 self.session.delete(file_obj)
@@ -88,6 +89,7 @@ class WaveformFileCrawler:
         else:
             q = self.session.query(WaveformPath)
             q = q.filter(WaveformPath.path == path)
+            q = q.filter(WaveformPath.archived == False)
             try:
                 path_obj = q.one()
                 self.session.delete(path_obj)
@@ -155,6 +157,7 @@ class WaveformFileCrawler:
         self._current_path = None
         self._current_files = []
         self._db_files = []
+        self._db_paths = []
         self._not_yet_queued = None
         # get search paths for waveform crawler
         self._paths = []
@@ -312,24 +315,60 @@ class WaveformIndexer(SimpleXMLRPCServer, WaveformFileCrawler):
 
 def worker(i, input_queue, output_queue, preview_dir=None):
     logger.debug("Starting Process #%d" % i)
-    # fetch all possible entry points for waveform features
-    features_ep = _getInstalledWaveformFeaturesPlugins()
-    # fetch action from input queue
+    # fetch and initialize all possible waveform feature plug-ins
+    all_features = {}
+    for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
+        try:
+            # load plug-in
+            cls = ep.load()
+            # initialize class
+            func = cls().process
+        except Exception, e:
+            logger.error(str(e) + '\n')
+            continue
+        all_features[key] = {}
+        all_features[key]['run'] = func
+        try:
+            all_features[key]['indexer_kwargs'] = cls['indexer_kwargs']
+        except:
+            all_features[key]['indexer_kwargs'] = {}
+    # loop through input queue
     for args in iter(input_queue.get, 'STOP'):
         (path, file, stats, features) = args
         filepath = os.path.join(path, file)
+        # get additional kwargs for read method from waveform plug-ins
+        kwargs = {}
+        for feature in features:
+            if feature not in all_features:
+                logger.error(filepath + '\n')
+                logger.error('Unknown feature %s\n' % feature)
+                continue
+            kwargs.update(all_features[feature]['indexer_kwargs'])
+        # read file
         try:
-            stream = read(str(filepath))
+            stream = read(str(filepath), kwargs)
+            # get gap and overlap information
+            gap_list = stream.getGaps()
+            # merge channels
+            stream.merge()
         except Exception, e:
             logger.error(filepath + '\n')
             logger.error(str(e) + '\n')
             continue
-        try:
-            stream.merge()
-        except Exception , e:
-            logger.error(filepath + '\n')
-            logger.error(str(e) + '\n')
-            continue
+        # build up dictionary of gaps and overlaps for easier lookup
+        gap_dict = {}
+        for gap in gap_list:
+            id = '.'.join(gap[0:4])
+            gap_dict.setdefault(id, {'gaps':0, 'overlaps':0, 'gaps_samples':0,
+                                     'overlaps_samples':0})
+            if gap[6] > 0:
+                # gap
+                gap_dict[id]['gaps'] += 1
+                gap_dict[id]['gaps_samples'] += gap[7]
+            else:
+                # overlap
+                gap_dict[id]['overlaps'] += 1
+                gap_dict[id]['overlaps_samples'] += gap[7]
         # loop through traces
         dataset = []
         for trace in stream:
@@ -351,17 +390,15 @@ def worker(i, input_queue, output_queue, preview_dir=None):
             result['calib'] = trace.stats.calib
             result['npts'] = trace.stats.npts
             result['sampling_rate'] = trace.stats.sampling_rate
+            # gaps/overlaps
+            result.update(gap_dict.get(trace.id, {}))
             # apply feature functions
             for feature in features:
-                if feature not in features_ep:
-                    logger.error(filepath + '\n')
-                    logger.error('Unknown feature %s\n' % feature)
+                if feature not in all_features:
                     continue
                 try:
-                    # load plug-in
-                    plugin = features_ep[feature].load()
                     # run plug-in and update results
-                    result.update(plugin(trace))
+                    result.update(all_features[feature]['run'](trace))
                 except Exception, e:
                     logger.error(filepath + '\n')
                     logger.error(str(e) + '\n')
@@ -394,7 +431,6 @@ def worker(i, input_queue, output_queue, preview_dir=None):
             output_queue.put_nowait(dataset)
         except:
             pass
-    logger.debug("Stopping Process #%d" % i)
 
 
 def runIndexer(options):
