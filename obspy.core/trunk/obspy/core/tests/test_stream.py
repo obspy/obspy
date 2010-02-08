@@ -465,17 +465,13 @@ class StreamTestCase(unittest.TestCase):
         ref[-k:] = 20.0
         np.testing.assert_array_equal(stream[0].data, ref)
 
-
     def test_mergeOverlapAndDiscardRedundantTrace(self):
         """
         If a second trace is completely contained within a first trace it will
         be discarded.
         """
         trace1 = Trace(data=np.zeros(1000))
-        trace1.stats.sampling_rate = 1.0
-        trace1.stats.starttime = UTCDateTime(0)
         trace2 = Trace(data=np.zeros(10))
-        trace2.stats.sampling_rate = 1.0
         trace2.data[:] = 1
         trace2.stats.starttime = trace1.stats.starttime + 10
         st = Stream(traces=[trace1, trace2])
@@ -483,7 +479,6 @@ class StreamTestCase(unittest.TestCase):
         st.merge()
         self.assertEqual(len(st.traces), 1)
         np.testing.assert_array_equal(st[0].data, np.zeros(1000))
-
 
     def test_tabCompleteStats(self):
         """
@@ -494,6 +489,32 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue('npts' in dir(tr.stats))
         self.assertTrue('station' in dir(tr.stats))
         self.assertTrue('starttime' in dir(tr.stats))
+
+    def test_bugfixMergeDropTraceIfAlreadyContained(self):
+        """
+        Trace data already existing in another trace and ending on the same
+        endtime was not correctly merged until now.
+        """
+        trace1 = Trace(data=np.empty(10))
+        trace2 = Trace(data=np.empty(2))
+        trace2.stats.starttime = trace1.stats.endtime - trace1.stats.delta
+        st = Stream([trace1, trace2])
+        st.merge()
+
+    def test_bugfixMergeMultipleOverlappingTraces(self):
+        """
+        Bugfix for merging multiple overlapping traces in a row.
+        """
+        # create a stream with one sample overlapping
+        trace1 = Trace(data=np.empty(10))
+        traces = [trace1]
+        for _ in xrange(0, 10):
+            trace = Trace(data=np.empty(10))
+            trace.stats.starttime = traces[-1].stats.endtime - trace1.stats.delta
+            traces.append(trace)
+        st = Stream(traces)
+        st.merge()
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

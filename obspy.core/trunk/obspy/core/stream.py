@@ -685,19 +685,21 @@ class Stream(object):
                     right_delta = -1 * int(round((trace.stats.endtime - \
                                                  old_endtime) * sampling_rate))
                     # If right_delta is negative or zero throw the trace away.
-                    if right_delta > 0:
+                    if right_delta >= 0:
                         continue
                     # Update the old trace with the interpolation.
                     cur_trace[-1][left_delta:] = \
                         (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
                     # Append the rest of the trace.
                     cur_trace.append(trace[right_delta:])
+                    old_endtime = trace.stats.endtime
+                    old_starttime = trace.stats.starttime - delta * trace.stats.delta
                 # Gap
                 else:
                     nans = np.ma.masked_all(delta)
                     cur_trace.extend([nans, trace.data])
-                old_endtime = trace.stats.endtime
-                old_starttime = trace.stats.starttime
+                    old_endtime = trace.stats.endtime
+                    old_starttime = trace.stats.starttime
             if True in [np.ma.is_masked(_i) for _i in cur_trace]:
                 data = np.ma.concatenate(cur_trace)
                 stats.npts = data.size
