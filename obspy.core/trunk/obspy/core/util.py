@@ -11,6 +11,7 @@ Various additional utilities for ObsPy.
 from math import modf, floor
 from pkg_resources import require, iter_entry_points
 import ctypes as C
+import numpy as np
 import os
 import tempfile
 import sys
@@ -327,6 +328,34 @@ def _getPlugins(group, subgroup_name=None):
         else:
             features[ep.name] = ep
     return features
+
+def maskedZeros(npts, dtype, fill_value=np.nan, mask=True):
+    """
+    Returns a masked array of zeros
+
+    :param npts: number of points
+    :param dtype: dtype of the returned array
+    :param fill_value: fill value of the masked array
+    :param mask: set mask to true or false
+    :return: masked array with given properties
+
+    >>> x = maskedZeros(5, "float32")
+    >>> x  # doctest: +NORMALIZE_WHITESPACE
+    masked_array(data = --,
+          mask = True,
+          fill_value=nan)
+    >>> x.data
+    array([ 0.,  0.,  0.,  0.,  0.], dtype=float32)
+    >>> maskedZeros(5, "int32") # doctest: +NORMALIZE_WHITESPACE
+    masked_array(data = --,
+          mask = True,
+          fill_value=-2147483648)
+
+    """
+    arr = np.ma.zeros(npts, dtype=dtype)
+    arr.mask = mask
+    arr.fill_value = fill_value
+    return arr
 
 
 if __name__ == '__main__':
