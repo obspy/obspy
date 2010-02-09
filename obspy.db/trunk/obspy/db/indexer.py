@@ -3,7 +3,7 @@
 from Queue import Empty as QueueEmpty, Full as QueueFull
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from obspy.core import read
-from obspy.db.defaults import Base, WaveformFile, WaveformPath, WaveformChannel
+from obspy.db.db import Base, WaveformFile, WaveformPath, WaveformChannel
 from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -438,8 +438,8 @@ def runIndexer(options):
     # create file queue and worker processes
     input_queue = multiprocessing.Queue(options.number_of_processors * 2)
     output_queue = multiprocessing.Queue()
-    for i in range(options.number_of_processors):
-        args = (i, input_queue, output_queue, options.output_path)
+    for i in range(options.number_of_cpus):
+        args = (i, input_queue, output_queue, options.preview_path)
         p = multiprocessing.Process(target=worker, args=args)
         p.daemon = True
         p.start()

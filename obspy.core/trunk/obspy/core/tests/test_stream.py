@@ -515,6 +515,14 @@ class StreamTestCase(unittest.TestCase):
         st = Stream(traces)
         st.merge()
 
+    def test_writingMaskedArrays(self):
+        """
+        Writing a masked array should raise an exception.
+        """
+        tr = Trace(data=np.ma.masked_all(10))
+        st = Stream([tr])
+        self.assertRaises(Exception, st.write, 'filename')
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

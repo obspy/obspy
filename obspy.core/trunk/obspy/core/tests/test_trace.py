@@ -90,7 +90,7 @@ class TraceTestCase(unittest.TestCase):
         # start time == end time
         tr.ltrim(5)
         tr.verify()
-        self.assertEquals(trace.stats, tr.stats)
+        self.assertEquals(trace.stats.start, tr.stats)
         np.testing.assert_array_equal(trace.data, tr.data)
 
         tr.ltrim(5.1)
@@ -353,7 +353,7 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(10, dtype='int32'))
         mempos = tr.data.ctypes.data
         t = tr.stats.starttime
-        tr1 = tr.slice(t+2, t+8)
+        tr1 = tr.slice(t + 2, t + 8)
         tr1.data[0] = 10
         self.assertEqual(tr.data[2], 10)
         self.assertEqual(tr.data.ctypes.data, mempos)

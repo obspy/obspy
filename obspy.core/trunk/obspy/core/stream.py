@@ -572,6 +572,13 @@ class Stream(object):
         SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
         =======  ===================  ====================================
         """
+        # Check all traces for masked arrays and raise exception.
+        for trace in self.traces:
+            if np.ma.is_masked(trace.data):
+                msg = 'Masked array writing is not supported. You can use ' + \
+                      'np.array.filled() to convert the masked array to a ' + \
+                      'normal array.'
+                raise Exception(msg)
         format = format.upper()
         # Gets all available formats and the corresponding entry points.
         formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')
@@ -639,7 +646,7 @@ class Stream(object):
         for trace in self:
             trace.verify()
 
-    def merge(self):
+    def merge(self, fill_value=None):
         """
         Merges ObsPy Trace objects with same IDs.
 
@@ -694,10 +701,11 @@ class Stream(object):
                     # Append the rest of the trace.
                     cur_trace.append(trace[right_delta:])
                     old_endtime = trace.stats.endtime
-                    old_starttime = trace.stats.starttime - delta * trace.stats.delta
+                    old_starttime = trace.stats.starttime - \
+                        delta * trace.stats.delta
                 # Gap
                 else:
-                    nans = np.ma.masked_all(delta)
+                    nans = np.ma.masked_all(delta, dtype=trace.data.dtype)
                     cur_trace.extend([nans, trace.data])
                     old_endtime = trace.stats.endtime
                     old_starttime = trace.stats.starttime

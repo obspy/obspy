@@ -427,8 +427,12 @@ class Trace(object):
         elif not isinstance(starttime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        if starttime <= self.stats.starttime or \
-           starttime >= self.stats.endtime:
+        delta = (starttime - self.stats.starttime)
+        if delta <= 0:
+            return
+        elif starttime > self.stats.endtime:
+            self.stats.starttime = starttime
+            self.data = np.empty(0)
             return
         # cut from left
         delta = (starttime - self.stats.starttime)
@@ -456,7 +460,12 @@ class Trace(object):
         elif not isinstance(endtime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        if endtime >= self.stats.endtime or endtime < self.stats.starttime:
+        delta = (endtime - self.stats.endtime)
+        if delta >= 0:
+            return
+        elif endtime < self.stats.starttime:
+            self.stats.starttime = endtime
+            self.data = np.empty(0)
             return
         # cut from right
         delta = (self.stats.endtime - endtime)
@@ -532,14 +541,18 @@ class Trace(object):
             msg = "End time(%s) before start time(%s)"
             raise Exception(msg % (self.stats.endtime, self.stats.starttime))
         sr = self.stats.sampling_rate
-        if int(round(delta * sr)) + 1 != len(self.data):
-            msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data size(%d)"
-            raise Exception(msg % (sr, delta, len(self.data)))
-        # Check if the endtime fits the starttime, npts and sampling_rate.
-        if self.stats.endtime != self.stats.starttime + (self.stats.npts - 1) / \
-                                 float(self.stats.sampling_rate):
-            msg = "Endtime is not the time of the last sample."
-            raise Exception(msg)
+        if self.stats.starttime != self.stats.endtime:
+            if int(round(delta * sr)) + 1 != len(self.data):
+                msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data len(%d)"
+                raise Exception(msg % (sr, delta, len(self.data)))
+            # Check if the endtime fits the starttime, npts and sampling_rate.
+            if self.stats.endtime != self.stats.starttime + \
+                (self.stats.npts - 1) / float(self.stats.sampling_rate):
+                msg = "Endtime is not the time of the last sample."
+                raise Exception(msg)
+        elif self.stats.npts != 0:
+            msg = "Data size should be 0, but is %d"
+            raise Exception(msg % len(self.stats.npts))
         if not isinstance(self.stats, Stats):
             msg = "Attribute stats must be an instance of obspy.core.Stats"
             raise Exception(msg)
