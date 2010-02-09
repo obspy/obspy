@@ -26,12 +26,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
-            if format == 'SAC':
-                continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
                     # new trace object in native byte order
                     dt = np.dtype("int").newbyteorder(native_byteorder)
+                    if format == 'MSEED':
+                        # MiniSEED cannot write int64, enforce type
+                        dt = "int32"
                     tr = Trace(data=data.astype(dt))
                     tr.stats.network = "BW"
                     tr.stats.station = "MANZ1"
