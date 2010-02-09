@@ -4,6 +4,7 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy.core import UTCDateTime, Stream, Trace
+import time
 from obspy.imaging import spectrogram
 import inspect
 import numpy as np
@@ -38,6 +39,9 @@ class SpectrogramTestCase(unittest.TestCase):
         outfile = os.path.join(self.path, 'spectogram.png')
         spectrogram.spectrogram(stream[0].data[0:1000], samp_rate=200.0,
                                 log=True, outfile=outfile)
+        # check that outfile was modified
+        stat = os.stat(outfile)
+        self.assertTrue( abs(stat.st_mtime - time.time()) < 3)
 
 
 def suite():

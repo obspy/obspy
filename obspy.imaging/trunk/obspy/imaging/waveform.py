@@ -178,6 +178,9 @@ class WaveformPlotting(object):
     def plot(self, *args, **kwargs):
         """
         Plot the Traces showing one graph per Trace.
+
+        Plots the whole time series for 400000 points and less. For more
+        points it plots minmax values.
         """
         # Generate sorted list of traces (no copy)
         # Sort order, id, starttime, endtime
@@ -216,8 +219,15 @@ class WaveformPlotting(object):
                 msg = "All traces with the same id need to have the same " + "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
-            ax = self.fig.add_subplot(len(stream_new), 1, _i + 1, 
-                                      axisbg = self.background_color)
+            if self.axis:
+                # if axis is existing tie the x axis together
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1, 
+                                          axisbg=self.background_color,
+                                          sharex=self.axis[0])
+            else:
+                # if no other plots before, do not tie the axis
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1, 
+                                          axisbg=self.background_color)
             self.axis.append(ax)
             if (self.endtime - self.starttime) * sampling_rate  > 400000:
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)

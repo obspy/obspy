@@ -93,7 +93,7 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self.createStream(start, start + 3600, 1000.0)
         filename = 'OneHourManySamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
         
     def test_plotOneHourFewSamples(self):
         """
@@ -104,7 +104,7 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self.createStream(start, start + 3600, 10.0)
         filename = 'OneHourFewSamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
 
     def test_plotSimpleGapManySamples(self):
         """
@@ -117,7 +117,7 @@ class WaveformTestCase(unittest.TestCase):
         st = self.createStream(start, start + 3600 * 3/4, 500.0)
         st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 500.0)
         filename = 'SimpleGapManySamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
 
     def test_plotSimpleGapFewSamples(self):
         """
@@ -130,7 +130,7 @@ class WaveformTestCase(unittest.TestCase):
         st = self.createStream(start, start + 3600 * 3/4, 5.0)
         st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 5.0)
         filename = 'SimpleGapFewSamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
 
     def test_plotComplexGapManySamples(self):
         """
@@ -148,7 +148,7 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapManySamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
 
     def test_plotComplexGapFewSamples(self):
         """
@@ -166,7 +166,7 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapFewSamples.png'
-        st.plot(outfile = os.path.join(self.path, filename))
+        st.plot(outfile=os.path.join(self.path, filename))
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')

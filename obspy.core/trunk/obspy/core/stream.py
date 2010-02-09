@@ -444,6 +444,7 @@ class Stream(object):
             values. If none is supplied it will be created automatically.
             Useful for caching.
             Defaults to False.
+        :param fig: Use an existing figure instance, default None
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
