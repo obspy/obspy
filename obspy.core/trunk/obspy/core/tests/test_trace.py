@@ -22,7 +22,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the __len__ and count methods of the L{Trace} class.
         """
-        trace = Trace(data=array(range(0, 1000)))
+        trace = Trace(data=np.arange(1000))
         self.assertEquals(len(trace), 1000)
         self.assertEquals(trace.count(), 1000)
 
@@ -31,7 +31,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the ltrim method of the L{Trace} class.
         """
         # set up
-        trace = Trace(data=range(0, 1000))
+        trace = Trace(data=np.arange(1000))
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
@@ -42,7 +42,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.ltrim(0.5)
         tr.verify()
-        self.assertEquals(tr.data[0:5], [100, 101, 102, 103, 104])
+        np.testing.assert_array_equal(tr.data[0:5], \
+                                np.array([100, 101, 102, 103, 104]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -52,7 +53,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.ltrim(1.010)
         tr.verify()
-        self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
+        np.testing.assert_array_equal(tr.data[0:5], \
+                                np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -62,7 +64,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
         tr.verify()
-        self.assertEquals(tr.data[0:5], [202, 203, 204, 205, 206])
+        np.testing.assert_array_equal(tr.data[0:5], \
+                                np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -74,32 +77,38 @@ class TraceTestCase(unittest.TestCase):
         tr.ltrim(UTCDateTime(1999))
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         tr.ltrim(-100)
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         # start time > end time
         tr.ltrim(UTCDateTime(2001))
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
-        tr.ltrim(5.1)
-        tr.verify()
-        self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         # start time == end time
         tr.ltrim(5)
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
+
+        tr.ltrim(5.1)
+        tr.verify()
+        self.assertEquals(trace.stats, tr.stats)
+        np.testing.assert_array_equal(trace.data, tr.data)
+        # start time == end time
+        tr.ltrim(5)
+        tr.verify()
+        self.assertEquals(trace.stats, tr.stats)
+        np.testing.assert_array_equal(trace.data, tr.data)
 
     def test_rtrim(self):
         """
         Tests the rtrim method of the L{Trace} class.
         """
         # set up
-        trace = Trace(data=range(0, 1000))
+        trace = Trace(data=np.arange(1000))
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
@@ -109,7 +118,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.rtrim(0.5)
         tr.verify()
-        self.assertEquals(tr.data[-5:], [895, 896, 897, 898, 899])
+        np.testing.assert_array_equal(tr.data[-5:], \
+                                np.array([895, 896, 897, 898, 899]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -119,7 +129,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.rtrim(1.010)
         tr.verify()
-        self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
+        np.testing.assert_array_equal(tr.data[-5:], \
+                                np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -129,7 +140,8 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
         tr.verify()
-        self.assertEquals(tr.data[-5:], [793, 794, 795, 796, 797])
+        np.testing.assert_array_equal(tr.data[-5:], \
+                                np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -141,25 +153,26 @@ class TraceTestCase(unittest.TestCase):
         tr.rtrim(UTCDateTime(1999))
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         tr.rtrim(-100)
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         # end time > start time
         tr.rtrim(UTCDateTime(2001))
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         tr.rtrim(5.1)
         tr.verify()
         self.assertEquals(trace.stats, tr.stats)
-        self.assertEquals(trace.data, tr.data)
+        np.testing.assert_array_equal(trace.data, tr.data)
         # end time == start time
         # returns one sample!
         tr.rtrim(4.995)
         tr.verify()
-        self.assertEquals(tr.data, [0])
+        np.testing.assert_array_equal(tr.data, \
+                                np.array([0]))
         self.assertEquals(len(tr.data), 1)
         self.assertEquals(tr.stats.npts, 1)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -171,7 +184,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the trim method of the L{Trace} class.
         """
         # set up
-        trace = Trace(data=range(0, 1001))
+        trace = Trace(data=np.arange(1001))
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         trace.stats.starttime = start
         trace.stats.sampling_rate = 200.0
@@ -180,8 +193,10 @@ class TraceTestCase(unittest.TestCase):
         # rtrim 100 samples
         trace.trim(0.5, 0.5)
         trace.verify()
-        self.assertEquals(trace.data[-5:], [896, 897, 898, 899, 900])
-        self.assertEquals(trace.data[0:5], [100, 101, 102, 103, 104])
+        np.testing.assert_array_equal(trace.data[-5:], \
+                                np.array([896, 897, 898, 899, 900]))
+        np.testing.assert_array_equal(trace.data[:5], \
+                                np.array([100, 101, 102, 103, 104]))
         self.assertEquals(len(trace.data), 801)
         self.assertEquals(trace.stats.npts, 801)
         self.assertEquals(trace.stats.sampling_rate, 200.0)
@@ -193,11 +208,11 @@ class TraceTestCase(unittest.TestCase):
         Tests the add method of the L{Trace} class.
         """
         # set up
-        tr1 = Trace(data=range(0, 1000))
+        tr1 = Trace(data=np.arange(1000))
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2 = Trace(data=np.arange(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 10
         # verify
@@ -226,11 +241,11 @@ class TraceTestCase(unittest.TestCase):
         Tests the add method of the L{Trace} class.
         """
         # set up
-        tr1 = Trace(data=range(0, 1000))
+        tr1 = Trace(data=np.arange(1000))
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2 = Trace(data=np.arange(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
         # verify
@@ -259,7 +274,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the add method of the L{Trace} class.
         """
         # set up
-        tr1 = Trace(data=range(0, 1001))
+        tr1 = Trace(data=np.arange(1001))
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
@@ -269,7 +284,7 @@ class TraceTestCase(unittest.TestCase):
         trace = tr1 + tr1
         # should return exact the same values
         self.assertEquals(trace.stats, tr1.stats)
-        self.assertEquals(trace.data, tr1.data)
+        np.testing.assert_array_equal(trace.data, tr1.data)
         # verify
         trace.verify()
 
@@ -278,11 +293,11 @@ class TraceTestCase(unittest.TestCase):
         Tests the add method of the L{Trace} class.
         """
         # set up
-        tr1 = Trace(data=range(0, 1001))
+        tr1 = Trace(data=np.arange(1001))
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr2 = Trace(data=range(0, 201))
+        tr2 = Trace(data=np.arange(201))
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 1
         # verify
@@ -292,12 +307,12 @@ class TraceTestCase(unittest.TestCase):
         trace = tr1 + tr2
         # should return exact the same values like trace 1
         self.assertEquals(trace.stats, tr1.stats)
-        self.assertEquals(trace.data, tr1.data)
+        np.testing.assert_array_equal(trace.data, tr1.data)
         # add the other way around
         trace = tr2 + tr1
         # should return exact the same values like trace 1
         self.assertEquals(trace.stats, tr1.stats)
-        self.assertEquals(trace.data, tr1.data)
+        np.testing.assert_array_equal(trace.data, tr1.data)
         # verify
         trace.verify()
 
@@ -306,14 +321,14 @@ class TraceTestCase(unittest.TestCase):
         Test order of merging traces.
         """
         # set up
-        tr1 = Trace(data=range(0, 1000))
+        tr1 = Trace(data=np.arange(1000))
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr2 = Trace(data=range(0, 1000)[::-1])
+        tr2 = Trace(data=np.arange(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
-        tr3 = Trace(data=range(0, 1000)[::-1])
+        tr3 = Trace(data=np.arange(0, 1000)[::-1])
         tr3.stats.sampling_rate = 200
         tr3.stats.starttime = start + 12
         # verify

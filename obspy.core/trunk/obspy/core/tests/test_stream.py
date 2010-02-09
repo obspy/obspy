@@ -67,7 +67,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(8, len(stream))
         # This will create a copy of all Traces and thus the objects should not
         # be identical but the Traces attributes should be identical.
-        for _i in range(4):
+        for _i in xrange(4):
             self.assertNotEqual(stream[_i], stream[_i + 4])
             self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
             np.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
@@ -77,7 +77,7 @@ class StreamTestCase(unittest.TestCase):
         new_stream = stream + other_stream
         self.assertEqual(9, len(new_stream))
         # The traces of all streams are copied.
-        for _i in range(8):
+        for _i in xrange(8):
             self.assertNotEqual(new_stream[_i], stream[_i])
             np.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
         # Also test for the newly added stream.
@@ -232,9 +232,9 @@ class StreamTestCase(unittest.TestCase):
                           824.0)]
         # Assert the number of gaps.
         self.assertEqual(len(mseed_gap_list), len(gap_list))
-        for _i in range(len(mseed_gap_list)):
+        for _i in xrange(len(mseed_gap_list)):
             # Compare the string values directly.
-            for _j in range(6):
+            for _j in xrange(6):
                 self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
             # The small differences are probably due to rounding errors.
             self.assertAlmostEqual(mseed_gap_list[_i][6], gap_list[_i][6],
@@ -267,7 +267,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all remaining Traces.
         self.assertEqual(2, len(stream))
         self.assertEqual(2, len(traces))
-        for _i in range(len(traces)):
+        for _i in xrange(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -290,7 +290,7 @@ class StreamTestCase(unittest.TestCase):
         """
         Test the pop method of the Stream objects.
         """
-        trace = Trace(data=range(0, 1000))
+        trace = Trace(data=np.arange(0, 1000))
         st = Stream([trace])
         st = st + st + st + st
         self.assertEqual(len(st), 4)
@@ -316,7 +316,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all remaining Traces.
         self.assertEqual(2, len(stream))
         self.assertEqual(2, len(stream2))
-        for _i in range(len(stream2)):
+        for _i in xrange(len(stream2)):
             self.assertEqual(stream2[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(stream2[_i].data, stream[_i].data)
 
@@ -333,7 +333,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all Traces.
         self.assertEqual(4, len(stream))
         self.assertEqual(4, len(traces))
-        for _i in range(len(traces)):
+        for _i in xrange(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -427,7 +427,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(stream[3]), 50668)
         self.assertEquals(stream[0].stats.starttime, start)
         self.assertEquals(stream[3].stats.endtime, end)
-        for i in range(0, 4):
+        for i in xrange(4):
             self.assertEquals(stream[i].stats.sampling_rate, 200)
             self.assertEquals(stream[i].getId(), 'BW.BGLD..EHE')
         stream.verify()
@@ -508,7 +508,7 @@ class StreamTestCase(unittest.TestCase):
         # create a stream with one sample overlapping
         trace1 = Trace(data=np.empty(10))
         traces = [trace1]
-        for _ in xrange(0, 10):
+        for _ in xrange(10):
             trace = Trace(data=np.empty(10))
             trace.stats.starttime = traces[-1].stats.endtime - trace1.stats.delta
             traces.append(trace)
