@@ -150,9 +150,10 @@ class SacioTestCase(unittest.TestCase):
         t.SetHvalue('lcalda', 1)
         t.WriteSacBinary(tempfile)
         t2 = sacio.ReadSac(tempfile)
-        self.assertEqual(t2.GetHvalue('dist'), 18486532.0)
-        self.assertAlmostEqual(t2.GetHvalue('az'), 65.654154562, 5)
-        self.assertAlmostEqual(t2.GetHvalue('baz'), 305.975459869, 5)
+        b = np.array([18486532.5788/1000.,65.654154562,305.975459869],dtype='>f4')
+        self.assertEqual(t2.GetHvalue('dist'), b[0])
+        self.assertEqual(t2.GetHvalue('az'), b[1])
+        self.assertEqual(t2.GetHvalue('baz'), b[2])
         os.remove(tempfile)
 
     def test_isSAC(self):

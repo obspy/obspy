@@ -775,11 +775,12 @@ class ReadSac(object):
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist_()
-        >>> round(abs(t.GetHvalue('dist') - 18486532.0),5)
+        >>> b = np.array([18486532.5788/1000.,65.654154562,305.975459869],dtype='>f4')
+        >>> round(abs(t.GetHvalue('dist') - b[0]),7)
         0.0
-        >>> round(abs(t.GetHvalue('az') - 65.654154562),5)
+        >>> round(abs(t.GetHvalue('az') - b[1]),7)
         0.0
-        >>> round(abs(t.GetHvalue('baz') - 305.975459869),5)
+        >>> round(abs(t.GetHvalue('baz') - b[2]),7)
         0.0
 
         The orginal SAC-program calculates the distance assuming a
