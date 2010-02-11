@@ -501,11 +501,11 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([trace1, trace2])
         st.merge()
 
-    def test_bugfixMergeMultipleOverlappingTraces(self):
+    def test_bugfixMergeMultipleTraces1(self):
         """
-        Bugfix for merging multiple overlapping traces in a row.
+        Bugfix for merging multiple traces in a row.
         """
-        # create a stream with one sample overlapping
+        # create a stream with multiple traces overlapping
         trace1 = Trace(data=np.empty(10))
         traces = [trace1]
         for _ in xrange(10):
@@ -513,6 +513,22 @@ class StreamTestCase(unittest.TestCase):
             trace.stats.starttime = traces[-1].stats.endtime - trace1.stats.delta
             traces.append(trace)
         st = Stream(traces)
+        st.merge()
+
+    def test_bugfixMergeMultipleTraces2(self):
+        """
+        Bugfix for merging multiple traces in a row.
+        """
+        trace1 = Trace(data=np.empty(4190864))
+        trace1.stats.sampling_rate = 200
+        trace1.stats.starttime = UTCDateTime("2010-01-21T00:00:00.015000Z")
+        trace2 = Trace(data=np.empty(603992))
+        trace2.stats.sampling_rate = 200
+        trace2.stats.starttime = UTCDateTime("2010-01-21T05:49:14.330000Z")
+        trace3 = Trace(data=np.empty(222892))
+        trace3.stats.sampling_rate = 200
+        trace3.stats.starttime = UTCDateTime("2010-01-21T06:39:33.280000Z")
+        st = Stream([trace1, trace2, trace3])
         st.merge()
 
     def test_writingMaskedArrays(self):
