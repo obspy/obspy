@@ -13,11 +13,13 @@ import sys
 
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
+from matplotlib.patches import Ellipse
 
 from optparse import OptionParser
 from obspy.seishub import Client
 from obspy.core import UTCDateTime
 from obspy.signal.filter import bandpass,bandpassZPHSH,bandstop,bandstopZPHSH,lowpass,lowpassZPHSH,highpass,highpassZPHSH
+from obspy.signal.util import utlLonLat
 
 #imports for the buttons
 import matplotlib.colors as colors
@@ -185,7 +187,7 @@ class PickingGUI:
         self.flagFilt=False #False:no filter  True:filter
         self.flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
         self.dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
-        self.flagFiltZPH=True #False: no zero-phase True: zero-phase filtering
+        self.flagFiltZPH=False #False: no zero-phase True: zero-phase filtering
         self.valFiltLow=np.NaN # These are overridden with low/high estimated from sampling rate
         self.valFiltHigh=np.NaN
         self.flagWheelZoom=True #Switch use of mousewheel for zooming
@@ -276,7 +278,7 @@ class PickingGUI:
         self.buttonreleaseAllowRedraw = self.fig.canvas.mpl_connect('button_release_event', self.allowRedraw)
         self.scroll = self.fig.canvas.mpl_connect('scroll_event', self.zoom)
         self.scroll_button = self.fig.canvas.mpl_connect('button_press_event', self.zoom_reset)
-        self.fig.canvas.toolbar.pan()
+        self.fig.canvas.toolbar.zoom()
         self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
         #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
         self.multicursor = MultiCursor(self.fig.canvas,self.axs, useblit=True, color=self.dictPhaseColors['P'], linewidth=1, ls='dotted')
@@ -428,7 +430,7 @@ class PickingGUI:
     def drawPsynthLabel(self):
         if not self.dicts[self.stPt].has_key('Psynth'):
             return
-        PsynthLabelString = 'Psynth'
+        PsynthLabelString = 'Psynth: %+.3f' % self.dicts[self.stPt]['Pres']
         self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.08 * len(self.axs), '  ' + PsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Psynth'])
     
@@ -549,7 +551,7 @@ class PickingGUI:
     def drawSsynthLabel(self):
         if not self.dicts[self.stPt].has_key('Ssynth'):
             return
-        SsynthLabelString = 'Ssynth'
+        SsynthLabelString = 'Ssynth: %+.3f' % self.dicts[self.stPt]['Sres']
         self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.08 * len(self.axs), '\n  ' + SsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Ssynth'])
     
@@ -815,7 +817,7 @@ class PickingGUI:
     def addFiltButtons(self):
         #add filter buttons
         self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase'),(False,True))
+        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase'),(self.flagFilt,self.flagFiltZPH))
         self.check.on_clicked(self.funcFilt)
         self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
@@ -1419,13 +1421,16 @@ class PickingGUI:
         for phase in phaseList[1:]:
             # example for a synthetic pick line from 3dloc:
             # RJOB P 2009 12 27 10 52 59.425 -0.004950 298.199524 136.000275
-            # station phase YYYY MM DD hh mm ss.sss residual? azimuth? incidenceangle?
+            # station phase YYYY MM DD hh mm ss.sss (picked time!) residual
+            # (add this to get synthetic time) azimuth? incidenceangle?
             phase = phase.split()
             phStat = phase[0]
             phType = phase[1]
             phUTCTime = UTCDateTime(int(phase[2]), int(phase[3]),
                                     int(phase[4]), int(phase[5]),
                                     int(phase[6]), float(phase[7]))
+            phResid = float(phase[8])
+            phUTCTime += phResid
             for i in range(len(self.streams)):
                 # check for matching station names
                 if not phStat == self.streams[i][0].stats.station.strip():
@@ -1440,12 +1445,14 @@ class PickingGUI:
                         # starttime at which the time of the synthetic phase
                         # is located
                         phSamps = phUTCTime - self.streams[i][0].stats.starttime
-                        phSamps = int(phSamps *
-                                      self.streams[i][0].stats.sampling_rate)
+                        phSamps = int(round(phSamps *
+                                            self.streams[i][0].stats.sampling_rate))
                         if phType == 'P':
                             self.dicts[i]['Psynth'] = phSamps
+                            self.dicts[i]['Pres'] = phResid
                         elif phType == 'S':
                             self.dicts[i]['Ssynth'] = phSamps
+                            self.dicts[i]['Sres'] = phResid
         self.drawPsynthLine()
         self.drawPsynthLabel()
         self.drawSsynthLine()
@@ -1500,6 +1507,8 @@ class PickingGUI:
         event = open(self.threeDlocOutfile).readline().split()
         self.threeDlocEventLon = float(event[8])
         self.threeDlocEventLat = float(event[9])
+        self.threeDlocEventErrX = float(event[11])
+        self.threeDlocEventErrY = float(event[12])
         self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
@@ -1522,22 +1531,35 @@ class PickingGUI:
                 self.threeDlocSNames.append(pick[0])
 
     def show3dlocEventMap(self):
+        self.load3dlocData()
         self.fig3dloc = plt.figure()
         self.ax3dloc = self.fig3dloc.add_subplot(111)
         self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
-                             180, color = 'black', marker = 'x')
-        self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, 440,
-                             color = self.dictPhaseColors['S'], marker = 'v',
-                             edgecolor= 'black')
-        self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, 180,
-                             color = self.dictPhaseColors['P'], marker = 'v',
-                             edgecolor= 'black')
-        for i in range(len(self.threeDlocPNames)):
-            self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-                              self.threeDlocPNames[i])
-        for i in range(len(self.threeDlocSNames)):
-            self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-                              self.threeDlocSNames[i])
+                             30, color = 'red', marker = 'o')
+        self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
+                          '%2.3f\n%2.3f' % (self.threeDlocEventLon,
+                          self.threeDlocEventLat), va = 'top')
+        errLon, errLat = utlLonLat(self.threeDlocEventLon, self.threeDlocEventLat,
+                               self.threeDlocEventErrX, self.threeDlocEventErrY)
+        errLon -= self.threeDlocEventLon
+        errLat -= self.threeDlocEventLat
+        errorell = Ellipse(xy = [self.threeDlocEventLon, self.threeDlocEventLat],
+                      width = errLon, height = errLat, angle = 0, fill = False)
+        self.ax3dloc.add_artist(errorell)
+        if len(self.threeDlocSLons) > 0:
+            self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
+                                 color = self.dictPhaseColors['S'], marker = 'v',
+                                 edgecolor = 'black')
+            for i in range(len(self.threeDlocSNames)):
+                self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+                                  '  ' + self.threeDlocSNames[i], va = 'top')
+        if len(self.threeDlocPLons) > 0:
+            self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
+                                 color = self.dictPhaseColors['P'], marker = 'v',
+                                 edgecolor = 'black')
+            for i in range(len(self.threeDlocPNames)):
+                self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+                                  '  ' + self.threeDlocPNames[i], va = 'top')
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
         self.ax3dloc.set_title(self.threeDlocEventTime)
