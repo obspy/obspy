@@ -209,18 +209,20 @@ class PickingGUI:
         self.magMarkerSize=20
         self.axvlinewidths=1.2
         #dictionary for key-bindings
-        self.dictKeybindings = {'setPick':'alt', 'setPickError':' ', 'delPick':'escape',
-                           'setMagMin':'alt', 'setMagMax':' ', 'switchPhase':'control',
-                           'delMagMinMax':'escape', 'switchWheelZoom':'z',
-                           'switchPan':'p', 'prevStream':'y', 'nextStream':'x',
-                           'setPWeight0':'0', 'setPWeight1':'1', 'setPWeight2':'2',
-                           'setPWeight3':'3',# 'setPWeight4':'4', 'setPWeight5':'5',
-                           'setSWeight0':'0', 'setSWeight1':'1', 'setSWeight2':'2',
-                           'setSWeight3':'3',# 'setSWeight4':'4', 'setSWeight5':'5',
-                           'setPPolUp':'q', 'setPPolPoorUp':'w',
-                           'setPPolDown':'a', 'setPPolPoorDown':'s',
-                           'setSPolUp':'q', 'setSPolPoorUp':'w',
-                           'setSPolDown':'a', 'setSPolPoorDown':'s'}
+        self.dictKeybindings = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
+                           'setMagMin': 'alt', 'setMagMax': ' ', 'switchPhase': 'control',
+                           'delMagMinMax': 'escape', 'switchWheelZoom': 'z',
+                           'switchPan': 'p', 'prevStream': 'y', 'nextStream': 'x',
+                           'setPWeight0': '0', 'setPWeight1': '1', 'setPWeight2': '2',
+                           'setPWeight3': '3', # 'setPWeight4': '4', 'setPWeight5': '5',
+                           'setSWeight0': '0', 'setSWeight1': '1', 'setSWeight2': '2',
+                           'setSWeight3': '3', # 'setSWeight4': '4', 'setSWeight5': '5',
+                           'setPPolUp': 'u', 'setPPolPoorUp': '+',
+                           'setPPolDown': 'd', 'setPPolPoorDown': '-',
+                           'setSPolUp': 'u', 'setSPolPoorUp': '+',
+                           'setSPolDown': 'd', 'setSPolPoorDown': '-',
+                           'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
+                           'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e',}
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
         self.xmlEventID = None
@@ -403,23 +405,32 @@ class PickingGUI:
         if not self.dicts[self.stPt].has_key('P'):
             return
         PLabelString = 'P:'
+        if not self.dicts[self.stPt].has_key('POnset'):
+            PLabelString += '_'
+        else:
+            if self.dicts[self.stPt]['POnset'] == 'impulsive':
+                PLabelString += 'i'
+            elif self.dicts[self.stPt]['POnset'] == 'emergent':
+                PLabelString += 'e'
         if not self.dicts[self.stPt].has_key('PPol'):
             PLabelString += '_'
         else:
             if self.dicts[self.stPt]['PPol'] == 'Up':
-                PLabelString += 'U'
-            elif self.dicts[self.stPt]['PPol'] == 'PoorUp':
                 PLabelString += 'u'
+            elif self.dicts[self.stPt]['PPol'] == 'PoorUp':
+                PLabelString += '+'
             elif self.dicts[self.stPt]['PPol'] == 'Down':
-                PLabelString += 'D'
-            elif self.dicts[self.stPt]['PPol'] == 'PoorDown':
                 PLabelString += 'd'
+            elif self.dicts[self.stPt]['PPol'] == 'PoorDown':
+                PLabelString += '-'
         if not self.dicts[self.stPt].has_key('PWeight'):
             PLabelString += '_'
         else:
             PLabelString += str(self.dicts[self.stPt]['PWeight'])
-        self.PLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.04 * len(self.axs), '  ' + PLabelString,
-                             transform = self.trans[0], color=self.dictPhaseColors['P'])
+        self.PLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.04 * len(self.axs),
+                                       '  ' + PLabelString, transform = self.trans[0],
+                                       color = self.dictPhaseColors['P'],
+                                       family = 'monospace')
     
     def delPLabel(self):
         try:
@@ -524,23 +535,32 @@ class PickingGUI:
         if not self.dicts[self.stPt].has_key('S'):
             return
         SLabelString = 'S:'
+        if not self.dicts[self.stPt].has_key('SOnset'):
+            SLabelString += '_'
+        else:
+            if self.dicts[self.stPt]['SOnset'] == 'impulsive':
+                SLabelString += 'i'
+            elif self.dicts[self.stPt]['SOnset'] == 'emergent':
+                SLabelString += 'e'
         if not self.dicts[self.stPt].has_key('SPol'):
             SLabelString += '_'
         else:
             if self.dicts[self.stPt]['SPol'] == 'Up':
-                SLabelString += 'U'
-            elif self.dicts[self.stPt]['SPol'] == 'PoorUp':
                 SLabelString += 'u'
+            elif self.dicts[self.stPt]['SPol'] == 'PoorUp':
+                SLabelString += '+'
             elif self.dicts[self.stPt]['SPol'] == 'Down':
-                SLabelString += 'D'
-            elif self.dicts[self.stPt]['SPol'] == 'PoorDown':
                 SLabelString += 'd'
+            elif self.dicts[self.stPt]['SPol'] == 'PoorDown':
+                SLabelString += '-'
         if not self.dicts[self.stPt].has_key('SWeight'):
             SLabelString += '_'
         else:
             SLabelString += str(self.dicts[self.stPt]['SWeight'])
-        self.SLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.04 * len(self.axs), '  ' + SLabelString,
-                             transform = self.trans[0], color=self.dictPhaseColors['S'])
+        self.SLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.04 * len(self.axs),
+                                       '  ' + SLabelString, transform = self.trans[0],
+                                       color = self.dictPhaseColors['S'],
+                                       family = 'monospace')
     
     def delSLabel(self):
         try:
@@ -717,6 +737,13 @@ class PickingGUI:
         except:
             pass
             
+    def delPOnset(self):
+        try:
+            del self.dicts[self.stPt]['POnset']
+            print "P Pick onset deleted"
+        except:
+            pass
+            
     def delPErr1(self):
         try:
             del self.dicts[self.stPt]['PErr1']
@@ -756,6 +783,13 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['SPol']
             print "S Pick polarity deleted"
+        except:
+            pass
+            
+    def delSOnset(self):
+        try:
+            del self.dicts[self.stPt]['SOnset']
+            print "S Pick onset deleted"
         except:
             pass
             
@@ -1037,6 +1071,20 @@ class PickingGUI:
                 self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+        # Set P Pick onset
+        if self.dicts[self.stPt].has_key('P'):
+            if self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetImpulsive']:
+                self.delPLabel()
+                self.dicts[self.stPt]['POnset'] = 'impulsive'
+                self.drawPLabel()
+                self.redraw()
+                print "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
+            elif self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetEmergent']:
+                self.delPLabel()
+                self.dicts[self.stPt]['POnset'] = 'emergent'
+                self.drawPLabel()
+                self.redraw()
+                print "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
         # Set new S Pick
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPick']:
             self.delSLine()
@@ -1116,6 +1164,20 @@ class PickingGUI:
                 self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+        # Set S Pick onset
+        if self.dicts[self.stPt].has_key('S'):
+            if self.flagPhase == 0 and event.key == self.dictKeybindings['setSOnsetImpulsive']:
+                self.delSLabel()
+                self.dicts[self.stPt]['SOnset'] = 'impulsive'
+                self.drawSLabel()
+                self.redraw()
+                print "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
+            elif self.flagPhase == 0 and event.key == self.dictKeybindings['setSOnsetEmergent']:
+                self.delSLabel()
+                self.dicts[self.stPt]['SOnset'] = 'emergent'
+                self.drawSLabel()
+                self.redraw()
+                print "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
         # Remove P Pick
         if self.flagPhase==0 and event.key==self.dictKeybindings['delPick']:
             # Try to remove all existing Pick lines and P Pick variable
@@ -1123,6 +1185,7 @@ class PickingGUI:
             self.delP()
             self.delPWeight()
             self.delPPol()
+            self.delPOnset()
             self.delPLabel()
             # Try to remove existing Pick Error 1 lines and variable
             self.delPErr1Line()
@@ -1139,6 +1202,7 @@ class PickingGUI:
             self.delS()
             self.delSWeight()
             self.delSPol()
+            self.delSOnset()
             self.delSLabel()
             # Try to remove existing Pick Error 1 lines and variable
             self.delSErr1Line()
@@ -1589,31 +1653,50 @@ class PickingGUI:
         Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
         Sub(Sub(xml, "event_type"), "value").text = "manual"
         
+        # we save P picks on Z-component and S picks on N-component
+        # XXX standard values for unset keys!!!???!!!???
         for i in range(len(self.streams)):
-            for j in range(len(self.streams[i])):
-                if self.dicts[i].has_key('P'):
-                    pick = Sub(xml, "pick")
-                    wave = Sub(pick, "waveform")
-                    wave.set("networkCode", self.streams[i][j].stats.network) 
-                    wave.set("stationCode", self.streams[i][j].stats.station) 
-                    wave.set("channelCode", self.streams[i][j].stats.channel) 
-                    wave.set("locationCode", "") 
-                    date = Sub(pick, "time")
-                    Sub(date, "value").text = "2010-02-09T19:19:21.255"
-                    Sub(date, "uncertainty")
-                    Sub(pick, "phaseHint").text = "P"
-                    Sub(pick, "onset").text = "impulsive"
-                    Sub(pick, "polarity").text = "positiv"
-                    Sub(pick, "weight").text = "0"
-                    Sub(Sub(pick, "min_amp"), "value").text = "0.00000"
-                    Sub(pick, "phase_compu").text = "IPU0"
-                    Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
-                    Sub(Sub(pick, "phase_weight"), "value").text = "1.00000"
-                    Sub(Sub(pick, "phase_delay"), "value").text = "0.00000"
-                    Sub(Sub(pick, "azimuth"), "value").text = "1.922043"
-                    Sub(Sub(pick, "incident"), "value").text = "96.00000"
-                    Sub(Sub(pick, "epi_dist"), "value").text = "44.938843"
-                    Sub(Sub(pick, "hyp_dist"), "value").text = "45.30929"
+            if self.dicts[i].has_key('P'):
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", self.streams[i][0].stats.network) 
+                wave.set("stationCode", self.streams[i][0].stats.station) 
+                wave.set("channelCode", self.streams[i][0].stats.channel) 
+                wave.set("locationCode", "") 
+                date = Sub(pick, "time")
+                # prepare time of pick
+                picktime = self.streams[i][0].stats.starttime
+                picktime += (self.dicts[i]['P'] /
+                             self.streams[i][0].stats.sampling_rate)
+                Sub(date, "value").text = (picktime.isoformat() + '.' +
+                                           picktime.microsecond)
+                Sub(date, "uncertainty") #XXX what does this line mean???
+                Sub(pick, "phaseHint").text = "P"
+                if self.dicts[i]['POnset'] == 'impulsive':
+                    Sub(pick, "onset").text = 'impulsive'
+                elif self.dicts[i]['POnset'] == 'emergent':
+                    Sub(pick, "onset").text = 'emergent'
+                else:
+                    Sub(pick, "onset").text = ''
+                if self.dicts[i]['PPol'] == 'Up' or self.dicts[i]['PPol'] == 'PoorUp':
+                    Sub(pick, "polarity").text = 'positiv'
+                elif self.dicts[i]['PPol'] == 'Down' or self.dicts[i]['PPol'] == 'PoorDown':
+                    Sub(pick, "polarity").text = 'negativ'
+                else:
+                    Sub(pick, "polarity").text = ''
+                if self.dicts[i].has_key('PWeight'):
+                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
+                else:
+                    Sub(pick, "weight").text = ''
+                Sub(Sub(pick, "min_amp"), "value").text = "0.00000" #XXX what is min_amp???
+                Sub(pick, "phase_compu").text = "IPU0"
+                Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
+                Sub(Sub(pick, "phase_weight"), "value").text = "1.00000"
+                Sub(Sub(pick, "phase_delay"), "value").text = "0.00000"
+                Sub(Sub(pick, "azimuth"), "value").text = "1.922043"
+                Sub(Sub(pick, "incident"), "value").text = "96.00000"
+                Sub(Sub(pick, "epi_dist"), "value").text = "44.938843"
+                Sub(Sub(pick, "hyp_dist"), "value").text = "45.30929"
 
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
