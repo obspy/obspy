@@ -3,23 +3,28 @@
 #check for textboxes and other stuff:
 #http://code.enthought.com/projects/traits/docs/html/tutorials/traits_ui_scientific_app.html
 
-import matplotlib
 #matplotlib.use('gtkagg')
 
-from obspy.core import read
-import matplotlib.pyplot as plt
+from lxml.etree import SubElement as Sub, parse, tostring,
+from lxml.etree import fromstring, Element
+from optparse import OptionParser
 import numpy as np
 import sys
+import subprocess
+import httplib
+import base64
 
+from obspy.core import read, UTCDateTime
+from obspy.seishub import Client
+from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
+from obspy.signal.filter import lowpass, lowpassZPHSH, highpass, highpassZPHSH
+from obspy.signal.util import utlLonLat
+
+import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 from matplotlib.patches import Ellipse
-
-from optparse import OptionParser
-from obspy.seishub import Client
-from obspy.core import UTCDateTime
-from obspy.signal.filter import bandpass,bandpassZPHSH,bandstop,bandstopZPHSH,lowpass,lowpassZPHSH,highpass,highpassZPHSH
-from obspy.signal.util import utlLonLat
 
 #imports for the buttons
 import matplotlib.colors as colors
@@ -27,9 +32,6 @@ import matplotlib.patches as patches
 import matplotlib.mathtext as mathtext
 import matplotlib.artist as artist
 import matplotlib.image as image
-
-from lxml.etree import fromstring
-import subprocess
 
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
@@ -1575,6 +1577,110 @@ class PickingGUI:
                           fontsize = 10, verticalalignment = 'top',
                           family = 'monospace')
         plt.show()
+
+    def threedLoc2XML(self):
+        """
+        Returns output of 3dloc as xml file
+        """
+        xml =  Element("event")
+        Sub(Sub(xml, "event_id"), "value").text = "0815"
+        Sub(Sub(xml, "event_type"), "value").text = "manual"
+
+        for station in ["VIEL"]:
+            for channel in ['EHZ']:
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", station) 
+                wave.set("stationCode", station) 
+                wave.set("channelCode", channel) 
+                wave.set("locationCode", "") 
+                time = Sub(pick, "time")
+                Sub(time, "value").text = "2010-02-09T19:19:21.255"
+                Sub(time, "uncertainty")
+                Sub(pick, "phaseHint").text = "P"
+                Sub(pick, "onset").text = "impulsive"
+                Sub(pick, "polarity").text = "positiv"
+                Sub(pick, "weight").text = "0"
+                Sub(Sub(pick, "min_amp"), "value").text = "0.00000"
+                Sub(pick, "phase_compu").text = "IPU0"
+                Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
+                Sub(Sub(pick, "phase_weight"), "value").text = "1.00000"
+                Sub(Sub(pick, "phase_delay"), "value").text = "0.00000"
+                Sub(Sub(pick, "azimuth"), "value").text = "1.922043"
+                Sub(Sub(pick, "incident"), "value").text = "96.00000"
+                Sub(Sub(pick, "epi_dist"), "value").text = "44.938843"
+                Sub(Sub(pick, "hyp_dist"), "value").text = "45.30929"
+
+        origin = Sub(xml, "origin")
+        time = Sub(origin, "time")
+        Sub(time, "value").text = "2010-02-09T19:19:13.550"
+        Sub(time, "uncertainty")
+        lat = Sub(origin, "latitude")
+        Sub(lat, "value").text = "50.579498"
+        Sub(lat, "uncertainty").text = "2.240000"
+        lon = Sub(origin, "latitude")
+        Sub(lon, "value").text = "12.243500"
+        Sub(lon, "uncertainty").text = "2.240000"
+        depth = Sub(origin, "latitude")
+        Sub(depth, "value").text = "12.243500"
+        Sub(depth, "uncertainty").text = "2.240000"
+        Sub(origin, "depth_type").text = "from location program"
+        Sub(origin, "earth_mod").text = "VOG"
+        Sub(origin, "originUncertainty")
+        quality = Sub(origin, "originQuality")
+        Sub(quality, "P_usedPhaseCount").text = "7"
+        Sub(quality, "S_usedPhaseCount").text = "7"
+        Sub(quality, "usedPhaseCount").text = "14"
+        Sub(quality, "associatedPhaseCount").text = "14"
+        Sub(quality, "associatedStationCount").text = "14"
+        Sub(quality, "depthPhaseCount").text = "0"
+        Sub(quality, "standardError").text = "0.170000"
+        Sub(quality, "secondaryAzimuthalGap").text = "343.00000"
+        Sub(quality, "groundTruthLevel")
+        Sub(quality, "minimumDistance").text = "45.309029"
+        Sub(quality, "maximumDistance").text = "90.594482"
+        Sub(quality, "medianDistance").text = "64.749686"
+        magnitude = Sub(xml, "magnitude")
+        mag = Sub(magnitude, "mag")
+        Sub(mag, "value").text = "1.823500"
+        Sub(mag, "uncertainty").text = "0.1000000"
+        Sub(magnitude, "type").text = "Ml"
+        Sub(magnitude, "stationCount").text = "14"
+        return tostring(xml,pretty_print=True,xml_declaration=True)
+
+
+    def uploadSeishub(self):
+        """
+        Upload xml file to seishub
+        """
+        userid = "admin"
+        passwd = "admin"
+
+        auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
+
+        servername = 'teide:8080'
+        path = '/xml/seismology/event'
+
+        data = self.threedLoc2XML()
+        name = "baynet_%d" % (id) #XXX id of the file
+
+        #construct and send the header
+        webservice = httplib.HTTP(servername)
+        webservice.putrequest("PUT", path + '/' + name)
+        webservice.putheader('Authorization', auth )
+        webservice.putheader("Host", "localhost")
+        webservice.putheader("User-Agent", "pickingGUI.py")
+        webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
+        webservice.putheader("Content-length", "%d" % len(data))
+        webservice.endheaders()
+        webservice.send(data)
+
+        # get the response
+        statuscode, statusmessage, header = webservice.getreply()
+        if statuscode!=201:
+           print "Server: ", servername, path
+           print "Response: ", statuscode, statusmessage
+           print "Headers: ", header
 
 
 def main():
