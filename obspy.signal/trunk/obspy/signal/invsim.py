@@ -230,3 +230,56 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     # linear detrend, 
     detrend(tr)
     return tr
+
+
+def paz2AmpValueOfFreqResp(paz, freq):
+    """
+    Returns Amplitude at one frequency for the given poles and zeros
+
+    :param paz: Given poles and zeros
+    :param freq: Given frequency
+
+    >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j], \
+               'zeros': [0 + 0j, 0 + 0j], \
+               'gain': 0.4}
+    >>> paz2AmpValueOfFreqResp(paz, 1)
+    0.28302624594071618
+    """
+    # The amplitude of the period is estimated according to "Of Poles and
+    # Zeros", Fank Scherbaum, p 43.
+    jw = complex(0, 2 * np.pi * freq)
+    num = 1
+    for zero in paz['zeros']:
+        num = num * (jw - zero)
+    denum = 1
+    for pole in paz['poles']:
+        denum = denum * (jw - pole)
+    return abs(num/denum) * paz['gain']
+
+
+def estimateMagnitude(paz, amplitude, timespan, h_dist):
+    """
+    Estimates local magnitude from poles and zeros of given instrument, the
+    peak to peak amplitude and the period in which it is measured
+
+    :param paz: PAZ of the instrument
+    :param amplitude: Peak to peak amplitude
+    :param timespan: Timespan of peak to peak amplitude
+    :param h_dist: Horizontal distance to epicenter
+    XXX: Not sure if this is right, need to check tommorrow
+    """
+    woodander = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
+                    'zeros': [0j],
+                    'gain': 2080}
+    freq = 1 / (2 * timespan)
+    amp_val = paz2AmpValueOfFreqResp(woodander) / paz2AmpValueOfFreqResp(paz) 
+    amp_val *= 1000 # convert to mm
+    # analog to spr_mag.c,v line 523
+    magnitude = np.log10(amp_val) + np.log10(h_dist/100.0) + \
+                0.00301*(h_dist - 100.0) + 3.0
+    return magnitude
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
