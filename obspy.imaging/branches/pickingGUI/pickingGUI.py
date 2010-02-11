@@ -5,7 +5,7 @@
 
 #matplotlib.use('gtkagg')
 
-from lxml.etree import SubElement as Sub, parse, tostring,
+from lxml.etree import SubElement as Sub, parse, tostring
 from lxml.etree import fromstring, Element
 from optparse import OptionParser
 import numpy as np
@@ -13,6 +13,7 @@ import sys
 import subprocess
 import httplib
 import base64
+import time
 
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
@@ -222,6 +223,7 @@ class PickingGUI:
                            'setSPolDown':'a', 'setSPolPoorDown':'s'}
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
+        self.xmlEventID = None
         
         # Return, if no streams are given
         if not streams:
@@ -1462,6 +1464,7 @@ class PickingGUI:
         self.redraw()
 
     def do3dLoc(self):
+        self.xmlEventID = '%i' % time.time()
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
@@ -1578,43 +1581,44 @@ class PickingGUI:
                           family = 'monospace')
         plt.show()
 
-    def threedLoc2XML(self):
+    def threeDLoc2XML(self):
         """
         Returns output of 3dloc as xml file
         """
         xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = "0815"
+        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
         Sub(Sub(xml, "event_type"), "value").text = "manual"
-
-        for station in ["VIEL"]:
-            for channel in ['EHZ']:
-                pick = Sub(xml, "pick")
-                wave = Sub(pick, "waveform")
-                wave.set("networkCode", station) 
-                wave.set("stationCode", station) 
-                wave.set("channelCode", channel) 
-                wave.set("locationCode", "") 
-                time = Sub(pick, "time")
-                Sub(time, "value").text = "2010-02-09T19:19:21.255"
-                Sub(time, "uncertainty")
-                Sub(pick, "phaseHint").text = "P"
-                Sub(pick, "onset").text = "impulsive"
-                Sub(pick, "polarity").text = "positiv"
-                Sub(pick, "weight").text = "0"
-                Sub(Sub(pick, "min_amp"), "value").text = "0.00000"
-                Sub(pick, "phase_compu").text = "IPU0"
-                Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
-                Sub(Sub(pick, "phase_weight"), "value").text = "1.00000"
-                Sub(Sub(pick, "phase_delay"), "value").text = "0.00000"
-                Sub(Sub(pick, "azimuth"), "value").text = "1.922043"
-                Sub(Sub(pick, "incident"), "value").text = "96.00000"
-                Sub(Sub(pick, "epi_dist"), "value").text = "44.938843"
-                Sub(Sub(pick, "hyp_dist"), "value").text = "45.30929"
+        
+        for i in range(len(self.streams)):
+            for j in range(len(self.streams[i])):
+                if self.dicts[i].has_key('P'):
+                    pick = Sub(xml, "pick")
+                    wave = Sub(pick, "waveform")
+                    wave.set("networkCode", self.streams[i][j].stats.network) 
+                    wave.set("stationCode", self.streams[i][j].stats.station) 
+                    wave.set("channelCode", self.streams[i][j].stats.channel) 
+                    wave.set("locationCode", "") 
+                    date = Sub(pick, "time")
+                    Sub(date, "value").text = "2010-02-09T19:19:21.255"
+                    Sub(date, "uncertainty")
+                    Sub(pick, "phaseHint").text = "P"
+                    Sub(pick, "onset").text = "impulsive"
+                    Sub(pick, "polarity").text = "positiv"
+                    Sub(pick, "weight").text = "0"
+                    Sub(Sub(pick, "min_amp"), "value").text = "0.00000"
+                    Sub(pick, "phase_compu").text = "IPU0"
+                    Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
+                    Sub(Sub(pick, "phase_weight"), "value").text = "1.00000"
+                    Sub(Sub(pick, "phase_delay"), "value").text = "0.00000"
+                    Sub(Sub(pick, "azimuth"), "value").text = "1.922043"
+                    Sub(Sub(pick, "incident"), "value").text = "96.00000"
+                    Sub(Sub(pick, "epi_dist"), "value").text = "44.938843"
+                    Sub(Sub(pick, "hyp_dist"), "value").text = "45.30929"
 
         origin = Sub(xml, "origin")
-        time = Sub(origin, "time")
-        Sub(time, "value").text = "2010-02-09T19:19:13.550"
-        Sub(time, "uncertainty")
+        date = Sub(origin, "time")
+        Sub(date, "value").text = "2010-02-09T19:19:13.550"
+        Sub(date, "uncertainty")
         lat = Sub(origin, "latitude")
         Sub(lat, "value").text = "50.579498"
         Sub(lat, "uncertainty").text = "2.240000"
@@ -1662,7 +1666,9 @@ class PickingGUI:
         path = '/xml/seismology/event'
 
         data = self.threedLoc2XML()
-        name = "baynet_%d" % (id) #XXX id of the file
+        #XXX remove later
+        self.xmlEventID = '%i' % 1265906465.2780671
+        name = "baynet_%s" % (self.xmlEventID) #XXX id of the file
 
         #construct and send the header
         webservice = httplib.HTTP(servername)
