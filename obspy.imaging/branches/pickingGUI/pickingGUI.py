@@ -19,7 +19,8 @@ from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
 from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
 from obspy.signal.filter import lowpass, lowpassZPHSH, highpass, highpassZPHSH
-from obspy.signal.util import utlLonLat
+from obspy.signal.util import utlLonLat, utlGeoKm
+from obspy.signal.invsim import estimateMagnitude
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -261,6 +262,7 @@ class PickingGUI:
         # set all station magnitude use-flags False
         self.dicts = []
         self.eventMapColors = []
+        #client = Client()
         for i in range(len(self.streams)):
             self.dicts.append({})
             self.dicts[i]['MagUse'] = True
@@ -268,6 +270,12 @@ class PickingGUI:
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
             #lon, lat, ele = getCoord(network, self.stationlist[i])
+            #net = streams[i][0].stats.network.strip()
+            #sta = self.dicts[i]['Station']
+            #date = streams[i][0].stats.starttime.date
+            #self.dicts[i]['pazZ'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][0].stats.channel)
+            #self.dicts[i]['pazN'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][1].stats.channel)
+            #self.dicts[i]['pazE'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][2].stats.channel)
             #self.dicts[i]['Station'] = self.stationlist[i]
             #self.dicts[i]['StaLon'] = lon
             #self.dicts[i]['StaLat'] = lat
@@ -289,6 +297,66 @@ class PickingGUI:
         self.dicts[2]['StaEle'] = 0.555000
         self.dicts[3]['StaEle'] = 1.162000
         self.dicts[4]['StaEle'] = 0.763000
+        self.dicts[0]['pazZ'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[0]['pazN'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[0]['pazE'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[1]['pazZ'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[1]['pazN'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[1]['pazE'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[2]['pazZ'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[2]['pazN'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[2]['pazE'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[3]['pazZ'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[3]['pazN'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[3]['pazE'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[4]['pazZ'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[4]['pazN'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
+        self.dicts[4]['pazE'] = {'gain': 1.0,
+                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                                 'sensitivity': 671140000.0,
+                                 'zeros': [0j, 0j, 0j]}
 
         #XXX only for testing purposes
         self.dicts[0]['Mag'] = 1.34
@@ -1669,8 +1737,32 @@ class PickingGUI:
         except:
             pass
 
+    def calculateStationMagnitudes(self):
+        for i in range(len(self.streams)):
+            if (self.dicts[i].has_key('MagMin1') and
+                self.dicts[i].has_key('MagMin2') and
+                self.dicts[i].has_key('MagMax1') and
+                self.dicts[i].has_key('MagMax2')):
+                
+                amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
+                timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
+                timedelta /= self.streams[i][1].stats.sampling_rate
+                x, y = utlGeoKm(self.threeDlocEventLon, self.threeDlocEventLat, self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
+                dist = np.sqrt(x**2 + y**2)
+                #print self.dicts[i]['pazN']
+                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta, dist)
+                amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
+                timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
+                timedelta /= self.streams[i][2].stats.sampling_rate
+                mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta, dist)
+                mag /= 2.
+                self.dicts[i]['Mag'] = mag
+                print 'calculated new magnitude for %s: %0.2f' % (self.dicts[i]['Station'], self.dicts[i]['Mag'])
+                
+
     def show3dlocEventMap(self):
         self.load3dlocData()
+        self.calculateStationMagnitudes()
         self.updateNetworkMag()
         #print self.dicts[0]
         self.fig3dloc = plt.figure()
@@ -1726,7 +1818,7 @@ class PickingGUI:
                                   '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
                 self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '\n\n\n\n  %s' % self.dicts[i]['Mag'], va = 'top',
+                                  '\n\n\n\n  %0.2f' % self.dicts[i]['Mag'], va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['Mag'])
             self.scatterMag = self.ax3dloc.scatter(self.scatterMagLon, self.scatterMagLat, s = 150,
@@ -1790,8 +1882,8 @@ class PickingGUI:
         i = self.scatterMagIndices[event.ind[0]]
         j = event.ind[0]
         self.dicts[i]['MagUse'] = not self.dicts[i]['MagUse']
-        print event.ind[0]
-        print i
+        #print event.ind[0]
+        #print i
         #print event.artist
         #for di in self.dicts:
         #    print di['MagUse']
