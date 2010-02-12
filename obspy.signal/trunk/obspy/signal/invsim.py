@@ -272,7 +272,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                     'zeros': [0j],
                     'gain': 2080}
     freq = 1 / (2 * timespan)
-    amp_val = paz2AmpValueOfFreqResp(woodander) / paz2AmpValueOfFreqResp(paz) 
+    amp_val = paz2AmpValueOfFreqResp(woodander, freq) / paz2AmpValueOfFreqResp(paz, freq) 
     amp_val *= 1000 # convert to mm
     # analog to spr_mag.c,v line 523
     magnitude = np.log10(amp_val) + np.log10(h_dist/100.0) + \
