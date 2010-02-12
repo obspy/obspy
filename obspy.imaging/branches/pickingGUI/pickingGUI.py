@@ -259,10 +259,44 @@ class PickingGUI:
 
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
-        self.dicts=[]
-        for i in range(len(streams)):
-            self.dicts.append({'MagUse': False})
-        
+        self.dicts = []
+        self.eventMapColors = []
+        for i in range(len(self.streams)):
+            self.dicts.append({})
+            self.dicts[i]['MagUse'] = True
+            self.dicts[i]['Station'] = streams[i][0].stats.station.rstrip()
+            self.eventMapColors.append((0.,  1.,  0.,  1.))
+            #XXX uncomment following lines for use with dynamically acquired data from seishub!
+            #lon, lat, ele = getCoord(network, self.stationlist[i])
+            #self.dicts[i]['Station'] = self.stationlist[i]
+            #self.dicts[i]['StaLon'] = lon
+            #self.dicts[i]['StaLat'] = lat
+            #self.dicts[i]['StaEle'] = ele
+
+        #XXX Remove lines for use with dynamically acquired data from seishub!
+        self.dicts[0]['StaLon'] = 12.795714
+        self.dicts[1]['StaLon'] = 12.864466
+        self.dicts[2]['StaLon'] = 12.867100
+        self.dicts[3]['StaLon'] = 12.824082
+        self.dicts[4]['StaLon'] = 12.729887
+        self.dicts[0]['StaLat'] = 47.737167
+        self.dicts[1]['StaLat'] = 47.761658
+        self.dicts[2]['StaLat'] = 47.740501
+        self.dicts[3]['StaLat'] = 47.745098
+        self.dicts[4]['StaLat'] = 47.744171
+        self.dicts[0]['StaEle'] = 0.860000
+        self.dicts[1]['StaEle'] = 0.815000
+        self.dicts[2]['StaEle'] = 0.555000
+        self.dicts[3]['StaEle'] = 1.162000
+        self.dicts[4]['StaEle'] = 0.763000
+
+        #XXX only for testing purposes
+        self.dicts[0]['Mag'] = 1.34
+        self.dicts[1]['Mag'] = 1.03
+        #self.dicts[2]['Mag'] = 1.22
+        self.dicts[3]['Mag'] = 0.65
+        self.dicts[4]['Mag'] = 0.96
+
         #Define a pointer to navigate through the streams
         self.stNum=len(streams)
         self.stPt=0
@@ -1535,7 +1569,10 @@ class PickingGUI:
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
         for i in range(len(self.streams)):
-            lon, lat, ele = getCoord(network, self.stationlist[i])
+            #lon, lat, ele = getCoord(network, self.stationlist[i])
+            lon = self.dicts[i]['StaLon']
+            lat = self.dicts[i]['StaLat']
+            ele = self.dicts[i]['StaEle']
             self.coords.append([lon, lat])
             if self.dicts[i].has_key('P'):
                 t = self.streams[i][0].stats.starttime
@@ -1583,6 +1620,7 @@ class PickingGUI:
         self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
+        #XXX aufraeumen!! Die meisten Listen hier werden nicht mehr gebraucht
         self.threeDlocPLons = []
         self.threeDlocPLats = []
         self.threeDlocSLons = []
@@ -1594,24 +1632,47 @@ class PickingGUI:
         lines = open(self.threeDlocInfile).readlines()
         for line in lines:
             pick = line.split()
-            if pick[1] == 'P':
-                self.threeDlocPLons.append(float(pick[14]))
-                self.threeDlocPLats.append(float(pick[15]))
-                self.threeDlocPNames.append(' ' + pick[0])
-            if pick[1] == 'S':
-                self.threeDlocSLons.append(float(pick[14]))
-                self.threeDlocSLats.append(float(pick[15]))
-                self.threeDlocSNames.append(' ' + pick[0])
+            for i in range(len(self.streams)):
+                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+                    if pick[1] == 'P':
+                        self.dicts[i]['3DlocPLon'] = float(pick[14])
+                        self.dicts[i]['3DlocPLat'] = float(pick[15])
+                    elif pick[1] == 'S':
+                        self.dicts[i]['3DlocSLon'] = float(pick[14])
+                        self.dicts[i]['3DlocSLat'] = float(pick[15])
+                    break
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
             pick = line.split()
-            if pick[1] == 'P':
-                self.threeDlocPResInfo.append('\n\n %+0.3fs' % float(pick[8]))
-            if pick[1] == 'S':
-                self.threeDlocSResInfo.append('\n\n\n %+0.3fs' % float(pick[8]))
+            for i in range(len(self.streams)):
+                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+                    if pick[1] == 'P':
+                        self.dicts[i]['3DlocPResInfo'] = '\n\n %+0.3fs' % float(pick[8])
+                    elif pick[1] == 'S':
+                        self.dicts[i]['3DlocSResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
+                    break
+    
+    def updateNetworkMag(self):
+        count = 0
+        self.netMag = 0
+        for i in range(len(self.streams)):
+            if self.dicts[i]['MagUse'] and self.dicts[i].has_key('Mag'):
+                count += 1
+                self.netMag += self.dicts[i]['Mag']
+        if count == 0:
+            self.netMag = np.NaN
+        else:
+            self.netMag /= count
+        self.netMagLabel = '\n\n\n  %.2f' % self.netMag
+        try:
+            self.netMagText.set_text(self.netMagLabel)
+        except:
+            pass
 
     def show3dlocEventMap(self):
         self.load3dlocData()
+        self.updateNetworkMag()
+        #print self.dicts[0]
         self.fig3dloc = plt.figure()
         self.ax3dloc = self.fig3dloc.add_subplot(111)
         self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
@@ -1625,43 +1686,86 @@ class PickingGUI:
                           self.threeDlocEventErrX, self.threeDlocEventLat,
                           self.threeDlocEventErrY), va = 'top',
                           family = 'monospace')
+        self.netMagText = self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
+                          self.netMagLabel,
+                          va = 'top',
+                          color = 'green',
+                          family = 'monospace')
         errorell = Ellipse(xy = [self.threeDlocEventLon, self.threeDlocEventLat],
                       width = errLon, height = errLat, angle = 0, fill = False)
         self.ax3dloc.add_artist(errorell)
-        if len(self.threeDlocSNames) > 0:
-            #self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
-            #                     color = self.dictPhaseColors['S'], marker = 'v',
-            #                     edgecolor = 'black')
-            for i in range(len(self.threeDlocSNames)):
-                self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 150,
+        self.scatterMagIndices = []
+        self.scatterMagLon = []
+        self.scatterMagLat = []
+        for i in range(len(self.streams)):
+            if self.dicts[i].has_key('3DlocPLon'):
+                self.ax3dloc.scatter([self.dicts[i]['3DlocPLon']], [self.dicts[i]['3DlocPLat']], s = 150,
                                      marker = 'v', color = '', edgecolor = 'black')
-                #self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-                #                  '  ' + self.threeDlocSNames[i], va = 'top')
-                self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-                                  self.threeDlocSNames[i], va = 'top',
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
-                self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-                                  self.threeDlocSResInfo[i], va = 'top',
-                                  family = 'monospace',
-                                  color = self.dictPhaseColors['S'])
-        if len(self.threeDlocPNames) > 0:
-            #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
-            #                     color = self.dictPhaseColors['P'], marker = 'v',
-            #                     edgecolor = 'black')
-            for i in range(len(self.threeDlocPNames)):
-                self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
-                                     marker = 'v', color = '', edgecolor = 'black', picker = 10)
-                #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
-                #                              marker = 'v', color = '', edgecolor = 'black', picker = True)
-                #self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-                #                  '  ' + self.threeDlocPNames[i], va = 'top')
-                self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-                                  self.threeDlocPNames[i], va = 'top',
-                                  family = 'monospace')
-                self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-                                  self.threeDlocPResInfo[i], va = 'top',
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  self.dicts[i]['3DlocPResInfo'], va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['P'])
+            if self.dicts[i].has_key('3DlocSLon'):
+                self.ax3dloc.scatter([self.dicts[i]['StaLon']], [self.dicts[i]['StaLat']], s = 150,
+                                     marker = 'v', color = '', edgecolor = 'black')
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  '  ' + self.dicts[i]['Station'], va = 'top',
+                                  family = 'monospace')
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  self.dicts[i]['3DlocSResInfo'], va = 'top',
+                                  family = 'monospace',
+                                  color = self.dictPhaseColors['S'])
+            if self.dicts[i].has_key('Mag'):
+                self.scatterMagIndices.append(i)
+                self.scatterMagLon.append(self.dicts[i]['StaLon'])
+                self.scatterMagLat.append(self.dicts[i]['StaLat'])
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  '  ' + self.dicts[i]['Station'], va = 'top',
+                                  family = 'monospace')
+                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  '\n\n\n\n  %s' % self.dicts[i]['Mag'], va = 'top',
+                                  family = 'monospace',
+                                  color = self.dictPhaseColors['Mag'])
+            self.scatterMag = self.ax3dloc.scatter(self.scatterMagLon, self.scatterMagLat, s = 150,
+                                     marker = 'v', color = '', edgecolor = 'black', picker = 10)
+                
+        #if len(self.threeDlocSNames) > 0:
+        #    #self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
+        #    #                     color = self.dictPhaseColors['S'], marker = 'v',
+        #    #                     edgecolor = 'black')
+        #    for i in range(len(self.threeDlocSNames)):
+        #        self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 150,
+        #                             marker = 'v', color = '', edgecolor = 'black')
+        #        #self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+        #        #                  '  ' + self.threeDlocSNames[i], va = 'top')
+        #        self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+        #                          self.threeDlocSNames[i], va = 'top',
+        #                          family = 'monospace')
+        #        self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+        #                          self.threeDlocSResInfo[i], va = 'top',
+        #                          family = 'monospace',
+        #                          color = self.dictPhaseColors['S'])
+        #if len(self.threeDlocPNames) > 0:
+        #    #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
+        #    #                     color = self.dictPhaseColors['P'], marker = 'v',
+        #    #                     edgecolor = 'black')
+        #    for i in range(len(self.threeDlocPNames)):
+        #        self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
+        #                             marker = 'v', color = '', edgecolor = 'black', picker = 10)
+        #        #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
+        #        #                              marker = 'v', color = '', edgecolor = 'black', picker = True)
+        #        #self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+        #        #                  '  ' + self.threeDlocPNames[i], va = 'top')
+        #        self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+        #                          self.threeDlocPNames[i], va = 'top',
+        #                          family = 'monospace')
+        #        self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+        #                          self.threeDlocPResInfo[i], va = 'top',
+        #                          family = 'monospace',
+        #                          color = self.dictPhaseColors['P'])
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
         self.ax3dloc.set_title(self.threeDlocEventTime)
@@ -1677,27 +1781,31 @@ class PickingGUI:
                           fontsize = 10, verticalalignment = 'top',
                           family = 'monospace')
         self.fig3dloc.canvas.mpl_connect('pick_event', self.selectMagnitudes)
+        self.scatterMag.set_facecolors(self.eventMapColors)
         plt.show()
 
     def selectMagnitudes(self, event):
-        colors = event.artist.get_facecolors()
-        #print event
+        if event.artist != self.scatterMag:
+            return
+        i = self.scatterMagIndices[event.ind[0]]
+        j = event.ind[0]
+        self.dicts[i]['MagUse'] = not self.dicts[i]['MagUse']
+        print event.ind[0]
+        print i
         #print event.artist
-        #print event.ind
-        #print colors
-        if len(colors) == 0:
-            colors = [[ 0.,  0.,  0.,  0.],
-                      [ 0.,  0.,  0.,  0.],
-                      [ 0.,  0.,  0.,  0.],
-                      [ 0.,  0.,  0.,  0.],
-                      [ 0.,  0.,  0.,  0.]]
-        #print colors
-        #print colors[event.ind[0]]
-        if list(colors[event.ind[0]]) == [ 0.,  0.,  0.,  0.]:
-            colors[event.ind[0]] = [ 0.,  1.,  0.,  1.]
+        #for di in self.dicts:
+        #    print di['MagUse']
+        #print i
+        #print self.dicts[i]['MagUse']
+        if self.dicts[i]['MagUse']:
+            self.eventMapColors[j] = (0.,  1.,  0.,  1.)
         else:
-            colors[event.ind[0]] = [ 0.,  0.,  0.,  0.]
-        event.artist.set_facecolors(colors)
+            self.eventMapColors[j] = (0.,  0.,  0.,  0.)
+        #print self.eventMapColors
+        self.scatterMag.set_facecolors(self.eventMapColors)
+        #print self.scatterMag.get_facecolors()
+        #event.artist.set_facecolors(self.eventMapColors)
+        self.updateNetworkMag()
         self.fig3dloc.canvas.draw()
 
     def threeDLoc2XML(self):
