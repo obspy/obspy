@@ -553,7 +553,7 @@ class PickingGUI:
     def drawPsynthLabel(self):
         if not self.dicts[self.stPt].has_key('Psynth'):
             return
-        PsynthLabelString = 'Psynth: %+.3f' % self.dicts[self.stPt]['Pres']
+        PsynthLabelString = 'Psynth: %+.3fs' % self.dicts[self.stPt]['Pres']
         self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.08 * len(self.axs), '  ' + PsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Psynth'])
     
@@ -683,7 +683,7 @@ class PickingGUI:
     def drawSsynthLabel(self):
         if not self.dicts[self.stPt].has_key('Ssynth'):
             return
-        SsynthLabelString = 'Ssynth: %+.3f' % self.dicts[self.stPt]['Sres']
+        SsynthLabelString = 'Ssynth: %+.3fs' % self.dicts[self.stPt]['Sres']
         self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.08 * len(self.axs), '\n  ' + SsynthLabelString,
                              transform = self.trans[0], color=self.dictPhaseColors['Ssynth'])
     
@@ -1744,11 +1744,13 @@ class PickingGUI:
                     break
     
     def updateNetworkMag(self):
+        print "updating network magnitude..."
         self.staMagCount = 0
         self.netMag = 0
         self.staMags = []
         for i in range(len(self.streams)):
             if self.dicts[i]['MagUse'] and self.dicts[i].has_key('Mag'):
+                print self.dicts[i]['Station']
                 self.staMagCount += 1
                 self.netMag += self.dicts[i]['Mag']
                 self.staMags.append(self.dicts[i]['Mag'])
@@ -1757,7 +1759,8 @@ class PickingGUI:
         else:
             self.netMag /= self.staMagCount
         self.netMagVar = np.var(self.staMags)
-        self.netMagLabel = '\n\n\n\n  %.2f' % self.netMag
+        print "new network magnitude: %.2f (Variance: %.2f)" % (self.netMag, self.netMagVar)
+        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.netMag, self.netMagVar)
         try:
             self.netMagText.set_text(self.netMagLabel)
         except:
@@ -1777,6 +1780,7 @@ class PickingGUI:
                 z = abs(self.dicts[i]['StaEle'] - self.threeDlocEventZ)
                 self.dicts[i]['distX'] = x
                 self.dicts[i]['distY'] = y
+                print self.dicts[i]['StaEle'], self.threeDlocEventZ, z
                 self.dicts[i]['distZ'] = z
                 dist = np.sqrt(x**2 + y**2)
                 #print self.dicts[i]['pazN']
@@ -1806,8 +1810,8 @@ class PickingGUI:
         self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
                           ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.threeDlocEventLon,
                           self.threeDlocEventErrX, self.threeDlocEventLat,
-                          self.threeDlocEventErrY, self.threeDlocEventZ,
-                          self.threeDlocEventErrZ), va = 'top',
+                          self.threeDlocEventErrY, self.threeDlocEventZ * 1000,
+                          self.threeDlocEventErrZ * 1000), va = 'top',
                           family = 'monospace')
         self.netMagText = self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
                           self.netMagLabel,
@@ -1959,7 +1963,7 @@ class PickingGUI:
                 picktime = self.streams[i][0].stats.starttime
                 picktime += (self.dicts[i]['P'] /
                              self.streams[i][0].stats.sampling_rate)
-                Sub(date, "value").text = (picktime.isoformat() + '.%06i' % picktime.microsecond)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
                     temp = float(self.dicts[i]['PErr2'] -
                                  self.dicts[i]['PErr1'])
@@ -2011,7 +2015,7 @@ class PickingGUI:
                 picktime = self.streams[i][axind].stats.starttime
                 picktime += (self.dicts[i]['S'] /
                              self.streams[i][axind].stats.sampling_rate)
-                Sub(date, "value").text = (picktime.isoformat() + '.%06i' % picktime.microsecond)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
                     temp = float(self.dicts[i]['SErr2'] -
                                  self.dicts[i]['SErr1'])
@@ -2052,12 +2056,12 @@ class PickingGUI:
         
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
-        Sub(date, "value").text = self.threeDlocEventTime.isoformat() + '.%03i' % self.threeDlocEventTime.microsecond
+        Sub(date, "value").text = self.threeDlocEventTime.isoformat() # + '.%03i' % self.threeDlocEventTime.microsecond
         Sub(date, "uncertainty")
         lat = Sub(origin, "latitude")
         Sub(lat, "value").text = '%s' % self.threeDlocEventLat
         Sub(lat, "uncertainty").text = '%s' % self.threeDlocEventErrY #XXX Lat Error in km??!!
-        lon = Sub(origin, "latitude")
+        lon = Sub(origin, "longitude")
         Sub(lon, "value").text = '%s' % self.threeDlocEventLon
         Sub(lon, "uncertainty").text = '%s' % self.threeDlocEventErrX #XXX Lon Error in km??!!
         depth = Sub(origin, "depth")
