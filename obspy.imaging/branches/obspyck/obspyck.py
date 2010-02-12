@@ -21,6 +21,7 @@ from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
 from obspy.signal.filter import lowpass, lowpassZPHSH, highpass, highpassZPHSH
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
+from obspy.imaging.spectrogram import spectrogram
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -227,6 +228,7 @@ class PickingGUI:
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
         self.xmlEventID = None
+        self.flagSpectrogram = False
         
         # Return, if no streams are given
         if not streams:
@@ -449,7 +451,13 @@ class PickingGUI:
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
-            self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
+            if not self.flagSpectrogram:
+                self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
+            else:
+                spectrogram(self.streams[self.stPt][i].data,
+                            self.streams[self.stPt][i].stats.sampling_rate,
+                            axis = self.axs[i],
+                            nwin = self.streams[self.stPt][i].stats.npts * 4 / self.streams[self.stPt][i].stats.sampling_rate)
         self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
@@ -964,7 +972,7 @@ class PickingGUI:
     def addFiltButtons(self):
         #add filter buttons
         self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase'),(self.flagFilt,self.flagFiltZPH))
+        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram'),(self.flagFilt,self.flagFiltZPH,self.flagSpectrogram))
         self.check.on_clicked(self.funcFilt)
         self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
@@ -1073,6 +1081,11 @@ class PickingGUI:
             self.switch_flagFiltZPH()
             if self.flagFilt:
                 self.updatePlot()
+        elif label=='Spectrogram':
+            self.flagSpectrogram = not self.flagSpectrogram
+            self.delAxes()
+            self.drawAxes()
+            self.fig.canvas.draw()
     
     def funcFiltTyp(self, label):
         self.flagFiltTyp=self.dictFiltTyp[label]
