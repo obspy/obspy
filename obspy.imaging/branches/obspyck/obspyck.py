@@ -262,108 +262,111 @@ class PickingGUI:
         # set all station magnitude use-flags False
         self.dicts = []
         self.eventMapColors = []
-        #client = Client()
+        client1 = Client()
         for i in range(len(self.streams)):
             self.dicts.append({})
             self.dicts[i]['MagUse'] = True
             self.dicts[i]['Station'] = streams[i][0].stats.station.rstrip()
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
-            #lon, lat, ele = getCoord(network, self.stationlist[i])
-            #net = streams[i][0].stats.network.strip()
-            #sta = self.dicts[i]['Station']
-            #date = streams[i][0].stats.starttime.date
-            #self.dicts[i]['pazZ'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][0].stats.channel)
-            #self.dicts[i]['pazN'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][1].stats.channel)
-            #self.dicts[i]['pazE'] = client.station.getPAZ(net, sta, date, channel_id = streams[i][2].stats.channel)
-            #self.dicts[i]['Station'] = self.stationlist[i]
-            #self.dicts[i]['StaLon'] = lon
-            #self.dicts[i]['StaLat'] = lat
-            #self.dicts[i]['StaEle'] = ele
+            net = streams[i][0].stats.network.strip()
+            if net == '':
+                net = 'BW'
+            sta = self.dicts[i]['Station']
+            print sta
+            date = streams[i][0].stats.starttime.date
+            lon, lat, ele = getCoord(net, sta)
+            self.dicts[i]['pazZ'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][0].stats.channel)
+            self.dicts[i]['pazN'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][1].stats.channel)
+            self.dicts[i]['pazE'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][2].stats.channel)
+            self.dicts[i]['Station'] = self.stationlist[i]
+            self.dicts[i]['StaLon'] = lon
+            self.dicts[i]['StaLat'] = lat
+            self.dicts[i]['StaEle'] = ele
 
         #XXX Remove lines for use with dynamically acquired data from seishub!
-        self.dicts[0]['StaLon'] = 12.795714
-        self.dicts[1]['StaLon'] = 12.864466
-        self.dicts[2]['StaLon'] = 12.867100
-        self.dicts[3]['StaLon'] = 12.824082
-        self.dicts[4]['StaLon'] = 12.729887
-        self.dicts[0]['StaLat'] = 47.737167
-        self.dicts[1]['StaLat'] = 47.761658
-        self.dicts[2]['StaLat'] = 47.740501
-        self.dicts[3]['StaLat'] = 47.745098
-        self.dicts[4]['StaLat'] = 47.744171
-        self.dicts[0]['StaEle'] = 0.860000
-        self.dicts[1]['StaEle'] = 0.815000
-        self.dicts[2]['StaEle'] = 0.555000
-        self.dicts[3]['StaEle'] = 1.162000
-        self.dicts[4]['StaEle'] = 0.763000
-        self.dicts[0]['pazZ'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[0]['pazN'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[0]['pazE'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[1]['pazZ'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[1]['pazN'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[1]['pazE'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[2]['pazZ'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[2]['pazN'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[2]['pazE'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[3]['pazZ'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[3]['pazN'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[3]['pazE'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[4]['pazZ'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[4]['pazN'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
-        self.dicts[4]['pazE'] = {'gain': 1.0,
-                                 'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-                                 'sensitivity': 671140000.0,
-                                 'zeros': [0j, 0j, 0j]}
+        #self.dicts[0]['StaLon'] = 12.795714
+        #self.dicts[1]['StaLon'] = 12.864466
+        #self.dicts[2]['StaLon'] = 12.867100
+        #self.dicts[3]['StaLon'] = 12.824082
+        #self.dicts[4]['StaLon'] = 12.729887
+        #self.dicts[0]['StaLat'] = 47.737167
+        #self.dicts[1]['StaLat'] = 47.761658
+        #self.dicts[2]['StaLat'] = 47.740501
+        #self.dicts[3]['StaLat'] = 47.745098
+        #self.dicts[4]['StaLat'] = 47.744171
+        #self.dicts[0]['StaEle'] = 0.860000
+        #self.dicts[1]['StaEle'] = 0.815000
+        #self.dicts[2]['StaEle'] = 0.555000
+        #self.dicts[3]['StaEle'] = 1.162000
+        #self.dicts[4]['StaEle'] = 0.763000
+        #self.dicts[0]['pazZ'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[0]['pazN'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[0]['pazE'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[1]['pazZ'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[1]['pazN'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[1]['pazE'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[2]['pazZ'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[2]['pazN'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[2]['pazE'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[3]['pazZ'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[3]['pazN'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[3]['pazE'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[4]['pazZ'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[4]['pazN'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
+        #self.dicts[4]['pazE'] = {'gain': 1.0,
+        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+        #                         'sensitivity': 671140000.0,
+        #                         'zeros': [0j, 0j, 0j]}
 
-        #XXX only for testing purposes
-        self.dicts[0]['Mag'] = 1.34
-        self.dicts[1]['Mag'] = 1.03
-        #self.dicts[2]['Mag'] = 1.22
-        self.dicts[3]['Mag'] = 0.65
-        self.dicts[4]['Mag'] = 0.96
+        ##XXX only for testing purposes
+        #self.dicts[0]['Mag'] = 1.34
+        #self.dicts[1]['Mag'] = 1.03
+        ##self.dicts[2]['Mag'] = 1.22
+        #self.dicts[3]['Mag'] = 0.65
+        #self.dicts[4]['Mag'] = 0.96
 
         #Define a pointer to navigate through the streams
         self.stNum=len(streams)
@@ -398,7 +401,7 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'showMap', 'save', 'quit'):
+        for label in ('do3dloc', 'showMap', 'send2seishub', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
@@ -408,6 +411,8 @@ class PickingGUI:
                 elif item.labelstr == 'showMap':
                     self.load3dlocData()
                     self.show3dlocEventMap()
+                elif item.labelstr == 'send2seishub':
+                    self.uploadSeishub()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
         self.menu = Menu(self.fig, menuitems)
@@ -1683,8 +1688,10 @@ class PickingGUI:
         event = open(self.threeDlocOutfile).readline().split()
         self.threeDlocEventLon = float(event[8])
         self.threeDlocEventLat = float(event[9])
+        self.threeDlocEventZ = float(event[10]) * 1000
         self.threeDlocEventErrX = float(event[11])
         self.threeDlocEventErrY = float(event[12])
+        self.threeDlocEventErrZ = float(event[13]) * 1000
         self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
@@ -1731,7 +1738,7 @@ class PickingGUI:
             self.netMag = np.NaN
         else:
             self.netMag /= count
-        self.netMagLabel = '\n\n\n  %.2f' % self.netMag
+        self.netMagLabel = '\n\n\n\n  %.2f' % self.netMag
         try:
             self.netMagText.set_text(self.netMagLabel)
         except:
@@ -1774,9 +1781,10 @@ class PickingGUI:
         errLon -= self.threeDlocEventLon
         errLat -= self.threeDlocEventLat
         self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
-                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm' % (self.threeDlocEventLon,
+                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.threeDlocEventLon,
                           self.threeDlocEventErrX, self.threeDlocEventLat,
-                          self.threeDlocEventErrY), va = 'top',
+                          self.threeDlocEventErrY, self.threeDlocEventZ,
+                          self.threeDlocEventErrZ), va = 'top',
                           family = 'monospace')
         self.netMagText = self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
                           self.netMagLabel,
@@ -1923,26 +1931,33 @@ class PickingGUI:
                 picktime = self.streams[i][0].stats.starttime
                 picktime += (self.dicts[i]['P'] /
                              self.streams[i][0].stats.sampling_rate)
-                Sub(date, "value").text = (picktime.isoformat() + '.' +
-                                           picktime.microsecond)
-                Sub(date, "uncertainty") #XXX what does this line mean???
+                Sub(date, "value").text = (picktime.isoformat() + '.%06i' % picktime.microsecond)
+                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
+                    temp = float(self.dicts[i].has_key('PErr2') -
+                                 self.dicts[i].has_key('PErr1'))
+                    temp /= self.streams[i][0].stats.sampling_rate
+                    Sub(date, "uncertainty").text = str(temp)
+                else:
+                    Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "P"
-                if self.dicts[i]['POnset'] == 'impulsive':
-                    Sub(pick, "onset").text = 'impulsive'
-                elif self.dicts[i]['POnset'] == 'emergent':
-                    Sub(pick, "onset").text = 'emergent'
+                if self.dicts[i].has_key('POnset'):
+                    if self.dicts[i]['POnset'] == 'impulsive':
+                        Sub(pick, "onset").text = 'impulsive'
+                    elif self.dicts[i]['POnset'] == 'emergent':
+                        Sub(pick, "onset").text = 'emergent'
                 else:
-                    Sub(pick, "onset").text = ''
-                if self.dicts[i]['PPol'] == 'Up' or self.dicts[i]['PPol'] == 'PoorUp':
-                    Sub(pick, "polarity").text = 'positiv'
-                elif self.dicts[i]['PPol'] == 'Down' or self.dicts[i]['PPol'] == 'PoorDown':
-                    Sub(pick, "polarity").text = 'negativ'
+                    Sub(pick, "onset")
+                if self.dicts[i].has_key('PPol'):
+                    if self.dicts[i]['PPol'] == 'Up' or self.dicts[i]['PPol'] == 'PoorUp':
+                        Sub(pick, "polarity").text = 'positive'
+                    elif self.dicts[i]['PPol'] == 'Down' or self.dicts[i]['PPol'] == 'PoorDown':
+                        Sub(pick, "polarity").text = 'negative'
                 else:
-                    Sub(pick, "polarity").text = ''
+                    Sub(pick, "polarity")
                 if self.dicts[i].has_key('PWeight'):
                     Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
                 else:
-                    Sub(pick, "weight").text = ''
+                    Sub(pick, "weight")
                 Sub(Sub(pick, "min_amp"), "value").text = "0.00000" #XXX what is min_amp???
                 Sub(pick, "phase_compu").text = "IPU0"
                 Sub(Sub(pick, "phase_res"), "value").text = "0.17000"
@@ -1963,7 +1978,7 @@ class PickingGUI:
         lon = Sub(origin, "latitude")
         Sub(lon, "value").text = "12.243500"
         Sub(lon, "uncertainty").text = "2.240000"
-        depth = Sub(origin, "latitude")
+        depth = Sub(origin, "depth")
         Sub(depth, "value").text = "12.243500"
         Sub(depth, "uncertainty").text = "2.240000"
         Sub(origin, "depth_type").text = "from location program"
@@ -2003,17 +2018,17 @@ class PickingGUI:
         servername = 'teide:8080'
         path = '/xml/seismology/event'
 
-        data = self.threedLoc2XML()
+        data = self.threeDLoc2XML()
         #XXX remove later
         self.xmlEventID = '%i' % 1265906465.2780671
-        name = "baynet_%s" % (self.xmlEventID) #XXX id of the file
+        name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
 
         #construct and send the header
         webservice = httplib.HTTP(servername)
         webservice.putrequest("PUT", path + '/' + name)
         webservice.putheader('Authorization', auth )
         webservice.putheader("Host", "localhost")
-        webservice.putheader("User-Agent", "pickingGUI.py")
+        webservice.putheader("User-Agent", "obspyck")
         webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
         webservice.putheader("Content-length", "%d" % len(data))
         webservice.endheaders()
@@ -2025,6 +2040,8 @@ class PickingGUI:
            print "Server: ", servername, path
            print "Response: ", statuscode, statusmessage
            print "Headers: ", header
+        else:
+            print 'Upload to seishub successful (EventId: %s)' % name
 
 
 def main():
