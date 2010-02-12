@@ -5,7 +5,7 @@ The InvSim test suite.
 """
 
 from obspy.core import Stream, Trace, UTCDateTime
-from obspy.signal import seisSim, cornFreq2Paz, lowpass
+from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
 import gzip
 import inspect
 import numpy as np
@@ -184,6 +184,29 @@ class InvSimTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(res, srl_res)
 
 
+    def test_estimateMagnitude(self):
+        """
+        Tests against PITSA. Note that PITSA displays microvolt, that is
+        the amplitude values must be computed back into counts (for this
+        stations .596microvolt/count was used). Pitsa internally calculates
+        with the sensitivity 2800 of the WA. Using this we get for the
+        following for event 2009-07-19 23:03::
+
+            RTSH PITSA 2.263 ObsPy 2.294
+            RTBE PITSA 1.325 ObsPy 1.363
+            RMOA PITSA 1.629 ObsPy 1.675
+        """
+        paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j], \
+               'zeros': [0 + 0j, 0 + 0j, 0 + 0j], \
+               'gain': 1.0, \
+               'sensitivity': 671140000.0}
+        mag_RTSH = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
+        self.assertAlmostEqual(mag_RTSH,  2.1653454839257327)
+        mag_RTBE = estimateMagnitude(paz, 3.61e4, 0.08, 2.197)
+        self.assertAlmostEqual(mag_RTBE, 1.2334841683429503)
+        mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
+        self.assertAlmostEqual(mag_RNON, 1.5455526399683184)
+
     #XXX: Test for really big signal is missing, where the water level is
     # actually acting
     #def test_seisSimVsPitsa2(self):
@@ -194,7 +217,6 @@ class InvSimTestCase(unittest.TestCase):
     #    g.read(file,format='MSEED')
     #    # paz of test file
     #    samp_rate = 200.0
-
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')

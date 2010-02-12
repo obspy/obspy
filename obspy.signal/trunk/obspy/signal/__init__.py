@@ -54,7 +54,7 @@ from rotate import *
 from trigger import *
 from seismometer import *
 from invsim import cosTaper, detrend, cornFreq2Paz
-from invsim import pazToFreqResp, seisSim, specInv
+from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import *
 
 
