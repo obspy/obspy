@@ -258,9 +258,10 @@ class PickingGUI:
             return
 
         #set up a list of dictionaries to store all picking data
+        # set all station magnitude use-flags False
         self.dicts=[]
         for i in range(len(streams)):
-            self.dicts.append({})
+            self.dicts.append({'MagUse': False})
         
         #Define a pointer to navigate through the streams
         self.stNum=len(streams)
@@ -1573,6 +1574,7 @@ class PickingGUI:
             print line.strip()
 
     def load3dlocData(self):
+        #self.load3dlocSyntheticPhases()
         event = open(self.threeDlocOutfile).readline().split()
         self.threeDlocEventLon = float(event[8])
         self.threeDlocEventLat = float(event[9])
@@ -1581,23 +1583,32 @@ class PickingGUI:
         self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
-        lines = open(self.threeDlocInfile).readlines()
         self.threeDlocPLons = []
         self.threeDlocPLats = []
         self.threeDlocSLons = []
         self.threeDlocSLats = []
         self.threeDlocPNames = []
         self.threeDlocSNames = []
-        for line in lines[1:]:
+        self.threeDlocPResInfo = []
+        self.threeDlocSResInfo = []
+        lines = open(self.threeDlocInfile).readlines()
+        for line in lines:
             pick = line.split()
             if pick[1] == 'P':
                 self.threeDlocPLons.append(float(pick[14]))
                 self.threeDlocPLats.append(float(pick[15]))
-                self.threeDlocPNames.append(pick[0])
+                self.threeDlocPNames.append(' ' + pick[0])
             if pick[1] == 'S':
                 self.threeDlocSLons.append(float(pick[14]))
                 self.threeDlocSLats.append(float(pick[15]))
-                self.threeDlocSNames.append(pick[0])
+                self.threeDlocSNames.append(' ' + pick[0])
+        lines = open(self.threeDlocOutfile).readlines()
+        for line in lines[1:]:
+            pick = line.split()
+            if pick[1] == 'P':
+                self.threeDlocPResInfo.append('\n\n %+0.3fs' % float(pick[8]))
+            if pick[1] == 'S':
+                self.threeDlocSResInfo.append('\n\n\n %+0.3fs' % float(pick[8]))
 
     def show3dlocEventMap(self):
         self.load3dlocData()
@@ -1605,30 +1616,52 @@ class PickingGUI:
         self.ax3dloc = self.fig3dloc.add_subplot(111)
         self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
                              30, color = 'red', marker = 'o')
-        self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
-                          '%2.3f\n%2.3f' % (self.threeDlocEventLon,
-                          self.threeDlocEventLat), va = 'top')
         errLon, errLat = utlLonLat(self.threeDlocEventLon, self.threeDlocEventLat,
                                self.threeDlocEventErrX, self.threeDlocEventErrY)
         errLon -= self.threeDlocEventLon
         errLat -= self.threeDlocEventLat
+        self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
+                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm' % (self.threeDlocEventLon,
+                          self.threeDlocEventErrX, self.threeDlocEventLat,
+                          self.threeDlocEventErrY), va = 'top',
+                          family = 'monospace')
         errorell = Ellipse(xy = [self.threeDlocEventLon, self.threeDlocEventLat],
                       width = errLon, height = errLat, angle = 0, fill = False)
         self.ax3dloc.add_artist(errorell)
-        if len(self.threeDlocSLons) > 0:
-            self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
-                                 color = self.dictPhaseColors['S'], marker = 'v',
-                                 edgecolor = 'black')
+        if len(self.threeDlocSNames) > 0:
+            #self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
+            #                     color = self.dictPhaseColors['S'], marker = 'v',
+            #                     edgecolor = 'black')
             for i in range(len(self.threeDlocSNames)):
+                self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 150,
+                                     marker = 'v', color = '', edgecolor = 'black')
+                #self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+                #                  '  ' + self.threeDlocSNames[i], va = 'top')
                 self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-                                  '  ' + self.threeDlocSNames[i], va = 'top')
-        if len(self.threeDlocPLons) > 0:
-            self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
-                                 color = self.dictPhaseColors['P'], marker = 'v',
-                                 edgecolor = 'black')
+                                  self.threeDlocSNames[i], va = 'top',
+                                  family = 'monospace')
+                self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
+                                  self.threeDlocSResInfo[i], va = 'top',
+                                  family = 'monospace',
+                                  color = self.dictPhaseColors['S'])
+        if len(self.threeDlocPNames) > 0:
+            #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
+            #                     color = self.dictPhaseColors['P'], marker = 'v',
+            #                     edgecolor = 'black')
             for i in range(len(self.threeDlocPNames)):
+                self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
+                                     marker = 'v', color = '', edgecolor = 'black', picker = 10)
+                #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
+                #                              marker = 'v', color = '', edgecolor = 'black', picker = True)
+                #self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+                #                  '  ' + self.threeDlocPNames[i], va = 'top')
                 self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-                                  '  ' + self.threeDlocPNames[i], va = 'top')
+                                  self.threeDlocPNames[i], va = 'top',
+                                  family = 'monospace')
+                self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
+                                  self.threeDlocPResInfo[i], va = 'top',
+                                  family = 'monospace',
+                                  color = self.dictPhaseColors['P'])
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
         self.ax3dloc.set_title(self.threeDlocEventTime)
@@ -1643,7 +1676,29 @@ class PickingGUI:
         self.ax3dloc.text(0.02, 0.90, infoPicks, transform = self.ax3dloc.transAxes,
                           fontsize = 10, verticalalignment = 'top',
                           family = 'monospace')
+        self.fig3dloc.canvas.mpl_connect('pick_event', self.selectMagnitudes)
         plt.show()
+
+    def selectMagnitudes(self, event):
+        colors = event.artist.get_facecolors()
+        #print event
+        #print event.artist
+        #print event.ind
+        #print colors
+        if len(colors) == 0:
+            colors = [[ 0.,  0.,  0.,  0.],
+                      [ 0.,  0.,  0.,  0.],
+                      [ 0.,  0.,  0.,  0.],
+                      [ 0.,  0.,  0.,  0.],
+                      [ 0.,  0.,  0.,  0.]]
+        #print colors
+        #print colors[event.ind[0]]
+        if list(colors[event.ind[0]]) == [ 0.,  0.,  0.,  0.]:
+            colors[event.ind[0]] = [ 0.,  1.,  0.,  1.]
+        else:
+            colors[event.ind[0]] = [ 0.,  0.,  0.,  0.]
+        event.artist.set_facecolors(colors)
+        self.fig3dloc.canvas.draw()
 
     def threeDLoc2XML(self):
         """
