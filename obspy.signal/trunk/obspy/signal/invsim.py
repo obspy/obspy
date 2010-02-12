@@ -236,6 +236,9 @@ def paz2AmpValueOfFreqResp(paz, freq):
     """
     Returns Amplitude at one frequency for the given poles and zeros
 
+    The amplitude of the freq is estimated according to "Of Poles and
+    Zeros", Fank Scherbaum, p 43.
+
     :param paz: Given poles and zeros
     :param freq: Given frequency
 
@@ -245,16 +248,13 @@ def paz2AmpValueOfFreqResp(paz, freq):
     >>> paz2AmpValueOfFreqResp(paz, 1)
     0.28302624594071618
     """
-    # The amplitude of the period is estimated according to "Of Poles and
-    # Zeros", Fank Scherbaum, p 43.
-    jw = complex(0, 2 * np.pi * freq)
-    num = 1
-    for zero in paz['zeros']:
-        num = num * (jw - zero)
-    denum = 1
-    for pole in paz['poles']:
-        denum = denum * (jw - pole)
-    return abs(num/denum) * paz['gain']
+    jw = complex(0, 2 * np.pi * freq) #angular frequency
+    fac = complex(1,0)
+    for zero in paz['zeros']: #numerator
+        fac *= (jw - zero)
+    for pole in paz['poles']: #denumerator
+        fac /= (jw - pole)
+    return abs(fac) * paz['gain']
 
 
 def estimateMagnitude(paz, amplitude, timespan, h_dist):
@@ -262,20 +262,43 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     Estimates local magnitude from poles and zeros of given instrument, the
     peak to peak amplitude and the period in which it is measured
 
-    :param paz: PAZ of the instrument
-    :param amplitude: Peak to peak amplitude
-    :param timespan: Timespan of peak to peak amplitude
-    :param h_dist: Horizontal distance to epicenter
-    XXX: Not sure if this is right, need to check tommorrow
+    Magnitude calculation according to:
+    Bakun, W. H. and W. B. Joyner: The Ml scale in central California,
+    Bull. Seismol. Soc. Am., 74, 1827-1843, 1984
+
+    :param paz: PAZ of the instrument [m/s]
+    :param amplitude: Peak to peak amplitude [counts]
+    :param timespan: Timespan of peak to peak amplitude [s]
+    :param h_dist: Horizontal distance to epicenter [km]
+
+    >>> paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j], \
+               'zeros': [0 + 0j, 0 + 0j, 0 + 0j], \
+               'gain': 1.0, \
+               'sensitivity': 671140000.0}
+    >>> round(estimateMagnitude(paz, 1.99e6, 0.065, 0.255), 5)
+    1.94045
+    >>> round(estimateMagnitude(paz, 2.15e4, 0.08, 2.197), 4)  
+    1.0084
+    >>> round(estimateMagnitude(paz, 4.04e4, 0.125, 1.538), 4) 
+    1.3207
     """
+    # doctest mismachtes to pitsa of about 10%, for gain 2800 we get the
+    # following for event 2009-07-19 13:03
+    # RTSH orig with pitsa 2.263 Python 2.06955
+    # RTBE orig with pitsa 1.325 Python 1.1375
+    # RNON orig with pitsa 1.629 Python 1.4498
+    #
+    # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     woodander = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
-                    'zeros': [0j],
-                    'gain': 2080}
+                 'zeros': [0 + 0j],
+                 'gain': 2080} #new value
+                #'gain': 2800} see comment above
     freq = 1 / (2 * timespan)
-    amp_val = paz2AmpValueOfFreqResp(woodander, freq) / paz2AmpValueOfFreqResp(paz, freq) 
-    amp_val *= 1000 # convert to mm
-    # analog to spr_mag.c,v line 523
-    magnitude = np.log10(amp_val) + np.log10(h_dist/100.0) + \
+    wa_ampl = amplitude / 2.0 #half peak to peak amplitude
+    wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
+    wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) 
+    wa_ampl *= 1000 #convert to mm
+    magnitude = np.log10(wa_ampl) + np.log10(h_dist/100.0) + \
                 0.00301*(h_dist - 100.0) + 3.0
     return magnitude
 
