@@ -284,7 +284,7 @@ class PickingGUI:
             self.dicts[i]['Station'] = self.stationlist[i]
             self.dicts[i]['StaLon'] = lon
             self.dicts[i]['StaLat'] = lat
-            self.dicts[i]['StaEle'] = ele
+            self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
 
         #XXX Remove lines for use with dynamically acquired data from seishub!
         #self.dicts[0]['StaLon'] = 12.795714
@@ -1688,6 +1688,11 @@ class PickingGUI:
         self.cat3dlocOut()
         self.load3dlocSyntheticPhases()
         self.redraw()
+        self.load3dlocData()
+        self.calculateEpiHypoDists()
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.show3dlocEventMap()
 
     def cat3dlocIn(self):
         lines = open(self.threeDlocInfile).readlines()
@@ -1724,7 +1729,6 @@ class PickingGUI:
         self.threeDlocSResInfo = []
         self.threeDlocPCount = 0
         self.threeDlocSCount = 0
-        self.threeDlocUsedStationsCount = len(self.streams)
         lines = open(self.threeDlocInfile).readlines()
         for line in lines:
             pick = line.split()
@@ -1738,8 +1742,6 @@ class PickingGUI:
                         self.dicts[i]['3DlocSLon'] = float(pick[14])
                         self.dicts[i]['3DlocSLat'] = float(pick[15])
                         self.threeDlocSCount += 1
-                    else:
-                        self.threeDlocUsedStationsCount -= 1
                     break
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
@@ -1750,11 +1752,20 @@ class PickingGUI:
                         self.dicts[i]['3DlocPAzim'] = float(pick[9])
                         self.dicts[i]['3DlocPInci'] = float(pick[10])
                         self.dicts[i]['3DlocPResInfo'] = '\n\n %+0.3fs' % float(pick[8])
+                        if self.dicts[i].has_key('PPol'):
+                            self.dicts[i]['3DlocPResInfo'] += '  %s' % self.dicts[i]['PPol']
+                            
                     elif pick[1] == 'S':
                         self.dicts[i]['3DlocSAzim'] = float(pick[9])
                         self.dicts[i]['3DlocSInci'] = float(pick[10])
                         self.dicts[i]['3DlocSResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
+                        if self.dicts[i].has_key('SPol'):
+                            self.dicts[i]['3DlocSResInfo'] += '  %s' % self.dicts[i]['SPol']
                     break
+        self.threeDlocUsedStationsCount = len(self.dicts)
+        for st in self.dicts:
+            if not (st.has_key('Psynth') or st.has_key('Ssynth')):
+                self.threeDlocUsedStationsCount -= 1
     
     def updateNetworkMag(self):
         print "updating network magnitude..."
@@ -1768,7 +1779,7 @@ class PickingGUI:
                 self.netMag += self.dicts[i]['Mag']
                 self.staMags.append(self.dicts[i]['Mag'])
         if self.staMagCount == 0:
-            self.netMag = np.NaN
+            self.netMag = np.nan
         else:
             self.netMag /= self.staMagCount
         self.netMagVar = np.var(self.staMags)
@@ -1778,6 +1789,27 @@ class PickingGUI:
             self.netMagText.set_text(self.netMagLabel)
         except:
             pass
+    
+    def calculateEpiHypoDists(self):
+        epidists = []
+        for i in range(len(self.streams)):
+            x, y = utlGeoKm(self.threeDlocEventLon, self.threeDlocEventLat,
+                            self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
+            z = abs(self.dicts[i]['StaEle'] - self.threeDlocEventZ)
+            self.dicts[i]['distX'] = x
+            self.dicts[i]['distY'] = y
+            self.dicts[i]['distZ'] = z
+            self.dicts[i]['distEpi'] = np.sqrt(x**2 + y**2)
+            # Median and Max/Min of epicentral distances should only be used
+            # for stations with a pick that goes into the location.
+            # The epicentral distance of all other stations may be needed for
+            # magnitude estimation nonetheless.
+            if self.dicts[i].has_key('Psynth') or self.dicts[i].has_key('Ssynth'):
+                epidists.append(self.dicts[i]['distEpi'])
+            self.dicts[i]['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
+        self.threeDlocEpidistMax = max(epidists)
+        self.threeDlocEpidistMin = min(epidists)
+        self.threeDlocEpidistMedian = np.median(epidists)
 
     def calculateStationMagnitudes(self):
         for i in range(len(self.streams)):
@@ -1789,28 +1821,51 @@ class PickingGUI:
                 amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
                 timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
                 timedelta /= self.streams[i][1].stats.sampling_rate
-                x, y = utlGeoKm(self.threeDlocEventLon, self.threeDlocEventLat, self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
-                z = abs(self.dicts[i]['StaEle'] - self.threeDlocEventZ)
-                self.dicts[i]['distX'] = x
-                self.dicts[i]['distY'] = y
-                print self.dicts[i]['StaEle'], self.threeDlocEventZ, z
-                self.dicts[i]['distZ'] = z
-                dist = np.sqrt(x**2 + y**2)
                 #print self.dicts[i]['pazN']
-                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta, dist)
+                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
+                                        self.dicts[i]['distEpi'])
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
                 timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
                 timedelta /= self.streams[i][2].stats.sampling_rate
-                mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta, dist)
+                mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
+                                         self.dicts[i]['distEpi'])
                 mag /= 2.
                 self.dicts[i]['Mag'] = mag
-                print 'calculated new magnitude for %s: %0.2f' % (self.dicts[i]['Station'], self.dicts[i]['Mag'])
+                self.dicts[i]['MagChannel'] = '%s,%s' % (self.streams[i][1].stats.channel, self.streams[i][2].stats.channel)
+                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
+                         self.dicts[i]['MagChannel'])
+            
+            elif (self.dicts[i].has_key('MagMin1') and
+                  self.dicts[i].has_key('MagMax1')):
+                amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
+                timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
+                timedelta /= self.streams[i][1].stats.sampling_rate
+                #print self.dicts[i]['pazN']
+                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
+                                        self.dicts[i]['distEpi'])
+                self.dicts[i]['Mag'] = mag
+                self.dicts[i]['MagChannel'] = '%s' % self.streams[i][1].stats.channel
+                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
+                         self.dicts[i]['MagChannel'])
+            
+            elif (self.dicts[i].has_key('MagMin2') and
+                  self.dicts[i].has_key('MagMax2')):
+                amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
+                timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
+                timedelta /= self.streams[i][2].stats.sampling_rate
+                #print self.dicts[i]['pazN']
+                mag = estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
+                                        self.dicts[i]['distEpi'])
+                self.dicts[i]['Mag'] = mag
+                self.dicts[i]['MagChannel'] = '%s' % self.streams[i][2].stats.channel
+                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
+                         self.dicts[i]['MagChannel'])
                 
 
     def show3dlocEventMap(self):
-        self.load3dlocData()
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
         #print self.dicts[0]
         self.fig3dloc = plt.figure()
         self.ax3dloc = self.fig3dloc.add_subplot(111)
@@ -1866,7 +1921,8 @@ class PickingGUI:
                                   '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
                 self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '\n\n\n\n  %0.2f' % self.dicts[i]['Mag'], va = 'top',
+                                  '\n\n\n\n  %0.2f (%s)' % (self.dicts[i]['Mag'],
+                                  self.dicts[i]['MagChannel']), va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['Mag'])
             if len(self.scatterMagLon) > 0 :
@@ -2009,11 +2065,8 @@ class PickingGUI:
                     Sub(Sub(pick, "phase_delay"), "value")
                     Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['3DlocPAzim']
                     Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['3DlocPInci']
-                    epidist = np.sqrt(self.dicts[i]['distX']**2 + self.dicts[i]['distY']**2)
-                    epidists.append(epidist)
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % epidist
-                    hypodist = np.sqrt(self.dicts[i]['distX']**2 + self.dicts[i]['distY']**2 + self.dicts[i]['distZ']**2)
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % hypodist
+                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
+                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
         
             if self.dicts[i].has_key('S'):
                 axind = self.dicts[i]['Saxind']
@@ -2061,11 +2114,8 @@ class PickingGUI:
                     Sub(Sub(pick, "phase_delay"), "value")
                     Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['3DlocSAzim']
                     Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['3DlocSInci']
-                    epidist = np.sqrt(self.dicts[i]['distX']**2 + self.dicts[i]['distY']**2)
-                    epidists.append(epidist)
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % epidist
-                    hypodist = np.sqrt(self.dicts[i]['distX']**2 + self.dicts[i]['distY']**2 + self.dicts[i]['distZ']**2)
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % hypodist
+                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
+                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
         
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
@@ -2089,20 +2139,32 @@ class PickingGUI:
         Sub(quality, "usedPhaseCount").text = '%i' % (self.threeDlocPCount + self.threeDlocSCount)
         Sub(quality, "usedStationCount").text = '%i' % self.threeDlocUsedStationsCount
         Sub(quality, "associatedPhaseCount").text = '%i' % (self.threeDlocPCount + self.threeDlocSCount)
-        Sub(quality, "associatedStationCount").text = '%i' % self.threeDlocUsedStationsCount
+        Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
         Sub(quality, "depthPhaseCount").text = "0"
         Sub(quality, "standardError").text = '%s' % self.threeDlocEventStdErr
         Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.threeDlocEventAzimGap
         Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % min(epidists)
-        Sub(quality, "maximumDistance").text = '%s' % max(epidists)
-        Sub(quality, "medianDistance").text = '%s' % np.median(epidists)
+        Sub(quality, "minimumDistance").text = '%s' % self.threeDlocEpidistMin
+        Sub(quality, "maximumDistance").text = '%s' % self.threeDlocEpidistMax
+        Sub(quality, "medianDistance").text = '%s' % self.threeDlocEpidistMedian
         magnitude = Sub(xml, "magnitude")
         mag = Sub(magnitude, "mag")
-        Sub(mag, "value").text = '%s' % self.netMag
-        Sub(mag, "uncertainty").text = '%s' % self.netMagVar
+        if np.isnan(self.netMag):
+            Sub(mag, "value")
+            Sub(mag, "uncertainty")
+        else:
+            Sub(mag, "value").text = '%s' % self.netMag
+            Sub(mag, "uncertainty").text = '%s' % self.netMagVar
         Sub(magnitude, "type").text = "Ml"
         Sub(magnitude, "stationCount").text = '%i' % self.staMagCount
+        sta_mags = Sub(magnitude, "sta_mags")
+        for i in range(len(self.streams)):
+            if self.dicts[i].has_key('Mag'):
+                sta_mag = Sub(sta_mags, 'sta_mag')
+                Sub(sta_mag, 'station').text = '%s' % self.dicts[i]['Station']
+                Sub(sta_mag, 'value').text = '%s' % self.dicts[i]['Mag']
+                Sub(sta_mag, 'used').text = '%s' % self.dicts[i]['MagUse']
+                Sub(sta_mag, 'channels').text = '%s' % self.dicts[i]['MagChannel']
         return tostring(xml,pretty_print=True,xml_declaration=True)
 
 
