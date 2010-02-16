@@ -502,19 +502,26 @@ class Trace(object):
         elif not isinstance(starttime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        delta = (starttime - self.stats.starttime)
-        if delta <= 0:
+        delta = int(round((starttime - self.stats.starttime) * \
+                          self.stats.sampling_rate, 7))
+        self.stats.starttime += delta * self.stats.delta
+        if delta == 0:
+            return
+        elif delta < 0:
+            try:
+                gap = createEmptyDataChunk(abs(delta), self.data.dtype)
+            except ValueError:
+                # createEmptyDataChunk returns negative ValueError ?? for
+                # too large number of pointes, e.g. 189336539799
+                raise Exception("Time offset between starttime and " + \
+                                "trace.starttime too large")
+            self.data = np.ma.concatenate((gap, self.data))
             return
         elif starttime > self.stats.endtime:
-            self.stats.starttime = starttime
             self.data = np.empty(0)
             return
         # cut from left
-        delta = (starttime - self.stats.starttime)
-        samples = int(delta * self.stats.sampling_rate)
-        self.data = self.data[samples:]
-        self.stats.npts = len(self.data)
-        self.stats.starttime += (samples * self.stats.delta)
+        self.data = self.data[delta:]
 
     def rtrim(self, endtime):
         """
@@ -535,21 +542,31 @@ class Trace(object):
         elif not isinstance(endtime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        delta = (endtime - self.stats.endtime)
-        if delta >= 0:
+        delta = int(round((endtime - self.stats.endtime) * \
+                          self.stats.sampling_rate, 7))
+        if delta == 0:
+            return
+        if delta > 0:
+            try:
+                gap = createEmptyDataChunk(delta, self.data.dtype)
+            except ValueError:
+                # createEmptyDataChunk returns negative ValueError ?? for
+                # too large number of pointes, e.g. 189336539799
+                raise Exception("Time offset between starttime and " + \
+                                "trace.starttime too large")
+            self.data = np.ma.concatenate((self.data, gap))
             return
         elif endtime < self.stats.starttime:
-            self.stats.starttime = endtime
+            self.stats.starttime = self.stats.endtime + \
+                                   delta * self.stats.delta
             self.data = np.empty(0)
             return
         # cut from right
-        delta = (self.stats.endtime - endtime)
-        samples = int(round(delta * self.stats.sampling_rate, 7))
-        total = len(self.data) - samples
+        delta = abs(delta)
+        total = len(self.data) - delta
         if endtime == self.stats.starttime:
             total = 1
-        self.data = self.data[0:total]
-        self.stats.npts = total
+        self.data = self.data[:total]
 
     def trim(self, starttime, endtime):
         """
@@ -566,7 +583,7 @@ class Trace(object):
         """
         # check time order and swap eventually
         if starttime > endtime:
-            endtime, starttime = starttime, endtime
+            raise Exception("startime is larger than endtime")
         # cut it
         self.ltrim(starttime)
         self.rtrim(endtime)
@@ -627,7 +644,7 @@ class Trace(object):
                 raise Exception(msg)
         elif self.stats.npts != 0:
             msg = "Data size should be 0, but is %d"
-            raise Exception(msg % len(self.stats.npts))
+            raise Exception(msg % self.stats.npts)
         if not isinstance(self.stats, Stats):
             msg = "Attribute stats must be an instance of obspy.core.Stats"
             raise Exception(msg)
