@@ -42,7 +42,7 @@ class TraceTestCase(unittest.TestCase):
         tr.ltrim(0.5)
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
-                                np.array([100, 101, 102, 103, 104]))
+                                      np.array([100, 101, 102, 103, 104]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -53,7 +53,7 @@ class TraceTestCase(unittest.TestCase):
         tr.ltrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
-                                np.array([202, 203, 204, 205, 206]))
+                                      np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -64,7 +64,7 @@ class TraceTestCase(unittest.TestCase):
         tr.ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
-                                np.array([202, 203, 204, 205, 206]))
+                                      np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -84,35 +84,31 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         self.assertEquals(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
-        np.testing.assert_array_equal(trace.data, 
-                                      tr.data[delta:])
+        np.testing.assert_array_equal(trace.data, tr.data[delta:])
         self.assertEquals(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
         tr.ltrim(trace.stats.endtime + 100)
         tr.verify()
-        self.assertEquals(tr.stats.starttime, 
+        self.assertEquals(tr.stats.starttime,
                           trace.stats.endtime + 100)
-        np.testing.assert_array_equal(tr.data, 
-                                      np.empty(0))
+        np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
         tr.ltrim(5)
         tr.verify()
-        self.assertEquals(tr.stats.starttime, 
+        self.assertEquals(tr.stats.starttime,
                           trace.stats.starttime + 5)
-        np.testing.assert_array_equal(tr.data, 
-                                      np.empty(0))
+        np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
         tr.ltrim(5.1)
         tr.verify()
-        self.assertEquals(tr.stats.starttime, 
+        self.assertEquals(tr.stats.starttime,
                           trace.stats.starttime + 5.1)
-        np.testing.assert_array_equal(tr.data, 
-                                      np.empty(0))
+        np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
 
     def test_rtrim(self):
@@ -131,7 +127,7 @@ class TraceTestCase(unittest.TestCase):
         tr.rtrim(0.5)
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
-                                np.array([895, 896, 897, 898, 899]))
+                                      np.array([895, 896, 897, 898, 899]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -142,7 +138,7 @@ class TraceTestCase(unittest.TestCase):
         tr.rtrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
-                                np.array([793, 794, 795, 796, 797]))
+                                      np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -153,7 +149,7 @@ class TraceTestCase(unittest.TestCase):
         tr.rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
-                                np.array([793, 794, 795, 796, 797]))
+                                      np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
         self.assertEquals(tr.stats.sampling_rate, 200.0)
@@ -171,8 +167,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr.rtrim(100)
         tr.verify()
-        self.assertEquals(tr.stats.endtime, 
-                          trace.stats.endtime - 100)
+        self.assertEquals(tr.stats.endtime, trace.stats.endtime - 100)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # end time > start time
@@ -219,10 +214,10 @@ class TraceTestCase(unittest.TestCase):
         # rtrim 100 samples
         trace.trim(0.5, 0.5)
         trace.verify()
-        np.testing.assert_array_equal(trace.data[-5:], \
-                                np.array([896, 897, 898, 899, 900]))
-        np.testing.assert_array_equal(trace.data[:5], \
-                                np.array([100, 101, 102, 103, 104]))
+        np.testing.assert_array_equal(trace.data[-5:],
+                                      np.array([896, 897, 898, 899, 900]))
+        np.testing.assert_array_equal(trace.data[:5],
+                                      np.array([100, 101, 102, 103, 104]))
         self.assertEquals(len(trace.data), 801)
         self.assertEquals(trace.stats.npts, 801)
         self.assertEquals(trace.stats.sampling_rate, 200.0)
@@ -325,19 +320,15 @@ class TraceTestCase(unittest.TestCase):
         mask = np.zeros(len(tr1)).astype("bool")
         mask[200:401] = True
         np.testing.assert_array_equal(trace.data.mask, mask)
-        np.testing.assert_array_equal(trace.data.data[:200], \
-                                      tr1.data[:200])
-        np.testing.assert_array_equal(trace.data.data[401:], \
-                                      tr1.data[401:])
+        np.testing.assert_array_equal(trace.data.data[:200], tr1.data[:200])
+        np.testing.assert_array_equal(trace.data.data[401:], tr1.data[401:])
         # add the other way around
         trace = tr2 + tr1
         # should return exact the same values like trace 1
         self.assertEquals(trace.stats, tr1.stats)
         np.testing.assert_array_equal(trace.data.mask, mask)
-        np.testing.assert_array_equal(trace.data.data[:200], \
-                                      tr1.data[:200])
-        np.testing.assert_array_equal(trace.data.data[401:], \
-                                      tr1.data[401:])
+        np.testing.assert_array_equal(trace.data.data[:200], tr1.data[:200])
+        np.testing.assert_array_equal(trace.data.data[401:], tr1.data[401:])
         # verify
         trace.verify()
 
@@ -362,10 +353,8 @@ class TraceTestCase(unittest.TestCase):
         mask = np.zeros(1800).astype("bool")
         mask[800:1000] = True
         np.testing.assert_array_equal(overlap.data.mask, mask)
-        np.testing.assert_array_equal(overlap.data.data[:800], \
-                                      tr1.data[:800])
-        np.testing.assert_array_equal(overlap.data.data[1000:], \
-                                      tr2.data[200:])
+        np.testing.assert_array_equal(overlap.data.data[:800], tr1.data[:800])
+        np.testing.assert_array_equal(overlap.data.data[1000:], tr2.data[200:])
         # overlap + gap
         overlap_gap = overlap + tr3
         self.assertEqual(len(overlap_gap), 3400)
@@ -377,18 +366,15 @@ class TraceTestCase(unittest.TestCase):
                                       tr1.data[:800])
         np.testing.assert_array_equal(overlap_gap.data.data[1000:1800], \
                                       tr2.data[200:])
-        np.testing.assert_array_equal(overlap_gap.data.data[2400:], \
-                                      tr3.data)
+        np.testing.assert_array_equal(overlap_gap.data.data[2400:], tr3.data)
         # gap
         gap = tr2 + tr3
         self.assertEqual(len(gap), 2600)
         mask = np.zeros(2600).astype("bool")
         mask[1000:1600] = True
         np.testing.assert_array_equal(gap.data.mask, mask)
-        np.testing.assert_array_equal(gap.data.data[:1000], \
-                                      tr2.data)
-        np.testing.assert_array_equal(gap.data.data[1600:], \
-                                      tr3.data)
+        np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
+        np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
 
     def test_slice(self):
         """
@@ -419,7 +405,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime, UTCDateTime(10))
         # Create temp trace object used for testing.
         st = tr.stats.starttime
-
         # This is supposed to include the start- and endtimes and should
         # therefore cut right at 2 and 8.
         temp = deepcopy(tr)
@@ -436,7 +421,6 @@ class TraceTestCase(unittest.TestCase):
         # Check if the data is the same.
         self.assertNotEqual(temp.data.ctypes.data, tr.data[2:9].ctypes.data)
         np.testing.assert_array_equal(tr.data[2:9], temp.data)
-
         # Using out of bounds times should not do anything but create
         # a copy of the stats.
         temp = deepcopy(tr)
@@ -458,7 +442,6 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, org_data)
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
-        #
         # Use more complicated times and sampling rate.
         tr = Trace(data=np.arange(111))
         tr.stats.starttime = UTCDateTime(111.11111)
@@ -484,9 +467,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         #XXX is this correct??? shouldn't it be something like
         #delta = int(111.11111*50+.5)
-        delta = int(111.11111*50)
-        np.testing.assert_array_equal(tr.data, 
-                temp.data[delta:delta + 111])
+        delta = int(111.11111 * 50)
+        np.testing.assert_array_equal(tr.data, temp.data[delta:delta + 111])
         # Make sure the original Trace object did not change.
         np.testing.assert_array_equal(tr.data, org_data)
         self.assertEqual(tr.data.ctypes.data, mem_pos)
@@ -505,7 +487,7 @@ class TraceTestCase(unittest.TestCase):
         tr2.stats.starttime = tr1.stats.starttime + 5
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
-        self.assertEqual(tr.data.tolist(), 
+        self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
         #2 - overlapping trace with same data
         # Trace 1: 0000000
@@ -584,6 +566,7 @@ class TraceTestCase(unittest.TestCase):
         tr4.stats.channel = 'EHZ'
         tr1 + tr3
         tr2 + tr4
+        # adding traces with different ids should raise
         self.assertRaises(TypeError, tr1.__add__, tr2)
         self.assertRaises(TypeError, tr3.__add__, tr4)
 

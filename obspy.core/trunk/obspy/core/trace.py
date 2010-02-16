@@ -356,18 +356,16 @@ class Trace(object):
         if delta <= 0 and delta_endtime < 0:
             # overlap
             delta = abs(delta)
-            if np.all(lt.data[delta:] == rt.data[:-delta]):
-                # if data are the same
+            if np.all(lt.data[delta:].tolist() == rt.data[:-delta].tolist()):
+                # check if data are the same
                 data = [lt.data[delta:], rt.data]
             elif method == 0:
-                overlap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+                overlap = createEmptyDataChunk(delta, lt.data.dtype,
+                                               fill_value)
                 data = [lt.data[:-delta], overlap, rt.data[delta:]]
-            elif method == 1 and interpolate_samples == 0:
-                data = [lt.data[:-delta], rt.data]
-            elif method == 1 and interpolate_samples > 0 or \
-                 interpolate_samples == -1 :
+            elif method == 1 and interpolation_samples >= -1:
                 ls = lt.data[-delta - 1]
-                if interpolate_samples == -1:
+                if interpolation_samples == -1:
                     interpolate_samples = delta
                 rs = rt.data[interpolate_samples]
                 # include left and right sample (delta + 2)
@@ -383,14 +381,14 @@ class Trace(object):
             # contained trace
             delta = abs(delta)
             lenrt = len(rt)
-            lenlt = len(lt)
-            if np.all(lt.data[lenlt-delta:lenlt-delta+lenrt] == rt.data):
-                # if data are the same
+            t1 = len(lt) - delta
+            t2 = t1 + lenrt
+            if np.all(lt.data[t1:t2] == rt.data):
+                # check if data are the same
                 data = [lt.data]
             elif method == 0:
                 gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
-                data = [lt.data[:lenlt - delta], gap, lt.data[lenlt - delta + lenrt:]]
-                #import pdb; pdb.set_trace()
+                data = [lt.data[:t1], gap, lt.data[t2:]]
             elif method == 1:
                 data = [lt.data]
             else:
