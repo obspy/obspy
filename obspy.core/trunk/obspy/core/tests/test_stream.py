@@ -413,7 +413,55 @@ class StreamTestCase(unittest.TestCase):
         # should be equal
         self.assertEqual(a, b)
 
-    def test_merge_gaps(self):
+    def test_mergeWithDifferentSamplingRates(self):
+         """
+         Test the merge method of the Stream objects.
+         """
+         # 1 - different sampling rates for the same channel should fail
+         tr1 = Trace(data=np.zeros(5))
+         tr1.stats.sampling_rate = 200
+         tr2 = Trace(data=np.zeros(5))
+         tr2.stats.sampling_rate = 50
+         st = Stream([tr1, tr2])
+         self.assertRaises(Exception, st.merge)
+         # 2 - different sampling rates for the different channels is ok
+         tr1 = Trace(data=np.zeros(5))
+         tr1.stats.sampling_rate = 200
+         tr1.stats.channel = 'EHE'
+         tr2 = Trace(data=np.zeros(5))
+         tr2.stats.sampling_rate = 50
+         tr2.stats.channel = 'EHZ'
+         tr3 = Trace(data=np.zeros(5))
+         tr3.stats.sampling_rate = 200
+         tr3.stats.channel = 'EHE'
+         tr4 = Trace(data=np.zeros(5))
+         tr4.stats.sampling_rate = 50
+         tr4.stats.channel = 'EHZ'
+         st = Stream([tr1, tr2, tr3, tr4])
+         st.merge()
+
+    def test_mergeWithDifferentDatatypes(self):
+        """
+        Test the merge method of the Stream objects.
+        """
+        # 1 - different dtype for the same channel should fail
+        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        st = Stream([tr1, tr2])
+        self.assertRaises(Exception, st.merge)
+        # 2 - different sampling rates for the different channels is ok
+        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1.stats.channel = 'EHE'
+        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2.stats.channel = 'EHZ'
+        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3.stats.channel = 'EHE'
+        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4.stats.channel = 'EHZ'
+        st = Stream([tr1, tr2, tr3, tr4])
+        st.merge()
+
+    def test_mergeGaps(self):
         """
         Test the merge method of the Stream objects.
         """
@@ -441,44 +489,61 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.sampling_rate, 200)
         self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
 
-    def test_merge_overlaps(self):
-        """
-        Test the merge method of the Stream objects.
-        """
-        ts = []
-        npts = 1000
-        k = 0
-        for _i in xrange(2):
-            ts.append(Trace())
-            ts[-1].data = np.zeros(npts) + k
-            ts[-1].stats.sampling_rate = 1
-            ts[-1].stats.starttime = UTCDateTime("20080808") + k
-            ts[-1].stats.npts = npts
-            k = 20
-        stream = Stream(traces=ts)
-        stream.verify()
-        # merge it
-        stream.merge()
-        # build reference array
-        ref = np.zeros(npts + k) + 10.0
-        ref[:k] = 0.0
-        ref[-k:] = 20.0
-        np.testing.assert_array_equal(stream[0].data, ref)
+    def test_mergeOverlapsDefaultMethod(self):
+         """
+         Test the merge method of the Stream objects.
+         """
+         #1 - overlapping trace with differing data
+         # Trace 1: 0000000
+         # Trace 2:      1111111
+         # 1 + 2  : 00000--11111
+         tr1 = Trace(data=np.zeros(7))
+         tr2 = Trace(data=np.ones(7))
+         tr2.stats.starttime = tr1.stats.starttime + 5
+         st = Stream([tr1, tr2])
+         st.merge()
+         self.assertEqual(len(st), 1)
+         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+         self.assertEqual(st[0].data.tolist(), 
+                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
+         #2 - overlapping trace with same data
+         # Trace 1: 0000000
+         # Trace 2:      0000000
+         # 1 + 2  : 000000000000
+         tr1 = Trace(data=np.zeros(7))
+         tr2 = Trace(data=np.zeros(7))
+         tr2.stats.starttime = tr1.stats.starttime + 5
+         st = Stream([tr1, tr2])
+         st.merge()
+         self.assertEqual(len(st), 1)
+         self.assertTrue(isinstance(st[0].data, np.ndarray))
+         np.testing.assert_array_equal(st[0].data, np.zeros(12))
+         #3 - contained overlap with same data
+         # Trace 1: 1111111111
+         # Trace 2:      11
+         # 1 + 2  : 1111111111
+         tr1 = Trace(data=np.ones(10))
+         tr2 = Trace(data=np.ones(2))
+         tr2.stats.starttime = tr1.stats.starttime + 5
+         st = Stream([tr1, tr2])
+         st.merge()
+         self.assertEqual(len(st), 1)
+         self.assertTrue(isinstance(st[0].data, np.ndarray))
+         np.testing.assert_array_equal(st[0].data, np.ones(10))
+         #4 - contained overlap with differing data
+         # Trace 1: 0000000000
+         # Trace 2:      11
+         # 1 + 2  : 00000--000
+         tr1 = Trace(data=np.zeros(10))
+         tr2 = Trace(data=np.ones(2))
+         tr2.stats.starttime = tr1.stats.starttime + 5
+         st = Stream([tr1, tr2])
+         st.merge()
+         self.assertEqual(len(st), 1)
+         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+         self.assertEqual(st[0].data.tolist(),
+                          [0, 0, 0, 0, 0, None, None, 0, 0, 0])
 
-    def test_mergeOverlapAndDiscardRedundantTrace(self):
-        """
-        If a second trace is completely contained within a first trace it will
-        be discarded.
-        """
-        trace1 = Trace(data=np.zeros(1000))
-        trace2 = Trace(data=np.zeros(10))
-        trace2.data[:] = 1
-        trace2.stats.starttime = trace1.stats.starttime + 10
-        st = Stream(traces=[trace1, trace2])
-        self.assertEqual(len(st.traces), 2)
-        st.merge()
-        self.assertEqual(len(st.traces), 1)
-        np.testing.assert_array_equal(st[0].data, np.zeros(1000))
 
     def test_tabCompleteStats(self):
         """
@@ -532,12 +597,12 @@ class StreamTestCase(unittest.TestCase):
         st.merge()
 
     def test_writingMaskedArrays(self):
-        """
-        Writing a masked array should raise an exception.
-        """
-        tr = Trace(data=np.ma.masked_all(10))
-        st = Stream([tr])
-        self.assertRaises(Exception, st.write, 'filename')
+       """
+       Writing a masked array should raise an exception.
+       """
+       tr = Trace(data=np.ma.masked_all(10))
+       st = Stream([tr])
+       self.assertRaises(Exception, st.write, 'filename')
 
 
 def suite():

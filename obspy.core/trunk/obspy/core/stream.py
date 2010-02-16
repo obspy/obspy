@@ -646,17 +646,59 @@ class Stream(object):
         for trace in self:
             trace.verify()
 
-    def merge(self, fill_value=None):
+    def _mergeChecks(self):
+        sr = {}
+        dtype = {}
+        for trace in self.traces:
+            sr.setdefault(trace.id, trace.stats.sampling_rate)
+            if trace.stats.sampling_rate != sr[trace.id]:
+                msg = "Can't merge traces with same ids but differing " + \
+                      "sampling rates!"
+                raise Exception(msg)
+            dtype.setdefault(trace.id, trace.data.dtype)
+            if trace.data.dtype != dtype[trace.id]:
+                msg = "Can't merge traces with same ids but differing " + \
+                      "data types!"
+                raise Exception(msg)
+
+    def _createEmptyDataChunk(self, delta, dtype, fill_value):
+        if fill_value:
+            temp = np.ones(delta, dtype=dtype)
+            temp *= fill_value
+        else:
+            temp = np.ma.masked_all(delta, dtype=dtype)
+        return temp
+
+    def merge(self, method=0, fill_value=None, interpolation_samples=0):
         """
         Merges ObsPy Trace objects with same IDs.
 
         Gaps and overlaps are usually separated in distinct traces. This method
         tries to merge them and to create distinct traces within this 
-        :class:`~Stream` object.
+        :class:`~Stream` object. Merged trace data will be converted into a
+        NumPy masked array data type if any gaps are present. This behavior may
+        be prevented by setting the ``fill_value`` parameter. The ``method``
+        argument controls the handling of overlapping data values.
+
+        Parameters
+        ----------
+        method : [ 0 | 1 ], optional
+            Methologie to handle overlaps of traces (default is 0).
+            see :meth:`~obspy.core.trace.Trace.__add__` for details
+        fill_value : int or float, optional
+            Fill value for gaps (default is None). Traces will be converted to
+            NumPy masked arrays if no value is given and gaps are present.
+        interpolation_samples : int or "all", optional
+            Used only for method 1. It specifies the number of samples which
+            are used to interpolate between overlapping traces (default is 0).
+            If set to "all" all overlapping samples are interpolated.
         """
+        # check sampling rates and dtypes
+        self._mergeChecks()
         # order matters!
         self.sort(keys=['network', 'station', 'location', 'channel',
-                         'starttime', 'endtime'])
+                        'starttime', 'endtime'])
+        # build up dictionary with with lists of traces with same ids
         traces_dict = {}
         # using pop() and try-except saves memory
         try:
@@ -669,54 +711,16 @@ class Stream(object):
                     traces_dict[id].append(trace)
         except IndexError:
             pass
+        # clear traces of current stream
         self.traces = []
-        # same here
+        # loop through ids
         for id in traces_dict.keys():
-            stats = copy.deepcopy(traces_dict[id][0].stats)
-            sampling_rate = stats.sampling_rate
-            stats.starttime = traces_dict[id][0].stats.starttime
-            old_starttime = traces_dict[id][0].stats.starttime
-            old_endtime = traces_dict[id][0].stats.endtime
-            # This is the data list to which we extend
-            cur_trace = [traces_dict[id].pop(0).data]
+            cur_trace = traces_dict[id].pop(0)
+            # loop through traces of same id
             for _i in xrange(len(traces_dict[id])):
                 trace = traces_dict[id].pop(0)
-                delta = int(round((trace.stats.starttime - \
-                        old_endtime) * sampling_rate)) - 1
-                # Overlap
-                if delta <= 0:
-                    # Left delta is the new starttime - old starttime. This
-                    # always has to be greater or equal to zero.
-                    left_delta = int(round((trace.stats.starttime - \
-                                           old_starttime) * sampling_rate))
-                    # The Endtime difference.
-                    right_delta = -1 * int(round((trace.stats.endtime - \
-                                                 old_endtime) * sampling_rate))
-                    # If right_delta is negative or zero throw the trace away.
-                    if right_delta >= 0:
-                        continue
-                    # Update the old trace with the interpolation.
-                    cur_trace[-1][left_delta:] = \
-                        (cur_trace[-1][left_delta:] + trace[:right_delta]) / 2
-                    # Append the rest of the trace.
-                    cur_trace.append(trace[right_delta:])
-                    old_endtime = trace.stats.endtime
-                    old_starttime = trace.stats.starttime - \
-                        delta * trace.stats.delta
-                # Gap
-                else:
-                    nans = np.ma.masked_all(delta, dtype=trace.data.dtype)
-                    cur_trace.extend([nans, trace.data])
-                    old_endtime = trace.stats.endtime
-                    old_starttime = trace.stats.starttime
-            if True in [np.ma.is_masked(_i) for _i in cur_trace]:
-                data = np.ma.concatenate(cur_trace)
-                stats.npts = data.size
-                self.traces.append(Trace(data=data, header=stats))
-            else:
-                data = np.concatenate(cur_trace)
-                stats.npts = data.size
-                self.traces.append(Trace(data=data, header=stats))
+                cur_trace = cur_trace.__add__(trace, method, fill_value)
+            self.traces.append(cur_trace)
 
 
 if __name__ == '__main__':

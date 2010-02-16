@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import numpy as np
-from numpy import array
 from numpy.ma import is_masked
 from obspy.core import UTCDateTime, Trace
 import unittest
@@ -248,9 +247,6 @@ class TraceTestCase(unittest.TestCase):
         tr2 = Trace(data=np.arange(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
-        # verify
-        tr1.verify()
-        tr2.verify()
         # add
         trace = tr1 + tr2
         # stats
@@ -262,8 +258,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(len(trace), 1800)
         self.assertEquals(trace[0], 0)
         self.assertEquals(trace[799], 799)
-        self.assertEquals(trace[800], (800 + 999) // 2)
-        self.assertEquals(trace[999], (999 + 800) // 2)
+        self.assertTrue(trace[800].mask)
+        self.assertTrue(trace[999].mask)
         self.assertEquals(trace[1000], 799)
         self.assertEquals(trace[1799], 0)
         # verify
@@ -275,11 +271,6 @@ class TraceTestCase(unittest.TestCase):
         """
         # set up
         tr1 = Trace(data=np.arange(1001))
-        tr1.stats.sampling_rate = 200
-        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
-        tr1.stats.starttime = start
-        # verify
-        tr1.verify()
         # add
         trace = tr1 + tr1
         # should return exact the same values
@@ -300,23 +291,30 @@ class TraceTestCase(unittest.TestCase):
         tr2 = Trace(data=np.arange(201))
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 1
-        # verify
-        tr1.verify()
-        tr2.verify()
         # add
         trace = tr1 + tr2
         # should return exact the same values like trace 1
         self.assertEquals(trace.stats, tr1.stats)
-        np.testing.assert_array_equal(trace.data, tr1.data)
+        mask = np.zeros(len(tr1)).astype("bool")
+        mask[200:401] = True
+        np.testing.assert_array_equal(trace.data.mask, mask)
+        np.testing.assert_array_equal(trace.data.data[:200], \
+                                      tr1.data[:200])
+        np.testing.assert_array_equal(trace.data.data[401:], \
+                                      tr1.data[401:])
         # add the other way around
         trace = tr2 + tr1
         # should return exact the same values like trace 1
         self.assertEquals(trace.stats, tr1.stats)
-        np.testing.assert_array_equal(trace.data, tr1.data)
+        np.testing.assert_array_equal(trace.data.mask, mask)
+        np.testing.assert_array_equal(trace.data.data[:200], \
+                                      tr1.data[:200])
+        np.testing.assert_array_equal(trace.data.data[401:], \
+                                      tr1.data[401:])
         # verify
         trace.verify()
 
-    def test_mergeGapAndOverlap(self):
+    def test_addGapAndOverlap(self):
         """
         Test order of merging traces.
         """
@@ -325,26 +323,45 @@ class TraceTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 200
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr1.stats.starttime = start
-        tr2 = Trace(data=np.arange(0, 1000)[::-1])
+        tr2 = Trace(data=np.arange(1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 4
-        tr3 = Trace(data=np.arange(0, 1000)[::-1])
+        tr3 = Trace(data=np.arange(1000)[::-1])
         tr3.stats.sampling_rate = 200
         tr3.stats.starttime = start + 12
-        # verify
-        tr1.verify()
-        tr2.verify()
-        tr3.verify()
-        # check types
+        # overlap
         overlap = tr1 + tr2
-        self.assertFalse(is_masked(overlap.data))
-        masked_gap = overlap + tr3
-        self.assertTrue(is_masked(masked_gap.data))
-        # check types
-        masked_gap = tr2 + tr3
-        self.assertTrue(is_masked(masked_gap.data))
-        overlap = tr1 + masked_gap
-        self.assertTrue(is_masked(overlap.data))
+        self.assertEqual(len(overlap), 1800)
+        mask = np.zeros(1800).astype("bool")
+        mask[800:1000] = True
+        np.testing.assert_array_equal(overlap.data.mask, mask)
+        np.testing.assert_array_equal(overlap.data.data[:800], \
+                                      tr1.data[:800])
+        np.testing.assert_array_equal(overlap.data.data[1000:], \
+                                      tr2.data[200:])
+        # overlap + gap
+        overlap_gap = overlap + tr3
+        self.assertEqual(len(overlap_gap), 3400)
+        mask = np.zeros(3400).astype("bool")
+        mask[800:1000] = True
+        mask[1800:2400] = True
+        np.testing.assert_array_equal(overlap_gap.data.mask, mask)
+        np.testing.assert_array_equal(overlap_gap.data.data[:800], \
+                                      tr1.data[:800])
+        np.testing.assert_array_equal(overlap_gap.data.data[1000:1800], \
+                                      tr2.data[200:])
+        np.testing.assert_array_equal(overlap_gap.data.data[2400:], \
+                                      tr3.data)
+        # gap
+        gap = tr2 + tr3
+        self.assertEqual(len(gap), 2600)
+        mask = np.zeros(2600).astype("bool")
+        mask[1000:1600] = True
+        np.testing.assert_array_equal(gap.data.mask, mask)
+        np.testing.assert_array_equal(gap.data.data[:1000], \
+                                      tr2.data)
+        np.testing.assert_array_equal(gap.data.data[1600:], \
+                                      tr3.data)
 
     def test_slice(self):
         """
@@ -432,7 +449,6 @@ class TraceTestCase(unittest.TestCase):
         # Check stuff.
         self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
-
         # Check if the data is the same.
         temp = deepcopy(tr)
         temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000))
@@ -443,8 +459,105 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
+    def test_addOverlapsDefaultMethod(self):
+        """
+        Test __add__ method of the Trace object.
+        """
+        #1 - overlapping trace with differing data
+        # Trace 1: 0000000
+        # Trace 2:      1111111
+        # 1 + 2  : 00000--11111
+        tr1 = Trace(data=np.zeros(7))
+        tr2 = Trace(data=np.ones(7))
+        tr2.stats.starttime = tr1.stats.starttime + 5
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertEqual(tr.data.tolist(), 
+                         [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
+        #2 - overlapping trace with same data
+        # Trace 1: 0000000
+        # Trace 2:      0000000
+        # 1 + 2  : 000000000000
+        tr1 = Trace(data=np.zeros(7))
+        tr2 = Trace(data=np.zeros(7))
+        tr2.stats.starttime = tr1.stats.starttime + 5
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ndarray))
+        np.testing.assert_array_equal(tr.data, np.zeros(12))
+        #3 - contained overlap with same data
+        # Trace 1: 1111111111
+        # Trace 2:      11
+        # 1 + 2  : 1111111111
+        tr1 = Trace(data=np.ones(10))
+        tr2 = Trace(data=np.ones(2))
+        tr2.stats.starttime = tr1.stats.starttime + 5
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ndarray))
+        np.testing.assert_array_equal(tr.data, np.ones(10))
+        #4 - contained overlap with differing data
+        # Trace 1: 0000000000
+        # Trace 2:      11
+        # 1 + 2  : 00000--000
+        tr1 = Trace(data=np.zeros(10))
+        tr2 = Trace(data=np.ones(2))
+        tr2.stats.starttime = tr1.stats.starttime + 5
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertEqual(tr.data.tolist(),
+                         [0, 0, 0, 0, 0, None, None, 0, 0, 0])
+
+    def test_addWithDifferentSamplingRates(self):
+        """
+        Test __add__ method of the Trace object.
+        """
+        # 1 - different sampling rates for the same channel should fail
+        tr1 = Trace(data=np.zeros(5))
+        tr1.stats.sampling_rate = 200
+        tr2 = Trace(data=np.zeros(5))
+        tr2.stats.sampling_rate = 50
+        self.assertRaises(TypeError, tr1.__add__, tr2)
+        # 2 - different sampling rates for the different channels is ok
+        tr1 = Trace(data=np.zeros(5))
+        tr1.stats.sampling_rate = 200
+        tr1.stats.channel = 'EHE'
+        tr2 = Trace(data=np.zeros(5))
+        tr2.stats.sampling_rate = 50
+        tr2.stats.channel = 'EHZ'
+        tr3 = Trace(data=np.zeros(5))
+        tr3.stats.sampling_rate = 200
+        tr3.stats.channel = 'EHE'
+        tr4 = Trace(data=np.zeros(5))
+        tr4.stats.sampling_rate = 50
+        tr4.stats.channel = 'EHZ'
+        tr1 + tr3
+        tr2 + tr4
+
+    def test_addWithDifferentDatatypesOrID(self):
+        """
+        Test __add__ method of the Trace object.
+        """
+        # 1 - different dtype for the same channel should fail
+        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        self.assertRaises(TypeError, tr1.__add__, tr2)
+        # 2 - different sampling rates for the different channels is ok
+        tr1 = Trace(data=np.zeros(5, dtype="int32"))
+        tr1.stats.channel = 'EHE'
+        tr2 = Trace(data=np.zeros(5, dtype="float32"))
+        tr2.stats.channel = 'EHZ'
+        tr3 = Trace(data=np.zeros(5, dtype="int32"))
+        tr3.stats.channel = 'EHE'
+        tr4 = Trace(data=np.zeros(5, dtype="float32"))
+        tr4.stats.channel = 'EHZ'
+        tr1 + tr3
+        tr2 + tr4
+        self.assertRaises(TypeError, tr1.__add__, tr2)
+        self.assertRaises(TypeError, tr3.__add__, tr4)
+
+
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

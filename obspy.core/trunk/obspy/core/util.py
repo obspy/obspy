@@ -276,6 +276,29 @@ def complexifyString(line):
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
 
 
+def createEmptyDataChunk(delta, dtype, fill_value=None):
+    """
+    Creates an NumPy array depending on the given data type and fill value.
+
+    If no ``fill_value`` is given a masked array will be returned.
+
+    Basic Usage
+    -----------
+    >>> createEmptyDataChunk(3, 'int32', 10)
+    array([10, 10, 10])
+    >>> createEmptyDataChunk(3, np.dtype('float64'))  # doctest: +SKIP
+    masked_array(data = [-- -- --],
+                 mask = [ True  True  True],
+                 fill_value=1e+20)
+    """
+    if fill_value:
+        temp = np.ones(delta, dtype=np.dtype(dtype))
+        temp *= fill_value
+    else:
+        temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+    return temp
+
+
 def _getVersionString(module="obspy.core"):
     """
     Returns either the EGG version or current SVN revision for a given module.

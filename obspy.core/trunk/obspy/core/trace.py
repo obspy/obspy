@@ -10,7 +10,7 @@ Module for handling ObsPy Trace objects.
 """
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, createEmptyDataChunk
 import numpy as np
 
 
@@ -271,13 +271,63 @@ class Trace(object):
         """
         return self.data[index]
 
-    def __add__(self, trace):
+    def __add__(self, trace, method=0, interpolation_samples=0,
+                fill_value=None):
         """
         Adds another Trace object to current trace.
 
-        Data is automatically appended by interpolating overlaps or filling
-        gaps with numpy.NaN samples. Sampling rate and trace.id of both
-        traces must match.
+        Trace data will be converted into a NumPy masked array data type if
+        any gaps are present. This behavior may be prevented by setting the
+        ``fill_value`` parameter. The ``method`` argument controls the
+        handling of overlapping data values.
+
+        Sampling rate, data type and trace.id of both traces must match.
+
+        Parameters
+        ----------
+        method : [ 0 | 1 ], optional
+            Methologie to handle overlaps of traces (default is 0).
+            
+            ======  ===========================================================
+            Method  Description
+            ======  ===========================================================
+            0       Discard overlapping data. Overlaps are essentially treated
+                    the same way as gaps.
+                    
+                    Example
+                    -------
+                    (1) Trace 1: AAAAAAAA
+                        Trace 2:     FFFFFFFF
+                        1 + 2  : AAAA----FFFF
+                    (2) Trace 1: AAAAAAAAAAAA
+                        Trace 2:     FF
+                        1 + 2  : AAAA--AAAAAA
+            1       Discard data of the previous trace assuming the
+                    following trace contains data with a more correct time
+                    value. The parameter ``interpolation_samples``
+                    specifies the number of samples used to linearly
+                    interpolate between the two traces in order to prevent
+                    steps.
+
+                    Any contained traces will be discarted.
+                    
+                    Example
+                    -------
+                    (1) Trace 1: AAAAAAAA
+                        Trace 2:     FFFFFFFF
+                        1 + 2  : AAAAFFFFFFFF (0 samples interpolated)
+                        1 + 2  : AAAACDFFFFFF (2 samples interpolated)
+                    (2) Trace 1: AAAAAAAAAAAA (contained trace)
+                        Trace 2:     FF
+                        1 + 2  : AAAAAAAAAAAA
+            ======  ===========================================================
+        fill_value : int or float, optional
+            Fill value for gaps (default is None). Traces will be converted to
+            NumPy masked arrays if no value is given and gaps are present.
+        interpolation_samples : int, optional
+            Used only for method 1. It specifies the number of samples which
+            are used to interpolate between overlapping traces (default is 0).
+            If set to -1 all overlapping samples are interpolated.
         """
         if not isinstance(trace, Trace):
             raise TypeError
@@ -287,16 +337,10 @@ class Trace(object):
         #  check sample rate
         if self.stats.sampling_rate != trace.stats.sampling_rate:
             raise TypeError("Sampling rate differs")
+        # check data type
+        if self.data.dtype != trace.data.dtype:
+            raise TypeError("Data type differs")
         # check times
-        if self.stats.starttime <= trace.stats.starttime and \
-           self.stats.endtime >= trace.stats.endtime:
-            # new trace is within this trace
-            return deepcopy(self)
-        elif self.stats.starttime >= trace.stats.starttime and \
-           self.stats.endtime <= trace.stats.endtime:
-            # this trace is within new trace
-            return deepcopy(trace)
-        # shortcuts
         if self.stats.starttime <= trace.stats.starttime:
             lt = self
             rt = trace
@@ -305,31 +349,62 @@ class Trace(object):
             lt = trace
         sr = self.stats.sampling_rate
         delta = int(round((rt.stats.starttime - lt.stats.endtime) * sr)) - 1
-        out = deepcopy(lt)
+        delta_endtime = lt.stats.endtime - rt.stats.endtime
+        # create the returned trace
+        out = Trace(header=deepcopy(lt.stats))
         # check if overlap or gap
-        if delta <= 0:
+        if delta <= 0 and delta_endtime < 0:
             # overlap
             delta = abs(delta)
-            ltotal = len(lt)
-            lend = ltotal - delta
-            ldata = np.asanyarray(lt.data)
-            rdata = np.asanyarray(rt.data)
-            samples = (ldata[lend:] + rdata[0:delta]) / 2
-            if np.ma.is_masked(ldata) or np.ma.is_masked(rdata):
-                out.data = np.ma.concatenate([ldata[0:lend], samples,
-                                              rdata[delta:]])
+            if np.all(lt.data[delta:] == rt.data[:-delta]):
+                # if data are the same
+                data = [lt.data[delta:], rt.data]
+            elif method == 0:
+                overlap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+                data = [lt.data[:-delta], overlap, rt.data[delta:]]
+            elif method == 1 and interpolate_samples == 0:
+                data = [lt.data[:-delta], rt.data]
+            elif method == 1 and interpolate_samples > 0 or \
+                 interpolate_samples == -1 :
+                ls = lt.data[-delta - 1]
+                if interpolate_samples == -1:
+                    interpolate_samples = delta
+                rs = rt.data[interpolate_samples]
+                # include left and right sample (delta + 2)
+                interpolation = ls + np.arange(interpolate_samples + 2) * \
+                                (ls - rs) / float(interpolate_samples - 1 + 2)
+                # cut ls and rs and ensure correct data type
+                interpolation = interpolation[1:-1].require(lt.data.dtype)
+                data = [lt.data[:-delta], interpolation,
+                        rt.data[interpolate_samples:]]
             else:
-                out.data = np.concatenate([ldata[0:lend], samples,
-                                           rdata[delta:]])
+                raise NotImplementedError
+        elif delta <= 0 and delta_endtime >= 0:
+            # contained trace
+            delta = abs(delta)
+            lenrt = len(rt)
+            lenlt = len(lt)
+            if np.all(lt.data[lenlt-delta:lenlt-delta+lenrt] == rt.data):
+                # if data are the same
+                data = [lt.data]
+            elif method == 0:
+                gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
+                data = [lt.data[:lenlt - delta], gap, lt.data[lenlt - delta + lenrt:]]
+                #import pdb; pdb.set_trace()
+            elif method == 1:
+                data = [lt.data]
+            else:
+                raise NotImplementedError
         else:
             # gap
-            # get number of missing samples
-            nans = np.empty(delta)
-            nans[:] = np.NaN
-            out.data = np.concatenate([lt.data, nans, rt.data])
-            # Create masked array.
-            out.data = np.ma.masked_array(out.data, np.isnan(out.data))
-        out.stats.npts = out.data.size
+            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+            data = [lt.data, gap, rt.data]
+        # merge traces depending on numpy array type
+        if True in [np.ma.is_masked(_i) for _i in data]:
+            data = np.ma.concatenate(data)
+        else:
+            data = np.concatenate(data)
+        out.data = data
         return out
 
     def getId(self):
