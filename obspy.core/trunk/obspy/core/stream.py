@@ -684,7 +684,7 @@ class Stream(object):
         ----------
         method : [ 0 | 1 ], optional
             Methologie to handle overlaps of traces (default is 0).
-            see :meth:`~obspy.core.trace.Trace.__add__` for details
+            see :meth:`obspy.core.trace.Trace.__add__` for details
         fill_value : int or float, optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.

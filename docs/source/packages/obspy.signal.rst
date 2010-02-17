@@ -24,6 +24,7 @@
         ~invsim.seisSim
         ~invsim.pazToFreqResp
         ~invsim.cornFreq2Paz
+        ~invsim.estimateMagnitude
         ~rotate.rotate_NE_RT
         ~rotate.gps2DistAzimuth
         ~trigger.recStalta

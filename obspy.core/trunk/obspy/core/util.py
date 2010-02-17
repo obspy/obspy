@@ -284,7 +284,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
     Basic Usage
     -----------
-    >>> createEmptyDataChunk(3, 'int32', 10)
+    >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
     >>> createEmptyDataChunk(3, np.dtype('float64'))  # doctest: +SKIP
     masked_array(data = [-- -- --],

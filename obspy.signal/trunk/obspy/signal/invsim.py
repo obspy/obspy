@@ -245,8 +245,9 @@ def paz2AmpValueOfFreqResp(paz, freq):
     >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j], \
                'zeros': [0 + 0j, 0 + 0j], \
                'gain': 0.4}
-    >>> paz2AmpValueOfFreqResp(paz, 1)
-    0.28302624594071618
+    >>> amp = paz2AmpValueOfFreqResp(paz, 1)
+    >>> round(amp, 7)
+    0.28302620000000001
     """
     jw = complex(0, 2 * np.pi * freq) #angular frequency
     fac = complex(1,0)

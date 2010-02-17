@@ -465,9 +465,10 @@ class TraceTestCase(unittest.TestCase):
         temp = deepcopy(tr)
         temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000))
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
-        #XXX is this correct??? shouldn't it be something like
-        #delta = int(111.11111*50+.5)
-        delta = int(111.11111 * 50)
+        # starttime must be in conformance with sampling rate
+        t = UTCDateTime(1970, 1, 1, 0, 0, 0, 11110)
+        self.assertEqual(temp.stats.starttime, t)
+        delta = int((tr.stats.starttime - t) * tr.stats.sampling_rate + .5)
         np.testing.assert_array_equal(tr.data, temp.data[delta:delta + 111])
         # Make sure the original Trace object did not change.
         np.testing.assert_array_equal(tr.data, org_data)

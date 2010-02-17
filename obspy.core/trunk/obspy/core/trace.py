@@ -196,6 +196,19 @@ class Trace(object):
         Numpy array of data samples
     header : dict or :class:`~obspy.core.trace.Stats`
         Dictionary containing header fields
+
+    Supported Operations
+    --------------------
+    ``trace = traceA + traceB``
+        Merges traceA and traceB into one new trace object.
+        See also: :meth:`Trace.__add__`.
+    ``len(trace)``
+        Returns the number of samples contained in the trace. That is
+        it es equal to ``len(trace.data)``.
+        See also: :meth:`Trace.__len__`.
+    ``str(trace)``
+        Returns basic information about the trace object.
+        See also: :meth:`Trace.__str__`.
     """
 
     def __init__(self, data=np.array([]), header=None):
@@ -286,41 +299,8 @@ class Trace(object):
         Parameters
         ----------
         method : [ 0 | 1 ], optional
-            Methologie to handle overlaps of traces (default is 0).
-            
-            ======  ===========================================================
-            Method  Description
-            ======  ===========================================================
-            0       Discard overlapping data. Overlaps are essentially treated
-                    the same way as gaps.
-                    
-                    Example
-                    -------
-                    (1) Trace 1: AAAAAAAA
-                        Trace 2:     FFFFFFFF
-                        1 + 2  : AAAA----FFFF
-                    (2) Trace 1: AAAAAAAAAAAA
-                        Trace 2:     FF
-                        1 + 2  : AAAA--AAAAAA
-            1       Discard data of the previous trace assuming the
-                    following trace contains data with a more correct time
-                    value. The parameter ``interpolation_samples``
-                    specifies the number of samples used to linearly
-                    interpolate between the two traces in order to prevent
-                    steps.
-
-                    Any contained traces will be discarted.
-                    
-                    Example
-                    -------
-                    (1) Trace 1: AAAAAAAA
-                        Trace 2:     FFFFFFFF
-                        1 + 2  : AAAAFFFFFFFF (0 samples interpolated)
-                        1 + 2  : AAAACDFFFFFF (2 samples interpolated)
-                    (2) Trace 1: AAAAAAAAAAAA (contained trace)
-                        Trace 2:     FF
-                        1 + 2  : AAAAAAAAAAAA
-            ======  ===========================================================
+            Methologie to handle overlaps of traces (default is 0). See the
+            table given below for further details.
         fill_value : int or float, optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.
@@ -328,6 +308,38 @@ class Trace(object):
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
             If set to -1 all overlapping samples are interpolated.
+
+        Notes
+        -----
+        ======  ===========================================================
+        Method  Description
+        ======  ===========================================================
+        0       Discard overlapping data. Overlaps are essentially treated
+                the same way as gaps::
+                
+                    (1) Trace 1: AAAAAAAA
+                        Trace 2:     FFFFFFFF
+                        1 + 2  : AAAA----FFFF
+                    (2) Trace 1: AAAAAAAAAAAA
+                        Trace 2:     FF
+                        1 + 2  : AAAA--AAAAAA
+        1       Discard data of the previous trace assuming the
+                following trace contains data with a more correct time
+                value. The parameter ``interpolation_samples``
+                specifies the number of samples used to linearly
+                interpolate between the two traces in order to prevent
+                steps.
+                
+                Any contained traces will be discarted::
+                
+                    (1) Trace 1: AAAAAAAA
+                        Trace 2:     FFFFFFFF
+                        1 + 2  : AAAAFFFFFFFF (0 samples interpolated)
+                        1 + 2  : AAAACDFFFFFF (2 samples interpolated)
+                    (2) Trace 1: AAAAAAAAAAAA (contained trace)
+                        Trace 2:     FF
+                        1 + 2  : AAAAAAAAAAAA
+        ======  ===========================================================
         """
         if not isinstance(trace, Trace):
             raise TypeError
@@ -468,8 +480,7 @@ class Trace(object):
             Name of the output file.
         format : string
             Name of the output format.
-            .. :seealso:: 
-                :func:`~obspy.core.stream.read` for all possible formats.
+            See :func:`~obspy.core.stream.read` for all possible formats.
 
         Basic Usage
         -----------
