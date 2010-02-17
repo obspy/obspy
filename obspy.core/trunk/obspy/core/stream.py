@@ -683,15 +683,15 @@ class Stream(object):
         Parameters
         ----------
         method : [ 0 | 1 ], optional
-            Methologie to handle overlaps of traces (default is 0).
-            see :meth:`obspy.core.trace.Trace.__add__` for details
+            Mythology to handle overlaps of traces (default is 0).
+            See :meth:`obspy.core.trace.Trace.__add__` for details
         fill_value : int or float, optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.
-        interpolation_samples : int or "all", optional
+        interpolation_samples : int, optional
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
-            If set to "all" all overlapping samples are interpolated.
+            If set to -1 all overlapping samples are interpolated.
         """
         # check sampling rates and dtypes
         self._mergeChecks()

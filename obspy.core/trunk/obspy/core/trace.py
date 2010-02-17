@@ -299,7 +299,7 @@ class Trace(object):
         Parameters
         ----------
         method : [ 0 | 1 ], optional
-            Methologie to handle overlaps of traces (default is 0). See the
+            Mythology to handle overlaps of traces (default is 0). See the
             table given below for further details.
         fill_value : int or float, optional
             Fill value for gaps (default is None). Traces will be converted to
