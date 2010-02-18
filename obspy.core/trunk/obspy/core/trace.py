@@ -322,6 +322,7 @@ class Trace(object):
                     1 + 2  : AAAA----FFFF
                 
                 Contained traces with differing data will be marked as gap::
+                
                     Trace 1: AAAAAAAAAAAA
                     Trace 2:     FF
                     1 + 2  : AAAA--AAAAAA
@@ -332,16 +333,19 @@ class Trace(object):
                 prevent steps.
                 
                 No interpolation (``interpolation_samples=0``)::
+                
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAAFFFFFFFF
                 
                 Interpolate first two samples (``interpolation_samples=2``)::
+                
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAACDFFFFFF (interpolation_samples=2)
                 
                 Interpolate all samples (``interpolation_samples=-1``)::
+                
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAABCDEFFFF ()

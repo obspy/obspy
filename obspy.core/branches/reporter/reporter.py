@@ -1,44 +1,97 @@
-from SimpleXMLRPCServer import SimpleXMLRPCServer
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
-from lxml import etree
-import pymysql
-
-# Create server
-server = SimpleXMLRPCServer(("localhost", 8000))
-server.register_introspection_functions()
-
-# create mysql connection
-conn = pymysql.connect(host='127.0.0.1', port=3306,
-                       user='', passwd="", db='')
-
-class MyFuncs:
-    def report(self, ok, result):
-        root = etree.Element("report")
-        for key, value in result.iteritems():
-            if isinstance(value, dict):
-                child = etree.SubElement(root, key)
-                for subkey, subvalue in value.iteritems():
-                    subkey = subkey.split('(')[0].strip()
-                    if subvalue:
-                        etree.SubElement(child, subkey).text = str(subvalue)
-                    else:
-                        etree.SubElement(child, subkey)
-            elif value:
-                etree.SubElement(root, key).text = str(value)
-            else:
-                etree.SubElement(root, key)
-        cur = conn.cursor()
-        cur.execute("SELECT Host,User FROM user")
-        cur.close()
-        print etree.tostring(root, pretty_print=True, encoding="UTF-8")
-        return ""
+from StringIO import StringIO
+from xml.etree import ElementTree as etree
+import BaseHTTPServer
+import sqlite3
+import time
+import datetime
 
 
-server.register_instance(MyFuncs())
+HOST_NAME = 'localhost'
+PORT_NUMBER = 8080
+DB_NAME = "reporter.db"
 
+# create db connection
+conn = sqlite3.connect(DB_NAME)
 
-# Run the server's main loop
+# create tables
 try:
-    server.serve_forever()
-except KeyboardInterrupt:
-    conn.close()
+    conn.execute('''
+        CREATE TABLE report (timestamp INTEGER, 
+                             xml TEXT)
+    ''')
+except:
+    pass
+
+
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+    def do_GET(request):
+        """
+        Respond to a GET request.
+        """
+        results = conn.execute("SELECT * FROM report LIMIT 20")
+        request.send_response(200)
+        request.send_header("Content-type", "text/html")
+        request.end_headers()
+        request.wfile.write("<html>")
+        request.wfile.write("<head><title>Test reports</title></head>")
+        request.wfile.write("<body><h1>Reports</h1>")
+        request.wfile.write('<table width="100%" border="1">')
+        request.wfile.write("<tr>")
+        request.wfile.write("<th>Timestamp</th>")
+        request.wfile.write("<th>Platform</th>")
+        request.wfile.write("<th>ObsPy</th>")
+        request.wfile.write("<th>Dependencies</th>")
+        request.wfile.write("</tr>")
+        for item in results:
+            # parse xml
+            xml = etree.parse(StringIO(item[1])).getroot()
+            request.wfile.write("<tr>")
+            dt = datetime.datetime.fromtimestamp(item[0])
+            request.wfile.write("<td>%s</td>" % dt)
+            # platform
+            request.wfile.write("<td><ul>")
+            for item in xml.find("platform")._children:
+                name = item.tag
+                version = item.text
+                request.wfile.write("<li>%s : %s</li>" % (name, version))
+            request.wfile.write("</ul></td>")
+            # obspy
+            request.wfile.write("<td><ul>")
+            for item in xml.find("obspy")._children:
+                name = item.tag
+                version = item.text
+                request.wfile.write("<li>%s : %s</li>" % (name, version))
+            request.wfile.write("</ul></td>")
+            # dependencies
+            request.wfile.write("<td><ul>")
+            for item in xml.find("dependencies")._children:
+                name = item.tag
+                version = item.text
+                request.wfile.write("<li>%s : %s</li>" % (name, version))
+            request.wfile.write("</ul></td>")
+            request.wfile.write("</tr>")
+        request.wfile.write("</table>")
+        request.wfile.write("</body></html>")
+
+    def do_PUT(request):
+        """
+        Respond to a PUT request.
+        """
+        import pdb;pdb.set_trace()
+        #dt = result['timestamp']
+        #conn.execute("INSERT INTO report VALUES (?, ?)", (dt, xml_doc))
+        #conn.commit()
+        request.send_response(200)
+
+
+if __name__ == '__main__':
+    server_class = BaseHTTPServer.HTTPServer
+    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)

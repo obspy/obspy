@@ -87,15 +87,16 @@ def _getSuite(verbosity=1, tests=[]):
     return ut.suiteClass(suites)
 
 
-def _createReport(ttr, log):
+def _createReport(ttr, log, host, port):
     # import additional libraries here to speed up normal tests
-    import xmlrpclib
-    import datetime
+    import httplib
+    import time
     import platform
-    result = {'timestamp':datetime.datetime.now()}
+    from xml.etree import ElementTree as etree
+    result = {'timestamp':int(time.time())}
     if log:
         try:
-            result['install_log': open(log,'r').read()]
+            result['install_log': open(log, 'r').read()]
         except:
             print "Cannot open log file"
     # get ObsPy module versions
@@ -137,19 +138,43 @@ def _createReport(ttr, log):
     result['failures'] = {}
     for method, text in ttr.failures:
         result['errors'][str(method)] = text
+    # generate XML document
+    root = etree.Element("report")
+    for key, value in result.iteritems():
+        if isinstance(value, dict):
+            child = etree.SubElement(root, key)
+            for subkey, subvalue in value.iteritems():
+                subkey = subkey.split('(')[0].strip()
+                if subvalue:
+                    etree.SubElement(child, subkey).text = str(subvalue)
+                else:
+                    etree.SubElement(child, subkey)
+        elif value:
+            etree.SubElement(root, key).text = str(value)
+        else:
+            etree.SubElement(root, key)
+    xml_doc = etree.tostring(root, "UTF-8")
     print
-    # send result to report server 
-    try:
-        sp = xmlrpclib.ServerProxy('http://localhost:8000/')
-        sp.report(ttr.wasSuccessful(), result)
-    except Exception, e:
-        print "Error: Could not sent a test report to http://tests.obspy.org."
-        print e
+    # send result to report server
+    webservice = httplib.HTTP(host, port)
+    webservice.putrequest("PUT", '/')
+    webservice.putheader("Host", "localhost")
+    webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
+    webservice.putheader("Content-length", "%d" % len(xml_doc))
+    webservice.endheaders()
+    webservice.send(xml_doc)
+    # get the response
+    statuscode, statusmessage, _ = webservice.getreply()
+    # handle errors
+    if statuscode == 200:
+        print "Test report has been sent to %s:%d." % (host, port)
     else:
-        print "Test report has been sent to http://tests.obspy.org."
+        print "Error: Could not sent a test report to %s:%d." % (host, port)
+        print statusmessage
 
 
-def runTests(verbosity=1, tests=[], report=False, log=None):
+def runTests(verbosity=1, tests=[], report=False, log=None,
+             host="tests.obspy.org", port=80):
     """
     This function executes ObsPy test suites.
 
@@ -162,15 +187,18 @@ def runTests(verbosity=1, tests=[], report=False, log=None):
         will be started (default is a empty list).
         Example ['obspy.core.tests.suite']
     report : boolean, optional
-        Sends a test report to http://tests.obspy.org if enabled (default is
-        False).
-    log : string
+        Submits a test report if enabled (default is False).
+    log : string, optional
         Filename of install log file to append to report
+    host : string, optional
+        Report server host name (default is "tests.obspy.org").
+    port : string, optional
+        Report server port number (default is 80).
     """
     suite = _getSuite(verbosity, tests)
     ttr = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if report:
-        _createReport(ttr, log)
+        _createReport(ttr, log, host, port)
 
 
 def main():
@@ -185,7 +213,13 @@ def main():
                       help="quiet mode")
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
-                      help="send a test report to http://tests.obspy.org")
+                      help="submit a test report")
+    parser.add_option("-s", "--host", default="tests.obspy.org",
+                      type="string", dest="host",
+                      help="report server host (default is tests.obspy.org)")
+    parser.add_option("-p", "--port", default=80,
+                      type="int", dest="port",
+                      help="report server port number (default is 80)")
     parser.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
@@ -198,11 +232,16 @@ def main():
     else:
         verbosity = 1
     # check for send report option or environmental settings
-    if options.report or 'OBSPY_REPORT_TEST' in os.environ.keys():
+    if options.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
     else:
         report = False
-    runTests(verbosity, parser.largs, report, options.log)
+    if 'OBSPY_REPORT_HOST' in os.environ.keys():
+        options.host = os.environ['OBSPY_REPORT_HOST']
+    if 'OBSPY_REPORT_HOST' in os.environ.keys():
+        options.port = int(os.environ['OBSPY_REPORT_PORT'])
+    runTests(verbosity, parser.largs, report, options.log, options.host,
+             options.port)
 
 
 if __name__ == "__main__":
