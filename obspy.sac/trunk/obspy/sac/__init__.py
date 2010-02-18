@@ -166,8 +166,28 @@ accessed as an instance of the ReadSac class.
     >>> tr.WriteSacHeader('test.sac')
 
 
-* :meth:`~sacio.ReadSac.IsSACfile` Test if file is a valid binary SAC file
-* :meth:`~sacio.ReadSac.IsXYSACfile` Test if file is a valid ascii SAC file
+* :meth:`~sacio.ReadSac.IsValidSacfile` Test if file is a valid binary SAC file
+
+    Parameters: *filename (SAC binary file)
+
+    >>> from obspy.sac import ReadSac
+    >>> ReadSac().IsValidSacFile('test.sac')
+    >>> True
+    >>> ReadSac().IsValidSacFile('testxy.sac')
+    >>> False
+
+* :meth:`~sacio.ReadSac.IsValidXYSacfile` Test if file is a valid ascii SAC file
+
+    Parameters: *filename (SAC ascii file)
+
+    >>> from obspy.sac import ReadSac
+    >>> ReadSac().IsValidXYSacFile('testxy.sac')
+    >>> True
+    >>> ReadSac().IsValidXYSacFile('test.sac')
+    >>> False
+
+
+
 * :meth:`~sacio.ReadSac.ListStdValues` Print common header values
 * :meth:`~sacio.ReadSac.GetHvalueFromFile` Access to specific header item in specified file
 * :meth:`~sacio.ReadSac.SetHvalueInFile` Change specific header item in specified file

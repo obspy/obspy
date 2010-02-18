@@ -711,15 +711,39 @@ class ReadSac(object):
         """
         Quick test for a valid SAC binary file file.
         ``IsValidSACFile(thePath)``
-        The "ok" value is one if no problems occurred, zero otherwise.
         """
         #
         #  Read in the Header
         #
-        self.ReadSacHeader(thePath)
-        #
-        self.IsSACfile(thePath)
+        try:
+            self.ReadSacHeader(thePath)
+        except SacError:
+            return False
+        except SacIOError:
+            return False
+        else:
+            return True
+        
 
+    def IsValidXYSacFile(self, thePath):
+        """
+        Quick test for a valid SAC binary file file.
+        ``IsValidSACFile(thePath)``
+        """
+        #
+        #  Read in the Header
+        #
+        try:
+            self.ReadSacXY(thePath)
+        except SacError:
+            return False
+        except SacIOError:
+            return False
+        except MemoryError:
+            return False
+        else:
+            return True
+        
     def _get_date_(self):
         """
         If date header values are set calculate date in julian seconds
