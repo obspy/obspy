@@ -299,8 +299,8 @@ class Trace(object):
         Parameters
         ----------
         method : [ 0 | 1 ], optional
-            Mythology to handle overlaps of traces (default is 0). See the
-            table given below for further details.
+            Method to handle overlaps of traces (default is 0). See the
+            table given in the notes section below for further details.
         fill_value : int or float, optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.
@@ -311,35 +311,47 @@ class Trace(object):
 
         Notes
         -----
-        ======  ===========================================================
+        ======  ===============================================================
         Method  Description
-        ======  ===========================================================
-        0       Discard overlapping data. Overlaps are essentially treated
-                the same way as gaps::
+        ======  ===============================================================
+        0       Discard overlapping data. Overlaps are essentially treated the
+                same way as gaps::
                 
-                    (1) Trace 1: AAAAAAAA
-                        Trace 2:     FFFFFFFF
-                        1 + 2  : AAAA----FFFF
-                    (2) Trace 1: AAAAAAAAAAAA
-                        Trace 2:     FF
-                        1 + 2  : AAAA--AAAAAA
-        1       Discard data of the previous trace assuming the
-                following trace contains data with a more correct time
-                value. The parameter ``interpolation_samples``
-                specifies the number of samples used to linearly
-                interpolate between the two traces in order to prevent
-                steps.
+                    Trace 1: AAAAAAAA
+                    Trace 2:     FFFFFFFF
+                    1 + 2  : AAAA----FFFF
                 
-                Any contained traces will be discarted::
+                Contained traces with differing data will be marked as gap::
+                    Trace 1: AAAAAAAAAAAA
+                    Trace 2:     FF
+                    1 + 2  : AAAA--AAAAAA
+        1       Discard data of the previous trace assuming the following trace
+                contains data with a more correct time value. The parameter
+                ``interpolation_samples`` specifies the number of samples used
+                to linearly interpolate between the two traces in order to
+                prevent steps.
                 
-                    (1) Trace 1: AAAAAAAA
-                        Trace 2:     FFFFFFFF
-                        1 + 2  : AAAAFFFFFFFF (0 samples interpolated)
-                        1 + 2  : AAAACDFFFFFF (2 samples interpolated)
-                    (2) Trace 1: AAAAAAAAAAAA (contained trace)
-                        Trace 2:     FF
-                        1 + 2  : AAAAAAAAAAAA
-        ======  ===========================================================
+                No interpolation (``interpolation_samples=0``)::
+                    Trace 1: AAAAAAAA
+                    Trace 2:     FFFFFFFF
+                    1 + 2  : AAAAFFFFFFFF
+                
+                Interpolate first two samples (``interpolation_samples=2``)::
+                    Trace 1: AAAAAAAA
+                    Trace 2:     FFFFFFFF
+                    1 + 2  : AAAACDFFFFFF (interpolation_samples=2)
+                
+                Interpolate all samples (``interpolation_samples=-1``)::
+                    Trace 1: AAAAAAAA
+                    Trace 2:     FFFFFFFF
+                    1 + 2  : AAAABCDEFFFF ()
+                
+                Any contained traces with different data will be discarted::
+                
+                    Trace 1: AAAAAAAAAAAA (contained trace)
+                    Trace 2:     FF
+                    1 + 2  : AAAAAAAAAAAA
+        ======  ===============================================================
         """
         if not isinstance(trace, Trace):
             raise TypeError

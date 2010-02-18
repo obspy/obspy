@@ -9,7 +9,7 @@ import unittest
 
 class TraceTestCase(unittest.TestCase):
     """
-    Test suite for L{obspy.core.Trace}.
+    Test suite for obspy.core.trace.Trace.
     """
     def setUp(self):
         pass
@@ -19,7 +19,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_len(self):
         """
-        Tests the __len__ and count methods of the L{Trace} class.
+        Tests the __len__ and count methods of the Trace class.
         """
         trace = Trace(data=np.arange(1000))
         self.assertEquals(len(trace), 1000)
@@ -27,7 +27,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_ltrim(self):
         """
-        Tests the ltrim method of the L{Trace} class.
+        Tests the ltrim method of the Trace class.
         """
         # set up
         trace = Trace(data=np.arange(1000))
@@ -113,7 +113,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_rtrim(self):
         """
-        Tests the rtrim method of the L{Trace} class.
+        Tests the rtrim method of the Trace class.
         """
         # set up
         trace = Trace(data=np.arange(1000))
@@ -202,7 +202,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_trim(self):
         """
-        Tests the trim method of the L{Trace} class.
+        Tests the trim method of the Trace class.
         """
         # set up
         trace = Trace(data=np.arange(1001))
@@ -226,7 +226,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_addTraceWithGap(self):
         """
-        Tests the add method of the L{Trace} class.
+        Tests __add__ method of the Trace class.
         """
         # set up
         tr1 = Trace(data=np.arange(1000))
@@ -259,7 +259,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_addTraceWithOverlap(self):
         """
-        Tests the add method of the L{Trace} class.
+        Tests __add__ method of the Trace class.
         """
         # set up
         tr1 = Trace(data=np.arange(1000))
@@ -289,7 +289,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_addSameTrace(self):
         """
-        Tests the add method of the L{Trace} class.
+        Tests __add__ method of the Trace class.
         """
         # set up
         tr1 = Trace(data=np.arange(1001))
@@ -303,7 +303,7 @@ class TraceTestCase(unittest.TestCase):
 
     def test_addTraceWithinTrace(self):
         """
-        Tests the add method of the L{Trace} class.
+        Tests __add__ method of the Trace class.
         """
         # set up
         tr1 = Trace(data=np.arange(1001))
@@ -479,48 +479,91 @@ class TraceTestCase(unittest.TestCase):
         """
         Test __add__ method of the Trace object.
         """
-        #1 - overlapping trace with differing data
+        #1 
+        # overlapping trace with differing data
         # Trace 1: 0000000
         # Trace 2:      1111111
-        # 1 + 2  : 00000--11111
         tr1 = Trace(data=np.zeros(7))
         tr2 = Trace(data=np.ones(7))
         tr2.stats.starttime = tr1.stats.starttime + 5
+        # 1 + 2  : 00000--11111
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
-        #2 - overlapping trace with same data
+        # 2 + 1  : 00000--11111
+        tr = tr2 + tr1
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertEqual(tr.data.tolist(),
+                         [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
+        #2
+        # overlapping trace with same data
         # Trace 1: 0000000
         # Trace 2:      0000000
-        # 1 + 2  : 000000000000
         tr1 = Trace(data=np.zeros(7))
         tr2 = Trace(data=np.zeros(7))
         tr2.stats.starttime = tr1.stats.starttime + 5
+        # 1 + 2  : 000000000000
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.zeros(12))
-        #3 - contained overlap with same data
+        # 2 + 1  : 000000000000
+        tr = tr2 + tr1
+        self.assertTrue(isinstance(tr.data, np.ndarray))
+        np.testing.assert_array_equal(tr.data, np.zeros(12))
+        #3
+        # contained trace with same data
         # Trace 1: 1111111111
         # Trace 2:      11
-        # 1 + 2  : 1111111111
         tr1 = Trace(data=np.ones(10))
         tr2 = Trace(data=np.ones(2))
         tr2.stats.starttime = tr1.stats.starttime + 5
+        # 1 + 2  : 1111111111
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ndarray))
         np.testing.assert_array_equal(tr.data, np.ones(10))
-        #4 - contained overlap with differing data
+        # 2 + 1  : 1111111111
+        tr = tr2 + tr1
+        self.assertTrue(isinstance(tr.data, np.ndarray))
+        np.testing.assert_array_equal(tr.data, np.ones(10))
+        #4
+        # contained trace with differing data
         # Trace 1: 0000000000
         # Trace 2:      11
-        # 1 + 2  : 00000--000
         tr1 = Trace(data=np.zeros(10))
         tr2 = Trace(data=np.ones(2))
         tr2.stats.starttime = tr1.stats.starttime + 5
+        # 1 + 2  : 00000--000
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 0, 0, 0])
+        # 2 + 1  : 00000--000
+        tr = tr2 + tr1
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertEqual(tr.data.tolist(),
+                         [0, 0, 0, 0, 0, None, None, 0, 0, 0])
+        #5
+        # completely contained trace with same data until end
+        # Trace 1: 1111111111
+        # Trace 2: 1111111111
+        tr1 = Trace(data=np.ones(10))
+        tr2 = Trace(data=np.ones(10))
+        # 1 + 2  : 1111111111
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ndarray))
+        np.testing.assert_array_equal(tr.data, np.ones(10))
+        #6
+        # completely contained trace with differing data
+        # Trace 1: 0000000000
+        # Trace 2: 1111111111
+        tr1 = Trace(data=np.zeros(10))
+        tr2 = Trace(data=np.ones(10))
+        # 1 + 2  : ----------
+        tr = tr1 + tr2
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertEqual(tr.data.tolist(), [None] * 10)
+
 
     def test_addWithDifferentSamplingRates(self):
         """
@@ -532,7 +575,8 @@ class TraceTestCase(unittest.TestCase):
         tr2 = Trace(data=np.zeros(5))
         tr2.stats.sampling_rate = 50
         self.assertRaises(TypeError, tr1.__add__, tr2)
-        # 2 - different sampling rates for the different channels is ok
+        self.assertRaises(TypeError, tr2.__add__, tr1)
+        # 2 - different sampling rates for the different channels works
         tr1 = Trace(data=np.zeros(5))
         tr1.stats.sampling_rate = 200
         tr1.stats.channel = 'EHE'
@@ -545,18 +589,22 @@ class TraceTestCase(unittest.TestCase):
         tr4 = Trace(data=np.zeros(5))
         tr4.stats.sampling_rate = 50
         tr4.stats.channel = 'EHZ'
+        # same sampling rate and ids should not fail
         tr1 + tr3
+        tr3 + tr1
         tr2 + tr4
+        tr4 + tr2
 
     def test_addWithDifferentDatatypesOrID(self):
         """
         Test __add__ method of the Trace object.
         """
-        # 1 - different dtype for the same channel should fail
+        # 1 - different data types for the same channel should fail
         tr1 = Trace(data=np.zeros(5, dtype="int32"))
         tr2 = Trace(data=np.zeros(5, dtype="float32"))
         self.assertRaises(TypeError, tr1.__add__, tr2)
-        # 2 - different sampling rates for the different channels is ok
+        self.assertRaises(TypeError, tr2.__add__, tr1)
+        # 2 - different sampling rates for the different channels works
         tr1 = Trace(data=np.zeros(5, dtype="int32"))
         tr1.stats.channel = 'EHE'
         tr2 = Trace(data=np.zeros(5, dtype="float32"))
@@ -565,11 +613,16 @@ class TraceTestCase(unittest.TestCase):
         tr3.stats.channel = 'EHE'
         tr4 = Trace(data=np.zeros(5, dtype="float32"))
         tr4.stats.channel = 'EHZ'
+        # same data types and ids should not fail
         tr1 + tr3
+        tr3 + tr1
         tr2 + tr4
+        tr4 + tr2
         # adding traces with different ids should raise
         self.assertRaises(TypeError, tr1.__add__, tr2)
         self.assertRaises(TypeError, tr3.__add__, tr4)
+        self.assertRaises(TypeError, tr2.__add__, tr1)
+        self.assertRaises(TypeError, tr4.__add__, tr3)
 
 
 def suite():
