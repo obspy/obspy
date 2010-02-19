@@ -22,8 +22,8 @@ try:
         CREATE TABLE report (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp INTEGER,
+            tests INTEGER,
             errors INTEGER,
-            failures INTEGER,
             system TEXT,
             architecture TEXT,
             version TEXT,
@@ -35,7 +35,7 @@ except:
 
 
 INSERT_SQL = """
-    INSERT INTO report (timestamp, errors, failures, system, architecture, 
+    INSERT INTO report (timestamp, tests, errors, system, architecture, 
         version, xml) 
     VALUES (?, ?, ?, ?, ?, ?, ?)
 """
@@ -87,7 +87,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("</style>")
             self.wfile.write("</head>")
             self.wfile.write("<body><h1>Report #%s</h1>" % id)
-            self.wfile.write("<p><a href='/'>Return to overview</a></p>")
+            self.wfile.write("<p><a href='?'>Return to overview</a></p>")
             self.wfile.write("<h2>Failures/Errors</h2>")
             for item in root.find('errors')._children:
                 self.wfile.write("<pre>%s</pre" % item.text)
@@ -132,12 +132,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write("<td>%s</td>" % dt)
                 if int(item[3]) > 0:
                     color = "#FF0000"
-                elif int(item[2]) > 0:
-                    color = "#FF7700"
                 else:
                     color = "#00FF00"
                 self.wfile.write("<td style='background-color:%s'>" % color)
-                self.wfile.write("%s/%s</td>" % (item[2], item[3]))
+                self.wfile.write("%s of %s</td>" % (item[3], item[2]))
                 self.wfile.write("<td>%s</td>" % item[4])
                 self.wfile.write("<td>%s</td>" % item[5])
                 self.wfile.write("<td>%s</td>" % item[6])
@@ -167,11 +165,11 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             ts = int(form['timestamp'].value)
             xml_doc = form['xml'].value
             errors = int(form['errors'].value)
-            failures = int(form['failures'].value)
+            tests = int(form['tests'].value)
             system = form['system'].value
             python_version = form['python_version'].value
             architecture = form['architecture'].value
-            conn.execute(INSERT_SQL, (ts, failures, errors, system,
+            conn.execute(INSERT_SQL, (ts, tests, errors, system,
                                       architecture, python_version, xml_doc))
             conn.commit()
         except Exception, e:

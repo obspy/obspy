@@ -135,6 +135,7 @@ def _createReport(ttr, log, server):
         except:
             result['platform'][func] = ''
     # test results
+    result['tests'] = ttr.testsRun
     result['errors'] = {}
     for method, text in ttr.errors:
         result['errors'][str(method)] = text
@@ -164,8 +165,8 @@ def _createReport(ttr, log, server):
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
         'architecture': result['platform']['architecture'],
-        'failures': len(ttr.failures),
-        'errors': len(ttr.errors),
+        'tests': int(ttr.testsRun),
+        'errors': len(ttr.failures) + len(ttr.errors),
         'xml': xml_doc
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
