@@ -8,7 +8,7 @@ import unittest
 
 class UTCDateTimeTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.UTCDateTime.
+    Test suite for obspy.core.utcdatetime.UTCDateTime.
     """
 
     def test_fromString(self):

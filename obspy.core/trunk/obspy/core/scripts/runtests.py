@@ -3,11 +3,11 @@
 """
 ObsPy Test Suite Module.
 
-All tests in ObsPy are located in the tests directory of the certain
+All tests in ObsPy are located in the tests directory of the each specific
 module. The __init__.py of the tests directory itself as well as every test
 file located in the tests directory has a function called suite, which is
 executed using this script. Running the script with the verbose keyword exposes
-the names of the available tests.
+the names of all available test cases.
 
 Examples
 --------
@@ -87,13 +87,15 @@ def _getSuite(verbosity=1, tests=[]):
     return ut.suiteClass(suites)
 
 
-def _createReport(ttr, log, host, port):
+def _createReport(ttr, log, server):
     # import additional libraries here to speed up normal tests
     import httplib
+    import urllib
     import time
     import platform
     from xml.etree import ElementTree as etree
-    result = {'timestamp':int(time.time())}
+    timestamp = int(time.time())
+    result = {'timestamp':timestamp}
     if log:
         try:
             result['install_log': open(log, 'r').read()]
@@ -156,25 +158,31 @@ def _createReport(ttr, log, host, port):
     xml_doc = etree.tostring(root, "UTF-8")
     print
     # send result to report server
-    webservice = httplib.HTTP(host, port)
-    webservice.putrequest("PUT", '/')
-    webservice.putheader("Host", "localhost")
-    webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
-    webservice.putheader("Content-length", "%d" % len(xml_doc))
-    webservice.endheaders()
-    webservice.send(xml_doc)
+    params = urllib.urlencode({
+        'timestamp': timestamp,
+        'system': result['platform']['system'],
+        'python_version': result['platform']['python_version'],
+        'architecture': result['platform']['architecture'],
+        'failures': len(ttr.failures),
+        'errors': len(ttr.errors),
+        'xml': xml_doc
+    })
+    headers = {"Content-type": "application/x-www-form-urlencoded",
+               "Accept": "text/plain"}
+    conn = httplib.HTTPConnection(server)
+    conn.request("POST", "/", params, headers)
     # get the response
-    statuscode, statusmessage, _ = webservice.getreply()
+    response = conn.getresponse()
     # handle errors
-    if statuscode == 200:
-        print "Test report has been sent to %s:%d." % (host, port)
+    if response.status == 200:
+        print "Test report has been sent to %s." % (server)
     else:
-        print "Error: Could not sent a test report to %s:%d." % (host, port)
-        print statusmessage
+        print "Error: Could not sent a test report to %s." % (server)
+        print response.reason
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
-             host="tests.obspy.org", port=80):
+             server="tests.obspy.org"):
     """
     This function executes ObsPy test suites.
 
@@ -190,15 +198,13 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         Submits a test report if enabled (default is False).
     log : string, optional
         Filename of install log file to append to report
-    host : string, optional
-        Report server host name (default is "tests.obspy.org").
-    port : string, optional
-        Report server port number (default is 80).
+    server : string, optional
+        Report server URL (default is "tests.obspy.org").
     """
     suite = _getSuite(verbosity, tests)
     ttr = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if report:
-        _createReport(ttr, log, host, port)
+        _createReport(ttr, log, server)
 
 
 def main():
@@ -214,12 +220,9 @@ def main():
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
                       help="submit a test report")
-    parser.add_option("-s", "--host", default="tests.obspy.org",
-                      type="string", dest="host",
-                      help="report server host (default is tests.obspy.org)")
-    parser.add_option("-p", "--port", default=80,
-                      type="int", dest="port",
-                      help="report server port number (default is 80)")
+    parser.add_option("-u", "--server", default="tests.obspy.org",
+                      type="string", dest="server",
+                      help="report server (default is tests.obspy.org)")
     parser.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
@@ -236,12 +239,9 @@ def main():
         report = True
     else:
         report = False
-    if 'OBSPY_REPORT_HOST' in os.environ.keys():
-        options.host = os.environ['OBSPY_REPORT_HOST']
-    if 'OBSPY_REPORT_HOST' in os.environ.keys():
-        options.port = int(os.environ['OBSPY_REPORT_PORT'])
-    runTests(verbosity, parser.largs, report, options.log, options.host,
-             options.port)
+    if 'OBSPY_REPORT_SERVER' in os.environ.keys():
+        options.server = os.environ['OBSPY_REPORT_SERVER']
+    runTests(verbosity, parser.largs, report, options.log, options.server)
 
 
 if __name__ == "__main__":

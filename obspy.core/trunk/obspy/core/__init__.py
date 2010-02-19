@@ -12,9 +12,8 @@
 obspy.core - Core classes of ObsPy
 ==================================
 
-This class contains common methods and classes for ObsPy. It includes
-UTCDateTime, Stats, Stream and Trace classes and methods for reading 
-seismograms.
+This class contains common methods and classes for ObsPy. It includes Stream,
+Trace, UTCDateTime, Stats classes and methods for reading seismogram files.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -24,16 +23,19 @@ seismograms.
 
 Summary
 -------
-Seismograms of the format (SAC, MiniSEED, GSE2, SEISAN, Q, SH_ASC) are
-read with the :func:`~obspy.core.stream.read` function into a
-:class:`~obspy.core.stream.Stream` object. The Stream object is a
-list like objects which contains several :class:`~obspy.core.trace.Trace` 
-objects, i.e. gap-less continuous time series. Each Trace object has an
-attribute ``data``, which contains the actual data as a numpy_ ndarray and an
-attribute ``stats`` which contains the header/meta information as a dict-like 
-:class:`~obspy.core.trace.Stats` object. The stats attributes ``starttime``
-and ``endtime`` are :class:`~obspy.core.utcdatetime.UTCDateTime`
-objects.
+Seismograms of the formats SAC, MiniSEED, GSE2, SEISAN, Q, etc. can be imported
+into a :class:`~obspy.core.stream.Stream` object using the
+:func:`~obspy.core.stream.read` function.
+
+Streams are list-like objects which contain multiple
+:class:`~obspy.core.trace.Trace` objects, i.e. gap-less continuous time series
+and related header/meta information.
+
+Each Trace object has the attribute ``data`` pointing to a NumPy_ ndarray of
+the actual time series and the attribute ``stats`` which contains all meta
+information in a dict-like :class:`~obspy.core.trace.Stats` object. Both
+attributes ``starttime`` and ``endtime`` of the Stats object are
+:class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 Example
 -------
@@ -51,21 +53,23 @@ BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - ... | 200.0 Hz, 412 samples
 >>> tr.data
 array([-363 -382 -388 -420 -417 ... -409 -393 -353 -360 -389])
 >>> tr.stats
-Stats({'network': 'BW', 
-       'mseed': AttribDict({'dataquality': 'D'}), 
-       'delta': 0.0050000000000000001, 
-       'station': 'BGLD', 
-       'location': '', 
-       'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), 
-       'npts': 412, 
-       'calib': 1.0, 
-       'sampling_rate': 200.0, 
-       'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000), 
-       'channel': 'EHE'})
+Stats({
+    'network': 'BW', 
+    'mseed': AttribDict({'dataquality': 'D'}), 
+    'delta': 0.0050000000000000001, 
+    'station': 'BGLD', 
+    'location': '', 
+    'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), 
+    'npts': 412, 
+    'calib': 1.0, 
+    'sampling_rate': 200.0, 
+    'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000), 
+    'channel': 'EHE'
+})
 >>> tr.stats.starttime
 UTCDateTime(2007, 12, 31, 23, 59, 59, 915000)
 
-.. _numpy: http://docs.scipy.org
+.. _NumPy: http://docs.scipy.org
 """
 
 # don't change order

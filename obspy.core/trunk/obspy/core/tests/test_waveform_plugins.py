@@ -13,14 +13,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
     Test suite for all installed waveform plug-ins.
     """
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_writeFormat(self):
+    def test_readAndWriteAllInstalledWaveformPlugins(self):
         """
+        Tests read and write methods for all installed waveform plug-ins.
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
@@ -72,7 +67,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     elif format not in ['WAV']:
                         self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
                     # remove temporary files
-                    os.remove(outfile)
+                    # XXX: temporary SAC file is locked on Windows ?!?
+                    try:
+                        os.remove(outfile)
+                    except:
+                        pass
                     if format == 'Q':
                         os.remove(outfile[:-4] + '.QBN')
                         os.remove(outfile[:-4])

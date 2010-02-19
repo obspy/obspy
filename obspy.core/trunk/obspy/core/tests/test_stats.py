@@ -10,13 +10,8 @@ import unittest
 
 class StatsTestCase(unittest.TestCase):
     """
-    Test suite for L{obspy.core.Stats}.
+    Test suite for obspy.core.util.Stats.
     """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_init(self):
         """
@@ -40,7 +35,7 @@ class StatsTestCase(unittest.TestCase):
 
     def test_deepcopy(self):
         """
-        Tests deepcopy method from L{obspy.core.Stats}.
+        Tests deepcopy method of Stats object.
         """
         stats = Stats()
         stats.network = 'BW'
@@ -66,7 +61,7 @@ class StatsTestCase(unittest.TestCase):
 
     def test_update(self):
         """
-        Tests update method of AttribDict.
+        Tests update method of Stats object.
         """
         x = Stats({'a': 5})
         self.assertTrue('a' in dir(x))
@@ -175,7 +170,7 @@ class StatsTestCase(unittest.TestCase):
 
     def test_pickleStats(self):
         """
-        Pickling L{obspy.core.Stats} objects. Test case for issue #10
+        Test pickling Stats objects. Test case for issue #10.
         """
         stats = Stats()
         stats.muh = 1

@@ -8,14 +8,10 @@ import unittest
 
 class StreamTestCase(unittest.TestCase):
     """
-    Test suite for L{obspy.core.Trace}.
-    
-    Please be aware that the tests will only work with the modules obspy.mseed 
-    and obspy.gse2.
+    Test suite for obspy.core.stream.Stream.
     """
 
     def setUp(self):
-        # Create dynamic test_files to avoid dependencies of other modules.
         # set specific seed value such that random numbers are reproduceable
         np.random.seed(815)
         header = {'network': 'BW', 'station': 'BGLD',
@@ -49,14 +45,14 @@ class StreamTestCase(unittest.TestCase):
 
     def test_getitem(self):
         """
-        Tests the getting of items of the Stream objects.
+        Tests the __getitem__ method of the Stream object.
         """
         stream = self.mseed_stream
         self.assertEqual(stream[0], stream.traces[0])
         self.assertEqual(stream[-1], stream.traces[-1])
         self.assertEqual(stream[3], stream.traces[3])
 
-    def test_adding(self):
+    def test_add(self):
         """
         Tests the adding of two stream objects.
         """
@@ -85,7 +81,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
         np.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
 
-    def test_iadding(self):
+    def test_iadd(self):
         """
         Tests the __iadd__ method of the Stream objects.
         """
@@ -104,7 +100,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_append(self):
         """
-        Tests the appending method of the Stream objects.
+        Tests the append method of the Stream object.
         """
         stream = self.mseed_stream
         # Check current count of traces
@@ -130,7 +126,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_countAndLen(self):
         """
-        Tests the count method and __len__ attribute of the Stream objects.
+        Tests the count method and __len__ attribute of the Stream object.
         """
         stream = self.mseed_stream
         self.assertEqual(4, len(stream))
@@ -139,7 +135,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_extend(self):
         """
-        Tests the extending method of the Stream objects.
+        Tests the extend method of the Stream object.
         """
         stream = self.mseed_stream
         # Check current count of traces
@@ -170,7 +166,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_insert(self):
         """
-        Tests the insert Method of the Stream objects.
+        Tests the insert Method of the Stream object.
         """
         stream = self.mseed_stream
         self.assertEqual(4, len(stream))
@@ -215,8 +211,10 @@ class StreamTestCase(unittest.TestCase):
 
     def test_getGaps(self):
         """
-        Tests the getGaps method of the Stream objects. It is compared directly
-        to the obspy.mseed method getGapsList which is assumed to be correct.
+        Tests the getGaps method of the Stream objects.
+
+        It is compared directly to the obspy.mseed method getGapsList which is
+        assumed to be correct.
         """
         stream = self.mseed_stream
         gap_list = stream.getGaps()
@@ -244,7 +242,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_pop(self):
         """
-        Test the pop method of the Stream objects.
+        Test the pop method of the Stream object.
         """
         stream = self.mseed_stream
         # Make a copy of the Traces.
@@ -271,9 +269,9 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
-    def test_getslice(self):
+    def test_slice(self):
         """
-        Tests the slicing of Stream objects.
+        Tests the slice of Stream object.
         """
         stream = self.mseed_stream
         self.assertEqual(stream[0:], stream[0:])
@@ -288,7 +286,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_pop2(self):
         """
-        Test the pop method of the Stream objects.
+        Test the pop method of the Stream object.
         """
         trace = Trace(data=np.arange(0, 1000))
         st = Stream([trace])
@@ -303,7 +301,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_remove(self):
         """
-        Tests the remove method of the Stream objects.
+        Tests the remove method of the Stream object.
         """
         stream = self.mseed_stream
         # Make a copy of the Traces.
@@ -322,7 +320,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_reverse(self):
         """
-        Tests the reverse method of the Stream objects.
+        Tests the reverse method of the Stream object.
         """
         stream = self.mseed_stream
         # Make a copy of the Traces.
@@ -339,7 +337,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_sort(self):
         """
-        Tests the sorting of the Stream objects.
+        Tests the sort method of the Stream object.
         """
         # Create new Stream
         stream = Stream()
@@ -415,7 +413,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_mergeWithDifferentSamplingRates(self):
         """
-        Test the merge method of the Stream objects.
+        Test the merge method of the Stream object.
         """
         # 1 - different sampling rates for the same channel should fail
         tr1 = Trace(data=np.zeros(5))
@@ -442,7 +440,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_mergeWithDifferentDatatypes(self):
         """
-        Test the merge method of the Stream objects.
+        Test the merge method of the Stream object.
         """
         # 1 - different dtype for the same channel should fail
         tr1 = Trace(data=np.zeros(5, dtype="int32"))
@@ -463,7 +461,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_mergeGaps(self):
         """
-        Test the merge method of the Stream objects.
+        Test the merge method of the Stream object.
         """
         stream = self.mseed_stream
         start = UTCDateTime("2007-12-31T23:59:59.915000")
@@ -491,7 +489,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_mergeOverlapsDefaultMethod(self):
         """
-        Test the merge method of the Stream objects.
+        Test the merge method of the Stream object.
         """
         #1 - overlapping trace with differing data
         # Trace 1: 0000000
@@ -547,7 +545,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_tabCompleteStats(self):
         """
-        Test stats for tab completion
+        Test tab completion of Stats object.
         """
         tr = self.mseed_stream[0]
         self.assertTrue('sampling_rate' in dir(tr.stats))
