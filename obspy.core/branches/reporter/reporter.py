@@ -1,10 +1,12 @@
 from StringIO import StringIO
+from daemon import Daemon
 from xml.etree import ElementTree as etree
 import BaseHTTPServer
-import sqlite3
-import time
-import datetime
 import cgi
+import datetime
+import sqlite3
+import sys
+import time
 
 
 HOST_NAME = 'localhost'
@@ -178,13 +180,34 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_response(200)
 
 
-if __name__ == '__main__':
-    server_class = BaseHTTPServer.HTTPServer
-    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
-    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    httpd.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
+class MyDaemon(Daemon):
+        def run(self):
+            server_class = BaseHTTPServer.HTTPServer
+            httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+            print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME,
+                                                             PORT_NUMBER)
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                pass
+            httpd.server_close()
+            print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME,
+                                                            PORT_NUMBER)
+
+
+if __name__ == "__main__":
+    daemon = MyDaemon('/home/barsch/opt/reporter/reporter.pid')
+    if len(sys.argv) == 2:
+        if 'start' == sys.argv[1]:
+            daemon.start()
+        elif 'stop' == sys.argv[1]:
+            daemon.stop()
+        elif 'restart' == sys.argv[1]:
+            daemon.restart()
+        else:
+            print "Unknown command"
+            sys.exit(2)
+        sys.exit(0)
+    else:
+        print "usage: %s start|stop|restart" % sys.argv[0]
+        sys.exit(2)

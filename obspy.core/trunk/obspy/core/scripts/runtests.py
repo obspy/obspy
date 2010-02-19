@@ -91,6 +91,7 @@ def _createReport(ttr, log, server):
     # import additional libraries here to speed up normal tests
     import httplib
     import urllib
+    from urlparse import urlparse
     import time
     import platform
     from xml.etree import ElementTree as etree
@@ -173,6 +174,13 @@ def _createReport(ttr, log, server):
     conn.request("POST", "/", params, headers)
     # get the response
     response = conn.getresponse()
+    # handle redirect
+    if response.status == 301:
+        o = urlparse(response.msg['location'])
+        conn = httplib.HTTPConnection(o.netloc)
+        conn.request("POST", o.path, params, headers)
+        # get the response
+        response = conn.getresponse()
     # handle errors
     if response.status == 200:
         print "Test report has been sent to %s." % (server)
