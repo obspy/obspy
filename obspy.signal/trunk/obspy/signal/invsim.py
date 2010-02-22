@@ -270,7 +270,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     :param paz: PAZ of the instrument [m/s]
     :param amplitude: Peak to peak amplitude [counts]
     :param timespan: Timespan of peak to peak amplitude [s]
-    :param h_dist: Horizontal distance to epicenter [km]
+    :param h_dist: Hypocentral distance [km]
 
     >>> paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j], \
                'zeros': [0 + 0j, 0 + 0j, 0 + 0j], \
