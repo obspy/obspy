@@ -1823,12 +1823,12 @@ class PickingGUI:
                 timedelta /= self.streams[i][1].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
-                                        self.dicts[i]['distEpi'])
+                                        self.dicts[i]['distHypo'])
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
                 timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
                 timedelta /= self.streams[i][2].stats.sampling_rate
                 mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
-                                         self.dicts[i]['distEpi'])
+                                         self.dicts[i]['distHypo'])
                 mag /= 2.
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s,%s' % (self.streams[i][1].stats.channel, self.streams[i][2].stats.channel)
@@ -1843,7 +1843,7 @@ class PickingGUI:
                 timedelta /= self.streams[i][1].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
-                                        self.dicts[i]['distEpi'])
+                                        self.dicts[i]['distHypo'])
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s' % self.streams[i][1].stats.channel
                 print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
@@ -1857,7 +1857,7 @@ class PickingGUI:
                 timedelta /= self.streams[i][2].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
-                                        self.dicts[i]['distEpi'])
+                                        self.dicts[i]['distHypo'])
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s' % self.streams[i][2].stats.channel
                 print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
