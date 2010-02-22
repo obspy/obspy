@@ -40,6 +40,7 @@ attributes ``starttime`` and ``endtime`` of the Stats object are
 Example
 -------
 
+>>> from obspy.core import read
 >>> st = read('gaps.mseed')
 >>> print st
 4 Trace(s) in Stream:
