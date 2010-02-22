@@ -96,12 +96,12 @@ def _createReport(ttr, log, server):
     import platform
     from xml.etree import ElementTree as etree
     timestamp = int(time.time())
-    result = {'timestamp':timestamp}
+    result = {'timestamp': timestamp}
     if log:
         try:
-            result['install_log': open(log, 'r').read()]
+            result['install_log']  = open(log, 'r').read()
         except:
-            print "Cannot open log file"
+            print "Cannot open log file %s" % log
     # get ObsPy module versions
     result['obspy'] = {}
     for module in ALL_MODULES:
