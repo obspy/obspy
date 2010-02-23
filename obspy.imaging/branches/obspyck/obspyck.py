@@ -2311,7 +2311,6 @@ class PickingGUI:
         f = urllib2.urlopen(req)
         xml = parse(f)
         f.close()
-        document = xml.xpath(".//document_id")
 
         picklist = []
 
@@ -2325,8 +2324,11 @@ class PickingGUI:
                                        self.seishubEventCount
 
         # define which event data we will fetch
-        document_id = document[self.seishubEventCurrent].text
         node = xml.xpath(u".//resource_name")[self.seishubEventCurrent]
+        #document = xml.xpath(".//document_id")
+        #document_id = document[self.seishubEventCurrent].text
+        # Hack to show xml resource as document id
+        document_id = node.text
         
         print "Fetching event %i of %i (event_id: %s)" %  \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
