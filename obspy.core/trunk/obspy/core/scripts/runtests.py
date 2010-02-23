@@ -49,8 +49,10 @@ Examples
 """
 
 from optparse import OptionParser
-import unittest
 import os
+import sys
+import time
+import unittest
 
 
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
@@ -59,57 +61,79 @@ ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
 
-def _getSuite(verbosity=1, tests=[]):
+def _getSuites(verbosity=1, tests=[]):
     """
     The obspy test suite.
     """
     if tests == []:
-        names = ['obspy.%s.tests.suite' % d for d in DEFAULT_MODULES]
+        names = DEFAULT_MODULES
     else:
         names = []
         # Search for short cuts in tests, if there are no short cuts,
         # names variables is equal to tests variable
         for test in tests:
             if test in ALL_MODULES:
-                test = 'obspy.%s.tests.suite' % test
-            names.append(test)
+                names.append(test)
     # Construct the test suite from the given names. Modules
     # need not be imported before in this case
-    suites = []
+    suites = {}
     ut = unittest.TestLoader()
     for name in names:
+        module = 'obspy.%s.tests.suite' % name
+        suite = []
         try:
-            suites.append(ut.loadTestsFromName(name, None))
+            suite.append(ut.loadTestsFromName(module, None))
         except Exception, e:
             if verbosity:
                 print e
-                print "Cannot import test suite for module %s" % name
-    return ut.suiteClass(suites)
+                print "Cannot import test suite for module obspy.%s" % name
+        else:
+            suites[name] = ut.suiteClass(suite)
+    return suites
 
 
-def _createReport(ttr, log, server):
+def _createReport(ttrs, timetaken, log, server):
     # import additional libraries here to speed up normal tests
     import httplib
     import urllib
     from urlparse import urlparse
-    import time
     import platform
     from xml.etree import ElementTree as etree
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
+    result['timetaken'] = timetaken
     if log:
         try:
-            result['install_log']  = open(log, 'r').read()
+            result['install_log'] = open(log, 'r').read()
         except:
             print "Cannot open log file %s" % log
     # get ObsPy module versions
     result['obspy'] = {}
+    tests = 0
+    errors = 0
+    failures = 0
     for module in ALL_MODULES:
+        result['obspy'][module] = {}
         try:
             mod = __import__('obspy.' + module, fromlist='obspy')
-            result['obspy'][module] = mod.__version__
+            result['obspy'][module]['installed'] = mod.__version__
         except:
-            result['obspy'][module] = ''
+            result['obspy'][module]['installed'] = ''
+        if module not in ttrs:
+            continue
+        # test results
+        ttr = ttrs[module]
+        result['obspy'][module]['tested'] = True
+        result['obspy'][module]['tests'] = ttr.testsRun
+        tests += ttr.testsRun
+        result['obspy'][module]['errors'] = {}
+        for method, text in ttr.errors:
+            result['obspy'][module]['errors'][str(method)] = text
+            errors += 1
+        result['obspy'][module]['failures'] = {}
+        for method, text in ttr.failures:
+            result['obspy'][module]['failures'][str(method)] = text
+            failures += 1
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
@@ -135,28 +159,22 @@ def _createReport(ttr, log, server):
         except:
             result['platform'][func] = ''
     # test results
-    result['tests'] = ttr.testsRun
-    result['errors'] = {}
-    for method, text in ttr.errors:
-        result['errors'][str(method)] = text
-    result['failures'] = {}
-    for method, text in ttr.failures:
-        result['errors'][str(method)] = text
+    result['tests'] = tests
+    result['errors'] = errors
+    result['failures'] = failures
     # generate XML document
+    def _dict2xml(doc, result):
+        for key, value in result.iteritems():
+            key = key.split('(')[0].strip()
+            if isinstance(value, dict):
+                child = etree.SubElement(doc, key)
+                _dict2xml(child, value)
+            elif value:
+                etree.SubElement(doc, key).text = str(value)
+            else:
+                etree.SubElement(doc, key)
     root = etree.Element("report")
-    for key, value in result.iteritems():
-        if isinstance(value, dict):
-            child = etree.SubElement(root, key)
-            for subkey, subvalue in value.iteritems():
-                subkey = subkey.split('(')[0].strip()
-                if subvalue:
-                    etree.SubElement(child, subkey).text = str(subvalue)
-                else:
-                    etree.SubElement(child, subkey)
-        elif value:
-            etree.SubElement(root, key).text = str(value)
-        else:
-            etree.SubElement(root, key)
+    _dict2xml(root, result)
     xml_doc = etree.tostring(root, "UTF-8")
     print
     # send result to report server
@@ -165,8 +183,9 @@ def _createReport(ttr, log, server):
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
         'architecture': result['platform']['architecture'],
-        'tests': int(ttr.testsRun),
-        'errors': len(ttr.failures) + len(ttr.errors),
+        'tests': tests,
+        'errors': failures + errors,
+        'modules': len(ttrs),
         'xml': xml_doc
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
@@ -190,6 +209,55 @@ def _createReport(ttr, log, server):
         print response.reason
 
 
+class _TextTestRunner:
+    def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1):
+        self.stream = unittest._WritelnDecorator(stream)
+        self.descriptions = descriptions
+        self.verbosity = verbosity
+
+    def _makeResult(self):
+        return unittest._TextTestResult(self.stream, self.descriptions,
+                                        self.verbosity)
+
+    def run(self, suites):
+        "Run the given test case or test suite."
+        startTime = time.time()
+        results = {}
+        for id, test in suites.iteritems():
+            result = self._makeResult()
+            test(result)
+            results[id] = result
+        stopTime = time.time()
+        timeTaken = stopTime - startTime
+        runs = 0
+        faileds = 0
+        erroreds = 0
+        wasSuccessful = True
+        for result in results.values():
+            result.printErrors()
+            self.stream.writeln(result.separator2)
+            failed, errored = map(len, (result.failures, result.errors))
+            faileds += failed
+            erroreds += errored
+            if not result.wasSuccessful():
+                wasSuccessful = False
+            runs += result.testsRun
+        self.stream.writeln("Ran %d test%s in %.3fs" %
+                            (runs, runs != 1 and "s" or "", timeTaken))
+        self.stream.writeln()
+        if not wasSuccessful:
+            self.stream.write("FAILED (")
+            if faileds:
+                self.stream.write("failures=%d" % faileds)
+            if erroreds:
+                if failed: self.stream.write(", ")
+                self.stream.write("errors=%d" % erroreds)
+            self.stream.writeln(")")
+        else:
+            self.stream.writeln("OK")
+        return results, timeTaken
+
+
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org"):
     """
@@ -210,10 +278,10 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     server : string, optional
         Report server URL (default is "tests.obspy.org").
     """
-    suite = _getSuite(verbosity, tests)
-    ttr = unittest.TextTestRunner(verbosity=verbosity).run(suite)
+    suites = _getSuites(verbosity, tests)
+    ttr, timetaken = _TextTestRunner(verbosity=verbosity).run(suites)
     if report:
-        _createReport(ttr, log, server)
+        _createReport(ttr, timetaken, log, server)
 
 
 def main():
