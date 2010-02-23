@@ -508,7 +508,7 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
-    def ltrim(self, starttime):
+    def ltrim(self, starttime, pad=False):
         """
         Cuts current trace to given start time.
 
@@ -529,10 +529,13 @@ class Trace(object):
         # check if in boundary
         delta = int(round((starttime - self.stats.starttime) * \
                           self.stats.sampling_rate, 7))
-        self.stats.starttime += delta * self.stats.delta
-        if delta == 0:
+        # Adjust starttime only if delta is greater than zero or if the values
+        # are padded with masked arrays.
+        if delta > 0 or pad:
+            self.stats.starttime += delta * self.stats.delta
+        if delta == 0 or (delta < 0 and not pad):
             return
-        elif delta < 0:
+        elif delta < 0 and pad:
             try:
                 gap = createEmptyDataChunk(abs(delta), self.data.dtype)
             except ValueError:
@@ -545,10 +548,10 @@ class Trace(object):
         elif starttime > self.stats.endtime:
             self.data = np.empty(0)
             return
-        # cut from left
-        self.data = self.data[delta:]
+        elif delta > 0:
+            self.data = self.data[delta:]
 
-    def rtrim(self, endtime):
+    def rtrim(self, endtime, pad=False):
         """
         Cuts current trace to given end time.
 
@@ -569,9 +572,9 @@ class Trace(object):
         # check if in boundary
         delta = int(round((endtime - self.stats.endtime) * \
                           self.stats.sampling_rate, 7))
-        if delta == 0:
+        if delta == 0 or (delta>0 and not pad):
             return
-        if delta > 0:
+        if delta > 0 and pad:
             try:
                 gap = createEmptyDataChunk(delta, self.data.dtype)
             except ValueError:
@@ -587,13 +590,20 @@ class Trace(object):
             self.data = np.empty(0)
             return
         # cut from right
-        delta = abs(delta)
-        total = len(self.data) - delta
-        if endtime == self.stats.starttime:
-            total = 1
-        self.data = self.data[:total]
+        if pad:
+            delta = abs(delta)
+            total = len(self.data) - delta
+            if endtime == self.stats.starttime:
+                total = 1
+            self.data = self.data[:total]
+        else:
+            delta = abs(delta)
+            total = len(self.data) - delta
+            if endtime == self.stats.starttime:
+                total = 1
+            self.data = self.data[:total]
 
-    def trim(self, starttime, endtime):
+    def trim(self, starttime, endtime, pad=False):
         """
         Cuts current trace to given start and end time.
 
@@ -610,8 +620,8 @@ class Trace(object):
         if starttime > endtime:
             raise Exception("startime is larger than endtime")
         # cut it
-        self.ltrim(starttime)
-        self.rtrim(endtime)
+        self.ltrim(starttime, pad)
+        self.rtrim(endtime, pad)
 
     cut = trim
     lcut = ltrim

@@ -597,26 +597,26 @@ class Stream(object):
             raise TypeError(msg + ', '.join(formats_ep.keys()))
         writeFormat(self, filename, **kwargs)
 
-    def trim(self, starttime, endtime):
+    def trim(self, starttime, endtime, pad=False):
         """
         Cuts all traces of this Stream object to given start and end time.
         """
         for trace in self:
-            trace.trim(starttime, endtime)
+            trace.trim(starttime, endtime, pad)
 
-    def ltrim(self, starttime):
+    def ltrim(self, starttime, pad=False):
         """
         Cuts all traces of this Stream object to given start time.
         """
         for trace in self:
-            trace.ltrim(starttime)
+            trace.ltrim(starttime, pad)
 
-    def rtrim(self, endtime):
+    def rtrim(self, endtime, pad=False):
         """
         Cuts all traces of this Stream object to given end time.
         """
         for trace in self:
-            trace.rtrim(endtime)
+            trace.rtrim(endtime, pad)
 
     def slice(self, starttime, endtime):
         """

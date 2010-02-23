@@ -73,14 +73,14 @@ class TraceTestCase(unittest.TestCase):
         # some sanity checks
         # negative start time as datetime
         tr = deepcopy(trace)
-        tr.ltrim(start - 1)
+        tr.ltrim(start - 1, pad=True)
         tr.verify()
         self.assertEquals(tr.stats.starttime, start - 1)
         np.testing.assert_array_equal(trace.data, tr.data[200:])
         self.assertEquals(tr.stats.endtime, trace.stats.endtime)
         # negative start time as integer
         tr = deepcopy(trace)
-        tr.ltrim(-100)
+        tr.ltrim(-100, pad=True)
         tr.verify()
         self.assertEquals(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
@@ -425,6 +425,72 @@ class TraceTestCase(unittest.TestCase):
         # a copy of the stats.
         temp = deepcopy(tr)
         temp.trim(st - 2.5, st + 200)
+        # The start- and endtimes should not change.
+        self.assertEqual(temp.stats.starttime, UTCDateTime(0))
+        self.assertEqual(temp.stats.endtime, UTCDateTime(10))
+        self.assertEqual(temp.stats.npts, 11)
+        # Alter the new stats to make sure the old one stays intact.
+        temp.stats.starttime = UTCDateTime(1000)
+        self.assertEqual(org_stats, tr.stats)
+        # Check if the data adress is not the same, that is it is a copy
+        self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
+        np.testing.assert_array_equal(tr.data, temp.data)
+        # Make sure the original Trace object did not change.
+        np.testing.assert_array_equal(tr.data, org_data)
+        self.assertEqual(tr.data.ctypes.data, mem_pos)
+        self.assertEqual(tr.stats, org_stats)
+        # Use more complicated times and sampling rate.
+        tr = Trace(data=np.arange(111))
+        tr.stats.starttime = UTCDateTime(111.11111)
+        tr.stats.sampling_rate = 50.0
+        org_stats = deepcopy(tr.stats)
+        org_data = deepcopy(tr.data)
+        # Save memory position of array.
+        mem_pos = tr.data.ctypes.data
+        # Create temp trace object used for testing.
+        temp = deepcopy(tr)
+        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999))
+        # Should again be identical.
+        temp2 = deepcopy(tr)
+        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
+        np.testing.assert_array_equal(temp.data, temp2.data)
+        self.assertEqual(temp.stats, temp2.stats)
+        # Check stuff.
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
+        self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
+        # Check if the data is the same.
+        temp = deepcopy(tr)
+        temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000))
+        self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
+        # starttime must be in conformance with sampling rate
+        t = UTCDateTime(111.11111)
+        self.assertEqual(temp.stats.starttime, t)
+        delta = int((tr.stats.starttime - t) * tr.stats.sampling_rate + .5)
+        np.testing.assert_array_equal(tr.data, temp.data[delta:delta + 111])
+        # Make sure the original Trace object did not change.
+        np.testing.assert_array_equal(tr.data, org_data)
+        self.assertEqual(tr.data.ctypes.data, mem_pos)
+        self.assertEqual(tr.stats, org_stats)
+
+    def test_trimFloatingPointWithPadding(self):
+        """
+        Tests the slicing of trace objects with the use of the padding option.
+        """
+        # Create test array that allows for easy testing.
+        tr = Trace(data=np.arange(11))
+        org_stats = deepcopy(tr.stats)
+        org_data = deepcopy(tr.data)
+        # Save memory position of array.
+        mem_pos = tr.data.ctypes.data
+        # Just some sanity tests.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr.stats.endtime, UTCDateTime(10))
+        # Create temp trace object used for testing.
+        st = tr.stats.starttime
+        # Using out of bounds times should not do anything but create
+        # a copy of the stats.
+        temp = deepcopy(tr)
+        temp.trim(st - 2.5, st + 200, pad=True)
         self.assertEqual(temp.stats.starttime, UTCDateTime(-2.0))
         self.assertEqual(temp.stats.endtime, UTCDateTime(200))
         self.assertEqual(temp.stats.npts, 203)
@@ -463,7 +529,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
         # Check if the data is the same.
         temp = deepcopy(tr)
-        temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000))
+        temp.trim(UTCDateTime(0), UTCDateTime(1000 * 1000), pad=True)
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
         # starttime must be in conformance with sampling rate
         t = UTCDateTime(1970, 1, 1, 0, 0, 0, 11110)
