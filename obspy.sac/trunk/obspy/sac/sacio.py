@@ -608,7 +608,7 @@ class ReadSac(object):
         """
         Convenience function for printing undefined string header values.
         """
-        if value != '-12345':
+        if value.find('-12345') == -1:
             print label, value
 
     def ListStdValues(self): # h is a header list, s is a float list
@@ -619,18 +619,21 @@ class ReadSac(object):
         #
         # Seismogram Info:
         #
-        nzyear = self.GetHvalue('nzyear')
-        nzjday = self.GetHvalue('nzjday')
-        month = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mon
-        date = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mday
-        pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
-        print pattern % (month, date,
-                         self.GetHvalue('nzyear'),
-                         self.GetHvalue('nzjday'),
-                         self.GetHvalue('nzhour'),
-                         self.GetHvalue('nzmin'),
-                         self.GetHvalue('nzsec'),
-                         self.GetHvalue('nzmsec'))
+        try:
+            nzyear = self.GetHvalue('nzyear')
+            nzjday = self.GetHvalue('nzjday')
+            month = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mon
+            date = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mday
+            pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
+            print pattern % (month, date,
+                             self.GetHvalue('nzyear'),
+                             self.GetHvalue('nzjday'),
+                             self.GetHvalue('nzhour'),
+                             self.GetHvalue('nzmin'),
+                             self.GetHvalue('nzsec'),
+                             self.GetHvalue('nzmsec'))
+        except ValueError,e:
+            pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
         self.PrintFValue('Delta = ', self.GetHvalue('delta'))
         self.PrintFValue('Begin = ', self.GetHvalue('b'))

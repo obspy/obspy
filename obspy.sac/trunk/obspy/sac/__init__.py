@@ -188,11 +188,91 @@ accessed as an instance of the ReadSac class.
 
 
 
-* :meth:`~sacio.ReadSac.ListStdValues` Print common header values
+* :meth:`~sacio.ReadSac.ListStdValues` Print defined header values
+
+    Parameters: None
+
+    >>> from obspy.sac import ReadSac
+    >>> t = ReadSac('test.sac')
+    >>> t.ListStdValues()
+    
+    Reference Time = 07/18/1978 (199) 8:0:0.0
+    Npts  =  100
+    Delta =  1
+    Begin =  10
+    End   =  109
+    Min   =  -1
+    Mean  =  8.7539462e-08
+    Max   =  1
+    Header Version =  6
+    Station =  STA     
+    Channel =  Q       
+    Event       =  FUNCGEN: SINE   
+
+    If no header values are defined (i.e. all are equal 12345) than this function
+    won't do anything.
+    
+
 * :meth:`~sacio.ReadSac.GetHvalueFromFile` Access to specific header item in specified file
+
+    Parameters: *filename (SAC binary)*
+                *header-var = SAC-header variable name.*
+
+    >>> from obspy.sac import ReadSac
+    >>> t = ReadSac()
+    >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip()
+    'Q'
+
+    String header values have a fixed length of 8 or 16 characters. This can lead to errors
+    for example if you concatenate strings and forget to strip off the trailing whitespace.
+
 * :meth:`~sacio.ReadSac.SetHvalueInFile` Change specific header item in specified file
+
+    Parameters: *filename (SAC binary)*
+                *header-var = SAC-header variable name.*
+                *value = numeric or string value to be assigned to header-var*
+
+    >>> from obspy.sac import ReadSac
+    >>> t = ReadSac()
+    >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+    'STA'
+    >>> t.SetHvalueInFile('test.sac','kstnm','blub')
+    >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+    'blub'
+
 * :meth:`~sacio.ReadSac.IsValidSacFile` Test for valid binary SAC file (wraps 'IsSACfile')
+
+    Parameters: *filename (SAC binary)*
+
+    >>> from obspy.sac import ReadSac
+    >>> ReadSac().IsValidSacFile('test.sac')
+    True
+
+* :meth:`~sacio.ReadSac.IsValidXYSacFile` Test for valid ascii SAC file
+
+    Parameters: *filename (SAC ascii)*
+
+    >>> from obspy.sac import ReadSac
+    >>> ReadSac().IsValidXYSacFile('testxy.sac')
+    True
+
 * :meth:`~sacio.ReadSac.swap_byte_order` Swap byte order of SAC-file in memory.
+
+   Parameters: None
+
+   >>> from obspy.sac import ReadSac
+   >>> t = ReadSac('test.sac')
+   >>> t.swap_byte_order()
+
+   Currently seems to work only for conversion from big-endian to little-endian.
+
+
+Exceptions
+----------
+
+* :meth:`SacIOError` Raised if input file can't be found or can't be read.
+
+* :meth:`SacError` Raised if inconistencies occur during reading or writing.
 
 """
 
