@@ -421,8 +421,13 @@ class PickingGUI:
                     message = "Using start and endtime of first trace in " + \
                               "first stream to search for events."
                     warnings.warn(message)
+                    print "Clearing previous event data."
+                    self.delAllItems()
+                    self.clearDictionaries()
                     self.getEventFromSeishub(self.streams[0][0].stats.starttime, 
                                              self.streams[0][0].stats.endtime)
+                    print "Event data from seishub loaded."
+                    self.drawAllItems()
                     self.redraw()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
@@ -2222,6 +2227,61 @@ class PickingGUI:
            print "Headers: ", header
         else:
             print 'Upload to seishub successful (EventId: %s)' % name
+    
+    def clearDictionaries(self):
+        for i in range(len(self.dicts)):
+            if self.dicts[i].has_key('P'):
+                del self.dicts[i]['P']
+            if self.dicts[i].has_key('PErr1'):
+                del self.dicts[i]['PErr1']
+            if self.dicts[i].has_key('PErr2'):
+                del self.dicts[i]['PErr2']
+            if self.dicts[i].has_key('PWeight'):
+                del self.dicts[i]['PWeight']
+            if self.dicts[i].has_key('PPol'):
+                del self.dicts[i]['PPol']
+            if self.dicts[i].has_key('POnset'):
+                del self.dicts[i]['POnset']
+            if self.dicts[i].has_key('S'):
+                del self.dicts[i]['S']
+            if self.dicts[i].has_key('SErr1'):
+                del self.dicts[i]['SErr1']
+            if self.dicts[i].has_key('SErr2'):
+                del self.dicts[i]['SErr2']
+            if self.dicts[i].has_key('SWeight'):
+                del self.dicts[i]['SWeight']
+            if self.dicts[i].has_key('SPol'):
+                del self.dicts[i]['SPol']
+            if self.dicts[i].has_key('SOnset'):
+                del self.dicts[i]['SOnset']
+
+    def delAllItems(self):
+        self.delPLine()
+        self.delPErr1Line()
+        self.delPErr2Line()
+        self.delPLabel()
+        self.delPsynthLine()
+        self.delPsynthLabel()
+        self.delSLine()
+        self.delSErr1Line()
+        self.delSErr2Line()
+        self.delSLabel()
+        self.delSsynthLine()
+        self.delSsynthLabel()
+
+    def drawAllItems(self):
+        self.drawPLine()
+        self.drawPErr1Line()
+        self.drawPErr2Line()
+        self.drawPLabel()
+        self.drawPsynthLine()
+        self.drawPsynthLabel()
+        self.drawSLine()
+        self.drawSErr1Line()
+        self.drawSErr2Line()
+        self.drawSLabel()
+        self.drawSsynthLine()
+        self.drawSsynthLabel()
 
     def getEventFromSeishub(self, starttime, endtime):
         """
