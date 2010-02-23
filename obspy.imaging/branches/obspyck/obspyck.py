@@ -226,11 +226,15 @@ class PickingGUI:
                            'setSPolUp': 'u', 'setSPolPoorUp': '+',
                            'setSPolDown': 'd', 'setSPolPoorDown': '-',
                            'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
-                           'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e',}
+                           'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
         self.xmlEventID = None
         self.flagSpectrogram = False
+        # indicates which of the available events from seishub was loaded
+        self.seishubEventCurrent = None 
+        # indicates how many events are available from seishub
+        self.seishubEventCount = None
         
         # Return, if no streams are given
         if not streams:
@@ -270,7 +274,7 @@ class PickingGUI:
         for i in range(len(self.streams)):
             self.dicts.append({})
             self.dicts[i]['MagUse'] = True
-            self.dicts[i]['Station'] = streams[i][0].stats.station.rstrip()
+            self.dicts[i]['Station'] = streams[i][0].stats.station.strip()
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
             net = streams[i][0].stats.network.strip()
@@ -405,7 +409,7 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'showMap', 'send2seishub', 'getEventFromSeishub', 'quit'):
+        for label in ('do3dloc', 'showMap', 'send2seishub', 'getNextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
@@ -417,14 +421,14 @@ class PickingGUI:
                     self.show3dlocEventMap()
                 elif item.labelstr == 'send2seishub':
                     self.uploadSeishub()
-                elif item.labelstr == 'getEventFromSeishub':
+                elif item.labelstr == 'getNextEvent':
                     message = "Using start and endtime of first trace in " + \
                               "first stream to search for events."
                     warnings.warn(message)
                     print "Clearing previous event data."
                     self.delAllItems()
                     self.clearDictionaries()
-                    self.getEventFromSeishub(self.streams[0][0].stats.starttime, 
+                    self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
                                              self.streams[0][0].stats.endtime)
                     print "Event data from seishub loaded."
                     self.drawAllItems()
@@ -2283,7 +2287,7 @@ class PickingGUI:
         self.drawSsynthLine()
         self.drawSsynthLabel()
 
-    def getEventFromSeishub(self, starttime, endtime):
+    def getNextEventFromSeishub(self, starttime, endtime):
         """
         Updates dictionary with pick data for first event which origin time
         is between startime and endtime.
@@ -2311,99 +2315,108 @@ class PickingGUI:
 
         picklist = []
 
-        if len(document) > 1:
-            message = "Found more than one event. Using first one only!"
-            warnings.warn(message)
+        # iterate the counter that indicates which event to fetch
+        if not self.seishubEventCount:
+            self.seishubEventCount = len(xml.xpath(u".//resource_name"))
+            self.seishubEventCurrent = 0
+            print "%i events are available from Seishub" % self.seishubEventCount
+        else:
+            self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
+                                       self.seishubEventCount
 
-        for i, node in enumerate(xml.xpath(u".//resource_name")):
-            document_id = document[i].text
-            print "Fetching data for event with event_id: %s" % document_id
-            resource_url = "http://teide:8080/xml/seismology/event/" + \
-                           node.text
-            resource_req = urllib2.Request(resource_url)
-            resource_req.add_header("Authorization", "Basic %s" % auth)
-            fp = urllib2.urlopen(resource_req)
-            resource_xml = parse(fp)
-            fp.close()
-            for pick in resource_xml.xpath(u".//pick"):
-                # attributes
-                id = pick.find("waveform").attrib
-                network = id["networkCode"]
-                station = id["stationCode"]
-                location = id["locationCode"]
-                channel = id['channelCode']
-                streamnum = None
-                # search for streamnumber corresponding to pick
-                for i in range(len(self.streams)):
-                    if station.strip() != self.dicts[i]['Station']:
-                        continue
-                    else:
-                        streamnum = i
-                        break
-                if not streamnum:
-                    message = "Did not find matching stream for pick data " + \
-                              "with station id: %s" % station.strip()
-                    warnings.warn(message)
+        # define which event data we will fetch
+        document_id = document[self.seishubEventCurrent].text
+        node = xml.xpath(u".//resource_name")[self.seishubEventCurrent]
+        
+        print "Fetching event %i of %i (event_id: %s)" %  \
+              (self.seishubEventCurrent + 1, self.seishubEventCount,
+               document_id)
+        resource_url = "http://teide:8080/xml/seismology/event/" + \
+                       node.text
+        resource_req = urllib2.Request(resource_url)
+        resource_req.add_header("Authorization", "Basic %s" % auth)
+        fp = urllib2.urlopen(resource_req)
+        resource_xml = parse(fp)
+        fp.close()
+        for pick in resource_xml.xpath(u".//pick"):
+            # attributes
+            id = pick.find("waveform").attrib
+            network = id["networkCode"]
+            station = id["stationCode"]
+            location = id["locationCode"]
+            channel = id['channelCode']
+            streamnum = None
+            # search for streamnumber corresponding to pick
+            for i in range(len(self.streams)):
+                if station.strip() != self.dicts[i]['Station']:
                     continue
-                # values
-                time = pick.xpath(".//time/value")[0].text
-                uncertainty = pick.xpath(".//time/uncertainty")[0].text
-                try:
-                    onset = pick.xpath(".//onset")[0].text
-                except:
-                    onset = None
-                try:
-                    polarity = pick.xpath(".//polarity")[0].text
-                except:
-                    polarity = None
-                try:
-                    weight = pick.xpath(".//weight")[0].text
-                except:
-                    weight = None
-                # convert UTC time to samples after stream starttime
-                time = UTCDateTime(time)
-                time -= self.streams[streamnum][0].stats.starttime
-                time = int(round(time *
+                else:
+                    streamnum = i
+                    break
+            if streamnum == None:
+                message = "Did not find matching stream for pick data " + \
+                          "with station id: \"%s\"" % station.strip()
+                warnings.warn(message)
+                continue
+            # values
+            time = pick.xpath(".//time/value")[0].text
+            uncertainty = pick.xpath(".//time/uncertainty")[0].text
+            try:
+                onset = pick.xpath(".//onset")[0].text
+            except:
+                onset = None
+            try:
+                polarity = pick.xpath(".//polarity")[0].text
+            except:
+                polarity = None
+            try:
+                weight = pick.xpath(".//weight")[0].text
+            except:
+                weight = None
+            # convert UTC time to samples after stream starttime
+            time = UTCDateTime(time)
+            time -= self.streams[streamnum][0].stats.starttime
+            time = int(round(time *
+                     self.streams[streamnum][0].stats.sampling_rate))
+            # map uncertainty in seconds to error picks in samples
+            if uncertainty:
+                uncertainty = float(uncertainty)
+                uncertainty = int(round(uncertainty *
                          self.streams[streamnum][0].stats.sampling_rate))
-                # map uncertainty in seconds to error picks in samples
+                uncertainty /= 2
+            # assign to dictionary
+            if pick.xpath(".//phaseHint")[0].text == "P":
+                self.dicts[streamnum]['P'] = time
                 if uncertainty:
-                    uncertainty = float(uncertainty)
-                    uncertainty = int(round(uncertainty *
-                             self.streams[streamnum][0].stats.sampling_rate))
-                    uncertainty /= 2
-                # assign to dictionary
-                if pick.xpath(".//phaseHint")[0].text == "P":
-                    self.dicts[streamnum]['P'] = time
-                    if uncertainty:
-                        self.dicts[streamnum]['PErr1'] = time - uncertainty
-                        self.dicts[streamnum]['PErr2'] = time + uncertainty
-                    if onset:
-                        self.dicts[streamnum]['POnset'] = onset
-                    if polarity:
-                        self.dicts[streamnum]['PPol'] = polarity
-                    if weight:
-                        self.dicts[streamnum]['PWeight'] = weight
-                if pick.xpath(".//phaseHint")[0].text == "S":
-                    self.dicts[streamnum]['S'] = time
-                    if uncertainty:
-                        self.dicts[streamnum]['SErr1'] = time - uncertainty
-                        self.dicts[streamnum]['SErr2'] = time + uncertainty
-                    if onset:
-                        self.dicts[streamnum]['SOnset'] = onset
-                    if polarity:
-                        self.dicts[streamnum]['SPol'] = polarity
-                    if weight:
-                        self.dicts[streamnum]['SWeight'] = weight
-                    # XXX the channel on which the S phase was picked is not
-                    # yet retrieved from the xml!
-                    # XXX information from synthetic phases is not yet
-                    # retrieved!!
-                # append everything to the picklist
-                #picklist.append([])
-                #picklist[-1].extend([document_id, network, station, location])
-                #picklist[-1].extend([channel, time, uncertainty, phaseHint])
-                #picklist[-1].extend([onset, polarity, weight])
-            break #XXX using only first found event from given time span!!
+                    self.dicts[streamnum]['PErr1'] = time - uncertainty
+                    self.dicts[streamnum]['PErr2'] = time + uncertainty
+                if onset:
+                    self.dicts[streamnum]['POnset'] = onset
+                if polarity:
+                    self.dicts[streamnum]['PPol'] = polarity
+                if weight:
+                    self.dicts[streamnum]['PWeight'] = weight
+            if pick.xpath(".//phaseHint")[0].text == "S":
+                self.dicts[streamnum]['S'] = time
+                if uncertainty:
+                    self.dicts[streamnum]['SErr1'] = time - uncertainty
+                    self.dicts[streamnum]['SErr2'] = time + uncertainty
+                if onset:
+                    self.dicts[streamnum]['SOnset'] = onset
+                if polarity:
+                    self.dicts[streamnum]['SPol'] = polarity
+                if weight:
+                    self.dicts[streamnum]['SWeight'] = weight
+                # XXX the channel on which the S phase was picked is not
+                # yet retrieved from the xml!
+                # XXX information from synthetic phases is not yet
+                # retrieved!!
+            # append everything to the picklist
+            #picklist.append([])
+            #picklist[-1].extend([document_id, network, station, location])
+            #picklist[-1].extend([channel, time, uncertainty, phaseHint])
+            #picklist[-1].extend([onset, polarity, weight])
+        #break #XXX using only first found event from given time span!!
         #return picklist
 
 
