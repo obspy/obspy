@@ -14,6 +14,7 @@ import subprocess
 import httplib
 import base64
 import time
+import urllib2
 
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
@@ -2204,6 +2205,56 @@ class PickingGUI:
            print "Headers: ", header
         else:
             print 'Upload to seishub successful (EventId: %s)' % name
+
+    def getPicks(starttime, endtime):
+        """
+        Returns dictionlary containing all picks in the given time range
+
+        :param starttime: Start datetime as UTCDateTime
+        :param endtime: End datetime as UTCDateTime
+        """
+
+        url = "http://teide:8080/seismology/event/getList?" + \
+              "min_datetime=%s&max_datetime=%s" % \
+              (str(starttime), str(endtime))
+        req = urllib2.Request(url)
+        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+        req.add_header("Authorization", "Basic %s" % auth)
+
+        f = urllib2.urlopen(req)
+        xml = parse(f)
+        f.close()
+        document_id = xml.xpath(".//document_id")[0].text
+
+        picklist = []
+        for node in xml.xpath(u".//resource_name"):
+            resource_url = "http://teide:8080/xml/seismology/event/" + \
+                           node.text
+            resource_req = urllib2.Request(resource_url)
+            resource_req.add_header("Authorization", "Basic %s" % auth)
+            fp = urllib2.urlopen(resource_req)
+            resource_xml = parse(fp)
+            fp.close()
+            for pick in resource_xml.xpath(u".//pick"):
+                # attributes
+                id = pick.find("waveform").attrib
+                network = id["networkCode"]
+                station = id["stationCode"]
+                location = id["locationCode"]
+                channel = id['channelCode']
+                # values
+                time = pick.xpath(".//time/value")[0].text
+                uncertainty = pick.xpath(".//time/uncertainty")[0].text
+                phaseHint = pick.xpath(".//phaseHint")[0].text
+                onset = pick.xpath(".//onset")[0].text
+                polarity = pick.xpath(".//polarity")[0].text
+                weight = pick.xpath(".//weight")[0].text
+                # append everything to the picklist
+                picklist.append([])
+                picklist[-1].extend([document_id, network, station, location])
+                picklist[-1].extend([channel, time, uncertainty, phaseHint])
+                #picklist[-1].extend([onset, polarity, weight])
+        return picklist
 
 
 def main():
