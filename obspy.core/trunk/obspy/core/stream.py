@@ -647,18 +647,30 @@ class Stream(object):
             trace.verify()
 
     def _mergeChecks(self):
+        """
+        Sanity checks for merging.
+        """
         sr = {}
         dtype = {}
+        calib = {}
         for trace in self.traces:
+            # Check sampling rate.
             sr.setdefault(trace.id, trace.stats.sampling_rate)
             if trace.stats.sampling_rate != sr[trace.id]:
                 msg = "Can't merge traces with same ids but differing " + \
                       "sampling rates!"
                 raise Exception(msg)
+            # Check dtype.
             dtype.setdefault(trace.id, trace.data.dtype)
             if trace.data.dtype != dtype[trace.id]:
                 msg = "Can't merge traces with same ids but differing " + \
                       "data types!"
+                raise Exception(msg)
+            # Check calibration factor. 
+            calib.setdefault(trace.id, trace.stats.calib)
+            if trace.stats.calib != calib[trace.id]:
+                msg = "Can't merge traces with same ids but differing " + \
+                      "calibration factors.!"
                 raise Exception(msg)
 
     def _createEmptyDataChunk(self, delta, dtype, fill_value):

@@ -411,6 +411,33 @@ class StreamTestCase(unittest.TestCase):
         # should be equal
         self.assertEqual(a, b)
 
+    def test_mergeWithDifferentCalibrationFactors(self):
+        """
+        Test the merge method of the Stream object.
+        """
+        # 1 - different calibration factors for the same channel should fail
+        tr1 = Trace(data=np.zeros(5))
+        tr1.stats.calib = 1.0
+        tr2 = Trace(data=np.zeros(5))
+        tr2.stats.calib = 2.0
+        st = Stream([tr1, tr2])
+        self.assertRaises(Exception, st.merge)
+        # 2 - different calibration factors for the different channels is ok
+        tr1 = Trace(data=np.zeros(5))
+        tr1.stats.calib = 2.00
+        tr1.stats.channel = 'EHE'
+        tr2 = Trace(data=np.zeros(5))
+        tr2.stats.calib = 5.0
+        tr2.stats.channel = 'EHZ'
+        tr3 = Trace(data=np.zeros(5))
+        tr3.stats.calib = 2.00
+        tr3.stats.channel = 'EHE'
+        tr4 = Trace(data=np.zeros(5))
+        tr4.stats.calib = 5.0
+        tr4.stats.channel = 'EHZ'
+        st = Stream([tr1, tr2, tr3, tr4])
+        st.merge()
+
     def test_mergeWithDifferentSamplingRates(self):
         """
         Test the merge method of the Stream object.

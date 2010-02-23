@@ -344,6 +344,8 @@ class WaveformPlotting(object):
             trace.data = np.ma.concatenate(concat)
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
+        # Apply calibration factor.
+        trace.data *= trace.stats.calib
         ax.plot(trace.data, color=self.color)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
@@ -388,21 +390,21 @@ class WaveformPlotting(object):
             data = data.reshape(pixel_count, pixel_length)
             # Calculate extreme_values and put them into new array.
             extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
-            min = data.min(axis=1)
-            max = data.max(axis=1)
+            min = data.min(axis=1) * _t.stats.calib
+            max = data.max(axis=1) * _t.stats.calib
             extreme_values[start: start + pixel_count, 0] = min
             extreme_values[start: start + pixel_count, 1] = max
             # First and last and last pixel need separate treatment.
             if start and prestart:
-                extreme_values[start - 1, 0] = _t.data[:prestart].min()
-                extreme_values[start - 1, 1] = _t.data[:prestart].max()
+                extreme_values[start - 1, 0] = _t.data[:prestart].min() * _t.stats.calib
+                extreme_values[start - 1, 1] = _t.data[:prestart].max() * _t.stats.calib
             if rest:
                 if start + pixel_count == self.width:
                     index = self.width - 1
                 else:
                     index = start + pixel_count
-                extreme_values[index, 0] = _t.data[-rest:].min()
-                extreme_values[index, 1] = _t.data[-rest:].max()
+                extreme_values[index, 0] = _t.data[-rest:].min() * _t.stats.calib
+                extreme_values[index, 1] = _t.data[-rest:].max() * _t.stats.calib
             # Use the first array as a reference and merge all following
             # extreme_values into it.
             if _i == 0:
@@ -583,7 +585,8 @@ class WaveformPlotting(object):
         It will also convert all values to floats.
         """
         # Convert to native floats.
-        self.extreme_values = self.extreme_values.astype(np.float)
+        self.extreme_values = self.extreme_values.astype(np.float) *\
+                              self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         self.extreme_values -= self.extreme_values.mean()
         # Now make sure that the range of all values goes from 0 to 1. With the
