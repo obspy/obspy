@@ -15,6 +15,7 @@ import httplib
 import base64
 import time
 import urllib2
+import warnings
 
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
@@ -404,7 +405,7 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'showMap', 'send2seishub', 'quit'):
+        for label in ('do3dloc', 'showMap', 'send2seishub', 'getEventFromSeishub', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
@@ -416,6 +417,13 @@ class PickingGUI:
                     self.show3dlocEventMap()
                 elif item.labelstr == 'send2seishub':
                     self.uploadSeishub()
+                elif item.labelstr == 'getEventFromSeishub':
+                    message = "Using start and endtime of first trace in " + \
+                              "first stream to search for events."
+                    warnings.warn(message)
+                    self.getEventFromSeishub(self.streams[0][0].stats.starttime, 
+                                             self.streams[0][0].stats.endtime)
+                    self.redraw()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
             menuitems.append(item)
         self.menu = Menu(self.fig, menuitems)
@@ -529,17 +537,21 @@ class PickingGUI:
                 PLabelString += 'i'
             elif self.dicts[self.stPt]['POnset'] == 'emergent':
                 PLabelString += 'e'
+            else:
+                PLabelString += '?'
         if not self.dicts[self.stPt].has_key('PPol'):
             PLabelString += '_'
         else:
-            if self.dicts[self.stPt]['PPol'] == 'Up':
+            if self.dicts[self.stPt]['PPol'] == 'up':
                 PLabelString += 'u'
-            elif self.dicts[self.stPt]['PPol'] == 'PoorUp':
+            elif self.dicts[self.stPt]['PPol'] == 'poorup':
                 PLabelString += '+'
-            elif self.dicts[self.stPt]['PPol'] == 'Down':
+            elif self.dicts[self.stPt]['PPol'] == 'down':
                 PLabelString += 'd'
-            elif self.dicts[self.stPt]['PPol'] == 'PoorDown':
+            elif self.dicts[self.stPt]['PPol'] == 'poordown':
                 PLabelString += '-'
+            else:
+                PLabelString += '?'
         if not self.dicts[self.stPt].has_key('PWeight'):
             PLabelString += '_'
         else:
@@ -659,17 +671,21 @@ class PickingGUI:
                 SLabelString += 'i'
             elif self.dicts[self.stPt]['SOnset'] == 'emergent':
                 SLabelString += 'e'
+            else:
+                SLabelString += '?'
         if not self.dicts[self.stPt].has_key('SPol'):
             SLabelString += '_'
         else:
-            if self.dicts[self.stPt]['SPol'] == 'Up':
+            if self.dicts[self.stPt]['SPol'] == 'up':
                 SLabelString += 'u'
-            elif self.dicts[self.stPt]['SPol'] == 'PoorUp':
+            elif self.dicts[self.stPt]['SPol'] == 'poorup':
                 SLabelString += '+'
-            elif self.dicts[self.stPt]['SPol'] == 'Down':
+            elif self.dicts[self.stPt]['SPol'] == 'down':
                 SLabelString += 'd'
-            elif self.dicts[self.stPt]['SPol'] == 'PoorDown':
+            elif self.dicts[self.stPt]['SPol'] == 'poordown':
                 SLabelString += '-'
+            else:
+                SLabelString += '?'
         if not self.dicts[self.stPt].has_key('SWeight'):
             SLabelString += '_'
         else:
@@ -1172,25 +1188,25 @@ class PickingGUI:
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolUp']:
                 self.delPLabel()
-                self.dicts[self.stPt]['PPol']='Up'
+                self.dicts[self.stPt]['PPol']='up'
                 self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorUp']:
                 self.delPLabel()
-                self.dicts[self.stPt]['PPol']='PoorUp'
+                self.dicts[self.stPt]['PPol']='poorup'
                 self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolDown']:
                 self.delPLabel()
-                self.dicts[self.stPt]['PPol']='Down'
+                self.dicts[self.stPt]['PPol']='down'
                 self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorDown']:
                 self.delPLabel()
-                self.dicts[self.stPt]['PPol']='PoorDown'
+                self.dicts[self.stPt]['PPol']='poordown'
                 self.drawPLabel()
                 self.redraw()
                 print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
@@ -1267,25 +1283,25 @@ class PickingGUI:
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolUp']:
                 self.delSLabel()
-                self.dicts[self.stPt]['SPol']='Up'
+                self.dicts[self.stPt]['SPol']='up'
                 self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorUp']:
                 self.delSLabel()
-                self.dicts[self.stPt]['SPol']='PoorUp'
+                self.dicts[self.stPt]['SPol']='poorup'
                 self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolDown']:
                 self.delSLabel()
-                self.dicts[self.stPt]['SPol']='Down'
+                self.dicts[self.stPt]['SPol']='down'
                 self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorDown']:
                 self.delSLabel()
-                self.dicts[self.stPt]['SPol']='PoorDown'
+                self.dicts[self.stPt]['SPol']='poordown'
                 self.drawSLabel()
                 self.redraw()
                 print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
@@ -1632,6 +1648,7 @@ class PickingGUI:
                     # check if synthetic pick is within time range of stream
                     if (phUTCTime > self.streams[i][0].stats.endtime or
                         phUTCTime < self.streams[i][0].stats.starttime):
+                        warnings.warn("Synthetic pick outside timespan.")
                         continue
                     else:
                         # phSamps is the number of samples after the stream-
@@ -2047,9 +2064,9 @@ class PickingGUI:
                 else:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == 'Up' or self.dicts[i]['PPol'] == 'PoorUp':
+                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
                         Sub(pick, "polarity").text = 'positive'
-                    elif self.dicts[i]['PPol'] == 'Down' or self.dicts[i]['PPol'] == 'PoorDown':
+                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
                         Sub(pick, "polarity").text = 'negative'
                 else:
                     Sub(pick, "polarity")
@@ -2096,9 +2113,9 @@ class PickingGUI:
                 else:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == 'Up' or self.dicts[i]['SPol'] == 'PoorUp':
+                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
                         Sub(pick, "polarity").text = 'positive'
-                    elif self.dicts[i]['SPol'] == 'Down' or self.dicts[i]['SPol'] == 'PoorDown':
+                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
                         Sub(pick, "polarity").text = 'negative'
                 else:
                     Sub(pick, "polarity")
@@ -2206,9 +2223,15 @@ class PickingGUI:
         else:
             print 'Upload to seishub successful (EventId: %s)' % name
 
-    def getPicks(starttime, endtime):
+    def getEventFromSeishub(self, starttime, endtime):
         """
-        Returns dictionlary containing all picks in the given time range
+        Updates dictionary with pick data for first event which origin time
+        is between startime and endtime.
+        Warning:
+         * When using the stream starttime an interesting event may not be
+           found because the origin time may be before the stream starttime!
+         * If more than one event is found in given time range only the first
+           one is used, all others are disregarded!
 
         :param starttime: Start datetime as UTCDateTime
         :param endtime: End datetime as UTCDateTime
@@ -2224,10 +2247,17 @@ class PickingGUI:
         f = urllib2.urlopen(req)
         xml = parse(f)
         f.close()
-        document_id = xml.xpath(".//document_id")[0].text
+        document = xml.xpath(".//document_id")
 
         picklist = []
-        for node in xml.xpath(u".//resource_name"):
+
+        if len(document) > 1:
+            message = "Found more than one event. Using first one only!"
+            warnings.warn(message)
+
+        for i, node in enumerate(xml.xpath(u".//resource_name")):
+            document_id = document[i].text
+            print "Fetching data for event with event_id: %s" % document_id
             resource_url = "http://teide:8080/xml/seismology/event/" + \
                            node.text
             resource_req = urllib2.Request(resource_url)
@@ -2242,19 +2272,79 @@ class PickingGUI:
                 station = id["stationCode"]
                 location = id["locationCode"]
                 channel = id['channelCode']
+                streamnum = None
+                # search for streamnumber corresponding to pick
+                for i in range(len(self.streams)):
+                    if station.strip() != self.dicts[i]['Station']:
+                        continue
+                    else:
+                        streamnum = i
+                        break
+                if not streamnum:
+                    message = "Did not find matching stream for pick data " + \
+                              "with station id: %s" % station.strip()
+                    warnings.warn(message)
+                    continue
                 # values
                 time = pick.xpath(".//time/value")[0].text
                 uncertainty = pick.xpath(".//time/uncertainty")[0].text
-                phaseHint = pick.xpath(".//phaseHint")[0].text
-                onset = pick.xpath(".//onset")[0].text
-                polarity = pick.xpath(".//polarity")[0].text
-                weight = pick.xpath(".//weight")[0].text
+                try:
+                    onset = pick.xpath(".//onset")[0].text
+                except:
+                    onset = None
+                try:
+                    polarity = pick.xpath(".//polarity")[0].text
+                except:
+                    polarity = None
+                try:
+                    weight = pick.xpath(".//weight")[0].text
+                except:
+                    weight = None
+                # convert UTC time to samples after stream starttime
+                time = UTCDateTime(time)
+                time -= self.streams[streamnum][0].stats.starttime
+                time = int(round(time *
+                         self.streams[streamnum][0].stats.sampling_rate))
+                # map uncertainty in seconds to error picks in samples
+                if uncertainty:
+                    uncertainty = float(uncertainty)
+                    uncertainty = int(round(uncertainty *
+                             self.streams[streamnum][0].stats.sampling_rate))
+                    uncertainty /= 2
+                # assign to dictionary
+                if pick.xpath(".//phaseHint")[0].text == "P":
+                    self.dicts[streamnum]['P'] = time
+                    if uncertainty:
+                        self.dicts[streamnum]['PErr1'] = time - uncertainty
+                        self.dicts[streamnum]['PErr2'] = time + uncertainty
+                    if onset:
+                        self.dicts[streamnum]['POnset'] = onset
+                    if polarity:
+                        self.dicts[streamnum]['PPol'] = polarity
+                    if weight:
+                        self.dicts[streamnum]['PWeight'] = weight
+                if pick.xpath(".//phaseHint")[0].text == "S":
+                    self.dicts[streamnum]['S'] = time
+                    if uncertainty:
+                        self.dicts[streamnum]['SErr1'] = time - uncertainty
+                        self.dicts[streamnum]['SErr2'] = time + uncertainty
+                    if onset:
+                        self.dicts[streamnum]['SOnset'] = onset
+                    if polarity:
+                        self.dicts[streamnum]['SPol'] = polarity
+                    if weight:
+                        self.dicts[streamnum]['SWeight'] = weight
+                    # XXX the channel on which the S phase was picked is not
+                    # yet retrieved from the xml!
+                    # XXX information from synthetic phases is not yet
+                    # retrieved!!
                 # append everything to the picklist
-                picklist.append([])
-                picklist[-1].extend([document_id, network, station, location])
-                picklist[-1].extend([channel, time, uncertainty, phaseHint])
+                #picklist.append([])
+                #picklist[-1].extend([document_id, network, station, location])
+                #picklist[-1].extend([channel, time, uncertainty, phaseHint])
                 #picklist[-1].extend([onset, polarity, weight])
-        return picklist
+            break #XXX using only first found event from given time span!!
+        #return picklist
 
 
 def main():
