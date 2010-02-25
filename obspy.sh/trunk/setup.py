@@ -17,7 +17,6 @@ import os
 VERSION = open(os.path.join("obspy", "sh", "VERSION.txt")).read()
 
 
-
 setup(
     name='obspy.sh',
     version=VERSION,
