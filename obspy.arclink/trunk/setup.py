@@ -41,7 +41,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Geophysics',
+        'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'Seismology', 'ArcLink', 'MiniSEED', 'SEED',
               'Inventory', 'Waveform'],

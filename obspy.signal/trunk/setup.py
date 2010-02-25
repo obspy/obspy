@@ -69,7 +69,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Geophysics',
+        'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'seismology', 'signal', 'filter', 'triggers',
               'instrument correction', ],
