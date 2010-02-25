@@ -1,0 +1,1 @@
+# omniORB stub directory
