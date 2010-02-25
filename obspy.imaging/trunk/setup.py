@@ -63,7 +63,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core'
+        'obspy.core',
         'matplotlib',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
