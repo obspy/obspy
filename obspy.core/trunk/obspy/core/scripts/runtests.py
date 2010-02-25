@@ -233,15 +233,16 @@ class _TextTestRunner:
         faileds = 0
         erroreds = 0
         wasSuccessful = True
+        self.stream.writeln()
         for result in results.values():
-            result.printErrors()
-            self.stream.writeln(result.separator2)
             failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
                 wasSuccessful = False
+                result.printErrors()
             runs += result.testsRun
+        self.stream.writeln(unittest._TextTestResult.separator2)
         self.stream.writeln("Ran %d test%s in %.3fs" %
                             (runs, runs != 1 and "s" or "", timeTaken))
         self.stream.writeln()
