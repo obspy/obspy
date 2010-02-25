@@ -230,7 +230,7 @@ class PickingGUI:
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
         self.hyp2000Outfile = './hypo.prt'
-        self.hyp2000Path = '/bay_event/baynet09/work/hyp_2000_obspyck'
+        self.hyp2000Path = '/baysoft/obspyck/hyp_2000'
         self.hyp2000Controlfile = self.hyp2000Path + '/bay2000.inp'
         self.hyp2000Phasefile = self.hyp2000Path + '/hyp2000.pha'
         self.hyp2000Stationsfile = self.hyp2000Path + '/stations.dat'
