@@ -3,8 +3,11 @@
 """
 obspy.signal installer
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from setuptools import find_packages, setup
@@ -12,7 +15,8 @@ from setuptools.extension import Extension
 import os
 
 
-VERSION = '0.2.2'
+VERSION = open(os.path.join("obspy", "signal", "VERSION.txt")).read()
+
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -53,6 +57,8 @@ setup(
     url='http://www.obspy.org',
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
+    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
+    platforms='OS Independent',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -60,11 +66,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ' + \
         'GNU Library or Lesser General Public License (LGPL)',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
+        'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: C',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Geophysics',
     ],
@@ -75,7 +78,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core>0.2.1',
+        'obspy.core',
         'scipy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \

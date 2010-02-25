@@ -632,7 +632,7 @@ class ReadSac(object):
                              self.GetHvalue('nzmin'),
                              self.GetHvalue('nzsec'),
                              self.GetHvalue('nzmsec'))
-        except ValueError,e:
+        except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
         self.PrintFValue('Delta = ', self.GetHvalue('delta'))
@@ -726,7 +726,7 @@ class ReadSac(object):
             return False
         else:
             return True
-        
+
 
     def IsValidXYSacFile(self, thePath):
         """
@@ -746,7 +746,7 @@ class ReadSac(object):
             return False
         else:
             return True
-        
+
     def _get_date_(self):
         """
         If date header values are set calculate date in julian seconds
@@ -833,11 +833,11 @@ class ReadSac(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = rotate.gps2DistAzimuth(eqlat,eqlon,stlat,stlon)
-        self.SetHvalue('dist',dist/1000.)
-        self.SetHvalue('az',az)
-        self.SetHvalue('baz',baz)
-        
+        dist, az, baz = rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
+        self.SetHvalue('dist', dist / 1000.)
+        self.SetHvalue('az', az)
+        self.SetHvalue('baz', baz)
+
     def swap_byte_order(self):
         """
         Swap byte order of SAC-file in memory:
