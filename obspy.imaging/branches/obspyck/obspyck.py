@@ -229,6 +229,11 @@ class PickingGUI:
                            'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
         self.threeDlocOutfile = './3dloc-out'
         self.threeDlocInfile = './3dloc-in'
+        self.hyp2000Outfile = './hypo.prt'
+        self.hyp2000Path = '/bay_event/baynet09/work/hyp_2000_obspyck'
+        self.hyp2000Controlfile = self.hyp2000Path + '/bay2000.inp'
+        self.hyp2000Phasefile = self.hyp2000Path + '/hyp2000.pha'
+        self.hyp2000Stationsfile = self.hyp2000Path + '/stations.dat'
         self.xmlEventID = None
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
@@ -386,6 +391,7 @@ class PickingGUI:
     
         # Set up initial plot
         self.fig = plt.figure()
+        self.fig.set_size_inches(20, 10, forward = True)
         self.drawAxes()
         self.addFiltButtons()
         self.addPhaseButtons()
@@ -413,11 +419,13 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
+        for label in ('doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
+                elif item.labelstr == 'doHyp2000':
+                    self.doHyp2000()
                 elif item.labelstr == 'do3dloc':
                     self.do3dLoc()
                 elif item.labelstr == 'calcMag':
@@ -1732,6 +1740,109 @@ class PickingGUI:
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
         self.show3dlocEventMap()
+
+    def doHyp2000(self):
+        self.xmlEventID = '%i' % time.time()
+        f = open(self.hyp2000Phasefile, 'w')
+        f2 = open(self.hyp2000Stationsfile, 'w')
+        network = "BW"
+        #fmt = "RWMOIP?0 091229124412.22       13.99IS?0"
+        fmtP = "%4s%1sP%1s%1i %15s"
+        fmtS = "%12s%1sS%1s%1i\n"
+        #fmt2 = "  BGLD4739.14N01300.75E 930"
+        fmt2 = "%6s%2i%5.2fN%3i%5.2fE%4i\n"
+        #self.coords = []
+        for i in range(len(self.streams)):
+            #lon, lat, ele = getCoord(network, self.stationlist[i])
+            sta = self.dicts[i]['Station']
+            lon = self.dicts[i]['StaLon']
+            lon_deg = int(lon)
+            lon_min = (lon - lon_deg) * 60.
+            lat = self.dicts[i]['StaLat']
+            lat_deg = int(lat)
+            lat_min = (lat - lat_deg) * 60.
+            ele = self.dicts[i]['StaEle'] * 1000
+            f2.write(fmt2 % (sta, lon_deg, lon_min, lat_deg, lat_min, ele))
+            #self.coords.append([lon, lat])
+            if self.dicts[i].has_key('P'):
+                t = self.streams[i][0].stats.starttime
+                t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
+                date = t.strftime("%y%m%d%H%M%S")
+                print date
+                date += ".%02d" % (t.microsecond / 1e4 + 0.5)
+                print t.microsecond
+                print date
+                if self.dicts[i].has_key('POnset'):
+                    if self.dicts[i]['POnset'] == 'impulsive':
+                        onset = 'I'
+                    elif self.dicts[i]['POnset'] == 'emergent':
+                        onset = 'E'
+                    else: #XXX check for other names correctly!!!
+                        onset = 'I'
+                else:
+                    onset = 'I'
+                if self.dicts[i].has_key('PPol'):
+                    if self.dicts[i]['PPol'] == "up" or \
+                       self.dicts[i]['PPol'] == "poorup":
+                        polarity = "U"
+                    elif self.dicts[i]['PPol'] == "down" or \
+                         self.dicts[i]['PPol'] == "poordown":
+                        polarity = "D"
+                    else: #XXX check for other names correctly!!!
+                        polarity = "D"
+                else:
+                    polarity = "?"
+                if self.dicts[i].has_key('PWeight'):
+                    weight = int(self.dicts[i]['PWeight'])
+                else:
+                    weight = 0
+                f.write(fmtP % (sta, onset, polarity, weight, date))
+            if self.dicts[i].has_key('S'):
+                t2 = self.streams[i][0].stats.starttime
+                t2 += self.dicts[i]['S'] / self.streams[i][0].stats.sampling_rate
+                date2 = t2.strftime("%H%M%S")
+                date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
+                if self.dicts[i].has_key('SOnset'):
+                    if self.dicts[i]['SOnset'] == 'impulsive':
+                        onset2 = 'I'
+                    elif self.dicts[i]['SOnset'] == 'emergent':
+                        onset2 = 'E'
+                    else: #XXX check for other names correctly!!!
+                        onset2 = 'I'
+                else:
+                    onset2 = 'I'
+                if self.dicts[i].has_key('SPol'):
+                    if self.dicts[i]['SPol'] == "up" or \
+                       self.dicts[i]['SPol'] == "poorup":
+                        polarity2 = "U"
+                    elif self.dicts[i]['SPol'] == "down" or \
+                         self.dicts[i]['SPol'] == "poordown":
+                        polarity2 = "D"
+                    else: #XXX check for other names correctly!!!
+                        polarity2 = "D"
+                else:
+                    polarity2 = "?"
+                if self.dicts[i].has_key('SWeight'):
+                    weight2 = int(self.dicts[i]['SWeight'])
+                else:
+                    weight2 = 0
+                f.write(fmtS % (date2, onset2, polarity2, weight2))
+            else:
+                f.write("\n")
+        f.close()
+        f2.close()
+        #self.cat3dlocIn()
+        subprocess.call("export HYP2000_DATA=%s;" % (self.hyp2000Path) + \
+                        "cd $HYP2000_DATA; hyp2000 < bay2000.inp", shell = True)
+        print '--> hyp2000 finished'
+        #self.cat3dlocOut()
+        #self.load3dlocSyntheticPhases()
+        #self.redraw()
+        #self.load3dlocData()
+        #self.calculateEpiHypoDists()
+        #self.calculateStationMagnitudes()
+        #self.updateNetworkMag()
+        #self.show3dlocEventMap()
 
     def cat3dlocIn(self):
         lines = open(self.threeDlocInfile).readlines()
