@@ -263,7 +263,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     Estimates local magnitude from poles and zeros of given instrument, the
     peak to peak amplitude and the period in which it is measured
 
-    Magnitude calculation according to:
+    Magnitude estimation according to Bakun & Joyner, 1984, Eq. (3) page 1835.
     Bakun, W. H. and W. B. Joyner: The Ml scale in central California,
     Bull. Seismol. Soc. Am., 74, 1827-1843, 1984
 

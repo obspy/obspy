@@ -22,9 +22,10 @@
         ~util.utlLonLat
         ~util.xcorr
         ~invsim.seisSim
+        ~invsim.cosTaper
+        ~invsim.estimateMagnitude
         ~invsim.pazToFreqResp
         ~invsim.cornFreq2Paz
-        ~invsim.estimateMagnitude
         ~rotate.rotate_NE_RT
         ~rotate.gps2DistAzimuth
         ~trigger.recStalta

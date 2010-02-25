@@ -50,9 +50,13 @@ array([-8.74227766e-08,  -3.09016973e-01, ..., 5.87777138e-01,3.09007347e-01], d
 
 Writing using obspy.core
 ------------------------
-Writing is also straight forward.
+Writing is also straight forward. All changes on the data as well as in
+stats and stats['sac'] are written with the following command to a file:
 
->>> st.write('tmp.sac', format = 'SAC')
+>>> st.write('tmp.sac', format='SAC')
+
+
+
 
 Additonal methods of obspy.sac
 ------------------------------
