@@ -251,7 +251,7 @@ class _TextTestRunner:
             if faileds:
                 self.stream.write("failures=%d" % faileds)
             if erroreds:
-                if failed: self.stream.write(", ")
+                if faileds: self.stream.write(", ")
                 self.stream.write("errors=%d" % erroreds)
             self.stream.writeln(")")
         else:
