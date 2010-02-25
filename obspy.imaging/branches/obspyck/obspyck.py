@@ -269,17 +269,21 @@ class PickingGUI:
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
         self.dicts = []
+        self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
         client1 = Client()
         for i in range(len(self.streams)):
             self.dicts.append({})
             self.dicts[i]['MagUse'] = True
-            self.dicts[i]['Station'] = streams[i][0].stats.station.strip()
+            station = streams[i][0].stats.station.strip()
+            self.dicts[i]['Station'] = station
+            self.dictsMap[station] = self.dicts[i]
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
             net = streams[i][0].stats.network.strip()
             if net == '':
                 net = 'BW'
+                print "got no network information, setting to default: BW"
             sta = self.dicts[i]['Station']
             print sta
             date = streams[i][0].stats.starttime.date
@@ -409,17 +413,21 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('do3dloc', 'showMap', 'send2seishub', 'getNextEvent', 'quit'):
+        for label in ('do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
                 elif item.labelstr == 'do3dloc':
                     self.do3dLoc()
+                elif item.labelstr == 'calcMag':
+                    self.calculateEpiHypoDists()
+                    self.calculateStationMagnitudes()
+                    self.updateNetworkMag()
                 elif item.labelstr == 'showMap':
                     self.load3dlocData()
                     self.show3dlocEventMap()
-                elif item.labelstr == 'send2seishub':
+                elif item.labelstr == 'sendEvent':
                     self.uploadSeishub()
                 elif item.labelstr == 'getNextEvent':
                     message = "Using start and endtime of first trace in " + \
@@ -1594,22 +1602,26 @@ class PickingGUI:
     def switchStream(self, event):
         if event.key==self.dictKeybindings['prevStream']:
             self.stPt=(self.stPt-1)%self.stNum
+            xmin, xmax = self.axs[0].get_xlim()
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
             self.delSliders()
             self.addSliders()
             self.multicursorReinit()
+            self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
             print "Going to previous stream"
         if event.key==self.dictKeybindings['nextStream']:
             self.stPt=(self.stPt+1)%self.stNum
+            xmin, xmax = self.axs[0].get_xlim()
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
             self.delSliders()
             self.addSliders()
             self.multicursorReinit()
+            self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
             print "Going to next stream"
             
@@ -1894,7 +1906,7 @@ class PickingGUI:
 
     def show3dlocEventMap(self):
         #print self.dicts[0]
-        self.fig3dloc = plt.figure()
+        self.fig3dloc = plt.figure(2)
         self.ax3dloc = self.fig3dloc.add_subplot(111)
         self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
                              30, color = 'red', marker = 'o')
@@ -1993,17 +2005,19 @@ class PickingGUI:
         self.ax3dloc.set_xlabel('Longitude')
         self.ax3dloc.set_ylabel('Latitude')
         self.ax3dloc.set_title(self.threeDlocEventTime)
-        lines = open(self.threeDlocOutfile).readlines()
-        infoEvent = lines[0].rstrip()
-        infoPicks = ''
-        for line in lines[1:]:
-            infoPicks += line
-        self.ax3dloc.text(0.02, 0.95, infoEvent, transform = self.ax3dloc.transAxes,
-                          fontsize = 12, verticalalignment = 'top',
-                          family = 'monospace')
-        self.ax3dloc.text(0.02, 0.90, infoPicks, transform = self.ax3dloc.transAxes,
-                          fontsize = 10, verticalalignment = 'top',
-                          family = 'monospace')
+        #XXX disabled because it plots the wrong info if the event was
+        # fetched from seishub
+        #####lines = open(self.threeDlocOutfile).readlines()
+        #####infoEvent = lines[0].rstrip()
+        #####infoPicks = ''
+        #####for line in lines[1:]:
+        #####    infoPicks += line
+        #####self.ax3dloc.text(0.02, 0.95, infoEvent, transform = self.ax3dloc.transAxes,
+        #####                  fontsize = 12, verticalalignment = 'top',
+        #####                  family = 'monospace')
+        #####self.ax3dloc.text(0.02, 0.90, infoPicks, transform = self.ax3dloc.transAxes,
+        #####                  fontsize = 10, verticalalignment = 'top',
+        #####                  family = 'monospace')
         self.fig3dloc.canvas.mpl_connect('pick_event', self.selectMagnitudes)
         try:
             self.scatterMag.set_facecolors(self.eventMapColors)
@@ -2184,14 +2198,18 @@ class PickingGUI:
             Sub(mag, "uncertainty").text = '%s' % self.netMagVar
         Sub(magnitude, "type").text = "Ml"
         Sub(magnitude, "stationCount").text = '%i' % self.staMagCount
-        sta_mags = Sub(magnitude, "sta_mags")
         for i in range(len(self.streams)):
+            stationMagnitude = Sub(xml, "stationMagnitude")
             if self.dicts[i].has_key('Mag'):
-                sta_mag = Sub(sta_mags, 'sta_mag')
-                Sub(sta_mag, 'station').text = '%s' % self.dicts[i]['Station']
-                Sub(sta_mag, 'value').text = '%s' % self.dicts[i]['Mag']
-                Sub(sta_mag, 'used').text = '%s' % self.dicts[i]['MagUse']
-                Sub(sta_mag, 'channels').text = '%s' % self.dicts[i]['MagChannel']
+                mag = Sub(stationMagnitude, 'mag')
+                Sub(mag, 'value').text = '%s' % self.dicts[i]['Mag']
+                Sub(mag, 'uncertainty').text
+                Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
+                if self.dicts[i]['MagUse']:
+                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.staMagCount)
+                else:
+                    Sub(stationMagnitude, 'weight').text = '0'
+                Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
         return tostring(xml,pretty_print=True,xml_declaration=True)
 
 
@@ -2234,30 +2252,12 @@ class PickingGUI:
     
     def clearDictionaries(self):
         for i in range(len(self.dicts)):
-            if self.dicts[i].has_key('P'):
-                del self.dicts[i]['P']
-            if self.dicts[i].has_key('PErr1'):
-                del self.dicts[i]['PErr1']
-            if self.dicts[i].has_key('PErr2'):
-                del self.dicts[i]['PErr2']
-            if self.dicts[i].has_key('PWeight'):
-                del self.dicts[i]['PWeight']
-            if self.dicts[i].has_key('PPol'):
-                del self.dicts[i]['PPol']
-            if self.dicts[i].has_key('POnset'):
-                del self.dicts[i]['POnset']
-            if self.dicts[i].has_key('S'):
-                del self.dicts[i]['S']
-            if self.dicts[i].has_key('SErr1'):
-                del self.dicts[i]['SErr1']
-            if self.dicts[i].has_key('SErr2'):
-                del self.dicts[i]['SErr2']
-            if self.dicts[i].has_key('SWeight'):
-                del self.dicts[i]['SWeight']
-            if self.dicts[i].has_key('SPol'):
-                del self.dicts[i]['SPol']
-            if self.dicts[i].has_key('SOnset'):
-                del self.dicts[i]['SOnset']
+            for k in self.dicts[i].keys():
+                if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
+                   k != 'StaEle' and k != 'pazZ' and k != 'pazN' and \
+                   k != 'pazE':
+                    del self.dicts[i][k]
+            self.dicts[i]['MagUse'] = True
 
     def delAllItems(self):
         self.delPLine()
@@ -2272,6 +2272,10 @@ class PickingGUI:
         self.delSLabel()
         self.delSsynthLine()
         self.delSsynthLabel()
+        self.delMagMaxCross1()
+        self.delMagMinCross1()
+        self.delMagMaxCross2()
+        self.delMagMinCross2()
 
     def drawAllItems(self):
         self.drawPLine()
@@ -2286,6 +2290,10 @@ class PickingGUI:
         self.drawSLabel()
         self.drawSsynthLine()
         self.drawSsynthLabel()
+        self.drawMagMaxCross1()
+        self.drawMagMinCross1()
+        self.drawMagMaxCross2()
+        self.drawMagMinCross2()
 
     def getNextEventFromSeishub(self, starttime, endtime):
         """
@@ -2340,6 +2348,7 @@ class PickingGUI:
         fp = urllib2.urlopen(resource_req)
         resource_xml = parse(fp)
         fp.close()
+        #analyze picks:
         for pick in resource_xml.xpath(u".//pick"):
             # attributes
             id = pick.find("waveform").attrib
@@ -2375,16 +2384,40 @@ class PickingGUI:
                 weight = pick.xpath(".//weight")[0].text
             except:
                 weight = None
+            try:
+                phase_res = pick.xpath(".//phase_res/value")[0].text
+            except:
+                phase_res = None
+            try:
+                azimuth = pick.xpath(".//azimuth/value")[0].text
+            except:
+                azimuth = None
+            try:
+                incident = pick.xpath(".//incident/value")[0].text
+            except:
+                incident = None
+            try:
+                epi_dist = pick.xpath(".//epi_dist/value")[0].text
+            except:
+                epi_dist = None
+            try:
+                hyp_dist = pick.xpath(".//hyp_dist/value")[0].text
+            except:
+                hyp_dist = None
             # convert UTC time to samples after stream starttime
             time = UTCDateTime(time)
             time -= self.streams[streamnum][0].stats.starttime
             time = int(round(time *
                      self.streams[streamnum][0].stats.sampling_rate))
+            if phase_res:
+                phase_res_samps = float(phase_res)
+                phase_res_samps *= self.streams[streamnum][0].stats.sampling_rate
+                phase_res_samps = int(round(phase_res_samps))
             # map uncertainty in seconds to error picks in samples
             if uncertainty:
                 uncertainty = float(uncertainty)
-                uncertainty = int(round(uncertainty *
-                         self.streams[streamnum][0].stats.sampling_rate))
+                uncertainty = int(round(uncertainty * \
+                        self.streams[streamnum][0].stats.sampling_rate))
                 uncertainty /= 2
             # assign to dictionary
             if pick.xpath(".//phaseHint")[0].text == "P":
@@ -2398,8 +2431,20 @@ class PickingGUI:
                     self.dicts[streamnum]['PPol'] = polarity
                 if weight:
                     self.dicts[streamnum]['PWeight'] = weight
+                if phase_res:
+                    self.dicts[streamnum]['Psynth'] = time + phase_res_samps
+                    self.dicts[streamnum]['Pres'] = float(phase_res)
+                if azimuth:
+                    self.dicts[streamnum]['3DlocPAzim'] = float(azimuth)
+                if incident:
+                    self.dicts[streamnum]['3DlocPInci'] = float(incident)
             if pick.xpath(".//phaseHint")[0].text == "S":
                 self.dicts[streamnum]['S'] = time
+                # XXX maybe dangerous to check last character:
+                if channel.endswith('N'):
+                    self.dicts[streamnum]['Saxind'] = 1
+                if channel.endswith('E'):
+                    self.dicts[streamnum]['Saxind'] = 2
                 if uncertainty:
                     self.dicts[streamnum]['SErr1'] = time - uncertainty
                     self.dicts[streamnum]['SErr2'] = time + uncertainty
@@ -2409,6 +2454,115 @@ class PickingGUI:
                     self.dicts[streamnum]['SPol'] = polarity
                 if weight:
                     self.dicts[streamnum]['SWeight'] = weight
+                if phase_res:
+                    self.dicts[streamnum]['Ssynth'] = time + phase_res_samps
+                    self.dicts[streamnum]['Sres'] = float(phase_res)
+                if azimuth:
+                    self.dicts[streamnum]['3DlocSAzim'] = float(azimuth)
+                if incident:
+                    self.dicts[streamnum]['3DlocSInci'] = float(incident)
+            if epi_dist:
+                self.dicts[streamnum]['distEpi'] = float(epi_dist)
+            if hyp_dist:
+                self.dicts[streamnum]['distHypo'] = float(hyp_dist)
+
+        #analyze origin:
+        origin = resource_xml.xpath(u".//origin")[0]
+        try:
+            time = origin.xpath(".//time/value")[0].text
+            self.threeDlocEventTime = UTCDateTime(time)
+        except:
+            pass
+        try:
+            lat = origin.xpath(".//latitude/value")[0].text
+            self.threeDlocEventLat = float(lat)
+        except:
+            pass
+        try:
+            lon = origin.xpath(".//longitude/value")[0].text
+            self.threeDlocEventLon = float(lon)
+        except:
+            pass
+        try:
+            errX = origin.xpath(".//longitude/uncertainty")[0].text
+            self.threeDlocEventErrX = float(errX)
+        except:
+            pass
+        try:
+            errY = origin.xpath(".//latitude/uncertainty")[0].text
+            self.threeDlocEventErrY = float(errY)
+        except:
+            pass
+        try:
+            z = origin.xpath(".//depth/value")[0].text
+            self.threeDlocEventZ = float(z)
+        except:
+            pass
+        try:
+            errZ = origin.xpath(".//depth/uncertainty")[0].text
+            self.threeDlocEventErrZ = float(errZ)
+        except:
+            pass
+        try:
+            self.threeDlocPCount = \
+                    int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocSCount = \
+                    int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocUsedStationsCount = \
+                    int(origin.xpath(".//originQuality/usedStationCount")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocEventStdErr = \
+                    float(origin.xpath(".//originQuality/standardError")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocEventAzimGap = \
+                    float(origin.xpath(".//originQuality/secondaryAzimuthalGap")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocEpidistMin = \
+                    float(origin.xpath(".//originQuality/minimumDistance")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocEpidistMax = \
+                    float(origin.xpath(".//originQuality/maximumDistance")[0].text)
+        except:
+            pass
+        try:
+            self.threeDlocEpidistMedian = \
+                    float(origin.xpath(".//originQuality/medianDistance")[0].text)
+        except:
+            pass
+
+        #analyze magnitude:
+        magnitude = resource_xml.xpath(u".//magnitude")[0]
+        try:
+            mag = magnitude.xpath(".//mag/value")[0].text
+            self.netMag = float(mag)
+            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.netMag, self.netMagVar)
+        except:
+            pass
+        try:
+            magVar = magnitude.xpath(".//mag/uncertainty")[0].text
+            self.netMagVar = float(magVar)
+        except:
+            pass
+        try:
+            stacount = magnitude.xpath(".//stationCount")[0].text
+            self.staMagCount = int(stacount)
+        except:
+            pass
+        # get values
                 # XXX the channel on which the S phase was picked is not
                 # yet retrieved from the xml!
                 # XXX information from synthetic phases is not yet
