@@ -60,6 +60,7 @@ setup(
         ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main',
+            'obspy-plot = obspy.db.scripts.plot:main',
         ],
     }
 )

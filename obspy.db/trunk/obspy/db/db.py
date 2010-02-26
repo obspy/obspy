@@ -6,15 +6,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, backref
 
 
-#waveform_tab = Table(WAVEFORM_TABLE, metadata,
-#  
-#    Column('starttime', DateTime, nullable=False, index=True),
-#    Column('endtime', DateTime, nullable=False, index=True),
-#    Column('calib', Float, nullable=False),
-#    Column('sampling_rate', Float, nullable=False),
-#    Column('npts', Integer, nullable=False),
-##    Column('DQ_gaps', Integer, nullable=True),
-##    Column('DQ_overlaps', Integer, nullable=True),
 ##    Column('DQ_amplifier_saturation', Integer, nullable=True),
 ##    Column('DQ_digitizer_clipping', Integer, nullable=True),
 ##    Column('DQ_spikes', Integer, nullable=True),
@@ -29,12 +20,6 @@ from sqlalchemy.orm import relation, backref
 ##    Column('TQ_lq', Numeric, nullable=True),
 ##    Column('TQ_median', Numeric, nullable=True),
 ##    Column('TQ_uq', Numeric, nullable=True),
-#    useexisting=True,
-#)
-
-#Index('idx_' + WAVEFORM_TABLE + '_net_sta_cha',
-#      waveform_tab.c.network, waveform_tab.c.station,
-#      waveform_tab.c.location, waveform_tab.c.channel)
 
 
 
@@ -88,10 +73,6 @@ class WaveformChannel(Base):
     calib = Column(Float, nullable=False)
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
-    gaps = Column(Integer, nullable=False)
-    gaps_samples = Column(Integer, nullable=False)
-    overlaps = Column(Integer, nullable=False)
-    overlaps_samples = Column(Integer, nullable=False)
 
     file = relation(WaveformFile, backref=backref('channels', order_by=id))
 
@@ -105,14 +86,27 @@ class WaveformChannel(Base):
         self.calib = data.get('calib', 1.0)
         self.npts = data.get('npts', 0)
         self.sampling_rate = data.get('sampling_rate', 1.0)
-        self.gaps = data.get('gaps', 0)
-        self.gaps_samples = data.get('gaps_samples', 0)
-        self.overlaps = data.get('overlaps', 0)
-        self.overlaps_samples = data.get('overlaps_samples', 0)
 
     def __repr__(self):
         return "<WaveformChannel('%s')>" % self.channel
 
 
+class WaveformGaps(Base):
+    __tablename__ = 'waveform_gaps'
+    id = Column(Integer, primary_key=True)
+    channel_id = Column(Integer, ForeignKey('waveform_channels.id'))
+    gap = Column(Boolean, nullable=False, index=True)
+    starttime = Column(DateTime, nullable=False, index=True)
+    endtime = Column(DateTime, nullable=False, index=True)
+    samples = Column(Integer, nullable=False)
 
+    channel = relation(WaveformChannel, backref=backref('gaps', order_by=id))
 
+    def __init__(self, data={}):
+        self.gap = data.get('gap', True)
+        self.starttime = data.get('starttime')
+        self.endtime = data.get('endtime')
+        self.samples = data.get('samples', 0)
+
+    def __repr__(self):
+        return "<WaveformGaps('%s')>" % self.gap

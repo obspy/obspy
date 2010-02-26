@@ -3,7 +3,8 @@
 from Queue import Empty as QueueEmpty, Full as QueueFull
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from obspy.core import read
-from obspy.db.db import Base, WaveformFile, WaveformPath, WaveformChannel
+from obspy.db.db import Base, WaveformFile, WaveformPath, WaveformChannel, \
+    WaveformGaps
 from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -58,6 +59,8 @@ class WaveformFileCrawler:
                                                channel=data['file']).one()
             except:
                 channel = WaveformChannel(data)
+                for gap in data['gaps']:
+                    channel.gaps.append(WaveformGaps(gap))
                 file.channels.append(channel)
             try:
                 self.session.commit()
@@ -359,16 +362,13 @@ def worker(i, input_queue, output_queue, preview_dir=None):
         gap_dict = {}
         for gap in gap_list:
             id = '.'.join(gap[0:4])
-            gap_dict.setdefault(id, {'gaps':0, 'overlaps':0, 'gaps_samples':0,
-                                     'overlaps_samples':0})
-            if gap[6] > 0:
-                # gap
-                gap_dict[id]['gaps'] += 1
-                gap_dict[id]['gaps_samples'] += gap[7]
-            else:
-                # overlap
-                gap_dict[id]['overlaps'] += 1
-                gap_dict[id]['overlaps_samples'] += gap[7]
+            temp = {
+                'gap': gap[6] >= 0,
+                'starttime': gap[4],
+                'endtime': gap[5],
+                'samples': abs(gap[7])
+            }
+            gap_dict.setdefault(id, []).append(temp)
         # loop through traces
         dataset = []
         for trace in stream:
@@ -391,7 +391,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
             result['npts'] = trace.stats.npts
             result['sampling_rate'] = trace.stats.sampling_rate
             # gaps/overlaps
-            result.update(gap_dict.get(trace.id, {}))
+            result['gaps'] = gap_dict.get(trace.id, [])
             # apply feature functions
             for feature in features:
                 if feature not in all_features:
@@ -436,7 +436,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
 def runIndexer(options):
     logger.info("Starting Indexer ...")
     # create file queue and worker processes
-    input_queue = multiprocessing.Queue(options.number_of_processors * 2)
+    input_queue = multiprocessing.Queue(options.number_of_cpus * 2)
     output_queue = multiprocessing.Queue()
     for i in range(options.number_of_cpus):
         args = (i, input_queue, output_queue, options.preview_path)
