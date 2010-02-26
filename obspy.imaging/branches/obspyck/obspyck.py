@@ -227,13 +227,24 @@ class PickingGUI:
                            'setSPolDown': 'd', 'setSPolPoorDown': '-',
                            'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
                            'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
-        self.threeDlocOutfile = './3dloc-out'
-        self.threeDlocInfile = './3dloc-in'
-        self.hyp2000Outfile = './hypo.prt'
-        self.hyp2000Path = '/baysoft/obspyck/hyp_2000'
-        self.hyp2000Controlfile = self.hyp2000Path + '/bay2000.inp'
-        self.hyp2000Phasefile = self.hyp2000Path + '/hyp2000.pha'
-        self.hyp2000Stationsfile = self.hyp2000Path + '/stations.dat'
+        self.threeDlocPath = '/baysoft/obspyck/3dloc/'
+        self.threeDlocOutfile = self.threeDlocPath + '3dloc-out'
+        self.threeDlocInfile = self.threeDlocPath + '3dloc-in'
+        self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
+                             'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
+                             'cd %s;' % self.threeDlocPath + \
+                             '3dloc_pitsa'
+        self.hyp2000Path = '/baysoft/obspyck/hyp_2000/'
+        self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
+        self.hyp2000Phasefile = self.hyp2000Path + 'hyp2000.pha'
+        self.hyp2000Stationsfile = self.hyp2000Path + 'stations.dat'
+        self.hyp2000Summary = self.hyp2000Path + 'hypo.prt'
+        self.hyp2000PreCall = 'rm %s %s %s &> /dev/null' \
+                % (self.hyp2000Phasefile, self.hyp2000Stationsfile,
+                   self.hyp2000Summary)
+        self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.hyp2000Path) + \
+                           'cd $HYP2000_DATA;' + \
+                           'hyp2000 < bay2000.inp &> /dev/null'
         self.xmlEventID = None
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
@@ -1729,10 +1740,10 @@ class PickingGUI:
                 f.write(fmt % (self.stationlist[i], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
-        self.cat3dlocIn()
-        subprocess.call("D3_VELOCITY=/scratch/rh_vel/vp_5836/ D3_VELOCITY_2=/scratch/rh_vel/vs_32220/ 3dloc_pitsa", shell = True)
+        self.catFile(self.threeDlocInfile)
+        subprocess.call(self.threeDlocCall, shell = True)
         print '--> 3dloc finished'
-        self.cat3dlocOut()
+        self.catFile(self.threeDlocOutfile)
         self.load3dlocSyntheticPhases()
         self.redraw()
         self.load3dlocData()
@@ -1743,6 +1754,7 @@ class PickingGUI:
 
     def doHyp2000(self):
         self.xmlEventID = '%i' % time.time()
+        subprocess.call(self.hyp2000PreCall, shell = True)
         f = open(self.hyp2000Phasefile, 'w')
         f2 = open(self.hyp2000Stationsfile, 'w')
         network = "BW"
@@ -1768,10 +1780,10 @@ class PickingGUI:
                 t = self.streams[i][0].stats.starttime
                 t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
                 date = t.strftime("%y%m%d%H%M%S")
-                print date
+                #print date
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
-                print t.microsecond
-                print date
+                #print t.microsecond
+                #print date
                 if self.dicts[i].has_key('POnset'):
                     if self.dicts[i]['POnset'] == 'impulsive':
                         onset = 'I'
@@ -1831,11 +1843,13 @@ class PickingGUI:
                 f.write("\n")
         f.close()
         f2.close()
-        #self.cat3dlocIn()
-        subprocess.call("export HYP2000_DATA=%s;" % (self.hyp2000Path) + \
-                        "cd $HYP2000_DATA; hyp2000 < bay2000.inp", shell = True)
+        print 'Phases for Hypo2000:'
+        self.catFile(self.hyp2000Phasefile)
+        print 'Stations for Hypo2000:'
+        self.catFile(self.hyp2000Stationsfile)
+        subprocess.call(self.hyp2000Call, shell = True)
         print '--> hyp2000 finished'
-        #self.cat3dlocOut()
+        self.catFile(self.hyp2000Summary)
         #self.load3dlocSyntheticPhases()
         #self.redraw()
         #self.load3dlocData()
@@ -1844,15 +1858,158 @@ class PickingGUI:
         #self.updateNetworkMag()
         #self.show3dlocEventMap()
 
-    def cat3dlocIn(self):
-        lines = open(self.threeDlocInfile).readlines()
+    def catFile(self, file):
+        lines = open(file).readlines()
         for line in lines:
-            print line.strip()
+            print line.rstrip()
 
-    def cat3dlocOut(self):
+    def loadHyp2000Data(self):
+        #self.load3dlocSyntheticPhases()
+        lines = open(self.hyp2000Summary).readlines()
+        if lines == []:
+            print "Error: Did not find Hypo2000 output file"
+            return
+        # goto origin info line
+        while True:
+            try:
+                line = lines.pop(0)
+            except:
+                break
+            if line.startswith(" YEAR MO DA  --ORIGIN--"):
+                break
+        line = lines.pop(0)
+
+        year = int(line[1:5])
+        month = int(line[6:8])
+        day = int(line[9:11])
+        hour = int(line[13:15])
+        minute = int(line[15:17])
+        seconds = float(line[18:23])
+        time = UTCDateTime(year, month, day, hour, minute, seconds)
+        lat_deg = int(line[25:27])
+        lat_min = float(line[28:33])
+        lat = lat_deg + (lat_min / 60.)
+        if line[27] == "S":
+            lat = -lat
+        lon_deg = int(line[35:38])
+        lon_min = float(line[39:44])
+        if line[38] == " ":
+            lon = -lon
+        depth = float(line[46:51])
+        rms = float(line[52:57])
+        errXY = float(line[58:63])
+        errZ = float(line[64:69])
+
+        # goto next origin info line
+        while True:
+            try:
+                line = lines.pop(0)
+            except:
+                break
+            if line.startswith(" NSTA NPHS  DMIN MODEL"):
+                break
+        line = lines.pop(0)
+
+        model = line[17:22].strip()
+        gap = int(line[23:26])
+
+        # assign origin info
+        self.EventLon = lon
+        self.EventLat = lat
+        self.EventZ = depth
+        self.EventErrX = errXY
+        self.EventErrY = errXY
+        self.EventErrZ = errZ
+        self.EventStdErr = rms #XXX stimmt diese Zuordnung!!!?!
+        self.EventAzimGap = gap
+        self.EventUsedModel = model
+        self.EventTime = time
+        
+        # goto station and phases info lines
+        while True:
+            try:
+                line = lines.pop(0)
+            except:
+                break
+            if line.startswith(" STA NET COM L CR DIST AZM"):
+                break
+        
+        self.PCount = 0
+        self.SCount = 0
+        for i in range(len(lines)):
+            if lines[i][32] != "P" and lines[i][32] != "S":
+                continue
+            # get values from line
+            station = lines[i][0:6].strip()
+            if station == "":
+                station = lines[i-1][0:6].strip()
+            azimuth = int(lines[i][23:26])
+            #XXX checken!! incident = int(lines[i][27:30])
+            if lines[i][31] == "I":
+                onset = "impulsive"
+            elif lines[i][31] == "E":
+                onset = "emergent"
+            if lines[i][33] == "U":
+                polarity = "up"
+            elif lines[i][33] == "D":
+                polarity = "down"
+            res = float(lines[i][61:66])
+            weight = float(lines[i][68:72])
+
+            # search for streamnumber corresponding to pick
+            streamnum = None
+            for i in range(len(self.streams)):
+                if station.strip() != self.dicts[i]['Station']:
+                    continue
+                else:
+                    streamnum = i
+                    break
+            if streamnum == None:
+                message = "Did not find matching stream for pick data " + \
+                          "with station id: \"%s\"" % station.strip()
+                warnings.warn(message)
+                continue
+            
+            # assign synthetic phase info
+            #XXX XXX XXX XXX XXX XXX XXX XXX XXX
+            
+
+
+            pick = line.split()
+            for i in range(len(self.streams)):
+                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+                    if pick[1] == 'P':
+                        self.dicts[i]['3DlocPLon'] = float(pick[14])
+                        self.dicts[i]['3DlocPLat'] = float(pick[15])
+                        self.threeDlocPCount += 1
+                    elif pick[1] == 'S':
+                        self.dicts[i]['3DlocSLon'] = float(pick[14])
+                        self.dicts[i]['3DlocSLat'] = float(pick[15])
+                        self.threeDlocSCount += 1
+                    break
         lines = open(self.threeDlocOutfile).readlines()
-        for line in lines:
-            print line.strip()
+        for line in lines[1:]:
+            pick = line.split()
+            for i in range(len(self.streams)):
+                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+                    if pick[1] == 'P':
+                        self.dicts[i]['3DlocPAzim'] = float(pick[9])
+                        self.dicts[i]['3DlocPInci'] = float(pick[10])
+                        self.dicts[i]['3DlocPResInfo'] = '\n\n %+0.3fs' % float(pick[8])
+                        if self.dicts[i].has_key('PPol'):
+                            self.dicts[i]['3DlocPResInfo'] += '  %s' % self.dicts[i]['PPol']
+                            
+                    elif pick[1] == 'S':
+                        self.dicts[i]['3DlocSAzim'] = float(pick[9])
+                        self.dicts[i]['3DlocSInci'] = float(pick[10])
+                        self.dicts[i]['3DlocSResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
+                        if self.dicts[i].has_key('SPol'):
+                            self.dicts[i]['3DlocSResInfo'] += '  %s' % self.dicts[i]['SPol']
+                    break
+        self.threeDlocUsedStationsCount = len(self.dicts)
+        for st in self.dicts:
+            if not (st.has_key('Psynth') or st.has_key('Ssynth')):
+                self.threeDlocUsedStationsCount -= 1
 
     def load3dlocData(self):
         #self.load3dlocSyntheticPhases()
