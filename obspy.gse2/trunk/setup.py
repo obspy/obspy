@@ -43,8 +43,9 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
-symbols = [i.strip() \
-           for i in open(src + 'gse_functions.def', 'r').readlines()[2:]]
+symbols = [s.strip()
+           for s in open(src + 'gse_functions.def', 'r').readlines()[2:]
+           if s.strip() != '']
 lib = MyExtension('gse_functions',
                   define_macros=[],
                   libraries=[],

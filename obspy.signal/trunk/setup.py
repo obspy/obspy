@@ -30,7 +30,8 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 src = os.path.join('obspy', 'signal', 'src') + os.sep
-symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]]
+symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
+           if s.strip() != '']
 lib = MyExtension('libsignal',
                   define_macros=[],
                   libraries=[],

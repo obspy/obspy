@@ -60,7 +60,8 @@ if platform.system() == "Windows":
         macros.append(('gmtime', '_gmtime64'))
 
 src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
-symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]]
+symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]
+           if s.strip() != '']
 lib = MyExtension('libmseed',
                   define_macros=macros,
                   libraries=[],
