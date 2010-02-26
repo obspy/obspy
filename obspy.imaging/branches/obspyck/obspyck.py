@@ -1941,10 +1941,14 @@ class PickingGUI:
                 continue
             # get values from line
             station = lines[i][0:6].strip()
+            azimuth = int(lines[i][23:26])
+            #XXX check, if incident is correct!!
+            incident = int(lines[i][27:30])
             if station == "":
                 station = lines[i-1][0:6].strip()
-            azimuth = int(lines[i][23:26])
-            #XXX checken!! incident = int(lines[i][27:30])
+                azimuth = int(lines[i-1][23:26])
+                #XXX check, if incident is correct!!
+                incident = int(lines[i-1][27:30])
             if lines[i][31] == "I":
                 onset = "impulsive"
             elif lines[i][31] == "E":
