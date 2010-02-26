@@ -1,10 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.core installer
+obspy installer
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+    
+    or
+    
+    GNU General Public License (GPL)
 """
 
 import distribute_setup
@@ -12,7 +19,7 @@ distribute_setup.use_setuptools()
 from setuptools import find_packages, setup
 
 
-VERSION = '0.2.2'
+VERSION = '0.3.0'
 
 
 setup(
@@ -34,19 +41,20 @@ setup(
     url='http://www.obspy.org',
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
-        classifiers=[
+    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
+    platforms='OS Independent',
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ' + \
         'GNU Library or Lesser General Public License (LGPL)',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Geophysics',
+        'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'seismology'],
     packages=find_packages(exclude=['distribute_setup']),
