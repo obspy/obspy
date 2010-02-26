@@ -25,6 +25,11 @@ def main():
                       type="string", dest="format",
                       help="Format log file to test report")
     (options, largs) = parser.parse_args()
+
+    # Print help and exit if no arguments are given
+    if len(largs) == 0:
+        parser.print_help()
+        sys.exit(1)
     
     #
     # Generate dictionary containing nested lists of start and end times per
