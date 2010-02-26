@@ -10,7 +10,7 @@ cd ..\..
 cd obspy.%%M/trunk
 echo === obspy.%%M ===
 %PYTHON% setup.py -q clean --all >NUL
-%PYTHON% setup.py -q build -c mingw32 develop
+%PYTHON% setup.py -q build develop
 %PYTHON% setup.py -q clean --all >NUL
 echo OK
 )
