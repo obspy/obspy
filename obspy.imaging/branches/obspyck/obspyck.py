@@ -230,6 +230,8 @@ class PickingGUI:
         self.threeDlocPath = '/baysoft/obspyck/3dloc/'
         self.threeDlocOutfile = self.threeDlocPath + '3dloc-out'
         self.threeDlocInfile = self.threeDlocPath + '3dloc-in'
+        self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
+                % (self.threeDlocOutfile, self.threeDlocInfile)
         self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
                              'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
                              'cd %s;' % self.threeDlocPath + \
@@ -465,7 +467,7 @@ class PickingGUI:
                     self.updateNetworkMag()
                 elif item.labelstr == 'showMap':
                     #self.load3dlocData()
-                    self.show3dlocEventMap()
+                    self.showEventMap()
                 elif item.labelstr == 'sendEvent':
                     self.uploadSeishub()
                 elif item.labelstr == 'getNextEvent':
@@ -1730,6 +1732,7 @@ class PickingGUI:
 
     def do3dLoc(self):
         self.xmlEventID = '%i' % time.time()
+        subprocess.call(self.threeDlocPreCall, shell = True)
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
@@ -1759,6 +1762,7 @@ class PickingGUI:
                 f.write(fmt % (self.stationlist[i], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
+        print 'Phases for 3Dloc:'
         self.catFile(self.threeDlocInfile)
         subprocess.call(self.threeDlocCall, shell = True)
         print '--> 3dloc finished'
@@ -1769,7 +1773,7 @@ class PickingGUI:
         self.calculateEpiHypoDists()
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
-        self.show3dlocEventMap()
+        self.showEventMap()
 
     def doHyp2000(self):
         self.xmlEventID = '%i' % time.time()
@@ -1871,11 +1875,11 @@ class PickingGUI:
         self.catFile(self.hyp2000Summary)
         #self.load3dlocSyntheticPhases()
         #self.redraw()
-        #self.load3dlocData()
-        #self.calculateEpiHypoDists()
-        #self.calculateStationMagnitudes()
-        #self.updateNetworkMag()
-        #self.show3dlocEventMap()
+        self.loadHyp2000Data()
+        self.calculateEpiHypoDists()
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.showEventMap()
 
     def catFile(self, file):
         lines = open(file).readlines()
@@ -1912,6 +1916,7 @@ class PickingGUI:
             lat = -lat
         lon_deg = int(line[35:38])
         lon_min = float(line[39:44])
+        lon = lon_deg + (lon_min / 60.)
         if line[38] == " ":
             lon = -lon
         depth = float(line[46:51])
@@ -1956,26 +1961,36 @@ class PickingGUI:
         self.PCount = 0
         self.SCount = 0
         for i in range(len(lines)):
-            if lines[i][32] != "P" and lines[i][32] != "S":
+            # check which type of phase
+            if lines[i][32] == "P":
+                type = "P"
+            elif lines[i][32] == "S":
+                type = "S"
+            else:
                 continue
             # get values from line
             station = lines[i][0:6].strip()
-            azimuth = int(lines[i][23:26])
-            #XXX check, if incident is correct!!
-            incident = int(lines[i][27:30])
             if station == "":
                 station = lines[i-1][0:6].strip()
                 azimuth = int(lines[i-1][23:26])
                 #XXX check, if incident is correct!!
                 incident = int(lines[i-1][27:30])
+            else:
+                azimuth = int(lines[i][23:26])
+                #XXX check, if incident is correct!!
+                incident = int(lines[i][27:30])
             if lines[i][31] == "I":
                 onset = "impulsive"
             elif lines[i][31] == "E":
                 onset = "emergent"
+            else:
+                onset = None
             if lines[i][33] == "U":
                 polarity = "up"
             elif lines[i][33] == "D":
                 polarity = "down"
+            else:
+                polarity = None
             res = float(lines[i][61:66])
             weight = float(lines[i][68:72])
 
@@ -1994,84 +2009,84 @@ class PickingGUI:
                 continue
             
             # assign synthetic phase info
-            #XXX XXX XXX XXX XXX XXX XXX XXX XXX
-            
-
-
-            pick = line.split()
-            for i in range(len(self.streams)):
-                if pick[0].strip() == self.streams[i][0].stats.station.strip():
-                    if pick[1] == 'P':
-                        self.dicts[i]['3DlocPLon'] = float(pick[14])
-                        self.dicts[i]['3DlocPLat'] = float(pick[15])
-                        self.threeDlocPCount += 1
-                    elif pick[1] == 'S':
-                        self.dicts[i]['3DlocSLon'] = float(pick[14])
-                        self.dicts[i]['3DlocSLat'] = float(pick[15])
-                        self.threeDlocSCount += 1
-                    break
-        lines = open(self.threeDlocOutfile).readlines()
-        for line in lines[1:]:
-            pick = line.split()
-            for i in range(len(self.streams)):
-                if pick[0].strip() == self.streams[i][0].stats.station.strip():
-                    if pick[1] == 'P':
-                        self.dicts[i]['3DlocPAzim'] = float(pick[9])
-                        self.dicts[i]['3DlocPInci'] = float(pick[10])
-                        self.dicts[i]['3DlocPResInfo'] = '\n\n %+0.3fs' % float(pick[8])
-                        if self.dicts[i].has_key('PPol'):
-                            self.dicts[i]['3DlocPResInfo'] += '  %s' % self.dicts[i]['PPol']
-                            
-                    elif pick[1] == 'S':
-                        self.dicts[i]['3DlocSAzim'] = float(pick[9])
-                        self.dicts[i]['3DlocSInci'] = float(pick[10])
-                        self.dicts[i]['3DlocSResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
-                        if self.dicts[i].has_key('SPol'):
-                            self.dicts[i]['3DlocSResInfo'] += '  %s' % self.dicts[i]['SPol']
-                    break
-        self.threeDlocUsedStationsCount = len(self.dicts)
+            if type == "P":
+                self.PCount += 1
+                self.dicts[streamnum]['PLon'] = self.dicts[streamnum]['StaLon']
+                self.dicts[streamnum]['PLat'] = self.dicts[streamnum]['StaLat']
+                synthsamps = int(round(res *
+                        self.streams[i][0].stats.sampling_rate))
+                synthsamps += self.dicts[streamnum]['P']
+                self.dicts[streamnum]['Psynth'] = synthsamps
+                self.dicts[streamnum]['Pres'] = res
+                self.dicts[streamnum]['PAzim'] = azimuth
+                self.dicts[streamnum]['PInci'] = incident
+                if onset:
+                    self.dicts[streamnum]['POnset'] = onset
+                if polarity:
+                    self.dicts[streamnum]['PPol'] = polarity
+                #XXX how to set the weight???
+                # we use weights 0,1,2,3 but hypo2000 outputs floats...
+                #self.dicts[streamnum]['PWeight'] = weight
+                self.dicts[streamnum]['PResInfo'] = '\n\n %+0.3fs' % res
+                if self.dicts[streamnum].has_key('PPol'):
+                    self.dicts[streamnum]['PResInfo'] += '  %s' % \
+                            self.dicts[streamnum]['PPol']
+            elif type == "S":
+                self.SCount += 1
+                self.dicts[streamnum]['SLon'] = self.dicts[streamnum]['StaLon']
+                self.dicts[streamnum]['SLat'] = self.dicts[streamnum]['StaLat']
+                synthsamps = int(round(res *
+                        self.streams[i][0].stats.sampling_rate))
+                synthsamps += self.dicts[streamnum]['S']
+                self.dicts[streamnum]['Ssynth'] = synthsamps
+                self.dicts[streamnum]['Sres'] = res
+                self.dicts[streamnum]['SAzim'] = azimuth
+                self.dicts[streamnum]['SInci'] = incident
+                if onset:
+                    self.dicts[streamnum]['SOnset'] = onset
+                if polarity:
+                    self.dicts[streamnum]['SPol'] = polarity
+                #XXX how to set the weight???
+                # we use weights 0,1,2,3 but hypo2000 outputs floats...
+                #self.dicts[streamnum]['SWeight'] = weight
+                self.dicts[streamnum]['SResInfo'] = '\n\n\n %+0.3fs' % res
+                if self.dicts[streamnum].has_key('SPol'):
+                    self.dicts[streamnum]['SResInfo'] += '  %s' % \
+                            self.dicts[streamnum]['SPol']
+        self.usedStationsCount = len(self.dicts)
         for st in self.dicts:
             if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.threeDlocUsedStationsCount -= 1
+                self.usedStationsCount -= 1
 
     def load3dlocData(self):
         #self.load3dlocSyntheticPhases()
         event = open(self.threeDlocOutfile).readline().split()
-        self.threeDlocEventLon = float(event[8])
-        self.threeDlocEventLat = float(event[9])
-        self.threeDlocEventZ = float(event[10])
-        self.threeDlocEventErrX = float(event[11])
-        self.threeDlocEventErrY = float(event[12])
-        self.threeDlocEventErrZ = float(event[13])
-        self.threeDlocEventStdErr = float(event[14])
-        self.threeDlocEventAzimGap = float(event[15])
-        self.threeDlocEventTime = UTCDateTime(int(event[2]), int(event[3]),
+        self.EventLon = float(event[8])
+        self.EventLat = float(event[9])
+        self.EventZ = float(event[10])
+        self.EventErrX = float(event[11])
+        self.EventErrY = float(event[12])
+        self.EventErrZ = float(event[13])
+        self.EventStdErr = float(event[14])
+        self.EventAzimGap = float(event[15])
+        self.EventTime = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
-        #XXX aufraeumen!! Die meisten Listen hier werden nicht mehr gebraucht
-        self.threeDlocPLons = []
-        self.threeDlocPLats = []
-        self.threeDlocSLons = []
-        self.threeDlocSLats = []
-        self.threeDlocPNames = []
-        self.threeDlocSNames = []
-        self.threeDlocPResInfo = []
-        self.threeDlocSResInfo = []
-        self.threeDlocPCount = 0
-        self.threeDlocSCount = 0
+        self.PCount = 0
+        self.SCount = 0
         lines = open(self.threeDlocInfile).readlines()
         for line in lines:
             pick = line.split()
             for i in range(len(self.streams)):
                 if pick[0].strip() == self.streams[i][0].stats.station.strip():
                     if pick[1] == 'P':
-                        self.dicts[i]['3DlocPLon'] = float(pick[14])
-                        self.dicts[i]['3DlocPLat'] = float(pick[15])
-                        self.threeDlocPCount += 1
+                        self.dicts[i]['PLon'] = float(pick[14])
+                        self.dicts[i]['PLat'] = float(pick[15])
+                        self.PCount += 1
                     elif pick[1] == 'S':
-                        self.dicts[i]['3DlocSLon'] = float(pick[14])
-                        self.dicts[i]['3DlocSLat'] = float(pick[15])
-                        self.threeDlocSCount += 1
+                        self.dicts[i]['SLon'] = float(pick[14])
+                        self.dicts[i]['SLat'] = float(pick[15])
+                        self.SCount += 1
                     break
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
@@ -2079,23 +2094,23 @@ class PickingGUI:
             for i in range(len(self.streams)):
                 if pick[0].strip() == self.streams[i][0].stats.station.strip():
                     if pick[1] == 'P':
-                        self.dicts[i]['3DlocPAzim'] = float(pick[9])
-                        self.dicts[i]['3DlocPInci'] = float(pick[10])
-                        self.dicts[i]['3DlocPResInfo'] = '\n\n %+0.3fs' % float(pick[8])
+                        self.dicts[i]['PAzim'] = float(pick[9])
+                        self.dicts[i]['PInci'] = float(pick[10])
+                        self.dicts[i]['PResInfo'] = '\n\n %+0.3fs' % float(pick[8])
                         if self.dicts[i].has_key('PPol'):
-                            self.dicts[i]['3DlocPResInfo'] += '  %s' % self.dicts[i]['PPol']
+                            self.dicts[i]['PResInfo'] += '  %s' % self.dicts[i]['PPol']
                             
                     elif pick[1] == 'S':
-                        self.dicts[i]['3DlocSAzim'] = float(pick[9])
-                        self.dicts[i]['3DlocSInci'] = float(pick[10])
-                        self.dicts[i]['3DlocSResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
+                        self.dicts[i]['SAzim'] = float(pick[9])
+                        self.dicts[i]['SInci'] = float(pick[10])
+                        self.dicts[i]['SResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
                         if self.dicts[i].has_key('SPol'):
-                            self.dicts[i]['3DlocSResInfo'] += '  %s' % self.dicts[i]['SPol']
+                            self.dicts[i]['SResInfo'] += '  %s' % self.dicts[i]['SPol']
                     break
-        self.threeDlocUsedStationsCount = len(self.dicts)
+        self.usedStationsCount = len(self.dicts)
         for st in self.dicts:
             if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.threeDlocUsedStationsCount -= 1
+                self.usedStationsCount -= 1
     
     def updateNetworkMag(self):
         print "updating network magnitude..."
@@ -2123,9 +2138,9 @@ class PickingGUI:
     def calculateEpiHypoDists(self):
         epidists = []
         for i in range(len(self.streams)):
-            x, y = utlGeoKm(self.threeDlocEventLon, self.threeDlocEventLat,
+            x, y = utlGeoKm(self.EventLon, self.EventLat,
                             self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
-            z = abs(self.dicts[i]['StaEle'] - self.threeDlocEventZ)
+            z = abs(self.dicts[i]['StaEle'] - self.EventZ)
             self.dicts[i]['distX'] = x
             self.dicts[i]['distY'] = y
             self.dicts[i]['distZ'] = z
@@ -2137,9 +2152,9 @@ class PickingGUI:
             if self.dicts[i].has_key('Psynth') or self.dicts[i].has_key('Ssynth'):
                 epidists.append(self.dicts[i]['distEpi'])
             self.dicts[i]['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
-        self.threeDlocEpidistMax = max(epidists)
-        self.threeDlocEpidistMin = min(epidists)
-        self.threeDlocEpidistMedian = np.median(epidists)
+        self.epidistMax = max(epidists)
+        self.epidistMin = min(epidists)
+        self.epidistMedian = np.median(epidists)
 
     def calculateStationMagnitudes(self):
         for i in range(len(self.streams)):
@@ -2195,107 +2210,73 @@ class PickingGUI:
                          self.dicts[i]['MagChannel'])
                 
 
-    def show3dlocEventMap(self):
+    def showEventMap(self):
         #print self.dicts[0]
-        self.fig3dloc = plt.figure(2)
-        self.ax3dloc = self.fig3dloc.add_subplot(111)
-        self.ax3dloc.scatter([self.threeDlocEventLon], [self.threeDlocEventLat],
+        self.figEventMap = plt.figure(2)
+        self.axEventMap = self.figEventMap.add_subplot(111)
+        self.axEventMap.scatter([self.EventLon], [self.EventLat],
                              30, color = 'red', marker = 'o')
-        errLon, errLat = utlLonLat(self.threeDlocEventLon, self.threeDlocEventLat,
-                               self.threeDlocEventErrX, self.threeDlocEventErrY)
-        errLon -= self.threeDlocEventLon
-        errLat -= self.threeDlocEventLat
-        self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
-                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.threeDlocEventLon,
-                          self.threeDlocEventErrX, self.threeDlocEventLat,
-                          self.threeDlocEventErrY, self.threeDlocEventZ * 1000,
-                          self.threeDlocEventErrZ * 1000), va = 'top',
+        errLon, errLat = utlLonLat(self.EventLon, self.EventLat,
+                               self.EventErrX, self.EventErrY)
+        errLon -= self.EventLon
+        errLat -= self.EventLat
+        self.axEventMap.text(self.EventLon, self.EventLat,
+                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.EventLon,
+                          self.EventErrX, self.EventLat,
+                          self.EventErrY, self.EventZ * 1000,
+                          self.EventErrZ * 1000), va = 'top',
                           family = 'monospace')
-        self.netMagText = self.ax3dloc.text(self.threeDlocEventLon, self.threeDlocEventLat,
+        self.netMagText = self.axEventMap.text(self.EventLon, self.EventLat,
                           self.netMagLabel,
                           va = 'top',
                           color = 'green',
                           family = 'monospace')
-        errorell = Ellipse(xy = [self.threeDlocEventLon, self.threeDlocEventLat],
+        errorell = Ellipse(xy = [self.EventLon, self.EventLat],
                       width = errLon, height = errLat, angle = 0, fill = False)
-        self.ax3dloc.add_artist(errorell)
+        self.axEventMap.add_artist(errorell)
         self.scatterMagIndices = []
         self.scatterMagLon = []
         self.scatterMagLat = []
         for i in range(len(self.streams)):
-            if self.dicts[i].has_key('3DlocPLon'):
-                self.ax3dloc.scatter([self.dicts[i]['3DlocPLon']], [self.dicts[i]['3DlocPLat']], s = 150,
+            if self.dicts[i].has_key('PLon'):
+                self.axEventMap.scatter([self.dicts[i]['PLon']], [self.dicts[i]['PLat']], s = 150,
                                      marker = 'v', color = '', edgecolor = 'black')
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  self.dicts[i]['3DlocPResInfo'], va = 'top',
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  self.dicts[i]['PResInfo'], va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['P'])
-            if self.dicts[i].has_key('3DlocSLon'):
-                self.ax3dloc.scatter([self.dicts[i]['StaLon']], [self.dicts[i]['StaLat']], s = 150,
+            if self.dicts[i].has_key('SLon'):
+                self.axEventMap.scatter([self.dicts[i]['StaLon']], [self.dicts[i]['StaLat']], s = 150,
                                      marker = 'v', color = '', edgecolor = 'black')
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  self.dicts[i]['3DlocSResInfo'], va = 'top',
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                                  self.dicts[i]['SResInfo'], va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['S'])
             if self.dicts[i].has_key('Mag'):
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(self.dicts[i]['StaLon'])
                 self.scatterMagLat.append(self.dicts[i]['StaLat'])
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   '  ' + self.dicts[i]['Station'], va = 'top',
                                   family = 'monospace')
-                self.ax3dloc.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
+                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   '\n\n\n\n  %0.2f (%s)' % (self.dicts[i]['Mag'],
                                   self.dicts[i]['MagChannel']), va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['Mag'])
             if len(self.scatterMagLon) > 0 :
-                self.scatterMag = self.ax3dloc.scatter(self.scatterMagLon, self.scatterMagLat, s = 150,
+                self.scatterMag = self.axEventMap.scatter(self.scatterMagLon, self.scatterMagLat, s = 150,
                                      marker = 'v', color = '', edgecolor = 'black', picker = 10)
                 
-        #if len(self.threeDlocSNames) > 0:
-        #    #self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 440,
-        #    #                     color = self.dictPhaseColors['S'], marker = 'v',
-        #    #                     edgecolor = 'black')
-        #    for i in range(len(self.threeDlocSNames)):
-        #        self.ax3dloc.scatter(self.threeDlocSLons, self.threeDlocSLats, s = 150,
-        #                             marker = 'v', color = '', edgecolor = 'black')
-        #        #self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-        #        #                  '  ' + self.threeDlocSNames[i], va = 'top')
-        #        self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-        #                          self.threeDlocSNames[i], va = 'top',
-        #                          family = 'monospace')
-        #        self.ax3dloc.text(self.threeDlocSLons[i], self.threeDlocSLats[i],
-        #                          self.threeDlocSResInfo[i], va = 'top',
-        #                          family = 'monospace',
-        #                          color = self.dictPhaseColors['S'])
-        #if len(self.threeDlocPNames) > 0:
-        #    #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 180,
-        #    #                     color = self.dictPhaseColors['P'], marker = 'v',
-        #    #                     edgecolor = 'black')
-        #    for i in range(len(self.threeDlocPNames)):
-        #        self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
-        #                             marker = 'v', color = '', edgecolor = 'black', picker = 10)
-        #        #self.ax3dloc.scatter(self.threeDlocPLons, self.threeDlocPLats, s = 150,
-        #        #                              marker = 'v', color = '', edgecolor = 'black', picker = True)
-        #        #self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-        #        #                  '  ' + self.threeDlocPNames[i], va = 'top')
-        #        self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-        #                          self.threeDlocPNames[i], va = 'top',
-        #                          family = 'monospace')
-        #        self.ax3dloc.text(self.threeDlocPLons[i], self.threeDlocPLats[i],
-        #                          self.threeDlocPResInfo[i], va = 'top',
-        #                          family = 'monospace',
-        #                          color = self.dictPhaseColors['P'])
-        self.ax3dloc.set_xlabel('Longitude')
-        self.ax3dloc.set_ylabel('Latitude')
-        self.ax3dloc.set_title(self.threeDlocEventTime)
+        self.axEventMap.set_xlabel('Longitude')
+        self.axEventMap.set_ylabel('Latitude')
+        self.axEventMap.set_title(self.EventTime)
         #XXX disabled because it plots the wrong info if the event was
         # fetched from seishub
         #####lines = open(self.threeDlocOutfile).readlines()
@@ -2303,13 +2284,13 @@ class PickingGUI:
         #####infoPicks = ''
         #####for line in lines[1:]:
         #####    infoPicks += line
-        #####self.ax3dloc.text(0.02, 0.95, infoEvent, transform = self.ax3dloc.transAxes,
+        #####self.axEventMap.text(0.02, 0.95, infoEvent, transform = self.axEventMap.transAxes,
         #####                  fontsize = 12, verticalalignment = 'top',
         #####                  family = 'monospace')
-        #####self.ax3dloc.text(0.02, 0.90, infoPicks, transform = self.ax3dloc.transAxes,
+        #####self.axEventMap.text(0.02, 0.90, infoPicks, transform = self.axEventMap.transAxes,
         #####                  fontsize = 10, verticalalignment = 'top',
         #####                  family = 'monospace')
-        self.fig3dloc.canvas.mpl_connect('pick_event', self.selectMagnitudes)
+        self.figEventMap.canvas.mpl_connect('pick_event', self.selectMagnitudes)
         try:
             self.scatterMag.set_facecolors(self.eventMapColors)
         except:
@@ -2338,7 +2319,7 @@ class PickingGUI:
         #print self.scatterMag.get_facecolors()
         #event.artist.set_facecolors(self.eventMapColors)
         self.updateNetworkMag()
-        self.fig3dloc.canvas.draw()
+        self.figEventMap.canvas.draw()
 
     def threeDLoc2XML(self):
         """
@@ -2395,8 +2376,8 @@ class PickingGUI:
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
                     Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['3DlocPAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['3DlocPInci']
+                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['PAzim']
+                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['PInci']
                     Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
                     Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
         
@@ -2444,41 +2425,41 @@ class PickingGUI:
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
                     Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['3DlocSAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['3DlocSInci']
+                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['SAzim']
+                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['SInci']
                     Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
                     Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
         
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
-        Sub(date, "value").text = self.threeDlocEventTime.isoformat() # + '.%03i' % self.threeDlocEventTime.microsecond
+        Sub(date, "value").text = self.EventTime.isoformat() # + '.%03i' % self.EventTime.microsecond
         Sub(date, "uncertainty")
         lat = Sub(origin, "latitude")
-        Sub(lat, "value").text = '%s' % self.threeDlocEventLat
-        Sub(lat, "uncertainty").text = '%s' % self.threeDlocEventErrY #XXX Lat Error in km??!!
+        Sub(lat, "value").text = '%s' % self.EventLat
+        Sub(lat, "uncertainty").text = '%s' % self.EventErrY #XXX Lat Error in km??!!
         lon = Sub(origin, "longitude")
-        Sub(lon, "value").text = '%s' % self.threeDlocEventLon
-        Sub(lon, "uncertainty").text = '%s' % self.threeDlocEventErrX #XXX Lon Error in km??!!
+        Sub(lon, "value").text = '%s' % self.EventLon
+        Sub(lon, "uncertainty").text = '%s' % self.EventErrX #XXX Lon Error in km??!!
         depth = Sub(origin, "depth")
-        Sub(depth, "value").text = '%s' % self.threeDlocEventZ
-        Sub(depth, "uncertainty").text = '%s' % self.threeDlocEventErrZ
+        Sub(depth, "value").text = '%s' % self.EventZ
+        Sub(depth, "uncertainty").text = '%s' % self.EventErrZ
         Sub(origin, "depth_type").text = "from location program"
         Sub(origin, "earth_mod").text = "STAUFEN"
         Sub(origin, "originUncertainty")
         quality = Sub(origin, "originQuality")
-        Sub(quality, "P_usedPhaseCount").text = '%i' % self.threeDlocPCount
-        Sub(quality, "S_usedPhaseCount").text = '%i' % self.threeDlocSCount
-        Sub(quality, "usedPhaseCount").text = '%i' % (self.threeDlocPCount + self.threeDlocSCount)
-        Sub(quality, "usedStationCount").text = '%i' % self.threeDlocUsedStationsCount
-        Sub(quality, "associatedPhaseCount").text = '%i' % (self.threeDlocPCount + self.threeDlocSCount)
+        Sub(quality, "P_usedPhaseCount").text = '%i' % self.PCount
+        Sub(quality, "S_usedPhaseCount").text = '%i' % self.SCount
+        Sub(quality, "usedPhaseCount").text = '%i' % (self.PCount + self.SCount)
+        Sub(quality, "usedStationCount").text = '%i' % self.usedStationsCount
+        Sub(quality, "associatedPhaseCount").text = '%i' % (self.PCount + self.SCount)
         Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
         Sub(quality, "depthPhaseCount").text = "0"
-        Sub(quality, "standardError").text = '%s' % self.threeDlocEventStdErr
-        Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.threeDlocEventAzimGap
+        Sub(quality, "standardError").text = '%s' % self.EventStdErr
+        Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.EventAzimGap
         Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % self.threeDlocEpidistMin
-        Sub(quality, "maximumDistance").text = '%s' % self.threeDlocEpidistMax
-        Sub(quality, "medianDistance").text = '%s' % self.threeDlocEpidistMedian
+        Sub(quality, "minimumDistance").text = '%s' % self.epidistMin
+        Sub(quality, "maximumDistance").text = '%s' % self.epidistMax
+        Sub(quality, "medianDistance").text = '%s' % self.epidistMedian
         magnitude = Sub(xml, "magnitude")
         mag = Sub(magnitude, "mag")
         if np.isnan(self.netMag):
@@ -2741,9 +2722,9 @@ class PickingGUI:
                     self.dicts[streamnum]['Psynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Pres'] = float(phase_res)
                 if azimuth:
-                    self.dicts[streamnum]['3DlocPAzim'] = float(azimuth)
+                    self.dicts[streamnum]['PAzim'] = float(azimuth)
                 if incident:
-                    self.dicts[streamnum]['3DlocPInci'] = float(incident)
+                    self.dicts[streamnum]['PInci'] = float(incident)
             if pick.xpath(".//phaseHint")[0].text == "S":
                 self.dicts[streamnum]['S'] = time
                 # XXX maybe dangerous to check last character:
@@ -2764,9 +2745,9 @@ class PickingGUI:
                     self.dicts[streamnum]['Ssynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Sres'] = float(phase_res)
                 if azimuth:
-                    self.dicts[streamnum]['3DlocSAzim'] = float(azimuth)
+                    self.dicts[streamnum]['SAzim'] = float(azimuth)
                 if incident:
-                    self.dicts[streamnum]['3DlocSInci'] = float(incident)
+                    self.dicts[streamnum]['SInci'] = float(incident)
             if epi_dist:
                 self.dicts[streamnum]['distEpi'] = float(epi_dist)
             if hyp_dist:
@@ -2776,76 +2757,76 @@ class PickingGUI:
         origin = resource_xml.xpath(u".//origin")[0]
         try:
             time = origin.xpath(".//time/value")[0].text
-            self.threeDlocEventTime = UTCDateTime(time)
+            self.EventTime = UTCDateTime(time)
         except:
             pass
         try:
             lat = origin.xpath(".//latitude/value")[0].text
-            self.threeDlocEventLat = float(lat)
+            self.EventLat = float(lat)
         except:
             pass
         try:
             lon = origin.xpath(".//longitude/value")[0].text
-            self.threeDlocEventLon = float(lon)
+            self.EventLon = float(lon)
         except:
             pass
         try:
             errX = origin.xpath(".//longitude/uncertainty")[0].text
-            self.threeDlocEventErrX = float(errX)
+            self.EventErrX = float(errX)
         except:
             pass
         try:
             errY = origin.xpath(".//latitude/uncertainty")[0].text
-            self.threeDlocEventErrY = float(errY)
+            self.EventErrY = float(errY)
         except:
             pass
         try:
             z = origin.xpath(".//depth/value")[0].text
-            self.threeDlocEventZ = float(z)
+            self.EventZ = float(z)
         except:
             pass
         try:
             errZ = origin.xpath(".//depth/uncertainty")[0].text
-            self.threeDlocEventErrZ = float(errZ)
+            self.EventErrZ = float(errZ)
         except:
             pass
         try:
-            self.threeDlocPCount = \
+            self.PCount = \
                     int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
         except:
             pass
         try:
-            self.threeDlocSCount = \
+            self.SCount = \
                     int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
         except:
             pass
         try:
-            self.threeDlocUsedStationsCount = \
+            self.usedStationsCount = \
                     int(origin.xpath(".//originQuality/usedStationCount")[0].text)
         except:
             pass
         try:
-            self.threeDlocEventStdErr = \
+            self.EventStdErr = \
                     float(origin.xpath(".//originQuality/standardError")[0].text)
         except:
             pass
         try:
-            self.threeDlocEventAzimGap = \
+            self.EventAzimGap = \
                     float(origin.xpath(".//originQuality/secondaryAzimuthalGap")[0].text)
         except:
             pass
         try:
-            self.threeDlocEpidistMin = \
+            self.epidistMin = \
                     float(origin.xpath(".//originQuality/minimumDistance")[0].text)
         except:
             pass
         try:
-            self.threeDlocEpidistMax = \
+            self.epidistMax = \
                     float(origin.xpath(".//originQuality/maximumDistance")[0].text)
         except:
             pass
         try:
-            self.threeDlocEpidistMedian = \
+            self.epidistMedian = \
                     float(origin.xpath(".//originQuality/medianDistance")[0].text)
         except:
             pass
