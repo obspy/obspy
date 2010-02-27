@@ -303,7 +303,9 @@ class PickingGUI:
             sta = self.dicts[i]['Station']
             print sta
             date = streams[i][0].stats.starttime.date
+            print 'fetching station data from seishub...'
             lon, lat, ele = getCoord(net, sta)
+            print 'done.'
             self.dicts[i]['pazZ'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][0].stats.channel)
             self.dicts[i]['pazN'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][1].stats.channel)
             self.dicts[i]['pazE'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][2].stats.channel)
@@ -430,21 +432,39 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
+        for label in ('clearAll', 'clearEvent', 'doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
+                elif item.labelstr == 'clearAll':
+                    self.delAllItems()
+                    self.clearDictionaries()
+                    self.drawAllItems()
+                    self.redraw()
+                elif item.labelstr == 'clearEvent':
+                    self.delAllItems()
+                    self.clearEventDictionaries()
+                    self.drawAllItems()
+                    self.redraw()
                 elif item.labelstr == 'doHyp2000':
+                    self.delAllItems()
+                    self.clearEventDictionaries()
                     self.doHyp2000()
+                    self.drawAllItems()
+                    self.redraw()
                 elif item.labelstr == 'do3dloc':
+                    self.delAllItems()
+                    self.clearEventDictionaries()
                     self.do3dLoc()
+                    self.drawAllItems()
+                    self.redraw()
                 elif item.labelstr == 'calcMag':
                     self.calculateEpiHypoDists()
                     self.calculateStationMagnitudes()
                     self.updateNetworkMag()
                 elif item.labelstr == 'showMap':
-                    self.load3dlocData()
+                    #self.load3dlocData()
                     self.show3dlocEventMap()
                 elif item.labelstr == 'sendEvent':
                     self.uploadSeishub()
@@ -452,7 +472,6 @@ class PickingGUI:
                     message = "Using start and endtime of first trace in " + \
                               "first stream to search for events."
                     warnings.warn(message)
-                    print "Clearing previous event data."
                     self.delAllItems()
                     self.clearDictionaries()
                     self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
@@ -2523,11 +2542,26 @@ class PickingGUI:
             print 'Upload to seishub successful (EventId: %s)' % name
     
     def clearDictionaries(self):
+        print "Clearing previous data."
         for i in range(len(self.dicts)):
             for k in self.dicts[i].keys():
                 if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
                    k != 'StaEle' and k != 'pazZ' and k != 'pazN' and \
                    k != 'pazE':
+                    del self.dicts[i][k]
+            self.dicts[i]['MagUse'] = True
+
+    def clearEventDictionaries(self):
+        print "Clearing previous event data."
+        for i in range(len(self.dicts)):
+            for k in self.dicts[i].keys():
+                if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
+                   k != 'StaEle' and k != 'pazZ' and k != 'pazN' and \
+                   k != 'pazE' and k != 'P' and k != 'PErr1' and \
+                   k != 'PErr2' and k != 'POnset' and k != 'PPol' and \
+                   k != 'PWeight' and k != 'S' and k != 'SErr1' and \
+                   k != 'SErr2' and k != 'SOnset' and k != 'SPol' and \
+                   k != 'SWeight' and k != 'Saxind':
                     del self.dicts[i][k]
             self.dicts[i]['MagUse'] = True
 
