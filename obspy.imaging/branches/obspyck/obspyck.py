@@ -248,6 +248,7 @@ class PickingGUI:
                            'cd $HYP2000_DATA;' + \
                            'hyp2000 < bay2000.inp &> /dev/null'
         self.xmlEventID = None
+        self.locationType = None
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
@@ -442,23 +443,39 @@ class PickingGUI:
                 elif item.labelstr == 'clearAll':
                     self.delAllItems()
                     self.clearDictionaries()
+                    self.locationType = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'clearEvent':
                     self.delAllItems()
                     self.clearEventDictionaries()
+                    self.locationType = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'doHyp2000':
                     self.delAllItems()
                     self.clearEventDictionaries()
+                    self.locationType = "hyp2000"
                     self.doHyp2000()
+                    #self.load3dlocSyntheticPhases()
+                    self.loadHyp2000Data()
+                    self.calculateEpiHypoDists()
+                    self.calculateStationMagnitudes()
+                    self.updateNetworkMag()
+                    self.showEventMap()
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'do3dloc':
                     self.delAllItems()
                     self.clearEventDictionaries()
+                    self.locationType = "3dloc"
                     self.do3dLoc()
+                    self.load3dlocSyntheticPhases()
+                    self.load3dlocData()
+                    self.calculateEpiHypoDists()
+                    self.calculateStationMagnitudes()
+                    self.updateNetworkMag()
+                    self.showEventMap()
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'calcMag':
@@ -591,20 +608,20 @@ class PickingGUI:
             PLabelString += '_'
         else:
             if self.dicts[self.stPt]['POnset'] == 'impulsive':
-                PLabelString += 'i'
+                PLabelString += 'I'
             elif self.dicts[self.stPt]['POnset'] == 'emergent':
-                PLabelString += 'e'
+                PLabelString += 'E'
             else:
                 PLabelString += '?'
         if not self.dicts[self.stPt].has_key('PPol'):
             PLabelString += '_'
         else:
             if self.dicts[self.stPt]['PPol'] == 'up':
-                PLabelString += 'u'
+                PLabelString += 'U'
             elif self.dicts[self.stPt]['PPol'] == 'poorup':
                 PLabelString += '+'
             elif self.dicts[self.stPt]['PPol'] == 'down':
-                PLabelString += 'd'
+                PLabelString += 'D'
             elif self.dicts[self.stPt]['PPol'] == 'poordown':
                 PLabelString += '-'
             else:
@@ -725,20 +742,20 @@ class PickingGUI:
             SLabelString += '_'
         else:
             if self.dicts[self.stPt]['SOnset'] == 'impulsive':
-                SLabelString += 'i'
+                SLabelString += 'I'
             elif self.dicts[self.stPt]['SOnset'] == 'emergent':
-                SLabelString += 'e'
+                SLabelString += 'E'
             else:
                 SLabelString += '?'
         if not self.dicts[self.stPt].has_key('SPol'):
             SLabelString += '_'
         else:
             if self.dicts[self.stPt]['SPol'] == 'up':
-                SLabelString += 'u'
+                SLabelString += 'U'
             elif self.dicts[self.stPt]['SPol'] == 'poorup':
                 SLabelString += '+'
             elif self.dicts[self.stPt]['SPol'] == 'down':
-                SLabelString += 'd'
+                SLabelString += 'D'
             elif self.dicts[self.stPt]['SPol'] == 'poordown':
                 SLabelString += '-'
             else:
@@ -1767,13 +1784,6 @@ class PickingGUI:
         subprocess.call(self.threeDlocCall, shell = True)
         print '--> 3dloc finished'
         self.catFile(self.threeDlocOutfile)
-        self.load3dlocSyntheticPhases()
-        self.redraw()
-        self.load3dlocData()
-        self.calculateEpiHypoDists()
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-        self.showEventMap()
 
     def doHyp2000(self):
         self.xmlEventID = '%i' % time.time()
@@ -1873,13 +1883,6 @@ class PickingGUI:
         subprocess.call(self.hyp2000Call, shell = True)
         print '--> hyp2000 finished'
         self.catFile(self.hyp2000Summary)
-        #self.load3dlocSyntheticPhases()
-        #self.redraw()
-        self.loadHyp2000Data()
-        self.calculateEpiHypoDists()
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-        self.showEventMap()
 
     def catFile(self, file):
         lines = open(file).readlines()
@@ -1900,7 +1903,11 @@ class PickingGUI:
                 break
             if line.startswith(" YEAR MO DA  --ORIGIN--"):
                 break
-        line = lines.pop(0)
+        try:
+            line = lines.pop(0)
+        except:
+            print "Error: No location in Hypo2000 Outputfile."
+            return
 
         year = int(line[1:5])
         month = int(line[6:8])
@@ -2232,25 +2239,21 @@ class PickingGUI:
         self.scatterMagLon = []
         self.scatterMagLat = []
         for i in range(len(self.streams)):
+            # determine which stations are used in location
             if self.dicts[i].has_key('Pres') or self.dicts[i].has_key('Sres'):
-                self.axEventMap.scatter([self.dicts[i]['StaLon']],
-                                        [self.dicts[i]['StaLat']], s = 150,
-                                        marker = 'v', color = '',
-                                        edgecolor = 'black')
-                self.axEventMap.text(self.dicts[i]['StaLon'],
-                                     self.dicts[i]['StaLat'],
-                                     '  ' + self.dicts[i]['Station'],
-                                     va = 'top', family = 'monospace')
+                stationColor = 'black'
             else:
-                self.axEventMap.scatter([self.dicts[i]['StaLon']],
-                                        [self.dicts[i]['StaLat']], s = 150,
-                                        marker = 'v', color = '',
-                                        edgecolor = 'lightgrey')
-                self.axEventMap.text(self.dicts[i]['StaLon'],
-                                     self.dicts[i]['StaLat'],
-                                     '  ' + self.dicts[i]['Station'],
-                                     color = 'lightgrey',
-                                     va = 'top', family = 'monospace')
+                stationColor = 'lightgray'
+            # plot stations at respective coordinates with names
+            self.axEventMap.scatter([self.dicts[i]['StaLon']],
+                                    [self.dicts[i]['StaLat']], s = 150,
+                                    marker = 'v', color = '',
+                                    edgecolor = stationColor)
+            self.axEventMap.text(self.dicts[i]['StaLon'],
+                                 self.dicts[i]['StaLat'],
+                                 '  ' + self.dicts[i]['Station'],
+                                 color = stationColor,
+                                 va = 'top', family = 'monospace')
             if self.dicts[i].has_key('Pres'):
                 self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   self.dicts[i]['PResInfo'], va = 'top',
@@ -2324,6 +2327,264 @@ class PickingGUI:
         self.updateNetworkMag()
         self.figEventMap.canvas.draw()
 
+    def picks2XML(self):
+        """
+        Returns output of picks as xml file
+        """
+        xml =  Element("event")
+        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
+        Sub(Sub(xml, "event_type"), "value").text = "manual"
+        
+        # we save P picks on Z-component and S picks on N-component
+        # XXX standard values for unset keys!!!???!!!???
+        epidists = []
+        for i in range(len(self.streams)):
+            if self.dicts[i].has_key('P'):
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", self.streams[i][0].stats.network) 
+                wave.set("stationCode", self.streams[i][0].stats.station) 
+                wave.set("channelCode", self.streams[i][0].stats.channel) 
+                wave.set("locationCode", "") 
+                date = Sub(pick, "time")
+                # prepare time of pick
+                picktime = self.streams[i][0].stats.starttime
+                picktime += (self.dicts[i]['P'] /
+                             self.streams[i][0].stats.sampling_rate)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
+                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
+                    temp = float(self.dicts[i]['PErr2'] -
+                                 self.dicts[i]['PErr1'])
+                    temp /= self.streams[i][0].stats.sampling_rate
+                    Sub(date, "uncertainty").text = str(temp)
+                else:
+                    Sub(date, "uncertainty")
+                Sub(pick, "phaseHint").text = "P"
+                if self.dicts[i].has_key('POnset'):
+                    Sub(pick, "onset").text = self.dicts[i]['POnset']
+                else:
+                    Sub(pick, "onset")
+                if self.dicts[i].has_key('PPol'):
+                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                else:
+                    Sub(pick, "polarity")
+                if self.dicts[i].has_key('PWeight'):
+                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
+                else:
+                    Sub(pick, "weight")
+                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
+        
+            if self.dicts[i].has_key('S'):
+                axind = self.dicts[i]['Saxind']
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", self.streams[i][axind].stats.network) 
+                wave.set("stationCode", self.streams[i][axind].stats.station) 
+                wave.set("channelCode", self.streams[i][axind].stats.channel) 
+                wave.set("locationCode", "") 
+                date = Sub(pick, "time")
+                # prepare time of pick
+                picktime = self.streams[i][axind].stats.starttime
+                picktime += (self.dicts[i]['S'] /
+                             self.streams[i][axind].stats.sampling_rate)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
+                if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
+                    temp = float(self.dicts[i]['SErr2'] -
+                                 self.dicts[i]['SErr1'])
+                    temp /= self.streams[i][axind].stats.sampling_rate
+                    Sub(date, "uncertainty").text = str(temp)
+                else:
+                    Sub(date, "uncertainty")
+                Sub(pick, "phaseHint").text = "S"
+                if self.dicts[i].has_key('SOnset'):
+                    Sub(pick, "onset").text = self.dicts[i]['SOnset']
+                else:
+                    Sub(pick, "onset")
+                if self.dicts[i].has_key('SPol'):
+                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                else:
+                    Sub(pick, "polarity")
+                if self.dicts[i].has_key('SWeight'):
+                    Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
+                else:
+                    Sub(pick, "weight")
+                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
+        return tostring(xml,pretty_print=True,xml_declaration=True)
+    
+    #XXX still have to adjust this to jo's hypo2000 xml look and feel
+    def hyp20002XML(self):
+        """
+        Returns output of hypo2000 as xml file
+        """
+        xml =  Element("event")
+        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
+        Sub(Sub(xml, "event_type"), "value").text = "manual"
+        
+        # we save P picks on Z-component and S picks on N-component
+        # XXX standard values for unset keys!!!???!!!???
+        epidists = []
+        for i in range(len(self.streams)):
+            if self.dicts[i].has_key('P'):
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", self.streams[i][0].stats.network) 
+                wave.set("stationCode", self.streams[i][0].stats.station) 
+                wave.set("channelCode", self.streams[i][0].stats.channel) 
+                wave.set("locationCode", "") 
+                date = Sub(pick, "time")
+                # prepare time of pick
+                picktime = self.streams[i][0].stats.starttime
+                picktime += (self.dicts[i]['P'] /
+                             self.streams[i][0].stats.sampling_rate)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
+                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
+                    temp = float(self.dicts[i]['PErr2'] -
+                                 self.dicts[i]['PErr1'])
+                    temp /= self.streams[i][0].stats.sampling_rate
+                    Sub(date, "uncertainty").text = str(temp)
+                else:
+                    Sub(date, "uncertainty")
+                Sub(pick, "phaseHint").text = "P"
+                if self.dicts[i].has_key('POnset'):
+                    Sub(pick, "onset").text = self.dicts[i]['POnset']
+                else:
+                    Sub(pick, "onset")
+                if self.dicts[i].has_key('PPol'):
+                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                else:
+                    Sub(pick, "polarity")
+                if self.dicts[i].has_key('PWeight'):
+                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
+                else:
+                    Sub(pick, "weight")
+                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
+                
+                if self.dicts[i].has_key('Psynth'):
+                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
+                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
+                    Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['PsynthWeight']
+                    Sub(Sub(pick, "phase_delay"), "value")
+                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['PAzim']
+                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['PInci']
+                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
+                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
+        
+            if self.dicts[i].has_key('S'):
+                axind = self.dicts[i]['Saxind']
+                pick = Sub(xml, "pick")
+                wave = Sub(pick, "waveform")
+                wave.set("networkCode", self.streams[i][axind].stats.network) 
+                wave.set("stationCode", self.streams[i][axind].stats.station) 
+                wave.set("channelCode", self.streams[i][axind].stats.channel) 
+                wave.set("locationCode", "") 
+                date = Sub(pick, "time")
+                # prepare time of pick
+                picktime = self.streams[i][axind].stats.starttime
+                picktime += (self.dicts[i]['S'] /
+                             self.streams[i][axind].stats.sampling_rate)
+                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
+                if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
+                    temp = float(self.dicts[i]['SErr2'] -
+                                 self.dicts[i]['SErr1'])
+                    temp /= self.streams[i][axind].stats.sampling_rate
+                    Sub(date, "uncertainty").text = str(temp)
+                else:
+                    Sub(date, "uncertainty")
+                Sub(pick, "phaseHint").text = "S"
+                if self.dicts[i].has_key('SOnset'):
+                    Sub(pick, "onset").text = self.dicts[i]['SOnset']
+                else:
+                    Sub(pick, "onset")
+                if self.dicts[i].has_key('SPol'):
+                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                else:
+                    Sub(pick, "polarity")
+                if self.dicts[i].has_key('SWeight'):
+                    Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
+                else:
+                    Sub(pick, "weight")
+                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
+                
+                if self.dicts[i].has_key('Ssynth'):
+                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
+                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
+                    Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['SsynthWeight']
+                    Sub(Sub(pick, "phase_delay"), "value")
+                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['SAzim']
+                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['SInci']
+                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
+                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
+        
+        #XXX XXX XXX XXX check lines below and compare to e.g.
+        # teide:8080/xml/seismology/event/baynet09_0641.xml
+        # especially "earth_mod" could be set with meaningful value
+        # read from hypo2000 output
+        origin = Sub(xml, "origin")
+        date = Sub(origin, "time")
+        Sub(date, "value").text = self.EventTime.isoformat() # + '.%03i' % self.EventTime.microsecond
+        Sub(date, "uncertainty")
+        lat = Sub(origin, "latitude")
+        Sub(lat, "value").text = '%s' % self.EventLat
+        Sub(lat, "uncertainty").text = '%s' % self.EventErrY #XXX Lat Error in km??!!
+        lon = Sub(origin, "longitude")
+        Sub(lon, "value").text = '%s' % self.EventLon
+        Sub(lon, "uncertainty").text = '%s' % self.EventErrX #XXX Lon Error in km??!!
+        depth = Sub(origin, "depth")
+        Sub(depth, "value").text = '%s' % self.EventZ
+        Sub(depth, "uncertainty").text = '%s' % self.EventErrZ
+        Sub(origin, "depth_type").text = "from location program"
+        Sub(origin, "earth_mod").text = "STAUFEN"
+        Sub(origin, "originUncertainty")
+        quality = Sub(origin, "originQuality")
+        Sub(quality, "P_usedPhaseCount").text = '%i' % self.PCount
+        Sub(quality, "S_usedPhaseCount").text = '%i' % self.SCount
+        Sub(quality, "usedPhaseCount").text = '%i' % (self.PCount + self.SCount)
+        Sub(quality, "usedStationCount").text = '%i' % self.usedStationsCount
+        Sub(quality, "associatedPhaseCount").text = '%i' % (self.PCount + self.SCount)
+        Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
+        Sub(quality, "depthPhaseCount").text = "0"
+        Sub(quality, "standardError").text = '%s' % self.EventStdErr
+        Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.EventAzimGap
+        Sub(quality, "groundTruthLevel")
+        Sub(quality, "minimumDistance").text = '%s' % self.epidistMin
+        Sub(quality, "maximumDistance").text = '%s' % self.epidistMax
+        Sub(quality, "medianDistance").text = '%s' % self.epidistMedian
+        magnitude = Sub(xml, "magnitude")
+        mag = Sub(magnitude, "mag")
+        if np.isnan(self.netMag):
+            Sub(mag, "value")
+            Sub(mag, "uncertainty")
+        else:
+            Sub(mag, "value").text = '%s' % self.netMag
+            Sub(mag, "uncertainty").text = '%s' % self.netMagVar
+        Sub(magnitude, "type").text = "Ml"
+        Sub(magnitude, "stationCount").text = '%i' % self.staMagCount
+        for i in range(len(self.streams)):
+            stationMagnitude = Sub(xml, "stationMagnitude")
+            if self.dicts[i].has_key('Mag'):
+                mag = Sub(stationMagnitude, 'mag')
+                Sub(mag, 'value').text = '%s' % self.dicts[i]['Mag']
+                Sub(mag, 'uncertainty').text
+                Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
+                if self.dicts[i]['MagUse']:
+                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.staMagCount)
+                else:
+                    Sub(stationMagnitude, 'weight').text = '0'
+                Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
+        return tostring(xml,pretty_print=True,xml_declaration=True)
+
     def threeDLoc2XML(self):
         """
         Returns output of 3dloc as xml file
@@ -2375,7 +2636,7 @@ class PickingGUI:
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
                 if self.dicts[i].has_key('Psynth'):
-                    Sub(pick, "phase_compu").text = "IPU0" #XXX soll das so bleiben?
+                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
                     Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
                     Sub(Sub(pick, "phase_delay"), "value")
@@ -2424,7 +2685,7 @@ class PickingGUI:
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
                 if self.dicts[i].has_key('Ssynth'):
-                    Sub(pick, "phase_compu").text = "ISU0" #XXX soll das so bleiben?
+                    Sub(pick, "phase_compu").text = #XXX this is redundant. can be constructed from above info
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
                     Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
                     Sub(Sub(pick, "phase_delay"), "value")
@@ -2499,8 +2760,15 @@ class PickingGUI:
 
         servername = 'teide:8080'
         path = '/xml/seismology/event'
-
-        data = self.threeDLoc2XML()
+        
+        # determine which location was run and how the xml should be created
+        if self.locationType = "3dloc":
+            data = self.threeDLoc2XML()
+        elif self.locationType = "hyp2000":
+            data = self.hyp20002XML()
+        #XXX there should be a method that creates a xml with pick info only
+        else:
+            data = self.picks2XML()
         #XXX remove later
         self.xmlEventID = '%i' % 1265906465.2780671
         name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
@@ -2679,6 +2947,10 @@ class PickingGUI:
             except:
                 phase_res = None
             try:
+                phase_weight = pick.xpath(".//phase_res/weight")[0].text
+            except:
+                phase_weight = None
+            try:
                 azimuth = pick.xpath(".//azimuth/value")[0].text
             except:
                 azimuth = None
@@ -2724,6 +2996,8 @@ class PickingGUI:
                 if phase_res:
                     self.dicts[streamnum]['Psynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Pres'] = float(phase_res)
+                if phase_weight:
+                    self.dicts[streamnum]['PsynthWeight'] = phase_weight
                 if azimuth:
                     self.dicts[streamnum]['PAzim'] = float(azimuth)
                 if incident:
@@ -2747,6 +3021,8 @@ class PickingGUI:
                 if phase_res:
                     self.dicts[streamnum]['Ssynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Sres'] = float(phase_res)
+                if phase_weight:
+                    self.dicts[streamnum]['SsynthWeight'] = phase_weight
                 if azimuth:
                     self.dicts[streamnum]['SAzim'] = float(azimuth)
                 if incident:
