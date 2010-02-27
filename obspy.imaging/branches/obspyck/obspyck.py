@@ -2011,8 +2011,6 @@ class PickingGUI:
             # assign synthetic phase info
             if type == "P":
                 self.PCount += 1
-                self.dicts[streamnum]['PLon'] = self.dicts[streamnum]['StaLon']
-                self.dicts[streamnum]['PLat'] = self.dicts[streamnum]['StaLat']
                 synthsamps = int(round(res *
                         self.streams[i][0].stats.sampling_rate))
                 synthsamps += self.dicts[streamnum]['P']
@@ -2080,12 +2078,8 @@ class PickingGUI:
             for i in range(len(self.streams)):
                 if pick[0].strip() == self.streams[i][0].stats.station.strip():
                     if pick[1] == 'P':
-                        self.dicts[i]['PLon'] = float(pick[14])
-                        self.dicts[i]['PLat'] = float(pick[15])
                         self.PCount += 1
                     elif pick[1] == 'S':
-                        self.dicts[i]['SLon'] = float(pick[14])
-                        self.dicts[i]['SLat'] = float(pick[15])
                         self.SCount += 1
                     break
         lines = open(self.threeDlocOutfile).readlines()
@@ -2238,22 +2232,31 @@ class PickingGUI:
         self.scatterMagLon = []
         self.scatterMagLat = []
         for i in range(len(self.streams)):
-            if self.dicts[i].has_key('PLon'):
-                self.axEventMap.scatter([self.dicts[i]['PLon']], [self.dicts[i]['PLat']], s = 150,
-                                     marker = 'v', color = '', edgecolor = 'black')
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '  ' + self.dicts[i]['Station'], va = 'top',
-                                  family = 'monospace')
+            if self.dicts[i].has_key('Pres') or self.dicts[i].has_key('Sres'):
+                self.axEventMap.scatter([self.dicts[i]['StaLon']],
+                                        [self.dicts[i]['StaLat']], s = 150,
+                                        marker = 'v', color = '',
+                                        edgecolor = 'black')
+                self.axEventMap.text(self.dicts[i]['StaLon'],
+                                     self.dicts[i]['StaLat'],
+                                     '  ' + self.dicts[i]['Station'],
+                                     va = 'top', family = 'monospace')
+            else:
+                self.axEventMap.scatter([self.dicts[i]['StaLon']],
+                                        [self.dicts[i]['StaLat']], s = 150,
+                                        marker = 'v', color = '',
+                                        edgecolor = 'lightgrey')
+                self.axEventMap.text(self.dicts[i]['StaLon'],
+                                     self.dicts[i]['StaLat'],
+                                     '  ' + self.dicts[i]['Station'],
+                                     color = 'lightgrey',
+                                     va = 'top', family = 'monospace')
+            if self.dicts[i].has_key('Pres'):
                 self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   self.dicts[i]['PResInfo'], va = 'top',
                                   family = 'monospace',
                                   color = self.dictPhaseColors['P'])
-            if self.dicts[i].has_key('SLon'):
-                self.axEventMap.scatter([self.dicts[i]['StaLon']], [self.dicts[i]['StaLat']], s = 150,
-                                     marker = 'v', color = '', edgecolor = 'black')
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '  ' + self.dicts[i]['Station'], va = 'top',
-                                  family = 'monospace')
+            if self.dicts[i].has_key('Sres'):
                 self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
                                   self.dicts[i]['SResInfo'], va = 'top',
                                   family = 'monospace',
