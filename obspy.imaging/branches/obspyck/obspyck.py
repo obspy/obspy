@@ -1941,8 +1941,11 @@ class PickingGUI:
                 break
         line = lines.pop(0)
 
-        model = line[17:22].strip()
+        #model = line[17:22].strip()
         gap = int(line[23:26])
+
+        line = lines.pop(0)
+        model = line[49:].strip()
 
         # assign origin info
         self.EventLon = lon
@@ -2451,25 +2454,43 @@ class PickingGUI:
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "P"
+                phase_compu = ""
                 if self.dicts[i].has_key('POnset'):
                     Sub(pick, "onset").text = self.dicts[i]['POnset']
+                    if onset == "impulsive":
+                        phase_compu += "I"
+                    elif onset == "emergent":
+                        phase_compu += "E"
                 else:
                     Sub(pick, "onset")
+                    phase_compu += "?"
+                phase_compu += "P"
                 if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
+                    if self.dicts[i]['PPol'] == 'up':
                         Sub(pick, "polarity").text = 'positive'
-                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
+                        phase_compu += "U"
+                    elif self.dicts[i]['PPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                        phase_compu += "+"
+                    elif self.dicts[i]['PPol'] == 'down':
                         Sub(pick, "polarity").text = 'negative'
+                        phase_compu += "D"
+                    elif self.dicts[i]['PPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                        phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
+                    phase_compu += "?"
                 if self.dicts[i].has_key('PWeight'):
                     Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
+                    phase_compu += "%1i" % self.dicts[i]['PWeight']
                 else:
                     Sub(pick, "weight")
+                    phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
                 if self.dicts[i].has_key('Psynth'):
-                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
+                    Sub(pick, "phase_compu").text = phase_compu #XXX this is redundant. can be constructed from above info
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
                     Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['PsynthWeight']
                     Sub(Sub(pick, "phase_delay"), "value")
@@ -2500,25 +2521,43 @@ class PickingGUI:
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "S"
+                phase_compu = ""
                 if self.dicts[i].has_key('SOnset'):
                     Sub(pick, "onset").text = self.dicts[i]['SOnset']
+                    if onset == "impulsive":
+                        phase_compu += "I"
+                    elif onset == "emergent":
+                        phase_compu += "E"
                 else:
                     Sub(pick, "onset")
+                    phase_compu += "?"
+                phase_compu += "S"
                 if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
+                    if self.dicts[i]['SPol'] == 'up':
                         Sub(pick, "polarity").text = 'positive'
-                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
+                        phase_compu += "U"
+                    elif self.dicts[i]['SPol'] == 'poorup':
+                        Sub(pick, "polarity").text = 'positive'
+                        phase_compu += "+"
+                    elif self.dicts[i]['SPol'] == 'down':
                         Sub(pick, "polarity").text = 'negative'
+                        phase_compu += "D"
+                    elif self.dicts[i]['SPol'] == 'poordown':
+                        Sub(pick, "polarity").text = 'negative'
+                        phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
+                    phase_compu += "?"
                 if self.dicts[i].has_key('SWeight'):
                     Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
+                    phase_compu += "%1i" % self.dicts[i]['SWeight']
                 else:
                     Sub(pick, "weight")
+                    phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
                 if self.dicts[i].has_key('Ssynth'):
-                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
+                    Sub(pick, "phase_compu").text = phase_compu #XXX this is redundant. can be constructed from above info
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
                     Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['SsynthWeight']
                     Sub(Sub(pick, "phase_delay"), "value")
@@ -2545,8 +2584,13 @@ class PickingGUI:
         Sub(depth, "value").text = '%s' % self.EventZ
         Sub(depth, "uncertainty").text = '%s' % self.EventErrZ
         Sub(origin, "depth_type").text = "from location program"
-        Sub(origin, "earth_mod").text = "STAUFEN"
-        Sub(origin, "originUncertainty")
+        Sub(origin, "earth_mod").text = self.EventUsedModel
+        uncertainty = Sub(origin, "originUncertainty")
+        Sub(uncertainty, "preferredDescription").text = "uncertainty ellipse"
+        Sub(uncertainty, "horizontalUncertainty")
+        Sub(uncertainty, "minHorizontalUncertainty")
+        Sub(uncertainty, "maxHorizontalUncertainty")
+        Sub(uncertainty, "azimuthMaxHorizontalUncertainty")
         quality = Sub(origin, "originQuality")
         Sub(quality, "P_usedPhaseCount").text = '%i' % self.PCount
         Sub(quality, "S_usedPhaseCount").text = '%i' % self.SCount
@@ -2556,7 +2600,8 @@ class PickingGUI:
         Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
         Sub(quality, "depthPhaseCount").text = "0"
         Sub(quality, "standardError").text = '%s' % self.EventStdErr
-        Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.EventAzimGap
+        Sub(quality, "azimuthalGap").text = '%s' % self.EventAzimGap
+        Sub(quality, "secondaryAzimuthalGap")
         Sub(quality, "groundTruthLevel")
         Sub(quality, "minimumDistance").text = '%s' % self.epidistMin
         Sub(quality, "maximumDistance").text = '%s' % self.epidistMax
@@ -2685,7 +2730,7 @@ class PickingGUI:
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
                 if self.dicts[i].has_key('Ssynth'):
-                    Sub(pick, "phase_compu").text = #XXX this is redundant. can be constructed from above info
+                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
                     Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
                     Sub(Sub(pick, "phase_delay"), "value")
@@ -2762,13 +2807,15 @@ class PickingGUI:
         path = '/xml/seismology/event'
         
         # determine which location was run and how the xml should be created
-        if self.locationType = "3dloc":
+        if self.locationType == "3dloc":
             data = self.threeDLoc2XML()
-        elif self.locationType = "hyp2000":
+            print "creating xml with picks and 3dloc event data."
+        elif self.locationType == "hyp2000":
             data = self.hyp20002XML()
-        #XXX there should be a method that creates a xml with pick info only
+            print "creating xml with picks and hypo2000 event data."
         else:
             data = self.picks2XML()
+            print "no event location performed.\ncreating xml with picks only."
         #XXX remove later
         self.xmlEventID = '%i' % 1265906465.2780671
         name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
