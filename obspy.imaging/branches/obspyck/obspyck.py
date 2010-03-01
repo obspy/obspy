@@ -189,7 +189,7 @@ def getCoord(network, station):
 
 class PickingGUI:
 
-    def __init__(self, streams=None, options=None):
+    def __init__(self, streams = None, options = None):
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
@@ -257,6 +257,12 @@ class PickingGUI:
         # indicates how many events are available from seishub
         self.seishubEventCount = None
         
+        # If keybindings option is set only show keybindings and exit
+        if self.options.keybindings:
+            for k, v in self.dictKeybindings.iteritems():
+                print "%s: \"%s\"" % (k, v)
+            return
+
         # Return, if no streams are given
         if not streams:
             return
@@ -2818,7 +2824,8 @@ class PickingGUI:
         else:
             data = self.picks2XML()
             print "no event location performed.\ncreating xml with picks only."
-        #XXX remove later, overwrite if using local traces for testing purposes
+        # overwrite the same xml file always when using option local
+        # which is intended for testing purposes only
         if self.options.local:
             self.xmlEventID = '%i' % 1265906465.2780671
         name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
@@ -3210,22 +3217,23 @@ def main():
                       default='BW.RJOB..EH*,BW.RMOA..EH*')
     parser.add_option("-l", "--local", action="store_true", dest="local",
                       default=False,
-                      help="use local files for design purposes")
-    #parser.add_option("-k", "--keys", action="store_true", dest="keybindings",
-    #                  default=False, help="Show keybindings and quit")
+                      help="use local files for design purposes " + \
+                           "(overwrites event xml with fixed id)")
+    parser.add_option("-k", "--keys", action="store_true", dest="keybindings",
+                      default=False, help="Show keybindings and quit")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
             parser.print_help()
             return
     
-    #if options.keybindings:
-    #    PickingGUI()
-    #    for i in self.dictKeybindings.items():
-    #        print i
-    #    return
-
-    if options.local:
+    # If keybindings option is set, don't prepare streams.
+    # We then only print the keybindings and exit.
+    if options.keybindings:
+        streams = None
+    # If local option is set we read the locally stored traces.
+    # Just for testing purposes, sent event xmls always overwrite the same xml.
+    elif options.local:
         streams=[]
         streams.append(read('20091227_105240_Z.RJOB'))
         streams[0].append(read('20091227_105240_N.RJOB')[0])
