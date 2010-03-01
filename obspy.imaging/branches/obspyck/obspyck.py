@@ -8,6 +8,7 @@
 from lxml.etree import SubElement as Sub, parse, tostring
 from lxml.etree import fromstring, Element
 from optparse import OptionParser
+import fnmatch
 import numpy as np
 import sys
 import subprocess
@@ -188,7 +189,7 @@ def getCoord(network, station):
 
 class PickingGUI:
 
-    def __init__(self, streams = None, options):
+    def __init__(self, streams=None, options=None):
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
@@ -3203,8 +3204,9 @@ def main():
                       help="Duration of seismogram in seconds",
                       default=120)
     parser.add_option("-i", "--ids", dest="ids",
-                      help="Ids to retrieve, e.g. "
-                           "'BW.RJOB..EH*,BW.RMOA..EH*'",
+                      help="Ids to retrieve, star for channel and "
+                           "wildcards for stations are allowed, e.g. "
+                           "'BW.RJOB..EH*,BW.RM?*..EH*'",
                       default='BW.RJOB..EH*,BW.RMOA..EH*')
     parser.add_option("-l", "--local", action="store_true", dest="local",
                       default=False,
@@ -3254,12 +3256,20 @@ def main():
             client = Client()
             streams = []
             for id in options.ids.split(","):
-                net, sta, loc, cha = id.split(".")
-                st = client.waveform.getWaveform(net, sta, loc, cha, 
-                                                 t, t + options.duration)
-                st.sort()
-                st.reverse()
-                streams.append(st)
+                net, sta_wildcard, loc, cha = id.split(".")
+                for sta in client.waveform.getStationIds(network_id=net):
+                    if not fnmatch.fnmatch(sta, sta_wildcard):
+                        continue
+                    try:
+                        st = client.waveform.getWaveform(net, sta, loc, cha, 
+                                                         t, t + options.duration)
+                    except:
+                        msg = "Cannot retrieve sta %s of id %s" % (sta, id)
+                        warnings.warn(msg)
+                        continue
+                    st.sort()
+                    st.reverse()
+                    streams.append(st)
         except:
             parser.print_help()
             raise
