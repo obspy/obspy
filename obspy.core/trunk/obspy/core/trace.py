@@ -12,6 +12,7 @@ from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 import numpy as np
+import math
 
 
 class Stats(AttribDict):
@@ -527,8 +528,8 @@ class Trace(object):
         elif not isinstance(starttime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        delta = int(round((starttime - self.stats.starttime) * \
-                          self.stats.sampling_rate, 7))
+        delta = int(math.floor(round((starttime - self.stats.starttime) * \
+                                     self.stats.sampling_rate, 7)))
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -570,8 +571,8 @@ class Trace(object):
         elif not isinstance(endtime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        delta = int(round((endtime - self.stats.endtime) * \
-                          self.stats.sampling_rate, 7))
+        delta = int(math.floor(round((endtime - self.stats.endtime) * \
+                               self.stats.sampling_rate, 7)))
         if delta == 0 or (delta>0 and not pad):
             return
         if delta > 0 and pad:
@@ -614,7 +615,7 @@ class Trace(object):
         >>> t = tr.stats.starttime
         >>> tr.trim(t + 2.000001, t + 7.999999)
         >>> tr.data
-        array([2, 3, 4, 5, 6, 7, 8])
+        array([2, 3, 4, 5, 6, 7])
         """
         # check time order and swap eventually
         if starttime > endtime:
