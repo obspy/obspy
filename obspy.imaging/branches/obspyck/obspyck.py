@@ -188,8 +188,9 @@ def getCoord(network, station):
 
 class PickingGUI:
 
-    def __init__(self, streams = None):
+    def __init__(self, streams = None, options):
         self.streams = streams
+        self.options = options
         #Define some flags, dictionaries and plotting options
         self.flagFilt=False #False:no filter  True:filter
         self.flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
@@ -2034,7 +2035,7 @@ class PickingGUI:
                     self.dicts[streamnum]['PPol'] = polarity
                 #XXX how to set the weight???
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
-                #self.dicts[streamnum]['PWeight'] = weight
+                self.dicts[streamnum]['PsynthWeight'] = weight
                 self.dicts[streamnum]['PResInfo'] = '\n\n %+0.3fs' % res
                 if self.dicts[streamnum].has_key('PPol'):
                     self.dicts[streamnum]['PResInfo'] += '  %s' % \
@@ -2056,7 +2057,7 @@ class PickingGUI:
                     self.dicts[streamnum]['SPol'] = polarity
                 #XXX how to set the weight???
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
-                #self.dicts[streamnum]['SWeight'] = weight
+                self.dicts[streamnum]['SsynthWeight'] = weight
                 self.dicts[streamnum]['SResInfo'] = '\n\n\n %+0.3fs' % res
                 if self.dicts[streamnum].has_key('SPol'):
                     self.dicts[streamnum]['SResInfo'] += '  %s' % \
@@ -2457,9 +2458,9 @@ class PickingGUI:
                 phase_compu = ""
                 if self.dicts[i].has_key('POnset'):
                     Sub(pick, "onset").text = self.dicts[i]['POnset']
-                    if onset == "impulsive":
+                    if self.dicts[i]['POnset'] == "impulsive":
                         phase_compu += "I"
-                    elif onset == "emergent":
+                    elif self.dicts[i]['POnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
@@ -2524,9 +2525,9 @@ class PickingGUI:
                 phase_compu = ""
                 if self.dicts[i].has_key('SOnset'):
                     Sub(pick, "onset").text = self.dicts[i]['SOnset']
-                    if onset == "impulsive":
+                    if self.dicts[i]['SOnset'] == "impulsive":
                         phase_compu += "I"
-                    elif onset == "emergent":
+                    elif self.dicts[i]['SOnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
@@ -2816,8 +2817,9 @@ class PickingGUI:
         else:
             data = self.picks2XML()
             print "no event location performed.\ncreating xml with picks only."
-        #XXX remove later
-        self.xmlEventID = '%i' % 1265906465.2780671
+        #XXX remove later, overwrite if using local traces for testing purposes
+        if self.options.local:
+            self.xmlEventID = '%i' % 1265906465.2780671
         name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
 
         #construct and send the header
@@ -3262,7 +3264,7 @@ def main():
             parser.print_help()
             raise
 
-    PickingGUI(streams)
+    PickingGUI(streams, options)
 
 if __name__ == "__main__":
     main()
