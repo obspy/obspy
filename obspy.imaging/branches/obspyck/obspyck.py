@@ -272,13 +272,20 @@ class PickingGUI:
         # - either one Z or three ZNE traces
         # - no two streams for any station
         self.stationlist=[]
-        for st in streams:
+        for i in range(len(self.streams))[::-1]:
+            st = self.streams[i]
             if not (len(st.traces) == 1 or len(st.traces) == 3):
-                print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
-                return
+                #print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
+                self.streams.pop(i)
+                continue
+                #return
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
-                print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
-                return
+                #print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded'
+                self.streams.pop(i)
+                continue
+                #return
             if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
                                         st[1].stats.channel[-1] != 'N' or
                                         st[2].stats.channel[-1] != 'E' or
@@ -286,8 +293,11 @@ class PickingGUI:
                                         st[1].stats.station.strip() or
                                         st[0].stats.station.strip() !=
                                         st[2].stats.station.strip()):
-                print 'Error: All streams must have either one Z trace or a set of ZNE traces (from the same station)'
-                return
+                #print 'Error: All streams must have either one Z trace or a set of ZNE traces (from the same station)'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
+                self.streams.pop(i)
+                continue
+                #return
             self.stationlist.append(st[0].stats.station.strip())
         if len(self.stationlist) != len(set(self.stationlist)):
             print 'Error: Found two streams for one station'
@@ -296,34 +306,54 @@ class PickingGUI:
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
         self.dicts = []
+        for i in range(len(self.streams)):
+            self.dicts.append({})
         self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
         client1 = Client()
-        for i in range(len(self.streams)):
-            self.dicts.append({})
+        for i in range(len(self.streams))[::-1]:
             self.dicts[i]['MagUse'] = True
-            station = streams[i][0].stats.station.strip()
-            self.dicts[i]['Station'] = station
-            self.dictsMap[station] = self.dicts[i]
+            sta = self.streams[i][0].stats.station.strip()
+            self.dicts[i]['Station'] = sta
+            self.dictsMap[sta] = self.dicts[i]
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
-            net = streams[i][0].stats.network.strip()
+            net = self.streams[i][0].stats.network.strip()
             if net == '':
                 net = 'BW'
-                print "got no network information, setting to default: BW"
-            sta = self.dicts[i]['Station']
+                print "Warning: Got no network information, setting to default: BW"
+            print "=" * 70
             print sta
-            date = streams[i][0].stats.starttime.date
-            print 'fetching station data from seishub...'
-            lon, lat, ele = getCoord(net, sta)
+            print "-" * 70
+            date = self.streams[i][0].stats.starttime.date
+            print 'fetching station metadata from seishub...'
+            try:
+                lon, lat, ele = getCoord(net, sta)
+            except:
+                print 'Error: could not load station metadata. Discarding stream.'
+                self.streams.pop(i)
+                self.dicts.pop(i)
+                continue
             print 'done.'
-            self.dicts[i]['pazZ'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][0].stats.channel)
-            self.dicts[i]['pazN'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][1].stats.channel)
-            self.dicts[i]['pazE'] = client1.station.getPAZ(net, sta, date, channel_id = streams[i][2].stats.channel)
-            self.dicts[i]['Station'] = self.stationlist[i]
+            self.dicts[i]['pazZ'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][0].stats.channel)
+            self.dicts[i]['pazN'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][1].stats.channel)
+            self.dicts[i]['pazE'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][2].stats.channel)
             self.dicts[i]['StaLon'] = lon
             self.dicts[i]['StaLat'] = lat
             self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
+            print self.dicts[i]['StaLon']
+            print self.dicts[i]['StaLat']
+            print self.dicts[i]['StaEle']
+            print self.dicts[i]['pazZ']
+            print self.dicts[i]['pazN']
+            print self.dicts[i]['pazE']
+        print "=" * 70
+
+        #for i in range(len(self.dicts)):
+        #    print self.dicts[i]['Station']
+        #    print self.dicts[i]['StaLon']
+        #    print self.dicts[i]['StaLat']
+        #    print "-" * 70
 
         #XXX Remove lines for use with dynamically acquired data from seishub!
         #self.dicts[0]['StaLon'] = 12.795714
@@ -410,7 +440,7 @@ class PickingGUI:
         #self.dicts[4]['Mag'] = 0.96
 
         #Define a pointer to navigate through the streams
-        self.stNum=len(streams)
+        self.stNum=len(self.streams)
         self.stPt=0
     
         # Set up initial plot
@@ -449,6 +479,8 @@ class PickingGUI:
                 if item.labelstr == 'quit':
                     plt.close()
                 elif item.labelstr == 'clearAll':
+                    for i in range(len(self.dicts)):
+                        print self.dicts[i]
                     self.delAllItems()
                     self.clearDictionaries()
                     self.locationType = None
@@ -503,7 +535,6 @@ class PickingGUI:
                     self.clearDictionaries()
                     self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
                                              self.streams[0][0].stats.endtime)
-                    print "Event data from seishub loaded."
                     self.drawAllItems()
                     self.redraw()
             item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
@@ -511,7 +542,11 @@ class PickingGUI:
         self.menu = Menu(self.fig, menuitems)
         
         
-        
+        #for i in range(len(self.dicts)):
+        #    print self.dicts[i]['Station']
+        #    print self.dicts[i]['StaLon']
+        #    print self.dicts[i]['StaLat']
+        #    print "-" * 70
         plt.show()
     
     
@@ -1775,7 +1810,7 @@ class PickingGUI:
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
                 delta /= self.streams[i][0].stats.sampling_rate
-                f.write(fmt % (self.stationlist[i], 'P', date, delta,
+                f.write(fmt % (self.dicts[i]['Station'], 'P', date, delta,
                                lon, lat, ele / 1e3))
             if self.dicts[i].has_key('S'):
                 t = self.streams[i][0].stats.starttime
@@ -1784,7 +1819,7 @@ class PickingGUI:
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
                 delta /= self.streams[i][0].stats.sampling_rate
-                f.write(fmt % (self.stationlist[i], 'S', date, delta,
+                f.write(fmt % (self.dicts[i]['Station'], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
         print 'Phases for 3Dloc:'
@@ -1817,6 +1852,8 @@ class PickingGUI:
             ele = self.dicts[i]['StaEle'] * 1000
             f2.write(fmt2 % (sta, lon_deg, lon_min, lat_deg, lat_min, ele))
             #self.coords.append([lon, lat])
+            if not self.dicts[i].has_key('P') and not self.dicts[i].has_key('S'):
+                continue
             if self.dicts[i].has_key('P'):
                 t = self.streams[i][0].stats.starttime
                 t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
@@ -1851,6 +1888,12 @@ class PickingGUI:
                     weight = 0
                 f.write(fmtP % (sta, onset, polarity, weight, date))
             if self.dicts[i].has_key('S'):
+                if not self.dicts[i].has_key('P'):
+                    msg = "Warning: Trying to print a hypo2000 phase file" + \
+                          " with S phase without P phase.\n" + \
+                          "This case might not be covered correctly and " + \
+                          "could screw our file up!"
+                    warnings.warn(msg)
                 t2 = self.streams[i][0].stats.starttime
                 t2 += self.dicts[i]['S'] / self.streams[i][0].stats.sampling_rate
                 date2 = t2.strftime("%H%M%S")
@@ -2254,7 +2297,7 @@ class PickingGUI:
             if self.dicts[i].has_key('Pres') or self.dicts[i].has_key('Sres'):
                 stationColor = 'black'
             else:
-                stationColor = 'lightgray'
+                stationColor = 'gray'
             # plot stations at respective coordinates with names
             self.axEventMap.scatter([self.dicts[i]['StaLon']],
                                     [self.dicts[i]['StaLat']], s = 150,
@@ -2942,6 +2985,8 @@ class PickingGUI:
             self.seishubEventCount = len(xml.xpath(u".//resource_name"))
             self.seishubEventCurrent = 0
             print "%i events are available from Seishub" % self.seishubEventCount
+            if self.seishubEventCount == 0:
+                return
         else:
             self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
                                        self.seishubEventCount
@@ -3197,6 +3242,7 @@ class PickingGUI:
             #picklist[-1].extend([onset, polarity, weight])
         #break #XXX using only first found event from given time span!!
         #return picklist
+        print "Event data from seishub loaded."
 
 
 def main():
