@@ -249,8 +249,11 @@ class PickingGUI:
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.hyp2000Path) + \
                            'cd $HYP2000_DATA;' + \
                            'hyp2000 < bay2000.inp &> /dev/null'
-        self.xmlEventID = None
-        self.locationType = None
+        self.dictOrigin = {}
+        self.dictMagnitude = {}
+        self.dictEvent = {}
+        self.dictEvent['xmlEventID'] = None
+        self.dictEvent['locationType'] = None
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
@@ -445,6 +448,7 @@ class PickingGUI:
     
         # Set up initial plot
         self.fig = plt.figure()
+        self.fig.canvas.set_window_title("ObsPyck")
         self.fig.set_size_inches(20, 10, forward = True)
         self.drawAxes()
         self.addFiltButtons()
@@ -473,29 +477,27 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
         hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('clearAll', 'clearEvent', 'doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'sendEvent', 'getNextEvent', 'quit'):
+        for label in ('clearAll', 'clearEvent', 'doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'showWadati', 'sendEvent', 'getNextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
                     plt.close()
                 elif item.labelstr == 'clearAll':
-                    for i in range(len(self.dicts)):
-                        print self.dicts[i]
                     self.delAllItems()
                     self.clearDictionaries()
-                    self.locationType = None
+                    self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'clearEvent':
                     self.delAllItems()
                     self.clearEventDictionaries()
-                    self.locationType = None
+                    self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'doHyp2000':
                     self.delAllItems()
                     self.clearEventDictionaries()
-                    self.locationType = "hyp2000"
+                    self.dictEvent['locationType'] = "hyp2000"
                     self.doHyp2000()
                     #self.load3dlocSyntheticPhases()
                     self.loadHyp2000Data()
@@ -508,7 +510,7 @@ class PickingGUI:
                 elif item.labelstr == 'do3dloc':
                     self.delAllItems()
                     self.clearEventDictionaries()
-                    self.locationType = "3dloc"
+                    self.dictEvent['locationType'] = "3dloc"
                     self.do3dLoc()
                     self.load3dlocSyntheticPhases()
                     self.load3dlocData()
@@ -525,6 +527,8 @@ class PickingGUI:
                 elif item.labelstr == 'showMap':
                     #self.load3dlocData()
                     self.showEventMap()
+                elif item.labelstr == 'showWadati':
+                    self.showWadati()
                 elif item.labelstr == 'sendEvent':
                     self.uploadSeishub()
                 elif item.labelstr == 'getNextEvent':
@@ -1791,7 +1795,7 @@ class PickingGUI:
         self.redraw()
 
     def do3dLoc(self):
-        self.xmlEventID = '%i' % time.time()
+        self.dictEvent['xmlEventID'] = '%i' % time.time()
         subprocess.call(self.threeDlocPreCall, shell = True)
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
@@ -1829,7 +1833,7 @@ class PickingGUI:
         self.catFile(self.threeDlocOutfile)
 
     def doHyp2000(self):
-        self.xmlEventID = '%i' % time.time()
+        self.dictEvent['xmlEventID'] = '%i' % time.time()
         subprocess.call(self.hyp2000PreCall, shell = True)
         f = open(self.hyp2000Phasefile, 'w')
         f2 = open(self.hyp2000Stationsfile, 'w')
@@ -1868,9 +1872,9 @@ class PickingGUI:
                     elif self.dicts[i]['POnset'] == 'emergent':
                         onset = 'E'
                     else: #XXX check for other names correctly!!!
-                        onset = 'I'
+                        onset = '?'
                 else:
-                    onset = 'I'
+                    onset = '?'
                 if self.dicts[i].has_key('PPol'):
                     if self.dicts[i]['PPol'] == "up" or \
                        self.dicts[i]['PPol'] == "poorup":
@@ -1904,9 +1908,9 @@ class PickingGUI:
                     elif self.dicts[i]['SOnset'] == 'emergent':
                         onset2 = 'E'
                     else: #XXX check for other names correctly!!!
-                        onset2 = 'I'
+                        onset2 = '?'
                 else:
-                    onset2 = 'I'
+                    onset2 = '?'
                 if self.dicts[i].has_key('SPol'):
                     if self.dicts[i]['SPol'] == "up" or \
                        self.dicts[i]['SPol'] == "poorup":
@@ -1999,16 +2003,16 @@ class PickingGUI:
         model = line[49:].strip()
 
         # assign origin info
-        self.EventLon = lon
-        self.EventLat = lat
-        self.EventZ = depth
-        self.EventErrX = errXY
-        self.EventErrY = errXY
-        self.EventErrZ = errZ
-        self.EventStdErr = rms #XXX stimmt diese Zuordnung!!!?!
-        self.EventAzimGap = gap
-        self.EventUsedModel = model
-        self.EventTime = time
+        self.dictOrigin['Longitude'] = lon
+        self.dictOrigin['Latitude'] = lat
+        self.dictOrigin['Depth'] = depth
+        self.dictOrigin['Longitude Error'] = errXY
+        self.dictOrigin['Latitude Error'] = errXY
+        self.dictOrigin['Depth Error'] = errZ
+        self.dictOrigin['Standarderror'] = rms #XXX stimmt diese Zuordnung!!!?!
+        self.dictOrigin['Azimuthal Gap'] = gap
+        self.dictOrigin['Used Model'] = model
+        self.dictOrigin['Time'] = time
         
         # goto station and phases info lines
         while True:
@@ -2019,8 +2023,8 @@ class PickingGUI:
             if line.startswith(" STA NET COM L CR DIST AZM"):
                 break
         
-        self.PCount = 0
-        self.SCount = 0
+        self.dictOrigin['used P Count'] = 0
+        self.dictOrigin['used S Count'] = 0
         for i in range(len(lines)):
             # check which type of phase
             if lines[i][32] == "P":
@@ -2071,7 +2075,7 @@ class PickingGUI:
             
             # assign synthetic phase info
             if type == "P":
-                self.PCount += 1
+                self.dictOrigin['used P Count'] += 1
                 synthsamps = int(round(res *
                         self.streams[i][0].stats.sampling_rate))
                 synthsamps += self.dicts[streamnum]['P']
@@ -2086,12 +2090,12 @@ class PickingGUI:
                 #XXX how to set the weight???
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
                 self.dicts[streamnum]['PsynthWeight'] = weight
-                self.dicts[streamnum]['PResInfo'] = '\n\n %+0.3fs' % res
-                if self.dicts[streamnum].has_key('PPol'):
-                    self.dicts[streamnum]['PResInfo'] += '  %s' % \
-                            self.dicts[streamnum]['PPol']
+                #self.dicts[streamnum]['PResInfo'] = '\n\n %+0.3fs' % res
+                #if self.dicts[streamnum].has_key('PPol'):
+                #    self.dicts[streamnum]['PResInfo'] += '  %s' % \
+                #            self.dicts[streamnum]['PPol']
             elif type == "S":
-                self.SCount += 1
+                self.dictOrigin['used S Count'] += 1
                 self.dicts[streamnum]['SLon'] = self.dicts[streamnum]['StaLon']
                 self.dicts[streamnum]['SLat'] = self.dicts[streamnum]['StaLat']
                 synthsamps = int(round(res *
@@ -2108,40 +2112,40 @@ class PickingGUI:
                 #XXX how to set the weight???
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
                 self.dicts[streamnum]['SsynthWeight'] = weight
-                self.dicts[streamnum]['SResInfo'] = '\n\n\n %+0.3fs' % res
-                if self.dicts[streamnum].has_key('SPol'):
-                    self.dicts[streamnum]['SResInfo'] += '  %s' % \
-                            self.dicts[streamnum]['SPol']
-        self.usedStationsCount = len(self.dicts)
+                #self.dicts[streamnum]['SResInfo'] = '\n\n\n %+0.3fs' % res
+                #if self.dicts[streamnum].has_key('SPol'):
+                #    self.dicts[streamnum]['SResInfo'] += '  %s' % \
+                #            self.dicts[streamnum]['SPol']
+        self.dictOrigin['used Station Count'] = len(self.dicts)
         for st in self.dicts:
             if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.usedStationsCount -= 1
+                self.dictOrigin['used Station Count'] -= 1
 
     def load3dlocData(self):
         #self.load3dlocSyntheticPhases()
         event = open(self.threeDlocOutfile).readline().split()
-        self.EventLon = float(event[8])
-        self.EventLat = float(event[9])
-        self.EventZ = float(event[10])
-        self.EventErrX = float(event[11])
-        self.EventErrY = float(event[12])
-        self.EventErrZ = float(event[13])
-        self.EventStdErr = float(event[14])
-        self.EventAzimGap = float(event[15])
-        self.EventTime = UTCDateTime(int(event[2]), int(event[3]),
+        self.dictOrigin['Longitude'] = float(event[8])
+        self.dictOrigin['Latitude'] = float(event[9])
+        self.dictOrigin['Depth'] = float(event[10])
+        self.dictOrigin['Longitude Error'] = float(event[11])
+        self.dictOrigin['Latitude Error'] = float(event[12])
+        self.dictOrigin['Depth Error'] = float(event[13])
+        self.dictOrigin['Standarderror'] = float(event[14])
+        self.dictOrigin['Azimuthal Gap'] = float(event[15])
+        self.dictOrigin['Time'] = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
-        self.PCount = 0
-        self.SCount = 0
+        self.dictOrigin['used P Count'] = 0
+        self.dictOrigin['used S Count'] = 0
         lines = open(self.threeDlocInfile).readlines()
         for line in lines:
             pick = line.split()
             for i in range(len(self.streams)):
                 if pick[0].strip() == self.streams[i][0].stats.station.strip():
                     if pick[1] == 'P':
-                        self.PCount += 1
+                        self.dictOrigin['used P Count'] += 1
                     elif pick[1] == 'S':
-                        self.SCount += 1
+                        self.dictOrigin['used S Count'] += 1
                     break
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
@@ -2151,40 +2155,41 @@ class PickingGUI:
                     if pick[1] == 'P':
                         self.dicts[i]['PAzim'] = float(pick[9])
                         self.dicts[i]['PInci'] = float(pick[10])
-                        self.dicts[i]['PResInfo'] = '\n\n %+0.3fs' % float(pick[8])
-                        if self.dicts[i].has_key('PPol'):
-                            self.dicts[i]['PResInfo'] += '  %s' % self.dicts[i]['PPol']
+                        #self.dicts[i]['PResInfo'] = '\n\n %+0.3fs' % float(pick[8])
+                        #if self.dicts[i].has_key('PPol'):
+                        #    self.dicts[i]['PResInfo'] += '  %s' % self.dicts[i]['PPol']
                             
                     elif pick[1] == 'S':
                         self.dicts[i]['SAzim'] = float(pick[9])
                         self.dicts[i]['SInci'] = float(pick[10])
-                        self.dicts[i]['SResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
-                        if self.dicts[i].has_key('SPol'):
-                            self.dicts[i]['SResInfo'] += '  %s' % self.dicts[i]['SPol']
+                        #self.dicts[i]['SResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
+                        #if self.dicts[i].has_key('SPol'):
+                        #    self.dicts[i]['SResInfo'] += '  %s' % self.dicts[i]['SPol']
                     break
-        self.usedStationsCount = len(self.dicts)
+        self.dictOrigin['used Station Count'] = len(self.dicts)
         for st in self.dicts:
             if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.usedStationsCount -= 1
+                self.dictOrigin['used Station Count'] -= 1
     
     def updateNetworkMag(self):
         print "updating network magnitude..."
-        self.staMagCount = 0
-        self.netMag = 0
-        self.staMags = []
+        self.dictMagnitude['Station Count'] = 0
+        self.dictMagnitude['Magnitude'] = 0
+        staMags = []
         for i in range(len(self.streams)):
             if self.dicts[i]['MagUse'] and self.dicts[i].has_key('Mag'):
                 print self.dicts[i]['Station']
-                self.staMagCount += 1
-                self.netMag += self.dicts[i]['Mag']
-                self.staMags.append(self.dicts[i]['Mag'])
-        if self.staMagCount == 0:
-            self.netMag = np.nan
+                self.dictMagnitude['Station Count'] += 1
+                self.dictMagnitude['Magnitude'] += self.dicts[i]['Mag']
+                staMags.append(self.dicts[i]['Mag'])
+        if self.dictMagnitude['Station Count'] == 0:
+            self.dictMagnitude['Magnitude'] = np.nan
+            self.dictMagnitude['Uncertainty'] = np.nan
         else:
-            self.netMag /= self.staMagCount
-        self.netMagVar = np.var(self.staMags)
-        print "new network magnitude: %.2f (Variance: %.2f)" % (self.netMag, self.netMagVar)
-        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.netMag, self.netMagVar)
+            self.dictMagnitude['Magnitude'] /= self.dictMagnitude['Station Count']
+            self.dictMagnitude['Uncertainty'] = np.var(staMags)
+        print "new network magnitude: %.2f (Variance: %.2f)" % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
         try:
             self.netMagText.set_text(self.netMagLabel)
         except:
@@ -2193,9 +2198,9 @@ class PickingGUI:
     def calculateEpiHypoDists(self):
         epidists = []
         for i in range(len(self.streams)):
-            x, y = utlGeoKm(self.EventLon, self.EventLat,
+            x, y = utlGeoKm(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
                             self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
-            z = abs(self.dicts[i]['StaEle'] - self.EventZ)
+            z = abs(self.dicts[i]['StaEle'] - self.dictOrigin['Depth'])
             self.dicts[i]['distX'] = x
             self.dicts[i]['distY'] = y
             self.dicts[i]['distZ'] = z
@@ -2207,9 +2212,9 @@ class PickingGUI:
             if self.dicts[i].has_key('Psynth') or self.dicts[i].has_key('Ssynth'):
                 epidists.append(self.dicts[i]['distEpi'])
             self.dicts[i]['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
-        self.epidistMax = max(epidists)
-        self.epidistMin = min(epidists)
-        self.epidistMedian = np.median(epidists)
+        self.dictOrigin['Maximum Distance'] = max(epidists)
+        self.dictOrigin['Minimum Distance'] = min(epidists)
+        self.dictOrigin['Median Distance'] = np.median(epidists)
 
     def calculateStationMagnitudes(self):
         for i in range(len(self.streams)):
@@ -2263,30 +2268,95 @@ class PickingGUI:
                 print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
                          self.dicts[i]['MagChannel'])
-                
+
+    def showWadati(self):
+        """
+        Shows a Wadati diagram plotting P time in (truncated) Julian seconds
+        against S-P time for every station and doing a linear regression
+        using rpy. An estimate of Vp/Vs is given by the slope + 1.
+        """
+        import rpy
+        pTimes = []
+        spTimes = []
+        stations = []
+        for i in range(len(self.dicts)):
+            if self.dicts[i].has_key('P') and self.dicts[i].has_key('S'):
+                p = self.streams[i][0].stats.starttime
+                p += (self.dicts[i]['P'] / \
+                          self.streams[i][0].stats.sampling_rate)
+                p = "%.3f" % p.getTimeStamp()
+                p = float(p[-7:])
+                pTimes.append(p)
+                sp = self.dicts[i]['S'] - self.dicts[i]['P']
+                sp = float(sp) / self.streams[i][0].stats.sampling_rate
+                spTimes.append(sp)
+                stations.append(self.dicts[i]['Station'])
+            else:
+                continue
+        if len(pTimes) < 2:
+            print "Error: Got less than 2 P-S Pairs."
+            return
+        my_lsfit = rpy.r.lsfit(pTimes, spTimes)
+        gradient = my_lsfit['coefficients']['X']
+        intercept = my_lsfit['coefficients']['Intercept']
+        vpvs = gradient + 1.
+        ressqrsum = 0.
+        for res in my_lsfit['residuals']:
+            ressqrsum += (res ** 2)
+        y0 = 0.
+        x0 = - (intercept / gradient)
+        x1 = max(pTimes)
+        y1 = (gradient * float(x1)) + intercept
+        fig = plt.figure(3)
+        fig.canvas.set_window_title("Wadati Diagram")
+        ax = fig.add_subplot(111)
+        ax.scatter(pTimes, spTimes)
+        for i in range(len(stations)):
+            ax.text(pTimes[i], spTimes[i], stations[i], va = "top")
+        ax.plot([x0, x1], [y0, y1])
+        ax.axhline(0, color = "blue", ls = ":")
+        # origin time estimated by wadati plot
+        ax.axvline(x0, color = "blue", ls = ":", label = "origin time from wadati diagram")
+        # origin time from event location
+        if self.dictOrigin.has_key('Time'):
+            otime = "%.3f" % self.dictOrigin['Time'].getTimeStamp()
+            otime = float(otime[-7:])
+            ax.axvline(otime, color = "red", ls = ":", label = "origin time from event location")
+        ax.text(0.1, 0.7, "Vp/Vs: %.2f\nSum of squared residuals: %.3f" % (vpvs, ressqrsum), transform = ax.transAxes)
+        ax.text(0.1, 0.1, "Origin time from event location", color = "red", transform = ax.transAxes)
+        #ax.axis("auto")
+        ax.set_xlim(min(x0 - 1, otime - 1), max(pTimes) + 1)
+        ax.set_ylim(-1, max(spTimes) + 1)
+        fig.canvas.draw()
+        plt.show()
 
     def showEventMap(self):
         #print self.dicts[0]
         self.figEventMap = plt.figure(2)
+        self.figEventMap.canvas.set_window_title("Event Map")
         self.axEventMap = self.figEventMap.add_subplot(111)
-        self.axEventMap.scatter([self.EventLon], [self.EventLat],
+        self.axEventMap.scatter([self.dictOrigin['Longitude']], [self.dictOrigin['Latitude']],
                              30, color = 'red', marker = 'o')
-        errLon, errLat = utlLonLat(self.EventLon, self.EventLat,
-                               self.EventErrX, self.EventErrY)
-        errLon -= self.EventLon
-        errLat -= self.EventLat
-        self.axEventMap.text(self.EventLon, self.EventLat,
-                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.EventLon,
-                          self.EventErrX, self.EventLat,
-                          self.EventErrY, self.EventZ * 1000,
-                          self.EventErrZ * 1000), va = 'top',
+        errLon, errLat = utlLonLat(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
+                               self.dictOrigin['Longitude Error'], self.dictOrigin['Latitude Error'])
+        errLon -= self.dictOrigin['Longitude']
+        errLat -= self.dictOrigin['Latitude']
+        self.axEventMap.text(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
+                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.dictOrigin['Longitude'],
+                          self.dictOrigin['Longitude Error'], self.dictOrigin['Latitude'],
+                          self.dictOrigin['Latitude Error'], self.dictOrigin['Depth'] * 1000,
+                          self.dictOrigin['Depth Error'] * 1000), va = 'top',
                           family = 'monospace')
-        self.netMagText = self.axEventMap.text(self.EventLon, self.EventLat,
-                          self.netMagLabel,
-                          va = 'top',
-                          color = 'green',
-                          family = 'monospace')
-        errorell = Ellipse(xy = [self.EventLon, self.EventLat],
+        try:
+            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+            self.netMagText = self.axEventMap.text(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
+                              self.netMagLabel,
+                              va = 'top',
+                              color = 'green',
+                              family = 'monospace')
+        except:
+            pass
+        errorell = Ellipse(xy = [self.dictOrigin['Longitude'], self.dictOrigin['Latitude']],
                       width = errLon, height = errLat, angle = 0, fill = False)
         self.axEventMap.add_artist(errorell)
         self.scatterMagIndices = []
@@ -2309,15 +2379,23 @@ class PickingGUI:
                                  color = stationColor,
                                  va = 'top', family = 'monospace')
             if self.dicts[i].has_key('Pres'):
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  self.dicts[i]['PResInfo'], va = 'top',
-                                  family = 'monospace',
-                                  color = self.dictPhaseColors['P'])
+                presinfo = '\n\n %+0.3fs' % self.dicts[i]['Pres']
+                if self.dicts[i].has_key('PPol'):
+                    presinfo += '  %s' % self.dicts[i]['PPol']
+                self.axEventMap.text(self.dicts[i]['StaLon'],
+                                     self.dicts[i]['StaLat'],
+                                     presinfo, va = 'top',
+                                     family = 'monospace',
+                                     color = self.dictPhaseColors['P'])
             if self.dicts[i].has_key('Sres'):
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  self.dicts[i]['SResInfo'], va = 'top',
-                                  family = 'monospace',
-                                  color = self.dictPhaseColors['S'])
+                sresinfo = '\n\n\n %+0.3fs' % self.dicts[i]['Sres']
+                if self.dicts[i].has_key('SPol'):
+                    sresinfo += '  %s' % self.dicts[i]['SPol']
+                self.axEventMap.text(self.dicts[i]['StaLon'],
+                                     self.dicts[i]['StaLat'],
+                                     sresinfo, va = 'top',
+                                     family = 'monospace',
+                                     color = self.dictPhaseColors['S'])
             if self.dicts[i].has_key('Mag'):
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(self.dicts[i]['StaLon'])
@@ -2336,7 +2414,7 @@ class PickingGUI:
                 
         self.axEventMap.set_xlabel('Longitude')
         self.axEventMap.set_ylabel('Latitude')
-        self.axEventMap.set_title(self.EventTime)
+        self.axEventMap.set_title(self.dictOrigin['Time'])
         #XXX disabled because it plots the wrong info if the event was
         # fetched from seishub
         #####lines = open(self.threeDlocOutfile).readlines()
@@ -2386,7 +2464,7 @@ class PickingGUI:
         Returns output of picks as xml file
         """
         xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
+        Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
         Sub(Sub(xml, "event_type"), "value").text = "manual"
         
         # we save P picks on Z-component and S picks on N-component
@@ -2477,7 +2555,7 @@ class PickingGUI:
         Returns output of hypo2000 as xml file
         """
         xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
+        Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
         Sub(Sub(xml, "event_type"), "value").text = "manual"
         
         # we save P picks on Z-component and S picks on N-component
@@ -2623,19 +2701,19 @@ class PickingGUI:
         # read from hypo2000 output
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
-        Sub(date, "value").text = self.EventTime.isoformat() # + '.%03i' % self.EventTime.microsecond
+        Sub(date, "value").text = self.dictOrigin['Time'].isoformat() # + '.%03i' % self.dictOrigin['Time'].microsecond
         Sub(date, "uncertainty")
         lat = Sub(origin, "latitude")
-        Sub(lat, "value").text = '%s' % self.EventLat
-        Sub(lat, "uncertainty").text = '%s' % self.EventErrY #XXX Lat Error in km??!!
+        Sub(lat, "value").text = '%s' % self.dictOrigin['Latitude']
+        Sub(lat, "uncertainty").text = '%s' % self.dictOrigin['Latitude Error'] #XXX Lat Error in km??!!
         lon = Sub(origin, "longitude")
-        Sub(lon, "value").text = '%s' % self.EventLon
-        Sub(lon, "uncertainty").text = '%s' % self.EventErrX #XXX Lon Error in km??!!
+        Sub(lon, "value").text = '%s' % self.dictOrigin['Longitude']
+        Sub(lon, "uncertainty").text = '%s' % self.dictOrigin['Longitude Error'] #XXX Lon Error in km??!!
         depth = Sub(origin, "depth")
-        Sub(depth, "value").text = '%s' % self.EventZ
-        Sub(depth, "uncertainty").text = '%s' % self.EventErrZ
+        Sub(depth, "value").text = '%s' % self.dictOrigin['Depth']
+        Sub(depth, "uncertainty").text = '%s' % self.dictOrigin['Depth Error']
         Sub(origin, "depth_type").text = "from location program"
-        Sub(origin, "earth_mod").text = self.EventUsedModel
+        Sub(origin, "earth_mod").text = self.dictOrigin['Used Model']
         uncertainty = Sub(origin, "originUncertainty")
         Sub(uncertainty, "preferredDescription").text = "uncertainty ellipse"
         Sub(uncertainty, "horizontalUncertainty")
@@ -2643,30 +2721,30 @@ class PickingGUI:
         Sub(uncertainty, "maxHorizontalUncertainty")
         Sub(uncertainty, "azimuthMaxHorizontalUncertainty")
         quality = Sub(origin, "originQuality")
-        Sub(quality, "P_usedPhaseCount").text = '%i' % self.PCount
-        Sub(quality, "S_usedPhaseCount").text = '%i' % self.SCount
-        Sub(quality, "usedPhaseCount").text = '%i' % (self.PCount + self.SCount)
-        Sub(quality, "usedStationCount").text = '%i' % self.usedStationsCount
-        Sub(quality, "associatedPhaseCount").text = '%i' % (self.PCount + self.SCount)
+        Sub(quality, "P_usedPhaseCount").text = '%i' % self.dictOrigin['used P Count']
+        Sub(quality, "S_usedPhaseCount").text = '%i' % self.dictOrigin['used S Count']
+        Sub(quality, "usedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
+        Sub(quality, "usedStationCount").text = '%i' % self.dictOrigin['used Station Count']
+        Sub(quality, "associatedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
         Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
         Sub(quality, "depthPhaseCount").text = "0"
-        Sub(quality, "standardError").text = '%s' % self.EventStdErr
-        Sub(quality, "azimuthalGap").text = '%s' % self.EventAzimGap
+        Sub(quality, "standardError").text = '%s' % self.dictOrigin['Standarderror']
+        Sub(quality, "azimuthalGap").text = '%s' % self.dictOrigin['Azimuthal Gap']
         Sub(quality, "secondaryAzimuthalGap")
         Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % self.epidistMin
-        Sub(quality, "maximumDistance").text = '%s' % self.epidistMax
-        Sub(quality, "medianDistance").text = '%s' % self.epidistMedian
+        Sub(quality, "minimumDistance").text = '%s' % self.dictOrigin['Minimum Distance']
+        Sub(quality, "maximumDistance").text = '%s' % self.dictOrigin['Maximum Distance']
+        Sub(quality, "medianDistance").text = '%s' % self.dictOrigin['Median Distance']
         magnitude = Sub(xml, "magnitude")
         mag = Sub(magnitude, "mag")
-        if np.isnan(self.netMag):
+        if np.isnan(self.dictMagnitude['Magnitude']):
             Sub(mag, "value")
             Sub(mag, "uncertainty")
         else:
-            Sub(mag, "value").text = '%s' % self.netMag
-            Sub(mag, "uncertainty").text = '%s' % self.netMagVar
+            Sub(mag, "value").text = '%s' % self.dictMagnitude['Magnitude']
+            Sub(mag, "uncertainty").text = '%s' % self.dictMagnitude['Uncertainty']
         Sub(magnitude, "type").text = "Ml"
-        Sub(magnitude, "stationCount").text = '%i' % self.staMagCount
+        Sub(magnitude, "stationCount").text = '%i' % self.dictMagnitude['Station Count']
         for i in range(len(self.streams)):
             stationMagnitude = Sub(xml, "stationMagnitude")
             if self.dicts[i].has_key('Mag'):
@@ -2675,7 +2753,7 @@ class PickingGUI:
                 Sub(mag, 'uncertainty').text
                 Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
                 if self.dicts[i]['MagUse']:
-                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.staMagCount)
+                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.dictMagnitude['Station Count'])
                 else:
                     Sub(stationMagnitude, 'weight').text = '0'
                 Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
@@ -2686,7 +2764,7 @@ class PickingGUI:
         Returns output of 3dloc as xml file
         """
         xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = self.xmlEventID
+        Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
         Sub(Sub(xml, "event_type"), "value").text = "manual"
         
         # we save P picks on Z-component and S picks on N-component
@@ -2792,44 +2870,44 @@ class PickingGUI:
         
         origin = Sub(xml, "origin")
         date = Sub(origin, "time")
-        Sub(date, "value").text = self.EventTime.isoformat() # + '.%03i' % self.EventTime.microsecond
+        Sub(date, "value").text = self.dictOrigin['Time'].isoformat() # + '.%03i' % self.dictOrigin['Time'].microsecond
         Sub(date, "uncertainty")
         lat = Sub(origin, "latitude")
-        Sub(lat, "value").text = '%s' % self.EventLat
-        Sub(lat, "uncertainty").text = '%s' % self.EventErrY #XXX Lat Error in km??!!
+        Sub(lat, "value").text = '%s' % self.dictOrigin['Latitude']
+        Sub(lat, "uncertainty").text = '%s' % self.dictOrigin['Latitude Error'] #XXX Lat Error in km??!!
         lon = Sub(origin, "longitude")
-        Sub(lon, "value").text = '%s' % self.EventLon
-        Sub(lon, "uncertainty").text = '%s' % self.EventErrX #XXX Lon Error in km??!!
+        Sub(lon, "value").text = '%s' % self.dictOrigin['Longitude']
+        Sub(lon, "uncertainty").text = '%s' % self.dictOrigin['Longitude Error'] #XXX Lon Error in km??!!
         depth = Sub(origin, "depth")
-        Sub(depth, "value").text = '%s' % self.EventZ
-        Sub(depth, "uncertainty").text = '%s' % self.EventErrZ
+        Sub(depth, "value").text = '%s' % self.dictOrigin['Depth']
+        Sub(depth, "uncertainty").text = '%s' % self.dictOrigin['Depth Error']
         Sub(origin, "depth_type").text = "from location program"
         Sub(origin, "earth_mod").text = "STAUFEN"
         Sub(origin, "originUncertainty")
         quality = Sub(origin, "originQuality")
-        Sub(quality, "P_usedPhaseCount").text = '%i' % self.PCount
-        Sub(quality, "S_usedPhaseCount").text = '%i' % self.SCount
-        Sub(quality, "usedPhaseCount").text = '%i' % (self.PCount + self.SCount)
-        Sub(quality, "usedStationCount").text = '%i' % self.usedStationsCount
-        Sub(quality, "associatedPhaseCount").text = '%i' % (self.PCount + self.SCount)
+        Sub(quality, "P_usedPhaseCount").text = '%i' % self.dictOrigin['used P Count']
+        Sub(quality, "S_usedPhaseCount").text = '%i' % self.dictOrigin['used S Count']
+        Sub(quality, "usedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
+        Sub(quality, "usedStationCount").text = '%i' % self.dictOrigin['used Station Count']
+        Sub(quality, "associatedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
         Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
         Sub(quality, "depthPhaseCount").text = "0"
-        Sub(quality, "standardError").text = '%s' % self.EventStdErr
-        Sub(quality, "secondaryAzimuthalGap").text = '%s' % self.EventAzimGap
+        Sub(quality, "standardError").text = '%s' % self.dictOrigin['Standarderror']
+        Sub(quality, "azimuthalGap").text = '%s' % self.dictOrigin['Azimuthal Gap']
         Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % self.epidistMin
-        Sub(quality, "maximumDistance").text = '%s' % self.epidistMax
-        Sub(quality, "medianDistance").text = '%s' % self.epidistMedian
+        Sub(quality, "minimumDistance").text = '%s' % self.dictOrigin['Minimum Distance']
+        Sub(quality, "maximumDistance").text = '%s' % self.dictOrigin['Maximum Distance']
+        Sub(quality, "medianDistance").text = '%s' % self.dictOrigin['Median Distance']
         magnitude = Sub(xml, "magnitude")
         mag = Sub(magnitude, "mag")
-        if np.isnan(self.netMag):
+        if np.isnan(self.dictMagnitude['Magnitude']):
             Sub(mag, "value")
             Sub(mag, "uncertainty")
         else:
-            Sub(mag, "value").text = '%s' % self.netMag
-            Sub(mag, "uncertainty").text = '%s' % self.netMagVar
+            Sub(mag, "value").text = '%s' % self.dictMagnitude['Magnitude']
+            Sub(mag, "uncertainty").text = '%s' % self.dictMagnitude['Uncertainty']
         Sub(magnitude, "type").text = "Ml"
-        Sub(magnitude, "stationCount").text = '%i' % self.staMagCount
+        Sub(magnitude, "stationCount").text = '%i' % self.dictMagnitude['Station Count']
         for i in range(len(self.streams)):
             stationMagnitude = Sub(xml, "stationMagnitude")
             if self.dicts[i].has_key('Mag'):
@@ -2838,7 +2916,7 @@ class PickingGUI:
                 Sub(mag, 'uncertainty').text
                 Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
                 if self.dicts[i]['MagUse']:
-                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.staMagCount)
+                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.dictMagnitude['Station Count'])
                 else:
                     Sub(stationMagnitude, 'weight').text = '0'
                 Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
@@ -2858,10 +2936,10 @@ class PickingGUI:
         path = '/xml/seismology/event'
         
         # determine which location was run and how the xml should be created
-        if self.locationType == "3dloc":
+        if self.dictEvent['locationType'] == "3dloc":
             data = self.threeDLoc2XML()
             print "creating xml with picks and 3dloc event data."
-        elif self.locationType == "hyp2000":
+        elif self.dictEvent['locationType'] == "hyp2000":
             data = self.hyp20002XML()
             print "creating xml with picks and hypo2000 event data."
         else:
@@ -2870,8 +2948,8 @@ class PickingGUI:
         # overwrite the same xml file always when using option local
         # which is intended for testing purposes only
         if self.options.local:
-            self.xmlEventID = '%i' % 1265906465.2780671
-        name = "obspyck_%s" % (self.xmlEventID) #XXX id of the file
+            self.dictEvent['xmlEventID'] = '%i' % 1265906465.2780671
+        name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
 
         #construct and send the header
         webservice = httplib.HTTP(servername)
@@ -2902,9 +2980,16 @@ class PickingGUI:
                    k != 'pazE':
                     del self.dicts[i][k]
             self.dicts[i]['MagUse'] = True
+        self.dictOrigin = {}
+        self.dictMagnitude = {}
+        self.dictEvent = {}
+        self.dictEvent['xmlEventID'] = None
+        self.dictEvent['locationType'] = None
+
 
     def clearEventDictionaries(self):
         print "Clearing previous event data."
+        # we need to delete all station magnitude information from all dicts
         for i in range(len(self.dicts)):
             for k in self.dicts[i].keys():
                 if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
@@ -2916,6 +3001,11 @@ class PickingGUI:
                    k != 'SWeight' and k != 'Saxind':
                     del self.dicts[i][k]
             self.dicts[i]['MagUse'] = True
+        self.dictOrigin = {}
+        self.dictMagnitude = {}
+        self.dictEvent = {}
+        self.dictEvent['xmlEventID'] = None
+        self.dictEvent['locationType'] = None
 
     def delAllItems(self):
         self.delPLine()
@@ -2966,9 +3056,13 @@ class PickingGUI:
         :param starttime: Start datetime as UTCDateTime
         :param endtime: End datetime as UTCDateTime
         """
-
+        
+        # two search criteria are applied:
+        # - first pick of event must be before stream endtime
+        # - last pick of event must be after stream starttime
+        # thus we get any event with at least one pick in between start/endtime
         url = "http://teide:8080/seismology/event/getList?" + \
-              "min_datetime=%s&max_datetime=%s" % \
+              "min_last_pick=%s&max_first_pick=%s" % \
               (str(starttime), str(endtime))
         req = urllib2.Request(url)
         auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
@@ -3098,6 +3192,8 @@ class PickingGUI:
                 if phase_res:
                     self.dicts[streamnum]['Psynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Pres'] = float(phase_res)
+                # hypo2000 uses this weight internally during the inversion
+                # this is not the same as the weight assigned during picking
                 if phase_weight:
                     self.dicts[streamnum]['PsynthWeight'] = phase_weight
                 if azimuth:
@@ -3123,6 +3219,8 @@ class PickingGUI:
                 if phase_res:
                     self.dicts[streamnum]['Ssynth'] = time + phase_res_samps
                     self.dicts[streamnum]['Sres'] = float(phase_res)
+                # hypo2000 uses this weight internally during the inversion
+                # this is not the same as the weight assigned during picking
                 if phase_weight:
                     self.dicts[streamnum]['SsynthWeight'] = phase_weight
                 if azimuth:
@@ -3138,76 +3236,76 @@ class PickingGUI:
         origin = resource_xml.xpath(u".//origin")[0]
         try:
             time = origin.xpath(".//time/value")[0].text
-            self.EventTime = UTCDateTime(time)
+            self.dictOrigin['Time'] = UTCDateTime(time)
         except:
             pass
         try:
             lat = origin.xpath(".//latitude/value")[0].text
-            self.EventLat = float(lat)
+            self.dictOrigin['Latitude'] = float(lat)
         except:
             pass
         try:
             lon = origin.xpath(".//longitude/value")[0].text
-            self.EventLon = float(lon)
+            self.dictOrigin['Longitude'] = float(lon)
         except:
             pass
         try:
             errX = origin.xpath(".//longitude/uncertainty")[0].text
-            self.EventErrX = float(errX)
+            self.dictOrigin['Longitude Error'] = float(errX)
         except:
             pass
         try:
             errY = origin.xpath(".//latitude/uncertainty")[0].text
-            self.EventErrY = float(errY)
+            self.dictOrigin['Latitude Error'] = float(errY)
         except:
             pass
         try:
             z = origin.xpath(".//depth/value")[0].text
-            self.EventZ = float(z)
+            self.dictOrigin['Depth'] = float(z)
         except:
             pass
         try:
             errZ = origin.xpath(".//depth/uncertainty")[0].text
-            self.EventErrZ = float(errZ)
+            self.dictOrigin['Depth Error'] = float(errZ)
         except:
             pass
         try:
-            self.PCount = \
+            self.dictOrigin['used P Count'] = \
                     int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
         except:
             pass
         try:
-            self.SCount = \
+            self.dictOrigin['used S Count'] = \
                     int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
         except:
             pass
         try:
-            self.usedStationsCount = \
+            self.dictOrigin['used Station Count'] = \
                     int(origin.xpath(".//originQuality/usedStationCount")[0].text)
         except:
             pass
         try:
-            self.EventStdErr = \
+            self.dictOrigin['Standarderror'] = \
                     float(origin.xpath(".//originQuality/standardError")[0].text)
         except:
             pass
         try:
-            self.EventAzimGap = \
-                    float(origin.xpath(".//originQuality/secondaryAzimuthalGap")[0].text)
+            self.dictOrigin['Azimuthal Gap'] = \
+                    float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
         except:
             pass
         try:
-            self.epidistMin = \
+            self.dictOrigin['Minimum Distance'] = \
                     float(origin.xpath(".//originQuality/minimumDistance")[0].text)
         except:
             pass
         try:
-            self.epidistMax = \
+            self.dictOrigin['Maximum Distance'] = \
                     float(origin.xpath(".//originQuality/maximumDistance")[0].text)
         except:
             pass
         try:
-            self.epidistMedian = \
+            self.dictOrigin['Median Distance'] = \
                     float(origin.xpath(".//originQuality/medianDistance")[0].text)
         except:
             pass
@@ -3216,18 +3314,18 @@ class PickingGUI:
         magnitude = resource_xml.xpath(u".//magnitude")[0]
         try:
             mag = magnitude.xpath(".//mag/value")[0].text
-            self.netMag = float(mag)
-            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.netMag, self.netMagVar)
+            self.dictMagnitude['Magnitude'] = float(mag)
+            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
         except:
             pass
         try:
             magVar = magnitude.xpath(".//mag/uncertainty")[0].text
-            self.netMagVar = float(magVar)
+            self.dictMagnitude['Uncertainty'] = float(magVar)
         except:
             pass
         try:
             stacount = magnitude.xpath(".//stationCount")[0].text
-            self.staMagCount = int(stacount)
+            self.dictMagnitude['Station Count'] = int(stacount)
         except:
             pass
         # get values
