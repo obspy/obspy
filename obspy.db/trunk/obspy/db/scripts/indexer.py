@@ -3,40 +3,49 @@
 """
 """
 
-from SimpleXMLRPCServer import SimpleXMLRPCServer
 from obspy.db import __version__
 from obspy.db.db import Base
 from obspy.db.indexer import worker, WaveformFileCrawler
 from optparse import OptionParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
+import BaseHTTPServer
 import logging
 import multiprocessing
 import os
 import select
 import sys
+import time
+
+
+HOST_NAME = 'localhost'
+PORT_NUMBER = 8080
 
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
-class WaveformIndexer(SimpleXMLRPCServer, WaveformFileCrawler):
+class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        """
+        Respond to a GET request.
+        """
+        out = "<html><body>"
+        out += "<pre>%s</pre>" % self.server.input_queue
+        out += "<pre>%s</pre>" % self.server.work_queue
+        out += "<pre>%s</pre>" % self.server.output_queue
+        out += "</body></html>"
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(out)
+
+
+class WaveformIndexer(BaseHTTPServer.HTTPServer, WaveformFileCrawler):
     """
     A waveform indexer server.
     """
-    def __init__(self, session, in_queue, work_queue, out_queue, paths,
-                 options):
-        SimpleXMLRPCServer.__init__(self, ("localhost", 8000))
-        # init db + options
-        self.session = session
-        self.options = options
-        # set queues
-        self.input_queue = in_queue
-        self.work_queue = work_queue
-        self.output_queue = out_queue
-        self.paths = paths
-        self._resetWalker()
-        self._stepWalker()
 
     def serve_forever(self, poll_interval=0.5):
         self.running = True
@@ -89,12 +98,27 @@ def _runIndexer(options):
     Session = sessionmaker(bind=engine)
     session = Session()
     # initialize crawler
-    service = WaveformIndexer(session, in_queue, work_queue, out_queue, paths,
-                              options)
+    server_class = WaveformIndexer
+    service = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
+    # init db + options
+    service.session = session
+    service.options = options
+    # set queues
+    service.input_queue = in_queue
+    service.work_queue = work_queue
+    service.output_queue = out_queue
+    service.paths = paths
+    service._resetWalker()
+    service._stepWalker()
+    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME,
+                                                     PORT_NUMBER)
     try:
-        service.serve_forever(poll_interval=options.poll_interval)
+        service.serve_forever()
     except KeyboardInterrupt:
         pass
+    service.server_close()
+    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME,
+                                                    PORT_NUMBER)
 
 
 def main():

@@ -11,7 +11,7 @@ Copyright
 
 Overview
 --------
-    obspy.core - obspy.db - A waveform database for ObsPy.
+    obspy.db - A waveform database for ObsPy.
 
     This class contains a simple waveform database.
 

@@ -36,8 +36,8 @@ except:
 
 
 INSERT_SQL = """
-    INSERT INTO report (timestamp, tests, errors, modules, system, architecture, 
-        version, xml) 
+    INSERT INTO report (timestamp, tests, errors, modules, system,
+        architecture, version, xml) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 """
 
@@ -53,40 +53,40 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def _stylesheet(self):
         self.wfile.write("""
-	<style type='text/css'>
+        <style type='text/css'>
           body {
-	    font-family: Verdana; 
-	    margin: 20px;
-	  }
+            font-family: Verdana; 
+            margin: 20px;
+          }
           pre {
-	    background-color:#EEEEEE;
-	  }
-	  th {
-	    background-color:#EEEEEE;
-	    margin: 0;
-	    padding: 5px;
-	    text-align: center;
+            background-color:#EEEEEE;
+          }
+          th {
+            background-color:#EEEEEE;
+            margin: 0;
+            padding: 5px;
+            text-align: center;
             border: 1px solid gray;
-	  }
-	  table {
-	    border-collapse: collapse;
-	    margin: 0;
-	    padding: 0;
-	  }
+          }
+          table {
+            border-collapse: collapse;
+            margin: 0;
+            padding: 0;
+          }
           td {
-	    text-align: center;
+            text-align: center;
             border: 1px solid gray;
-	    margin: 0;
-	    padding: 5px;
-	  }
-	  .error {
-	    background-color: #FF0000;
-	  }
-	  .ok {
-	    background-color: #00FF00;
-	  }
+            margin: 0;
+            padding: 5px;
+          }
+          .error {
+            background-color: #FF0000;
+          }
+          .ok {
+            background-color: #00FF00;
+          }
         </style>
-	""")
+        """)
 
     def do_GET(self):
         """
@@ -120,19 +120,21 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("<html>")
             self.wfile.write("<head>")
             self.wfile.write("<title>Report #%s</title>" % id)
-	    self._stylesheet()
+            self._stylesheet()
             self.wfile.write("</head>")
             self.wfile.write("<body><h1>Report #%s</h1>" % id)
             self.wfile.write("<p><a href='?'>Return to overview</a></p>")
             self.wfile.write("<h2>Platform</h2>")
             self.wfile.write("<ul>")
             for item in root.find('platform')._children:
-                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag, item.text))
+                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag,
+                                                              item.text))
             self.wfile.write("</ul>")
             self.wfile.write("<h2>Dependencies</h2>\n")
             self.wfile.write("<ul>")
             for item in root.find('dependencies')._children:
-                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag, item.text))
+                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag,
+                                                              item.text))
             self.wfile.write("</ul>")
             self.wfile.write("<h2>ObsPy</h2>\n")
             self.wfile.write("<table>\n")
@@ -142,46 +144,50 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("    <th>Errors/Failures</th>\n")
             self.wfile.write("    <th>Tracebacks</th>\n")
             self.wfile.write("  </tr>\n")
-	    errlog = ""
-	    errid = 0
+            errlog = ""
+            errid = 0
             for item in root.find('obspy')._children:
-	        errcases = ""
+                errcases = ""
                 self.wfile.write("  <tr>\n")
-	        version = item.find('installed').text
+                version = item.find('installed').text
                 self.wfile.write("    <td>obspy.%s</td>" % (item.tag))
-   	        self.wfile.write("    <td>%s</td>" % (version))
-		if item.find('tested')!=None:
- 		    tests = int(item.find('tests').text)
-		    errors = 0
+                self.wfile.write("    <td>%s</td>" % (version))
+                if item.find('tested') != None:
+                    tests = int(item.find('tests').text)
+                    errors = 0
                     for sitem in item.find('errors')._children:
-                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid, errid)
+                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid,
+                                                                     errid)
                         errlog += "<pre>%s</pre>" % sitem.text
-			errcases += "<a href='#%d'>#%d</a> " % (errid, errid)
-			errid += 1
-			errors += 1
+                        errcases += "<a href='#%d'>#%d</a> " % (errid,
+                                                                errid)
+                        errid += 1
+                        errors += 1
                     for sitem in item.find('failures')._children:
-                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid, errid)
+                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid,
+                                                                     errid)
                         errlog += "<pre>%s</pre>" % sitem.text
-			errcases += "<a href='#%d'>#%d</a> " % (errid, errid)
-			errors += 1
-			errid += 1
+                        errcases += "<a href='#%d'>#%d</a> " % (errid, errid)
+                        errors += 1
+                        errid += 1
                     if errors > 0:
                         color = "error"
                     else:
                         color = "ok"
-                    self.wfile.write("    <td class='%s'>%d of %d</td>" % (color, errors, tests))
+                    self.wfile.write("    <td class='%s'>%d of %d</td>" % \
+                                     (color, errors, tests))
                 else:
-                    self.wfile.write("    <td>Not tested</td>\n")		    
+                    self.wfile.write("    <td>Not tested</td>\n")
                 self.wfile.write("<td>%s</td>" % (errcases))
                 self.wfile.write("  </tr>\n")
             self.wfile.write("</table>\n")
             self.wfile.write(errlog)
             try:
-	        log = root.find('install_log').text
-		self.wfile.write("<h2>Install Log</h2>")
+                log = root.find('install_log').text
+                self.wfile.write("<h2>Install Log</h2>")
                 self.wfile.write("<pre>%s</pre" % log)
             except:
-	        pass
+                pass
             self.wfile.write("</body></html>")
         else:
             results = conn.execute(SELECT_ALL_SQL)
@@ -191,7 +197,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("<html>")
             self.wfile.write("<head>")
             self.wfile.write("<title>Last 20 reports</title>")
-	    self._stylesheet()
+            self._stylesheet()
             self.wfile.write("</head>")
             self.wfile.write("<body><h1>Reports</h1>")
             self.wfile.write('<table>')
@@ -206,14 +212,15 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 self.wfile.write("<tr>")
                 dt = datetime.datetime.fromtimestamp(item[1])
                 self.wfile.write("<td>%s</td>" % dt)
-		errors = int(item[3])
-		tests = int(item[2])
+                errors = int(item[3])
+                tests = int(item[2])
                 if errors > 0:
                     color = "#FF0000"
                 else:
                     color = "#00FF00"
                 self.wfile.write("<td style='background-color:%s'>" % color)
-                self.wfile.write('%s of %s &nbsp; [%s]' % (item[3], item[2], item[4]))
+                self.wfile.write('%s of %s &nbsp; [%s]' % (item[3], item[2],
+                                                           item[4]))
                 self.wfile.write("</td>")
                 self.wfile.write("<td>%s (%s)</td>" % (item[5], item[6]))
                 self.wfile.write("<td>%s</td>" % item[7])
