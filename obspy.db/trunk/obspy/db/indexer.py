@@ -1,30 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from Queue import Empty as QueueEmpty, Full as QueueFull
-from SimpleXMLRPCServer import SimpleXMLRPCServer
 from obspy.core import read
-from obspy.db.db import Base, WaveformFile, WaveformPath, WaveformChannel, \
+from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
     WaveformGaps
 from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
-from sqlalchemy import create_engine
-from sqlalchemy.orm.session import sessionmaker
 import copy
 import fnmatch
 import logging
 import multiprocessing
 import os
-import select
-import sys
-
-
-# create logger
-logger = logging.getLogger("simple_example")
-logger.setLevel(logging.DEBUG)
-# create console handler and set level to debug
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-# add ch to logger
-logger.addHandler(ch)
 
 
 class WaveformFileCrawler:
@@ -66,9 +50,9 @@ class WaveformFileCrawler:
                 self.session.commit()
             except Exception, e:
                 self.session.rollback()
-                logger.error(str(e))
+                logging.error(str(e))
             else:
-                logger.debug('Inserting %s %s' % (data['path'], data['file']))
+                logging.info('Inserting %s %s' % (data['path'], data['file']))
 
     def _delete(self, path, file=None):
         """
@@ -85,9 +69,9 @@ class WaveformFileCrawler:
                 self.session.commit()
             except:
                 self.session.rollback()
-                logger.error('Error deleting file %s %s' % (path, file))
+                logging.error('Error deleting file %s %s' % (path, file))
             else:
-                logger.debug('Deleting file %s %s' % (file_obj.file,
+                logging.info('Deleting file %s %s' % (file_obj.file,
                                                       file_obj.path.path))
         else:
             q = self.session.query(WaveformPath)
@@ -98,9 +82,9 @@ class WaveformFileCrawler:
                 self.session.delete(path_obj)
             except:
                 self.session.rollback()
-                logger.error('Error deleting path %s' % (path))
+                logging.error('Error deleting path %s' % (path))
             else:
-                logger.debug('Deleting path %s' % (path_obj.path))
+                logging.info('Deleting path %s' % (path_obj.path))
 
     def _select(self, path, file=None):
         """
@@ -124,7 +108,7 @@ class WaveformFileCrawler:
         """
         Checks if the file name fits to the preferred file pattern.
         """
-        for pattern in self.options.patterns:
+        for pattern in self.paths[self._root]:
             if fnmatch.fnmatch(file, pattern):
                 return True
         return False
@@ -142,8 +126,8 @@ class WaveformFileCrawler:
 
     def _processOutputQueue(self):
         try:
-            dataset = self.output_queue.get_nowait()
-        except QueueEmpty:
+            dataset = self.output_queue.pop(0)
+        except:
             pass
         else:
             self._update_or_insert(dataset)
@@ -152,16 +136,14 @@ class WaveformFileCrawler:
         """
         Resets the crawler parameters.
         """
-        logger.debug('Crawler restarted.')
+        logging.info('Crawler restarted.')
         # update configuration
-        self.crawler_paths = [os.path.normcase(path)
-                              for path in self.options.paths]
+        self.crawler_paths = [os.path.normcase(path) for path in self.paths]
         # reset attributes
         self._current_path = None
         self._current_files = []
         self._db_files = []
         self._db_paths = []
-        self._not_yet_queued = None
         # get search paths for waveform crawler
         self._paths = []
         self._roots = copy.copy(self.crawler_paths)
@@ -169,7 +151,7 @@ class WaveformFileCrawler:
         # create new walker
         self._walker = os.walk(self._root, topdown=True, followlinks=True)
         # logging
-        logger.debug("Crawling root '%s' ..." % self._root)
+        logging.info("Crawling root '%s' ..." % self._root)
 
     def _stepWalker(self):
         """
@@ -204,7 +186,7 @@ class WaveformFileCrawler:
             # create new walker
             self._walker = os.walk(self._root, topdown=True, followlinks=True)
             # logging
-            logger.debug("Crawling root '%s' ..." % self._root)
+            logging.info("Crawling root '%s' ..." % self._root)
             return
         # remove files or paths starting with a dot
         if self.options.skip_dots:
@@ -217,7 +199,7 @@ class WaveformFileCrawler:
         self._current_path = root
         self._current_files = files
         # logging
-        logger.debug("Scanning path '%s' ..." % self._current_path)
+        logging.info("Scanning path '%s' ..." % self._current_path)
         # get all database entries for current path
         self._db_files = self._select(self._current_path)
 
@@ -232,16 +214,8 @@ class WaveformFileCrawler:
         # try to finalize a single processed stream object from output queue
         self._processOutputQueue()
         # skip if input queue is full
-        if self.input_queue.full():
+        if len(self.input_queue) > 10:
             return
-        # check for files which could not put into queue yet
-        if self._not_yet_queued:
-            try:
-                self.input_queue.put_nowait(self._not_yet_queued)
-            except QueueFull:
-                # try later
-                return
-            self._not_yet_queued = None
         # walk through directories and files
         try:
             file = self._current_files.pop(0)
@@ -260,64 +234,36 @@ class WaveformFileCrawler:
         # process a single file
         path = self._current_path
         filepath = os.path.join(path, file)
+        # check if already processed
+        if filepath in self.work_queue:
+            return
         # get file stats
         try:
             stats = os.stat(filepath)
         except Exception, e:
-            logger.warning(str(e))
+            logging.warning(str(e))
             return
         # compare with database entries
         if file not in self._db_files:
             # file does not exists in database -> add file
             args = (path, file, stats, [])
-            try:
-                self.input_queue.put_nowait(args)
-            except QueueFull:
-                self._not_yet_queued = args
+            self.input_queue[filepath] = args
             return
         # file is already in database
-        # -> compare modification times of current file with database entry
         # -> remove from file list so it won't be deleted on database cleanup
         db_file_mtime = self._db_files.pop(file)
+        # -> compare modification times of current file with database entry
         if int(stats.st_mtime) == db_file_mtime:
             return
         # modification time differs -> update file
         args = (path, file, stats, [])
-        try:
-            self.input_queue.put_nowait(args)
-        except QueueFull:
-            self._not_yet_queued = args
+        self.input_queue[filepath] = args
         return
 
 
-class WaveformIndexer(SimpleXMLRPCServer, WaveformFileCrawler):
-    """
-    A waveform indexer server.
-    """
-    def __init__(self, session, input_queue, output_queue, options):
-        SimpleXMLRPCServer.__init__(self, ("localhost", 8000))
-        # init db + options
-        self.session = session
-        self.options = options
-        # set queues
-        self.input_queue = input_queue
-        self.output_queue = output_queue
-        self._resetWalker()
-        self._stepWalker()
-
-    def serve_forever(self, poll_interval=0.5):
-        self.running = True
-        #self.__is_shut_down.clear()
-        while self.running:
-            r, _w, _e = select.select([self], [], [], poll_interval)
-            if r:
-                self._handle_request_noblock()
-            self.iterate()
-        #self.__is_shut_down.set()
-
-
-def worker(i, input_queue, output_queue, preview_dir=None):
-    logger.debug("Starting Process #%d" % i)
+def worker(i, input_queue, work_queue, output_queue, lock, preview_dir=None):
+    logger = multiprocessing.log_to_stderr(logging.DEBUG)
+    logger.info("Starting Process #%d" % i)
     # fetch and initialize all possible waveform feature plug-ins
     all_features = {}
     for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
@@ -336,15 +282,25 @@ def worker(i, input_queue, output_queue, preview_dir=None):
         except:
             all_features[key]['indexer_kwargs'] = {}
     # loop through input queue
-    for args in iter(input_queue.get, 'STOP'):
+    while True:
+        # fetch a unprocessed item
+        try:
+            key, args = input_queue.popitem()
+        except:
+            continue
+        if key in work_queue:
+            continue
+        work_queue.append(key)
         (path, file, stats, features) = args
         filepath = os.path.join(path, file)
+        logger.debug('Reading File %s' % filepath)
         # get additional kwargs for read method from waveform plug-ins
         kwargs = {}
         for feature in features:
             if feature not in all_features:
                 logger.error(filepath + '\n')
                 logger.error('Unknown feature %s\n' % feature)
+                work_queue.remove(filepath)
                 continue
             kwargs.update(all_features[feature]['indexer_kwargs'])
         # read file
@@ -357,6 +313,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
         except Exception, e:
             logger.error(filepath + '\n')
             logger.error(str(e) + '\n')
+            work_queue.remove(filepath)
             continue
         # build up dictionary of gaps and overlaps for easier lookup
         gap_dict = {}
@@ -406,11 +363,15 @@ def worker(i, input_queue, output_queue, preview_dir=None):
             dataset.append(result)
             # generate preview of trace
             if preview_dir:
+                # check for network
+                if not trace.stats.network:
+                    network = '__'
+                else:
+                    network = trace.stats.network
                 # 2010/BW/MANZ/EHE.01D/
                 preview_path = os.path.join(preview_dir,
                                             str(trace.stats.starttime.year),
-                                            trace.stats.network,
-                                            trace.stats.station,
+                                            network, trace.stats.station,
                                             '%s.%sD' % (trace.stats.channel,
                                                         trace.stats.location))
                 if not os.path.isdir(preview_path):
@@ -428,34 +389,7 @@ def worker(i, input_queue, output_queue, preview_dir=None):
         del stream
         # return results to main loop
         try:
-            output_queue.put_nowait(dataset)
+            output_queue.append(dataset)
         except:
             pass
-
-
-def runIndexer(options):
-    logger.info("Starting Indexer ...")
-    # create file queue and worker processes
-    input_queue = multiprocessing.Queue(options.number_of_cpus * 2)
-    output_queue = multiprocessing.Queue()
-    for i in range(options.number_of_cpus):
-        args = (i, input_queue, output_queue, options.preview_path)
-        p = multiprocessing.Process(target=worker, args=args)
-        p.daemon = True
-        p.start()
-    # connect to database
-    engine = create_engine(options.db_uri, encoding='utf-8',
-                           convert_unicode=True)
-    metadata = Base.metadata
-    metadata.create_all(engine, checkfirst=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    # options
-    options.patterns = ["BW.*"]
-    options.paths = ["data"]
-    # init crawler
-    service = WaveformIndexer(session, input_queue, output_queue, options)
-    try:
-        service.serve_forever(poll_interval=options.poll_interval)
-    except KeyboardInterrupt:
-        pass
+        work_queue.remove(filepath)
