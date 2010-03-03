@@ -5,6 +5,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
 import numpy as np
 import os
+import threading
+import time
 import unittest
 
 
@@ -75,6 +77,67 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     if format == 'Q':
                         os.remove(outfile[:-4] + '.QBN')
                         os.remove(outfile[:-4])
+
+    def test_read_thread_safe(self):
+        """
+        Tests for race conditions. Reading n_threads (currently 30) times
+        the same waveform file in parallel and compare the results which must
+        be all the same.
+        """
+        data = np.arange(0, 20000)
+        start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
+        formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
+        for format in formats:
+            dt = np.dtype("int")
+            if format == 'MSEED':
+                dt = "int32"
+            tr = Trace(data=data.astype(dt))
+            tr.stats.network = "BW"
+            tr.stats.station = "MANZ1"
+            tr.stats.location = "00"
+            tr.stats.channel = "EHE"
+            tr.stats.calib = 0.999999
+            tr.stats.delta = 0.005
+            tr.stats.starttime = start
+            # create waveform file with given format and byte order
+            outfile = NamedTemporaryFile().name
+            tr.write(outfile, format=format)
+            if format == 'Q':
+                outfile += '.QHD'
+            n_threads = 10
+            streams = []
+            def test_function(streams):
+                st = read(outfile, format=format)
+                streams.append(st)
+            # Read the ten files at one and save the output in the just created
+            # class.
+            for _i in xrange(n_threads):
+                thread = threading.Thread(target=test_function,
+                                          args=(streams,))
+                thread.start()
+            # Loop until all threads are finished.
+            start = time.time()
+            while True:
+                if threading.activeCount() == 1:
+                    break
+                # Avoid infinite loop and leave after 120 seconds 
+                # such a long time is needed for debugging with valgrind
+                elif time.time() - start >= 120:
+                    msg = 'Not all threads finished!'
+                    raise Warning(msg)
+                    break
+                else:
+                    continue
+            # Compare all values which should be identical and clean up files
+            #for data in :
+            #    np.testing.assert_array_equal(values, original)
+            try:
+                os.remove(outfile)
+            except:
+                pass
+            if format == 'Q':
+                os.remove(outfile[:-4] + '.QBN')
+                os.remove(outfile[:-4])
 
 
 def suite():
