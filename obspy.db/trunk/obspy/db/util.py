@@ -34,9 +34,7 @@ def createPreview(trace, delta=60.0):
     # reshape matrix
     data = trace.data[0:npts].reshape([number_of_slices, number_of_samples])
     # get minimum and maximum for each row
-    min = data.min(axis=1)
-    max = data.max(axis=1)
-    diff = max - min
+    diff = data.ptp(axis=1)
     # fill NaN with -1 -> means missing data
     data = np.ma.filled(diff, -1)
     # append value of last diff

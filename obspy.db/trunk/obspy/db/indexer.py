@@ -452,7 +452,7 @@ def runIndexer(options):
     session = Session()
     # options
     options.patterns = ["BW.*"]
-    options.paths = ["C:\\Users\\barsch\\Workspace\\seishub\\trunk\\data"]
+    options.paths = ["data"]
     # init crawler
     service = WaveformIndexer(session, input_queue, output_queue, options)
     try:
