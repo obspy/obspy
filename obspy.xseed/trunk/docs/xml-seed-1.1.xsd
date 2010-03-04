@@ -149,8 +149,6 @@
 
   <xsd:complexType name="blockette10_type">
     <xsd:sequence>
-      <xsd:element name="version_of_format" type="xsd:string"/>
-      <xsd:element name="logical_record_length" type="xsd:long"/>
       <xsd:element name="beginning_time" type="dateUnionType"/>
       <xsd:element name="end_time" type="dateUnionType"/>
       <xsd:element name="volume_time" type="dateUnionType"/>
@@ -401,9 +399,9 @@
         minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="FIR_dictionary" type="blockette41_type" minOccurs="0"
         maxOccurs="unbounded"/>
-      <xsd:element name="response_poles_and_zeros" type="blockette43_type"
+      <xsd:element name="response_poles_and_zeros_dictionary" type="blockette43_type"
         minOccurs="0" maxOccurs="unbounded"/>
-      <xsd:element name="response_coefficients" type="blockette44_type"
+      <xsd:element name="response_coefficients_dictionary" type="blockette44_type"
         minOccurs="0" maxOccurs="unbounded"/>
       <xsd:element name="response_list_dictionary" type="blockette45_type"
         minOccurs="0" maxOccurs="unbounded"/>
@@ -670,7 +668,7 @@
           minOccurs="0" maxOccurs="unbounded"/>
         <xsd:element name="response_coefficients" type="blockette54_type"
           minOccurs="0" maxOccurs="unbounded"/>
-        <xsd:element name="reponse_list" type="blockette55_type" minOccurs="0"
+        <xsd:element name="response_list" type="blockette55_type" minOccurs="0"
           maxOccurs="unbounded"/>
         <xsd:element name="generic_response" type="blockette56_type"
           minOccurs="0" maxOccurs="unbounded"/>
