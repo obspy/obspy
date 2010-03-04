@@ -15,6 +15,7 @@ import sys
 import subprocess
 import httplib
 import base64
+import datetime
 import time
 import urllib2
 import warnings
@@ -200,8 +201,8 @@ class PickingGUI:
         self.flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
         self.dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
         self.flagFiltZPH=False #False: no zero-phase True: zero-phase filtering
-        self.valFiltLow=np.NaN # These are overridden with low/high estimated from sampling rate
-        self.valFiltHigh=np.NaN
+        self.valFiltHigh=self.options.highpass
+        self.valFiltLow=self.options.lowpass
         self.flagWheelZoom=True #Switch use of mousewheel for zooming
         self.flagPhase=0 #0:P 1:S 2:Magnitude
         self.dictPhase={'P':0, 'S':1, 'Mag':2}
@@ -349,103 +350,18 @@ class PickingGUI:
             self.dicts[i]['StaLon'] = lon
             self.dicts[i]['StaLat'] = lat
             self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
-            print self.dicts[i]['StaLon']
-            print self.dicts[i]['StaLat']
-            print self.dicts[i]['StaEle']
+            print self.dicts[i]['StaLon'], self.dicts[i]['StaLat'], \
+                  self.dicts[i]['StaEle']
             print self.dicts[i]['pazZ']
             print self.dicts[i]['pazN']
             print self.dicts[i]['pazE']
         print "=" * 70
 
-        #for i in range(len(self.dicts)):
-        #    print self.dicts[i]['Station']
-        #    print self.dicts[i]['StaLon']
-        #    print self.dicts[i]['StaLat']
-        #    print "-" * 70
-
-        #XXX Remove lines for use with dynamically acquired data from seishub!
-        #self.dicts[0]['StaLon'] = 12.795714
-        #self.dicts[1]['StaLon'] = 12.864466
-        #self.dicts[2]['StaLon'] = 12.867100
-        #self.dicts[3]['StaLon'] = 12.824082
-        #self.dicts[4]['StaLon'] = 12.729887
-        #self.dicts[0]['StaLat'] = 47.737167
-        #self.dicts[1]['StaLat'] = 47.761658
-        #self.dicts[2]['StaLat'] = 47.740501
-        #self.dicts[3]['StaLat'] = 47.745098
-        #self.dicts[4]['StaLat'] = 47.744171
-        #self.dicts[0]['StaEle'] = 0.860000
-        #self.dicts[1]['StaEle'] = 0.815000
-        #self.dicts[2]['StaEle'] = 0.555000
-        #self.dicts[3]['StaEle'] = 1.162000
-        #self.dicts[4]['StaEle'] = 0.763000
-        #self.dicts[0]['pazZ'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[0]['pazN'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[0]['pazE'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[1]['pazZ'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[1]['pazN'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[1]['pazE'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[2]['pazZ'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[2]['pazN'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[2]['pazE'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[3]['pazZ'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[3]['pazN'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[3]['pazE'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[4]['pazZ'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[4]['pazN'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-        #self.dicts[4]['pazE'] = {'gain': 1.0,
-        #                         'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
-        #                         'sensitivity': 671140000.0,
-        #                         'zeros': [0j, 0j, 0j]}
-
-        ##XXX only for testing purposes
-        #self.dicts[0]['Mag'] = 1.34
-        #self.dicts[1]['Mag'] = 1.03
-        ##self.dicts[2]['Mag'] = 1.22
-        #self.dicts[3]['Mag'] = 0.65
-        #self.dicts[4]['Mag'] = 0.96
+        # demean traces if not explicitly deactivated on command line
+        if not self.options.nozeromean:
+            for st in self.streams:
+                for tr in st:
+                    tr.data -= tr.data.mean()
 
         #Define a pointer to navigate through the streams
         self.stNum=len(self.streams)
@@ -454,8 +370,11 @@ class PickingGUI:
         # Set up initial plot
         self.fig = plt.figure()
         self.fig.canvas.set_window_title("ObsPyck")
-        #XXX not working with ion3 and windowmanagers?
-        self.fig.set_size_inches(20, 10, forward = True)
+        try:
+            #not working with ion3 and other windowmanagers...
+            self.fig.set_size_inches(20, 10, forward = True)
+        except:
+            pass
         self.drawAxes()
         self.addFiltButtons()
         self.addPhaseButtons()
@@ -539,9 +458,6 @@ class PickingGUI:
                 elif item.labelstr == 'sendEvent':
                     self.uploadSeishub()
                 elif item.labelstr == 'getNextEvent':
-                    message = "Using start and endtime of first trace in " + \
-                              "first stream to search for events."
-                    warnings.warn(message)
                     self.delAllItems()
                     self.clearDictionaries()
                     self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
@@ -585,7 +501,7 @@ class PickingGUI:
                                                                              self.axs[i].transAxes))
             else:
                 self.axs.append(self.fig.add_subplot(trNum, 1, i+1, 
-                        sharex=self.axs[0]))#, sharey=self.axs[0]))
+                        sharex=self.axs[0], sharey=self.axs[0]))
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
@@ -1143,8 +1059,8 @@ class PickingGUI:
             self.updatePlot()
     
     def delSliders(self):
-        self.valFiltLow = self.slideLow.val
         self.valFiltHigh = self.slideHigh.val
+        self.valFiltLow = self.slideLow.val
         try:
             self.fig.delaxes(self.axHighpass)
             self.fig.delaxes(self.axLowpass)
@@ -1155,14 +1071,14 @@ class PickingGUI:
         #add filter slider
         self.axHighpass = self.fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
         self.axLowpass  = self.fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
-        low  = 1.0/ (self.streams[self.stPt][0].stats.npts/float(self.streams[self.stPt][0].stats.sampling_rate))
-        high = self.streams[self.stPt][0].stats.sampling_rate/2.0
-        self.valFiltLow = max(low,self.valFiltLow)
-        self.valFiltHigh = min(high,self.valFiltHigh)
-        self.slideLow = Slider(self.axHighpass, 'Highpass', low, high, valinit=self.valFiltLow, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
-        self.slideHigh = Slider(self.axLowpass, 'Lowpass', low, high, valinit=self.valFiltHigh, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
-        self.slideLow.on_changed(self.updateLow)
-        self.slideHigh.on_changed(self.updateHigh)
+        minimum  = 1.0/ (self.streams[self.stPt][0].stats.npts/float(self.streams[self.stPt][0].stats.sampling_rate))
+        maximum = self.streams[self.stPt][0].stats.sampling_rate/2.0
+        self.valFiltHigh = max(minimum,self.valFiltHigh)
+        self.valFiltLow = min(maximum,self.valFiltLow)
+        self.slideHigh = Slider(self.axHighpass, 'Highpass', minimum, maximum, valinit=self.valFiltHigh, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
+        self.slideLow = Slider(self.axLowpass, 'Lowpass', minimum, maximum, valinit=self.valFiltLow, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
+        self.slideHigh.on_changed(self.updateLow)
+        self.slideLow.on_changed(self.updateHigh)
         
     
     def redraw(self):
@@ -1177,44 +1093,44 @@ class PickingGUI:
             if self.flagFiltZPH:
                 if self.flagFiltTyp==0:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpassZPHSH(tr.data,self.slideLow.val,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Bandpass: %.2f-%.2f Hz"%(self.slideLow.val,self.slideHigh.val)
+                        filt.append(bandpassZPHSH(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Bandpass: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
                 if self.flagFiltTyp==1:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstopZPHSH(tr.data,self.slideLow.val,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Bandstop: %.2f-%.2f Hz"%(self.slideLow.val,self.slideHigh.val)
+                        filt.append(bandstopZPHSH(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Bandstop: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
                 if self.flagFiltTyp==2:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpassZPHSH(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Lowpass: %.2f Hz"%(self.slideHigh.val)
+                        filt.append(lowpassZPHSH(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Lowpass: %.2f Hz"%(self.slideLow.val)
                 if self.flagFiltTyp==3:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(highpassZPHSH(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Highpass: %.2f Hz"%(self.slideLow.val)
+                        filt.append(highpassZPHSH(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
+                    print "Zero-Phase Highpass: %.2f Hz"%(self.slideHigh.val)
             else:
                 if self.flagFiltTyp==0:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpass(tr.data,self.slideLow.val,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Bandpass: %.2f-%.2f Hz"%(self.slideLow.val,self.slideHigh.val)
+                        filt.append(bandpass(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Bandpass: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
                 if self.flagFiltTyp==1:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstop(tr.data,self.slideLow.val,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Bandstop: %.2f-%.2f Hz"%(self.slideLow.val,self.slideHigh.val)
+                        filt.append(bandstop(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Bandstop: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
                 if self.flagFiltTyp==2:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpass(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Lowpass: %.2f Hz"%(self.slideHigh.val)
+                        filt.append(lowpass(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Lowpass: %.2f Hz"%(self.slideLow.val)
                 if self.flagFiltTyp==3:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(highpass(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Highpass: %.2f Hz"%(self.slideLow.val)
+                        filt.append(highpass(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
+                    print "One-Pass Highpass: %.2f Hz"%(self.slideHigh.val)
             #make new plots
             for i in range(len(self.plts)):
-                self.plts[i].set_data(self.t, filt[i])
+                self.plts[i].set_ydata(filt[i])
         else:
             #make new plots
             for i in range(len(self.plts)):
-                self.plts[i].set_data(self.t, self.streams[self.stPt][i].data)
+                self.plts[i].set_ydata(self.streams[self.stPt][i].data)
             print "Unfiltered Traces"
         # Update all subplots
         self.redraw()
@@ -1803,7 +1719,7 @@ class PickingGUI:
         self.redraw()
 
     def do3dLoc(self):
-        self.dictEvent['xmlEventID'] = '%i' % time.time()
+        self.setXMLEventID()
         subprocess.call(self.threeDlocPreCall, shell = True)
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
@@ -1841,7 +1757,7 @@ class PickingGUI:
         self.catFile(self.threeDlocOutfile)
 
     def doHyp2000(self):
-        self.dictEvent['xmlEventID'] = '%i' % time.time()
+        self.setXMLEventID()
         subprocess.call(self.hyp2000PreCall, shell = True)
         f = open(self.hyp2000Phasefile, 'w')
         f2 = open(self.hyp2000Stationsfile, 'w')
@@ -1989,7 +1905,7 @@ class PickingGUI:
         lon = lon_deg + (lon_min / 60.)
         if line[38] == " ":
             lon = -lon
-        depth = float(line[46:51])
+        depth = -float(line[46:51]) # depth: negative down!
         rms = float(line[52:57])
         errXY = float(line[58:63])
         errZ = float(line[64:69])
@@ -2335,6 +2251,8 @@ class PickingGUI:
         #ax.axis("auto")
         ax.set_xlim(min(x0 - 1, otime - 1), max(pTimes) + 1)
         ax.set_ylim(-1, max(spTimes) + 1)
+        ax.set_xlabel("absolute P times (julian seconds, truncated)")
+        ax.set_xlabel("P-S times (seconds)")
         fig.canvas.draw()
         plt.show()
 
@@ -2349,12 +2267,18 @@ class PickingGUI:
                                self.dictOrigin['Longitude Error'], self.dictOrigin['Latitude Error'])
         errLon -= self.dictOrigin['Longitude']
         errLat -= self.dictOrigin['Latitude']
-        self.axEventMap.text(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
-                          ' %2.3f +/- %0.2fkm\n %2.3f +/- %0.2fkm\n %im +/- %im' % (self.dictOrigin['Longitude'],
-                          self.dictOrigin['Longitude Error'], self.dictOrigin['Latitude'],
-                          self.dictOrigin['Latitude Error'], self.dictOrigin['Depth'] * 1000,
-                          self.dictOrigin['Depth Error'] * 1000), va = 'top',
-                          family = 'monospace')
+        self.axEventMap.text(self.dictOrigin['Longitude'],
+                             self.dictOrigin['Latitude'],
+                             ' %7.3f +/- %0.2fkm\n' % \
+                             (self.dictOrigin['Longitude'],
+                              self.dictOrigin['Longitude Error']) + \
+                             ' %7.3f +/- %0.2fkm\n' % \
+                             (self.dictOrigin['Latitude'],
+                              self.dictOrigin['Latitude Error']) + \
+                             '  %.1fkm +/- %.1fkm' % \
+                             (self.dictOrigin['Depth'],
+                              self.dictOrigin['Depth Error']),
+                             va = 'top', family = 'monospace')
         try:
             self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
             self.netMagText = self.axEventMap.text(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
@@ -2929,7 +2853,12 @@ class PickingGUI:
                     Sub(stationMagnitude, 'weight').text = '0'
                 Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
         return tostring(xml,pretty_print=True,xml_declaration=True)
-
+    
+    def setXMLEventID(self):
+        #XXX is problematic if two people make a location at the same second!
+        # then one event is overwritten with the other during submission.
+        self.dictEvent['xmlEventID'] = \
+                datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
     def uploadSeishub(self):
         """
@@ -2956,7 +2885,7 @@ class PickingGUI:
         # overwrite the same xml file always when using option local
         # which is intended for testing purposes only
         if self.options.local:
-            self.dictEvent['xmlEventID'] = '%i' % 1265906465.2780671
+            self.dictEvent['xmlEventID'] = '19700101000000'
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
 
         #construct and send the header
@@ -3373,6 +3302,12 @@ def main():
                            "(overwrites event xml with fixed id)")
     parser.add_option("-k", "--keys", action="store_true", dest="keybindings",
                       default=False, help="Show keybindings and quit")
+    parser.add_option("--lowpass", type="float", dest="lowpass",
+                      help="Frequency for Lowpass-Slider", default=20.)
+    parser.add_option("--highpass", type="float", dest="highpass",
+                      help="Frequency for Highpass-Slider", default=1.)
+    parser.add_option("--nozeromean", action="store_true", dest="nozeromean",
+                      help="Deactivate offset removal of traces", default=False)
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
