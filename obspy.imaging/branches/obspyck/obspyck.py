@@ -58,7 +58,7 @@ class MultiCursor(mplMultiCursor):
 #Some class definitions for the menu buttons
 #code from: http://matplotlib.sourceforge.net/examples/widgets/menu.html
 class ItemProperties:
-    def __init__(self, fontsize=12, labelcolor='black', bgcolor='yellow', alpha=1.0):
+    def __init__(self, fontsize=12, labelcolor='black', bgcolor='lightgrey', alpha=1.0):
         self.fontsize = fontsize
         self.labelcolor = labelcolor
         self.bgcolor = bgcolor
@@ -130,14 +130,14 @@ class MenuItem(artist.Artist):
         self.label.set_array(self.labelArray)
         self.rect.set(facecolor=props.bgcolor, alpha=props.alpha)
 
-    def set_hover(self, event):
-        'check the hover status of event and return true if status is changed'
-        b,junk = self.rect.contains(event)
-        changed = (b != self.hover)
-        if changed:
-            self.set_hover_props(b)
-        self.hover = b
-        return changed
+    #def set_hover(self, event):
+    #    'check the hover status of event and return true if status is changed'
+    #    b,junk = self.rect.contains(event)
+    #    changed = (b != self.hover)
+    #    if changed:
+    #        self.set_hover_props(b)
+    #    self.hover = b
+    #    return changed
 
 class Menu:
     def __init__(self, fig, menuitems):
@@ -160,15 +160,15 @@ class Menu:
             item.set_extent(left, bottom, width, height)
             fig.artists.append(item)
             y1 -= maxh + MenuItem.pady
-        fig.canvas.mpl_connect('motion_notify_event', self.on_move)
+        #fig.canvas.mpl_connect('motion_notify_event', self.on_move)
 
-    def on_move(self, event):
-        draw = False
-        for item in self.menuitems:
-            draw = item.set_hover(event)
-            if draw:
-                self.figure.canvas.draw()
-                break
+    #def on_move(self, event):
+    #    draw = False
+    #    for item in self.menuitems:
+    #        draw = item.set_hover(event)
+    #        if draw:
+    #            self.figure.canvas.draw()
+    #            break
     
 def getCoord(network, station):
     """
@@ -474,8 +474,8 @@ class PickingGUI:
             l.set_color(self.dictPhaseColors['P'])
         self.radioPhase.circles[0].set_facecolor(self.dictPhaseColors['P'])
         #add menu buttons:
-        props = ItemProperties(labelcolor='black', bgcolor='yellow', fontsize=12, alpha=0.2)
-        hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
+        props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
+        #hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
         for label in ('clearAll', 'clearEvent', 'doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'showWadati', 'sendEvent', 'getNextEvent', 'quit'):
             def on_select(item):
@@ -541,7 +541,7 @@ class PickingGUI:
                                              self.streams[0][0].stats.endtime)
                     self.drawAllItems()
                     self.redraw()
-            item = MenuItem(self.fig, label, props=props, hoverprops=hoverprops, on_select=on_select)
+            item = MenuItem(self.fig, label, props=props, hoverprops=None, on_select=on_select)
             menuitems.append(item)
         self.menu = Menu(self.fig, menuitems)
         
@@ -591,7 +591,7 @@ class PickingGUI:
         self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.20,hspace=0,right=0.999,top=0.95)
+        self.fig.subplots_adjust(bottom=0.20, hspace=0.01, right=0.999, top=0.95, left=0.15)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1138,21 +1138,21 @@ class PickingGUI:
         self.valFiltLow = self.slideLow.val
         self.valFiltHigh = self.slideHigh.val
         try:
-            self.fig.delaxes(self.axLowcut)
-            self.fig.delaxes(self.axHighcut)
+            self.fig.delaxes(self.axHighpass)
+            self.fig.delaxes(self.axLowpass)
         except:
             return
     
     def addSliders(self):
         #add filter slider
-        self.axLowcut = self.fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
-        self.axHighcut  = self.fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
+        self.axHighpass = self.fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
+        self.axLowpass  = self.fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
         low  = 1.0/ (self.streams[self.stPt][0].stats.npts/float(self.streams[self.stPt][0].stats.sampling_rate))
         high = self.streams[self.stPt][0].stats.sampling_rate/2.0
         self.valFiltLow = max(low,self.valFiltLow)
         self.valFiltHigh = min(high,self.valFiltHigh)
-        self.slideLow = Slider(self.axLowcut, 'Lowcut', low, high, valinit=self.valFiltLow, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
-        self.slideHigh = Slider(self.axHighcut, 'Highcut', low, high, valinit=self.valFiltHigh, facecolor='darkgrey', edgecolor='k', linewidth=1.7)
+        self.slideLow = Slider(self.axHighpass, 'Highpass', low, high, valinit=self.valFiltLow, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
+        self.slideHigh = Slider(self.axLowpass, 'Lowpass', low, high, valinit=self.valFiltHigh, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
         self.slideLow.on_changed(self.updateLow)
         self.slideHigh.on_changed(self.updateHigh)
         
@@ -1842,7 +1842,7 @@ class PickingGUI:
         fmtP = "%4s%1sP%1s%1i %15s"
         fmtS = "%12s%1sS%1s%1i\n"
         #fmt2 = "  BGLD4739.14N01300.75E 930"
-        fmt2 = "%6s%2i%5.2fN%3i%5.2fE%4i\n"
+        fmt2 = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
         #self.coords = []
         for i in range(len(self.streams)):
             #lon, lat, ele = getCoord(network, self.stationlist[i])
@@ -1854,7 +1854,7 @@ class PickingGUI:
             lat_deg = int(lat)
             lat_min = (lat - lat_deg) * 60.
             ele = self.dicts[i]['StaEle'] * 1000
-            f2.write(fmt2 % (sta, lon_deg, lon_min, lat_deg, lat_min, ele))
+            f2.write(fmt2 % (sta, lat_deg, lat_min, lon_deg, lon_min, ele))
             #self.coords.append([lon, lat])
             if not self.dicts[i].has_key('P') and not self.dicts[i].has_key('S'):
                 continue
