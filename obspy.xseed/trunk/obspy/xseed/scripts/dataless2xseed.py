@@ -52,7 +52,8 @@ def dataless2xseed(filename, options):
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.writeXSEED(output, version=str(options.version))
+            parser.writeXSEED(output, version=str(options.version),
+                              split_stations=options.split_stations)
         except Exception, e:
             if options.debug:
                 raise
@@ -64,6 +65,11 @@ def dataless2xseed(filename, options):
 def main():
     usage = "usage: %prog [options] filename"
     parser = OptionParser(usage)
+    parser.add_option("-s", "--split-stations", default=False,
+                      action="store_true", dest="split_stations",
+                      help="split multiple stations within one dataless file "
+                           "into multiple XML-SEED files, labeled with the "
+                           "start time of the volume.")
     parser.add_option("-d", "--debug", default=False,
                       action="store_true", dest="debug",
                       help="show debugging information")

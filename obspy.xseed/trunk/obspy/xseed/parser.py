@@ -14,6 +14,7 @@ import math
 import os
 import warnings
 import zipfile
+import copy
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -134,11 +135,21 @@ class Parser(object):
         else:
             raise IOError
 
-    def getXSEED(self, version=DEFAULT_XSEED_VERSION):
+    def getXSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XML representation of all headers of a SEED volume.
-        
-        :param version: XSEED version string. Defaults to version 1.1
+
+        Parameters
+        ----------
+        version : float, optional
+            XSEED version string (default is 1.1).
+        split_stations : boolean, optional
+            Returns 
+
+        Returns
+        -------
+        string or list of strings
+            Return type depends on the flag ``split_stations``.
         """
         if version not in XSEED_VERSIONS:
             raise SEEDParserException("Unknown XML-SEED version!")
@@ -168,28 +179,57 @@ class Parser(object):
                     utils.toTag('Abbreviation Dictionary Control Header'))
         for blockette in self.abbreviations:
             root.append(blockette.getXML(xseed_version=version))
-        # All blockettes for one station in one root element:
-        for station in self.stations:
-            root = SubElement(doc, utils.toTag('Station Control Header'))
-            for blockette in station:
-                root.append(blockette.getXML(xseed_version=version))
         if version == '1.0':
             # To pass the XSD schema test an empty time span control header is
             # added to the end of the file.
             root = SubElement(doc, utils.toTag('Timespan Control Header'))
             # Also no data is present in all supported SEED files (for now).
             root = SubElement(doc, utils.toTag('Data Records'))
-        # Write XML String.
-        return tostring(doc, pretty_print=True, xml_declaration=True,
-                        encoding='utf-8')
+        if not split_stations:
+            # Don't split stations
+            for station in self.stations:
+                root = SubElement(doc, utils.toTag('Station Control Header'))
+                for blockette in station:
+                    root.append(blockette.getXML(xseed_version=version))
+            # Return single XML String.
+            return tostring(doc, pretty_print=True, xml_declaration=True,
+                            encoding='utf-8')
+        else:
+            # generate a XML resource for each station
+            result = {}
+            for station in self.stations:
+                cdoc = copy.copy(doc)
+                root = SubElement(cdoc, utils.toTag('Station Control Header'))
+                for blockette in station:
+                    root.append(blockette.getXML(xseed_version=version))
+                id = station[0].end_effective_date
+                result[id] = tostring(cdoc, pretty_print=True,
+                                      xml_declaration=True, encoding='utf-8')
+            return result
+
 
     def writeXSEED(self, filename, *args, **kwargs):
         """
         Stores XML-SEED string into file with given name.
         """
-        fh = open(filename, 'w')
-        fh.write(self.getXSEED(*args, **kwargs))
-        fh.close()
+        result = self.getXSEED(*args, **kwargs)
+        if isinstance(result, basestring):
+            open(filename, 'w').write(result)
+            return
+        elif isinstance(result, dict):
+            for key, value in result.iteritems():
+                if len(result) > 1 and key != '':
+                    fn = filename.split('.xml')[0]
+                    if result.keys().count(key) == 1:
+                        fn = "%s.%s.xml" % (filename, key.date)
+                    else:
+                        fn = "%s.%s.xml" % (filename, key.timestamp)
+                else:
+                    fn = filename
+                open(fn, 'w').write(value)
+            return
+        else:
+            raise TypeError
 
     def getSEED(self, compact=False):
         """
