@@ -8,8 +8,9 @@
 from lxml.etree import SubElement as Sub, parse, tostring
 from lxml.etree import fromstring, Element
 from optparse import OptionParser
-import fnmatch
 import numpy as np
+import fnmatch
+import shutil
 import sys
 import subprocess
 import httplib
@@ -17,7 +18,9 @@ import base64
 import time
 import urllib2
 import warnings
+import tempfile
 
+#sys.path.append('/baysoft/obspy/obspy/branches/symlink')
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
 from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
@@ -229,24 +232,26 @@ class PickingGUI:
                            'setSPolDown': 'd', 'setSPolPoorDown': '-',
                            'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
                            'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
-        self.threeDlocPath = '/baysoft/obspyck/3dloc/'
-        self.threeDlocOutfile = self.threeDlocPath + '3dloc-out'
-        self.threeDlocInfile = self.threeDlocPath + '3dloc-in'
+        self.tmp_dir = tempfile.mkdtemp() + '/'
+        self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
+        self.threeDlocInfile = self.tmp_dir + '3dloc-in'
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
         self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
                              'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
-                             'cd %s;' % self.threeDlocPath + \
+                             'cd %s;' % self.tmp_dir + \
                              '3dloc_pitsa'
         self.hyp2000Path = '/baysoft/obspyck/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
-        self.hyp2000Phasefile = self.hyp2000Path + 'hyp2000.pha'
-        self.hyp2000Stationsfile = self.hyp2000Path + 'stations.dat'
-        self.hyp2000Summary = self.hyp2000Path + 'hypo.prt'
+        self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
+        self.hyp2000Stationsfile = self.tmp_dir + 'stations.dat'
+        self.hyp2000Summary = self.tmp_dir + 'hypo.prt'
+        subprocess.call('cp %s/* %s &> /dev/null' % \
+                (self.hyp2000Path, self.tmp_dir), shell=True)
         self.hyp2000PreCall = 'rm %s %s %s &> /dev/null' \
                 % (self.hyp2000Phasefile, self.hyp2000Stationsfile,
                    self.hyp2000Summary)
-        self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.hyp2000Path) + \
+        self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
                            'cd $HYP2000_DATA;' + \
                            'hyp2000 < bay2000.inp &> /dev/null'
         self.dictOrigin = {}
@@ -449,6 +454,7 @@ class PickingGUI:
         # Set up initial plot
         self.fig = plt.figure()
         self.fig.canvas.set_window_title("ObsPyck")
+        #XXX not working with ion3 and windowmanagers?
         self.fig.set_size_inches(20, 10, forward = True)
         self.drawAxes()
         self.addFiltButtons()
@@ -481,6 +487,7 @@ class PickingGUI:
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
+                    shutil.rmtree(self.tmp_dir)
                     plt.close()
                 elif item.labelstr == 'clearAll':
                     self.delAllItems()
@@ -577,7 +584,8 @@ class PickingGUI:
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             else:
-                self.axs.append(self.fig.add_subplot(trNum,1,i+1,sharex=self.axs[0],sharey=self.axs[0]))
+                self.axs.append(self.fig.add_subplot(trNum, 1, i+1, 
+                        sharex=self.axs[0]))#, sharey=self.axs[0]))
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
