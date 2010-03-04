@@ -489,6 +489,13 @@ class PickingGUI:
     
     
     def drawAxes(self):
+        #XXX wanted to change to seconds on x-axis but there is one problem:
+        # during picking it's convenient to round to the nearest sample
+        # with float seconds on the x-axis it's not so easy anymore
+        #npts = self.streams[self.stPt][0].stats.npts
+        #smprt = self.streams[self.stPt][0].stats.sampling_rate
+        #dt = 1. / smprt
+        #self.t = np.arange(0., dt * npts, dt)
         self.t = np.arange(self.streams[self.stPt][0].stats.npts)
         self.axs = []
         self.plts = []
