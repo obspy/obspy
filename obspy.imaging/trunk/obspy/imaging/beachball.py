@@ -133,6 +133,7 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
         return imgdata.read()
     else:
         show()
+        return fig
 
 
 def plotMT(ax, T, N, P, size=200, color='b', outline=True,
