@@ -114,7 +114,7 @@ class LibMSEED(object):
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
                                skipnotdata=1, verbose=0, starttime=None,
-                               endtime=None):
+                               endtime=None, quality = False):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -126,10 +126,18 @@ class LibMSEED(object):
         :param filename: Name of MiniSEED file.
         :param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
+        :param quality: Read quality information or not. Defaults to false.
         """
+        # Open file handler neccessary for reading quality informations.
+        if quality:
+            file = open(filename, 'rb')
         # Initialise list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
+        # Init quality informations.
+        if quality:
+            trace_list[-1][0]['timing_quality'] = []
+            trace_list[-1][0]['data_quality_flags'] = [0] * 8
         ms = MSStruct(filename)
         end_byte = 1e99
         if starttime or endtime:
@@ -145,6 +153,8 @@ class LibMSEED(object):
         # Loop over records and append to trace_list.
         last_msrid = None
         while True:
+            if quality:
+                filepos = ms.tell()
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
                               raise_flag=False)
@@ -171,11 +181,23 @@ class LibMSEED(object):
                 trace_list[-1][0]['endtime'] = header['endtime']
                 trace_list[-1][0]['numsamples'] += header['numsamples']
                 trace_list[-1].append(data)
+                # Read quality information.
+                if quality:
+                    self._readQuality(file, filepos, chain,
+                         tq = trace_list[-1][0]['timing_quality'],
+                         dq = trace_list[-1][0]['data_quality_flags'])
             else:
                 # Concatenate last trace and start a new trace
                 trace_list[-1] = [trace_list[-1][0],
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
+                # Init quality informations.
+                if quality:
+                    trace_list[-1][0]['timing_quality'] = []
+                    trace_list[-1][0]['data_quality_flags'] = [0] * 8
+                    self._readQuality(file, filepos, chain,
+                         tq = trace_list[-1][0]['timing_quality'],
+                         dq = trace_list[-1][0]['data_quality_flags'])
             last_msrid = msrid
             if ms.f.tell() >= end_byte:
                 break
@@ -184,7 +206,35 @@ class LibMSEED(object):
                           np.concatenate(trace_list[-1][1:])]
         trace_list.pop(0) # remove first dummy entry of list
         del ms # for valgrind
+        # Close file.
+        if quality:
+            file.close()
         return trace_list
+
+
+    def _readQuality(self, file, filepos, chain, tq, dq):
+        """
+        Reads all quality informations from a file and writes it to tq and dq.
+        """
+        # Seek to correct position.
+        file.seek(filepos, 0)
+        # Skip non data records.
+        data = file.read(39)
+        if data[6] == 'D':
+            # Read data quality byte.
+            data_quality_flags = data[38]
+            # Unpack the binary data.
+            data_quality_flags = unpack('B', data_quality_flags)[0]
+            # Add the value of each bit to the quality_count.
+            for _j in xrange(8):
+                if (data_quality_flags & (1 << _j)) != 0:
+                    dq[_j] += 1
+        try:
+            # Get timing quality in blockette 1001.
+            tq.append(float(chain.Blkt1001.contents.timing_qual))
+        except:
+            pass
+
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
@@ -998,6 +1048,12 @@ class MSStruct(object):
         self.read(-1, 0, 1, 0)
         dtime = clibmseed.msr_endtime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
+
+    def tell(self):
+        """
+        Analogue to file.tell().
+        """
+        return self.f.tell()
 
     def getStart(self):
         """

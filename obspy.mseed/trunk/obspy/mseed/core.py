@@ -25,7 +25,7 @@ def isMSEED(filename):
 
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
-              reclen= -1, **kwargs):
+              reclen= -1, quality = False, **kwargs):
     """
     Reads a given Mini-SEED file and returns an Stream object.
     
@@ -48,6 +48,15 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         Record length in bytes of Mini-SEED file to read. This option might
         be usefull if blockette 10 is missing and thus read cannot
         determine the reclen automatically.
+    quality : bool, optional
+        Determines whether quality information is being read or not. Has a big
+        impact on performance so only use when necessary (takes ~ 700 %
+        longer). Two attributes will be written to each Trace's stats.mseed
+        object: data_quality_flags_count counts the bits in field 14 of the
+        fixed header for each Mini-SEED record. timing_quality is a
+        `numpy.array` which contains all timing qualities found in Blockette
+        1001 in the order of appearance. If no Blockette 1001 is found it will
+        be an empty array.
 
     Example
     -------
@@ -61,10 +70,11 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     else:
         kwargs['starttime'] = kwargs.get('starttime', None)
         kwargs['endtime'] = kwargs.get('endtime', None)
-        if starttime or endtime or platform.system() == "Windows":
+        if starttime or endtime or platform.system() == "Windows" or quality:
             # 4x slower on Mac
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
-                         starttime=starttime, endtime=endtime, reclen=reclen)
+                         starttime=starttime, endtime=endtime, reclen=reclen,
+                         quality = quality)
         else:
             # problem on windows with big files (>=20 MB)
             trace_list = __libmseed__.readMSTraces(filename, reclen=reclen)
@@ -91,6 +101,12 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
             __libmseed__._convertMSTimeToDatetime(header['starttime'])
         header['endtime'] = \
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
+        # Append quality informations if necessary.
+        if quality:
+                header['mseed']['timing_quality']=\
+                np.array(old_header['timing_quality'])
+                header['mseed']['data_quality_flags_count']= \
+                                      old_header['data_quality_flags']
         # Append traces.
         if headonly:
             header['npts'] = int((header['endtime'] - header['starttime']) *

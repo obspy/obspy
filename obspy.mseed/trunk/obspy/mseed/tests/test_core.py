@@ -454,6 +454,42 @@ class CoreTestCase(unittest.TestCase):
                                 'float32_Float32_bigEndian.mseed')
             self.assertRaises(Exception, read, file, reclen=4096)
 
+    def test_readQualityInformation(self):
+        """
+        Tests the reading of the quality informations if the flag is set.
+        """
+        # Two files. One with timing quality information and one with set
+        # quality flags.
+        timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
+        qualityflags = os.path.join(self.path, 'data', 'qualityflags.mseed')
+        t_st = read(timingqual, quality = True)
+        q_st = read(qualityflags, quality = True)
+        # The timingquality contains values from 0 to 100 in random order.
+        qual = np.arange(101, dtype='float32')
+        read_qual = t_st[0].stats.mseed.timing_quality
+        read_qual.sort()
+        np.testing.assert_array_equal(qual, read_qual)
+        # Check for quality flags.
+        # The test file contains 18 records. The first record has no set bit,
+        # bit 0 of the second record is set, bit 1 of the third, ..., bit 7 of
+        # the 9th record is set. The last nine records have 0 to 8 set bits,
+        # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
+        # Altogether the file contains 44 set bits.
+        self.assertEqual(len(q_st), 18)
+        self.assertEqual(q_st[0].stats.mseed.data_quality_flags_count,
+                         [0] * 8)
+        for _i in xrange(8):
+            dummy = [0] * 8
+            dummy[_i] = 1
+            self.assertEqual(q_st[_i+1].stats.mseed.data_quality_flags_count,
+                             dummy)
+        dummy = [0] * 8
+        self.assertEqual(q_st[9].stats.mseed.data_quality_flags_count,
+                         [0] * 8)
+        for _i in xrange(8):
+            dummy[_i] = 1
+            self.assertEqual(q_st[_i+10].stats.mseed.data_quality_flags_count,
+                             dummy)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
