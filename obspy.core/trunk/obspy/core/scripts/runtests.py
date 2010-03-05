@@ -61,28 +61,26 @@ ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
 
-def _getSuites(verbosity=1, tests=[]):
+def _getSuites(verbosity=1, names=[]):
     """
     The obspy test suite.
     """
-    if tests == []:
+    if names == []:
         names = DEFAULT_MODULES
-    else:
-        names = []
-        # Search for short cuts in tests, if there are no short cuts,
-        # names variables is equal to tests variable
-        for test in tests:
-            if test in ALL_MODULES:
-                names.append(test)
     # Construct the test suite from the given names. Modules
     # need not be imported before in this case
     suites = {}
     ut = unittest.TestLoader()
     for name in names:
-        module = 'obspy.%s.tests.suite' % name
         suite = []
+        if name in ALL_MODULES:
+            # Search for short cuts in tests
+            test = 'obspy.%s.tests.suite' % name
+        else:
+            # If no short cuts names variable = test variable
+            test = name
         try:
-            suite.append(ut.loadTestsFromName(module, None))
+            suite.append(ut.loadTestsFromName(test, None))
         except Exception, e:
             if verbosity:
                 print e
