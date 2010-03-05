@@ -12,6 +12,7 @@ import numpy as np
 import fnmatch
 import shutil
 import sys
+import os
 import subprocess
 import httplib
 import base64
@@ -29,6 +30,7 @@ from obspy.signal.filter import lowpass, lowpassZPHSH, highpass, highpassZPHSH
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
+from obspy.imaging.beachball import Beachball
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -234,8 +236,12 @@ class PickingGUI:
                            'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
                            'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
         self.tmp_dir = tempfile.mkdtemp() + '/'
+        self.threeDlocPath = '/baysoft/obspyck/3dloc/'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
         self.threeDlocInfile = self.tmp_dir + '3dloc-in'
+        # copy 3dloc files to temp directory (only na.in)
+        subprocess.call('cp %s/* %s &> /dev/null' % \
+                (self.threeDlocPath, self.tmp_dir), shell=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
         self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
@@ -247,6 +253,7 @@ class PickingGUI:
         self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
         self.hyp2000Stationsfile = self.tmp_dir + 'stations.dat'
         self.hyp2000Summary = self.tmp_dir + 'hypo.prt'
+        # copy hypo2000 files to temp directory
         subprocess.call('cp %s/* %s &> /dev/null' % \
                 (self.hyp2000Path, self.tmp_dir), shell=True)
         self.hyp2000PreCall = 'rm %s %s %s &> /dev/null' \
@@ -255,8 +262,23 @@ class PickingGUI:
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
                            'cd $HYP2000_DATA;' + \
                            'hyp2000 < bay2000.inp &> /dev/null'
+        self.focmecPath = '/baysoft/obspyck/focmec/'
+        self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
+        self.focmecStdout = self.tmp_dir + 'focmec.stdout'
+        self.focmecSummary = self.tmp_dir + 'focmec.out'
+        # copy focmec files to temp directory
+        subprocess.call('cp %s/* %s &> /dev/null' % \
+                (self.focmecPath, self.tmp_dir), shell=True)
+        self.focmecCall = 'cd %s;' % (self.tmp_dir) + \
+                          './rfocmec'
         self.dictOrigin = {}
         self.dictMagnitude = {}
+        self.dictFocalMechanism = {} # currently selected focal mechanism
+        self.focMechList = [] # list for all focal mechanisms from focmec
+        # indicates which of the available focal mechanisms is selected
+        self.focMechCurrent = None 
+        # indicates how many focal mechanisms are available from focmec
+        self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
         self.dictEvent['locationType'] = None
@@ -265,6 +287,8 @@ class PickingGUI:
         self.seishubEventCurrent = None 
         # indicates how many events are available from seishub
         self.seishubEventCount = None
+        # save username of current user
+        self.username = os.environ['USER']
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
@@ -402,27 +426,33 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
         #hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('clearAll', 'clearEvent', 'doHyp2000', 'do3dloc', 'calcMag', 'showMap', 'showWadati', 'sendEvent', 'getNextEvent', 'quit'):
+        for label in ('clear All', 'clear Orig&Mag', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
-                    shutil.rmtree(self.tmp_dir)
+                    try:
+                        shutil.rmtree(self.tmp_dir)
+                    except:
+                        pass
                     plt.close()
-                elif item.labelstr == 'clearAll':
+                    plt.close()
+                    plt.close()
+                    plt.close()
+                elif item.labelstr == 'clear All':
                     self.delAllItems()
                     self.clearDictionaries()
                     self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
-                elif item.labelstr == 'clearEvent':
+                elif item.labelstr == 'clear Orig&Mag':
                     self.delAllItems()
-                    self.clearEventDictionaries()
+                    self.clearOriginMagnitudeDictionaries()
                     self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
-                elif item.labelstr == 'doHyp2000':
+                elif item.labelstr == 'do Hypo2000':
                     self.delAllItems()
-                    self.clearEventDictionaries()
+                    self.clearOriginMagnitudeDictionaries()
                     self.dictEvent['locationType'] = "hyp2000"
                     self.doHyp2000()
                     #self.load3dlocSyntheticPhases()
@@ -433,9 +463,9 @@ class PickingGUI:
                     self.showEventMap()
                     self.drawAllItems()
                     self.redraw()
-                elif item.labelstr == 'do3dloc':
+                elif item.labelstr == 'do 3dloc':
                     self.delAllItems()
-                    self.clearEventDictionaries()
+                    self.clearOriginMagnitudeDictionaries()
                     self.dictEvent['locationType'] = "3dloc"
                     self.do3dLoc()
                     self.load3dlocSyntheticPhases()
@@ -446,18 +476,25 @@ class PickingGUI:
                     self.showEventMap()
                     self.drawAllItems()
                     self.redraw()
-                elif item.labelstr == 'calcMag':
+                elif item.labelstr == 'calc Mag':
                     self.calculateEpiHypoDists()
                     self.calculateStationMagnitudes()
                     self.updateNetworkMag()
-                elif item.labelstr == 'showMap':
+                elif item.labelstr == 'do Focmec':
+                    self.clearFocmecDictionary()
+                    self.doFocmec()
+                elif item.labelstr == 'next Focmec':
+                    self.nextFocMec()
+                elif item.labelstr == 'show Map':
                     #self.load3dlocData()
                     self.showEventMap()
-                elif item.labelstr == 'showWadati':
+                elif item.labelstr == 'show Focmec':
+                    self.showFocMec()
+                elif item.labelstr == 'show Wadati':
                     self.showWadati()
-                elif item.labelstr == 'sendEvent':
+                elif item.labelstr == 'send Event':
                     self.uploadSeishub()
-                elif item.labelstr == 'getNextEvent':
+                elif item.labelstr == 'get NextEvent':
                     self.delAllItems()
                     self.clearDictionaries()
                     self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
@@ -522,7 +559,7 @@ class PickingGUI:
         self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.20, hspace=0.01, right=0.999, top=0.95, left=0.15)
+        self.fig.subplots_adjust(bottom=0.20, hspace=0.01, right=0.999, top=0.95, left=0.18)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1763,6 +1800,145 @@ class PickingGUI:
         print '--> 3dloc finished'
         self.catFile(self.threeDlocOutfile)
 
+    def doFocmec(self):
+        f = open(self.focmecPhasefile, 'w')
+        f.write("\n") #first line is ignored!
+        #Fortran style! 1: Station 2: Azimuth 3: Incident 4: Polarity
+        #fmt = "ONTN  349.00   96.00C"
+        fmt = "%4s  %6.2f  %6.2f%1s\n"
+        count = 0
+        for d in self.dicts:
+            if 'PAzim' not in d or 'PInci' not in d or 'PPol' not in d:
+                continue
+            sta = d['Station'][:4] #focmec has only 4 chars
+            azim = d['PAzim']
+            inci = d['PInci']
+            if d['PPol'] == 'up':
+                pol = 'U'
+            elif d['PPol'] == 'poorup':
+                pol = '+'
+            elif d['PPol'] == 'down':
+                pol = 'D'
+            elif d['PPol'] == 'poordown':
+                pol = '-'
+            else:
+                continue
+            count += 1
+            f.write(fmt % (sta, azim, inci, pol))
+        f.close()
+        print 'Phases for focmec: %i' % count
+        self.catFile(self.focmecPhasefile)
+        exitcode = subprocess.call(self.focmecCall, shell=True)
+        if exitcode == 1:
+            print "Error: focmec did not find a suitable solution"
+            return
+        print '--> focmec finished'
+        lines = open(self.focmecSummary, "r").readlines()
+        print '%i suitable solutions found:' % len(lines)
+        self.focMechList = []
+        for line in lines:
+            line = line.split()
+            tempdict = {}
+            tempdict['Dip'] = float(line[0])
+            tempdict['Strike'] = float(line[1])
+            tempdict['Rake'] = float(line[2])
+            tempdict['Errors'] = int(float(line[3])) # not used in xml
+            tempdict['Station Polarity Count'] = count
+            print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
+                    (tempdict['Dip'], tempdict['Strike'], tempdict['Rake'],
+                     tempdict['Errors'], tempdict['Station Polarity Count'])
+            self.focMechList.append(tempdict)
+        self.focMechCount = len(self.focMechList)
+        self.focMechCurrent = 0
+        print "selecting Focal Mechanism No.  1 of %2i:" % self.focMechCount
+        self.dictFocalMechanism = self.focMechList[0]
+        print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
+                (self.dictFocalMechanism['Dip'],
+                 self.dictFocalMechanism['Strike'],
+                 self.dictFocalMechanism['Rake'],
+                 self.dictFocalMechanism['Errors'],
+                 self.dictFocalMechanism['Station Polarity Count'])
+
+    def nextFocMec(self):
+        if not self.focMechCount:
+            return
+        self.focMechCurrent = (self.focMechCurrent + 1) % self.focMechCount
+        self.dictFocalMechanism = self.focMechList[self.focMechCurrent]
+        print "selecting Focal Mechanism No. %2i of %2i:" % \
+                (self.focMechCurrent + 1, self.focMechCount)
+        print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
+                (self.dictFocalMechanism['Dip'],
+                 self.dictFocalMechanism['Strike'],
+                 self.dictFocalMechanism['Rake'],
+                 self.dictFocalMechanism['Errors'],
+                 self.dictFocalMechanism['Station Polarity Count'])
+
+    def showFocMec(self):
+        if self.dictFocalMechanism == {}:
+            return
+        # plot the selected solution
+        fig = Beachball([self.dictFocalMechanism['Strike'],
+                         self.dictFocalMechanism['Dip'],
+                         self.dictFocalMechanism['Rake']])
+        # plot the alternative solutions
+        if self.focMechList != []:
+            for d in self.focMechList:
+                Beachball([d['Strike'], d['Dip'], d['Rake']],
+                          nofill=True, fig=fig)
+        try:
+            fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
+                    (self.dictFocalMechanism['Dip'],
+                     self.dictFocalMechanism['Strike'],
+                     self.dictFocalMechanism['Rake']) + \
+                     "Errors: %i/%i" % \
+                     (self.dictFocalMechanism['Errors'],
+                      self.dictFocalMechanism['Station Polarity Count']),
+                     fontsize=10)
+        except:
+            fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
+                    (self.dictFocalMechanism['Dip'],
+                     self.dictFocalMechanism['Strike'],
+                     self.dictFocalMechanism['Rake']) + \
+                     "Used Polarities: %i" % \
+                     self.dictFocalMechanism['Station Polarity Count'],
+                     fontsize=10)
+        fig.canvas.set_window_title("Focal Mechanism (%i of %i)" % \
+                (self.focMechCurrent + 1,
+                 self.focMechCount))
+        fig.subplots_adjust(top=0.88) # make room for suptitle
+        # values 0.02 and 0.96 fit best over the outer edges of beachball
+        #ax = fig.add_axes([0.00, 0.02, 1.00, 0.96], polar=True)
+        ax = fig.add_axes([0.00, 0.02, 1.00, 0.84], polar=True)
+        ax.set_axis_off()
+        for d in self.dicts:
+            if 'PAzim' in d and 'PInci' in d and 'PPol' in d:
+                if d['PPol'] == "up":
+                    color = "black"
+                elif d['PPol'] == "poorup":
+                    color = "darkgrey"
+                elif d['PPol'] == "poordown":
+                    color = "lightgrey"
+                elif d['PPol'] == "down":
+                    color = "white"
+                else:
+                    continue
+                # southern hemisphere projection
+                if d['PInci'] > 90:
+                    inci = 180. - d['PInci']
+                    #azim = -180. + d['PAzim']
+                else:
+                    inci = d['PInci']
+                azim = d['PAzim']
+                #we have to hack the azimuth because of the polar plot
+                #axes orientation
+                plotazim = (np.pi / 2.) - ((azim / 180.) * np.pi)
+                ax.scatter([plotazim], [inci], facecolor=color)
+                ax.text(plotazim, inci, " " + d['Station'],
+                        fontsize=10, va="top")
+        #this fits the 90 degree incident value to the beachball edge best
+        ax.set_ylim([0., 91])
+        fig.canvas.draw()
+
     def doHyp2000(self):
         self.setXMLEventID()
         subprocess.call(self.hyp2000PreCall, shell = True)
@@ -2238,7 +2414,7 @@ class PickingGUI:
         x0 = - (intercept / gradient)
         x1 = max(pTimes)
         y1 = (gradient * float(x1)) + intercept
-        fig = plt.figure(3)
+        fig = plt.figure(1001)
         fig.canvas.set_window_title("Wadati Diagram")
         ax = fig.add_subplot(111)
         ax.scatter(pTimes, spTimes)
@@ -2265,7 +2441,7 @@ class PickingGUI:
 
     def showEventMap(self):
         #print self.dicts[0]
-        self.figEventMap = plt.figure(2)
+        self.figEventMap = plt.figure(1000)
         self.figEventMap.canvas.set_window_title("Event Map")
         self.axEventMap = self.figEventMap.add_subplot(111)
         self.axEventMap.scatter([self.dictOrigin['Longitude']], [self.dictOrigin['Latitude']],
@@ -2354,6 +2530,7 @@ class PickingGUI:
         self.axEventMap.set_xlabel('Longitude')
         self.axEventMap.set_ylabel('Latitude')
         self.axEventMap.set_title(self.dictOrigin['Time'])
+        self.axEventMap.axis('equal')
         #XXX disabled because it plots the wrong info if the event was
         # fetched from seishub
         #####lines = open(self.threeDlocOutfile).readlines()
@@ -2404,7 +2581,9 @@ class PickingGUI:
         """
         xml =  Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
-        Sub(Sub(xml, "event_type"), "value").text = "manual"
+        event_type = Sub(xml, "event_type")
+        Sub(event_type, "value").text = "manual"
+        Sub(event_type, "user").text = self.username
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
@@ -2437,9 +2616,9 @@ class PickingGUI:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('PPol'):
                     if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                     elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                 else:
                     Sub(pick, "polarity")
                 if self.dicts[i].has_key('PWeight'):
@@ -2476,9 +2655,9 @@ class PickingGUI:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('SPol'):
                     if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                     elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                 else:
                     Sub(pick, "polarity")
                 if self.dicts[i].has_key('SWeight'):
@@ -2495,7 +2674,9 @@ class PickingGUI:
         """
         xml =  Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
-        Sub(Sub(xml, "event_type"), "value").text = "manual"
+        event_type = Sub(xml, "event_type")
+        Sub(event_type, "value").text = "manual"
+        Sub(event_type, "user").text = self.username
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
@@ -2535,16 +2716,16 @@ class PickingGUI:
                 phase_compu += "P"
                 if self.dicts[i].has_key('PPol'):
                     if self.dicts[i]['PPol'] == 'up':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                         phase_compu += "U"
                     elif self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                         phase_compu += "+"
                     elif self.dicts[i]['PPol'] == 'down':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                         phase_compu += "D"
                     elif self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
@@ -2602,16 +2783,16 @@ class PickingGUI:
                 phase_compu += "S"
                 if self.dicts[i].has_key('SPol'):
                     if self.dicts[i]['SPol'] == 'up':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                         phase_compu += "U"
                     elif self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                         phase_compu += "+"
                     elif self.dicts[i]['SPol'] == 'down':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                         phase_compu += "D"
                     elif self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
@@ -2685,8 +2866,8 @@ class PickingGUI:
         Sub(magnitude, "type").text = "Ml"
         Sub(magnitude, "stationCount").text = '%i' % self.dictMagnitude['Station Count']
         for i in range(len(self.streams)):
-            stationMagnitude = Sub(xml, "stationMagnitude")
             if self.dicts[i].has_key('Mag'):
+                stationMagnitude = Sub(xml, "stationMagnitude")
                 mag = Sub(stationMagnitude, 'mag')
                 Sub(mag, 'value').text = '%s' % self.dicts[i]['Mag']
                 Sub(mag, 'uncertainty').text
@@ -2696,6 +2877,28 @@ class PickingGUI:
                 else:
                     Sub(stationMagnitude, 'weight').text = '0'
                 Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
+
+        #focal mechanism output
+        if self.dictFocalMechanism != {}:
+            focmec = Sub(xml, "focalMechanism")
+            nodplanes = Sub(focmec, "nodalPlanes")
+            nodplanes.set("preferredPlane", "1")
+            nodplane1 = Sub(nodplanes, "nodalPlane1")
+            strike = Sub(nodplane1, "strike")
+            Sub(strike, "value").text = "%s" % \
+                    self.dictFocalMechanism['Strike']
+            Sub(strike, "uncertainty")
+            dip = Sub(nodplane1, "dip")
+            Sub(dip, "value").text = "%s" % self.dictFocalMechanism['Dip']
+            Sub(dip, "uncertainty")
+            rake = Sub(nodplane1, "rake")
+            Sub(rake, "value").text = "%s" % self.dictFocalMechanism['Rake']
+            Sub(rake, "uncertainty")
+            Sub(focmec, "stationPolarityCount").text = "%i" % \
+                    self.dictFocalMechanism['Station Polarity Count']
+            Sub(focmec, "stationPolarityErrorCount").text = "%i" % \
+                    self.dictFocalMechanism['Errors']
+
         return tostring(xml,pretty_print=True,xml_declaration=True)
 
     def threeDLoc2XML(self):
@@ -2704,7 +2907,9 @@ class PickingGUI:
         """
         xml =  Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
-        Sub(Sub(xml, "event_type"), "value").text = "manual"
+        event_type = Sub(xml, "event_type")
+        Sub(event_type, "value").text = "manual"
+        Sub(event_type, "user").text = self.username
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
@@ -2737,9 +2942,9 @@ class PickingGUI:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('PPol'):
                     if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                     elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
                 else:
                     Sub(pick, "polarity")
                 if self.dicts[i].has_key('PWeight'):
@@ -2786,9 +2991,9 @@ class PickingGUI:
                     Sub(pick, "onset")
                 if self.dicts[i].has_key('SPol'):
                     if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = 'positive'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                     elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = 'negative'
+                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
                 else:
                     Sub(pick, "polarity")
                 if self.dicts[i].has_key('SWeight'):
@@ -2859,6 +3064,28 @@ class PickingGUI:
                 else:
                     Sub(stationMagnitude, 'weight').text = '0'
                 Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
+        
+        #focal mechanism output
+        if self.dictFocalMechanism != {}:
+            focmec = Sub(xml, "focalMechanism")
+            nodplanes = Sub(focmec, "nodalPlanes")
+            nodplanes.set("preferredPlane", "1")
+            nodplane1 = Sub(nodplanes, "nodalPlane1")
+            strike = Sub(nodplane1, "strike")
+            Sub(strike, "value").text = "%s" % \
+                    self.dictFocalMechanism['Strike']
+            Sub(strike, "uncertainty")
+            dip = Sub(nodplane1, "dip")
+            Sub(dip, "value").text = "%s" % self.dictFocalMechanism['Dip']
+            Sub(dip, "uncertainty")
+            rake = Sub(nodplane1, "rake")
+            Sub(rake, "value").text = "%s" % self.dictFocalMechanism['Rake']
+            Sub(rake, "uncertainty")
+            Sub(focmec, "stationPolarityCount").text = "%i" % \
+                    self.dictFocalMechanism['Station Polarity Count']
+            Sub(focmec, "stationPolarityErrorCount").text = "%i" % \
+                    self.dictFocalMechanism['Errors']
+
         return tostring(xml,pretty_print=True,xml_declaration=True)
     
     def setXMLEventID(self):
@@ -2909,11 +3136,11 @@ class PickingGUI:
         # get the response
         statuscode, statusmessage, header = webservice.getreply()
         if statuscode!=201:
+           print "User: ", self.username
+           print "Name: ", name
            print "Server: ", servername, path
            print "Response: ", statuscode, statusmessage
            print "Headers: ", header
-        else:
-            print 'Upload to seishub successful (EventId: %s)' % name
     
     def clearDictionaries(self):
         print "Clearing previous data."
@@ -2926,12 +3153,16 @@ class PickingGUI:
             self.dicts[i]['MagUse'] = True
         self.dictOrigin = {}
         self.dictMagnitude = {}
+        self.dictFocalMechanism = {}
+        self.focMechList = []
+        self.focMechCurrent = None
+        self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
         self.dictEvent['locationType'] = None
 
 
-    def clearEventDictionaries(self):
+    def clearOriginMagnitudeDictionaries(self):
         print "Clearing previous event data."
         # we need to delete all station magnitude information from all dicts
         for i in range(len(self.dicts)):
@@ -2950,6 +3181,13 @@ class PickingGUI:
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
         self.dictEvent['locationType'] = None
+
+    def clearFocmecDictionary(self):
+        print "Clearing previous focal mechanism data."
+        self.dictFocalMechanism = {}
+        self.focMechList = []
+        self.focMechCurrent = None
+        self.focMechCount = None
 
     def delAllItems(self):
         self.delPLine()
@@ -3177,115 +3415,141 @@ class PickingGUI:
                 self.dicts[streamnum]['distHypo'] = float(hyp_dist)
 
         #analyze origin:
-        origin = resource_xml.xpath(u".//origin")[0]
         try:
-            time = origin.xpath(".//time/value")[0].text
-            self.dictOrigin['Time'] = UTCDateTime(time)
-        except:
-            pass
-        try:
-            lat = origin.xpath(".//latitude/value")[0].text
-            self.dictOrigin['Latitude'] = float(lat)
-        except:
-            pass
-        try:
-            lon = origin.xpath(".//longitude/value")[0].text
-            self.dictOrigin['Longitude'] = float(lon)
-        except:
-            pass
-        try:
-            errX = origin.xpath(".//longitude/uncertainty")[0].text
-            self.dictOrigin['Longitude Error'] = float(errX)
-        except:
-            pass
-        try:
-            errY = origin.xpath(".//latitude/uncertainty")[0].text
-            self.dictOrigin['Latitude Error'] = float(errY)
-        except:
-            pass
-        try:
-            z = origin.xpath(".//depth/value")[0].text
-            self.dictOrigin['Depth'] = float(z)
-        except:
-            pass
-        try:
-            errZ = origin.xpath(".//depth/uncertainty")[0].text
-            self.dictOrigin['Depth Error'] = float(errZ)
-        except:
-            pass
-        try:
-            self.dictOrigin['used P Count'] = \
-                    int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['used S Count'] = \
-                    int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['used Station Count'] = \
-                    int(origin.xpath(".//originQuality/usedStationCount")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['Standarderror'] = \
-                    float(origin.xpath(".//originQuality/standardError")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['Azimuthal Gap'] = \
-                    float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['Minimum Distance'] = \
-                    float(origin.xpath(".//originQuality/minimumDistance")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['Maximum Distance'] = \
-                    float(origin.xpath(".//originQuality/maximumDistance")[0].text)
-        except:
-            pass
-        try:
-            self.dictOrigin['Median Distance'] = \
-                    float(origin.xpath(".//originQuality/medianDistance")[0].text)
+            origin = resource_xml.xpath(u".//origin")[0]
+            try:
+                time = origin.xpath(".//time/value")[0].text
+                self.dictOrigin['Time'] = UTCDateTime(time)
+            except:
+                pass
+            try:
+                lat = origin.xpath(".//latitude/value")[0].text
+                self.dictOrigin['Latitude'] = float(lat)
+            except:
+                pass
+            try:
+                lon = origin.xpath(".//longitude/value")[0].text
+                self.dictOrigin['Longitude'] = float(lon)
+            except:
+                pass
+            try:
+                errX = origin.xpath(".//longitude/uncertainty")[0].text
+                self.dictOrigin['Longitude Error'] = float(errX)
+            except:
+                pass
+            try:
+                errY = origin.xpath(".//latitude/uncertainty")[0].text
+                self.dictOrigin['Latitude Error'] = float(errY)
+            except:
+                pass
+            try:
+                z = origin.xpath(".//depth/value")[0].text
+                self.dictOrigin['Depth'] = float(z)
+            except:
+                pass
+            try:
+                errZ = origin.xpath(".//depth/uncertainty")[0].text
+                self.dictOrigin['Depth Error'] = float(errZ)
+            except:
+                pass
+            try:
+                self.dictOrigin['used P Count'] = \
+                        int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['used S Count'] = \
+                        int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['used Station Count'] = \
+                        int(origin.xpath(".//originQuality/usedStationCount")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['Standarderror'] = \
+                        float(origin.xpath(".//originQuality/standardError")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['Azimuthal Gap'] = \
+                        float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['Minimum Distance'] = \
+                        float(origin.xpath(".//originQuality/minimumDistance")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['Maximum Distance'] = \
+                        float(origin.xpath(".//originQuality/maximumDistance")[0].text)
+            except:
+                pass
+            try:
+                self.dictOrigin['Median Distance'] = \
+                        float(origin.xpath(".//originQuality/medianDistance")[0].text)
+            except:
+                pass
         except:
             pass
 
         #analyze magnitude:
-        magnitude = resource_xml.xpath(u".//magnitude")[0]
         try:
-            mag = magnitude.xpath(".//mag/value")[0].text
-            self.dictMagnitude['Magnitude'] = float(mag)
-            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+            magnitude = resource_xml.xpath(u".//magnitude")[0]
+            try:
+                mag = magnitude.xpath(".//mag/value")[0].text
+                self.dictMagnitude['Magnitude'] = float(mag)
+                self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+            except:
+                pass
+            try:
+                magVar = magnitude.xpath(".//mag/uncertainty")[0].text
+                self.dictMagnitude['Uncertainty'] = float(magVar)
+            except:
+                pass
+            try:
+                stacount = magnitude.xpath(".//stationCount")[0].text
+                self.dictMagnitude['Station Count'] = int(stacount)
+            except:
+                pass
         except:
             pass
+        
+        #analyze focal mechanism:
         try:
-            magVar = magnitude.xpath(".//mag/uncertainty")[0].text
-            self.dictMagnitude['Uncertainty'] = float(magVar)
+            focmec = resource_xml.xpath(u".//focalMechanism")[0]
+            try:
+                strike = focmec.xpath(".//nodalPlanes/nodalPlane1/strike/value")[0].text
+                self.dictFocalMechanism['Strike'] = float(strike)
+                self.focMechCount = 1
+                self.focMechCurrent = 0
+            except:
+                pass
+            try:
+                dip = focmec.xpath(".//nodalPlanes/nodalPlane1/dip/value")[0].text
+                self.dictFocalMechanism['Dip'] = float(dip)
+            except:
+                pass
+            try:
+                rake = focmec.xpath(".//nodalPlanes/nodalPlane1/rake/value")[0].text
+                self.dictFocalMechanism['Rake'] = float(rake)
+            except:
+                pass
+            try:
+                staPolCount = focmec.xpath(".//stationPolarityCount")[0].text
+                self.dictFocalMechanism['Station Polarity Count'] = int(staPolCount)
+            except:
+                pass
+            try:
+                staPolErrCount = focmec.xpath(".//stationPolarityErrorCount")[0].text
+                self.dictFocalMechanism['Errors'] = int(staPolErrCount)
+            except:
+                pass
         except:
             pass
-        try:
-            stacount = magnitude.xpath(".//stationCount")[0].text
-            self.dictMagnitude['Station Count'] = int(stacount)
-        except:
-            pass
-        # get values
-                # XXX the channel on which the S phase was picked is not
-                # yet retrieved from the xml!
-                # XXX information from synthetic phases is not yet
-                # retrieved!!
-            # append everything to the picklist
-            #picklist.append([])
-            #picklist[-1].extend([document_id, network, station, location])
-            #picklist[-1].extend([channel, time, uncertainty, phaseHint])
-            #picklist[-1].extend([onset, polarity, weight])
-        #break #XXX using only first found event from given time span!!
-        #return picklist
         print "Event data from seishub loaded."
-
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
