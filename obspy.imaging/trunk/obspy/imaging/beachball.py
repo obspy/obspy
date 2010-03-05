@@ -54,7 +54,7 @@ EPSILON = 0.00001
 
 
 def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
-              format=None):
+              format=None, nofill=False, fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
     
@@ -74,6 +74,9 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
     :param size: Draw with this diameter.
     :param color: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
+    :param nofill: Do not fill the beachball, but only plot the planes.
+    :param fig: Give an existing figure instance to plot into. New Figure if
+        set to None.
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
     plt.ioff()
@@ -99,10 +102,11 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
     plot_size = size * 0.95
 
     # plot the figure
-    fig = plt.figure(figsize=(3, 3), dpi=100)
-    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
-    fig.set_figheight(size // 100)
-    fig.set_figwidth(size // 100)
+    if not fig:
+        fig = plt.figure(figsize=(3, 3), dpi=100)
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
+        fig.set_figheight(size // 100)
+        fig.set_figwidth(size // 100)
     ax = fig.add_subplot(111, aspect='equal')
 
     # hide axes + ticks
@@ -112,12 +116,12 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
     if mt:
         (T, N, P) = MT2Axes(mt)
         if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
-            plotDC(ax, np1, plot_size, linewidth, color, alpha)
+            plotDC(ax, np1, plot_size, linewidth, color, alpha, nofill=nofill)
         else:
             plotMT(ax, T, N, P, plot_size, color, outline=True,
                    plot_zerotrace=True, alpha=alpha, linewidth=linewidth)
     else:
-        plotDC(ax, np1, plot_size, linewidth, color, alpha)
+        plotDC(ax, np1, plot_size, linewidth, color, alpha, nofill=nofill)
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
     # export
@@ -446,7 +450,7 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
         ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
 
 
-def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
+def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0, nofill=False):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
     
@@ -517,8 +521,14 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0):
     (x, y) = Pol2Cart(phid, 90)
     xx = x * D / 90
     yy = y * D / 90
-    ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
-    ax.fill(Y, X, 'w', alpha=alpha, linewidth=linewidth)
+    if nofill:
+        l2 = lines.Line2D(Y, X, color='grey', linewidth=linewidth / 2.,
+                          zorder=10, alpha=alpha)
+        ax.add_line(l2)
+    else:
+        ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
+        ax.fill(Y, X, 'w', alpha=alpha, linewidth=linewidth)
+                          
     l = lines.Line2D(xx, yy, color='k',
                      linewidth=linewidth, zorder=10, alpha=alpha)
     ax.add_line(l)
