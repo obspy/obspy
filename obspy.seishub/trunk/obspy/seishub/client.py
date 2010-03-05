@@ -69,22 +69,22 @@ class _WaveformMapperClient(object):
     def getNetworkIds(self, **kwargs):
         url = '/seismology/waveform/getNetworkIds'
         root = self.client._objectify(url, **kwargs)
-        return [str(node.getchildren()[0]) for node in root.getchildren()]
+        return root.getchildren()
 
     def getStationIds(self, **kwargs):
         url = '/seismology/waveform/getStationIds'
         root = self.client._objectify(url, **kwargs)
-        return [str(node.getchildren()[0]) for node in root.getchildren()]
+        return root.getchildren()
 
     def getLocationIds(self, **kwargs):
         url = '/seismology/waveform/getLocationIds'
         root = self.client._objectify(url, **kwargs)
-        return [str(node.getchildren()[0]) for node in root.getchildren()]
+        return root.getchildren()
 
     def getChannelIds(self, **kwargs):
         url = '/seismology/waveform/getChannelIds'
         root = self.client._objectify(url, **kwargs)
-        return [str(node.getchildren()[0]) for node in root.getchildren()]
+        return root.getchildren()
 
     def getLatency(self, *args, **kwargs):
         """

@@ -6,7 +6,6 @@ from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
 from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
 import copy
 import fnmatch
-import logging
 import multiprocessing
 import os
 
@@ -50,9 +49,9 @@ class WaveformFileCrawler:
                 self.session.commit()
             except Exception, e:
                 self.session.rollback()
-                logging.error(str(e))
+                self.log.error(str(e))
             else:
-                logging.info('Inserting %s %s' % (data['path'], data['file']))
+                self.log.debug('Inserting %s %s' % (data['path'], data['file']))
 
     def _delete(self, path, file=None):
         """
@@ -69,10 +68,10 @@ class WaveformFileCrawler:
                 self.session.commit()
             except:
                 self.session.rollback()
-                logging.error('Error deleting file %s %s' % (path, file))
+                self.log.error('Error deleting file %s %s' % (path, file))
             else:
-                logging.info('Deleting file %s %s' % (file_obj.file,
-                                                      file_obj.path.path))
+                self.log('Deleting file %s %s' % (file_obj.file,
+                                                       file_obj.path.path))
         else:
             q = self.session.query(WaveformPath)
             q = q.filter(WaveformPath.path == path)
@@ -82,9 +81,9 @@ class WaveformFileCrawler:
                 self.session.delete(path_obj)
             except:
                 self.session.rollback()
-                logging.error('Error deleting path %s' % (path))
+                self.log.error('Error deleting path %s' % (path))
             else:
-                logging.info('Deleting path %s' % (path_obj.path))
+                self.log.debug('Deleting path %s' % (path_obj.path))
 
     def _select(self, path, file=None):
         """
@@ -136,9 +135,9 @@ class WaveformFileCrawler:
         """
         Resets the crawler parameters.
         """
-        logging.info('Crawler restarted.')
+        self.log.info('Crawler restarted.')
         # update configuration
-        self.crawler_paths = [os.path.normcase(path) for path in self.paths]
+        self.crawler_paths = [path for path in self.paths]
         # reset attributes
         self._current_path = None
         self._current_files = []
@@ -151,7 +150,7 @@ class WaveformFileCrawler:
         # create new walker
         self._walker = os.walk(self._root, topdown=True, followlinks=True)
         # logging
-        logging.info("Crawling root '%s' ..." % self._root)
+        self.log.debug("Crawling root '%s' ..." % self._root)
 
     def _stepWalker(self):
         """
@@ -186,10 +185,10 @@ class WaveformFileCrawler:
             # create new walker
             self._walker = os.walk(self._root, topdown=True, followlinks=True)
             # logging
-            logging.info("Crawling root '%s' ..." % self._root)
+            self.log.debug("Crawling root '%s' ..." % self._root)
             return
         # remove files or paths starting with a dot
-        if self.options.skip_dots:
+        if self.skip_dots:
             for file in files:
                 if file.startswith('.'):
                     files.remove(file)
@@ -199,7 +198,7 @@ class WaveformFileCrawler:
         self._current_path = root
         self._current_files = files
         # logging
-        logging.info("Scanning path '%s' ..." % self._current_path)
+        self.log.debug("Scanning path '%s' ..." % self._current_path)
         # get all database entries for current path
         self._db_files = self._select(self._current_path)
 
@@ -219,10 +218,14 @@ class WaveformFileCrawler:
         # walk through directories and files
         try:
             file = self._current_files.pop(0)
+        except AttributeError:
+            self._resetWalker()
+            self._stepWalker()
+            return
         except IndexError:
             # file list is empty  
             # clean up not existing files in current path
-            if self.options.cleanup:
+            if self.cleanup:
                 for file in self._db_files.keys():
                     self._delete(self._current_path, file)
             # jump into next directory
@@ -241,7 +244,7 @@ class WaveformFileCrawler:
         try:
             stats = os.stat(filepath)
         except Exception, e:
-            logging.warning(str(e))
+            self.log.warning(str(e))
             return
         # compare with database entries
         if file not in self._db_files:
@@ -261,9 +264,9 @@ class WaveformFileCrawler:
         return
 
 
-def worker(i, input_queue, work_queue, output_queue, lock, preview_dir=None):
-    logger = multiprocessing.log_to_stderr(logging.DEBUG)
-    logger.info("Starting Process #%d" % i)
+def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
+    logger = multiprocessing.log_to_stderr()
+    #logger.info("Starting Process #%d" % i)
     # fetch and initialize all possible waveform feature plug-ins
     all_features = {}
     for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
@@ -293,7 +296,7 @@ def worker(i, input_queue, work_queue, output_queue, lock, preview_dir=None):
         work_queue.append(key)
         (path, file, stats, features) = args
         filepath = os.path.join(path, file)
-        logger.debug('Reading File %s' % filepath)
+        #logger.debug('Reading File %s' % filepath)
         # get additional kwargs for read method from waveform plug-ins
         kwargs = {}
         for feature in features:

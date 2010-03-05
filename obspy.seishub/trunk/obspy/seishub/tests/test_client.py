@@ -17,7 +17,9 @@ class ClientTestCase(unittest.TestCase):
     def test_getStations(self):
         """
         """
-        client = Client()
+        client = Client("http://localhost:8080")
+        data = client.waveform.getLatency(network_id='BW', station_id='HROE')
+        print data
         data = client.waveform.getNetworkIds()
         print data
         data = client.waveform.getStationIds()
@@ -26,16 +28,14 @@ class ClientTestCase(unittest.TestCase):
         print data
         data = client.waveform.getChannelIds()
         print data
-        t = UTCDateTime('20090808')
-        st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t,
-                                          t + 60*30)
+        t = UTCDateTime('20100102')
+        st = client.waveform.getWaveform("BW", "HROE", "", "EHN", t,
+                                          t + 60 * 30)
         print st
         data = client.waveform.getStationIds(network_id='BW')
         print data
         data = client.waveform.getChannelIds(network_id='BW',
                                              station_id='MANZ')
-        print data
-        data = client.waveform.getLatency(network_id='BW', station_id='MANZ')
         print data
         data = client.station.getList(network_id='BW', station_id='MANZ')
         print data

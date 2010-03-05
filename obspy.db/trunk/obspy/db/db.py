@@ -27,10 +27,13 @@ Base = declarative_base()
 
 
 class WaveformPath(Base):
-    __tablename__ = 'waveform_paths'
+    __tablename__ = 'default_waveform_paths'
     id = Column(Integer, primary_key=True)
     path = Column(String, nullable=False, index=True)
     archived = Column(Boolean, default=False)
+
+    files = relation("WaveformFile", order_by="WaveformFile.id",
+                     backref="path")
 
     def __init__(self, data={}):
         self.path = data.get('path')
@@ -40,15 +43,16 @@ class WaveformPath(Base):
 
 
 class WaveformFile(Base):
-    __tablename__ = 'waveform_files'
+    __tablename__ = 'default_waveform_files'
     id = Column(Integer, primary_key=True)
     file = Column(String, nullable=False, index=True)
     size = Column(Integer, nullable=False)
     mtime = Column(Integer, nullable=False, index=True)
     format = Column(String, nullable=False, index=True)
-    path_id = Column(Integer, ForeignKey('waveform_paths.id'))
+    path_id = Column(Integer, ForeignKey('default_waveform_paths.id'))
 
-    path = relation(WaveformPath, backref=backref('files', order_by=id))
+    channels = relation("WaveformChannel", order_by="WaveformChannel.id",
+                        backref="file")
 
     def __init__(self, data={}):
         self.file = data.get('file')
@@ -61,9 +65,9 @@ class WaveformFile(Base):
 
 
 class WaveformChannel(Base):
-    __tablename__ = 'waveform_channels'
+    __tablename__ = 'default_waveform_channels'
     id = Column(Integer, primary_key=True)
-    file_id = Column(Integer, ForeignKey('waveform_files.id'))
+    file_id = Column(Integer, ForeignKey('default_waveform_files.id'))
     network = Column(String(2), nullable=False, index=True)
     station = Column(String(5), nullable=False, index=True)
     location = Column(String(2), nullable=False, index=True)
@@ -74,7 +78,8 @@ class WaveformChannel(Base):
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
 
-    file = relation(WaveformFile, backref=backref('channels', order_by=id))
+    gaps = relation("WaveformGaps", order_by="WaveformGaps.id",
+                    backref="channel")
 
     def __init__(self, data={}):
         self.network = data.get('network', '')
@@ -92,15 +97,13 @@ class WaveformChannel(Base):
 
 
 class WaveformGaps(Base):
-    __tablename__ = 'waveform_gaps'
+    __tablename__ = 'default_waveform_gaps'
     id = Column(Integer, primary_key=True)
-    channel_id = Column(Integer, ForeignKey('waveform_channels.id'))
+    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
     gap = Column(Boolean, nullable=False, index=True)
     starttime = Column(DateTime, nullable=False, index=True)
     endtime = Column(DateTime, nullable=False, index=True)
     samples = Column(Integer, nullable=False)
-
-    channel = relation(WaveformChannel, backref=backref('gaps', order_by=id))
 
     def __init__(self, data={}):
         self.gap = data.get('gap', True)
