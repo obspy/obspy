@@ -102,7 +102,9 @@ def _runIndexer(options):
     service = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
     # init db + options
     service.session = session
-    service.options = options
+    service.skip_dots = options.skip_dots
+    service.cleanup = options.cleanup
+    service.log = logging
     # set queues
     service.input_queue = in_queue
     service.work_queue = work_queue
