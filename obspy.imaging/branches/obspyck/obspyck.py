@@ -366,16 +366,19 @@ class PickingGUI:
             self.eventMapColors.append((0.,  1.,  0.,  1.))
             #XXX uncomment following lines for use with dynamically acquired data from seishub!
             net = self.streams[i][0].stats.network.strip()
+            print "=" * 70
+            print sta
             if net == '':
                 net = 'BW'
                 print "Warning: Got no network information, setting to default: BW"
-            print "=" * 70
-            print sta
             print "-" * 70
             date = self.streams[i][0].stats.starttime.date
             print 'fetching station metadata from seishub...'
             try:
-                lon, lat, ele = getCoord(self.server['BaseUrl'], net, sta)
+                lon, lat, ele = getCoord(self.server['BaseUrl'],
+                                         self.server['User'],
+                                         self.server['Password'],
+                                         self.server['Timeout'],  net, sta) 
             except:
                 print 'Error: could not load station metadata. Discarding stream.'
                 self.streams.pop(i)
