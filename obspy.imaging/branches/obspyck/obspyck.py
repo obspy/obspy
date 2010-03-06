@@ -176,11 +176,13 @@ class Menu:
     #            self.figure.canvas.draw()
     #            break
     
-def getCoord(network, station):
+def getCoord(base_url, user, password, timeout, network, station):
     """
-    Returns longitude, latitude and elevation of given station
+    Returns longitude, latitude and elevation of given station from server
+    at given Url
     """
-    client = Client(base_url=self.server['BaseUrl'])
+    client = Client(base_url=base_url, user=user, password=password,
+                    timeout=timeout)
     coord = []
 
     resource = "dataless.seed.%s_%s.xml" % (network, station)
@@ -293,9 +295,11 @@ class PickingGUI:
         self.server = {}
         self.server['Name'] = self.options.servername # "teide"
         self.server['Port'] = self.options.port # 8080
+        self.server['User'] = self.options.user # admin
+        self.server['Password'] = self.options.password # admin
+        self.server['Timeout'] = self.options.timeout # 10
         self.server['BaseUrl'] = "http://" + self.server['Name'] + \
                                  ":%i" % self.options.port
-        print self.server
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
@@ -350,7 +354,10 @@ class PickingGUI:
             self.dicts.append({})
         self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
-        client1 = Client(base_url=self.server['BaseUrl'])
+        client1 = Client(base_url=self.server['BaseUrl'],
+                         user=self.server['User'],
+                         password=self.server['Password'],
+                         timeout=self.server['Timeout'])
         for i in range(len(self.streams))[::-1]:
             self.dicts[i]['MagUse'] = True
             sta = self.streams[i][0].stats.station.strip()
@@ -368,7 +375,7 @@ class PickingGUI:
             date = self.streams[i][0].stats.starttime.date
             print 'fetching station metadata from seishub...'
             try:
-                lon, lat, ele = getCoord(net, sta)
+                lon, lat, ele = getCoord(self.server['BaseUrl'], net, sta)
             except:
                 print 'Error: could not load station metadata. Discarding stream.'
                 self.streams.pop(i)
@@ -1778,7 +1785,6 @@ class PickingGUI:
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
         for i in range(len(self.streams)):
-            #lon, lat, ele = getCoord(network, self.stationlist[i])
             lon = self.dicts[i]['StaLon']
             lat = self.dicts[i]['StaLat']
             ele = self.dicts[i]['StaEle']
@@ -1965,7 +1971,6 @@ class PickingGUI:
         fmt2 = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
         #self.coords = []
         for i in range(len(self.streams)):
-            #lon, lat, ele = getCoord(network, self.stationlist[i])
             sta = self.dicts[i]['Station']
             lon = self.dicts[i]['StaLon']
             lon_deg = int(lon)
@@ -3588,6 +3593,12 @@ def main():
     parser.add_option("-p", "--port", type="int", dest="port",
                       help="Port of the seishub server",
                       default=8080)
+    parser.add_option("--user", dest="user", default='admin',
+                      help="Username for seishub server")
+    parser.add_option("--password", dest="password", default='admin',
+                      help="Password for seishub server")
+    parser.add_option("--timeout", dest="timeout", type="int", default=10,
+                      help="Timeout for seishub server")
     parser.add_option("-l", "--local", action="store_true", dest="local",
                       default=False,
                       help="use local files for design purposes " + \
@@ -3640,7 +3651,9 @@ def main():
     else:
         try:
             t = UTCDateTime(options.time)
-            client = Client(base_url=self.server['BaseUrl'])
+            baseurl = "http://" + options.servername + ":%i" % options.port
+            client = Client(base_url=baseurl, user=options.user,
+                            password=options.password, timeout=options.timeout)
             streams = []
             for id in options.ids.split(","):
                 net, sta_wildcard, loc, cha = id.split(".")
