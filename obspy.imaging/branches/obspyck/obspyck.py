@@ -443,7 +443,7 @@ class PickingGUI:
         props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
         #hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
         menuitems = []
-        for label in ('clear All', 'clear Orig&Mag', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
+        for label in ('clear All', 'clear Orig&Mag', 'clear Focmec', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
             def on_select(item):
                 print '--> ', item.labelstr
                 if item.labelstr == 'quit':
@@ -467,6 +467,8 @@ class PickingGUI:
                     self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
+                elif item.labelstr == 'clear Focmec':
+                    self.clearFocmecDictionary()
                 elif item.labelstr == 'do Hypo2000':
                     self.delAllItems()
                     self.clearOriginMagnitudeDictionaries()
@@ -1892,6 +1894,7 @@ class PickingGUI:
 
     def showFocMec(self):
         if self.dictFocalMechanism == {}:
+            print "no focal mechanism data."
             return
         # make up the figure:
         fig = plt.figure(1002, figsize=(2, 2))
@@ -2461,6 +2464,9 @@ class PickingGUI:
         plt.show()
 
     def showEventMap(self):
+        if self.dictOrigin == {}:
+            print "no hypocenter data."
+            return
         #print self.dicts[0]
         self.figEventMap = plt.figure(1000)
         self.figEventMap.canvas.set_window_title("Event Map")
