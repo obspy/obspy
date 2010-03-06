@@ -180,7 +180,7 @@ def getCoord(network, station):
     """
     Returns longitude, latitude and elevation of given station
     """
-    client = Client()
+    client = Client(base_url=self.server['BaseUrl'])
     coord = []
 
     resource = "dataless.seed.%s_%s.xml" % (network, station)
@@ -289,6 +289,13 @@ class PickingGUI:
         self.seishubEventCount = None
         # save username of current user
         self.username = os.environ['USER']
+        # setup server information
+        self.server = {}
+        self.server['Name'] = self.options.servername # "teide"
+        self.server['Port'] = self.options.port # 8080
+        self.server['BaseUrl'] = "http://" + self.server['Name'] + \
+                                 ":%i" % self.options.port
+        print self.server
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
@@ -343,7 +350,7 @@ class PickingGUI:
             self.dicts.append({})
         self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
-        client1 = Client()
+        client1 = Client(base_url=self.server['BaseUrl'])
         for i in range(len(self.streams))[::-1]:
             self.dicts[i]['MagUse'] = True
             sta = self.streams[i][0].stats.station.strip()
@@ -485,6 +492,7 @@ class PickingGUI:
                     self.doFocmec()
                 elif item.labelstr == 'next Focmec':
                     self.nextFocMec()
+                    self.showFocMec()
                 elif item.labelstr == 'show Map':
                     #self.load3dlocData()
                     self.showEventMap()
@@ -1876,10 +1884,15 @@ class PickingGUI:
     def showFocMec(self):
         if self.dictFocalMechanism == {}:
             return
+        # make up the figure:
+        fig = plt.figure(1002, figsize=(2, 2))
+        fig.clear()
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
+        
         # plot the selected solution
-        fig = Beachball([self.dictFocalMechanism['Strike'],
-                         self.dictFocalMechanism['Dip'],
-                         self.dictFocalMechanism['Rake']])
+        Beachball([self.dictFocalMechanism['Strike'],
+                   self.dictFocalMechanism['Dip'],
+                   self.dictFocalMechanism['Rake']], fig=fig)
         # plot the alternative solutions
         if self.focMechList != []:
             for d in self.focMechList:
@@ -3103,7 +3116,7 @@ class PickingGUI:
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
-        servername = 'teide:8080'
+        servername = self.server['Name'] + ":%i" % self.server['Port']
         path = '/xml/seismology/event'
         
         # determine which location was run and how the xml should be created
@@ -3243,7 +3256,8 @@ class PickingGUI:
         # - first pick of event must be before stream endtime
         # - last pick of event must be after stream starttime
         # thus we get any event with at least one pick in between start/endtime
-        url = "http://teide:8080/seismology/event/getList?" + \
+        url = "http://" + self.server['Name'] + ":%i" % self.server['Port'] + \
+              "/seismology/event/getList?" + \
               "min_last_pick=%s&max_first_pick=%s" % \
               (str(starttime), str(endtime))
         req = urllib2.Request(url)
@@ -3277,7 +3291,8 @@ class PickingGUI:
         print "Fetching event %i of %i (event_id: %s)" %  \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
                document_id)
-        resource_url = "http://teide:8080/xml/seismology/event/" + \
+        resource_url = "http://" + self.server['Name'] + ":%i" % \
+                       self.server['Port'] + "/xml/seismology/event/" + \
                        node.text
         resource_req = urllib2.Request(resource_url)
         resource_req.add_header("Authorization", "Basic %s" % auth)
@@ -3567,6 +3582,12 @@ def main():
                            "wildcards for stations are allowed, e.g. "
                            "'BW.RJOB..EH*,BW.RM?*..EH*'",
                       default='BW.RJOB..EH*,BW.RMOA..EH*')
+    parser.add_option("-s", "--servername", dest="servername",
+                      help="Servername of the seishub server",
+                      default='teide')
+    parser.add_option("-p", "--port", type="int", dest="port",
+                      help="Port of the seishub server",
+                      default=8080)
     parser.add_option("-l", "--local", action="store_true", dest="local",
                       default=False,
                       help="use local files for design purposes " + \
@@ -3619,7 +3640,7 @@ def main():
     else:
         try:
             t = UTCDateTime(options.time)
-            client = Client()
+            client = Client(base_url=self.server['BaseUrl'])
             streams = []
             for id in options.ids.split(","):
                 net, sta_wildcard, loc, cha = id.split(".")
