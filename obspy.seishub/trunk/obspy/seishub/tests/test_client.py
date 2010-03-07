@@ -18,8 +18,6 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         client = Client("http://localhost:8080")
-        data = client.waveform.getLatency(network_id='BW', station_id='HROE')
-        print data
         data = client.waveform.getNetworkIds()
         print data
         data = client.waveform.getStationIds()
@@ -38,6 +36,8 @@ class ClientTestCase(unittest.TestCase):
                                              station_id='MANZ')
         print data
         data = client.station.getList(network_id='BW', station_id='MANZ')
+        print data
+        data = client.waveform.getLatency(network_id='BW', station_id='HROE')
         print data
         data = client.station.getResource('dataless.seed.BW_MANZ.xml',
                                           format='metadata')
