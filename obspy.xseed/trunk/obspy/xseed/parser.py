@@ -168,29 +168,29 @@ class Parser(object):
             self._createBlockettes11and12(blockette12=True)
         # Now start actually filling the XML tree.
         # Volume header:
-        root = SubElement(doc, utils.toTag('Volume Index Control Header'))
+        sub = SubElement(doc, utils.toTag('Volume Index Control Header'))
         for blockette in self.volume:
-            root.append(blockette.getXML(xseed_version=version))
+            sub.append(blockette.getXML(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
             self._deleteBlockettes11and12()
         # Abbreviations:
-        root = SubElement(doc,
+        sub = SubElement(doc,
                     utils.toTag('Abbreviation Dictionary Control Header'))
         for blockette in self.abbreviations:
-            root.append(blockette.getXML(xseed_version=version))
-        if version == '1.0':
-            # To pass the XSD schema test an empty time span control header is
-            # added to the end of the file.
-            root = SubElement(doc, utils.toTag('Timespan Control Header'))
-            # Also no data is present in all supported SEED files (for now).
-            root = SubElement(doc, utils.toTag('Data Records'))
+            sub.append(blockette.getXML(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
-                root = SubElement(doc, utils.toTag('Station Control Header'))
+                sub = SubElement(doc, utils.toTag('Station Control Header'))
                 for blockette in station:
-                    root.append(blockette.getXML(xseed_version=version))
+                    sub.append(blockette.getXML(xseed_version=version))
+            if version == '1.0':
+                # To pass the XSD schema test an empty time span control header
+                # is added to the end of the file.
+                SubElement(doc, utils.toTag('Timespan Control Header'))
+                # Also no data is present in all supported SEED files.
+                SubElement(doc, utils.toTag('Data Records'))
             # Return single XML String.
             return tostring(doc, pretty_print=True, xml_declaration=True,
                             encoding='utf-8')
@@ -199,9 +199,15 @@ class Parser(object):
             result = {}
             for station in self.stations:
                 cdoc = copy.copy(doc)
-                root = SubElement(cdoc, utils.toTag('Station Control Header'))
+                sub = SubElement(cdoc, utils.toTag('Station Control Header'))
                 for blockette in station:
-                    root.append(blockette.getXML(xseed_version=version))
+                    sub.append(blockette.getXML(xseed_version=version))
+                if version == '1.0':
+                    # To pass the XSD schema test an empty time span control
+                    # header is added to the end of the file.
+                    SubElement(doc, utils.toTag('Timespan Control Header'))
+                    # Also no data is present in all supported SEED files.
+                    SubElement(doc, utils.toTag('Data Records'))
                 id = station[0].end_effective_date
                 result[id] = tostring(cdoc, pretty_print=True,
                                       xml_declaration=True, encoding='utf-8')
