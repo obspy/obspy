@@ -6,7 +6,6 @@ from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
 from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
 import copy
 import fnmatch
-import multiprocessing
 import os
 
 
@@ -51,7 +50,8 @@ class WaveformFileCrawler:
                 self.session.rollback()
                 self.log.error(str(e))
             else:
-                self.log.debug('Inserting %s %s' % (data['path'], data['file']))
+                self.log.debug('Inserting %s in %s' % (data['file'],
+                                                       data['path']))
 
     def _delete(self, path, file=None):
         """
@@ -68,10 +68,10 @@ class WaveformFileCrawler:
                 self.session.commit()
             except:
                 self.session.rollback()
-                self.log.error('Error deleting file %s %s' % (path, file))
+                self.log.error('Error deleting file %s in %s' % (file, path))
             else:
-                self.log('Deleting file %s %s' % (file_obj.file,
-                                                       file_obj.path.path))
+                self.log('Deleting file %s in %s' % (file_obj.file,
+                                                     file_obj.path.path))
         else:
             q = self.session.query(WaveformPath)
             q = q.filter(WaveformPath.path == path)
@@ -112,17 +112,6 @@ class WaveformFileCrawler:
                 return True
         return False
 
-#    def _selectAllPaths(self):
-#        """
-#        Query for all paths inside the database.
-#        """
-#        sql_obj = sql.select([waveform_tab.c['path']]).distinct()
-#        try:
-#            result = self.db.execute(sql_obj)
-#        except:
-#            result = []
-#        return [path[0] for path in result]
-
     def _processOutputQueue(self):
         try:
             dataset = self.output_queue.pop(0)
@@ -130,6 +119,14 @@ class WaveformFileCrawler:
             pass
         else:
             self._update_or_insert(dataset)
+
+    def _processLogQueue(self):
+        try:
+            msg = self.log_queue.pop(0)
+        except:
+            pass
+        else:
+            self.log.error(msg)
 
     def _resetWalker(self):
         """
@@ -167,14 +164,7 @@ class WaveformFileCrawler:
             try:
                 self._root = self._roots.pop()
             except IndexError:
-                # a whole cycle has been done - check paths
-#                db_paths = self._selectAllPaths()
-#                for path in db_paths:
-#                    # skip existing paths
-#                    if path in self._paths:
-#                        continue
-#                    # remove the others
-#                    self._delete(path)
+                # a whole cycle has been done
                 # reset everything
                 self._resetWalker()
                 return
@@ -212,6 +202,8 @@ class WaveformFileCrawler:
             return
         # try to finalize a single processed stream object from output queue
         self._processOutputQueue()
+        # Fetch items from the log queue
+        self._processLogQueue()
         # skip if input queue is full
         if len(self.input_queue) > 10:
             return
@@ -264,9 +256,8 @@ class WaveformFileCrawler:
         return
 
 
-def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
-    logger = multiprocessing.log_to_stderr()
-    #logger.info("Starting Process #%d" % i)
+def worker(i, input_queue, work_queue, output_queue, log_queue,
+           preview_dir=None):
     # fetch and initialize all possible waveform feature plug-ins
     all_features = {}
     for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
@@ -276,7 +267,7 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
             # initialize class
             func = cls().process
         except Exception, e:
-            logger.error(str(e) + '\n')
+            log_queue.append(str(e))
             continue
         all_features[key] = {}
         all_features[key]['run'] = func
@@ -291,18 +282,18 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
             key, args = input_queue.popitem()
         except:
             continue
+        # skim item if already in work queue
         if key in work_queue:
             continue
         work_queue.append(key)
         (path, file, stats, features) = args
         filepath = os.path.join(path, file)
-        #logger.debug('Reading File %s' % filepath)
         # get additional kwargs for read method from waveform plug-ins
         kwargs = {}
         for feature in features:
             if feature not in all_features:
-                logger.error(filepath + '\n')
-                logger.error('Unknown feature %s\n' % feature)
+                log_queue.append('%s: Unknown feature %s' % (filepath,
+                                                             feature))
                 work_queue.remove(filepath)
                 continue
             kwargs.update(all_features[feature]['indexer_kwargs'])
@@ -314,8 +305,7 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
             # merge channels
             stream.merge()
         except Exception, e:
-            logger.error(filepath + '\n')
-            logger.error(str(e) + '\n')
+            log_queue.append('%s: %s' % (filepath, e))
             work_queue.remove(filepath)
             continue
         # build up dictionary of gaps and overlaps for easier lookup
@@ -360,13 +350,12 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
                     # run plug-in and update results
                     result.update(all_features[feature]['run'](trace))
                 except Exception, e:
-                    logger.error(filepath + '\n')
-                    logger.error(str(e) + '\n')
+                    log_queue.append('%s: %s' % (filepath, e))
                     continue
             dataset.append(result)
             # generate preview of trace
             if preview_dir:
-                # check for network
+                # check for network id
                 if not trace.stats.network:
                     network = '__'
                 else:
@@ -378,17 +367,17 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
                                             '%s.%sD' % (trace.stats.channel,
                                                         trace.stats.location))
                 if not os.path.isdir(preview_path):
-                    os.makedirs(preview_path)
-                start = trace.stats.starttime.timestamp
-                end = trace.stats.endtime.timestamp
-                preview_file = os.path.join(preview_path,
-                                            "%s-%s.mseed" % (start, end))
+                    try:
+                        os.makedirs(preview_path)
+                    except Exception , e:
+                        log_queue.append('%s: %s' % (preview_path, e))
+                        continue
+                preview_file = os.path.join(preview_path, "%s.preview" % file)
                 try:
                     trace = createPreview(trace, 60.0)
                     trace.write(preview_file, format="MSEED", reclen=1024)
                 except Exception , e:
-                    logger.error(filepath + '\n')
-                    logger.error(str(e) + '\n')
+                    log_queue.append('%s: %s' % (filepath, e))
         del stream
         # return results to main loop
         try:

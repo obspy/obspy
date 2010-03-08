@@ -49,13 +49,11 @@ class WaveformIndexer(BaseHTTPServer.HTTPServer, WaveformFileCrawler):
 
     def serve_forever(self, poll_interval=0.5):
         self.running = True
-        #self.__is_shut_down.clear()
         while self.running:
             r, _w, _e = select.select([self], [], [], poll_interval)
             if r:
                 self._handle_request_noblock()
             self.iterate()
-        #self.__is_shut_down.set()
 
 
 def _runIndexer(options):
@@ -85,8 +83,10 @@ def _runIndexer(options):
     in_queue = manager.dict()
     work_queue = manager.list()
     out_queue = manager.list()
+    log_queue = manager.list()
     for i in range(options.number_of_cpus):
-        args = (i, in_queue, work_queue, out_queue, options.preview_path)
+        args = (i, in_queue, work_queue, out_queue, log_queue,
+                options.preview_path)
         p = multiprocessing.Process(target=worker, args=args)
         p.daemon = True
         p.start()
@@ -109,6 +109,7 @@ def _runIndexer(options):
     service.input_queue = in_queue
     service.work_queue = work_queue
     service.output_queue = out_queue
+    service.log_queue = log_queue
     service.paths = paths
     service._resetWalker()
     service._stepWalker()
