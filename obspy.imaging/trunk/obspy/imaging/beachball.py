@@ -46,6 +46,9 @@ from numpy import array, linalg, zeros, sqrt, fabs, arcsin, arccos, pi, cos, \
 from pylab import show
 import StringIO
 import doctest
+import matplotlib.patches as patches
+from matplotlib.path import Path
+from matplotlib.collections import PatchCollection
 
 
 D2R = pi / 180
@@ -53,8 +56,9 @@ R2D = 180 / pi
 EPSILON = 0.00001
 
 
-def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
-              format=None, nofill=False, fig=None):
+
+def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0, 
+          xy=(0,0), width=200, size=100, nofill=False):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
     
@@ -79,7 +83,6 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
         set to None.
     """
     # Turn interactive mode off or otherwise only the first plot will be fast.
-    plt.ioff()
     mt = None
     np1 = None
     if isinstance(fm, MomentTensor):
@@ -95,10 +98,60 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
     else:
         raise TypeError("Wrong input value for 'fm'.")
 
-    # size must be at least 100
-    if size < 100:
-        size = 100
-    # actual painting diam is only 95% due to an axis display glitch
+    # Return as collection
+    color = facecolor
+    fc = None
+    if mt:
+        (T, N, P) = MT2Axes(mt)
+        if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
+            p = plotDC(np1, size, xy=xy, width=width)
+        else:
+            fc, p = plotMT(T, N, P, size, outline=True, color=color,
+                           plot_zerotrace=True, xy=xy, width=width)
+    else:
+        p =  plotDC(np1, size=size, xy=xy, width=width)
+
+
+    if nofill:
+        collection = PatchCollection([p[1]], match_original=False)
+        collection.set_facecolor('none')
+    else:
+        collection = PatchCollection(p, match_original=False)
+        if not fc:
+            fc = [color, 'w']
+        collection.set_facecolors(fc)
+
+    collection.set_edgecolor(edgecolor)
+    collection.set_alpha(alpha)
+    collection.set_linewidth(linewidth)
+    return collection
+
+def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, 
+              patch=False, xy=(0,0), width=200, outfile=None, format=None, 
+              nofill=False, fig=None):
+    """
+    Draws a beach ball diagram of an earthquake focal mechanism. 
+    
+    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
+    be vectors of multiple focal mechanisms.
+    
+    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
+        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
+        six independent components of the moment tensor). The strike is of the 
+        first plane, clockwise relative to north. 
+        The dip is of the first plane, defined clockwise and perpendicular to 
+        strike, relative to horizontal such that 0 is horizontal and 90 is 
+        vertical. The rake is of the first focal plane solution. 90 moves the 
+        hanging wall up-dip (thrust), 0 moves it in the strike direction 
+        (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
+        opposite to strike (right-lateral). 
+    :param size: Draw with this diameter.
+    :param color: Color to use for quadrants of tension; can be a string, e.g. 
+        'r', 'b' or three component color vector, [R G B].
+    :param nofill: Do not fill the beachball, but only plot the planes.
+    :param fig: Give an existing figure instance to plot into. New Figure if
+        set to None.
+    """
     plot_size = size * 0.95
 
     # plot the figure
@@ -112,16 +165,12 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
     # hide axes + ticks
     ax.axison = False
 
-    # plot
-    if mt:
-        (T, N, P) = MT2Axes(mt)
-        if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
-            plotDC(ax, np1, plot_size, linewidth, color, alpha, nofill=nofill)
-        else:
-            plotMT(ax, T, N, P, plot_size, color, outline=True,
-                   plot_zerotrace=True, alpha=alpha, linewidth=linewidth)
-    else:
-        plotDC(ax, np1, plot_size, linewidth, color, alpha, nofill=nofill)
+    # plot the collection
+    collection = Beach(fm, linewidth=2, facecolor='b', edgecolor='k',
+                       alpha=alpha, 
+                       xy=(0,0), width=plot_size, size=plot_size,
+                       nofill=nofill)
+    ax.add_collection(collection)
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
     # export
@@ -140,8 +189,8 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, outfile=None,
         return fig
 
 
-def plotMT(ax, T, N, P, size=200, color='b', outline=True,
-           plot_zerotrace=True, alpha=1.0, linewidth=2, x0=0, y0=0):
+def plotMT(T, N, P, size=200, color='b', outline=True, plot_zerotrace=True, 
+           x0=0, y0=0, xy=(0,0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
     
@@ -153,6 +202,9 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     Adapted from ps_tensor / utilmeca.c / Generic Mapping Tools (GMT).
     @see: http://gmt.soest.hawaii.edu
     """
+    collect = []
+    colors = []
+    res = width/float(size)
     b = 1
     big_iso = 0
     j = 1
@@ -193,16 +245,14 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     if fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
         # pure implosion-explosion
         if vi > 0.:
-            cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
-                                 alpha=alpha, linewidth=linewidth, ec='k',
-                                 fc=color)
-            ax.add_patch(cir)
+            cir = patches.Circle(xy, radius=width/2.0)
+            collect.append(cir)
+            colors.append(color)
         if vi < 0.:
-            cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
-                                 alpha=alpha, linewidth=linewidth, ec='k',
-                                 fc='w')
-            ax.add_patch(cir)
-        return
+            cir = patches.Circle(xy, radius=width/2.0)
+            collect.append(cir)
+            colors.append('w')
+        return colors, collect
 
     if fabs(v[0]) >= fabs(v[2]):
         d = 0
@@ -223,17 +273,15 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
     # between -1 and 1 - f there will be no nodes whatsoever
 
     if iso < -1:
-        cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
-                             alpha=alpha, linewidth=linewidth, ec='k',
-                             fc='w')
-        ax.add_patch(cir)
-        return
+        cir = patches.Circle(xy, radius=width/2.0)
+        collect.append(cir)
+        colors.append('w')
+        return colors, collect
     elif iso > 1 - f:
-        cir = patches.Circle((x0, y0), radius=radius_size, fill=False,
-                             alpha=alpha, linewidth=linewidth, ec='k',
-                             fc=color)
-        ax.add_patch(cir)
-        return
+        cir = patches.Circle(xy, radius=width/2.0)
+        collect.append(cir)
+        colors.append(color)
+        return colors, collect
 
     spd = sin(p[d] * D2R)
     cpd = cos(p[d] * D2R)
@@ -319,13 +367,13 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
         rgb1 = 'w'
         rgb2 = color
 
-    cir = patches.Circle((x0, y0), radius=radius_size, fill=True,
-                         alpha=alpha, linewidth=linewidth, ec='k',
-                         fc=rgb2)
-    ax.add_patch(cir)
+    cir = patches.Circle(xy, radius=width/2.0)
+    collect.append(cir)
+    colors.append(rgb2)
     if n == 0:
-        ax.fill(x[0:360], y[0:360], rgb1, alpha=alpha, linewidth=linewidth)
-        return
+        collect.append(xy2patch(x[0:360], y[0:360], res, xy))
+        colors.append(rgb1)
+        return colors, collect
     elif n == 1:
         for i in range(0, j):
             xp1[i] = x[i]
@@ -352,7 +400,8 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 i += 1
                 yp1[i] = y0 + radius_size * co
                 az += D2R
-        ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        collect.append(xy2patch(xp1[0:i], yp1[0:i], res, xy))
+        colors.append(rgb1)
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
@@ -378,8 +427,9 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 i += 1
                 yp2[i] = y0 + radius_size * co
                 az += D2R
-        ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
-        return
+        collect.append(xy2patch(xp2[0:i], yp2[0:i], res, xy))
+        colors.append(rgb1)
+        return colors, collect
     elif n == 2:
         for i in range(0, j3):
             xp1[i] = x3[i]
@@ -395,8 +445,9 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 i += 1
                 yp1[i] = y2[ii]
                 ii -= 1
-            ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
-            return
+            collect.append(xy2patch(xp1[0:i], yp1[0:i], res, xy))
+            colors.append(rgb1)
+            return colors, collect
 
 #        if azi[2][0] - azi[0][1] > pi:
 #            azi[2][0] -= pi * 2.
@@ -420,7 +471,8 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 i += 1
                 yp1[i] = y0 + radius_size * co
                 az += D2R
-        ax.fill(xp1[0:i], yp1[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        collect.append(xy2patch(xp1[0:i], yp1[0:i], res, xy))
+        colors.append(rgb1)
 
         for i in range(0, j2):
             xp2[i] = x2[i]
@@ -447,10 +499,12 @@ def plotMT(ax, T, N, P, size=200, color='b', outline=True,
                 i += 1
                 yp2[i] = y0 + radius_size * co
                 az += D2R
-        ax.fill(xp2[0:i], yp2[0:i], rgb1, alpha=alpha, linewidth=linewidth)
+        collect.append(xy2patch(xp2[0:i], yp2[0:i], res, xy))
+        colors.append(rgb1)
+        return colors, collect
 
 
-def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0, nofill=False):
+def plotDC(np1, size=200, xy=(0,0), width=200):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
     
@@ -521,18 +575,25 @@ def plotDC(ax, np1, size=200, linewidth=2, color='b', alpha=1.0, nofill=False):
     (x, y) = Pol2Cart(phid, 90)
     xx = x * D / 90
     yy = y * D / 90
-    if nofill:
-        l2 = lines.Line2D(Y, X, color='grey', linewidth=linewidth / 2.,
-                          zorder=10, alpha=alpha)
-        ax.add_line(l2)
-    else:
-        ax.fill(xx, yy, color, alpha=alpha, linewidth=linewidth)
-        ax.fill(Y, X, 'w', alpha=alpha, linewidth=linewidth)
-                          
-    l = lines.Line2D(xx, yy, color='k',
-                     linewidth=linewidth, zorder=10, alpha=alpha)
-    ax.add_line(l)
 
+    # calculate resolution
+    res = width/float(size)
+
+    # construct the patches
+    collect = [xy2patch(xx, yy, res, xy)]
+    collect.append(xy2patch(Y, X, res, xy))
+    return collect
+
+def xy2patch(x, y, res, xy):
+    # transform into the Path coordinate system 
+    x = x * res + xy[0]
+    y = y * res + xy[1]
+    verts = zip(x.tolist(), y.tolist())
+    codes = [Path.MOVETO]
+    codes.extend([Path.LINETO]*(len(x)-2))
+    codes.append(Path.CLOSEPOLY)
+    path = Path(verts, codes) 
+    return patches.PathPatch(path)
 
 def Pol2Cart(th, r):
     """
