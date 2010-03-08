@@ -324,8 +324,8 @@ def worker(i, input_queue, work_queue, output_queue, preview_dir=None):
             id = '.'.join(gap[0:4])
             temp = {
                 'gap': gap[6] >= 0,
-                'starttime': gap[4],
-                'endtime': gap[5],
+                'starttime': gap[4].datetime,
+                'endtime': gap[5].datetime,
                 'samples': abs(gap[7])
             }
             gap_dict.setdefault(id, []).append(temp)
