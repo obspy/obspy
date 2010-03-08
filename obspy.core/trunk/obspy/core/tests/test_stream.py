@@ -43,6 +43,20 @@ class StreamTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_setitem(self):
+        """
+        Tests the __setitem__ method of the Stream object.
+        """
+        stream = self.mseed_stream
+        stream[0] = stream[3]
+        self.assertEqual(stream[0], stream[3])
+        st = deepcopy(stream)
+        stream[0].data[0:10] = 999
+        self.assertNotEqual(st[0].data[0], 999)
+        st[0] = stream[0]
+        np.testing.assert_array_equal(stream[0].data[:10],
+                                      np.ones(10,dtype='int')*999)
+
     def test_getitem(self):
         """
         Tests the __getitem__ method of the Stream object.

@@ -273,6 +273,14 @@ class Stream(object):
             return False
         return True
 
+    def __setitem__(self, index, trace):
+        """
+        __setitem__ method of obspy.Stream objects.
+
+        :return: Trace objects
+        """
+        self.traces[index] = trace
+
     def __getitem__(self, index):
         """
         __getitem__ method of obspy.Stream objects.
