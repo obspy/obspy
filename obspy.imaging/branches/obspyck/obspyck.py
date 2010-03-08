@@ -397,6 +397,12 @@ class PickingGUI:
             print self.dicts[i]['pazN']
             print self.dicts[i]['pazE']
         print "=" * 70
+        
+        # exit if no streams are left after removing everthing with missing
+        # information:
+        if self.streams == []:
+            print "Error: No streams."
+            return
 
         # demean traces if not explicitly deactivated on command line
         if not self.options.nozeromean:
@@ -549,11 +555,11 @@ class PickingGUI:
         #XXX wanted to change to seconds on x-axis but there is one problem:
         # during picking it's convenient to round to the nearest sample
         # with float seconds on the x-axis it's not so easy anymore
-        #npts = self.streams[self.stPt][0].stats.npts
-        #smprt = self.streams[self.stPt][0].stats.sampling_rate
-        #dt = 1. / smprt
-        #self.t = np.arange(0., dt * npts, dt)
-        self.t = np.arange(self.streams[self.stPt][0].stats.npts)
+        npts = self.streams[self.stPt][0].stats.npts
+        smprt = self.streams[self.stPt][0].stats.sampling_rate
+        dt = 1. / smprt
+        self.t = np.arange(0., dt * npts, dt)
+        #self.t = np.arange(self.streams[self.stPt][0].stats.npts)
         self.axs = []
         self.plts = []
         self.trans = []
@@ -1240,12 +1246,22 @@ class PickingGUI:
     
     # Define the event that handles the setting of P- and S-wave picks
     def pick(self, event):
+        #We want to round from the picking location to
+        #the time value of the nearest time sample:
+        samp_rate = self.streams[self.stPt][0].stats.sampling_rate
+        pickSample = event.xdata * samp_rate
+        pickSample = round(pickSample)
+        pickSample = pickSample / samp_rate
+        # we need the position of the cursor location
+        # in the seismogram array:
+        xpos = pickSample * samp_rate
+        
         # Set new P Pick
         if self.flagPhase==0 and event.key==self.dictKeybindings['setPick']:
             self.delPLine()
             self.delPLabel()
             self.delPsynthLine()
-            self.dicts[self.stPt]['P']=int(round(event.xdata))
+            self.dicts[self.stPt]['P'] = pickSample
             self.drawPLine()
             self.drawPLabel()
             self.drawPsynthLine()
@@ -1266,7 +1282,7 @@ class PickingGUI:
             # Update all subplots
             self.redraw()
             # Console output
-            print "P Pick set at %i"%self.dicts[self.stPt]['P']
+            print "P Pick set at %.3f" % self.dicts[self.stPt]['P']
         # Set P Pick weight
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight0']:
@@ -1338,9 +1354,8 @@ class PickingGUI:
             self.delSLine()
             self.delSLabel()
             self.delSsynthLine()
-            self.dicts[self.stPt]['S'] = int(round(event.xdata))
+            self.dicts[self.stPt]['S'] = pickSample
             self.dicts[self.stPt]['Saxind'] = self.axs.index(event.inaxes)
-            #self.dicts[self.stPt]['Saxind'] = int(round(event.xdata))
             self.drawSLine()
             self.drawSLabel()
             self.drawSsynthLine()
@@ -1361,7 +1376,7 @@ class PickingGUI:
             # Update all subplots
             self.redraw()
             # Console output
-            print "S Pick set at %i"%self.dicts[self.stPt]['S']
+            print "S Pick set at %.3f" % self.dicts[self.stPt]['S']
         # Set S Pick weight
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight0']:
@@ -1467,88 +1482,94 @@ class PickingGUI:
             # Set Flag to determine scenario
             try:
                 # Set left Error Pick
-                if event.xdata<self.dicts[self.stPt]['P']:
+                if pickSample < self.dicts[self.stPt]['P']:
                     errFlag=1
                 # Set right Error Pick
                 else:
                     errFlag=2
             # Set no Error Pick (no P Pick yet)
             except:
-                errFlag=0
+                return
             # Case 1
             if errFlag==1:
                 # Define global variables seen outside
                 # Remove old lines from the plot before plotting the new ones
                 self.delPErr1Line()
-                # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['PErr1']=int(round(event.xdata))
+                # Save time value of sample nearest to error pick
+                self.dicts[self.stPt]['PErr1'] = pickSample
                 # Plot the lines for the P Error pick in all three traces
                 self.drawPErr1Line()
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "P Error Pick 1 set at %i"%self.dicts[self.stPt]['PErr1']
+                print "P Error Pick 1 set at %.3f" % \
+                        self.dicts[self.stPt]['PErr1']
             # Case 2
             if errFlag==2:
                 # Define global variables seen outside
                 # Remove old lines from the plot before plotting the new ones
                 self.delPErr2Line()
-                # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['PErr2']=int(round(event.xdata))
+                # Save time value of sample nearest to error pick
+                self.dicts[self.stPt]['PErr2'] = pickSample
                 # Plot the lines for the P Error pick in all three traces
                 self.drawPErr2Line()
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "P Error Pick 2 set at %i"%self.dicts[self.stPt]['PErr2']
+                print "P Error Pick 2 set at %.3f" % \
+                        self.dicts[self.stPt]['PErr2']
         # Set new S Pick uncertainties
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPickError']:
             # Set Flag to determine scenario
             try:
                 # Set left Error Pick
-                if event.xdata<self.dicts[self.stPt]['S']:
+                if pickSample < self.dicts[self.stPt]['S']:
                     errFlag=1
                 # Set right Error Pick
                 else:
                     errFlag=2
             # Set no Error Pick (no S Pick yet)
             except:
-                errFlag=0
+                return
             # Case 1
             if errFlag==1:
                 # Define global variables seen outside
                 # Remove old lines from the plot before plotting the new ones
                 self.delSErr1Line()
                 # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['SErr1']=int(round(event.xdata))
+                self.dicts[self.stPt]['SErr1'] = pickSample
                 # Plot the lines for the S Error pick in all three traces
                 self.drawSErr1Line()
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "S Error Pick 1 set at %i"%self.dicts[self.stPt]['SErr1']
+                print "S Error Pick 1 set at %.3f" % \
+                        self.dicts[self.stPt]['SErr1']
             # Case 2
             if errFlag==2:
                 # Define global variables seen outside
                 # Remove old lines from the plot before plotting the new ones
                 self.delSErr2Line()
                 # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['SErr2']=int(round(event.xdata))
+                self.dicts[self.stPt]['SErr2'] = pickSample
                 # Plot the lines for the S Error pick in all three traces
                 self.drawSErr2Line()
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "S Error Pick 2 set at %i"%self.dicts[self.stPt]['SErr2']
+                print "S Error Pick 2 set at %.3f" % \
+                        self.dicts[self.stPt]['SErr2']
         # Magnitude estimation picking:
         if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMin'] and len(self.axs) > 2:
             if event.inaxes == self.axs[1]:
                 self.delMagMinCross1()
-                xpos=int(event.xdata)
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 self.dicts[self.stPt]['MagMin1']=np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                self.dicts[self.stPt]['MagMin1T']=cutoffSamples+np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                # save time of magnitude minimum in seconds
+                tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                tmp_magtime = tmp_magtime / samp_rate
+                self.dicts[self.stPt]['MagMin1T'] = tmp_magtime
                 #delete old MagMax Pick, if new MagMin Pick is higher
                 try:
                     if self.dicts[self.stPt]['MagMin1'] > self.dicts[self.stPt]['MagMax1']:
@@ -1558,14 +1579,17 @@ class PickingGUI:
                     pass
                 self.drawMagMinCross1()
                 self.redraw()
-                print "Minimum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMin1'],self.dicts[self.stPt]['MagMin1T'])
+                print "Minimum for magnitude estimation set: %s at %.3f" % \
+                        (self.dicts[self.stPt]['MagMin1'], self.dicts[self.stPt]['MagMin1T'])
             elif event.inaxes == self.axs[2]:
                 self.delMagMinCross2()
-                xpos=int(event.xdata)
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 self.dicts[self.stPt]['MagMin2']=np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                self.dicts[self.stPt]['MagMin2T']=cutoffSamples+np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                # save time of magnitude minimum in seconds
+                tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                tmp_magtime = tmp_magtime / samp_rate
+                self.dicts[self.stPt]['MagMin2T'] = tmp_magtime
                 #delete old MagMax Pick, if new MagMin Pick is higher
                 try:
                     if self.dicts[self.stPt]['MagMin2'] > self.dicts[self.stPt]['MagMax2']:
@@ -1575,15 +1599,18 @@ class PickingGUI:
                     pass
                 self.drawMagMinCross2()
                 self.redraw()
-                print "Minimum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMin2'],self.dicts[self.stPt]['MagMin2T'])
+                print "Minimum for magnitude estimation set: %s at %.3f" % \
+                        (self.dicts[self.stPt]['MagMin2'], self.dicts[self.stPt]['MagMin2T'])
         if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMax'] and len(self.axs) > 2:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
-                xpos=int(event.xdata)
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 self.dicts[self.stPt]['MagMax1']=np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                self.dicts[self.stPt]['MagMax1T']=cutoffSamples+np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                # save time of magnitude maximum in seconds
+                tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                tmp_magtime = tmp_magtime / samp_rate
+                self.dicts[self.stPt]['MagMax1T'] = tmp_magtime
                 #delete old MagMax Pick, if new MagMax Pick is higher
                 try:
                     if self.dicts[self.stPt]['MagMin1'] > self.dicts[self.stPt]['MagMax1']:
@@ -1593,14 +1620,17 @@ class PickingGUI:
                     pass
                 self.drawMagMaxCross1()
                 self.redraw()
-                print "Maximum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMax1'],self.dicts[self.stPt]['MagMax1T'])
+                print "Maximum for magnitude estimation set: %s at %.3f" % \
+                        (self.dicts[self.stPt]['MagMax1'], self.dicts[self.stPt]['MagMax1T'])
             elif event.inaxes == self.axs[2]:
                 self.delMagMaxCross2()
-                xpos=int(event.xdata)
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 self.dicts[self.stPt]['MagMax2']=np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                self.dicts[self.stPt]['MagMax2T']=cutoffSamples+np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                # save time of magnitude maximum in seconds
+                tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                tmp_magtime = tmp_magtime / samp_rate
+                self.dicts[self.stPt]['MagMax2T'] = tmp_magtime
                 #delete old MagMax Pick, if new MagMax Pick is higher
                 try:
                     if self.dicts[self.stPt]['MagMin2'] > self.dicts[self.stPt]['MagMax2']:
@@ -1610,7 +1640,8 @@ class PickingGUI:
                     pass
                 self.drawMagMaxCross2()
                 self.redraw()
-                print "Maximum for magnitude estimation set: %s at %s"%(self.dicts[self.stPt]['MagMax2'],self.dicts[self.stPt]['MagMax2T'])
+                print "Maximum for magnitude estimation set: %s at %.3f" % \
+                        (self.dicts[self.stPt]['MagMax2'],self.dicts[self.stPt]['MagMax2T'])
         if self.flagPhase == 2 and event.key == self.dictKeybindings['delMagMinMax']:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
@@ -1761,20 +1792,19 @@ class PickingGUI:
                     # check if synthetic pick is within time range of stream
                     if (phUTCTime > self.streams[i][0].stats.endtime or
                         phUTCTime < self.streams[i][0].stats.starttime):
-                        warnings.warn("Synthetic pick outside timespan.")
+                        msg = "Synthetic pick outside timespan."
+                        warnings.warn(msg)
                         continue
                     else:
-                        # phSamps is the number of samples after the stream-
+                        # phSeconds is the time in seconds after the stream-
                         # starttime at which the time of the synthetic phase
                         # is located
-                        phSamps = phUTCTime - self.streams[i][0].stats.starttime
-                        phSamps = int(round(phSamps *
-                                            self.streams[i][0].stats.sampling_rate))
+                        phSeconds = phUTCTime - self.streams[i][0].stats.starttime
                         if phType == 'P':
-                            self.dicts[i]['Psynth'] = phSamps
+                            self.dicts[i]['Psynth'] = phSeconds
                             self.dicts[i]['Pres'] = phResid
                         elif phType == 'S':
-                            self.dicts[i]['Ssynth'] = phSamps
+                            self.dicts[i]['Ssynth'] = phSeconds
                             self.dicts[i]['Sres'] = phResid
         self.drawPsynthLine()
         self.drawPsynthLabel()
@@ -1796,20 +1826,18 @@ class PickingGUI:
             self.coords.append([lon, lat])
             if self.dicts[i].has_key('P'):
                 t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
+                t += self.dicts[i]['P']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
-                delta /= self.streams[i][0].stats.sampling_rate
                 f.write(fmt % (self.dicts[i]['Station'], 'P', date, delta,
                                lon, lat, ele / 1e3))
             if self.dicts[i].has_key('S'):
                 t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['S'] / self.streams[i][0].stats.sampling_rate
+                t += self.dicts[i]['S']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
-                delta /= self.streams[i][0].stats.sampling_rate
                 f.write(fmt % (self.dicts[i]['Station'], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
@@ -1991,7 +2019,7 @@ class PickingGUI:
                 continue
             if self.dicts[i].has_key('P'):
                 t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['P'] / self.streams[i][0].stats.sampling_rate
+                t += self.dicts[i]['P']
                 date = t.strftime("%y%m%d%H%M%S")
                 #print date
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
@@ -2030,7 +2058,7 @@ class PickingGUI:
                           "could screw our file up!"
                     warnings.warn(msg)
                 t2 = self.streams[i][0].stats.starttime
-                t2 += self.dicts[i]['S'] / self.streams[i][0].stats.sampling_rate
+                t2 += self.dicts[i]['S']
                 date2 = t2.strftime("%H%M%S")
                 date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
                 if self.dicts[i].has_key('SOnset'):
@@ -2207,10 +2235,8 @@ class PickingGUI:
             # assign synthetic phase info
             if type == "P":
                 self.dictOrigin['used P Count'] += 1
-                synthsamps = int(round(res *
-                        self.streams[i][0].stats.sampling_rate))
-                synthsamps += self.dicts[streamnum]['P']
-                self.dicts[streamnum]['Psynth'] = synthsamps
+                self.dicts[streamnum]['Psynth'] = res + \
+                                                  self.dicts[streamnum]['P']
                 self.dicts[streamnum]['Pres'] = res
                 self.dicts[streamnum]['PAzim'] = azimuth
                 self.dicts[streamnum]['PInci'] = incident
@@ -2227,11 +2253,8 @@ class PickingGUI:
                 #            self.dicts[streamnum]['PPol']
             elif type == "S":
                 self.dictOrigin['used S Count'] += 1
-                self.dicts[streamnum]['SLon'] = self.dicts[streamnum]['StaLon']
-                self.dicts[streamnum]['SLat'] = self.dicts[streamnum]['StaLat']
-                synthsamps = int(round(res *
-                        self.streams[i][0].stats.sampling_rate))
-                synthsamps += self.dicts[streamnum]['S']
+                self.dicts[streamnum]['Ssynth'] = res + \
+                                                  self.dicts[streamnum]['P']
                 self.dicts[streamnum]['Ssynth'] = synthsamps
                 self.dicts[streamnum]['Sres'] = res
                 self.dicts[streamnum]['SAzim'] = azimuth
@@ -2356,13 +2379,11 @@ class PickingGUI:
                 
                 amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
                 timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                timedelta /= self.streams[i][1].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
                 timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
-                timedelta /= self.streams[i][2].stats.sampling_rate
                 mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
                                          self.dicts[i]['distHypo'])
                 mag /= 2.
@@ -2376,7 +2397,6 @@ class PickingGUI:
                   self.dicts[i].has_key('MagMax1')):
                 amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
                 timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                timedelta /= self.streams[i][1].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
@@ -2390,7 +2410,6 @@ class PickingGUI:
                   self.dicts[i].has_key('MagMax2')):
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
                 timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
-                timedelta /= self.streams[i][2].stats.sampling_rate
                 #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
@@ -2413,13 +2432,11 @@ class PickingGUI:
         for i in range(len(self.dicts)):
             if self.dicts[i].has_key('P') and self.dicts[i].has_key('S'):
                 p = self.streams[i][0].stats.starttime
-                p += (self.dicts[i]['P'] / \
-                          self.streams[i][0].stats.sampling_rate)
+                p += self.dicts[i]['P']
                 p = "%.3f" % p.getTimeStamp()
                 p = float(p[-7:])
                 pTimes.append(p)
                 sp = self.dicts[i]['S'] - self.dicts[i]['P']
-                sp = float(sp) / self.streams[i][0].stats.sampling_rate
                 spTimes.append(sp)
                 stations.append(self.dicts[i]['Station'])
             else:
@@ -2626,13 +2643,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][0].stats.starttime
-                picktime += (self.dicts[i]['P'] /
-                             self.streams[i][0].stats.sampling_rate)
+                picktime += self.dicts[i]['P']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = float(self.dicts[i]['PErr2'] -
-                                 self.dicts[i]['PErr1'])
-                    temp /= self.streams[i][0].stats.sampling_rate
+                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -2665,13 +2679,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][axind].stats.starttime
-                picktime += (self.dicts[i]['S'] /
-                             self.streams[i][axind].stats.sampling_rate)
+                picktime += self.dicts[i]['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = float(self.dicts[i]['SErr2'] -
-                                 self.dicts[i]['SErr1'])
-                    temp /= self.streams[i][axind].stats.sampling_rate
+                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -2719,13 +2730,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][0].stats.starttime
-                picktime += (self.dicts[i]['P'] /
-                             self.streams[i][0].stats.sampling_rate)
+                picktime += self.dicts[i]['P']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = float(self.dicts[i]['PErr2'] -
-                                 self.dicts[i]['PErr1'])
-                    temp /= self.streams[i][0].stats.sampling_rate
+                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -2786,13 +2794,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][axind].stats.starttime
-                picktime += (self.dicts[i]['S'] /
-                             self.streams[i][axind].stats.sampling_rate)
+                picktime += self.dicts[i]['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = float(self.dicts[i]['SErr2'] -
-                                 self.dicts[i]['SErr1'])
-                    temp /= self.streams[i][axind].stats.sampling_rate
+                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -2952,13 +2957,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][0].stats.starttime
-                picktime += (self.dicts[i]['P'] /
-                             self.streams[i][0].stats.sampling_rate)
+                picktime += self.dicts[i]['P']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = float(self.dicts[i]['PErr2'] -
-                                 self.dicts[i]['PErr1'])
-                    temp /= self.streams[i][0].stats.sampling_rate
+                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -3001,13 +3003,10 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = self.streams[i][axind].stats.starttime
-                picktime += (self.dicts[i]['S'] /
-                             self.streams[i][axind].stats.sampling_rate)
+                picktime += self.dicts[i]['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = float(self.dicts[i]['SErr2'] -
-                                 self.dicts[i]['SErr1'])
-                    temp /= self.streams[i][axind].stats.sampling_rate
+                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
@@ -3373,21 +3372,13 @@ class PickingGUI:
                 hyp_dist = pick.xpath(".//hyp_dist/value")[0].text
             except:
                 hyp_dist = None
-            # convert UTC time to samples after stream starttime
+            # convert UTC time to seconds after stream starttime
             time = UTCDateTime(time)
             time -= self.streams[streamnum][0].stats.starttime
-            time = int(round(time *
-                     self.streams[streamnum][0].stats.sampling_rate))
-            if phase_res:
-                phase_res_samps = float(phase_res)
-                phase_res_samps *= self.streams[streamnum][0].stats.sampling_rate
-                phase_res_samps = int(round(phase_res_samps))
-            # map uncertainty in seconds to error picks in samples
+            # map uncertainty in seconds to error picks in seconds
             if uncertainty:
                 uncertainty = float(uncertainty)
-                uncertainty = int(round(uncertainty * \
-                        self.streams[streamnum][0].stats.sampling_rate))
-                uncertainty /= 2
+                uncertainty /= 2.
             # assign to dictionary
             if pick.xpath(".//phaseHint")[0].text == "P":
                 self.dicts[streamnum]['P'] = time
@@ -3401,7 +3392,7 @@ class PickingGUI:
                 if weight:
                     self.dicts[streamnum]['PWeight'] = weight
                 if phase_res:
-                    self.dicts[streamnum]['Psynth'] = time + phase_res_samps
+                    self.dicts[streamnum]['Psynth'] = time + float(phase_res)
                     self.dicts[streamnum]['Pres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
@@ -3428,7 +3419,7 @@ class PickingGUI:
                 if weight:
                     self.dicts[streamnum]['SWeight'] = weight
                 if phase_res:
-                    self.dicts[streamnum]['Ssynth'] = time + phase_res_samps
+                    self.dicts[streamnum]['Ssynth'] = time + float(phase_res)
                     self.dicts[streamnum]['Sres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
