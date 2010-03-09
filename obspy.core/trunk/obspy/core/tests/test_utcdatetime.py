@@ -284,9 +284,18 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(-1000.1)
         self.assertEquals(str(dt), "1969-12-31T23:43:19.900000Z")
         self.assertEquals(dt.timestamp, -1000.1)
-        dt = UTCDateTime(-1000.1)
 
-    def test_initUTCDatetTime(self):
+    def test_negativeUTCDateTime(self):
+        #1
+        dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
+        self.assertEquals(dt.timestamp, -1000.1)
+        self.assertEquals(str(dt), "1969-12-31T23:43:19.900000Z")
+        #2
+        dt = UTCDateTime("1905-01-01T12:23:34.123456Z")
+        self.assertEquals(dt.timestamp, -2051177785.876544)
+        self.assertEquals(str(dt), "1905-01-01T12:23:34.123456Z")
+
+    def test_initUTCDateTime(self):
         dt = UTCDateTime(year=2008, month=1, day=1)
         self.assertEquals(str(dt), "2008-01-01T00:00:00.000000Z")
         dt = UTCDateTime(year=2008, julday=1, hour=12, microsecond=5000)
