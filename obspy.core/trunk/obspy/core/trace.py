@@ -383,7 +383,7 @@ class Trace(object):
         # create the returned trace
         out = Trace(header=deepcopy(lt.stats))
         # check if overlap or gap
-        if delta <= 0 and delta_endtime < 0:
+        if delta < 0 and delta_endtime < 0:
             # overlap
             delta = abs(delta)
             #XXX tolist is really bad, much more memory consumption
@@ -409,7 +409,7 @@ class Trace(object):
                         rt.data[interpolate_samples:]]
             else:
                 raise NotImplementedError
-        elif delta <= 0 and delta_endtime >= 0:
+        elif delta < 0 and delta_endtime >= 0:
             # contained trace
             delta = abs(delta)
             lenrt = len(rt)
@@ -425,6 +425,8 @@ class Trace(object):
                 data = [lt.data]
             else:
                 raise NotImplementedError
+        elif delta == 0:
+            data = [lt.data, rt.data]
         else:
             # gap
             gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)

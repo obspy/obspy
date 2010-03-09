@@ -640,16 +640,17 @@ class StreamTestCase(unittest.TestCase):
         Bugfix for merging multiple traces with very small sampling rate.
         """
         # create traces
-        trace1 = Trace(data=np.empty(1441))
+        np.random.seed(815)
+        trace1 = Trace(data=np.random.randn(1441))
         trace1.stats.delta = 60.0
         trace1.stats.starttime = UTCDateTime("2009-02-01T00:00:02.995000Z")
-        trace2 = Trace(data=np.empty(1441))
+        trace2 = Trace(data=np.random.randn(1441))
         trace2.stats.delta = 60.0
         trace2.stats.starttime = UTCDateTime("2009-02-02T00:00:12.095000Z")
-        trace3 = Trace(data=np.empty(1440))
+        trace3 = Trace(data=np.random.randn(1440))
         trace3.stats.delta = 60.0
         trace3.stats.starttime = UTCDateTime("2009-02-03T00:00:16.395000Z")
-        trace4 = Trace(data=np.empty(1440))
+        trace4 = Trace(data=np.random.randn(1440))
         trace4.stats.delta = 60.0
         trace4.stats.starttime = UTCDateTime("2009-02-04T00:00:11.095000Z")
         # create stream
@@ -660,7 +661,10 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(st), 1)
         self.assertEquals(st[0].stats.delta, 60.0)
         self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
-        self.assertEquals(st[0].stats.endtime, trace4.stats.endtime)
+        # endtime of last trace
+        endtime = trace1.stats.starttime + \
+                  (4 * 1440 - 1) * trace1.stats.delta
+        self.assertEquals(st[0].stats.endtime, endtime)
 
     def test_trimWithSmallSamplingRate(self):
         """
