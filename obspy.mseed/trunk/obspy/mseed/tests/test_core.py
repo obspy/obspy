@@ -109,6 +109,21 @@ class CoreTestCase(unittest.TestCase):
         stream.verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
+    def test_writeWithDateTimeBefore1970(self):
+        """
+        Write an stream via libmseed with a datetime before 1970.
+        """
+        # create trace
+        tr = Trace(data=np.empty(1000))
+        tr.stats.starttime = UTCDateTime("1969-01-01T00:00:00")
+        # write file
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format="MSEED")
+        # read again
+        stream = read(tempfile)
+        os.remove(tempfile)
+        stream.verify()
+
     def test_readWithWildCard(self):
         """
         Reads wildcard filenames.
@@ -462,8 +477,8 @@ class CoreTestCase(unittest.TestCase):
         # quality flags.
         timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
         qualityflags = os.path.join(self.path, 'data', 'qualityflags.mseed')
-        t_st = read(timingqual, quality = True)
-        q_st = read(qualityflags, quality = True)
+        t_st = read(timingqual, quality=True)
+        q_st = read(qualityflags, quality=True)
         # The timingquality contains values from 0 to 100 in random order.
         qual = np.arange(101, dtype='float32')
         read_qual = t_st[0].stats.mseed.timing_quality
@@ -481,14 +496,14 @@ class CoreTestCase(unittest.TestCase):
         for _i in xrange(8):
             dummy = [0] * 8
             dummy[_i] = 1
-            self.assertEqual(q_st[_i+1].stats.mseed.data_quality_flags_count,
+            self.assertEqual(q_st[_i + 1].stats.mseed.data_quality_flags_count,
                              dummy)
         dummy = [0] * 8
         self.assertEqual(q_st[9].stats.mseed.data_quality_flags_count,
                          [0] * 8)
         for _i in xrange(8):
             dummy[_i] = 1
-            self.assertEqual(q_st[_i+10].stats.mseed.data_quality_flags_count,
+            self.assertEqual(q_st[_i + 10].stats.mseed.data_quality_flags_count,
                              dummy)
 
 def suite():
