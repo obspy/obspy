@@ -37,6 +37,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 from matplotlib.patches import Ellipse
+from matplotlib.ticker import FormatStrFormatter
 
 #imports for the buttons
 import matplotlib.colors as colors
@@ -194,6 +195,12 @@ def getCoord(base_url, user, password, timeout, network, station):
         coord.append(value)
 
     return coord
+
+#def yAxisLabelFormatter(t):
+#    """
+#    Formatter for the y-axis major tick labels
+#    """
+#    return "%.3f" % t
 
 class PickingGUI:
 
@@ -574,6 +581,7 @@ class PickingGUI:
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
+            self.axs[i].xaxis.set_major_formatter(FormatStrFormatter("%.3f"))
             if not self.flagSpectrogram:
                 self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
             else:
@@ -1936,7 +1944,8 @@ class PickingGUI:
         if self.focMechList != []:
             for d in self.focMechList:
                 Beachball([d['Strike'], d['Dip'], d['Rake']],
-                          nofill=True, fig=fig)
+                          nofill=True, fig=fig, edgecolor='k',
+                          linewidth=1., alpha=0.3)
         try:
             fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
                     (self.dictFocalMechanism['Dip'],
@@ -2254,7 +2263,6 @@ class PickingGUI:
                 self.dictOrigin['used S Count'] += 1
                 self.dicts[streamnum]['Ssynth'] = res + \
                                                   self.dicts[streamnum]['P']
-                self.dicts[streamnum]['Ssynth'] = synthsamps
                 self.dicts[streamnum]['Sres'] = res
                 self.dicts[streamnum]['SAzim'] = azimuth
                 self.dicts[streamnum]['SInci'] = incident
@@ -2417,7 +2425,8 @@ class PickingGUI:
                 print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
                          self.dicts[i]['MagChannel'])
-
+    
+    #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
     def showWadati(self):
         """
         Shows a Wadati diagram plotting P time in (truncated) Julian seconds
