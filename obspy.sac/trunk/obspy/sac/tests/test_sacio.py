@@ -163,6 +163,12 @@ class SacioTestCase(unittest.TestCase):
         t = sacio.ReadSac()
         self.assertRaises(SacError, t.ReadSacFile, __file__)
 
+    def test_getattr(self):
+        tfile = os.path.join(os.path.dirname(__file__), 'data','test.sac')
+        tr = sacio.ReadSac(tfile)
+        self.assertEqual(tr.npts,tr.GetHvalue('npts'))
+        self.assertEqual(tr.kstnm,tr.GetHvalue('kstnm'))
+
 
 def suite():
     return unittest.makeSuite(SacioTestCase, 'test')

@@ -270,6 +270,8 @@ accessed as an instance of the ReadSac class.
 
    Currently seems to work only for conversion from big-endian to little-endian.
 
+* :meth:`~sacio.ReadSac.__getattr__` Convenience function to access header values.
+
 
 Exceptions
 ----------

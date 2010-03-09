@@ -866,6 +866,21 @@ class ReadSac(object):
         self.hi = self.hi.newbyteorder(bs)
 
 
+    def __getattr__(self,hname):
+        """
+        convenience function to access header values
+
+        :param hname: header variable name
+        
+        >>>
+        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
+        ...                     'test.sac')
+        >>> tr = ReadSac(file)
+        >>> tr.npts == tr.GetHvalue('npts')
+        True
+        """
+        return self.GetHvalue(hname)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
