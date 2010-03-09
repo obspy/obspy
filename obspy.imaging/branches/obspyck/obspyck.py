@@ -269,7 +269,7 @@ class PickingGUI:
                    self.hyp2000Summary)
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
                            'cd $HYP2000_DATA;' + \
-                           'hyp2000 < bay2000.inp &> /dev/null'
+                           './hyp2000 < bay2000.inp &> /dev/null'
         self.focmecPath = self.options.pluginpath + '/focmec/'
         self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
         self.focmecStdout = self.tmp_dir + 'focmec.stdout'
