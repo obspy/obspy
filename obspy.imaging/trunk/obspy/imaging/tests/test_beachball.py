@@ -4,11 +4,11 @@ The obspy.imaging.beachball test suite.
 """
 
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
-    MomentTensor, MT2Plane, MT2Axes
+    MomentTensor, MT2Plane, MT2Axes, Beach
 import inspect
 import os
 import unittest
-
+import matplotlib.pyplot as plt
 
 class BeachballTestCase(unittest.TestCase):
     """
@@ -211,6 +211,53 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
+    def test_Beach(self):
+        """
+        Tests to plot beachballs as collection into an existing axis
+        object. The moment tensor values are taken form the 
+        test_Beachball unit test. See that test for more information about
+        the parameters.
+        """
+        fig = plt.figure(1, figsize=(3, 3), dpi=100)
+        ax = fig.add_subplot(111, aspect='equal')
+        mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
+              [274, 13, 55],
+              [130, 79, 98],
+              [264.98, 45.00, -159.99],
+              [160.55, 76.00, -46.78],
+              [1.45, -6.60, 5.14, -2.67, -3.16, 1.36],
+              [235, 80, 35],
+              [138, 56, 168],
+              [1, 1, 1, 0, 0, 0],
+              [-1, -1, -1, 0, 0, 0],
+              [1, -2, 1, 0, 0, 0],
+              [1, -1, 0, 0, 0, 0],
+              [1, -1, 0, 0, 0, -1],
+              [179, 55, -78],
+              [10, 42.5, 90],
+              [10, 42.5, 92],
+              [150, 87, 1],
+              [0.99, -2.00, 1.01, 0.92, 0.48, 0.15],
+              [5.24, -6.77, 1.53, 0.81, 1.49, -0.05],
+              [16.578, -7.987, -8.592, -5.515, -29.732, 7.517],
+              [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
+              [150, 87, 1]]
+
+        ax.plot([-100,-100,100,100], [-100,100,-100,100], 'rv')
+
+        x = -100
+        y = -100
+        for i, t in enumerate(mt):
+            ax.add_collection(Beach(t, size=100, width=30, xy=(x,y),
+                                    linewidth=.6))
+            x += 50
+            if (i+1) % 5 == 0:
+                x = -100
+                y += 50
+
+        ax.set_xlim(-120,120)
+        ax.set_ylim(-120,120)
+        fig.savefig(os.path.join(self.path, 'beachball-collection.png'))
 
 def suite():
     return unittest.makeSuite(BeachballTestCase, 'test')

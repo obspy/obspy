@@ -98,6 +98,10 @@ def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0,
     else:
         raise TypeError("Wrong input value for 'fm'.")
 
+    # Only at least size 100, i.e. 100 points in the matrix are allowed
+    if size < 100:
+        size = 100
+
     # Return as collection
     color = facecolor
     fc = None
@@ -570,16 +574,12 @@ def plotDC(np1, size=200, xy=(0,0), width=200):
 
     X = X * D / 90
     Y = Y * D / 90
-    phid = arange(0, 2 * pi, .01)
-    (x, y) = Pol2Cart(phid, 90)
-    xx = x * D / 90
-    yy = y * D / 90
 
     # calculate resolution
     res = width/float(size)
 
     # construct the patches
-    collect = [xy2patch(xx, yy, res, xy)]
+    collect = [patches.Circle(xy, radius=width/2.0)]
     collect.append(xy2patch(Y, X, res, xy))
     return collect
 
