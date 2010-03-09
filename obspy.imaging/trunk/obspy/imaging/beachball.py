@@ -126,7 +126,7 @@ def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0,
     collection.set_linewidth(linewidth)
     return collection
 
-def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, 
+def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, edgecolor='k',
               patch=False, xy=(0,0), width=200, outfile=None, format=None, 
               nofill=False, fig=None):
     """
@@ -166,10 +166,9 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0,
     ax.axison = False
 
     # plot the collection
-    collection = Beach(fm, linewidth=2, facecolor='b', edgecolor='k',
-                       alpha=alpha, 
-                       xy=(0,0), width=plot_size, size=plot_size,
-                       nofill=nofill)
+    collection = Beach(fm, linewidth=linewidth, facecolor=color,
+                       edgecolor=edgecolor, alpha=alpha, nofill=nofill,
+                       xy=(0,0), width=plot_size, size=plot_size)
     ax.add_collection(collection)
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
