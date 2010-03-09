@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from time import time
+from utils import get_channels
 
 class DatabaseEnvironment(object):
     """
@@ -12,6 +13,11 @@ class DatabaseEnvironment(object):
     """
     def __init__(self):
         self.errorHandler = ErrorHandler()
+
+    def setPath(self, base_path):
+        self.path = base_path
+        self.paths = get_channels(base_path)
+            
 
 
 class Error(object):

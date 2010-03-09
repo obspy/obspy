@@ -64,6 +64,15 @@ class StatusBar(GUIElement):
 
         self.text = self.text_layout.text
 
+    def setText(self, text):
+        """
+        Sets the text.
+        """
+        self.text = text
+        self.text_layout.begin_update()
+        self.text_layout.text = self.text
+        self.text_layout.end_update()
+
     def resize(self, width, height):
         """
         Should get called on all resize events.

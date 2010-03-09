@@ -9,3 +9,4 @@ from scroll_bar import ScrollBar
 from status_bar import StatusBar
 from waveform_plot import WaveformPlot
 from waveform_group import WaveformGroup
+from menu import Menu

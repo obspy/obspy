@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
 from gui_element import GUIElement
 import glydget
-from obspy.core import UTCDateTime
+from itertools import izip
+import numpy as np
+from numpy.ma import is_masked
+from obspy.core import read, UTCDateTime
 import pyglet
+from waveform_group import WaveformGroup
 
 class WaveformPlot(GUIElement):
     """
@@ -19,70 +24,231 @@ class WaveformPlot(GUIElement):
         Usual init method.
         """
         super(WaveformPlot, self).__init__(self, **kwargs)
-        # Change group to a Custom waveform group.
-        self.group = self.win.waveform_group
+        # Dummy value for header.
+        self.header = ""
         # XXX: Will need to be read from the file.
         self.starttime = kwargs.get('starttime', UTCDateTime(0))
-        self.endtime = kwargs.get('endtime', UTCDateTime(3600))
+        self.endtime = kwargs.get('endtime', UTCDateTime(1971,1,1))
+        self.time_range = self.endtime - self.starttime
+        # Path to the files.
+        self.path = kwargs.get('dir', None)
+        # Prepare the data.
+        self.readAndMergeData()
         # Symetric margins around the plots.
-        self.vertical_margin = kwargs.get('vertical_margin', 10)
+        self.vertical_margin = kwargs.get('vertical_margin', 5)
         self.horizontal_margin = kwargs.get('horizontal_margin', 10)
         # Height of plot.
-        self.height = kwargs.get('height', 200)
+        self.height = kwargs.get('height', 40)
+        # Inner padding. Currently used for top, bottom and left border.
+        self.pad = kwargs.get('pad', 2)
         # Bind to waveform list of window.
         self.win.waveforms.append(self)
         # Current position in self.win.waveforms.
         self.position = len(self.win.waveforms)
+        # Group to handle the positioning and the scrolling with the GPU.
+        self.group1 = WaveformGroup(self.win, self.horizontal_margin,
+                     (self.position-1)*(self.height + self.vertical_margin) +\
+                     self.vertical_margin + self.height, 1)
+        self.group2 = WaveformGroup(self.win, self.horizontal_margin,
+                     (self.position-1)*(self.height + self.vertical_margin) +\
+                     self.vertical_margin + self.height, 2)
+        self.group3 = WaveformGroup(self.win, self.horizontal_margin,
+                     (self.position-1)*(self.height + self.vertical_margin) +\
+                     self.vertical_margin + self.height, 3)
+        self.plot_group = WaveformGroup(self.win, self.horizontal_margin,
+                     (self.position-1)*(self.height + self.vertical_margin) +\
+                     self.vertical_margin + self.height, 2, plot = True)
         # Create and bind plot.
-        self.createPlot()
+        self.initPlot()
         # Create title.
         self.createTitle()
         # Update the viewable area of the window.
         self.win.max_viewable = len(self.win.waveforms) * \
                                 (self.vertical_margin + self.height)
 
+    def updatePositions(self):
+        """
+        Updates the position of the graph after one other graph has been
+        deleted.
+        """
+        # XXX: Not implemented yet.
+        offset = (self.position-1)*(self.height + self.vertical_margin) +\
+                     self.vertical_margin + self.height
+
+    def readAndMergeData(self):
+        """
+        Reads the data to self.stream
+        """
+        try:
+            stream = read(self.path + '*')
+        except:
+            # XXX: Need to use the Error handling object.
+            self.win.status_bar.error_text = "Reading failed."
+            return
+        try:
+            stream.merge()
+        except:
+            self.win.status_bar.error_text = "Merging failed."
+            return
+        self.stream = stream
+        # Copy the stream to always have an original version.
+        self.org_stream = deepcopy(stream)
+
+    def createMinMaxList(self):
+        """
+        Creates the minmax list. The method used is not fully accurate but the results
+        should be ok.
+        """
+        # Minus 2 to avoid drawing on the boundary box.
+        pixel = self.win.detail
+        data = self.stream.slice(self.starttime, self.endtime)[0].data 
+        # Reshape and calculate point to point differences.
+        per_pixel = int(len(data)//pixel)
+        ptp = data[:pixel * per_pixel].reshape(pixel, per_pixel).ptp(axis=1)
+        # Last pixel.
+        last_pixel = data[pixel * per_pixel:]
+        if len(last_pixel):
+            last_pixel = last_pixel.ptp()
+            if ptp[-1] < last_pixel:
+                ptp[-1] = last_pixel
+        self.ptp = ptp.astype('float32')
+        # Create a logarithmic axis.
+        if self.win.log_scale:
+            self.ptp[self.ptp>1] = (np.log(self.ptp[self.ptp>1])/\
+                                    np.log(self.win.log_scale)) + 1
+        # Adjust to fit in the window.
+        self.ptp /= self.ptp.max()
+        # Exclude the boundaries.
+        self.ptp *= (self.graph_height-2)/2
+        # Set masked arrays to zero.
+        if is_masked(self.ptp):
+            self.ptp.fill_value = 0.0
+            self.ptp = self.ptp.filled()
+
+    def _delete(self):
+        """
+        Method the delete the object. Only takes care of the objects in the
+        frame buffer. The garbage collector should be able to take care of the
+        rest.
+        """
+        self.bars.delete()
+        self.title_layout.delete()
+        self.stats_layout.delete()
+        self.box.delete()
+        self.graph_box.delete()
+        self.plot.delete()
+
+    def replot(self):
+        """
+        Draws the plot again. Useful for changed settings or colors.
+        """
+        self.bars.delete()
+        self.stream = deepcopy(self.org_stream)
+        self.initPlot(create = False)
+
+    def initPlot(self, create = True):
+        """
+        Inits the plot.
+        """
+        # Trim the data. Pad if necessary.
+        # XXX: Need to adjust to newer obspy version.
+        # self.stream.trim(self.win.starttime, self.win.endtime, pad = True)
+        self.stream.trim(self.win.starttime, self.win.endtime)
+        # Writes class attributes.
+        self.starttime = self.stream[0].stats.starttime
+        self.endtime = self.stream[0].stats.endtime
+        self.time_range = self.endtime - self.starttime
+        self.header = self.stream[0].getId()
+        if create:
+            self.createPlot()
+        # Get the point-to-point array.
+        self.createMinMaxList()
+        # Create an array containing the quad coordinates for each vertical
+        # line.
+        quads = np.empty(self.win.detail * 8)
+        # Write the x_values.
+        x_values = np.linspace(0, 100, self.win.detail + 1)
+        quads[0::8] = x_values[:-1]
+        quads[2::8] = x_values[:-1]
+        quads[4::8] = x_values[1:]
+        quads[6::8] = x_values[1:]
+        # Write the y-values.
+        middle = self.pad + (self.graph_height/2)
+        quads[1::8] = -self.ptp + middle
+        quads[3::8] = self.ptp + middle
+        quads[5::8] = self.ptp + middle
+        quads[7::8] = -self.ptp + middle
+        self.quads = quads
+        color = [0, 0, 0] * (len(quads)/2)
+        self.bars  = self.batch.add(len(quads)/2,
+                        pyglet.gl.GL_QUADS, self.plot_group,
+                        ('v2f', self.quads),
+                        ('c3B', tuple(color)))
+        # Set new status text.
+        self.win.status_bar.setText('%i Traces' % len(self.win.waveforms))
+    
     def createTitle(self):
         """
-        XXX: Dummy title to ease development.
+        Reads the class attributes and creates a title.
         """
         # Position.
-        x = self.horizontal_margin + 5
-        y = self._get_y() - 5
-        # Just write the position to it.
-        title_document = pyglet.text.decode_text(str(self.position))
+        x =  5
+        y = self.height - 5
+        # Set the title.
+        title_document = pyglet.text.decode_text(self.header)
         title_document.set_style(0, 2, dict(font_name='arial',
                                  bold=True, font_size=10, color=(0,0,0,255)))
         self.title_layout = pyglet.text.DocumentLabel(document = title_document,
                           x = x , y = y, batch = self.batch, anchor_x = 'left',
-                          anchor_y = 'top', group = self.group)
-
-    def _get_y(self):
-        """
-        Helper method to get the y_value of the top left corner.
-        """
-        y = self.win.window.height - ((self.position - 1) * self.height +\
-            self.position * self.vertical_margin)
-        return y
+                          anchor_y = 'top', group = self.group1)
+        # Show times.
+        stats_text = "{font_name 'Arial'}{font_size 8}" + "XX Hz"
+        stats_document = pyglet.text.decode_attributed(stats_text)
+        self.stats_layout = pyglet.text.DocumentLabel(document = stats_document,
+                          x = x , y = y - 20, width = 20, batch = self.batch,
+                          anchor_x = 'left', anchor_y = 'top',
+                          group = self.group1, multiline = False)
 
     def createPlot(self):
         """
-        Create and bind to batch.
+        Create and bind to batch and group. Each WaveformPlot object will have
+        its own WaveformGroup for handling all the transforms needed.
+
+        Therefore scrolling and placement of the plot will be entirely handled
+        by the graphics card. Only the width and height need to be handled by
+        the CPU.
+
+        The plot will go from (0,0) to (self.win.window.width - 2 *
+        self.horizontal_margin - self.win.scroll_bar.width, self.height).
         """
-        y = self._get_y()
+        y = self.height
         width = self.win.window.width - 2 * self.horizontal_margin - \
-                self.win.scroll_bar.width
+                self.win.scroll_bar.width - self.win.menu_width
         # The box is slighty smaller than the border.
-        self.plot = glydget.Rectangle(self.horizontal_margin+1, y-1, width-2,
+        self.plot = glydget.Rectangle(1, y-1, width-2,
                         self.height-2,
                         [255, 255, 255, 250, 255, 255, 255, 240,
                         255, 255, 255, 230, 255, 255, 255, 215])
-        # Also create a box around it.
-        self.box = glydget.Rectangle(self.horizontal_margin, y, width,
+        # also create a box around it.
+        self.box = glydget.Rectangle(0, y, width,
                         self.height,
                         (205, 55, 55, 250), filled=False)
         # Add to batch.
-        self.plot.build(batch = self.batch, group = self.group)
-        self.box.build(batch = self.batch, group = self.group)
+        self.plot.build(batch = self.batch, group = self.group1)
+        self.box.build(batch = self.batch, group = self.group1)
+        # Add actual graph. Also set class variables for later easier access.
+        self.graph_start_x = 125
+        self.graph_start_y = y - self.pad
+        self.graph_width = width - self.graph_start_x - self.pad
+        # Set the scaling factor of the plot accordingly.
+        self.plot_group.plot = self.graph_width/100.0
+        self.plot_group.plot_offset = self.graph_start_x
+        self.graph_height = self.height - 2*self.pad
+        self.graph_box = glydget.Rectangle(self.graph_start_x,
+                         self.graph_start_y, self.graph_width,
+                         self.graph_height,
+                        (0, 0, 0, 250), filled=False)
+        self.graph_box.build(batch = self.batch, group = self.group2)
         # Add to object_list.
         self.win.object_list.append(self)
 
@@ -91,18 +257,20 @@ class WaveformPlot(GUIElement):
         All adjustments neccessary on resize.
         """
         width = self.win.window.width - 2 * self.horizontal_margin -\
-                self.win.scroll_bar.width
-        y = self._get_y()
+                self.win.scroll_bar.width - self.win.menu_width
+        y = self.height
         # The box is slighty smaller than the border.
         self.plot.begin_update()
-        self.plot.move(self.horizontal_margin+1,y-1)
         self.plot.resize(width-2,self.height-2)
         self.plot.end_update()
         self.box.begin_update()
-        self.box.move(self.horizontal_margin,y)
         self.box.resize(width,self.height)
         self.box.end_update()
-        # Update text.
-        self.title_layout.begin_update()
-        self.title_layout.y = y - 5
-        self.title_layout.end_update()
+        # Update the graph. Also update the variables.
+        self.graph_width = width - 125 - self.pad
+        self.graph_height = self.height - 4
+        self.graph_box.begin_update()
+        self.graph_box.resize(self.graph_width, self.graph_height)
+        self.graph_box.end_update()
+        # Change the scaling factor of the plot.
+        self.plot_group.plot = self.graph_width/100.0

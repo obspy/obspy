@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import pyglet
+from menu import Menu
+from obspy.core import UTCDateTime
 from status_bar import StatusBar
 from background import Background
 from scroll_bar import ScrollBar
 from status_bar import StatusBar
-from waveform_group import WaveformGroup
 
 class PygletWindow(object):
     """
@@ -22,6 +23,8 @@ class PygletWindow(object):
         self._setDefaultValues(**kwargs)
         # Create the window.
         self.createWindow()
+        # Set the OpenGL state.
+        self.setOpenGLState()
         # Set the caption of the window.
         self.window.set_caption('OpenGL Waveform Database Viewer')
         # Create the ordered groups used to get a layer like drawing of the
@@ -41,8 +44,17 @@ class PygletWindow(object):
         self.current_view_span = self.window.height - self.status_bar.height
         # Add a scroll bar. Should also always be on top.
         self.scroll_bar = ScrollBar(parent = self, group = 999)
-        # Create the waveform Group.
-        self._createWaveformGroup()
+        # Add the menu.
+        self.menu = Menu(parent = self, group = 999, width = self.menu_width)
+
+    def setOpenGLState(self):
+        """
+        Sets some global OpenGL states.
+        """
+        # Enable transparency.
+        pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
+                              pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+        pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 
 
     def getGroup(self, index):
@@ -78,26 +90,29 @@ class PygletWindow(object):
         self.vsync = kwargs.get('vsync', 0)
         # Check whether a status bar is desired.
         self.status_bar = kwargs.get('status_bar', True)
-        # Get number of layer. Defaults to five.
-        self.layers = kwargs.get('layers', 5)
+        # Get number of layer. Defaults to six.
+        self.layers = kwargs.get('layers', 6)
+        # Number of bars for each waveform plot.
+        self.detail = 1000
+        # Logarithmic scale.
+        self.log_scale = 1.00000001
         # List to store the actual WaveformPlot objects.
         self.waveforms = []
-        # Waveform Layer.
-        self.waveform_layer = kwargs.get('waveform_layer', 3)
+        # Start- and Endtime of the plots. Needs to be stored into the window
+        # object because it has to be the same for all traces.
+        self.starttime = kwargs.get('starttime', UTCDateTime(2010,1,1))
+        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,1) - 1.0)
+        # Waveform Layer. Waveforms will need some more layers. I will just add
+        # three.
+        # XXX: Maybe switch to some more elegant solution.
+        self.waveform_layer1 = kwargs.get('waveform_layer', 3)
+        self.waveform_layer2 = self.waveform_layer1 + 1
+        self.waveform_layer3 = self.waveform_layer2 + 1
         # Offset of the waveform plots in the y-direction.
+        # XXX: Currently used?
         self.waveform_offset = 0
-
-
-    def _createWaveformGroup(self):
-        """
-        Creates Waveform Group.
-
-        Needs to be done to get a group that can be automatically passed to
-        each waveform group.
-        """
-        self.waveform_group = WaveformGroup(parent =\
-                              self.getGroup(self.waveform_layer), win = self)
-
+        # Total width of the menu.
+        self.menu_width = kwargs.get('menu_width', 200)
 
     def _createdOrderedGroups(self):
         """

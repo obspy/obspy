@@ -10,23 +10,52 @@ class WaveformGroup(pyglet.graphics.Group):
 
     This will be handled by simply translating the OpenGL view.
     """
-    def __init__(self, parent, win, *args, **kwargs):
+    def __init__(self, win, x_offset, y_offset, id, plot = False,
+                 plot_offset = 0.0, *args, **kwargs):
         """
         Set the parent attribute to still account for the ordering.
         """
         super(WaveformGroup, self).__init__(self, *args, **kwargs)
-        self.parent = parent
         self.win = win
+        # The parent is a ordered group that gets handled by the window which
+        # also decided which layer the waveforms will be drawn on.
+        if id == 1:
+            self.parent = self.win.getGroup(self.win.waveform_layer1)
+        elif id == 2:
+            self.parent = self.win.getGroup(self.win.waveform_layer2)
+        elif id == 3:
+            self.parent = self.win.getGroup(self.win.waveform_layer3)
+        # Constant offsets.
+        self.x_offset = x_offset
+        # The given offset is always the offset from the top border of the
+        # window.
+        self.y_offset = y_offset
+        self.current_offset = self.win.window.height - self.y_offset
+        self.plot = plot
+        self.plot_offset = plot_offset
 
     def set_state(self):
         """
         Translate Waveform group.
         """
-        glTranslatef(0.0, -self.win.waveform_offset, 0.0)
+        if self.plot:
+            self.current_offset = self.win.window.height - self.y_offset
+            glTranslatef(self.x_offset + self.plot_offset,
+                         self.current_offset -self.win.waveform_offset, 0.0)
+            glScalef(self.plot, 1.0, 1.0)
+        else:
+            self.current_offset = self.win.window.height - self.y_offset
+            glTranslatef(self.x_offset, self.current_offset - self.win.waveform_offset, 0.0)
 
     def unset_state(self): 
         """
         Undo translation to not affect other elements.
         """
-        glTranslatef(0.0, self.win.waveform_offset, 0.0)
-        
+        if self.plot:
+            glScalef(1.0/self.plot, 1.0, 1.0)
+            self.current_offset = self.win.window.height - self.y_offset
+            glTranslatef(-self.x_offset - self.plot_offset,
+                         -self.current_offset +self.win.waveform_offset, 0.0)
+        else:
+            self.current_offset = self.win.window.height - self.y_offset
+            glTranslatef(-self.x_offset, -self.current_offset + self.win.waveform_offset, 0.0)

@@ -18,7 +18,9 @@ class GUIElement(object):
         # assures that it will always get to the deepest batch.
         self.batch = parent.batch
         # Set the group. If none is given just draw on top of everything else.
-        self.group = self.win.getGroup(kwargs.get('group', 999))
+        self.group = kwargs.get('group', 999)
+        if type(self.group) == int:
+            self.group = self.win.getGroup(self.group)
 
     def resize(self, width, height):
         """

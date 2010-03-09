@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#1!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Import pyglet and do not debug the OpenGL code.
@@ -11,30 +11,18 @@ if __name__ == '__main__':
     """
     Just testing some stuff.
     """
+    # Path to the previews.
+    preview_path = '/Users/lion/Documents/workspace/test_files/preview/'
 
     # Launch the globally available Environment class which later needs to be
     # given as an argument to most other class instances.
     env = DatabaseEnvironment()
+    # Path to be accesseable by all submodules.
+    env.setPath(preview_path + '2010/')
+        
     # Set the window.
     win = PygletWindow(env = env)
-    # Launch 12 dummy WaveformPlot objects for testing purposes.
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    WaveformPlot(parent = win, group = 2)
-    # Testing (error) messages.
-    win.status_bar.error_text = 'Some error'
-    win.status_bar.text = 'Some text'
 
-    
     # Shortcut to window because it gets called frequently.
     window = win.window
 
@@ -51,9 +39,11 @@ if __name__ == '__main__':
     @window.event
     def on_draw(*args, **kwargs):
         """
-        The actual main loop. Do no intesive calculations in there.
+        The actual main loop. Do no intensive calculations in there.
         """
         win.draw()
+        # XXX: Need to figure out a way to add the menu to the batch.
+        win.menu.menu.batch.draw()
 
     @window.event
     def on_resize(width, height):
