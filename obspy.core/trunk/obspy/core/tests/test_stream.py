@@ -55,7 +55,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertNotEqual(st[0].data[0], 999)
         st[0] = stream[0]
         np.testing.assert_array_equal(stream[0].data[:10],
-                                      np.ones(10,dtype='int')*999)
+                                      np.ones(10, dtype='int') * 999)
 
     def test_getitem(self):
         """
@@ -634,6 +634,60 @@ class StreamTestCase(unittest.TestCase):
         trace3.stats.starttime = UTCDateTime("2010-01-21T06:39:33.280000Z")
         st = Stream([trace1, trace2, trace3])
         st.merge()
+
+    def test_mergeWithSmallSamplingRate(self):
+        """
+        Bugfix for merging multiple traces with very small sampling rate.
+        """
+        # create traces
+        trace1 = Trace(data=np.empty(1441))
+        trace1.stats.delta = 60.0
+        trace1.stats.starttime = UTCDateTime("2009-02-01T00:00:02.995000Z")
+        trace2 = Trace(data=np.empty(1441))
+        trace2.stats.delta = 60.0
+        trace2.stats.starttime = UTCDateTime("2009-02-02T00:00:12.095000Z")
+        trace3 = Trace(data=np.empty(1440))
+        trace3.stats.delta = 60.0
+        trace3.stats.starttime = UTCDateTime("2009-02-03T00:00:16.395000Z")
+        trace4 = Trace(data=np.empty(1440))
+        trace4.stats.delta = 60.0
+        trace4.stats.starttime = UTCDateTime("2009-02-04T00:00:11.095000Z")
+        # create stream
+        st = Stream([trace1, trace2, trace3, trace4])
+        # merge
+        st.merge()
+        # compare results
+        self.assertEquals(len(st), 1)
+        self.assertEquals(st[0].stats.delta, 60.0)
+        self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
+        self.assertEquals(st[0].stats.endtime, trace4.stats.endtime)
+
+    def test_trimWithSmallSamplingRate(self):
+        """
+        Bugfix for cutting multiple traces with very small sampling rate.
+        """
+        # create traces
+        trace1 = Trace(data=np.empty(1441))
+        trace1.stats.delta = 60.0
+        trace1.stats.starttime = UTCDateTime("2009-02-01T00:00:02.995000Z")
+        trace2 = Trace(data=np.empty(1441))
+        trace2.stats.delta = 60.0
+        trace2.stats.starttime = UTCDateTime("2009-02-02T00:00:12.095000Z")
+        trace3 = Trace(data=np.empty(1440))
+        trace3.stats.delta = 60.0
+        trace3.stats.starttime = UTCDateTime("2009-02-03T00:00:16.395000Z")
+        trace4 = Trace(data=np.empty(1440))
+        trace4.stats.delta = 60.0
+        trace4.stats.starttime = UTCDateTime("2009-02-04T00:00:11.095000Z")
+        # create stream
+        st = Stream([trace1, trace2, trace3, trace4])
+        # merge
+        st.trim(trace1.stats.starttime, trace4.stats.endtime)
+        # compare results
+        self.assertEquals(len(st), 4)
+        self.assertEquals(st[0].stats.delta, 60.0)
+        self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
+        self.assertEquals(st[0].stats.endtime, trace4.stats.endtime)
 
     def test_writingMaskedArrays(self):
         """
