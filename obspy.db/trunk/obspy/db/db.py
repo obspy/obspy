@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
-    Boolean
+    Binary, Boolean
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relation, backref
-
+from sqlalchemy.orm import relation
+from obspy.core import Trace, UTCDateTime
+import numpy as np
 
 ##    Column('DQ_amplifier_saturation', Integer, nullable=True),
 ##    Column('DQ_digitizer_clipping', Integer, nullable=True),
@@ -77,6 +78,7 @@ class WaveformChannel(Base):
     calib = Column(Float, nullable=False)
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
+    preview = Column(Binary, nullable=True)
 
     gaps = relation("WaveformGaps", order_by="WaveformGaps.id",
                     backref="channel")
@@ -91,9 +93,20 @@ class WaveformChannel(Base):
         self.calib = data.get('calib', 1.0)
         self.npts = data.get('npts', 0)
         self.sampling_rate = data.get('sampling_rate', 1.0)
+        self.preview = data.get('preview', None)
 
     def __repr__(self):
         return "<WaveformChannel('%s')>" % self.channel
+
+    def getPreview(self):
+        tr = Trace(data=np.loads(str(self.preview)))
+        tr.stats.starttime = UTCDateTime(self.starttime)
+        tr.stats.delta = 60.0
+        tr.stats.network = self.network
+        tr.stats.station = self.station
+        tr.stats.location = self.location
+        tr.stats.channel = self.channel
+        return tr
 
 
 class WaveformGaps(Base):

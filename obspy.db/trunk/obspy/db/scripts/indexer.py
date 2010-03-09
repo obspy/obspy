@@ -85,8 +85,7 @@ def _runIndexer(options):
     out_queue = manager.list()
     log_queue = manager.list()
     for i in range(options.number_of_cpus):
-        args = (i, in_queue, work_queue, out_queue, log_queue,
-                options.preview_path)
+        args = (i, in_queue, work_queue, out_queue, log_queue)
         p = multiprocessing.Process(target=worker, args=args)
         p.daemon = True
         p.start()
@@ -138,10 +137,6 @@ def main():
                            "wildcards after a equal sign. e.g. "
                            "'/path=*.gse2,*.mseed'. "
                            "Default path is 'data=*.*, '")
-    parser.add_option("-p", default='preview', type="string",
-                      dest="preview_path",
-                      help="Path where all preview files are generated. "
-                           "Default path is './preview'")
     parser.add_option("-n", type="int", dest="number_of_cpus",
                       help="Number of CPUs used for the indexer.",
                       default=multiprocessing.cpu_count())

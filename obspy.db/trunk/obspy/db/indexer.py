@@ -236,7 +236,7 @@ class WaveformFileCrawler:
         try:
             stats = os.stat(filepath)
         except Exception, e:
-            self.log.warning(str(e))
+            self.log.error(str(e))
             return
         # compare with database entries
         if file not in self._db_files:
@@ -256,8 +256,7 @@ class WaveformFileCrawler:
         return
 
 
-def worker(i, input_queue, work_queue, output_queue, log_queue,
-           preview_dir=None):
+def worker(i, input_queue, work_queue, output_queue, log_queue):
     # fetch and initialize all possible waveform feature plug-ins
     all_features = {}
     for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
@@ -302,8 +301,9 @@ def worker(i, input_queue, work_queue, output_queue, log_queue,
             stream = read(str(filepath), kwargs)
             # get gap and overlap information
             gap_list = stream.getGaps()
-            # merge channels
-            stream.merge()
+            # merge channels and replace gaps/overlaps with 0 to prevent
+            # generation of masked arrays
+            stream.merge(fill_value=0)
         except Exception, e:
             log_queue.append('%s: %s' % (filepath, e))
             work_queue.remove(filepath)
@@ -340,7 +340,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue,
             result['calib'] = trace.stats.calib
             result['npts'] = trace.stats.npts
             result['sampling_rate'] = trace.stats.sampling_rate
-            # gaps/overlaps
+            # gaps/overlaps for current trace
             result['gaps'] = gap_dict.get(trace.id, [])
             # apply feature functions
             for feature in features:
@@ -352,32 +352,15 @@ def worker(i, input_queue, work_queue, output_queue, log_queue,
                 except Exception, e:
                     log_queue.append('%s: %s' % (filepath, e))
                     continue
-            dataset.append(result)
             # generate preview of trace
-            if preview_dir:
-                # check for network id
-                if not trace.stats.network:
-                    network = '__'
-                else:
-                    network = trace.stats.network
-                # 2010/BW/MANZ/EHE.01D/
-                preview_path = os.path.join(preview_dir,
-                                            str(trace.stats.starttime.year),
-                                            network, trace.stats.station,
-                                            '%s.%sD' % (trace.stats.channel,
-                                                        trace.stats.location))
-                if not os.path.isdir(preview_path):
-                    try:
-                        os.makedirs(preview_path)
-                    except Exception , e:
-                        log_queue.append('%s: %s' % (preview_path, e))
-                        continue
-                preview_file = os.path.join(preview_path, "%s.preview" % file)
-                try:
-                    trace = createPreview(trace, 60.0)
-                    trace.write(preview_file, format="MSEED", reclen=1024)
-                except Exception , e:
-                    log_queue.append('%s: %s' % (filepath, e))
+            try:
+                trace = createPreview(trace, 60.0)
+                result['preview'] = trace.data.dumps()
+            except Exception , e:
+                log_queue.append('%s: %s' % (filepath, e))
+                result['preview'] = None
+            # update dataset
+            dataset.append(result)
         del stream
         # return results to main loop
         try:

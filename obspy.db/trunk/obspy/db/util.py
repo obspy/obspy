@@ -15,6 +15,9 @@ def _getInstalledWaveformFeaturesPlugins():
 
 
 def createPreview(trace, delta=60.0):
+    """
+    Creates a preview trace.
+    """
     data = trace.data
     # number of samples for a DELTA second slice
     number_of_samples = delta * trace.stats.sampling_rate
