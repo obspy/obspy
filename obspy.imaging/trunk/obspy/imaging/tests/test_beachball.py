@@ -218,8 +218,6 @@ class BeachballTestCase(unittest.TestCase):
         test_Beachball unit test. See that test for more information about
         the parameters.
         """
-        fig = plt.figure(1, figsize=(3, 3), dpi=100)
-        ax = fig.add_subplot(111, aspect='equal')
         mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
               [274, 13, 55],
               [130, 79, 98],
@@ -243,11 +241,17 @@ class BeachballTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
+        # Initialize figure
+        fig = plt.figure(1, figsize=(3, 3), dpi=100)
+        ax = fig.add_subplot(111, aspect='equal')
+
+        # Plot the stations or borders
         ax.plot([-100,-100,100,100], [-100,100,-100,100], 'rv')
 
         x = -100
         y = -100
         for i, t in enumerate(mt):
+            # add the beachball (a collection of two patches) to the axis
             ax.add_collection(Beach(t, size=100, width=30, xy=(x,y),
                                     linewidth=.6))
             x += 50
@@ -255,8 +259,8 @@ class BeachballTestCase(unittest.TestCase):
                 x = -100
                 y += 50
 
-        ax.set_xlim(-120,120)
-        ax.set_ylim(-120,120)
+        # Set the x and y limits and save the output
+        ax.axis([-120, 120, -120, 120])
         fig.savefig(os.path.join(self.path, 'beachball-collection.png'))
 
 def suite():

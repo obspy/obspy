@@ -681,13 +681,13 @@ class StreamTestCase(unittest.TestCase):
         trace4.stats.starttime = UTCDateTime("2009-02-04T00:00:11.095000Z")
         # create stream
         st = Stream([trace1, trace2, trace3, trace4])
-        # merge
+        # trim
         st.trim(trace1.stats.starttime, trace4.stats.endtime)
         # compare results
         self.assertEquals(len(st), 4)
         self.assertEquals(st[0].stats.delta, 60.0)
         self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
-        self.assertEquals(st[0].stats.endtime, trace4.stats.endtime)
+        self.assertEquals(st[3].stats.endtime, trace4.stats.endtime)
 
     def test_writingMaskedArrays(self):
         """

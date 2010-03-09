@@ -377,7 +377,8 @@ class Trace(object):
             rt = self
             lt = trace
         sr = self.stats.sampling_rate
-        delta = int(round((rt.stats.starttime - lt.stats.endtime) * sr)) - 1
+        delta = int(math.floor(round((rt.stats.starttime - \
+                                      lt.stats.endtime) * sr, 7))) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = Trace(header=deepcopy(lt.stats))
@@ -385,6 +386,8 @@ class Trace(object):
         if delta <= 0 and delta_endtime < 0:
             # overlap
             delta = abs(delta)
+            #XXX tolist is really bad, much more memory consumption
+            # use np.testing.assert_array_equal or something similar
             if np.all(lt.data[delta:].tolist() == rt.data[:-delta].tolist()):
                 # check if data are the same
                 data = [lt.data[delta:], rt.data]
