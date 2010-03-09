@@ -238,7 +238,7 @@ class PickingGUI:
                            'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
                            'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
         self.tmp_dir = tempfile.mkdtemp() + '/'
-        self.threeDlocPath = '/baysoft/obspyck/3dloc/'
+        self.threeDlocPath = self.options.pluginpath + '/3dloc/'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
         self.threeDlocInfile = self.tmp_dir + '3dloc-in'
         # copy 3dloc files to temp directory (only na.in)
@@ -247,10 +247,9 @@ class PickingGUI:
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
         self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
-                             'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
-                             'cd %s;' % self.tmp_dir + \
-                             '3dloc_pitsa'
-        self.hyp2000Path = '/baysoft/obspyck/hyp_2000/'
+                'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
+                'cd %s; 3dloc_pitsa' % self.tmp_dir
+        self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
         self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
         self.hyp2000Stationsfile = self.tmp_dir + 'stations.dat'
@@ -264,7 +263,7 @@ class PickingGUI:
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
                            'cd $HYP2000_DATA;' + \
                            'hyp2000 < bay2000.inp &> /dev/null'
-        self.focmecPath = '/baysoft/obspyck/focmec/'
+        self.focmecPath = self.options.pluginpath + '/focmec/'
         self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
         self.focmecStdout = self.tmp_dir + 'focmec.stdout'
         self.focmecSummary = self.tmp_dir + 'focmec.out'
@@ -3610,7 +3609,12 @@ def main():
     parser.add_option("--highpass", type="float", dest="highpass",
                       help="Frequency for Highpass-Slider", default=1.)
     parser.add_option("--nozeromean", action="store_true", dest="nozeromean",
-                      help="Deactivate offset removal of traces", default=False)
+                      help="Deactivate offset removal of traces",
+                      default=False)
+    parser.add_option("--pluginpath", dest="pluginpath",
+                      default="/baysoft/obspyck/",
+                      help="Path to local directory containing the folders" + \
+                           " with the files for the external programs")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
