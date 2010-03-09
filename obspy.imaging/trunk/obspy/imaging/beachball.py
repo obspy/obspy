@@ -57,10 +57,11 @@ EPSILON = 0.00001
 
 
 
-def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0, 
-          xy=(0,0), width=200, size=100, nofill=False):
+def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+          alpha=1.0, xy=(0,0), width=200, size=100, nofill=False):
     """
-    Draws a beach ball diagram of an earthquake focal mechanism. 
+    Return a beach ball as a collection which can be connected to an
+    current matplotlib axes instance (ax.add_collection).
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
@@ -75,14 +76,17 @@ def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0,
         hanging wall up-dip (thrust), 0 moves it in the strike direction 
         (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
         opposite to strike (right-lateral). 
-    :param size: Draw with this diameter.
-    :param color: Color to use for quadrants of tension; can be a string, e.g. 
+    :param size: Controls the number of interpolation points for the
+        curves. Minimum is automatically set to 100.
+    :param facecolor: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
-    :param nofill: Do not fill the beachball, but only plot the planes.
-    :param fig: Give an existing figure instance to plot into. New Figure if
-        set to None.
+    :param edgecolor: Color of the edges.
+    :param bgcolor: The background color, usually white.
+    :param alpha: The alpha level of the beach ball.
+    :param xy: Origin position of the beach ball as tuple.
+    :param width: Symbol size of beach ball.
+    :param nofill: Do not fill the beach ball, but only plot the planes.
     """
-    # Turn interactive mode off or otherwise only the first plot will be fast.
     mt = None
     np1 = None
     if isinstance(fm, MomentTensor):
@@ -103,26 +107,25 @@ def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0,
         size = 100
 
     # Return as collection
-    color = facecolor
-    fc = None
     if mt:
         (T, N, P) = MT2Axes(mt)
         if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
-            p = plotDC(np1, size, xy=xy, width=width)
+            colors, p = plotDC(np1, size, xy=xy, width=width)
         else:
-            fc, p = plotMT(T, N, P, size, outline=True, color=color,
-                           plot_zerotrace=True, xy=xy, width=width)
+            colors, p = plotMT(T, N, P, size, outline=True, 
+                               plot_zerotrace=True, xy=xy, width=width)
     else:
-        p =  plotDC(np1, size=size, xy=xy, width=width)
+        colors, p =  plotDC(np1, size=size, xy=xy, width=width)
 
 
     if nofill:
+        #XXX not tested with plotMT
         collection = PatchCollection([p[1]], match_original=False)
         collection.set_facecolor('none')
     else:
         collection = PatchCollection(p, match_original=False)
-        if not fc:
-            fc = [color, 'w']
+        # Replace color dummies 'b' and 'w' by face and bgcolor
+        fc = [facecolor if c == 'b' else bgcolor for c in colors]
         collection.set_facecolors(fc)
 
     collection.set_edgecolor(edgecolor)
@@ -130,31 +133,23 @@ def Beach(fm, linewidth=2, facecolor='b', edgecolor='k', alpha=1.0,
     collection.set_linewidth(linewidth)
     return collection
 
-def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, edgecolor='k',
-              patch=False, xy=(0,0), width=200, outfile=None, format=None, 
-              nofill=False, fig=None):
+def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k', 
+              bgcolor='w', alpha=1.0, xy=(0,0), width=200, outfile=None,
+              format=None, nofill=False, fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
-    
-    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
-        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
-        six independent components of the moment tensor). The strike is of the 
-        first plane, clockwise relative to north. 
-        The dip is of the first plane, defined clockwise and perpendicular to 
-        strike, relative to horizontal such that 0 is horizontal and 90 is 
-        vertical. The rake is of the first focal plane solution. 90 moves the 
-        hanging wall up-dip (thrust), 0 moves it in the strike direction 
-        (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
-        opposite to strike (right-lateral). 
+
     :param size: Draw with this diameter.
-    :param color: Color to use for quadrants of tension; can be a string, e.g. 
-        'r', 'b' or three component color vector, [R G B].
-    :param nofill: Do not fill the beachball, but only plot the planes.
     :param fig: Give an existing figure instance to plot into. New Figure if
-        set to None.
+                set to None.
+    :param format: If specified the format in which the plot should be
+                   saved. E.g. (pdf, png, jpg, eps)
+
+    For info on the remaining parameters see the
+    :func:`~obspy.imaging.beachball.Beach` function of this module.
     """
     plot_size = size * 0.95
 
@@ -170,9 +165,10 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, edgecolor='k',
     ax.axison = False
 
     # plot the collection
-    collection = Beach(fm, linewidth=linewidth, facecolor=color,
-                       edgecolor=edgecolor, alpha=alpha, nofill=nofill,
-                       xy=(0,0), width=plot_size, size=plot_size)
+    collection = Beach(fm, linewidth=linewidth, facecolor=facecolor,
+                       edgecolor=edgecolor, bgcolor=bgcolor, 
+                       alpha=alpha, nofill=nofill, xy=(0,0), 
+                       width=plot_size, size=plot_size)
     ax.add_collection(collection)
 
     ax.autoscale_view(tight=False, scalex=True, scaley=True)
@@ -192,7 +188,7 @@ def Beachball(fm, size=200, linewidth=2, color='b', alpha=1.0, edgecolor='k',
         return fig
 
 
-def plotMT(T, N, P, size=200, color='b', outline=True, plot_zerotrace=True, 
+def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True, 
            x0=0, y0=0, xy=(0,0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
@@ -250,7 +246,7 @@ def plotMT(T, N, P, size=200, color='b', outline=True, plot_zerotrace=True,
         if vi > 0.:
             cir = patches.Circle(xy, radius=width/2.0)
             collect.append(cir)
-            colors.append(color)
+            colors.append('b')
         if vi < 0.:
             cir = patches.Circle(xy, radius=width/2.0)
             collect.append(cir)
@@ -283,7 +279,7 @@ def plotMT(T, N, P, size=200, color='b', outline=True, plot_zerotrace=True,
     elif iso > 1 - f:
         cir = patches.Circle(xy, radius=width/2.0)
         collect.append(cir)
-        colors.append(color)
+        colors.append('b')
         return colors, collect
 
     spd = sin(p[d] * D2R)
@@ -364,11 +360,11 @@ def plotMT(T, N, P, size=200, color='b', outline=True, plot_zerotrace=True,
     azi[n][1] = az
 
     if v[1] < 0.:
-        rgb1 = color
+        rgb1 = 'b'
         rgb2 = 'w'
     else:
         rgb1 = 'w'
-        rgb2 = color
+        rgb2 = 'b'
 
     cir = patches.Circle(xy, radius=width/2.0)
     collect.append(cir)
@@ -581,7 +577,7 @@ def plotDC(np1, size=200, xy=(0,0), width=200):
     # construct the patches
     collect = [patches.Circle(xy, radius=width/2.0)]
     collect.append(xy2patch(Y, X, res, xy))
-    return collect
+    return ['w', 'b'], collect
 
 def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system 

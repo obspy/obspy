@@ -116,16 +116,6 @@ and 180 moves it opposite to strike (right-lateral).
 The focal mechanism can also be specified using the 6 independant components of
 the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
 
->>> from obspy.imaging.beachball import Beachball
->>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
->>> Beachball(mt)
-
-.. plot::
-
-    from obspy.imaging.beachball import Beachball
-    mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-    Beachball(mt)
-    
 The following keyword arguments are possible:
 
 * size = 200: Diameter of the beachball.
@@ -134,6 +124,33 @@ The following keyword arguments are possible:
 * alpha = 1.0: Alpha value
 * outfile = None: Filename of the output file. Also used to determine the file format.
 * format = None: File format.
+
+Plot the beachball as matplotlib collection into an existing plot.
+
+>>> import matplotlib.pyplot as plt
+>>> from obspy.imaging.beachball import Beach
+>>> np1 = [150, 87, 1]
+>>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
+>>> plt.plot([-100, 100], [0, 100], "rv", ms=10)
+>>> ax = plt.gca()
+>>> ax.add_collection(Beach(np1, xy=(5,5), width=30))
+>>> ax.add_collection(Beach(mt, xy=(5,5), width=50))
+>>> plt.axis('scaled')
+>>> plt.axis([-120, 120, -20, 120])
+
+.. plot::
+
+    import matplotlib.pyplot as plt
+    from obspy.imaging.beachball import Beach
+    np1 = [150, 87, 1]
+    mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
+    plt.plot([-100, 100], [0, 100], "rv", ms=10)
+    ax = plt.gca()
+    ax.add_collection(Beach(np1, xy=(50,50), width=30))
+    ax.add_collection(Beach(mt, xy=(-50,50), width=50))
+    plt.axis('scaled')
+    plt.axis([-120, 120, -20, 120])
+
 """
 
 # Please do not import any modules using matplotlib - otherwise it will disturb
