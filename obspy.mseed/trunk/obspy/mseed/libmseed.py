@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 from StringIO import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import quantile
+from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
     PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES
 from struct import unpack
@@ -114,7 +114,7 @@ class LibMSEED(object):
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
                                skipnotdata=1, verbose=0, starttime=None,
-                               endtime=None, quality = False):
+                               endtime=None, quality=False):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -173,7 +173,7 @@ class LibMSEED(object):
                                                 chain.sampletype)
             msrid = self._MSRId(header)
             last_endtime = trace_list[-1][0]['endtime']
-            record_delta = abs(last_endtime - header['starttime']) 
+            record_delta = abs(last_endtime - header['starttime'])
             if record_delta <= 1.01 * delta and\
                record_delta >= 0.99 * delta and\
                last_msrid == msrid:
@@ -184,8 +184,8 @@ class LibMSEED(object):
                 # Read quality information.
                 if quality:
                     self._readQuality(file, filepos, chain,
-                         tq = trace_list[-1][0]['timing_quality'],
-                         dq = trace_list[-1][0]['data_quality_flags'])
+                         tq=trace_list[-1][0]['timing_quality'],
+                         dq=trace_list[-1][0]['data_quality_flags'])
             else:
                 # Concatenate last trace and start a new trace
                 trace_list[-1] = [trace_list[-1][0],
@@ -196,8 +196,8 @@ class LibMSEED(object):
                     trace_list[-1][0]['timing_quality'] = []
                     trace_list[-1][0]['data_quality_flags'] = [0] * 8
                     self._readQuality(file, filepos, chain,
-                         tq = trace_list[-1][0]['timing_quality'],
-                         dq = trace_list[-1][0]['data_quality_flags'])
+                         tq=trace_list[-1][0]['timing_quality'],
+                         dq=trace_list[-1][0]['data_quality_flags'])
             last_msrid = msrid
             if ms.f.tell() >= end_byte:
                 break
@@ -569,9 +569,9 @@ class LibMSEED(object):
         result['max'] = max(data)
         result['average'] = sum(data) / n
         data = sorted(data)
-        result['median'] = quantile(data, 0.5, issorted=False)
-        result['lower_quantile'] = quantile(data, 0.25, issorted=False)
-        result['upper_quantile'] = quantile(data, 0.75, issorted=False)
+        result['median'] = scoreatpercentile(data, 50, issorted=False)
+        result['lower_quantile'] = scoreatpercentile(data, 25, issorted=False)
+        result['upper_quantile'] = scoreatpercentile(data, 75, issorted=False)
         return result
 
     def _bytePosFromTime(self, filename, starttime=None, endtime=None):

@@ -94,89 +94,52 @@ class AttribDict(dict, object):
             self[key] = value
 
 
-def quantile(x, q, qtype=7, issorted=False):
+def scoreatpercentile(a, per, limit=(), issorted=True):
+    """ 
+    Calculates the score at the given per percentile of the sequence a.
+
+    For example, the score at ``per=50`` is the median. 
+
+    If the desired quantile lies between two data points, we interpolate
+    between them.
+
+    If the parameter ``limit`` is provided, it should be a tuple (lower,
+    upper) of two values.  Values of ``a`` outside this (closed) interval
+    will be ignored. 
+
+        >>> a = [1, 2, 3, 4]
+        >>> scoreatpercentile(a, 25)
+        1.75
+        >>> scoreatpercentile(a, 50)
+        2.5
+        >>> scoreatpercentile(a, 75)
+        3.25
+        >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
+        >>> scoreatpercentile(a, 25)
+        25.5
+        >>> scoreatpercentile(a, 50)
+        40
+        >>> scoreatpercentile(a, 75)
+        42.5
+
+    This method is taken from scipy.stats.scoreatpercentile 
+    Copyright (c) Gary Strangman 
     """
-    Compute quantiles from input array using a given algorithm type.
-
-    Parameters
-    ----------
-    x : array
-        Input data.
-    q : float, `0.0 <= q <= 1.0`
-        Quantile. For median, specify `q=0.5`.
-    qtype : int , optional
-        Selected algorithm. Defaults to 7.
-            ==============  =======================================
-            Algorithm Type  Algorithm
-            ==============  =======================================
-            1               Inverse empirical distribution function
-            2               Similar to type 1, averaged
-            3               Nearest order statistic, (SAS)
-            4               California linear interpolation
-            5               Hydrologists method
-            6               Mean-based estimate(Weibull method)
-            7               Mode-based method (S, S-Plus)
-            8               Median-unbiased
-            9               Normal-unbiased
-            ==============  =======================================
-    issorted : boolean, optional
-        True if `x` already sorted. Defaults to false.
-
-    Examples
-    --------
-
-    >>> a = [1, 2, 3, 4]
-    >>> quantile(a, 0.25)
-    1.75
-    >>> quantile(a, 0.50)
-    2.5
-    >>> quantile(a, 0.75)
-    3.25
-
-    >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-    >>> quantile(a, 0.25)
-    25.5
-    >>> quantile(a, 0.50)
-    40
-    >>> quantile(a, 0.75)
-    42.5
-
-    :Author: 'Ernesto P.Adorio Ph.D.'_, UP Extension Program in Pampanga,
-             Clark Field
-    
-..  _'Ernesto P.Adorio Ph.D.': http://adorio-research.org/wordpress/?p=125 
-    """
-    # sort list
-    if not issorted:
-        y = sorted(x)
+    if issorted:
+        values = sorted(a)
+        if limit:
+            values = values[(limit[0] < a) & (a < limit[1])]
     else:
-        y = x
-    if not (1 <= qtype <= 9):
-        return None  # error!
-    # Parameters for the Hyndman and Fan algorithm
-    abcd = [
-        (0, 0, 1, 0), # inverse empirical distrib.function., R type 1
-        (0.5, 0, 1, 0), # similar to type 1, averaged, R type 2
-        (0.5, 0, 0, 0), # nearest order statistic,(SAS) R type 3
-        (0, 0, 0, 1), # California linear interpolation, R type 4
-        (0.5, 0, 0, 1), # hydrologists method, R type 5
-        (0, 1, 0, 1), # mean-based estimate(Weibull method), R type 6
-        (1, -1, 0, 1), # mode-based method,(S, S-Plus), R type 7
-        (1.0 / 3, 1.0 / 3, 0, 1), # median-unbiased ,  R type 8
-        (3 / 8.0, 0.25, 0, 1)   # normal-unbiased, R type 9.
-    ]
-    a, b, c, d = abcd[qtype - 1]
-    n = len(x)
-    g, j = modf(a + (n + b) * q - 1)
-    if j < 0:
-        return y[0]
-    elif j > n:
-        return y[n]
-    j = int(floor(j))
-    if g == 0:
-        return y[j]
+        values = a
+
+    def _interpolate(a, b, fraction):
+        return a + (b - a) * fraction;
+
+    idx = per / 100. * (len(values) - 1)
+    if (idx % 1 == 0):
+        return values[int(idx)]
     else:
-        return y[j] + (y[j + 1] - y[j]) * (c + d * g)
+        return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
 
 
 # C file pointer/ descriptor class
