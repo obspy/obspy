@@ -9,6 +9,7 @@ SeisHub database client for ObsPy.
 from lxml import objectify
 from obspy.core import read
 from obspy.core.util import NamedTemporaryFile
+import pickle
 import sys
 import urllib2
 
@@ -137,6 +138,32 @@ class _WaveformMapperClient(object):
             stream.ltrim(kwargs['start_datetime'])
         if 'end_datetime' in kwargs:
             stream.rtrim(kwargs['end_datetime'])
+        return stream
+
+    def getPreview(self, *args, **kwargs):
+        """
+        Gets a preview of a Obspy Stream object.
+        
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :param location_id: Location code, e.g. '01'.
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
+        :param end_datetime: end time as 
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object
+        :return: :class:`~obspy.core.stream.Stream` object.
+        """
+        map = ['network_id', 'station_id', 'location_id', 'channel_id',
+               'start_datetime', 'end_datetime']
+        for i in range(len(args)):
+            kwargs[map[i]] = args[i]
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
+        if not data:
+            raise Exception("No waveform data available")
+        # unpickle
+        stream = pickle.loads(data)
         return stream
 
 

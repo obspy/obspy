@@ -1,29 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
-    Binary, Boolean
+    PickleType, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
 from obspy.core import Trace, UTCDateTime
 import numpy as np
 from sqlalchemy.schema import UniqueConstraint
 import pickle
-
-##    Column('DQ_amplifier_saturation', Integer, nullable=True),
-##    Column('DQ_digitizer_clipping', Integer, nullable=True),
-##    Column('DQ_spikes', Integer, nullable=True),
-##    Column('DQ_glitches', Integer, nullable=True),
-##    Column('DQ_missing_or_padded_data', Integer, nullable=True),
-##    Column('DQ_telemetry_synchronization', Integer, nullable=True),
-##    Column('DQ_digital_filter_charging', Integer, nullable=True),
-##    Column('DQ_questionable_time_tag', Integer, nullable=True),
-##    Column('TQ_min', Numeric, nullable=True),
-##    Column('TQ_avg', Numeric, nullable=True),
-##    Column('TQ_max', Numeric, nullable=True),
-##    Column('TQ_lq', Numeric, nullable=True),
-##    Column('TQ_median', Numeric, nullable=True),
-##    Column('TQ_uq', Numeric, nullable=True),
-
 
 
 Base = declarative_base()
@@ -86,7 +70,7 @@ class WaveformChannel(Base):
     calib = Column(Float, nullable=False)
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
-    preview = Column(Binary, nullable=True)
+    preview = Column(PickleType, nullable=True)
 
     gaps = relation("WaveformGaps", order_by="WaveformGaps.id",
                     backref="channel", cascade="all, delete, delete-orphan")
@@ -155,7 +139,7 @@ class WaveformFeatures(Base):
     id = Column(Integer, primary_key=True)
     channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
     key = Column(String, nullable=False, index=True)
-    value = Column(Binary, nullable=True)
+    value = Column(PickleType, nullable=True)
 
     def __init__(self, data={}):
         self.key = data.get('key')
