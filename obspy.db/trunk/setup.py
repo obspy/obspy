@@ -3,14 +3,18 @@
 """
 obspy.db installer
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+import os
 
 
-VERSION = '0.0.1'
+VERSION = open(os.path.join("obspy", "db", "VERSION.txt")).read()
 
 
 setup(
@@ -25,6 +29,8 @@ setup(
     url='http://www.obspy.org',
     author='The ObsPy Development Team',
     author_email='devs@obspy.org',
+    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
+    platforms='OS Independent',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -32,12 +38,10 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ' + \
         'GNU Library or Lesser General Public License (LGPL)',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
+        'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Geophysics',
+        'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'seismology', 'seismogram', 'database', 'SeisHub'],
     packages=find_packages(),
@@ -45,18 +49,16 @@ setup(
     zip_safe=True,
     install_requires=[
         'setuptools',
-        'obspy.core>0.2.1',
-        'obspy.mseed>0.2.1',
+        'obspy.core',
+        'obspy.mseed',
         'sqlalchemy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.db/trunk#egg=obspy.db-dev",
-    test_suite="obspy.sh.tests.suite",
-    include_package_data=True,
+#    test_suite="obspy.db.tests.suite",
     entry_points={
         'obspy.db.feature' : [
-            'minmax_amplitude = obspy.db.feature:AmplitudeFeature',
-            'mseed_timing_quality = obspy.db.feature:MSEEDQualityFeature'
+            'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
         ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main',

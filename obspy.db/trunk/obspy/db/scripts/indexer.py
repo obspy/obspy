@@ -12,7 +12,6 @@ from sqlalchemy.orm.session import sessionmaker
 import BaseHTTPServer
 import logging
 import multiprocessing
-import os
 import select
 import sys
 import time
@@ -58,69 +57,53 @@ class WaveformIndexer(BaseHTTPServer.HTTPServer, WaveformFileCrawler):
 
 def _runIndexer(options):
     logging.info("Starting Indexer ...")
-    # paths
-    if ';' in options.data:
-        items = options.data.split(';')
-    else:
-        items = [options.data]
-    paths = {}
-    for item in items:
-        if '=' in item:
-            path, wc = item.split('=', 1)
-            wcs = wc.split(',')
-        else:
-            path = item
-            wcs = ['*.*']
-        # check path
-        if not os.path.isdir(path):
-            logging.warn("Skipping inaccessible path %s ..." % path)
-            continue
-        paths[path] = wcs
-    if not paths:
-        return
-    # create file queue and worker processes
-    manager = multiprocessing.Manager()
-    in_queue = manager.dict()
-    work_queue = manager.list()
-    out_queue = manager.list()
-    log_queue = manager.list()
-    for i in range(options.number_of_cpus):
-        args = (i, in_queue, work_queue, out_queue, log_queue)
-        p = multiprocessing.Process(target=worker, args=args)
-        p.daemon = True
-        p.start()
-    # connect to database
-    engine = create_engine(options.db_uri, encoding='utf-8',
-                           convert_unicode=True)
-    metadata = Base.metadata
-    metadata.create_all(engine, checkfirst=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
     # initialize crawler
-    server_class = WaveformIndexer
-    service = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
-    # init db + options
-    service.session = session
-    service.skip_dots = options.skip_dots
-    service.cleanup = options.cleanup
-    service.log = logging
-    # set queues
-    service.input_queue = in_queue
-    service.work_queue = work_queue
-    service.output_queue = out_queue
-    service.log_queue = log_queue
-    service.paths = paths
-    service._resetWalker()
-    service._stepWalker()
-    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME,
-                                                     PORT_NUMBER)
+    service = WaveformIndexer((HOST_NAME, PORT_NUMBER), MyHandler)
     try:
+        # paths
+        if ',' in options.data:
+            paths = options.data.split(',')
+        else:
+            paths = [options.data]
+        paths = service._preparePaths(paths)
+        if not paths:
+            return
+        # create file queue and worker processes
+        manager = multiprocessing.Manager()
+        in_queue = manager.dict()
+        work_queue = manager.list()
+        out_queue = manager.list()
+        log_queue = manager.list()
+        cpu_list = []
+        for i in range(options.number_of_cpus):
+            args = (i, in_queue, work_queue, out_queue, log_queue)
+            p = multiprocessing.Process(target=worker, args=args)
+            p.daemon = True
+            p.start()
+            cpu_list.append(p)
+        # connect to database
+        engine = create_engine(options.db_uri, encoding='utf-8',
+                               convert_unicode=True)
+        metadata = Base.metadata
+        metadata.create_all(engine, checkfirst=True)
+        # init db + options
+        service.session = sessionmaker(bind=engine)
+        service.skip_dots = options.skip_dots
+        service.cleanup = options.cleanup
+        service.log = logging
+        # set queues
+        service.input_queue = in_queue
+        service.work_queue = work_queue
+        service.output_queue = out_queue
+        service.log_queue = log_queue
+        service.paths = paths
+        service._resetWalker()
+        service._stepWalker()
+        print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME,
+                                                         PORT_NUMBER)
         service.serve_forever()
     except KeyboardInterrupt:
-        pass
-    service.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME,
-                                                    PORT_NUMBER)
+        quit()
 
 
 def main():
@@ -128,15 +111,19 @@ def main():
             "\n".join(__doc__.split("\n")[3:])
     parser = OptionParser(usage.strip(), version="%prog " + __version__)
     parser.add_option("-d", default='data=*.*', type="string", dest="data",
-                      help="Path and search pattern of waveform files. The "
-                           "indexer will crawl recursive through all "
-                           "sub-directories within each given path. Multiple "
-                           "paths have to be separated with a semicolon, e.g. "
-                           "'/first/path=*.*;/second/path;/third/path=*.gse'. "
-                           "File patterns are given as comma-separated list of "
-                           "wildcards after a equal sign. e.g. "
-                           "'/path=*.gse2,*.mseed'. "
-                           "Default path is 'data=*.*, '")
+        help="""Path, search patterns and feature plug-ins of waveform files.
+The indexer will crawl recursive through all sub-directories within each given
+path. Multiple paths have to be separated with a comma, e.g.
+'/first/path=*.*,/second/path,/third/path=*.gse'.
+File patterns are given as space-separated list of wildcards after a equal
+sign, e.g.
+'/path=*.gse2 *.mseed;/second/path=*.*'.
+Feature plug-ins are given as space-separated list of plug-in names after a
+semicolon, e.g.
+'/path=*.mseed;feature1 feature2,/second/path;feature1'.
+Be aware that features must be provided behind file patterns (if any)! There is
+no default feature enabled.
+Default path option is 'data=*.*'.""")
     parser.add_option("-n", type="int", dest="number_of_cpus",
                       help="Number of CPUs used for the indexer.",
                       default=multiprocessing.cpu_count())

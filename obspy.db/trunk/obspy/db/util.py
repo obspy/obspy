@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from obspy.core import Trace
 from pkg_resources import iter_entry_points
 import numpy as np

@@ -8,64 +8,37 @@ Feature generators for ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core.util import quantile
+
+from obspy.core.util import scoreatpercentile
 
 
-class AmplitudeFeature:
+class MinMaxAmplitudeFeature:
 
     def process(self, trace):
         """
         Gets some statistics about the amplitude values.
-    
+
+        This may take a while to calculate - use a moderate looping interval.
+
         Example
         -------
         >>> from obspy.core import Trace
         >>> import numpy as np
         >>> tr = Trace(data=np.arange(-5,5))
-        >>> result = getMinMaxAmplitude(tr)
+        >>> result = AmplitudeFeature().process(tr)
         >>> result['max']
         4
         >>> result['upper_quantile']
         1.75
         """
         result = {}
-        result['min'] = trace.data.min()
-        result['max'] = trace.data.max()
-        result['avg'] = trace.data.mean()
-        result['median'] = quantile(trace.data, 0.5, issorted=False, qtype=7)
-        result['lower_quantile'] = quantile(trace.data, 0.25, qtype=7)
-        result['upper_quantile'] = quantile(trace.data, 0.75, qtype=7)
+        result['min'] = float(trace.data.min())
+        result['max'] = float(trace.data.max())
+        result['avg'] = float(trace.data.mean())
+        result['median'] = float(scoreatpercentile(trace.data, 50, False))
+        result['lower_quantile'] = float(scoreatpercentile(trace.data, 25))
+        result['upper_quantile'] = float(scoreatpercentile(trace.data, 75))
         return result
-
-
-class MSEEDQualityFeature:
-
-    indexer_kwargs = {"quality": True}
-
-    def process(self, trace):
-        """
-        Gets some statistics about the amplitude values.
-    
-        Example
-        -------
-        >>> from obspy.core import Trace
-        >>> import numpy as np
-        >>> tr = Trace(data=np.arange(-5,5))
-        >>> result = getMinMaxAmplitude(tr)
-        >>> result['max']
-        4
-        >>> result['upper_quantile']
-        1.75
-        """
-        result = {}
-        result['min'] = trace.data.min()
-        result['max'] = trace.data.max()
-        result['avg'] = trace.data.mean()
-        result['median'] = quantile(trace.data, 0.5, issorted=False, qtype=7)
-        result['lower_quantile'] = quantile(trace.data, 0.25, qtype=7)
-        result['upper_quantile'] = quantile(trace.data, 0.75, qtype=7)
-        return result
-
 
 
 if __name__ == '__main__':

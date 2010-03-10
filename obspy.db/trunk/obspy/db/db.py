@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
 from obspy.core import Trace, UTCDateTime
 import numpy as np
+from sqlalchemy.schema import UniqueConstraint
+import pickle
 
 ##    Column('DQ_amplifier_saturation', Integer, nullable=True),
 ##    Column('DQ_digitizer_clipping', Integer, nullable=True),
@@ -29,12 +31,14 @@ Base = declarative_base()
 
 class WaveformPath(Base):
     __tablename__ = 'default_waveform_paths'
+    __table_args__ = (UniqueConstraint('path'))
+
     id = Column(Integer, primary_key=True)
     path = Column(String, nullable=False, index=True)
     archived = Column(Boolean, default=False)
 
     files = relation("WaveformFile", order_by="WaveformFile.id",
-                     backref="path")
+                     backref="path", cascade="all, delete, delete-orphan")
 
     def __init__(self, data={}):
         self.path = data.get('path')
@@ -45,6 +49,7 @@ class WaveformPath(Base):
 
 class WaveformFile(Base):
     __tablename__ = 'default_waveform_files'
+
     id = Column(Integer, primary_key=True)
     file = Column(String, nullable=False, index=True)
     size = Column(Integer, nullable=False)
@@ -53,7 +58,7 @@ class WaveformFile(Base):
     path_id = Column(Integer, ForeignKey('default_waveform_paths.id'))
 
     channels = relation("WaveformChannel", order_by="WaveformChannel.id",
-                        backref="file")
+                        backref="file", cascade="all, delete, delete-orphan")
 
     def __init__(self, data={}):
         self.file = data.get('file')
@@ -62,11 +67,14 @@ class WaveformFile(Base):
         self.format = data.get('format')
 
     def __repr__(self):
-        return "<WaveformFile('%s')>" % self.file
+        return "<WaveformFile('%s')>" % (self.id)
 
 
 class WaveformChannel(Base):
     __tablename__ = 'default_waveform_channels'
+    __table_args__ = (UniqueConstraint('network', 'station', 'location',
+                                       'channel', 'starttime', 'endtime'))
+
     id = Column(Integer, primary_key=True)
     file_id = Column(Integer, ForeignKey('default_waveform_files.id'))
     network = Column(String(2), nullable=False, index=True)
@@ -81,9 +89,16 @@ class WaveformChannel(Base):
     preview = Column(Binary, nullable=True)
 
     gaps = relation("WaveformGaps", order_by="WaveformGaps.id",
-                    backref="channel")
+                    backref="channel", cascade="all, delete, delete-orphan")
+
+    features = relation("WaveformFeatures", order_by="WaveformFeatures.id",
+                        backref="channel",
+                        cascade="all, delete, delete-orphan")
 
     def __init__(self, data={}):
+        self.update(data)
+
+    def update(self, data):
         self.network = data.get('network', '')
         self.station = data.get('station', '')
         self.location = data.get('location', '')
@@ -96,21 +111,26 @@ class WaveformChannel(Base):
         self.preview = data.get('preview', None)
 
     def __repr__(self):
-        return "<WaveformChannel('%s')>" % self.channel
+        return "<WaveformChannel('%s')>" % (self.id)
 
-    def getPreview(self):
-        tr = Trace(data=np.loads(str(self.preview)))
+    def getPreview(self, apply_calibration=False):
+        data = np.loads(str(self.preview))
+        if apply_calibration:
+            data = data * self.calib
+        tr = Trace(data=data)
         tr.stats.starttime = UTCDateTime(self.starttime)
         tr.stats.delta = 60.0
         tr.stats.network = self.network
         tr.stats.station = self.station
         tr.stats.location = self.location
         tr.stats.channel = self.channel
+        tr.stats.calib = self.calib
         return tr
 
 
 class WaveformGaps(Base):
     __tablename__ = 'default_waveform_gaps'
+
     id = Column(Integer, primary_key=True)
     channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
     gap = Column(Boolean, nullable=False, index=True)
@@ -125,4 +145,21 @@ class WaveformGaps(Base):
         self.samples = data.get('samples', 0)
 
     def __repr__(self):
-        return "<WaveformGaps('%s')>" % self.gap
+        return "<WaveformGaps('%s')>" % (self.id)
+
+
+class WaveformFeatures(Base):
+    __tablename__ = 'default_waveform_features'
+    __table_args__ = (UniqueConstraint('channel_id', 'key'))
+
+    id = Column(Integer, primary_key=True)
+    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
+    key = Column(String, nullable=False, index=True)
+    value = Column(Binary, nullable=True)
+
+    def __init__(self, data={}):
+        self.key = data.get('key')
+        self.value = pickle.dumps(data.get('value', None))
+
+    def __repr__(self):
+        return "<WaveformFeatures('%s')>" % (self.id)
