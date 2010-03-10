@@ -30,15 +30,14 @@ class SpectrogramTestCase(unittest.TestCase):
         # Create dynamic test_files to avoid dependencies of other modules.
         # set specific seed value such that random numbers are reproduceable
         np.random.seed(815)
-        header = {'network': 'BW', 'station': 'BGLD',
+        head = {'network': 'BW', 'station': 'BGLD',
             'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
-            'npts': 412, 'sampling_rate': 200.0,
-            'channel': 'EHE'}
-        trace = Trace(data=np.random.randint(0, 1000, 412), header=header)
-        stream = Stream([trace])
+            'sampling_rate': 200.0, 'channel': 'EHE'}
+        tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
+        st = Stream([tr])
         outfile = os.path.join(self.path, 'spectogram.png')
-        spectrogram.spectrogram(stream[0].data[0:1000], samp_rate=200.0,
-                                log=True, outfile=outfile)
+        spectrogram.spectrogram(st[0].data, log=True, outfile=outfile,
+                                samp_rate=st[0].stats.sampling_rate)
         # check that outfile was modified
         stat = os.stat(outfile)
         self.assertTrue( abs(stat.st_mtime - time.time()) < 3)

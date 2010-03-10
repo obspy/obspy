@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-
+import matplotlib
 from matplotlib import mlab
 import matplotlib.pyplot as plt
 import math as M
@@ -58,8 +58,9 @@ def nearestPow2(x):
         return b
 
 
-def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False, 
-                outfile=None, format=None, axis=None):
+def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False, 
+                outfile=None, format=None, axis=None, dbscale=False,
+                mult=8.0):
     """
     Computes and plots logarithmic spectrogram of the input trace.
     
@@ -67,35 +68,51 @@ def spectrogram(data, samp_rate=100.0, per_lap = .8, nwin = 10, log=False,
     :param sample_rate: Samplerate in Hz
     :param log: True logarithmic frequency axis, False linear frequency axis
     :param per_lap: Percent of overlap
-    :param nwin: Approximate number of windows.
+    :param wlen: Window length for fft in seconds. If this parameter is too
+                 small, the calculation will take forever.
     :param outfile: String for the filename of output file, if None
-        interactive plotting is activated.
+                    interactive plotting is activated.
     :param format: Format of image to save
     :param axis: Plot into given axis, this deactivates the format and
-        outfile option
+                 outfile option
+    :param dbscale: If True 10 * log10 of color values is taken, if False
+                    the sqrt is taken
+    :param mult: Pad zeros to lengh mult * wlen. This will make the
+                 spectrogram smoother. Available for matplotlib > 0.99.0
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
-    nfft = int(nearestPow2(npts / float(nwin)))
-    if nfft > 4096:
-        nfft = 4096
+    #XXX add condition for too many windows => calculation takes for ever
+    nfft = int(nearestPow2(wlen*samp_rate)) 
+    if nfft > npts: 
+        nfft = int(nearestPow2(npts / 8.0)) 
+                               
+    mult = int(nearestPow2(mult)) 
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
     end = npts/samp_rate
 
-    # here we call not plt.specgram as this already produces a plot
+    # Here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
-                                            NFFT=nfft, noverlap=nlap)
+    if matplotlib.__version__ >= '0.99.0':
+        spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
+                                              pad_to=mult*nfft, noverlap=nlap)
+    else:
+        spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
+                                                NFFT=nfft, noverlap=nlap)
     # db scale and remove zero/offset for amplitude
-    spectrogram = 10 * np.log10(spectrogram[1:, :])
+    if dbscale:
+        spectrogram = 10 * np.log10(spectrogram[1:, :])
+    else:
+        spectrogram = np.sqrt(spectrogram[1:,:])
     freq = freq[1:]
+
     
     if not axis:
         fig = plt.figure()
