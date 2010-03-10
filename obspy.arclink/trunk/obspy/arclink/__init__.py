@@ -37,10 +37,10 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
 
 >>> from obspy.core import UTCDateTime
 >>> from obspy.arclink.client import Client
->>> 
+>>>
 >>> client = Client("webdc.eu", 18001)
->>> start = UTCDateTime(2009, 8, 20, 6, 35, 0, 0)
->>> st = client.getWaveform("GR", "FUR", "", "BH*", start, start + 60*30)
+>>> start = UTCDateTime("2009-08-20 04:03:12")
+>>> st = client.getWaveform("BW", "RJOB", "", "EH*", start - 3, start + 15)
 >>> st.plot()
 
 .. plot::
@@ -48,8 +48,8 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
     from obspy.core import UTCDateTime
     from obspy.arclink.client import Client
     client = Client("webdc.eu", 18001)
-    start = UTCDateTime(2009, 8, 20, 6, 35, 0, 0)
-    st = client.getWaveform("GR", "FUR", "", "BH*", start, start + 60*30)
+    start = UTCDateTime("2009-08-20 04:03:12")
+    st = client.getWaveform("BW", "RJOB", "", "EH*", start - 3, start + 15)
     st.plot()
 
 Waveform data fetched from an ArcLink node is converted into an ObsPy stream

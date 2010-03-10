@@ -17,7 +17,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getStations(self):
         """
         """
-        client = Client("http://localhost:8080")
+        client = Client("http://teide:8080")
         data = client.waveform.getNetworkIds()
         print data
         data = client.waveform.getStationIds()

@@ -70,6 +70,7 @@ of 4096 points.
 
 >>> from obspy.imaging import spectrogram
 >>> from obspy.core import read
+>>>
 >>> st = read('test_file.gse')
 >>> spectrogram.spectrogram(st[0].data, st[0].stats.sampling_rate)
 
@@ -80,14 +81,7 @@ of 4096 points.
     st = read('../obspy.gse2/trunk/obspy/gse2/tests/data/loc_RNON20040609200559.z')
     spectrogram.spectrogram(st[0].data, st[0].stats.sampling_rate)
 
-The following keyword arguments are possible:
-
-* sample_rate = 100.0: Samplerate in Hz
-* log = False: True logarithmic frequency axis, False linear frequency axis
-* per_lap = 0.8: Percent of overlap
-* nwin = 10: Approximate number of windows.
-* outfile = None: String for the filename of output file, if None interactive plotting is activated.
-* format = None: Format of image to save
+For more info see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
 
 Beachballs
@@ -114,23 +108,18 @@ and 180 moves it opposite to strike (right-lateral).
     Beachball(np1)
 
 The focal mechanism can also be specified using the 6 independant components of
-the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
+the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz). 
+For more info see :func:`~obspy.imaging.beachball.Beachball`.
 
-The following keyword arguments are possible:
 
-* size = 200: Diameter of the beachball.
-* linewidth = 2: Line width.
-* color = 'b' : Color used for the quadrants of tension.
-* alpha = 1.0: Alpha value
-* outfile = None: Filename of the output file. Also used to determine the file format.
-* format = None: File format.
-
-Plot the beachball as matplotlib collection into an existing plot.
+Plot the beach ball as matplotlib collection into an existing plot.
 
 >>> import matplotlib.pyplot as plt
 >>> from obspy.imaging.beachball import Beach
+>>>
 >>> np1 = [150, 87, 1]
 >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
+>>>
 >>> plt.plot([-100, 100], [0, 100], "rv", ms=10)
 >>> ax = plt.gca()
 >>> ax.add_collection(Beach(np1, xy=(5,5), width=30))
@@ -151,6 +140,7 @@ Plot the beachball as matplotlib collection into an existing plot.
     plt.axis('scaled')
     plt.axis([-120, 120, -20, 120])
 
+For more info see :func:`~obspy.imaging.beachball.Beach`.
 """
 
 # Please do not import any modules using matplotlib - otherwise it will disturb
