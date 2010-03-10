@@ -112,7 +112,13 @@ class CoreTestCase(unittest.TestCase):
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
+        
+        This test depends on the platform specific localtime()/gmtime()
+        function. 
         """
+        # skip Windows Systems
+        if platform.system() == 'Windows':
+            pass
         # create trace
         tr = Trace(data=np.empty(1000))
         tr.stats.starttime = UTCDateTime("1969-01-01T00:00:00")
