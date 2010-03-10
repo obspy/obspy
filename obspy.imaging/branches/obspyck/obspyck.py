@@ -289,6 +289,8 @@ class PickingGUI:
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
         self.dictEvent['locationType'] = None
+        #value for the "public" tag in the event xml (switched by button)
+        self.flagPublicEvent = True
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
@@ -538,11 +540,6 @@ class PickingGUI:
         #    print "-" * 70
         plt.show()
     
-    
-    def switch_flagFilt(self):
-        self.flagFilt=not self.flagFilt
-    def switch_flagFiltZPH(self):
-        self.flagFiltZPH=not self.flagFiltZPH
     
     ## Trim all to same length, us Z as reference
     #start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
@@ -1104,7 +1101,7 @@ class PickingGUI:
     def addFiltButtons(self):
         #add filter buttons
         self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram'),(self.flagFilt,self.flagFiltZPH,self.flagSpectrogram))
+        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(self.flagFilt,self.flagFiltZPH,self.flagSpectrogram,self.flagPublicEvent))
         self.check.on_clicked(self.funcFilt)
         self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
@@ -1207,10 +1204,10 @@ class PickingGUI:
     
     def funcFilt(self, label):
         if label=='Filter':
-            self.switch_flagFilt()
+            self.flagFilt=not self.flagFilt
             self.updatePlot()
         elif label=='Zero-Phase':
-            self.switch_flagFiltZPH()
+            self.flagFiltZPH=not self.flagFiltZPH
             if self.flagFilt:
                 self.updatePlot()
         elif label=='Spectrogram':
@@ -1218,6 +1215,10 @@ class PickingGUI:
             self.delAxes()
             self.drawAxes()
             self.fig.canvas.draw()
+        elif label=='Public Event':
+            self.flagPublicEvent = not self.flagPublicEvent
+            print "setting \"public\" flag of event to: %s" % \
+                    self.flagPublicEvent
     
     def funcFiltTyp(self, label):
         self.flagFiltTyp=self.dictFiltTyp[label]
@@ -2629,6 +2630,7 @@ class PickingGUI:
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
         Sub(event_type, "user").text = self.username
+        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
@@ -2716,6 +2718,7 @@ class PickingGUI:
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
         Sub(event_type, "user").text = self.username
+        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
@@ -2943,6 +2946,7 @@ class PickingGUI:
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
         Sub(event_type, "user").text = self.username
+        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
         
         # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
