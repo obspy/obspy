@@ -177,13 +177,11 @@ class Menu:
     #            self.figure.canvas.draw()
     #            break
     
-def getCoord(base_url, user, password, timeout, network, station):
+def getCoord(client, network, station):
     """
-    Returns longitude, latitude and elevation of given station from server
-    at given Url
+    Returns longitude, latitude and elevation of given station from given
+    client instance
     """
-    client = Client(base_url=base_url, user=user, password=password,
-                    timeout=timeout)
     coord = []
 
     resource = "dataless.seed.%s_%s.xml" % (network, station)
@@ -204,7 +202,8 @@ def getCoord(base_url, user, password, timeout, network, station):
 
 class PickingGUI:
 
-    def __init__(self, streams = None, options = None):
+    def __init__(self, client = None, streams = None, options = None):
+        self.client = client
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
@@ -301,11 +300,9 @@ class PickingGUI:
         self.server = {}
         self.server['Name'] = self.options.servername # "teide"
         self.server['Port'] = self.options.port # 8080
-        self.server['User'] = self.options.user # admin
-        self.server['Password'] = self.options.password # admin
-        self.server['Timeout'] = self.options.timeout # 10
-        self.server['BaseUrl'] = "http://" + self.server['Name'] + \
-                                 ":%i" % self.options.port
+        self.server['Server'] = self.server['Name'] + \
+                                ":%i" % self.server['Port']
+        self.server['BaseUrl'] = "http://" + self.server['Server']
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
@@ -360,10 +357,6 @@ class PickingGUI:
             self.dicts.append({})
         self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
-        client1 = Client(base_url=self.server['BaseUrl'],
-                         user=self.server['User'],
-                         password=self.server['Password'],
-                         timeout=self.server['Timeout'])
         for i in range(len(self.streams))[::-1]:
             self.dicts[i]['MagUse'] = True
             sta = self.streams[i][0].stats.station.strip()
@@ -381,19 +374,19 @@ class PickingGUI:
             date = self.streams[i][0].stats.starttime.date
             print 'fetching station metadata from seishub...'
             try:
-                lon, lat, ele = getCoord(self.server['BaseUrl'],
-                                         self.server['User'],
-                                         self.server['Password'],
-                                         self.server['Timeout'],  net, sta) 
+                lon, lat, ele = getCoord(self.client,  net, sta) 
             except:
                 print 'Error: could not load station metadata. Discarding stream.'
                 self.streams.pop(i)
                 self.dicts.pop(i)
                 continue
             print 'done.'
-            self.dicts[i]['pazZ'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][0].stats.channel)
-            self.dicts[i]['pazN'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][1].stats.channel)
-            self.dicts[i]['pazE'] = client1.station.getPAZ(net, sta, date, channel_id = self.streams[i][2].stats.channel)
+            self.dicts[i]['pazZ'] = self.client.station.getPAZ(net, sta, date,
+                    channel_id = self.streams[i][0].stats.channel)
+            self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta, date,
+                    channel_id = self.streams[i][1].stats.channel)
+            self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta, date,
+                    channel_id = self.streams[i][2].stats.channel)
             self.dicts[i]['StaLon'] = lon
             self.dicts[i]['StaLat'] = lat
             self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
@@ -3137,7 +3130,6 @@ class PickingGUI:
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
-        servername = self.server['Name'] + ":%i" % self.server['Port']
         path = '/xml/seismology/event'
         
         # determine which location was run and how the xml should be created
@@ -3157,7 +3149,7 @@ class PickingGUI:
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
 
         #construct and send the header
-        webservice = httplib.HTTP(servername)
+        webservice = httplib.HTTP(self.server['Server'])
         webservice.putrequest("PUT", path + '/' + name)
         webservice.putheader('Authorization', auth )
         webservice.putheader("Host", "localhost")
@@ -3172,7 +3164,7 @@ class PickingGUI:
         if statuscode!=201:
            print "User: ", self.username
            print "Name: ", name
-           print "Server: ", servername, path
+           print "Server: ", self.server['Server'], path
            print "Response: ", statuscode, statusmessage
            print "Headers: ", header
     
@@ -3277,7 +3269,7 @@ class PickingGUI:
         # - first pick of event must be before stream endtime
         # - last pick of event must be after stream starttime
         # thus we get any event with at least one pick in between start/endtime
-        url = "http://" + self.server['Name'] + ":%i" % self.server['Port'] + \
+        url = self.server['BaseUrl'] + \
               "/seismology/event/getList?" + \
               "min_last_pick=%s&max_first_pick=%s" % \
               (str(starttime), str(endtime))
@@ -3312,8 +3304,7 @@ class PickingGUI:
         print "Fetching event %i of %i (event_id: %s)" %  \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
                document_id)
-        resource_url = "http://" + self.server['Name'] + ":%i" % \
-                       self.server['Port'] + "/xml/seismology/event/" + \
+        resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
                        node.text
         resource_req = urllib2.Request(resource_url)
         resource_req.add_header("Authorization", "Basic %s" % auth)
@@ -3634,6 +3625,7 @@ def main():
     # We then only print the keybindings and exit.
     if options.keybindings:
         streams = None
+        client = None
     # If local option is set we read the locally stored traces.
     # Just for testing purposes, sent event xmls always overwrite the same xml.
     elif options.local:
@@ -3653,14 +3645,9 @@ def main():
         streams.append(read('20091227_105240_Z.RWMO'))
         streams[4].append(read('20091227_105240_N.RWMO')[0])
         streams[4].append(read('20091227_105240_E.RWMO')[0])
-        #streams=[]
-        #streams.append(read('RJOB_061005_072159.ehz.new'))
-        #streams[0].append(read('RJOB_061005_072159.ehn.new')[0])
-        #streams[0].append(read('RJOB_061005_072159.ehe.new')[0])
-        #streams.append(read('RNON_160505_000059.ehz.new'))
-        #streams.append(read('RMOA_160505_014459.ehz.new'))
-        #streams[2].append(read('RMOA_160505_014459.ehn.new')[0])
-        #streams[2].append(read('RMOA_160505_014459.ehe.new')[0])
+        baseurl = "http://" + options.servername + ":%i" % options.port
+        client = Client(base_url=baseurl, user=options.user,
+                        password=options.password, timeout=options.timeout)
     else:
         try:
             t = UTCDateTime(options.time)
@@ -3687,7 +3674,7 @@ def main():
             parser.print_help()
             raise
 
-    PickingGUI(streams, options)
+    PickingGUI(client, streams, options)
 
 if __name__ == "__main__":
     main()
