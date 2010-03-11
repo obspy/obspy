@@ -174,9 +174,7 @@ class WaveformFileCrawler:
         """
         Resets the crawler parameters.
         """
-        self.log.info('Crawler restarted.')
-        # update configuration
-        self.update()
+        self.log.debug('Crawler restarted.')
         # reset attributes
         self._current_path = None
         self._current_files = []
@@ -266,14 +264,6 @@ class WaveformFileCrawler:
             out[path] = (patterns, features)
         return out
 
-    def update(self):
-        """
-        Update configuration parameters.
-        
-        This method should be overwritten by inheriting classes.
-        """
-        pass
-
     def iterate(self):
         """
         Handles exactly one directory.
@@ -292,12 +282,8 @@ class WaveformFileCrawler:
         # walk through directories and files
         try:
             file = self._current_files.pop(0)
-        except AttributeError:
-            self._resetWalker()
-            self._stepWalker()
-            return
         except IndexError:
-            # file list is empty  
+            # file list is empty
             # clean up not existing files in current path
             if self.cleanup:
                 for file in self._db_files.keys():

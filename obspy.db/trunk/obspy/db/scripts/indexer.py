@@ -92,7 +92,7 @@ def _runIndexer(options):
         service.paths = paths
         service._resetWalker()
         service._stepWalker()
-        service.serve_forever()
+        service.serve_forever(options.poll_interval)
     except KeyboardInterrupt:
         quit()
     logging.info("Indexer stopped.")
