@@ -58,7 +58,8 @@ EPSILON = 0.00001
 
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
-          alpha=1.0, xy=(0,0), width=200, size=100, nofill=False):
+          alpha=1.0, xy=(0,0), width=200, size=100, nofill=False,
+          zorder=100):
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
@@ -86,6 +87,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param xy: Origin position of the beach ball as tuple.
     :param width: Symbol size of beach ball.
     :param nofill: Do not fill the beach ball, but only plot the planes.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn
+                   first.
     """
     mt = None
     np1 = None
@@ -131,6 +134,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     collection.set_edgecolor(edgecolor)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)
+    collection.set_zorder(zorder)
     return collection
 
 def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k', 
