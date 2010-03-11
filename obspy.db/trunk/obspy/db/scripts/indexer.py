@@ -96,6 +96,7 @@ def _runIndexer(options):
         service.work_queue = work_queue
         service.output_queue = out_queue
         service.log_queue = log_queue
+        service.number_of_cpus = options.number_of_cpus
         service.paths = paths
         service._resetWalker()
         service._stepWalker()

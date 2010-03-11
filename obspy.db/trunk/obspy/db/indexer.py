@@ -42,7 +42,7 @@ class WaveformFileCrawler:
                 channel = file.channels.filter(network=data['network'],
                                                station=data['station'],
                                                location=data['location'],
-                                               channel=data['file'],
+                                               channel=data['channel'],
                                                starttime=data['starttime'],
                                                endtime=data['endtime']).one()
             except:
@@ -282,13 +282,13 @@ class WaveformFileCrawler:
         # be aware that the processor pool is still active waiting for work
         if not self.running:
             return
+        # skip if input queue is full
+        if len(self.input_queue) > self.number_of_cpus:
+            return
         # try to finalize a single processed stream object from output queue
         self._processOutputQueue()
         # Fetch items from the log queue
         self._processLogQueue()
-        # skip if input queue is full
-        if len(self.input_queue) > 10:
-            return
         # walk through directories and files
         try:
             file = self._current_files.pop(0)
