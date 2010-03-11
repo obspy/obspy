@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 from matplotlib.patches import Ellipse
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import FuncFormatter
 
 #imports for the buttons
 import matplotlib.colors as colors
@@ -194,11 +194,19 @@ def getCoord(client, network, station):
 
     return coord
 
-#def yAxisLabelFormatter(t):
-#    """
-#    Formatter for the y-axis major tick labels
-#    """
-#    return "%.3f" % t
+def formatXTicklabels(x,pos):
+    """
+    Make a nice formatting for y axis ticklabels: minutes:seconds.microsec
+    """
+    # x is of type numpy.float64, the string representation of that float
+    # strips of all tailing zeros
+    # pos returns the position of x on the axis while zooming, None otherwise
+    min = int(x / 60.)
+    if min > 0:
+        sec = x % 60
+        return "%i:%06.3f" % (min, sec)
+    else:
+        return "%.3f" % x
 
 class PickingGUI:
 
@@ -382,22 +390,22 @@ class PickingGUI:
                 self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
                 print self.dicts[i]['StaLon'], self.dicts[i]['StaLat'], \
                       self.dicts[i]['StaEle']
+                self.dicts[i]['pazZ'] = self.client.station.getPAZ(net, sta, date,
+                        channel_id = self.streams[i][0].stats.channel)
+                print self.dicts[i]['pazZ']
+                if len(self.streams[i]) == 3:
+                    self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta,
+                            date, channel_id = self.streams[i][1].stats.channel)
+                    self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta,
+                            date, channel_id = self.streams[i][2].stats.channel)
+                    print self.dicts[i]['pazN']
+                    print self.dicts[i]['pazE']
             except:
-                print 'Error: could not load station metadata. Discarding stream.'
+                print 'Error: could not fetch station metadata. Discarding stream.'
                 self.streams.pop(i)
                 self.dicts.pop(i)
                 continue
             print 'done.'
-            self.dicts[i]['pazZ'] = self.client.station.getPAZ(net, sta, date,
-                    channel_id = self.streams[i][0].stats.channel)
-            print self.dicts[i]['pazZ']
-            if len(self.streams[i]) == 3:
-                self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta,
-                        date, channel_id = self.streams[i][1].stats.channel)
-                self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta,
-                        date, channel_id = self.streams[i][2].stats.channel)
-                print self.dicts[i]['pazN']
-                print self.dicts[i]['pazE']
         print "=" * 70
         
         # exit if no streams are left after removing everthing with missing
@@ -572,7 +580,7 @@ class PickingGUI:
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
             self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
-            self.axs[i].xaxis.set_major_formatter(FormatStrFormatter("%.3f"))
+            self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if not self.flagSpectrogram:
                 self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
             else:
