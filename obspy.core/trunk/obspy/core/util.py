@@ -8,7 +8,6 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from math import modf, floor
 from pkg_resources import require, iter_entry_points
 import ctypes as C
 import numpy as np

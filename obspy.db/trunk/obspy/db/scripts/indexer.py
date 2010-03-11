@@ -14,14 +14,6 @@ import logging
 import multiprocessing
 import select
 import sys
-import time
-
-
-HOST_NAME = 'localhost'
-PORT_NUMBER = 8080
-
-
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -56,9 +48,9 @@ class WaveformIndexer(BaseHTTPServer.HTTPServer, WaveformFileCrawler):
 
 
 def _runIndexer(options):
-    logging.info("Starting Indexer ...")
+    logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
     # initialize crawler
-    service = WaveformIndexer((HOST_NAME, PORT_NUMBER), MyHandler)
+    service = WaveformIndexer((options.host, options.port), MyHandler)
     try:
         # paths
         if ',' in options.data:
@@ -100,11 +92,10 @@ def _runIndexer(options):
         service.paths = paths
         service._resetWalker()
         service._stepWalker()
-        print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME,
-                                                         PORT_NUMBER)
         service.serve_forever()
     except KeyboardInterrupt:
         quit()
+    logging.info("Indexer stopped.")
 
 
 def main():
@@ -136,6 +127,18 @@ Default path option is 'data=*.*'.""")
     parser.add_option("-i", type="float", default=0.1, dest="poll_interval",
                       help="Poll interval for file crawler in seconds "
                            "(default is 0.1 seconds).")
+    parser.add_option("-v", action="store_true", dest="verbose",
+                      default=False,
+                      help="Verbose output.")
+    parser.add_option("-l", type="string", dest="log",
+                      help="Log file name. If no log file is given, stdout" + \
+                      "is used.", default="")
+    parser.add_option("-s", type="string", dest="host",
+                      help="Server host name. Default is 'localhost'.",
+                      default="localhost")
+    parser.add_option("-p", type="int", dest="port",
+                      help="Port number. Default is '8081'.",
+                      default=8081)
     parser.add_option("--cleanup", action="store_true", dest="cleanup",
                       default=False,
                       help="Clean database from non-existing files or paths "
@@ -148,6 +151,15 @@ Default path option is 'data=*.*'.""")
                            "parse all paths and files.")
 
     (options, _) = parser.parse_args()
+    # set level of verbosity
+    if options.verbose:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+    if options.log == "":
+        logging.basicConfig(stream=sys.stdout, level=level)
+    else:
+        logging.basicConfig(filename=options.log, level=level)
     _runIndexer(options)
 
 
