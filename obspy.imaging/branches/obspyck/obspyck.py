@@ -377,6 +377,11 @@ class PickingGUI:
             print 'fetching station metadata from seishub...'
             try:
                 lon, lat, ele = getCoord(self.client,  net, sta) 
+                self.dicts[i]['StaLon'] = lon
+                self.dicts[i]['StaLat'] = lat
+                self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
+                print self.dicts[i]['StaLon'], self.dicts[i]['StaLat'], \
+                      self.dicts[i]['StaEle']
             except:
                 print 'Error: could not load station metadata. Discarding stream.'
                 self.streams.pop(i)
@@ -385,18 +390,14 @@ class PickingGUI:
             print 'done.'
             self.dicts[i]['pazZ'] = self.client.station.getPAZ(net, sta, date,
                     channel_id = self.streams[i][0].stats.channel)
-            self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta, date,
-                    channel_id = self.streams[i][1].stats.channel)
-            self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta, date,
-                    channel_id = self.streams[i][2].stats.channel)
-            self.dicts[i]['StaLon'] = lon
-            self.dicts[i]['StaLat'] = lat
-            self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
-            print self.dicts[i]['StaLon'], self.dicts[i]['StaLat'], \
-                  self.dicts[i]['StaEle']
             print self.dicts[i]['pazZ']
-            print self.dicts[i]['pazN']
-            print self.dicts[i]['pazE']
+            if len(self.streams[i]) == 3:
+                self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta,
+                        date, channel_id = self.streams[i][1].stats.channel)
+                self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta,
+                        date, channel_id = self.streams[i][2].stats.channel)
+                print self.dicts[i]['pazN']
+                print self.dicts[i]['pazE']
         print "=" * 70
         
         # exit if no streams are left after removing everthing with missing
