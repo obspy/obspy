@@ -72,6 +72,7 @@ class WaveformFileCrawler:
             else:
                 self.log.debug("%s '%s' in '%s'" % (msg, data['file'],
                                                     data['path']))
+            session.close()
 
     def _delete(self, path, file=None):
         """
@@ -107,6 +108,7 @@ class WaveformFileCrawler:
                 self.log.error("Error deleting path '%s': %s" % (path, e))
             else:
                 self.log.debug("Deleting path '%s'" % (path))
+        session.close()
 
     def _select(self, path=None):
         """
@@ -120,16 +122,18 @@ class WaveformFileCrawler:
                 query = query.filter(WaveformPath.path == path)
             try:
                 query = query.first()
-                return dict([(f.file, f.mtime) for f in query.files])
+                result = dict([(f.file, f.mtime) for f in query.files])
             except:
-                return {}
+                result = {}
         else:
             # check database for all path entries
             query = session.query(WaveformPath.path)
             try:
-                return [p.path for p in query.all()]
+                result = [p.path for p in query.all()]
             except:
-                return []
+                result = []
+        session.close()
+        return result
 
     def getFeatures(self):
         return self.paths[self._root][1]
@@ -280,9 +284,7 @@ class WaveformFileCrawler:
             return
         # try to finalize a single processed stream object from output queue
         self._processOutputQueue()
-        self._processOutputQueue()
         # Fetch items from the log queue
-        self._processLogQueue()
         self._processLogQueue()
         # skip if input queue is full
         if len(self.input_queue) > 10:
