@@ -118,7 +118,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # skip Windows Systems
         if platform.system() == 'Windows':
-            pass
+            return
         # create trace
         tr = Trace(data=np.empty(1000))
         tr.stats.starttime = UTCDateTime("1969-01-01T00:00:00")

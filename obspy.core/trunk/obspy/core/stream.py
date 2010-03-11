@@ -739,7 +739,8 @@ class Stream(object):
             # loop through traces of same id
             for _i in xrange(len(traces_dict[id])):
                 trace = traces_dict[id].pop(0)
-                cur_trace = cur_trace.__add__(trace, method, fill_value)
+                cur_trace = cur_trace.__add__(trace, method,
+                                              fill_value=fill_value)
             self.traces.append(cur_trace)
 
 
