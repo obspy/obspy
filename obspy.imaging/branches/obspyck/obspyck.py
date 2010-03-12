@@ -296,7 +296,7 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictEvent['locationType'] = None
+        self.dictOrigin['Program'] = None
         #value for the "public" tag in the event xml (switched by button)
         self.flagPublicEvent = True
         self.flagSpectrogram = False
@@ -477,13 +477,11 @@ class PickingGUI:
                 elif item.labelstr == 'clear All':
                     self.delAllItems()
                     self.clearDictionaries()
-                    self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'clear Orig&Mag':
                     self.delAllItems()
                     self.clearOriginMagnitudeDictionaries()
-                    self.dictEvent['locationType'] = None
                     self.drawAllItems()
                     self.redraw()
                 elif item.labelstr == 'clear Focmec':
@@ -491,7 +489,7 @@ class PickingGUI:
                 elif item.labelstr == 'do Hypo2000':
                     self.delAllItems()
                     self.clearOriginMagnitudeDictionaries()
-                    self.dictEvent['locationType'] = "hyp2000"
+                    self.dictOrigin['Program'] = "hyp2000"
                     self.doHyp2000()
                     #self.load3dlocSyntheticPhases()
                     self.loadHyp2000Data()
@@ -504,11 +502,12 @@ class PickingGUI:
                 elif item.labelstr == 'do 3dloc':
                     self.delAllItems()
                     self.clearOriginMagnitudeDictionaries()
-                    self.dictEvent['locationType'] = "3dloc"
+                    self.dictOrigin['Program'] = "3dloc"
                     self.do3dLoc()
                     self.load3dlocSyntheticPhases()
                     self.load3dlocData()
                     self.calculateEpiHypoDists()
+                    self.dictMagnitude['Program'] = "obspy"
                     self.calculateStationMagnitudes()
                     self.updateNetworkMag()
                     self.showEventMap()
@@ -516,10 +515,12 @@ class PickingGUI:
                     self.redraw()
                 elif item.labelstr == 'calc Mag':
                     self.calculateEpiHypoDists()
+                    self.dictMagnitude['Program'] = "obspy"
                     self.calculateStationMagnitudes()
                     self.updateNetworkMag()
                 elif item.labelstr == 'do Focmec':
                     self.clearFocmecDictionary()
+                    self.dictFocalMechanism['Program'] = "focmec"
                     self.doFocmec()
                 elif item.labelstr == 'next Focmec':
                     self.nextFocMec()
@@ -2300,6 +2301,7 @@ class PickingGUI:
         self.dictOrigin['Depth Error'] = float(event[13])
         self.dictOrigin['Standarderror'] = float(event[14])
         self.dictOrigin['Azimuthal Gap'] = float(event[15])
+        self.dictOrigin['Used Model'] = "STAUFEN"
         self.dictOrigin['Time'] = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
@@ -2634,97 +2636,9 @@ class PickingGUI:
         self.updateNetworkMag()
         self.figEventMap.canvas.draw()
 
-    def picks2XML(self):
+    def dicts2XML(self):
         """
-        Returns output of picks as xml file
-        """
-        xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
-        event_type = Sub(xml, "event_type")
-        Sub(event_type, "value").text = "manual"
-        Sub(event_type, "user").text = self.username
-        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
-        
-        # we save P picks on Z-component and S picks on N-component
-        # XXX standard values for unset keys!!!???!!!???
-        epidists = []
-        for i in range(len(self.streams)):
-            if self.dicts[i].has_key('P'):
-                pick = Sub(xml, "pick")
-                wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][0].stats.network) 
-                wave.set("stationCode", self.streams[i][0].stats.station) 
-                wave.set("channelCode", self.streams[i][0].stats.channel) 
-                wave.set("locationCode", "") 
-                date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = self.streams[i][0].stats.starttime
-                picktime += self.dicts[i]['P']
-                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
-                    Sub(date, "uncertainty").text = str(temp)
-                else:
-                    Sub(date, "uncertainty")
-                Sub(pick, "phaseHint").text = "P"
-                if self.dicts[i].has_key('POnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['POnset']
-                else:
-                    Sub(pick, "onset")
-                if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
-                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
-                else:
-                    Sub(pick, "polarity")
-                if self.dicts[i].has_key('PWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
-                else:
-                    Sub(pick, "weight")
-                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
-        
-            if self.dicts[i].has_key('S'):
-                axind = self.dicts[i]['Saxind']
-                pick = Sub(xml, "pick")
-                wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][axind].stats.network) 
-                wave.set("stationCode", self.streams[i][axind].stats.station) 
-                wave.set("channelCode", self.streams[i][axind].stats.channel) 
-                wave.set("locationCode", "") 
-                date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = self.streams[i][axind].stats.starttime
-                picktime += self.dicts[i]['S']
-                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
-                    Sub(date, "uncertainty").text = str(temp)
-                else:
-                    Sub(date, "uncertainty")
-                Sub(pick, "phaseHint").text = "S"
-                if self.dicts[i].has_key('SOnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['SOnset']
-                else:
-                    Sub(pick, "onset")
-                if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
-                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
-                else:
-                    Sub(pick, "polarity")
-                if self.dicts[i].has_key('SWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
-                else:
-                    Sub(pick, "weight")
-                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
-        return tostring(xml,pretty_print=True,xml_declaration=True)
-    
-    #XXX still have to adjust this to jo's hypo2000 xml look and feel
-    def hyp20002XML(self):
-        """
-        Returns output of hypo2000 as xml file
+        Returns information of all dictionaries as xml file
         """
         xml =  Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
@@ -2733,404 +2647,245 @@ class PickingGUI:
         Sub(event_type, "user").text = self.username
         Sub(event_type, "public").text = "%s" % self.flagPublicEvent
         
-        # we save P picks on Z-component and S picks on N-component
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
+        # go through all stream-dictionaries and look for picks
         for i in range(len(self.streams)):
-            if self.dicts[i].has_key('P'):
+            d = self.dicts[i]
+            st = self.streams[i]
+
+            # write P Pick info
+            if 'P' in d:
                 pick = Sub(xml, "pick")
                 wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][0].stats.network) 
-                wave.set("stationCode", self.streams[i][0].stats.station) 
-                wave.set("channelCode", self.streams[i][0].stats.channel) 
-                wave.set("locationCode", "") 
+                wave.set("networkCode", st[0].stats.network) 
+                wave.set("stationCode", st[0].stats.station) 
+                wave.set("channelCode", st[0].stats.channel) 
+                wave.set("locationCode", st[0].stats.location) 
                 date = Sub(pick, "time")
                 # prepare time of pick
-                picktime = self.streams[i][0].stats.starttime
-                picktime += self.dicts[i]['P']
+                picktime = st[0].stats.starttime
+                picktime += d['P']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
+                if 'PErr1' in d and 'PErr2' in d:
+                    temp = d['PErr2'] - d['PErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "P"
                 phase_compu = ""
-                if self.dicts[i].has_key('POnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['POnset']
-                    if self.dicts[i]['POnset'] == "impulsive":
+                if 'POnset' in d:
+                    Sub(pick, "onset").text = d['POnset']
+                    if d['POnset'] == "impulsive":
                         phase_compu += "I"
-                    elif self.dicts[i]['POnset'] == "emergent":
+                    elif d['POnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
                     phase_compu += "?"
                 phase_compu += "P"
-                if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == 'up':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
+                if 'PPol' in d:
+                    Sub(pick, "polarity").text = d['PPol']
+                    if d['PPol'] == 'up':
                         phase_compu += "U"
-                    elif self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
+                    elif d['PPol'] == 'poorup':
                         phase_compu += "+"
-                    elif self.dicts[i]['PPol'] == 'down':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
+                    elif d['PPol'] == 'down':
                         phase_compu += "D"
-                    elif self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
+                    elif d['PPol'] == 'poordown':
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
                     phase_compu += "?"
-                if self.dicts[i].has_key('PWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
-                    phase_compu += "%1i" % self.dicts[i]['PWeight']
+                if 'PWeight' in d:
+                    Sub(pick, "weight").text = '%i' % d['PWeight']
+                    phase_compu += "%1i" % d['PWeight']
                 else:
                     Sub(pick, "weight")
                     phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
-                if self.dicts[i].has_key('Psynth'):
-                    Sub(pick, "phase_compu").text = phase_compu #XXX this is redundant. can be constructed from above info
-                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
-                    Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['PsynthWeight']
+                if 'Psynth' in d:
+                    Sub(pick, "phase_compu").text = phase_compu
+                    Sub(Sub(pick, "phase_res"), "value").text = str(d['Pres'])
+                    if dO['Program'] == "hyp2000":
+                        Sub(Sub(pick, "phase_weight"), "value").text = \
+                                str(d['PsynthWeight'])
+                    else:
+                        Sub(Sub(pick, "phase_weight"), "value")
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['PAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['PInci']
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
+                    Sub(Sub(pick, "azimuth"), "value").text = str(d['PAzim'])
+                    Sub(Sub(pick, "incident"), "value").text = str(d['PInci'])
+                    Sub(Sub(pick, "epi_dist"), "value").text = \
+                            str(d['distEpi'])
+                    Sub(Sub(pick, "hyp_dist"), "value").text = \
+                            str(d['distHypo'])
         
-            if self.dicts[i].has_key('S'):
-                axind = self.dicts[i]['Saxind']
+            # write S Pick info
+            if 'S' in d:
+                axind = d['Saxind']
                 pick = Sub(xml, "pick")
                 wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][axind].stats.network) 
-                wave.set("stationCode", self.streams[i][axind].stats.station) 
-                wave.set("channelCode", self.streams[i][axind].stats.channel) 
-                wave.set("locationCode", "") 
+                wave.set("networkCode", st[axind].stats.network) 
+                wave.set("stationCode", st[axind].stats.station) 
+                wave.set("channelCode", st[axind].stats.channel) 
+                wave.set("locationCode", st[axind].stats.location) 
                 date = Sub(pick, "time")
                 # prepare time of pick
-                picktime = self.streams[i][axind].stats.starttime
-                picktime += self.dicts[i]['S']
+                picktime = st[axind].stats.starttime
+                picktime += d['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
+                if 'SErr1' in d and 'SErr2' in d:
+                    temp = d['SErr2'] - d['SErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "S"
                 phase_compu = ""
-                if self.dicts[i].has_key('SOnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['SOnset']
-                    if self.dicts[i]['SOnset'] == "impulsive":
+                if 'SOnset' in d:
+                    Sub(pick, "onset").text = d['SOnset']
+                    if d['SOnset'] == "impulsive":
                         phase_compu += "I"
-                    elif self.dicts[i]['SOnset'] == "emergent":
+                    elif d['SOnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
                     phase_compu += "?"
                 phase_compu += "S"
-                if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == 'up':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
+                if 'SPol' in d:
+                    Sub(pick, "polarity").text = d['SPol']
+                    if d['SPol'] == 'up':
                         phase_compu += "U"
-                    elif self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
+                    elif d['SPol'] == 'poorup':
                         phase_compu += "+"
-                    elif self.dicts[i]['SPol'] == 'down':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
+                    elif d['SPol'] == 'down':
                         phase_compu += "D"
-                    elif self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
+                    elif d['SPol'] == 'poordown':
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
                     phase_compu += "?"
-                if self.dicts[i].has_key('SWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
-                    phase_compu += "%1i" % self.dicts[i]['SWeight']
+                if 'SWeight' in d:
+                    Sub(pick, "weight").text = '%i' % d['SWeight']
+                    phase_compu += "%1i" % d['SWeight']
                 else:
                     Sub(pick, "weight")
                     phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
-                if self.dicts[i].has_key('Ssynth'):
-                    Sub(pick, "phase_compu").text = phase_compu #XXX this is redundant. can be constructed from above info
+                if 'Ssynth' in d:
+                    Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
-                    Sub(Sub(pick, "phase_weight"), "value").text = '%s' % self.dicts[i]['SsynthWeight']
+                    if dO['Program'] == "hyp2000":
+                        Sub(Sub(pick, "phase_weight"), "value").text = \
+                                str(d['SsynthWeight'])
+                    else:
+                        Sub(Sub(pick, "phase_weight"), "value")
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['SAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['SInci']
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
-        
-        #XXX XXX XXX XXX check lines below and compare to e.g.
-        # teide:8080/xml/seismology/event/baynet09_0641.xml
-        # especially "earth_mod" could be set with meaningful value
-        # read from hypo2000 output
-        origin = Sub(xml, "origin")
-        date = Sub(origin, "time")
-        Sub(date, "value").text = self.dictOrigin['Time'].isoformat() # + '.%03i' % self.dictOrigin['Time'].microsecond
-        Sub(date, "uncertainty")
-        lat = Sub(origin, "latitude")
-        Sub(lat, "value").text = '%s' % self.dictOrigin['Latitude']
-        Sub(lat, "uncertainty").text = '%s' % self.dictOrigin['Latitude Error'] #XXX Lat Error in km??!!
-        lon = Sub(origin, "longitude")
-        Sub(lon, "value").text = '%s' % self.dictOrigin['Longitude']
-        Sub(lon, "uncertainty").text = '%s' % self.dictOrigin['Longitude Error'] #XXX Lon Error in km??!!
-        depth = Sub(origin, "depth")
-        Sub(depth, "value").text = '%s' % self.dictOrigin['Depth']
-        Sub(depth, "uncertainty").text = '%s' % self.dictOrigin['Depth Error']
-        Sub(origin, "depth_type").text = "from location program"
-        Sub(origin, "earth_mod").text = self.dictOrigin['Used Model']
-        uncertainty = Sub(origin, "originUncertainty")
-        Sub(uncertainty, "preferredDescription").text = "uncertainty ellipse"
-        Sub(uncertainty, "horizontalUncertainty")
-        Sub(uncertainty, "minHorizontalUncertainty")
-        Sub(uncertainty, "maxHorizontalUncertainty")
-        Sub(uncertainty, "azimuthMaxHorizontalUncertainty")
-        quality = Sub(origin, "originQuality")
-        Sub(quality, "P_usedPhaseCount").text = '%i' % self.dictOrigin['used P Count']
-        Sub(quality, "S_usedPhaseCount").text = '%i' % self.dictOrigin['used S Count']
-        Sub(quality, "usedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
-        Sub(quality, "usedStationCount").text = '%i' % self.dictOrigin['used Station Count']
-        Sub(quality, "associatedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
-        Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
-        Sub(quality, "depthPhaseCount").text = "0"
-        Sub(quality, "standardError").text = '%s' % self.dictOrigin['Standarderror']
-        Sub(quality, "azimuthalGap").text = '%s' % self.dictOrigin['Azimuthal Gap']
-        Sub(quality, "secondaryAzimuthalGap")
-        Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % self.dictOrigin['Minimum Distance']
-        Sub(quality, "maximumDistance").text = '%s' % self.dictOrigin['Maximum Distance']
-        Sub(quality, "medianDistance").text = '%s' % self.dictOrigin['Median Distance']
-        magnitude = Sub(xml, "magnitude")
-        mag = Sub(magnitude, "mag")
-        if np.isnan(self.dictMagnitude['Magnitude']):
-            Sub(mag, "value")
-            Sub(mag, "uncertainty")
-        else:
-            Sub(mag, "value").text = '%s' % self.dictMagnitude['Magnitude']
-            Sub(mag, "uncertainty").text = '%s' % self.dictMagnitude['Uncertainty']
-        Sub(magnitude, "type").text = "Ml"
-        Sub(magnitude, "stationCount").text = '%i' % self.dictMagnitude['Station Count']
-        for i in range(len(self.streams)):
-            if self.dicts[i].has_key('Mag'):
-                stationMagnitude = Sub(xml, "stationMagnitude")
-                mag = Sub(stationMagnitude, 'mag')
-                Sub(mag, 'value').text = '%s' % self.dicts[i]['Mag']
-                Sub(mag, 'uncertainty').text
-                Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
-                if self.dicts[i]['MagUse']:
-                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.dictMagnitude['Station Count'])
-                else:
-                    Sub(stationMagnitude, 'weight').text = '0'
-                Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
+                    Sub(Sub(pick, "azimuth"), "value").text = str(d['SAzim'])
+                    Sub(Sub(pick, "incident"), "value").text = str(d['SInci'])
+                    Sub(Sub(pick, "epi_dist"), "value").text = \
+                            str(d['distEpi'])
+                    Sub(Sub(pick, "hyp_dist"), "value").text = \
+                            str(d['distHypo'])
 
+        #origin output
+        dO = self.dictOrigin
+        #we always have one key 'Program', if len > 1 we have real information
+        if len(dO) > 1:
+            origin = Sub(xml, "origin")
+            Sub(origin, "program").text = dO['Program']
+            date = Sub(origin, "time")
+            Sub(date, "value").text = dO['Time'].isoformat() # + '.%03i' % self.dictOrigin['Time'].microsecond
+            Sub(date, "uncertainty")
+            lat = Sub(origin, "latitude")
+            Sub(lat, "value").text = str(dO['Latitude'])
+            Sub(lat, "uncertainty").text = str(dO['Latitude Error']) #XXX Lat Error in km!!
+            lon = Sub(origin, "longitude")
+            Sub(lon, "value").text = str(dO['Longitude'])
+            Sub(lon, "uncertainty").text = str(dO['Longitude Error']) #XXX Lon Error in km!!
+            depth = Sub(origin, "depth")
+            Sub(depth, "value").text = str(dO['Depth'])
+            Sub(depth, "uncertainty").text = str(dO['Depth Error'])
+            Sub(origin, "depth_type").text = "from location program"
+            Sub(origin, "earth_mod").text = dO['Used Model']
+            if dO['Program'] == "hyp2000":
+                uncertainty = Sub(origin, "originUncertainty")
+                Sub(uncertainty, "preferredDescription").text = "uncertainty ellipse"
+                Sub(uncertainty, "horizontalUncertainty")
+                Sub(uncertainty, "minHorizontalUncertainty")
+                Sub(uncertainty, "maxHorizontalUncertainty")
+                Sub(uncertainty, "azimuthMaxHorizontalUncertainty")
+            else:
+                Sub(origin, "originUncertainty")
+            quality = Sub(origin, "originQuality")
+            Sub(quality, "P_usedPhaseCount").text = '%i' % dO['used P Count']
+            Sub(quality, "S_usedPhaseCount").text = '%i' % dO['used S Count']
+            Sub(quality, "usedPhaseCount").text = '%i' % (dO['used P Count'] + dO['used S Count'])
+            Sub(quality, "usedStationCount").text = '%i' % dO['used Station Count']
+            Sub(quality, "associatedPhaseCount").text = '%i' % (dO['used P Count'] + dO['used S Count'])
+            Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
+            Sub(quality, "depthPhaseCount").text = "0"
+            Sub(quality, "standardError").text = str(dO['Standarderror'])
+            Sub(quality, "azimuthalGap").text = str(dO['Azimuthal Gap'])
+            Sub(quality, "groundTruthLevel")
+            Sub(quality, "minimumDistance").text = str(dO['Minimum Distance'])
+            Sub(quality, "maximumDistance").text = str(dO['Maximum Distance'])
+            Sub(quality, "medianDistance").text = str(dO['Median Distance'])
+        
+        #magnitude output
+        dM = self.dictMagnitude
+        #we always have one key 'Program', if len > 1 we have real information
+        if len(dM) > 1:
+            magnitude = Sub(xml, "magnitude")
+            Sub(magnitude, "program").text = dM['Program']
+            mag = Sub(magnitude, "mag")
+            if np.isnan(dM['Magnitude']):
+                Sub(mag, "value")
+                Sub(mag, "uncertainty")
+            else:
+                Sub(mag, "value").text = str(dM['Magnitude'])
+                Sub(mag, "uncertainty").text = str(dM['Uncertainty'])
+            Sub(magnitude, "type").text = "Ml"
+            Sub(magnitude, "stationCount").text = '%i' % dM['Station Count']
+            for i in range(len(self.streams)):
+                d = self.dicts[i]
+                st = self.streams[i]
+                if 'Mag' in d:
+                    stationMagnitude = Sub(xml, "stationMagnitude")
+                    mag = Sub(stationMagnitude, 'mag')
+                    Sub(mag, 'value').text = str(d['Mag'])
+                    Sub(mag, 'uncertainty').text
+                    Sub(stationMagnitude, 'station').text = str(d['Station'])
+                    if d['MagUse']:
+                        Sub(stationMagnitude, 'weight').text = str(1. / dM['Station Count'])
+                    else:
+                        Sub(stationMagnitude, 'weight').text = "0"
+                    Sub(stationMagnitude, 'channels').text = str(d['MagChannel'])
+        
         #focal mechanism output
-        if self.dictFocalMechanism != {}:
+        dF = self.dictFocalMechanism
+        #we always have one key 'Program', if len > 1 we have real information
+        if len(dF) > 1:
             focmec = Sub(xml, "focalMechanism")
+            Sub(focmec, "program").text = dF['Program']
             nodplanes = Sub(focmec, "nodalPlanes")
             nodplanes.set("preferredPlane", "1")
             nodplane1 = Sub(nodplanes, "nodalPlane1")
             strike = Sub(nodplane1, "strike")
-            Sub(strike, "value").text = "%s" % \
-                    self.dictFocalMechanism['Strike']
+            Sub(strike, "value").text = str(dF['Strike'])
             Sub(strike, "uncertainty")
             dip = Sub(nodplane1, "dip")
-            Sub(dip, "value").text = "%s" % self.dictFocalMechanism['Dip']
+            Sub(dip, "value").text = str(dF['Dip'])
             Sub(dip, "uncertainty")
             rake = Sub(nodplane1, "rake")
-            Sub(rake, "value").text = "%s" % self.dictFocalMechanism['Rake']
+            Sub(rake, "value").text = str(dF['Rake'])
             Sub(rake, "uncertainty")
             Sub(focmec, "stationPolarityCount").text = "%i" % \
-                    self.dictFocalMechanism['Station Polarity Count']
-            Sub(focmec, "stationPolarityErrorCount").text = "%i" % \
-                    self.dictFocalMechanism['Errors']
+                    dF['Station Polarity Count']
+            Sub(focmec, "stationPolarityErrorCount").text = "%i" % dF['Errors']
 
-        return tostring(xml,pretty_print=True,xml_declaration=True)
-
-    def threeDLoc2XML(self):
-        """
-        Returns output of 3dloc as xml file
-        """
-        xml =  Element("event")
-        Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
-        event_type = Sub(xml, "event_type")
-        Sub(event_type, "value").text = "manual"
-        Sub(event_type, "user").text = self.username
-        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
-        
-        # we save P picks on Z-component and S picks on N-component
-        # XXX standard values for unset keys!!!???!!!???
-        epidists = []
-        for i in range(len(self.streams)):
-            if self.dicts[i].has_key('P'):
-                pick = Sub(xml, "pick")
-                wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][0].stats.network) 
-                wave.set("stationCode", self.streams[i][0].stats.station) 
-                wave.set("channelCode", self.streams[i][0].stats.channel) 
-                wave.set("locationCode", "") 
-                date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = self.streams[i][0].stats.starttime
-                picktime += self.dicts[i]['P']
-                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('PErr1') and self.dicts[i].has_key('PErr2'):
-                    temp = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
-                    Sub(date, "uncertainty").text = str(temp)
-                else:
-                    Sub(date, "uncertainty")
-                Sub(pick, "phaseHint").text = "P"
-                if self.dicts[i].has_key('POnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['POnset']
-                else:
-                    Sub(pick, "onset")
-                if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == 'up' or self.dicts[i]['PPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
-                    elif self.dicts[i]['PPol'] == 'down' or self.dicts[i]['PPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['PPol']
-                else:
-                    Sub(pick, "polarity")
-                if self.dicts[i].has_key('PWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['PWeight']
-                else:
-                    Sub(pick, "weight")
-                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
-                
-                if self.dicts[i].has_key('Psynth'):
-                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
-                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Pres']
-                    Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
-                    Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['PAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['PInci']
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
-        
-            if self.dicts[i].has_key('S'):
-                axind = self.dicts[i]['Saxind']
-                pick = Sub(xml, "pick")
-                wave = Sub(pick, "waveform")
-                wave.set("networkCode", self.streams[i][axind].stats.network) 
-                wave.set("stationCode", self.streams[i][axind].stats.station) 
-                wave.set("channelCode", self.streams[i][axind].stats.channel) 
-                wave.set("locationCode", "") 
-                date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = self.streams[i][axind].stats.starttime
-                picktime += self.dicts[i]['S']
-                Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if self.dicts[i].has_key('SErr1') and self.dicts[i].has_key('SErr2'):
-                    temp = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
-                    Sub(date, "uncertainty").text = str(temp)
-                else:
-                    Sub(date, "uncertainty")
-                Sub(pick, "phaseHint").text = "S"
-                if self.dicts[i].has_key('SOnset'):
-                    Sub(pick, "onset").text = self.dicts[i]['SOnset']
-                else:
-                    Sub(pick, "onset")
-                if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == 'up' or self.dicts[i]['SPol'] == 'poorup':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
-                    elif self.dicts[i]['SPol'] == 'down' or self.dicts[i]['SPol'] == 'poordown':
-                        Sub(pick, "polarity").text = self.dicts[i]['SPol']
-                else:
-                    Sub(pick, "polarity")
-                if self.dicts[i].has_key('SWeight'):
-                    Sub(pick, "weight").text = '%i' % self.dicts[i]['SWeight']
-                else:
-                    Sub(pick, "weight")
-                Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
-                
-                if self.dicts[i].has_key('Ssynth'):
-                    Sub(pick, "phase_compu").text #XXX this is redundant. can be constructed from above info
-                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
-                    Sub(Sub(pick, "phase_weight"), "value") #wird von hypoXX ausgespuckt
-                    Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = '%s' % self.dicts[i]['SAzim']
-                    Sub(Sub(pick, "incident"), "value").text = '%s' % self.dicts[i]['SInci']
-                    Sub(Sub(pick, "epi_dist"), "value").text = '%s' % self.dicts[i]['distEpi']
-                    Sub(Sub(pick, "hyp_dist"), "value").text = '%s' % self.dicts[i]['distHypo']
-        
-        origin = Sub(xml, "origin")
-        date = Sub(origin, "time")
-        Sub(date, "value").text = self.dictOrigin['Time'].isoformat() # + '.%03i' % self.dictOrigin['Time'].microsecond
-        Sub(date, "uncertainty")
-        lat = Sub(origin, "latitude")
-        Sub(lat, "value").text = '%s' % self.dictOrigin['Latitude']
-        Sub(lat, "uncertainty").text = '%s' % self.dictOrigin['Latitude Error'] #XXX Lat Error in km??!!
-        lon = Sub(origin, "longitude")
-        Sub(lon, "value").text = '%s' % self.dictOrigin['Longitude']
-        Sub(lon, "uncertainty").text = '%s' % self.dictOrigin['Longitude Error'] #XXX Lon Error in km??!!
-        depth = Sub(origin, "depth")
-        Sub(depth, "value").text = '%s' % self.dictOrigin['Depth']
-        Sub(depth, "uncertainty").text = '%s' % self.dictOrigin['Depth Error']
-        Sub(origin, "depth_type").text = "from location program"
-        Sub(origin, "earth_mod").text = "STAUFEN"
-        Sub(origin, "originUncertainty")
-        quality = Sub(origin, "originQuality")
-        Sub(quality, "P_usedPhaseCount").text = '%i' % self.dictOrigin['used P Count']
-        Sub(quality, "S_usedPhaseCount").text = '%i' % self.dictOrigin['used S Count']
-        Sub(quality, "usedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
-        Sub(quality, "usedStationCount").text = '%i' % self.dictOrigin['used Station Count']
-        Sub(quality, "associatedPhaseCount").text = '%i' % (self.dictOrigin['used P Count'] + self.dictOrigin['used S Count'])
-        Sub(quality, "associatedStationCount").text = '%i' % len(self.dicts)
-        Sub(quality, "depthPhaseCount").text = "0"
-        Sub(quality, "standardError").text = '%s' % self.dictOrigin['Standarderror']
-        Sub(quality, "azimuthalGap").text = '%s' % self.dictOrigin['Azimuthal Gap']
-        Sub(quality, "groundTruthLevel")
-        Sub(quality, "minimumDistance").text = '%s' % self.dictOrigin['Minimum Distance']
-        Sub(quality, "maximumDistance").text = '%s' % self.dictOrigin['Maximum Distance']
-        Sub(quality, "medianDistance").text = '%s' % self.dictOrigin['Median Distance']
-        magnitude = Sub(xml, "magnitude")
-        mag = Sub(magnitude, "mag")
-        if np.isnan(self.dictMagnitude['Magnitude']):
-            Sub(mag, "value")
-            Sub(mag, "uncertainty")
-        else:
-            Sub(mag, "value").text = '%s' % self.dictMagnitude['Magnitude']
-            Sub(mag, "uncertainty").text = '%s' % self.dictMagnitude['Uncertainty']
-        Sub(magnitude, "type").text = "Ml"
-        Sub(magnitude, "stationCount").text = '%i' % self.dictMagnitude['Station Count']
-        for i in range(len(self.streams)):
-            stationMagnitude = Sub(xml, "stationMagnitude")
-            if self.dicts[i].has_key('Mag'):
-                mag = Sub(stationMagnitude, 'mag')
-                Sub(mag, 'value').text = '%s' % self.dicts[i]['Mag']
-                Sub(mag, 'uncertainty').text
-                Sub(stationMagnitude, 'station').text = '%s' % self.dicts[i]['Station']
-                if self.dicts[i]['MagUse']:
-                    Sub(stationMagnitude, 'weight').text = '%s' % (1. / self.dictMagnitude['Station Count'])
-                else:
-                    Sub(stationMagnitude, 'weight').text = '0'
-                Sub(stationMagnitude, 'channels').text = '%s' % self.dicts[i]['MagChannel']
-        
-        #focal mechanism output
-        if self.dictFocalMechanism != {}:
-            focmec = Sub(xml, "focalMechanism")
-            nodplanes = Sub(focmec, "nodalPlanes")
-            nodplanes.set("preferredPlane", "1")
-            nodplane1 = Sub(nodplanes, "nodalPlane1")
-            strike = Sub(nodplane1, "strike")
-            Sub(strike, "value").text = "%s" % \
-                    self.dictFocalMechanism['Strike']
-            Sub(strike, "uncertainty")
-            dip = Sub(nodplane1, "dip")
-            Sub(dip, "value").text = "%s" % self.dictFocalMechanism['Dip']
-            Sub(dip, "uncertainty")
-            rake = Sub(nodplane1, "rake")
-            Sub(rake, "value").text = "%s" % self.dictFocalMechanism['Rake']
-            Sub(rake, "uncertainty")
-            Sub(focmec, "stationPolarityCount").text = "%i" % \
-                    self.dictFocalMechanism['Station Polarity Count']
-            Sub(focmec, "stationPolarityErrorCount").text = "%i" % \
-                    self.dictFocalMechanism['Errors']
-
-        return tostring(xml,pretty_print=True,xml_declaration=True)
+        return tostring(xml, pretty_print=True, xml_declaration=True)
     
     def setXMLEventID(self):
         #XXX is problematic if two people make a location at the same second!
@@ -3149,21 +2904,17 @@ class PickingGUI:
 
         path = '/xml/seismology/event'
         
-        # determine which location was run and how the xml should be created
-        if self.dictEvent['locationType'] == "3dloc":
-            data = self.threeDLoc2XML()
-            print "creating xml with picks and 3dloc event data."
-        elif self.dictEvent['locationType'] == "hyp2000":
-            data = self.hyp20002XML()
-            print "creating xml with picks and hypo2000 event data."
-        else:
-            data = self.picks2XML()
-            print "no event location performed.\ncreating xml with picks only."
         # overwrite the same xml file always when using option local
         # which is intended for testing purposes only
         if self.options.local:
             self.dictEvent['xmlEventID'] = '19700101000000'
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
+        # create XML and also save in temporary directory for inspection purposes
+        print "creating xml..."
+        data = self.dicts2XML()
+        tmpfile = self.tmp_dir + name + ".xml"
+        print "writing xml as %s... (for quick inspection only)" % tmpfile
+        open(tmpfile, "w").write(data)
 
         #construct and send the header
         webservice = httplib.HTTP(self.server['Server'])
@@ -3202,8 +2953,9 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictEvent['locationType'] = None
-
+        self.dictOrigin['Program'] = None
+        self.dictMagnitude['Program'] = None
+        self.dictFocalMechanism['Program'] = None
 
     def clearOriginMagnitudeDictionaries(self):
         print "Clearing previous event data."
@@ -3223,7 +2975,8 @@ class PickingGUI:
         self.dictMagnitude = {}
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictEvent['locationType'] = None
+        self.dictOrigin['Program'] = None
+        self.dictMagnitude['Program'] = None
 
     def clearFocmecDictionary(self):
         print "Clearing previous focal mechanism data."
@@ -3231,6 +2984,7 @@ class PickingGUI:
         self.focMechList = []
         self.focMechCurrent = None
         self.focMechCount = None
+        self.dictFocalMechanism['Program'] = None
 
     def delAllItems(self):
         self.delPLine()
@@ -3454,6 +3208,11 @@ class PickingGUI:
         try:
             origin = resource_xml.xpath(u".//origin")[0]
             try:
+                program = origin.xpath(".//program")[0].text
+                self.dictOrigin['Program'] = program
+            except:
+                pass
+            try:
                 time = origin.xpath(".//time/value")[0].text
                 self.dictOrigin['Time'] = UTCDateTime(time)
             except:
@@ -3535,6 +3294,11 @@ class PickingGUI:
         try:
             magnitude = resource_xml.xpath(u".//magnitude")[0]
             try:
+                program = magnitude.xpath(".//program")[0].text
+                self.dictMagnitude['Program'] = program
+            except:
+                pass
+            try:
                 mag = magnitude.xpath(".//mag/value")[0].text
                 self.dictMagnitude['Magnitude'] = float(mag)
                 self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
@@ -3556,6 +3320,16 @@ class PickingGUI:
         #analyze focal mechanism:
         try:
             focmec = resource_xml.xpath(u".//focalMechanism")[0]
+            try:
+                program = focmec.xpath(".//program")[0].text
+                self.dictFocalMechanism['Program'] = program
+            except:
+                pass
+            try:
+                program = focmec.xpath(".//program")[0].text
+                self.dictFocalMechanism['Program'] = program
+            except:
+                pass
             try:
                 strike = focmec.xpath(".//nodalPlanes/nodalPlane1/strike/value")[0].text
                 self.dictFocalMechanism['Strike'] = float(strike)
@@ -3674,33 +3448,33 @@ def main():
             baseurl = "http://" + options.servername + ":%i" % options.port
             client = Client(base_url=baseurl, user=options.user,
                             password=options.password, timeout=options.timeout)
-            streams = []
-            sta_fetched = set()
-            for id in options.ids.split(","):
-                net, sta_wildcard, loc, cha = id.split(".")
-                for sta in client.waveform.getStationIds(network_id=net):
-                    if not fnmatch.fnmatch(sta, sta_wildcard):
-                        continue
-                    # make sure we dont fetch a single station of
-                    # one network twice (could happen with wildcards)
-                    net_sta = "%s:%s" % (net, sta)
-                    if net_sta in sta_fetched:
-                        print net_sta, "was already retrieved. Skipping!"
-                        continue
-                    try:
-                        st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                                                         t + options.duration)
-                        print net_sta, "fetched successfully."
-                        sta_fetched.add(net_sta)
-                    except:
-                        print net_sta, "could not be retrieved. Skipping!"
-                        continue
-                    st.sort()
-                    st.reverse()
-                    streams.append(st)
         except:
-            parser.print_help()
+            print "Error while connecting to server!"
             raise
+        streams = []
+        sta_fetched = set()
+        for id in options.ids.split(","):
+            net, sta_wildcard, loc, cha = id.split(".")
+            for sta in client.waveform.getStationIds(network_id=net):
+                if not fnmatch.fnmatch(sta, sta_wildcard):
+                    continue
+                # make sure we dont fetch a single station of
+                # one network twice (could happen with wildcards)
+                net_sta = "%s:%s" % (net, sta)
+                if net_sta in sta_fetched:
+                    print net_sta, "was already retrieved. Skipping!"
+                    continue
+                try:
+                    st = client.waveform.getWaveform(net, sta, loc, cha, t,
+                                                     t + options.duration)
+                    print net_sta, "fetched successfully."
+                    sta_fetched.add(net_sta)
+                except:
+                    print net_sta, "could not be retrieved. Skipping!"
+                    continue
+                st.sort()
+                st.reverse()
+                streams.append(st)
 
     PickingGUI(client, streams, options)
 
