@@ -1261,7 +1261,6 @@ class PickingGUI:
     def pick(self, event):
         #We want to round from the picking location to
         #the time value of the nearest time sample:
-        print event.inaxes
         samp_rate = self.streams[self.stPt][0].stats.sampling_rate
         pickSample = event.xdata * samp_rate
         pickSample = round(pickSample)
