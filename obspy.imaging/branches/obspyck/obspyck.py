@@ -1899,6 +1899,7 @@ class PickingGUI:
         for line in lines:
             line = line.split()
             tempdict = {}
+            tempdict['Program'] = "focmec"
             tempdict['Dip'] = float(line[0])
             tempdict['Strike'] = float(line[1])
             tempdict['Rake'] = float(line[2])
@@ -2004,6 +2005,11 @@ class PickingGUI:
                         fontsize=10, va="top")
         #this fits the 90 degree incident value to the beachball edge best
         ax.set_ylim([0., 91])
+        try:
+            #not working with ion3 and other windowmanagers...
+            fig.set_size_inches(4, 4, forward = True)
+        except:
+            pass
         fig.canvas.draw()
 
     def doHyp2000(self):
@@ -2706,7 +2712,7 @@ class PickingGUI:
                 if 'Psynth' in d:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = str(d['Pres'])
-                    if dO['Program'] == "hyp2000":
+                    if self.dictOrigin['Program'] == "hyp2000":
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(d['PsynthWeight'])
                     else:
@@ -2774,7 +2780,7 @@ class PickingGUI:
                 if 'Ssynth' in d:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
-                    if dO['Program'] == "hyp2000":
+                    if self.dictOrigin['Program'] == "hyp2000":
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(d['SsynthWeight'])
                     else:
@@ -2917,7 +2923,7 @@ class PickingGUI:
         print "creating xml..."
         data = self.dicts2XML()
         tmpfile = self.tmp_dir + name + ".xml"
-        print "writing xml as %s... (for quick inspection only)" % tmpfile
+        print "writing xml as %s (for quick inspection only)" % tmpfile
         open(tmpfile, "w").write(data)
 
         #construct and send the header
