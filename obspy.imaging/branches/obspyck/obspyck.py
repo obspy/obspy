@@ -3159,7 +3159,7 @@ class PickingGUI:
                 if polarity:
                     self.dicts[streamnum]['PPol'] = polarity
                 if weight:
-                    self.dicts[streamnum]['PWeight'] = weight
+                    self.dicts[streamnum]['PWeight'] = int(weight)
                 if phase_res:
                     self.dicts[streamnum]['Psynth'] = time + float(phase_res)
                     self.dicts[streamnum]['Pres'] = float(phase_res)
@@ -3186,7 +3186,7 @@ class PickingGUI:
                 if polarity:
                     self.dicts[streamnum]['SPol'] = polarity
                 if weight:
-                    self.dicts[streamnum]['SWeight'] = weight
+                    self.dicts[streamnum]['SWeight'] = int(weight)
                 if phase_res:
                     self.dicts[streamnum]['Ssynth'] = time + float(phase_res)
                     self.dicts[streamnum]['Sres'] = float(phase_res)
