@@ -327,22 +327,30 @@ class PickingGUI:
         # Define some forbidden scenarios.
         # We assume there are:
         # - either one Z or three ZNE traces
-        # - no two streams for any station
-        self.stationlist=[]
+        # - no two streams for any station (of same network)
+        sta_list = set()
         for i in range(len(self.streams))[::-1]:
             st = self.streams[i]
+            net_sta = "%s:%s" % (st[0].stats.network.strip(),
+                                 st[0].stats.station.strip())
+            # Here we make sure that a station/network combination is not
+            # present with two streams. XXX For dynamically acquired data from
+            # seishub this is already done before initialising the GUI and
+            # thus redundant. Here it is only necessary if working with
+            # traces from local file system (option -l)
+            if net_sta in sta_list:
+                print "Warning: Station/Network combination \"%s\" already " \
+                      % net_sta + "in stream list. Discarding stream."
+                self.streams.pop(i)
+                continue
             if not (len(st.traces) == 1 or len(st.traces) == 3):
-                #print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
                 print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
                 self.streams.pop(i)
                 continue
-                #return
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
-                #print 'Error: All streams must have either one Z trace or a set of three ZNE traces'
                 print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded'
                 self.streams.pop(i)
                 continue
-                #return
             if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
                                         st[1].stats.channel[-1] != 'N' or
                                         st[2].stats.channel[-1] != 'E' or
@@ -350,15 +358,10 @@ class PickingGUI:
                                         st[1].stats.station.strip() or
                                         st[0].stats.station.strip() !=
                                         st[2].stats.station.strip()):
-                #print 'Error: All streams must have either one Z trace or a set of ZNE traces (from the same station)'
                 print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
                 self.streams.pop(i)
                 continue
-                #return
-            self.stationlist.append(st[0].stats.station.strip())
-        if len(self.stationlist) != len(set(self.stationlist)):
-            print 'Error: Found two streams for one station'
-            return
+            sta_list.add(net_sta)
 
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
@@ -1258,6 +1261,7 @@ class PickingGUI:
     def pick(self, event):
         #We want to round from the picking location to
         #the time value of the nearest time sample:
+        print event.inaxes
         samp_rate = self.streams[self.stPt][0].stats.sampling_rate
         pickSample = event.xdata * samp_rate
         pickSample = round(pickSample)
@@ -3658,6 +3662,9 @@ def main():
         streams.append(read('20091227_105240_Z.RWMO'))
         streams[4].append(read('20091227_105240_N.RWMO')[0])
         streams[4].append(read('20091227_105240_E.RWMO')[0])
+        streams.append(read('20091227_105240_Z.RWMO'))
+        streams[5].append(read('20091227_105240_N.RWMO')[0])
+        streams[5].append(read('20091227_105240_E.RWMO')[0])
         baseurl = "http://" + options.servername + ":%i" % options.port
         client = Client(base_url=baseurl, user=options.user,
                         password=options.password, timeout=options.timeout)
@@ -3668,17 +3675,25 @@ def main():
             client = Client(base_url=baseurl, user=options.user,
                             password=options.password, timeout=options.timeout)
             streams = []
+            sta_fetched = set()
             for id in options.ids.split(","):
                 net, sta_wildcard, loc, cha = id.split(".")
                 for sta in client.waveform.getStationIds(network_id=net):
                     if not fnmatch.fnmatch(sta, sta_wildcard):
                         continue
+                    # make sure we dont fetch a single station of
+                    # one network twice (could happen with wildcards)
+                    net_sta = "%s:%s" % (net, sta)
+                    if net_sta in sta_fetched:
+                        print net_sta, "was already retrieved. Skipping!"
+                        continue
                     try:
-                        st = client.waveform.getWaveform(net, sta, loc, cha, 
-                                                         t, t + options.duration)
+                        st = client.waveform.getWaveform(net, sta, loc, cha, t,
+                                                         t + options.duration)
+                        print net_sta, "fetched successfully."
+                        sta_fetched.add(net_sta)
                     except:
-                        msg = "Cannot retrieve sta %s of id %s" % (sta, id)
-                        warnings.warn(msg)
+                        print net_sta, "could not be retrieved. Skipping!"
                         continue
                     st.sort()
                     st.reverse()
