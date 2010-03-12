@@ -296,7 +296,6 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictOrigin['Program'] = None
         #value for the "public" tag in the event xml (switched by button)
         self.flagPublicEvent = True
         self.flagSpectrogram = False
@@ -2792,6 +2791,8 @@ class PickingGUI:
         #origin output
         dO = self.dictOrigin
         #we always have one key 'Program', if len > 1 we have real information
+        #its possible that we have set the 'Program' key but afterwards
+        #the actual program run does not fill our dictionary...
         if len(dO) > 1:
             origin = Sub(xml, "origin")
             Sub(origin, "program").text = dO['Program']
@@ -2836,6 +2837,8 @@ class PickingGUI:
         #magnitude output
         dM = self.dictMagnitude
         #we always have one key 'Program', if len > 1 we have real information
+        #its possible that we have set the 'Program' key but afterwards
+        #the actual program run does not fill our dictionary...
         if len(dM) > 1:
             magnitude = Sub(xml, "magnitude")
             Sub(magnitude, "program").text = dM['Program']
@@ -2866,6 +2869,8 @@ class PickingGUI:
         #focal mechanism output
         dF = self.dictFocalMechanism
         #we always have one key 'Program', if len > 1 we have real information
+        #its possible that we have set the 'Program' key but afterwards
+        #the actual program run does not fill our dictionary...
         if len(dF) > 1:
             focmec = Sub(xml, "focalMechanism")
             Sub(focmec, "program").text = dF['Program']
@@ -2953,9 +2958,6 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictOrigin['Program'] = None
-        self.dictMagnitude['Program'] = None
-        self.dictFocalMechanism['Program'] = None
 
     def clearOriginMagnitudeDictionaries(self):
         print "Clearing previous event data."
@@ -2975,8 +2977,6 @@ class PickingGUI:
         self.dictMagnitude = {}
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.dictOrigin['Program'] = None
-        self.dictMagnitude['Program'] = None
 
     def clearFocmecDictionary(self):
         print "Clearing previous focal mechanism data."
@@ -2984,7 +2984,6 @@ class PickingGUI:
         self.focMechList = []
         self.focMechCurrent = None
         self.focMechCount = None
-        self.dictFocalMechanism['Program'] = None
 
     def delAllItems(self):
         self.delPLine()
