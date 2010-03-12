@@ -2005,11 +2005,6 @@ class PickingGUI:
                         fontsize=10, va="top")
         #this fits the 90 degree incident value to the beachball edge best
         ax.set_ylim([0., 91])
-        try:
-            #not working with ion3 and other windowmanagers...
-            fig.set_size_inches(4, 4, forward = True)
-        except:
-            pass
         fig.canvas.draw()
 
     def doHyp2000(self):
