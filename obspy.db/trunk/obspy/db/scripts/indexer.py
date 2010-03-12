@@ -79,7 +79,8 @@ def _runIndexer(options):
         metadata = Base.metadata
         metadata.create_all(engine, checkfirst=True)
         # init db + options
-        service.session = sessionmaker(bind=engine)
+        Session = sessionmaker(bind=engine)
+        service.session = Session()
         service.skip_dots = options.skip_dots
         service.cleanup = options.cleanup
         service.log = logging

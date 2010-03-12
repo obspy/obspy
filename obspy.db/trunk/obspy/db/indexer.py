@@ -21,15 +21,13 @@ class WaveformFileCrawler:
         Add a new file into or modifies existing file in database.
         """
         for data in dataset:
-            # new transaction
-            session = self.session()
             # fetch or create path
             try:
-                query = session.query(WaveformPath)
+                query = self.session.query(WaveformPath)
                 path = query.filter_by(path=data['path']).one()
             except:
                 path = WaveformPath(data)
-                session.add(path)
+                self.session.add(path)
             # fetch or create file
             try:
                 file = path.files.filter(file=data['file']).one()
@@ -54,9 +52,9 @@ class WaveformFileCrawler:
                 msg = 'Updating'
                 channel.update(data)
                 # remove all gaps
-                session.delete(channel.gaps)
+                self.session.delete(channel.gaps)
                 # remove all features
-                session.delete(channel.features)
+                self.session.delete(channel.features)
             # add gaps
             for gap in data['gaps']:
                 channel.gaps.append(WaveformGaps(gap))
@@ -65,75 +63,67 @@ class WaveformFileCrawler:
                 channel.features.append(WaveformFeatures(feature))
             file.channels.append(channel)
             try:
-                session.commit()
+                self.session.commit()
             except Exception, e:
-                session.rollback()
+                self.session.rollback()
                 self.log.error(str(e))
             else:
                 self.log.debug("%s '%s' in '%s'" % (msg, data['file'],
                                                     data['path']))
-            session.close()
 
     def _delete(self, path, file=None):
         """
         Remove a file or all files with a given path from the database.
         """
-        # new transaction
-        session = self.session()
         if file:
-            query = session.query(WaveformFile)
+            query = self.session.query(WaveformFile)
             query = query.filter(WaveformPath.path == path)
             query = query.filter(WaveformFile.file == file)
             query = query.filter(WaveformPath.archived == False)
             for file_obj in query:
-                session.delete(file_obj)
+                self.session.delete(file_obj)
             try:
-                session.commit()
+                self.session.commit()
             except Exception, e:
-                session.rollback()
+                self.session.rollback()
                 msg = "Error deleting file '%s' in '%s': %s"
                 self.log.error(msg % (file, path, e))
             else:
                 self.log.debug("Deleting file '%s' in '%s'" % (file, path))
         else:
-            query = session.query(WaveformPath)
+            query = self.session.query(WaveformPath)
             query = query.filter(WaveformPath.path == path)
             query = query.filter(WaveformPath.archived == False)
             for path_obj in query:
-                session.delete(path_obj)
+                self.session.delete(path_obj)
             try:
-                session.commit()
+                self.session.commit()
             except Exception, e:
-                session.rollback()
+                self.session.rollback()
                 self.log.error("Error deleting path '%s': %s" % (path, e))
             else:
                 self.log.debug("Deleting path '%s'" % (path))
-        session.close()
 
     def _select(self, path=None):
         """
         """
-        # new transaction
-        session = self.session()
         if path:
             # check database for file entries in path
-            query = session.query(WaveformPath)
+            query = self.session.query(WaveformPath)
             if path:
                 query = query.filter(WaveformPath.path == path)
             try:
                 query = query.first()
-                result = dict([(f.file, f.mtime) for f in query.files])
+                return dict([(f.file, f.mtime) for f in query.files])
             except:
-                result = {}
+                return {}
         else:
             # check database for all path entries
-            query = session.query(WaveformPath.path)
+            query = self.session.query(WaveformPath.path)
             try:
-                result = [p.path for p in query.all()]
+                return [p.path for p in query.all()]
             except:
-                result = []
-        session.close()
-        return result
+                return []
 
     def getFeatures(self):
         return self.paths[self._root][1]
