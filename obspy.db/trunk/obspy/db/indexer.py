@@ -254,7 +254,7 @@ class WaveformFileCrawler:
             else:
                 patterns = ['*.*']
             # normalize and absolute path name
-            path = os.path.normpath(os.path.abspath(path))
+            path = os.path.normpath(path)
             # check path
             if not os.path.isdir(path):
                 self.log.warn("Skipping inaccessible path '%s' ..." % path)
