@@ -133,6 +133,10 @@ class _WaveformMapperClient(object):
             stream = read(tf.name, 'MSEED')
         finally:
             tf.close()
+        try:
+            os.remove(tf.name)
+        except:
+            pass
         # trim stream
         if 'start_datetime' in kwargs:
             stream.ltrim(kwargs['start_datetime'])
