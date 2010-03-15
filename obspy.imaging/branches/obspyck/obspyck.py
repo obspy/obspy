@@ -2269,7 +2269,7 @@ class PickingGUI:
             elif type == "S":
                 self.dictOrigin['used S Count'] += 1
                 self.dicts[streamnum]['Ssynth'] = res + \
-                                                  self.dicts[streamnum]['P']
+                                                  self.dicts[streamnum]['S']
                 self.dicts[streamnum]['Sres'] = res
                 self.dicts[streamnum]['SAzim'] = azimuth
                 self.dicts[streamnum]['SInci'] = incident
@@ -3420,24 +3420,25 @@ def main():
     # Just for testing purposes, sent event xmls always overwrite the same xml.
     elif options.local:
         streams=[]
-        streams.append(read('20091227_105240_Z.RJOB'))
-        streams[0].append(read('20091227_105240_N.RJOB')[0])
-        streams[0].append(read('20091227_105240_E.RJOB')[0])
-        streams.append(read('20091227_105240_Z.RMOA'))
-        streams[1].append(read('20091227_105240_N.RMOA')[0])
-        streams[1].append(read('20091227_105240_E.RMOA')[0])
-        streams.append(read('20091227_105240_Z.RNON'))
-        streams[2].append(read('20091227_105240_N.RNON')[0])
-        streams[2].append(read('20091227_105240_E.RNON')[0])
-        streams.append(read('20091227_105240_Z.RTBE'))
-        streams[3].append(read('20091227_105240_N.RTBE')[0])
-        streams[3].append(read('20091227_105240_E.RTBE')[0])
-        streams.append(read('20091227_105240_Z.RWMO'))
-        streams[4].append(read('20091227_105240_N.RWMO')[0])
-        streams[4].append(read('20091227_105240_E.RWMO')[0])
-        streams.append(read('20091227_105240_Z.RWMO'))
-        streams[5].append(read('20091227_105240_N.RWMO')[0])
-        streams[5].append(read('20091227_105240_E.RWMO')[0])
+        streams.append(read('/scratch/glade/test.gse'))
+        #streams.append(read('20091227_105240_Z.RJOB'))
+        #streams[0].append(read('20091227_105240_N.RJOB')[0])
+        #streams[0].append(read('20091227_105240_E.RJOB')[0])
+        #streams.append(read('20091227_105240_Z.RMOA'))
+        #streams[1].append(read('20091227_105240_N.RMOA')[0])
+        #streams[1].append(read('20091227_105240_E.RMOA')[0])
+        #streams.append(read('20091227_105240_Z.RNON'))
+        #streams[2].append(read('20091227_105240_N.RNON')[0])
+        #streams[2].append(read('20091227_105240_E.RNON')[0])
+        #streams.append(read('20091227_105240_Z.RTBE'))
+        #streams[3].append(read('20091227_105240_N.RTBE')[0])
+        #streams[3].append(read('20091227_105240_E.RTBE')[0])
+        #streams.append(read('20091227_105240_Z.RWMO'))
+        #streams[4].append(read('20091227_105240_N.RWMO')[0])
+        #streams[4].append(read('20091227_105240_E.RWMO')[0])
+        #streams.append(read('20091227_105240_Z.RWMO'))
+        #streams[5].append(read('20091227_105240_N.RWMO')[0])
+        #streams[5].append(read('20091227_105240_E.RWMO')[0])
         baseurl = "http://" + options.servername + ":%i" % options.port
         client = Client(base_url=baseurl, user=options.user,
                         password=options.password, timeout=options.timeout)
