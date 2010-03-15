@@ -85,7 +85,7 @@ def _runIndexer(options):
         metadata.create_all(engine, checkfirst=True)
         # init db + options
         Session = sessionmaker(bind=engine)
-        service.session = Session()
+        service.session = Session
         service.skip_dots = options.skip_dots
         service.cleanup = options.cleanup
         service.log = logging
@@ -166,9 +166,11 @@ Default path option is 'data=*.*'.""")
     else:
         level = logging.INFO
     if options.log == "":
-        logging.basicConfig(stream=sys.stdout, level=level)
+        logging.basicConfig(stream=sys.stdout, level=level,
+                            format="%(asctime)s [%(levelname)s] %(message)s")
     else:
-        logging.basicConfig(filename=options.log, level=level)
+        logging.basicConfig(filename=options.log, level=level,
+                            format="%(asctime)s [%(levelname)s] %(message)s")
     _runIndexer(options)
 
 

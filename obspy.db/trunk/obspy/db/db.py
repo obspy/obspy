@@ -17,7 +17,7 @@ class WaveformPath(Base):
     __tablename__ = 'default_waveform_paths'
     __table_args__ = (UniqueConstraint('path'))
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     path = Column(String, nullable=False, index=True)
     archived = Column(Boolean, default=False)
 
@@ -34,7 +34,7 @@ class WaveformPath(Base):
 class WaveformFile(Base):
     __tablename__ = 'default_waveform_files'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     file = Column(String, nullable=False, index=True)
     size = Column(Integer, nullable=False)
     mtime = Column(Integer, nullable=False, index=True)
@@ -59,8 +59,9 @@ class WaveformChannel(Base):
     __table_args__ = (UniqueConstraint('network', 'station', 'location',
                                        'channel', 'starttime', 'endtime'))
 
-    id = Column(Integer, primary_key=True)
-    file_id = Column(Integer, ForeignKey('default_waveform_files.id'))
+    id = Column(Integer, primary_key=True, index=True)
+    file_id = Column(Integer, ForeignKey('default_waveform_files.id'),
+                     index=True)
     network = Column(String(2), nullable=False, index=True)
     station = Column(String(5), nullable=False, index=True)
     location = Column(String(2), nullable=False, index=True)
@@ -115,8 +116,9 @@ class WaveformChannel(Base):
 class WaveformGaps(Base):
     __tablename__ = 'default_waveform_gaps'
 
-    id = Column(Integer, primary_key=True)
-    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
+    id = Column(Integer, primary_key=True, index=True)
+    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'),
+                        index=True)
     gap = Column(Boolean, nullable=False, index=True)
     starttime = Column(DateTime, nullable=False, index=True)
     endtime = Column(DateTime, nullable=False, index=True)
@@ -136,8 +138,9 @@ class WaveformFeatures(Base):
     __tablename__ = 'default_waveform_features'
     __table_args__ = (UniqueConstraint('channel_id', 'key'))
 
-    id = Column(Integer, primary_key=True)
-    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'))
+    id = Column(Integer, primary_key=True, index=True)
+    channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'),
+                        index=True)
     key = Column(String, nullable=False, index=True)
     value = Column(PickleType, nullable=True)
 
