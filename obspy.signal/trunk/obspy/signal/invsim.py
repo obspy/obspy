@@ -213,7 +213,7 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     del freq_response
     #
     # now depending on inst_sim, simulate the seismometer
-    if isinstance(inst_sim, type(None)):
+    if inst_sim is None:
         pass
     elif isinstance(inst_sim, dict):
         try:

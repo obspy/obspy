@@ -156,7 +156,7 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking numpy support.
     encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
-    if not encoding:
+    if encoding is None:
         encoding = -1
     elif isinstance(encoding, int) and encoding in ENCODINGS:
         encoding = encoding
