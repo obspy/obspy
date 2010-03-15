@@ -248,16 +248,18 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     -----------
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
+    >>> createEmptyDataChunk(6, 'complex128', 0)
+    array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
     >>> createEmptyDataChunk(3, np.dtype('float64'))  # doctest: +SKIP
     masked_array(data = [-- -- --],
                  mask = [ True  True  True],
                  fill_value=1e+20)
     """
-    if fill_value:
+    if fill_value is None:
+        temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+    else:
         temp = np.ones(delta, dtype=np.dtype(dtype))
         temp *= fill_value
-    else:
-        temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
     return temp
 
 
