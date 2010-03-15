@@ -2067,14 +2067,33 @@ class PickingGUI:
                 f.write(fmtP % (sta, onset, polarity, weight, date))
             if self.dicts[i].has_key('S'):
                 if not self.dicts[i].has_key('P'):
-                    msg = "Warning: Trying to print a hypo2000 phase file" + \
-                          " with S phase without P phase.\n" + \
+                    msg = "Trying to print a hypo2000 phase file " + \
+                          "with S phase without P phase.\n" + \
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
                     warnings.warn(msg)
                 t2 = self.streams[i][0].stats.starttime
                 t2 += self.dicts[i]['S']
-                date2 = t2.strftime("%H%M%S")
+                # if the S time's absolute minute is higher than that of the
+                # P pick, we have to add 60 to the S second count for the
+                # hypo 2000 output file
+                # +60 %60 is necessary if t.min = 57, t2.min = 2 e.g.
+                mindiff = (t2.minute - t.minute + 60) % 60
+                abs_sec = t2.second + (mindiff * 60)
+                if abs_sec > 99:
+                    msg = "Writing a hypo2000 phase file with a S phase " + \
+                          "seconds value greater than 99 seconds. This " + \
+                          "case could be covered incorrectly. Check " + \
+                          "location results carefully. (And give " + \
+                          "feedback... =)"
+                    warnings.warn(msg)
+                if t2.minute - t.minute < 0 and \
+                   t2.hour - t.hour > 1:
+                    msg = "Writing a hypo2000 phase file with a S phase " + \
+                          "over an hour later than the P phase. This case " + \
+                          "is definitely not implemented correctly."
+                    warnings.warn(msg)
+                date2 = str(abs_sec)
                 date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
                 if self.dicts[i].has_key('SOnset'):
                     if self.dicts[i]['SOnset'] == 'impulsive':
