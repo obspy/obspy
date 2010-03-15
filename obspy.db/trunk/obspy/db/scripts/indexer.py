@@ -67,8 +67,13 @@ def _runIndexer(options):
         out_queue = manager.list()
         log_queue = manager.list()
         cpu_list = []
+        # filter
+        if options.filter:
+            filter = options.filter
+        else:
+            filter = None
         for i in range(options.number_of_cpus):
-            args = (i, in_queue, work_queue, out_queue, log_queue)
+            args = (i, in_queue, work_queue, out_queue, log_queue, filter)
             p = multiprocessing.Process(target=worker, args=args)
             p.daemon = True
             p.start()
@@ -117,14 +122,17 @@ semicolon, e.g.
 Be aware that features must be provided behind file patterns (if any)! There is
 no default feature enabled.
 Default path option is 'data=*.*'.""")
-    parser.add_option("-n", type="int", dest="number_of_cpus",
-                      help="Number of CPUs used for the indexer.",
-                      default=multiprocessing.cpu_count())
     parser.add_option("-u", default='sqlite:///indexer.sqlite', type="string",
                       dest="db_uri",
                       help="Database connection URI, such as "
                            "postgresql://scott:tiger@localhost/mydatabase."
                            " Default is a SQLite database './indexer.sqlite'.")
+    parser.add_option("-f", type="string", dest="filter",
+                      help="Filter waveform files before storing into the DB.",
+                      default="")
+    parser.add_option("-n", type="int", dest="number_of_cpus",
+                      help="Number of CPUs used for the indexer.",
+                      default=multiprocessing.cpu_count())
     parser.add_option("-i", type="float", default=0.1, dest="poll_interval",
                       help="Poll interval for file crawler in seconds "
                            "(default is 0.1 seconds).")
@@ -134,12 +142,6 @@ Default path option is 'data=*.*'.""")
     parser.add_option("-l", type="string", dest="log",
                       help="Log file name. If no log file is given, stdout" + \
                       "is used.", default="")
-    parser.add_option("-s", type="string", dest="host",
-                      help="Server host name. Default is 'localhost'.",
-                      default="localhost")
-    parser.add_option("-p", type="int", dest="port",
-                      help="Port number. Default is '8081'.",
-                      default=8081)
     parser.add_option("--cleanup", action="store_true", dest="cleanup",
                       default=False,
                       help="Clean database from non-existing files or paths "
@@ -150,6 +152,12 @@ Default path option is 'data=*.*'.""")
                       help="The indexer will automatically skip paths or "
                            "files starting with a dot. This option forces to "
                            "parse all paths and files.")
+    parser.add_option("--host", type="string", dest="host",
+                      help="Server host name. Default is 'localhost'.",
+                      default="localhost")
+    parser.add_option("--port", type="int", dest="port",
+                      help="Port number. Default is '8081'.",
+                      default=8081)
 
     (options, _) = parser.parse_args()
     # set level of verbosity

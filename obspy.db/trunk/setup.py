@@ -60,6 +60,9 @@ setup(
         'obspy.db.feature' : [
             'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
         ],
+        'obspy.db.filter' : [
+            'BW_renamer = obspy.db.feature:BWRenamer',
+        ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main',
             'obspy-plot = obspy.db.scripts.plot:main',

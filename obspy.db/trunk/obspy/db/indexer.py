@@ -3,7 +3,8 @@
 from obspy.core import read
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
     WaveformGaps, WaveformFeatures
-from obspy.db.util import _getInstalledWaveformFeaturesPlugins, createPreview
+from obspy.core.util import _getPlugins
+from obspy.db.util import createPreview
 import fnmatch
 import os
 
@@ -245,8 +246,8 @@ class WaveformFileCrawler:
                     patterns = [patterns.strip()]
             else:
                 patterns = ['*.*']
-            # norm path name
-            path = os.path.normpath(path)
+            # normalize and absolute path name
+            path = os.path.normpath(os.path.abspath(path))
             # check path
             if not os.path.isdir(path):
                 self.log.warn("Skipping inaccessible path '%s' ..." % path)
@@ -312,18 +313,19 @@ class WaveformFileCrawler:
         return
 
 
-def worker(i, input_queue, work_queue, output_queue, log_queue):
+def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getInstalledWaveformFeaturesPlugins().iteritems():
+        for (key, ep) in _getPlugins('obspy.db.features').iteritems():
             try:
                 # load plug-in
                 cls = ep.load()
                 # initialize class
                 func = cls().process
             except Exception, e:
-                log_queue.append(str(e))
+                msg = 'Could not initialize feature %s. (%s)'
+                log_queue.append(msg % (key, str(e)))
                 continue
             all_features[key] = {}
             all_features[key]['run'] = func
@@ -331,6 +333,21 @@ def worker(i, input_queue, work_queue, output_queue, log_queue):
                 all_features[key]['indexer_kwargs'] = cls['indexer_kwargs']
             except:
                 all_features[key]['indexer_kwargs'] = {}
+        # fetch and initialize all possible waveform filter plug-in
+        if filter:
+            plugins = _getPlugins('obspy.db.filter')
+            try:
+                # load plug-in
+                ep = plugins[filter]
+                cls = ep.load()
+                # initialize class
+                func = cls().filter
+            except:
+                msg = 'Could not initialize filter %s.'
+                log_queue.append(msg % (filter))
+                filter = None
+            else:
+                filter = func
         # loop through input queue
         while True:
             # fetch a unprocessed item
@@ -389,7 +406,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue):
                 result['file'] = file
                 result['filepath'] = filepath
                 # trace information
-                result['format'] = trace.stats._format
+                result['format'] = format = trace.stats._format
                 result['station'] = trace.stats.station
                 result['location'] = trace.stats.location
                 result['channel'] = trace.stats.channel
@@ -399,6 +416,19 @@ def worker(i, input_queue, work_queue, output_queue, log_queue):
                 result['calib'] = trace.stats.calib
                 result['npts'] = trace.stats.npts
                 result['sampling_rate'] = trace.stats.sampling_rate
+                # filter
+                if filter:
+                    try:
+                        ok = filter(result, trace)
+                    except Exception, e:
+                        msg = '[Applying filter] %s: %s'
+                        log_queue.append(msg % (filepath, e))
+                        continue
+                    else:
+                        if ok == False:
+                            continue
+                        elif isinstance(ok, dict):
+                            result = ok
                 # gaps/overlaps for current trace
                 result['gaps'] = gap_dict.get(trace.id, [])
                 # apply feature functions
@@ -410,7 +440,8 @@ def worker(i, input_queue, work_queue, output_queue, log_queue):
                         # run plug-in and update results
                         temp = all_features[key]['run'](trace)
                         for key, value in temp.iteritems():
-                            result['features'].append({'key':key, 'value':value})
+                            result['features'].append({'key':key,
+                                                       'value':value})
                     except Exception, e:
                         msg = '[Processing feature] %s: %s'
                         log_queue.append(msg % (filepath, e))

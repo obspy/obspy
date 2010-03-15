@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import Trace
-from pkg_resources import iter_entry_points
 import numpy as np
-
-
-def _getInstalledWaveformFeaturesPlugins():
-    """
-    Gets a dictionary of all available waveform features plug-ins.
-    """
-    features = {}
-    for ep in iter_entry_points(group='obspy.db.feature'):
-        features[ep.name] = ep
-    return features
 
 
 def createPreview(trace, delta=60.0):
