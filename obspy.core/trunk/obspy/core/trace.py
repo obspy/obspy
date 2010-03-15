@@ -386,11 +386,9 @@ class Trace(object):
         if delta < 0 and delta_endtime < 0:
             # overlap
             delta = abs(delta)
-            #XXX tolist is really bad, much more memory consumption
-            # use np.testing.assert_array_equal or something similar
-            if np.all(lt.data[delta:].tolist() == rt.data[:-delta].tolist()):
+            if np.all(np.equal(lt.data[-delta:], rt.data[:delta])):
                 # check if data are the same
-                data = [lt.data[delta:], rt.data]
+                data = [lt.data[:-delta], rt.data]
             elif method == 0:
                 overlap = createEmptyDataChunk(delta, lt.data.dtype,
                                                fill_value)

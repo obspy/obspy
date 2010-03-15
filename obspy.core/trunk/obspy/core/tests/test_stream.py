@@ -546,29 +546,31 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 1, 1, 1, 1, 1])
         #2 - overlapping trace with same data
-        # Trace 1: 0000000
-        # Trace 2:      0000000
-        # 1 + 2  : 000000000000
-        tr1 = Trace(data=np.zeros(7))
-        tr2 = Trace(data=np.zeros(7))
+        # Trace 1: 0123456
+        # Trace 2:      56789
+        # 1 + 2  : 0123456789
+        tr1 = Trace(data=np.arange(7))
+        tr2 = Trace(data=np.arange(5, 10))
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
         self.assertEqual(len(st), 1)
         self.assertTrue(isinstance(st[0].data, np.ndarray))
-        np.testing.assert_array_equal(st[0].data, np.zeros(12))
+        np.testing.assert_array_equal(st[0].data, np.arange(10))
+        #
         #3 - contained overlap with same data
-        # Trace 1: 1111111111
-        # Trace 2:      11
-        # 1 + 2  : 1111111111
-        tr1 = Trace(data=np.ones(10))
-        tr2 = Trace(data=np.ones(2))
+        # Trace 1: 0123456789
+        # Trace 2:      56 
+        # 1 + 2  : 0123456789
+        tr1 = Trace(data=np.arange(10))
+        tr2 = Trace(data=np.arange(5, 7))
         tr2.stats.starttime = tr1.stats.starttime + 5
         st = Stream([tr1, tr2])
         st.merge()
         self.assertEqual(len(st), 1)
         self.assertTrue(isinstance(st[0].data, np.ndarray))
-        np.testing.assert_array_equal(st[0].data, np.ones(10))
+        np.testing.assert_array_equal(st[0].data, np.arange(10))
+        #
         #4 - contained overlap with differing data
         # Trace 1: 0000000000
         # Trace 2:      11

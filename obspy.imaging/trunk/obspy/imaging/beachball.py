@@ -581,7 +581,7 @@ def plotDC(np1, size=200, xy=(0,0), width=200):
     # construct the patches
     collect = [patches.Circle(xy, radius=width/2.0)]
     collect.append(xy2patch(Y, X, res, xy))
-    return ['w', 'b'], collect
+    return ['b', 'w'], collect
 
 def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system 
