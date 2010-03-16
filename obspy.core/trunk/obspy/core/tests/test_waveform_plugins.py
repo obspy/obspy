@@ -3,6 +3,7 @@
 from obspy.core import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
+from pkg_resources import load_entry_point
 import numpy as np
 import os
 import threading
@@ -14,6 +15,25 @@ class WaveformPluginsTestCase(unittest.TestCase):
     """
     Test suite for all installed waveform plug-ins.
     """
+
+    def test_raiseOnEmptyFile(self):
+        """
+        Test case ensures that empty files do raise
+        warnings. 
+        """
+        tmpfile = NamedTemporaryFile().name
+        # generate empty file
+        f = open(tmpfile)
+        f.write("")
+        f.close()
+        formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
+        for ep in formats_ep.values():
+            isFormat = load_entry_point(ep.dist.key,
+                                        'obspy.plugin.waveform.' + ep.name,
+                                        'isFormat')
+            self.assertFalse(False, isFormat(tmpfile))
+        os.remove(tmpfile)
+
 
     def test_readAndWriteAllInstalledWaveformPlugins(self):
         """

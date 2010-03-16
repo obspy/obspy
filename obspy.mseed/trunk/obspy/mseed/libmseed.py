@@ -72,6 +72,9 @@ class LibMSEED(object):
         """
         f = open(filename, 'rb')
         header = f.read(7)
+        # File has less than 7 characters
+        if len(header) != 7:
+            return False
         if not header[0:6].isdigit:
             f.close()
             return False
