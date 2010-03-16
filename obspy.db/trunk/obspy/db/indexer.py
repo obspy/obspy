@@ -367,7 +367,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):
                 continue
             work_queue.append(filepath)
             # get additional kwargs for read method from waveform plug-ins
-            kwargs = {}
+            kwargs = {'verify_chksum':False}
             for feature in features:
                 if feature not in all_features:
                     log_queue.append('%s: Unknown feature %s' % (filepath,
