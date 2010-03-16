@@ -57,7 +57,7 @@ setup(
     keywords=['ObsPy', 'seismology', 'fissures', 'DHI', 'IRIS', 'CORBA'],
     packages=find_packages(),
     namespace_packages=['obspy'],
-    zip_safe=True,
+    zip_safe=False,
     install_requires=[
         'setuptools',
         'obspy.mseed',

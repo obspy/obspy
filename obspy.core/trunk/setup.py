@@ -52,7 +52,7 @@ setup(
     keywords=['ObsPy', 'seismology'],
     packages=find_packages(exclude=['distribute_setup']),
     namespace_packages=['obspy'],
-    zip_safe=True,
+    zip_safe=False,
     install_requires=[
         'numpy>1.0.0',
     ],
