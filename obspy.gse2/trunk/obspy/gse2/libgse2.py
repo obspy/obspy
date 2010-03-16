@@ -78,6 +78,11 @@ class ChksumError(StandardError):
     """
     pass
 
+class GSEUtiError(StandardError):
+    """
+    Exception type for other errors in GSE_UTI
+    """
+    pass
 
 # gse2 header struct
 class HEADER(C.Structure):
@@ -227,10 +232,14 @@ def read(f, verify_chksum=True):
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
-    lib.read_header(fp, C.pointer(head))
+    errcode = lib.read_header(fp, C.pointer(head))
+    if errcode != 0:
+        raise GSEUtiError("Error in lib.read_header")
     data = np.empty(head.n_samps, dtype='int')
+    #import ipdb; ipdb.set_trace()
     n = lib.decomp_6b(fp, head.n_samps, data)
-    assert n == head.n_samps, "Missmatching length in lib.decomp_6b"
+    if n != head.n_samps:
+        raise GSEUtiError("Missmatching length in lib.decomp_6b")
     lib.rem_2nd_diff(data, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:

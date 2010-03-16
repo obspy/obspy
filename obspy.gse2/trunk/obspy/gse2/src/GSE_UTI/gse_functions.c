@@ -224,7 +224,9 @@ int decomp_6b (FILE *fop, int n_of_samples, long *dta)
   	if (ibuf > 79 || isspace(cbuf[ibuf])) { 
   	  if (fgets (cbuf,82,fop) == NULL) 	/* get next line */
   		{printf ("decomp_6b: missing input line?\n"); return -1; }
-  	  if (!(strncmp(cbuf,"CHK2",4)))
+      /* We need a space to be sure that CHK2 is not occuring in the middle
+       * of the encoded string/buffer */
+  	  if (!(strncmp(cbuf,"CHK2 ",5)))
   		{printf ("decomp_6b: CHK2 reached prematurely!\n"); return i; }
   	  ibuf = 0;
   	}
