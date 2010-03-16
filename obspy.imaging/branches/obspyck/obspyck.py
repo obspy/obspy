@@ -46,6 +46,14 @@ import matplotlib.mathtext as mathtext
 import matplotlib.artist as artist
 import matplotlib.image as image
 
+#gtk
+import gtk
+import gtk.glade
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
+from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
+
+
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
 class MultiCursor(mplMultiCursor):
@@ -426,123 +434,168 @@ class PickingGUI:
         self.stNum=len(self.streams)
         self.stPt=0
     
+        #XXX gtk gui
+        self.gla = gtk.glade.XML('obspyck.glade', 'windowObspyck')
+        # connect the signals with the function in GladeEventsHandlers
+        # class with a trick...
+        #gla.signal_autoconnect(GladeEventsHandlers.__dict__)
+        # commodity dictionary to easily connect destroy to gtk.main_quit()
+        d = {'on_buttonQuit_clicked': gtk.main_quit}
+        self.gla.signal_autoconnect(d)
+        # get the main window widget and set its title
+        self.win = self.gla.get_widget('windowObspyck')
+        self.win.set_title("ObsPyck")
+        # matplotlib code to generate an empty Axes
+        # we define no dimensions for Figure because it will be
+        # expanded to the whole empty space on main window widget
+        self.fig = Figure()
+        #self.fig.set_facecolor("0.9")
+        self.fig.subplots_adjust(0.05, 0.01, 0.9, 0.9)
+        # we bind the figure to the FigureCanvas, so that it will be
+        # drawn using the specific backend graphic functions
+        self.canv = FigureCanvas(self.fig)
+        self.canv.show()
+        # grab focus, otherwise the mpl key_press events get lost...
+        # XXX how can we get the focus to the mpl box permanently???
+        #self.canv.set_property("can_default", True)
+        #self.canv.grab_focus()
+        #self.canv.grab_default()
+        self.win.maximize()
+        # embed the canvas into the empty area left in glade window
+        #place1 = self.gla.get_widget("hboxObspyck")
+        place1 = self.gla.get_widget("vbox2")
+        #place1.set_property("can_default", True)
+        #place1.grab_focus()
+        #place1.grab_default()
+        place1.pack_start(self.canv, True, True)
+        place2 = self.gla.get_widget("vboxObspyck")
+        self.toolbar = Toolbar(self.canv, self.win)
+        place2.pack_start(self.toolbar, False, False)
+        #there's a bug in glade so we have to set the default value for the two
+        #comboboxes here by hand
+        #import ipdb; ipdb.set_trace()
+        comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
+        comboboxPhaseType.set_active(0)
+        comboboxFilterType = self.gla.get_widget("comboboxFilterType")
+        comboboxFilterType.set_active(0)
+
         # Set up initial plot
-        self.fig = plt.figure()
-        self.fig.canvas.set_window_title("ObsPyck")
-        try:
-            #not working with ion3 and other windowmanagers...
-            self.fig.set_size_inches(20, 10, forward = True)
-        except:
-            pass
+        #self.fig = plt.figure()
+        #self.fig.canvas.set_window_title("ObsPyck")
+        #try:
+        #    #not working with ion3 and other windowmanagers...
+        #    self.fig.set_size_inches(20, 10, forward = True)
+        #except:
+        #    pass
         self.drawAxes()
         self.addFiltButtons()
         self.addPhaseButtons()
         self.addSliders()
         #redraw()
-        self.fig.canvas.draw()
+        #self.fig.canvas.draw()
         # Activate all mouse/key/Cursor-events
-        self.keypress = self.fig.canvas.mpl_connect('key_press_event', self.pick)
-        self.keypressWheelZoom = self.fig.canvas.mpl_connect('key_press_event', self.switchWheelZoom)
-        self.keypressPan = self.fig.canvas.mpl_connect('key_press_event', self.switchPan)
-        self.keypressNextPrev = self.fig.canvas.mpl_connect('key_press_event', self.switchStream)
-        self.keypressSwitchPhase = self.fig.canvas.mpl_connect('key_press_event', self.switchPhase)
-        self.buttonpressBlockRedraw = self.fig.canvas.mpl_connect('button_press_event', self.blockRedraw)
-        self.buttonreleaseAllowRedraw = self.fig.canvas.mpl_connect('button_release_event', self.allowRedraw)
-        self.scroll = self.fig.canvas.mpl_connect('scroll_event', self.zoom)
-        self.scroll_button = self.fig.canvas.mpl_connect('button_press_event', self.zoom_reset)
-        self.fig.canvas.toolbar.zoom()
-        self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
+        self.keypress = self.canv.mpl_connect('key_press_event', self.pick)
+        self.keypressWheelZoom = self.canv.mpl_connect('key_press_event', self.switchWheelZoom)
+        self.keypressPan = self.canv.mpl_connect('key_press_event', self.switchPan)
+        self.keypressNextPrev = self.canv.mpl_connect('key_press_event', self.switchStream)
+        self.keypressSwitchPhase = self.canv.mpl_connect('key_press_event', self.switchPhase)
+        self.buttonpressBlockRedraw = self.canv.mpl_connect('button_press_event', self.blockRedraw)
+        self.buttonreleaseAllowRedraw = self.canv.mpl_connect('button_release_event', self.allowRedraw)
+        self.scroll = self.canv.mpl_connect('scroll_event', self.zoom)
+        self.scroll_button = self.canv.mpl_connect('button_press_event', self.zoom_reset)
+        #self.fig.canvas.toolbar.zoom()
+        #self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
         #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
         self.multicursor = MultiCursor(self.fig.canvas,self.axs, useblit=True, color=self.dictPhaseColors['P'], linewidth=1, ls='dotted')
         for l in self.multicursor.lines:
             l.set_color(self.dictPhaseColors['P'])
         self.radioPhase.circles[0].set_facecolor(self.dictPhaseColors['P'])
         #add menu buttons:
-        props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
+        #props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
         #hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
-        menuitems = []
-        for label in ('clear All', 'clear Orig&Mag', 'clear Focmec', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
-            def on_select(item):
-                print '--> ', item.labelstr
-                if item.labelstr == 'quit':
-                    try:
-                        shutil.rmtree(self.tmp_dir)
-                    except:
-                        pass
-                    plt.close()
-                    plt.close()
-                    plt.close()
-                    plt.close()
-                elif item.labelstr == 'clear All':
-                    self.delAllItems()
-                    self.clearDictionaries()
-                    self.drawAllItems()
-                    self.redraw()
-                elif item.labelstr == 'clear Orig&Mag':
-                    self.delAllItems()
-                    self.clearOriginMagnitudeDictionaries()
-                    self.drawAllItems()
-                    self.redraw()
-                elif item.labelstr == 'clear Focmec':
-                    self.clearFocmecDictionary()
-                elif item.labelstr == 'do Hypo2000':
-                    self.delAllItems()
-                    self.clearOriginMagnitudeDictionaries()
-                    self.dictOrigin['Program'] = "hyp2000"
-                    self.doHyp2000()
-                    #self.load3dlocSyntheticPhases()
-                    self.loadHyp2000Data()
-                    self.calculateEpiHypoDists()
-                    self.calculateStationMagnitudes()
-                    self.updateNetworkMag()
-                    self.showEventMap()
-                    self.drawAllItems()
-                    self.redraw()
-                elif item.labelstr == 'do 3dloc':
-                    self.delAllItems()
-                    self.clearOriginMagnitudeDictionaries()
-                    self.dictOrigin['Program'] = "3dloc"
-                    self.do3dLoc()
-                    self.load3dlocSyntheticPhases()
-                    self.load3dlocData()
-                    self.calculateEpiHypoDists()
-                    self.dictMagnitude['Program'] = "obspy"
-                    self.calculateStationMagnitudes()
-                    self.updateNetworkMag()
-                    self.showEventMap()
-                    self.drawAllItems()
-                    self.redraw()
-                elif item.labelstr == 'calc Mag':
-                    self.calculateEpiHypoDists()
-                    self.dictMagnitude['Program'] = "obspy"
-                    self.calculateStationMagnitudes()
-                    self.updateNetworkMag()
-                elif item.labelstr == 'do Focmec':
-                    self.clearFocmecDictionary()
-                    self.dictFocalMechanism['Program'] = "focmec"
-                    self.doFocmec()
-                elif item.labelstr == 'next Focmec':
-                    self.nextFocMec()
-                    self.showFocMec()
-                elif item.labelstr == 'show Map':
-                    #self.load3dlocData()
-                    self.showEventMap()
-                elif item.labelstr == 'show Focmec':
-                    self.showFocMec()
-                elif item.labelstr == 'show Wadati':
-                    self.showWadati()
-                elif item.labelstr == 'send Event':
-                    self.uploadSeishub()
-                elif item.labelstr == 'get NextEvent':
-                    self.delAllItems()
-                    self.clearDictionaries()
-                    self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
-                                             self.streams[0][0].stats.endtime)
-                    self.drawAllItems()
-                    self.redraw()
-            item = MenuItem(self.fig, label, props=props, hoverprops=None, on_select=on_select)
-            menuitems.append(item)
-        self.menu = Menu(self.fig, menuitems)
+        #menuitems = []
+        #for label in ('clear All', 'clear Orig&Mag', 'clear Focmec', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
+        #    def on_select(item):
+        #        print '--> ', item.labelstr
+        #        if item.labelstr == 'quit':
+        #            try:
+        #                shutil.rmtree(self.tmp_dir)
+        #            except:
+        #                pass
+        #            plt.close()
+        #            plt.close()
+        #            plt.close()
+        #            plt.close()
+        #        elif item.labelstr == 'clear All':
+        #            self.delAllItems()
+        #            self.clearDictionaries()
+        #            self.drawAllItems()
+        #            self.redraw()
+        #        elif item.labelstr == 'clear Orig&Mag':
+        #            self.delAllItems()
+        #            self.clearOriginMagnitudeDictionaries()
+        #            self.drawAllItems()
+        #            self.redraw()
+        #        elif item.labelstr == 'clear Focmec':
+        #            self.clearFocmecDictionary()
+        #        elif item.labelstr == 'do Hypo2000':
+        #            self.delAllItems()
+        #            self.clearOriginMagnitudeDictionaries()
+        #            self.dictOrigin['Program'] = "hyp2000"
+        #            self.doHyp2000()
+        #            #self.load3dlocSyntheticPhases()
+        #            self.loadHyp2000Data()
+        #            self.calculateEpiHypoDists()
+        #            self.calculateStationMagnitudes()
+        #            self.updateNetworkMag()
+        #            self.showEventMap()
+        #            self.drawAllItems()
+        #            self.redraw()
+        #        elif item.labelstr == 'do 3dloc':
+        #            self.delAllItems()
+        #            self.clearOriginMagnitudeDictionaries()
+        #            self.dictOrigin['Program'] = "3dloc"
+        #            self.do3dLoc()
+        #            self.load3dlocSyntheticPhases()
+        #            self.load3dlocData()
+        #            self.calculateEpiHypoDists()
+        #            self.dictMagnitude['Program'] = "obspy"
+        #            self.calculateStationMagnitudes()
+        #            self.updateNetworkMag()
+        #            self.showEventMap()
+        #            self.drawAllItems()
+        #            self.redraw()
+        #        elif item.labelstr == 'calc Mag':
+        #            self.calculateEpiHypoDists()
+        #            self.dictMagnitude['Program'] = "obspy"
+        #            self.calculateStationMagnitudes()
+        #            self.updateNetworkMag()
+        #        elif item.labelstr == 'do Focmec':
+        #            self.clearFocmecDictionary()
+        #            self.dictFocalMechanism['Program'] = "focmec"
+        #            self.doFocmec()
+        #        elif item.labelstr == 'next Focmec':
+        #            self.nextFocMec()
+        #            self.showFocMec()
+        #        elif item.labelstr == 'show Map':
+        #            #self.load3dlocData()
+        #            self.showEventMap()
+        #        elif item.labelstr == 'show Focmec':
+        #            self.showFocMec()
+        #        elif item.labelstr == 'show Wadati':
+        #            self.showWadati()
+        #        elif item.labelstr == 'send Event':
+        #            self.uploadSeishub()
+        #        elif item.labelstr == 'get NextEvent':
+        #            self.delAllItems()
+        #            self.clearDictionaries()
+        #            self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
+        #                                     self.streams[0][0].stats.endtime)
+        #            self.drawAllItems()
+        #            self.redraw()
+        #    item = MenuItem(self.fig, label, props=props, hoverprops=None, on_select=on_select)
+        #    menuitems.append(item)
+        #self.menu = Menu(self.fig, menuitems)
         
         
         #for i in range(len(self.dicts)):
@@ -550,8 +603,12 @@ class PickingGUI:
         #    print self.dicts[i]['StaLon']
         #    print self.dicts[i]['StaLat']
         #    print "-" * 70
-        plt.show()
-    
+        #plt.show()
+        
+        # start the GTK+ main loop
+        gtk.main()
+        #XXX gtk gui end
+
     
     ## Trim all to same length, us Z as reference
     #start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
