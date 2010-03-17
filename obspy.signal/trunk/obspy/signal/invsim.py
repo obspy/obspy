@@ -246,8 +246,8 @@ def paz2AmpValueOfFreqResp(paz, freq):
                'zeros': [0 + 0j, 0 + 0j], \
                'gain': 0.4}
     >>> amp = paz2AmpValueOfFreqResp(paz, 1)
-    >>> round(amp, 7)
-    0.28302620000000001
+    >>> print round(amp, 7)
+    0.2830262
     """
     jw = complex(0, 2 * np.pi * freq) #angular frequency
     fac = complex(1,0)
@@ -277,8 +277,8 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                'gain': 1.0, \
                'sensitivity': 671140000.0}
     >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
-    >>> round(mag, 6)
-    2.1653449999999999
+    >>> print round(mag, 6)
+    2.165345
     """
     # Sensitivity is 2080 according to:
     # P. Bormann: New Manual of Seismological Observatory Practice

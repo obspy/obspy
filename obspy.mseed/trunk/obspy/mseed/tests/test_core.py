@@ -3,7 +3,7 @@
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
-from obspy.mseed.core import readMSEED
+from obspy.mseed.core import readMSEED, isMSEED
 from obspy.mseed.headers import ENCODINGS
 from obspy.mseed.libmseed import MSStruct
 import inspect
@@ -511,6 +511,13 @@ class CoreTestCase(unittest.TestCase):
             dummy[_i] = 1
             self.assertEqual(q_st[_i + 10].stats.mseed.data_quality_flags_count,
                              dummy)
+    def test_readBlockette008(self):
+        """
+        Read file with blockette 8
+        """
+        file = os.path.join(self.path, 'data', 'blockette008.mseed')
+        self.assertTrue(isMSEED(file))
+        st = read(file)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

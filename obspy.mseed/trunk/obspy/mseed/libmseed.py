@@ -89,9 +89,13 @@ class LibMSEED(object):
             _i = 0
             # Check if one of the first three blockettes is blockette ten.
             while True:
-                if f.read(3) == '010':
+                if f.read(3) in ['010', '008']:
                     break
-                f.seek(int(file.read(4)) - 7, 1)
+                # the next for bytes are the record length
+                # as we are currently at postion 7 (f.read(3) f.read(4))
+                # we need to subtract this first before we seek
+                # to the appropriate position
+                f.seek(int(f.read(4)) - 7, 1)
                 _i += 1
                 if _i == 3:
                     f.close()

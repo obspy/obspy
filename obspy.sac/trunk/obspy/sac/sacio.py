@@ -802,17 +802,16 @@ class ReadSac(object):
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist_()
-        >>> b = np.array([18486532.5788/1000.,65.654154562,305.975459869],dtype='>f4')
-        >>> round(abs(t.GetHvalue('dist') - b[0]),7)
-        0.0
-        >>> round(abs(t.GetHvalue('az') - b[1]),7)
-        0.0
-        >>> round(abs(t.GetHvalue('baz') - b[2]),7)
-        0.0
+        >>> print round(t.GetHvalue('dist'), 2)
+        18486.53
+        >>> print round(t.GetHvalue('az'), 5)
+        65.65415
+        >>> print round(t.GetHvalue('baz'), 4)
+        305.9755
 
-        The orginal SAC-program calculates the distance assuming a
+        The original SAC-program calculates the distance assuming a
         average radius of 6371 km. Therefore, our routine should be more
-        acurate.
+        accurate.
         """
         # Avoid top level dependency on obspy.signal. Thus if obspy.signal
         # is not allow only this function will not work, not the whole
