@@ -244,16 +244,21 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
     If no ``fill_value`` is given a masked array will be returned.
 
+    @param delta: Number of samples for data chunk
+    @param dtype: NumPy dtype for returned data chunk
+    @param fill_value: If None, masked array is returned, if not None the
+                       array is filled with the corresponding value
+
     Basic Usage
     -----------
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
-    >>> createEmptyDataChunk(6, 'complex128', 0)
+    >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
-    >>> createEmptyDataChunk(3, np.dtype('float64'))  # doctest: +SKIP
+    >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
-                 mask = [ True  True  True],
-                 fill_value=1e+20)
+                 mask = ...,
+                 ...)
     """
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))

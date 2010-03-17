@@ -169,6 +169,16 @@ class LibGSE2TestCase(unittest.TestCase):
         f.close()
         os.remove(testfile)
 
+    def test_CHK2InCM6(self):
+        """
+        Tests a file which contains the "CHK2" string in the CM6 encoded
+        string (line 13 of twiceCHK2.gse2). 
+        """
+        f = open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb')
+        header, data = libgse2.read(f, verify_chksum=True)
+        self.assertEqual(header['n_samps'], 750)
+        np.testing.assert_array_equal(data[-4:], 
+                                      np.array([-139, -153, -169, -156]))
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')
