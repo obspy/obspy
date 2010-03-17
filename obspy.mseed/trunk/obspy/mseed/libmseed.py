@@ -70,53 +70,55 @@ class LibMSEED(object):
         
         :param filename: MiniSEED file.
         """
-        f = open(filename, 'rb')
-        header = f.read(7)
+        fp = open(filename, 'rb')
+        header = fp.read(7)
         # File has less than 7 characters
         if len(header) != 7:
             return False
+        # must start with 6 digits
         if not header[0:6].isdigit:
-            f.close()
             return False
         # Check for any valid control header types.
         if header[6] in ['D', 'R', 'Q', 'M']:
-            f.close()
             return True
-        # If it is a fullSEED record parse the whole file and check whether
-        # it has has a data record.
-        if header[6] == 'V':
-            f.seek(1, 1)
-            _i = 0
-            # Check if one of the first three blockettes is blockette ten.
-            while True:
-                if f.read(3) in ['010', '008']:
-                    break
-                # the next for bytes are the record length
-                # as we are currently at postion 7 (f.read(3) f.read(4))
-                # we need to subtract this first before we seek
-                # to the appropriate position
-                f.seek(int(f.read(4)) - 7, 1)
-                _i += 1
-                if _i == 3:
-                    f.close()
-                    return False
-            # Get record length.
-            f.seek(8, 1)
-            record_length = pow(2, int(f.read(2)))
-            file_size = os.path.getsize(filename)
-            # Jump to the second record.
-            f.seek(record_length + 6)
-            # Loop over all records and return True if one record is a data
-            # record
-            while f.tell() < file_size:
-                xx = f.read(1)
-                if xx in ['D', 'R', 'Q', 'M']:
-                    f.close()
-                    return True
-                f.seek(record_length - 1, 1)
-            f.close()
+        # Check if Full-SEED
+        if not header[6] == 'V':
             return False
-        f.close()
+        # Parse the whole file and check whether it has has a data record.
+        fp.seek(1, 1)
+        _i = 0
+        # search for blockettes 010 or 008
+        while True:
+            if fp.read(3) in ['010', '008']:
+                break
+            # the next for bytes are the record length
+            # as we are currently at postion 7 (fp.read(3) fp.read(4))
+            # we need to subtract this first before we seek
+            # to the appropriate position
+            try:
+                fp.seek(int(fp.read(4)) - 7, 1)
+            except:
+                return False
+            _i += 1
+            # break after 3 cycles
+            if _i == 3:
+                return False
+        # Try to get a record length.
+        fp.seek(8, 1)
+        try:
+            record_length = pow(2, int(fp.read(2)))
+        except:
+            return False
+        file_size = os.path.getsize(filename)
+        # Jump to the second record.
+        fp.seek(record_length + 6)
+        # Loop over all records and return True if one record is a data
+        # record
+        while fp.tell() < file_size:
+            flag = fp.read(1)
+            if flag in ['D', 'R', 'Q', 'M']:
+                return True
+            fp.seek(record_length - 1, 1)
         return False
 
     def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,

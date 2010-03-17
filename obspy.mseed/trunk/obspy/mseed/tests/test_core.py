@@ -116,7 +116,7 @@ class CoreTestCase(unittest.TestCase):
         This test depends on the platform specific localtime()/gmtime()
         function. 
         """
-        # skip Windows Systems
+        # XXX: skip Windows systems
         if platform.system() == 'Windows':
             return
         # create trace
@@ -418,7 +418,7 @@ class CoreTestCase(unittest.TestCase):
                np.fromstring(
                """ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV""" + \
                """WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
-            # XXX: int16 array will also be returned as int32.
+            # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed") : ('int32', 'i', 1,
                                                     def_content.astype('int16')),
             os.path.join(path, "int32_INT32.mseed") : ('int32', 'i', 3,
@@ -470,10 +470,11 @@ class CoreTestCase(unittest.TestCase):
         """
         # XXX: The test does not work under windows because libmseed does not
         # seem to handle the record length attribute correctly.
-        if not platform.system() == "Windows":
-            file = os.path.join(self.path, 'data', 'libmseed',
-                                'float32_Float32_bigEndian.mseed')
-            self.assertRaises(Exception, read, file, reclen=4096)
+        if platform.system() == "Windows":
+            return
+        file = os.path.join(self.path, 'data', 'libmseed',
+                            'float32_Float32_bigEndian.mseed')
+        self.assertRaises(Exception, read, file, reclen=4096)
 
     def test_readQualityInformation(self):
         """
@@ -511,13 +512,44 @@ class CoreTestCase(unittest.TestCase):
             dummy[_i] = 1
             self.assertEqual(q_st[_i + 10].stats.mseed.data_quality_flags_count,
                              dummy)
-    def test_readBlockette008(self):
+
+    def test_isInvalidMSEED(self):
         """
-        Read file with blockette 8
+        Tests isMSEED functionality.
         """
+        # invalid blockette length in first blockette
+        file = os.path.join(self.path, 'data', 'not.mseed')
+        self.assertFalse(isMSEED(file))
+        # just "000001V"
+        file = os.path.join(self.path, 'data', 'not2.mseed')
+        self.assertFalse(isMSEED(file))
+        # just "000001V011"
+        file = os.path.join(self.path, 'data', 'not3.mseed')
+        self.assertFalse(isMSEED(file))
+        # found blockette 010 but invalid record length
+        file = os.path.join(self.path, 'data', 'not4.mseed')
+        self.assertFalse(isMSEED(file))
+
+    def test_isValidMSEED(self):
+        """
+        Tests isMSEED functionality.
+        """
+        # fullseed starting with blockette 010
+        file = os.path.join(self.path, 'data', 'ArclinkRequest_340397.fseed')
+        self.assertTrue(isMSEED(file))
+        st = read(file)
+        self.assertEqual(len(st), 3)
+        # fullseed starting with blockette 008
         file = os.path.join(self.path, 'data', 'blockette008.mseed')
         self.assertTrue(isMSEED(file))
         st = read(file)
+        self.assertEqual(len(st), 1)
+        # fullseed not starting with blockette 010 or 008
+        file = os.path.join(self.path, 'data', 'fullseed.mseed')
+        self.assertTrue(isMSEED(file))
+        st = read(file)
+        self.assertEqual(len(st), 3)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
