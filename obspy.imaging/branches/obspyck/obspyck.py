@@ -53,6 +53,23 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
 from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
 
+#XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
+# we have to do this, so the focus always remains with our matplotlib
+# inset and all events are directed to the matplotlib canvas...
+# there is a bug in glade that does not set this flag to false even
+# if it is selected in the glade GUI for the widget.
+# see: https://bugzilla.gnome.org/show_bug.cgi?id=322340
+def nofocus_recursive(widget):
+    # we have to exclude SpinButtons otherwise we cannot put anything into
+    # the spin button
+    if not isinstance(widget, gtk.SpinButton):
+        widget.unset_flags(("GTK_CAN_FOCUS", "GTK_RECEIVES_DEFAULT"))
+    try:
+        children = widget.get_children()
+    except AttributeError:
+        return
+    for w in children:
+        nofocus_recursive(w)
 
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
@@ -217,6 +234,62 @@ def formatXTicklabels(x,pos):
         return "%.3f" % x
 
 class PickingGUI:
+
+    def on_windowObspyck_destroy(self, event):
+        self.cleanQuit()
+
+    def on_buttonQuit_clicked(self, event):
+        self.cleanQuit()
+
+    def on_buttonDebug_clicked(self, event):
+        self.debug()
+
+    def on_buttonSetFocusOnPlot_clicked(self, event):
+        self.setFocusToMatplotlib()
+
+    def on_mplbutton_clicked(event):
+        """callback for a click on the button"""
+        
+        st = read(entry.get_text())
+        update_graph(fig, ax, st)
+
+        return st
+
+    def on_mplopenmenuitem_activate(event):
+        """callback for activate on the Open menu item"""
+
+        # create a FileChooserDialog window
+        chooser = gtk.FileChooserDialog("Open..",
+                      None,
+                      gtk.FILE_CHOOSER_ACTION_OPEN,
+                      (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                      gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+
+        chooser.set_default_response(gtk.RESPONSE_OK) 
+        # execute the dialog window and get the result
+        res = chooser.run()
+
+        # if the result is a click on OK
+        if res == gtk.RESPONSE_OK:
+            # get the file selected and set it to the entry widget
+            entry.set_text(chooser.get_filename())
+
+        # distroy the dialog window
+        chooser.destroy()
+
+    def debug(self):
+        import ipdb
+        ipdb.set_trace()
+
+    def setFocusToMatplotlib(self):
+        self.canv.grab_focus()
+
+    def cleanQuit(self):
+        try:
+            shutil.rmtree(self.tmp_dir)
+        except:
+            pass
+        gtk.main_quit()
 
     def __init__(self, client = None, streams = None, options = None):
         self.client = client
@@ -438,9 +511,14 @@ class PickingGUI:
         self.gla = gtk.glade.XML('obspyck.glade', 'windowObspyck')
         # connect the signals with the function in GladeEventsHandlers
         # class with a trick...
-        #gla.signal_autoconnect(GladeEventsHandlers.__dict__)
+        #self.gla.signal_autoconnect(GladeEventsHandlers.__dict__)
         # commodity dictionary to easily connect destroy to gtk.main_quit()
-        d = {'on_buttonQuit_clicked': gtk.main_quit}
+        #d = {'on_buttonQuit_clicked': gtk.main_quit}
+        d = {}
+        d['on_windowObspyck_destroy'] = self.on_windowObspyck_destroy
+        d['on_buttonQuit_clicked'] = self.on_buttonQuit_clicked
+        d['on_buttonDebug_clicked'] = self.on_buttonDebug_clicked
+        d['on_buttonSetFocusOnPlot_clicked'] = self.on_buttonSetFocusOnPlot_clicked
         self.gla.signal_autoconnect(d)
         # get the main window widget and set its title
         self.win = self.gla.get_widget('windowObspyck')
@@ -450,23 +528,17 @@ class PickingGUI:
         # expanded to the whole empty space on main window widget
         self.fig = Figure()
         #self.fig.set_facecolor("0.9")
-        self.fig.subplots_adjust(0.05, 0.01, 0.9, 0.9)
         # we bind the figure to the FigureCanvas, so that it will be
         # drawn using the specific backend graphic functions
         self.canv = FigureCanvas(self.fig)
         self.canv.show()
         # grab focus, otherwise the mpl key_press events get lost...
         # XXX how can we get the focus to the mpl box permanently???
-        #self.canv.set_property("can_default", True)
-        #self.canv.grab_focus()
-        #self.canv.grab_default()
         self.win.maximize()
         # embed the canvas into the empty area left in glade window
         #place1 = self.gla.get_widget("hboxObspyck")
         place1 = self.gla.get_widget("vbox2")
-        #place1.set_property("can_default", True)
-        #place1.grab_focus()
-        #place1.grab_default()
+        #print type(place1)
         place1.pack_start(self.canv, True, True)
         place2 = self.gla.get_widget("vboxObspyck")
         self.toolbar = Toolbar(self.canv, self.win)
@@ -605,7 +677,12 @@ class PickingGUI:
         #    print "-" * 70
         #plt.show()
         
-        # start the GTK+ main loop
+        # correct some focus issues and start the GTK+ main loop
+        nofocus_recursive(self.win)
+        self.canv.set_property("can_default", True)
+        self.canv.set_property("can_focus", True)
+        self.canv.grab_default()
+        self.canv.grab_focus()
         gtk.main()
         #XXX gtk gui end
 
@@ -1316,6 +1393,7 @@ class PickingGUI:
     
     # Define the event that handles the setting of P- and S-wave picks
     def pick(self, event):
+        #import ipdb; ipdb.set_trace()
         #We want to round from the picking location to
         #the time value of the nearest time sample:
         samp_rate = self.streams[self.stPt][0].stats.sampling_rate
