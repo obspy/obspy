@@ -71,6 +71,23 @@ def nofocus_recursive(widget):
     for w in children:
         nofocus_recursive(w)
 
+def appendTextview(GTKtextview, string):
+    """
+    Appends text 'string' to the given GTKtextview instance.
+    At a certain length (currently 200 lines) we cut off some lines at the top
+    of the corresponding text buffer.
+    """
+    buffer = GTKtextview.get_buffer()
+    if buffer.get_line_count() > 200:
+        start = buffer.get_start_iter()
+        newstart = buffer.get_iter_at_line(150)
+        buffer.delete(start, newstart)
+    end = buffer.get_end_iter()
+    buffer.insert(end, "\n" + string)
+    end = buffer.get_end_iter()
+    endmark = buffer.create_mark("end", end, False)
+    GTKtextview.scroll_mark_onscreen(endmark)
+
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
 class MultiCursor(mplMultiCursor):
@@ -86,121 +103,6 @@ class MultiCursor(mplMultiCursor):
         self.needclear = False
         self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
         self.id2=self.canvas.mpl_connect('draw_event', self.clear)
-
-#Some class definitions for the menu buttons
-#code from: http://matplotlib.sourceforge.net/examples/widgets/menu.html
-class ItemProperties:
-    def __init__(self, fontsize=12, labelcolor='black', bgcolor='lightgrey', alpha=1.0):
-        self.fontsize = fontsize
-        self.labelcolor = labelcolor
-        self.bgcolor = bgcolor
-        self.alpha = alpha
-        self.labelcolor_rgb = colors.colorConverter.to_rgb(labelcolor)
-        self.bgcolor_rgb = colors.colorConverter.to_rgb(bgcolor)
-
-class MenuItem(artist.Artist):
-    parser = mathtext.MathTextParser("Bitmap")
-    padx = 5
-    pady = 5
-    def __init__(self, fig, labelstr, props=None, hoverprops=None, on_select=None):
-        artist.Artist.__init__(self)
-        self.set_figure(fig)
-        self.labelstr = labelstr
-        if props is None:
-            props = ItemProperties()
-        if hoverprops is None:
-            hoverprops = ItemProperties()
-        self.props = props
-        self.hoverprops = hoverprops
-        self.on_select = on_select
-        x, self.depth = self.parser.to_mask(
-            labelstr, fontsize=props.fontsize, dpi=fig.dpi)
-        if props.fontsize!=hoverprops.fontsize:
-            raise NotImplementedError('support for different font sizes not implemented')
-        self.labelwidth = x.shape[1]
-        self.labelheight = x.shape[0]
-        self.labelArray = np.zeros((x.shape[0], x.shape[1], 4))
-        self.labelArray[:,:,-1] = x/255.
-        self.label = image.FigureImage(fig, origin='upper')
-        self.label.set_array(self.labelArray)
-        # we'll update these later
-        self.rect = patches.Rectangle((0,0), 1,1)
-        self.set_hover_props(False)
-        fig.canvas.mpl_connect('button_release_event', self.check_select)
-
-    def check_select(self, event):
-        over, junk = self.rect.contains(event)
-        if not over:
-            return
-        if self.on_select is not None:
-            self.on_select(self)
-
-    def set_extent(self, x, y, w, h):
-        #print x, y, w, h
-        self.rect.set_x(x)
-        self.rect.set_y(y)
-        self.rect.set_width(w)
-        self.rect.set_height(h)
-        self.label.ox = x+self.padx
-        self.label.oy = y-self.depth+self.pady/2.
-        self.rect._update_patch_transform()
-        self.hover = False
-
-    def draw(self, renderer):
-        self.rect.draw(renderer)
-        self.label.draw(renderer)
-
-    def set_hover_props(self, b):
-        if b:
-            props = self.hoverprops
-        else:
-            props = self.props
-        r, g, b = props.labelcolor_rgb
-        self.labelArray[:,:,0] = r
-        self.labelArray[:,:,1] = g
-        self.labelArray[:,:,2] = b
-        self.label.set_array(self.labelArray)
-        self.rect.set(facecolor=props.bgcolor, alpha=props.alpha)
-
-    #def set_hover(self, event):
-    #    'check the hover status of event and return true if status is changed'
-    #    b,junk = self.rect.contains(event)
-    #    changed = (b != self.hover)
-    #    if changed:
-    #        self.set_hover_props(b)
-    #    self.hover = b
-    #    return changed
-
-class Menu:
-    def __init__(self, fig, menuitems):
-        self.figure = fig
-        fig.suppressComposite = True
-        self.menuitems = menuitems
-        self.numitems = len(menuitems)
-        maxw = max([item.labelwidth for item in menuitems])
-        maxh = max([item.labelheight for item in menuitems])
-        totalh = self.numitems*maxh + (self.numitems+1)*2*MenuItem.pady
-        x0 = 5
-        y0 = 5
-        y1 = y0 + (self.numitems-1)*(maxh + MenuItem.pady)
-        width = maxw + 2*MenuItem.padx
-        height = maxh+MenuItem.pady
-        for item in menuitems:
-            left = x0
-            #bottom = y0-maxh-MenuItem.pady
-            bottom = y1
-            item.set_extent(left, bottom, width, height)
-            fig.artists.append(item)
-            y1 -= maxh + MenuItem.pady
-        #fig.canvas.mpl_connect('motion_notify_event', self.on_move)
-
-    #def on_move(self, event):
-    #    draw = False
-    #    for item in self.menuitems:
-    #        draw = item.set_hover(event)
-    #        if draw:
-    #            self.figure.canvas.draw()
-    #            break
     
 def getCoord(client, network, station):
     """
@@ -234,48 +136,166 @@ def formatXTicklabels(x,pos):
         return "%.3f" % x
 
 class PickingGUI:
-
+    
+    ###########################################################################
+    # Start of list of event handles that get connected to GUI Elements       #
+    # Note: All fundtions starting with "on_" get connected to GUI Elements   #
+    ###########################################################################
     def on_windowObspyck_destroy(self, event):
         self.cleanQuit()
 
-    def on_buttonQuit_clicked(self, event):
-        self.cleanQuit()
+    def on_buttonClearAll_clicked(self, event):
+        self.delAllItems()
+        self.clearDictionaries()
+        self.drawAllItems()
+        self.redraw()
 
-    def on_buttonDebug_clicked(self, event):
-        self.debug()
+    def on_buttonClearOrigMag_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.drawAllItems()
+        self.redraw()
+
+    def on_buttonClearFocMec_clicked(self, event):
+        self.clearFocmecDictionary()
+
+    def on_buttonDoHyp2000_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "hyp2000"
+        self.doHyp2000()
+        self.loadHyp2000Data()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.showEventMap()
+        self.drawAllItems()
+        self.redraw()
+
+    def on_buttonDo3dloc_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "3dloc"
+        self.do3dLoc()
+        self.load3dlocSyntheticPhases()
+        self.load3dlocData()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.showEventMap()
+        self.drawAllItems()
+        self.redraw()
+
+    def on_buttonCalcMag_clicked(self, event):
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+
+    def on_buttonDoFocmec_clicked(self, event):
+        self.clearFocmecDictionary()
+        self.dictFocalMechanism['Program'] = "focmec"
+        self.doFocmec()
+
+    def on_buttonShowMap_clicked(self, event):
+        self.showEventMap()
+
+    def on_buttonShowFocMec_clicked(self, event):
+        self.showFocMec()
+
+    def on_buttonNextFocMec_clicked(self, event):
+        self.nextFocMec()
+        self.showFocMec()
+
+    def on_buttonShowWadati_clicked(self, event):
+        self.showWadati()
+
+    def on_buttonGetNextEvent_clicked(self, event):
+        self.delAllItems()
+        self.clearDictionaries()
+        self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
+                                     self.streams[0][0].stats.endtime)
+        self.drawAllItems()
+        self.redraw()
+
+    def on_buttonSendEvent_clicked(self, event):
+        self.uploadSeishub()
+
+    def on_checkbuttonPublicEvent_toggled(self, event):
+        newstate = self.checkbuttonPublicEvent.get_active()
+        msg = "Setting \"public\" flag of event to: %s" % newstate
+        appendTextview(self.textviewStdOut, msg)
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
         self.setFocusToMatplotlib()
 
-    def on_mplbutton_clicked(event):
-        """callback for a click on the button"""
-        
-        st = read(entry.get_text())
-        update_graph(fig, ax, st)
+    def on_buttonDebug_clicked(self, event):
+        self.debug()
 
-        return st
+    def on_buttonQuit_clicked(self, event):
+        self.cleanQuit()
 
-    def on_mplopenmenuitem_activate(event):
-        """callback for activate on the Open menu item"""
+    def on_togglebuttonFilter_toggled(self, event):
+        self.updatePlot()
 
-        # create a FileChooserDialog window
-        chooser = gtk.FileChooserDialog("Open..",
-                      None,
-                      gtk.FILE_CHOOSER_ACTION_OPEN,
-                      (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                      gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    def on_checkbuttonZeroPhase_toggled(self, event):
+        # if the filter flag is not set, we don't have to update the plot
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
 
-        chooser.set_default_response(gtk.RESPONSE_OK) 
-        # execute the dialog window and get the result
-        res = chooser.run()
+    def on_spinbuttonHighpass_value_changed(self, event):
+        # if the filter flag is not set, we don't have to update the plot
+        # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
+        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+            err = "Warning: Lowpass frequency below Highpass frequency!"
+            appendTextview(self.textviewStdErr, err)
+        # XXX maybe the following check could be done nicer
+        # XXX check this criterion!
+        minimum  = float(self.streams[self.stPt][0].stats.sampling_rate) / \
+                self.streams[self.stPt][0].stats.npts
+        if self.spinbuttonHighpass.get_value() < minimum:
+            err = "Warning: Lowpass frequency is not supported by length of trace!"
+            appendTextview(self.textviewStdErr, err)
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
+        # XXX we could use this for the combobox too!
+        # reset focus to matplotlib figure
+        self.canv.grab_focus()
 
-        # if the result is a click on OK
-        if res == gtk.RESPONSE_OK:
-            # get the file selected and set it to the entry widget
-            entry.set_text(chooser.get_filename())
+    def on_spinbuttonLowpass_value_changed(self, event):
+        # if the filter flag is not set, we don't have to update the plot
+        # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
+        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+            err = "Warning: Lowpass frequency below Highpass frequency!"
+            appendTextview(self.textviewStdErr, err)
+        # XXX maybe the following check could be done nicer
+        # XXX check this criterion!
+        maximum  = self.streams[self.stPt][0].stats.sampling_rate / 2.0
+        if self.spinbuttonLowpass.get_value() > maximum:
+            err = "Warning: Highpass frequency is lower than Nyquist!"
+            appendTextview(self.textviewStdErr, err)
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
+        # XXX we could use this for the combobox too!
+        # reset focus to matplotlib figure
+        self.canv.grab_focus()
 
-        # distroy the dialog window
-        chooser.destroy()
+    def on_togglebuttonSpectrogram_toggled(self, event):
+        err = "Error: Not implemented yet!"
+        appendTextview(self.textviewStdErr, err)
+    ###########################################################################
+    # End of list of event handles that get connected to GUI Elements         #
+    ###########################################################################
+
+        #>         self.buffer.insert (self.buffer.get_end_iter(), input_data)
+        #>         if self.buffer.get_line_count() > 400:
+        #>             self.buffer.delete(self.buffer.get_start_iter(),
+        #>                                 self.buffer.get_iter_at_line (200))
+        #>         mark = self.buffer.create_mark("end",
+        #>                                 self.buffer.get_end_iter(), False)
+        #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
 
     def debug(self):
         import ipdb
@@ -296,12 +316,12 @@ class PickingGUI:
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
-        self.flagFilt=False #False:no filter  True:filter
+        self.flagFilt=False #XXX DEPRECATED #False:no filter  True:filter
         self.flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
         self.dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
-        self.flagFiltZPH=False #False: no zero-phase True: zero-phase filtering
-        self.valFiltHigh=self.options.highpass
-        self.valFiltLow=self.options.lowpass
+        self.flagFiltZPH=False #XXX DEPRECATED #False: no zero-phase True: zero-phase filtering
+        self.valFiltHigh=self.options.highpass #XXX DEPRECATED
+        self.valFiltLow=self.options.lowpass #XXX DEPRECATED
         self.flagWheelZoom=True #Switch use of mousewheel for zooming
         self.flagPhase=0 #0:P 1:S 2:Magnitude
         self.dictPhase={'P':0, 'S':1, 'Mag':2}
@@ -377,8 +397,6 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        #value for the "public" tag in the event xml (switched by button)
-        self.flagPublicEvent = True
         self.flagSpectrogram = False
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
@@ -509,16 +527,16 @@ class PickingGUI:
     
         #XXX gtk gui
         self.gla = gtk.glade.XML('obspyck.glade', 'windowObspyck')
-        # connect the signals with the function in GladeEventsHandlers
-        # class with a trick...
-        #self.gla.signal_autoconnect(GladeEventsHandlers.__dict__)
-        # commodity dictionary to easily connect destroy to gtk.main_quit()
-        #d = {'on_buttonQuit_clicked': gtk.main_quit}
+        # commodity dictionary to connect event handles
+        # example:
+        # d = {'on_buttonQuit_clicked': gtk.main_quit}
+        # self.gla.signal_autoconnect(d)
         d = {}
-        d['on_windowObspyck_destroy'] = self.on_windowObspyck_destroy
-        d['on_buttonQuit_clicked'] = self.on_buttonQuit_clicked
-        d['on_buttonDebug_clicked'] = self.on_buttonDebug_clicked
-        d['on_buttonSetFocusOnPlot_clicked'] = self.on_buttonSetFocusOnPlot_clicked
+        # include every funtion starting with "on_" in the dictionary we use
+        # to autoconnect to all the buttons etc. in the GTK GUI
+        for func in dir(self):
+            if func.startswith("on_"):
+                exec("d['%s'] = self.%s" % (func, func))
         self.gla.signal_autoconnect(d)
         # get the main window widget and set its title
         self.win = self.gla.get_widget('windowObspyck')
@@ -532,24 +550,39 @@ class PickingGUI:
         # drawn using the specific backend graphic functions
         self.canv = FigureCanvas(self.fig)
         self.canv.show()
-        # grab focus, otherwise the mpl key_press events get lost...
-        # XXX how can we get the focus to the mpl box permanently???
+        #try:
+        #    #not working with ion3 and other windowmanagers...
+        #    self.fig.set_size_inches(20, 10, forward = True)
+        #except:
+        #    pass
         self.win.maximize()
         # embed the canvas into the empty area left in glade window
-        #place1 = self.gla.get_widget("hboxObspyck")
-        place1 = self.gla.get_widget("vbox2")
-        #print type(place1)
+        place1 = self.gla.get_widget("hboxObspyck")
         place1.pack_start(self.canv, True, True)
         place2 = self.gla.get_widget("vboxObspyck")
         self.toolbar = Toolbar(self.canv, self.win)
         place2.pack_start(self.toolbar, False, False)
-        #there's a bug in glade so we have to set the default value for the two
-        #comboboxes here by hand
-        #import ipdb; ipdb.set_trace()
-        comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
-        comboboxPhaseType.set_active(0)
-        comboboxFilterType = self.gla.get_widget("comboboxFilterType")
-        comboboxFilterType.set_active(0)
+        self.toolbar.zoom()
+        self.canv.widgetlock.release(self.toolbar)
+
+        # define handles for all buttons/GUI-elements we interact with
+        self.checkbuttonPublicEvent = \
+                self.gla.get_widget("checkbuttonPublicEvent")
+        self.comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
+        self.togglebuttonFilter = self.gla.get_widget("togglebuttonFilter")
+        self.comboboxFilterType = self.gla.get_widget("comboboxFilterType")
+        self.checkbuttonZeroPhase = self.gla.get_widget("checkbuttonZeroPhase")
+        self.spinbuttonHighpass = self.gla.get_widget("spinbuttonHighpass")
+        self.spinbuttonLowpass = self.gla.get_widget("spinbuttonLowpass")
+        self.togglebuttonSpectrogram = \
+                self.gla.get_widget("togglebuttonSpectrogram")
+        self.textviewStdOut = self.gla.get_widget("textviewStdOut")
+        self.textviewStdErr = self.gla.get_widget("textviewStdErr")
+
+        # there's a bug in glade so we have to set the default value for the two
+        # comboboxes here by hand
+        self.comboboxPhaseType.set_active(0)
+        self.comboboxFilterType.set_active(0)
 
         # Set up initial plot
         #self.fig = plt.figure()
@@ -560,9 +593,7 @@ class PickingGUI:
         #except:
         #    pass
         self.drawAxes()
-        self.addFiltButtons()
         self.addPhaseButtons()
-        self.addSliders()
         #redraw()
         #self.fig.canvas.draw()
         # Activate all mouse/key/Cursor-events
@@ -575,114 +606,31 @@ class PickingGUI:
         self.buttonreleaseAllowRedraw = self.canv.mpl_connect('button_release_event', self.allowRedraw)
         self.scroll = self.canv.mpl_connect('scroll_event', self.zoom)
         self.scroll_button = self.canv.mpl_connect('button_press_event', self.zoom_reset)
-        #self.fig.canvas.toolbar.zoom()
-        #self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
         #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
         self.multicursor = MultiCursor(self.fig.canvas,self.axs, useblit=True, color=self.dictPhaseColors['P'], linewidth=1, ls='dotted')
         for l in self.multicursor.lines:
             l.set_color(self.dictPhaseColors['P'])
         self.radioPhase.circles[0].set_facecolor(self.dictPhaseColors['P'])
-        #add menu buttons:
-        #props = ItemProperties(labelcolor='black', bgcolor='lightgrey', fontsize=12, alpha=1.0)
-        #hoverprops = ItemProperties(labelcolor='white', bgcolor='blue', fontsize=12, alpha=0.2)
-        #menuitems = []
-        #for label in ('clear All', 'clear Orig&Mag', 'clear Focmec', 'do Hypo2000', 'do 3dloc', 'calc Mag', 'do Focmec', 'next Focmec', 'show Map', 'show Focmec', 'show Wadati', 'send Event', 'get NextEvent', 'quit'):
-        #    def on_select(item):
-        #        print '--> ', item.labelstr
-        #        if item.labelstr == 'quit':
-        #            try:
-        #                shutil.rmtree(self.tmp_dir)
-        #            except:
-        #                pass
-        #            plt.close()
-        #            plt.close()
-        #            plt.close()
-        #            plt.close()
-        #        elif item.labelstr == 'clear All':
-        #            self.delAllItems()
-        #            self.clearDictionaries()
-        #            self.drawAllItems()
-        #            self.redraw()
-        #        elif item.labelstr == 'clear Orig&Mag':
-        #            self.delAllItems()
-        #            self.clearOriginMagnitudeDictionaries()
-        #            self.drawAllItems()
-        #            self.redraw()
-        #        elif item.labelstr == 'clear Focmec':
-        #            self.clearFocmecDictionary()
-        #        elif item.labelstr == 'do Hypo2000':
-        #            self.delAllItems()
-        #            self.clearOriginMagnitudeDictionaries()
-        #            self.dictOrigin['Program'] = "hyp2000"
-        #            self.doHyp2000()
-        #            #self.load3dlocSyntheticPhases()
-        #            self.loadHyp2000Data()
-        #            self.calculateEpiHypoDists()
-        #            self.calculateStationMagnitudes()
-        #            self.updateNetworkMag()
-        #            self.showEventMap()
-        #            self.drawAllItems()
-        #            self.redraw()
-        #        elif item.labelstr == 'do 3dloc':
-        #            self.delAllItems()
-        #            self.clearOriginMagnitudeDictionaries()
-        #            self.dictOrigin['Program'] = "3dloc"
-        #            self.do3dLoc()
-        #            self.load3dlocSyntheticPhases()
-        #            self.load3dlocData()
-        #            self.calculateEpiHypoDists()
-        #            self.dictMagnitude['Program'] = "obspy"
-        #            self.calculateStationMagnitudes()
-        #            self.updateNetworkMag()
-        #            self.showEventMap()
-        #            self.drawAllItems()
-        #            self.redraw()
-        #        elif item.labelstr == 'calc Mag':
-        #            self.calculateEpiHypoDists()
-        #            self.dictMagnitude['Program'] = "obspy"
-        #            self.calculateStationMagnitudes()
-        #            self.updateNetworkMag()
-        #        elif item.labelstr == 'do Focmec':
-        #            self.clearFocmecDictionary()
-        #            self.dictFocalMechanism['Program'] = "focmec"
-        #            self.doFocmec()
-        #        elif item.labelstr == 'next Focmec':
-        #            self.nextFocMec()
-        #            self.showFocMec()
-        #        elif item.labelstr == 'show Map':
-        #            #self.load3dlocData()
-        #            self.showEventMap()
-        #        elif item.labelstr == 'show Focmec':
-        #            self.showFocMec()
-        #        elif item.labelstr == 'show Wadati':
-        #            self.showWadati()
-        #        elif item.labelstr == 'send Event':
-        #            self.uploadSeishub()
-        #        elif item.labelstr == 'get NextEvent':
-        #            self.delAllItems()
-        #            self.clearDictionaries()
-        #            self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
-        #                                     self.streams[0][0].stats.endtime)
-        #            self.drawAllItems()
-        #            self.redraw()
-        #    item = MenuItem(self.fig, label, props=props, hoverprops=None, on_select=on_select)
-        #    menuitems.append(item)
-        #self.menu = Menu(self.fig, menuitems)
-        
-        
-        #for i in range(len(self.dicts)):
-        #    print self.dicts[i]['Station']
-        #    print self.dicts[i]['StaLon']
-        #    print self.dicts[i]['StaLat']
-        #    print "-" * 70
-        #plt.show()
         
         # correct some focus issues and start the GTK+ main loop
+        # grab focus, otherwise the mpl key_press events get lost...
+        # XXX how can we get the focus to the mpl box permanently???
+        # >> although manually removing the "GTK_CAN_FOCUS" flag of all widgets
+        # >> the combobox-type buttons grab the focus. if really necessary the
+        # >> focus can be rest by clicking the "set focus on plot" button...
+        # XXX a possible workaround would be to manually grab focus whenever
+        # one of the combobox buttons or spinbuttons is clicked/updated
         nofocus_recursive(self.win)
+        self.comboboxPhaseType.set_focus_on_click(False)
+        self.comboboxFilterType.set_focus_on_click(False)
         self.canv.set_property("can_default", True)
         self.canv.set_property("can_focus", True)
         self.canv.grab_default()
         self.canv.grab_focus()
+        # set the filter default values according to command line options
+        # or command line default values
+        self.spinbuttonHighpass.set_value(self.options.highpass)
+        self.spinbuttonLowpass.set_value(self.options.lowpass)
         gtk.main()
         #XXX gtk gui end
 
@@ -728,7 +676,7 @@ class PickingGUI:
         self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.20, hspace=0.01, right=0.999, top=0.95, left=0.18)
+        self.fig.subplots_adjust(bottom=0.10, hspace=0.01, right=0.999, top=0.95, left=0.08)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1103,49 +1051,56 @@ class PickingGUI:
     def delP(self):
         try:
             del self.dicts[self.stPt]['P']
-            print "P Pick deleted"
+            msg = "P Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPsynth(self):
         try:
             del self.dicts[self.stPt]['Psynth']
-            print "synthetic P Pick deleted"
+            msg = "synthetic P Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPWeight(self):
         try:
             del self.dicts[self.stPt]['PWeight']
-            print "P Pick weight deleted"
+            msg = "P Pick weight deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPPol(self):
         try:
             del self.dicts[self.stPt]['PPol']
-            print "P Pick polarity deleted"
+            msg = "P Pick polarity deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPOnset(self):
         try:
             del self.dicts[self.stPt]['POnset']
-            print "P Pick onset deleted"
+            msg = "P Pick onset deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPErr1(self):
         try:
             del self.dicts[self.stPt]['PErr1']
-            print "PErr1 Pick deleted"
+            msg = "PErr1 Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delPErr2(self):
         try:
             del self.dicts[self.stPt]['PErr2']
-            print "PErr2 Pick deleted"
+            msg = "PErr2 Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1153,49 +1108,56 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['S']
             del self.dicts[self.stPt]['Saxind']
-            print "S Pick deleted"
+            msg = "S Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSsynth(self):
         try:
             del self.dicts[self.stPt]['Ssynth']
-            print "synthetic S Pick deleted"
+            msg = "synthetic S Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSWeight(self):
         try:
             del self.dicts[self.stPt]['SWeight']
-            print "S Pick weight deleted"
+            msg = "S Pick weight deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSPol(self):
         try:
             del self.dicts[self.stPt]['SPol']
-            print "S Pick polarity deleted"
+            msg = "S Pick polarity deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSOnset(self):
         try:
             del self.dicts[self.stPt]['SOnset']
-            print "S Pick onset deleted"
+            msg = "S Pick onset deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSErr1(self):
         try:
             del self.dicts[self.stPt]['SErr1']
-            print "SErr1 Pick deleted"
+            msg = "SErr1 Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
     def delSErr2(self):
         try:
             del self.dicts[self.stPt]['SErr2']
-            print "SErr2 Pick deleted"
+            msg = "SErr2 Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1203,7 +1165,8 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['MagMin1']
             del self.dicts[self.stPt]['MagMin1T']
-            print "Magnitude Minimum Estimation Pick deleted"
+            msg = "Magnitude Minimum Estimation Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1211,7 +1174,8 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['MagMax1']
             del self.dicts[self.stPt]['MagMax1T']
-            print "Magnitude Maximum Estimation Pick deleted"
+            msg = "Magnitude Maximum Estimation Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1219,7 +1183,8 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['MagMin2']
             del self.dicts[self.stPt]['MagMin2T']
-            print "Magnitude Minimum Estimation Pick deleted"
+            msg = "Magnitude Minimum Estimation Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1227,7 +1192,8 @@ class PickingGUI:
         try:
             del self.dicts[self.stPt]['MagMax2']
             del self.dicts[self.stPt]['MagMax2T']
-            print "Magnitude Maximum Estimation Pick deleted"
+            msg = "Magnitude Maximum Estimation Pick deleted"
+            appendTextview(self.textviewStdOut, msg)
         except:
             pass
             
@@ -1247,7 +1213,8 @@ class PickingGUI:
     def addFiltButtons(self):
         #add filter buttons
         self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(self.flagFilt,self.flagFiltZPH,self.flagSpectrogram,self.flagPublicEvent))
+        #XXX DEPRECATED
+        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(False,False,self.flagSpectrogram,False))
         self.check.on_clicked(self.funcFilt)
         self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
         self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
@@ -1255,44 +1222,22 @@ class PickingGUI:
         
     def addPhaseButtons(self):
         #add phase buttons
-        self.axPhase = self.fig.add_axes([0.10, 0.02, 0.10, 0.15],frameon=False,axisbg='lightgrey')
+        self.axPhase = self.fig.add_axes([0.05, 0.02, 0.05, 0.05],frameon=False,axisbg='lightgrey')
         self.radioPhase = RadioButtons(self.axPhase, ('P', 'S', 'Mag'),activecolor='k')
         self.radioPhase.on_clicked(self.funcPhase)
         
     def updateLow(self,val):
-        if not self.flagFilt or self.flagFiltTyp == 2:
+        if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 2:
             return
         else:
             self.updatePlot()
     
     def updateHigh(self,val):
-        if not self.flagFilt or self.flagFiltTyp == 3:
+        if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 3:
             return
         else:
             self.updatePlot()
     
-    def delSliders(self):
-        self.valFiltHigh = self.slideHigh.val
-        self.valFiltLow = self.slideLow.val
-        try:
-            self.fig.delaxes(self.axHighpass)
-            self.fig.delaxes(self.axLowpass)
-        except:
-            return
-    
-    def addSliders(self):
-        #add filter slider
-        self.axHighpass = self.fig.add_axes([0.63, 0.05, 0.30, 0.03], xscale='log')
-        self.axLowpass  = self.fig.add_axes([0.63, 0.10, 0.30, 0.03], xscale='log')
-        minimum  = 1.0/ (self.streams[self.stPt][0].stats.npts/float(self.streams[self.stPt][0].stats.sampling_rate))
-        maximum = self.streams[self.stPt][0].stats.sampling_rate/2.0
-        self.valFiltHigh = max(minimum,self.valFiltHigh)
-        self.valFiltLow = min(maximum,self.valFiltLow)
-        self.slideHigh = Slider(self.axHighpass, 'Highpass', minimum, maximum, valinit=self.valFiltHigh, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
-        self.slideLow = Slider(self.axLowpass, 'Lowpass', minimum, maximum, valinit=self.valFiltLow, facecolor='lightgrey', edgecolor='k', linewidth=1.7)
-        self.slideHigh.on_changed(self.updateLow)
-        self.slideLow.on_changed(self.updateHigh)
-        
     
     def redraw(self):
         for line in self.multicursor.lines:
@@ -1302,41 +1247,49 @@ class PickingGUI:
     def updatePlot(self):
         filt=[]
         #filter data
-        if self.flagFilt==True:
-            if self.flagFiltZPH:
+        if self.togglebuttonFilter.get_active():
+            if self.checkbuttonZeroPhase.get_active():
                 if self.flagFiltTyp==0:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpassZPHSH(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Bandpass: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
+                        filt.append(bandpassZPHSH(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "Zero-Phase Bandpass: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==1:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstopZPHSH(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Bandstop: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
+                        filt.append(bandstopZPHSH(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "Zero-Phase Bandstop: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==2:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpassZPHSH(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Lowpass: %.2f Hz"%(self.slideLow.val)
+                        filt.append(lowpassZPHSH(tr.data,self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "Zero-Phase Lowpass: %.2f Hz"%(self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==3:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(highpassZPHSH(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "Zero-Phase Highpass: %.2f Hz"%(self.slideHigh.val)
+                        filt.append(highpassZPHSH(tr.data,self.spinbuttonHighpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "Zero-Phase Highpass: %.2f Hz"%(self.spinbuttonHighpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
             else:
                 if self.flagFiltTyp==0:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpass(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Bandpass: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
+                        filt.append(bandpass(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "One-Pass Bandpass: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==1:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstop(tr.data,self.slideHigh.val,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Bandstop: %.2f-%.2f Hz"%(self.slideHigh.val,self.slideLow.val)
+                        filt.append(bandstop(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "One-Pass Bandstop: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==2:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpass(tr.data,self.slideLow.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Lowpass: %.2f Hz"%(self.slideLow.val)
+                        filt.append(lowpass(tr.data,self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "One-Pass Lowpass: %.2f Hz"%(self.spinbuttonLowpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
                 if self.flagFiltTyp==3:
                     for tr in self.streams[self.stPt].traces:
-                        filt.append(highpass(tr.data,self.slideHigh.val,df=tr.stats.sampling_rate))
-                    print "One-Pass Highpass: %.2f Hz"%(self.slideHigh.val)
+                        filt.append(highpass(tr.data,self.spinbuttonHighpass.get_value(),df=tr.stats.sampling_rate))
+                    msg = "One-Pass Highpass: %.2f Hz"%(self.spinbuttonHighpass.get_value())
+                    appendTextview(self.textviewStdOut, msg)
             #make new plots
             for i in range(len(self.plts)):
                 self.plts[i].set_ydata(filt[i])
@@ -1344,31 +1297,32 @@ class PickingGUI:
             #make new plots
             for i in range(len(self.plts)):
                 self.plts[i].set_ydata(self.streams[self.stPt][i].data)
-            print "Unfiltered Traces"
+            msg = "Unfiltered Traces"
+            appendTextview(self.textviewStdOut, msg)
         # Update all subplots
         self.redraw()
     
     def funcFilt(self, label):
         if label=='Filter':
-            self.flagFilt=not self.flagFilt
-            self.updatePlot()
+            print "DEPRECATED!"
+            raise
+            #self.flagFilt=not self.flagFilt
+            #self.updatePlot()
         elif label=='Zero-Phase':
-            self.flagFiltZPH=not self.flagFiltZPH
-            if self.flagFilt:
-                self.updatePlot()
+            print "DEPRECATED!"
+            raise
+            #self.flagFiltZPH=not self.flagFiltZPH
+            #if self.flagFilt:
+            #    self.updatePlot()
         elif label=='Spectrogram':
             self.flagSpectrogram = not self.flagSpectrogram
             self.delAxes()
             self.drawAxes()
             self.fig.canvas.draw()
-        elif label=='Public Event':
-            self.flagPublicEvent = not self.flagPublicEvent
-            print "setting \"public\" flag of event to: %s" % \
-                    self.flagPublicEvent
     
     def funcFiltTyp(self, label):
         self.flagFiltTyp=self.dictFiltTyp[label]
-        if self.flagFilt:
+        if self.togglebuttonFilter.get_active():
             self.updatePlot()
     
     def funcPhase(self, label):
@@ -1430,7 +1384,8 @@ class PickingGUI:
             # Update all subplots
             self.redraw()
             # Console output
-            print "P Pick set at %.3f" % self.dicts[self.stPt]['P']
+            msg = "P Pick set at %.3f" % self.dicts[self.stPt]['P']
+            appendTextview(self.textviewStdOut, msg)
         # Set P Pick weight
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight0']:
@@ -1438,23 +1393,27 @@ class PickingGUI:
                 self.dicts[self.stPt]['PWeight']=0
                 self.drawPLabel()
                 self.redraw()
-                print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight1']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=1
-                print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                appendTextview(self.textviewStdOut, msg)
                 self.drawPLabel()
                 self.redraw()
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight2']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=2
-                print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                appendTextview(self.textviewStdOut, msg)
                 self.drawPLabel()
                 self.redraw()
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight3']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PWeight']=3
-                print "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                appendTextview(self.textviewStdOut, msg)
                 self.drawPLabel()
                 self.redraw()
         # Set P Pick polarity
@@ -1464,25 +1423,29 @@ class PickingGUI:
                 self.dicts[self.stPt]['PPol']='up'
                 self.drawPLabel()
                 self.redraw()
-                print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorUp']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PPol']='poorup'
                 self.drawPLabel()
                 self.redraw()
-                print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolDown']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PPol']='down'
                 self.drawPLabel()
                 self.redraw()
-                print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorDown']:
                 self.delPLabel()
                 self.dicts[self.stPt]['PPol']='poordown'
                 self.drawPLabel()
                 self.redraw()
-                print "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
+                appendTextview(self.textviewStdOut, msg)
         # Set P Pick onset
         if self.dicts[self.stPt].has_key('P'):
             if self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetImpulsive']:
@@ -1490,13 +1453,15 @@ class PickingGUI:
                 self.dicts[self.stPt]['POnset'] = 'impulsive'
                 self.drawPLabel()
                 self.redraw()
-                print "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
+                msg = "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
+                appendTextview(self.textviewStdOut, msg)
             elif self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetEmergent']:
                 self.delPLabel()
                 self.dicts[self.stPt]['POnset'] = 'emergent'
                 self.drawPLabel()
                 self.redraw()
-                print "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
+                msg = "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
+                appendTextview(self.textviewStdOut, msg)
         # Set new S Pick
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPick']:
             self.delSLine()
@@ -1524,7 +1489,8 @@ class PickingGUI:
             # Update all subplots
             self.redraw()
             # Console output
-            print "S Pick set at %.3f" % self.dicts[self.stPt]['S']
+            msg = "S Pick set at %.3f" % self.dicts[self.stPt]['S']
+            appendTextview(self.textviewStdOut, msg)
         # Set S Pick weight
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight0']:
@@ -1532,25 +1498,29 @@ class PickingGUI:
                 self.dicts[self.stPt]['SWeight']=0
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight1']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=1
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight2']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=2
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight3']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SWeight']=3
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                appendTextview(self.textviewStdOut, msg)
         # Set S Pick polarity
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolUp']:
@@ -1558,25 +1528,29 @@ class PickingGUI:
                 self.dicts[self.stPt]['SPol']='up'
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorUp']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SPol']='poorup'
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolDown']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SPol']='down'
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                appendTextview(self.textviewStdOut, msg)
             if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorDown']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SPol']='poordown'
                 self.drawSLabel()
                 self.redraw()
-                print "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
+                appendTextview(self.textviewStdOut, msg)
         # Set S Pick onset
         if self.dicts[self.stPt].has_key('S'):
             if self.flagPhase == 1 and event.key == self.dictKeybindings['setSOnsetImpulsive']:
@@ -1584,13 +1558,15 @@ class PickingGUI:
                 self.dicts[self.stPt]['SOnset'] = 'impulsive'
                 self.drawSLabel()
                 self.redraw()
-                print "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
+                msg = "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
+                appendTextview(self.textviewStdOut, msg)
             elif self.flagPhase == 1 and event.key == self.dictKeybindings['setSOnsetEmergent']:
                 self.delSLabel()
                 self.dicts[self.stPt]['SOnset'] = 'emergent'
                 self.drawSLabel()
                 self.redraw()
-                print "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
+                msg = "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
+                appendTextview(self.textviewStdOut, msg)
         # Remove P Pick
         if self.flagPhase==0 and event.key==self.dictKeybindings['delPick']:
             # Try to remove all existing Pick lines and P Pick variable
@@ -1650,8 +1626,9 @@ class PickingGUI:
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "P Error Pick 1 set at %.3f" % \
+                msg = "P Error Pick 1 set at %.3f" % \
                         self.dicts[self.stPt]['PErr1']
+                appendTextview(self.textviewStdOut, msg)
             # Case 2
             if errFlag==2:
                 # Define global variables seen outside
@@ -1664,8 +1641,9 @@ class PickingGUI:
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "P Error Pick 2 set at %.3f" % \
+                msg = "P Error Pick 2 set at %.3f" % \
                         self.dicts[self.stPt]['PErr2']
+                appendTextview(self.textviewStdOut, msg)
         # Set new S Pick uncertainties
         if self.flagPhase==1 and event.key==self.dictKeybindings['setPickError']:
             # Set Flag to determine scenario
@@ -1691,8 +1669,9 @@ class PickingGUI:
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "S Error Pick 1 set at %.3f" % \
+                msg = "S Error Pick 1 set at %.3f" % \
                         self.dicts[self.stPt]['SErr1']
+                appendTextview(self.textviewStdOut, msg)
             # Case 2
             if errFlag==2:
                 # Define global variables seen outside
@@ -1705,8 +1684,9 @@ class PickingGUI:
                 # Update all subplots
                 self.redraw()
                 # Console output
-                print "S Error Pick 2 set at %.3f" % \
+                msg = "S Error Pick 2 set at %.3f" % \
                         self.dicts[self.stPt]['SErr2']
+                appendTextview(self.textviewStdOut, msg)
         # Magnitude estimation picking:
         if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMin'] and len(self.axs) > 2:
             if event.inaxes == self.axs[1]:
@@ -1727,8 +1707,9 @@ class PickingGUI:
                     pass
                 self.drawMagMinCross1()
                 self.redraw()
-                print "Minimum for magnitude estimation set: %s at %.3f" % \
+                msg = "Minimum for magnitude estimation set: %s at %.3f" % \
                         (self.dicts[self.stPt]['MagMin1'], self.dicts[self.stPt]['MagMin1T'])
+                appendTextview(self.textviewStdOut, msg)
             elif event.inaxes == self.axs[2]:
                 self.delMagMinCross2()
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
@@ -1747,8 +1728,9 @@ class PickingGUI:
                     pass
                 self.drawMagMinCross2()
                 self.redraw()
-                print "Minimum for magnitude estimation set: %s at %.3f" % \
+                msg = "Minimum for magnitude estimation set: %s at %.3f" % \
                         (self.dicts[self.stPt]['MagMin2'], self.dicts[self.stPt]['MagMin2T'])
+                appendTextview(self.textviewStdOut, msg)
         if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMax'] and len(self.axs) > 2:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
@@ -1768,8 +1750,9 @@ class PickingGUI:
                     pass
                 self.drawMagMaxCross1()
                 self.redraw()
-                print "Maximum for magnitude estimation set: %s at %.3f" % \
+                msg = "Maximum for magnitude estimation set: %s at %.3f" % \
                         (self.dicts[self.stPt]['MagMax1'], self.dicts[self.stPt]['MagMax1T'])
+                appendTextview(self.textviewStdOut, msg)
             elif event.inaxes == self.axs[2]:
                 self.delMagMaxCross2()
                 ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
@@ -1788,8 +1771,9 @@ class PickingGUI:
                     pass
                 self.drawMagMaxCross2()
                 self.redraw()
-                print "Maximum for magnitude estimation set: %s at %.3f" % \
+                msg = "Maximum for magnitude estimation set: %s at %.3f" % \
                         (self.dicts[self.stPt]['MagMax2'],self.dicts[self.stPt]['MagMax2T'])
+                appendTextview(self.textviewStdOut, msg)
         if self.flagPhase == 2 and event.key == self.dictKeybindings['delMagMinMax']:
             if event.inaxes == self.axs[1]:
                 self.delMagMaxCross1()
@@ -1834,22 +1818,26 @@ class PickingGUI:
             self.axs[0].set_ybound(lower=self.yMin,upper=self.yMax)
             # Update all subplots
             self.redraw()
-            print "Resetting axes"
+            msg = "Resetting axes"
+            appendTextview(self.textviewStdOut, msg)
     
     def switchWheelZoom(self,event):
         if event.key==self.dictKeybindings['switchWheelZoom']:
             self.flagWheelZoom=not self.flagWheelZoom
             if self.flagWheelZoom:
-                print "Mouse wheel zooming activated"
+                msg = "Mouse wheel zooming activated"
+                appendTextview(self.textviewStdOut, msg)
             else:
-                print "Mouse wheel zooming deactivated"
+                msg = "Mouse wheel zooming deactivated"
+                appendTextview(self.textviewStdOut, msg)
     
     def switchPan(self,event):
         if event.key==self.dictKeybindings['switchPan']:
             self.fig.canvas.toolbar.pan()
             self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
             self.redraw()
-            print "Switching pan mode"
+            msg = "Switching pan mode"
+            appendTextview(self.textviewStdOut, msg)
     
     #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
     def multicursorReinit(self):
@@ -1868,7 +1856,8 @@ class PickingGUI:
     def switchPhase(self, event):
         if event.key==self.dictKeybindings['switchPhase']:
             self.funcSwitchPhase()
-            print "Switching Phase button"
+            msg = "Switching Phase button"
+            appendTextview(self.textviewStdOut, msg)
             
     def switchStream(self, event):
         if event.key==self.dictKeybindings['prevStream']:
@@ -1877,24 +1866,24 @@ class PickingGUI:
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
-            self.delSliders()
-            self.addSliders()
+            #self.delSliders()
             self.multicursorReinit()
             self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
-            print "Going to previous stream"
+            msg = "Going to previous stream"
+            appendTextview(self.textviewStdOut, msg)
         if event.key==self.dictKeybindings['nextStream']:
             self.stPt=(self.stPt+1)%self.stNum
             xmin, xmax = self.axs[0].get_xlim()
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
-            self.delSliders()
-            self.addSliders()
+            #self.delSliders()
             self.multicursorReinit()
             self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
-            print "Going to next stream"
+            msg = "Going to next stream"
+            appendTextview(self.textviewStdOut, msg)
             
     def blockRedraw(self, event):
         if event.button==1 or event.button==3:
@@ -1989,10 +1978,12 @@ class PickingGUI:
                 f.write(fmt % (self.dicts[i]['Station'], 'S', date, delta,
                                lon, lat, ele / 1e3))
         f.close()
-        print 'Phases for 3Dloc:'
+        msg = 'Phases for 3Dloc:'
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.threeDlocInfile)
         subprocess.call(self.threeDlocCall, shell = True)
-        print '--> 3dloc finished'
+        msg = '--> 3dloc finished'
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.threeDlocOutfile)
 
     def doFocmec(self):
@@ -2021,15 +2012,19 @@ class PickingGUI:
             count += 1
             f.write(fmt % (sta, azim, inci, pol))
         f.close()
-        print 'Phases for focmec: %i' % count
+        msg = 'Phases for focmec: %i' % count
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.focmecPhasefile)
         exitcode = subprocess.call(self.focmecCall, shell=True)
         if exitcode == 1:
-            print "Error: focmec did not find a suitable solution"
+            err = "Error: focmec did not find a suitable solution!"
+            appendTextview(self.textviewStdErr, err)
             return
-        print '--> focmec finished'
+        msg = '--> focmec finished'
+        appendTextview(self.textviewStdOut, msg)
         lines = open(self.focmecSummary, "r").readlines()
-        print '%i suitable solutions found:' % len(lines)
+        msg = '%i suitable solutions found:' % len(lines)
+        appendTextview(self.textviewStdOut, msg)
         self.focMechList = []
         for line in lines:
             line = line.split()
@@ -2040,38 +2035,44 @@ class PickingGUI:
             tempdict['Rake'] = float(line[2])
             tempdict['Errors'] = int(float(line[3])) # not used in xml
             tempdict['Station Polarity Count'] = count
-            print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
+            msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                     (tempdict['Dip'], tempdict['Strike'], tempdict['Rake'],
                      tempdict['Errors'], tempdict['Station Polarity Count'])
+            appendTextview(self.textviewStdOut, msg)
             self.focMechList.append(tempdict)
         self.focMechCount = len(self.focMechList)
         self.focMechCurrent = 0
-        print "selecting Focal Mechanism No.  1 of %2i:" % self.focMechCount
+        msg = "selecting Focal Mechanism No.  1 of %2i:" % self.focMechCount
+        appendTextview(self.textviewStdOut, msg)
         self.dictFocalMechanism = self.focMechList[0]
-        print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
+        msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                 (self.dictFocalMechanism['Dip'],
                  self.dictFocalMechanism['Strike'],
                  self.dictFocalMechanism['Rake'],
                  self.dictFocalMechanism['Errors'],
                  self.dictFocalMechanism['Station Polarity Count'])
+        appendTextview(self.textviewStdOut, msg)
 
     def nextFocMec(self):
         if not self.focMechCount:
             return
         self.focMechCurrent = (self.focMechCurrent + 1) % self.focMechCount
         self.dictFocalMechanism = self.focMechList[self.focMechCurrent]
-        print "selecting Focal Mechanism No. %2i of %2i:" % \
+        msg = "selecting Focal Mechanism No. %2i of %2i:" % \
                 (self.focMechCurrent + 1, self.focMechCount)
-        print "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
+        appendTextview(self.textviewStdOut, msg)
+        msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
                 (self.dictFocalMechanism['Dip'],
                  self.dictFocalMechanism['Strike'],
                  self.dictFocalMechanism['Rake'],
                  self.dictFocalMechanism['Errors'],
                  self.dictFocalMechanism['Station Polarity Count'])
+        appendTextview(self.textviewStdOut, msg)
 
     def showFocMec(self):
         if self.dictFocalMechanism == {}:
-            print "no focal mechanism data."
+            err = "Error: No focal mechanism data!"
+            appendTextview(self.textviewStdErr, err)
             return
         # make up the figure:
         fig = plt.figure(1002, figsize=(2, 2))
@@ -2225,10 +2226,7 @@ class PickingGUI:
                 t = self.streams[i][0].stats.starttime
                 t += self.dicts[i]['P']
                 date = t.strftime("%y%m%d%H%M%S")
-                #print date
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
-                #print t.microsecond
-                #print date
                 if self.dicts[i].has_key('POnset'):
                     if self.dicts[i]['POnset'] == 'impulsive':
                         onset = 'I'
@@ -2256,11 +2254,11 @@ class PickingGUI:
                 f.write(fmtP % (sta, onset, polarity, weight, date))
             if self.dicts[i].has_key('S'):
                 if not self.dicts[i].has_key('P'):
-                    msg = "Trying to print a hypo2000 phase file " + \
-                          "with S phase without P phase.\n" + \
+                    err = "Warning: Trying to print a Hypo2000 phase file " + \
+                          "with an S phase without P phase.\n" + \
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
-                    warnings.warn(msg)
+                    appendTextview(self.textviewStdErr, err)
                 t2 = self.streams[i][0].stats.starttime
                 t2 += self.dicts[i]['S']
                 # if the S time's absolute minute is higher than that of the
@@ -2307,24 +2305,31 @@ class PickingGUI:
                 f.write("\n")
         f.close()
         f2.close()
-        print 'Phases for Hypo2000:'
+        msg = 'Phases for Hypo2000:'
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Phasefile)
-        print 'Stations for Hypo2000:'
+        msg = 'Stations for Hypo2000:'
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Stationsfile)
         subprocess.call(self.hyp2000Call, shell = True)
-        print '--> hyp2000 finished'
+        msg = '--> hyp2000 finished'
+        appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Summary)
 
     def catFile(self, file):
         lines = open(file).readlines()
+        msg = ""
         for line in lines:
-            print line.rstrip()
+            msg += line
+        appendTextview(self.textviewStdOut, msg)
 
     def loadHyp2000Data(self):
         #self.load3dlocSyntheticPhases()
         lines = open(self.hyp2000Summary).readlines()
         if lines == []:
-            print "Error: Did not find Hypo2000 output file"
+            err = "Error: Hypo2000 output file (%s) does not exist!" % \
+                    self.hyp2000Summary
+            appendTextview(self.textviewStdErr, err)
             return
         # goto origin info line
         while True:
@@ -2337,7 +2342,9 @@ class PickingGUI:
         try:
             line = lines.pop(0)
         except:
-            print "Error: No location in Hypo2000 Outputfile."
+            err = "Error: No location info found in Hypo2000 outputfile " + \
+                  "(%s)!" % self.hyp2000Summary
+            appendTextview(self.textviewStdErr, err)
             return
 
         year = int(line[1:5])
@@ -2387,7 +2394,8 @@ class PickingGUI:
         self.dictOrigin['Depth Error'] = errZ
         self.dictOrigin['Standarderror'] = rms #XXX stimmt diese Zuordnung!!!?!
         self.dictOrigin['Azimuthal Gap'] = gap
-        self.dictOrigin['Used Model'] = model
+        self.dictOrigin['Depth Type'] = "from location program"
+        self.dictOrigin['Earth Model'] = model
         self.dictOrigin['Time'] = time
         
         # goto station and phases info lines
@@ -2502,7 +2510,8 @@ class PickingGUI:
         self.dictOrigin['Depth Error'] = float(event[13])
         self.dictOrigin['Standarderror'] = float(event[14])
         self.dictOrigin['Azimuthal Gap'] = float(event[15])
-        self.dictOrigin['Used Model'] = "STAUFEN"
+        self.dictOrigin['Depth Type'] = "from location program"
+        self.dictOrigin['Earth Model'] = "STAUFEN"
         self.dictOrigin['Time'] = UTCDateTime(int(event[2]), int(event[3]),
                                               int(event[4]), int(event[5]),
                                               int(event[6]), float(event[7]))
@@ -2543,13 +2552,16 @@ class PickingGUI:
                 self.dictOrigin['used Station Count'] -= 1
     
     def updateNetworkMag(self):
-        print "updating network magnitude..."
+        msg = "updating network magnitude..."
+        appendTextview(self.textviewStdOut, msg)
         self.dictMagnitude['Station Count'] = 0
         self.dictMagnitude['Magnitude'] = 0
         staMags = []
         for i in range(len(self.streams)):
             if self.dicts[i]['MagUse'] and self.dicts[i].has_key('Mag'):
-                print self.dicts[i]['Station']
+                msg = "%s: %.1f" % (self.dicts[i]['Station'],
+                                    self.dicts[i]['Mag'])
+                appendTextview(self.textviewStdOut, msg)
                 self.dictMagnitude['Station Count'] += 1
                 self.dictMagnitude['Magnitude'] += self.dicts[i]['Mag']
                 staMags.append(self.dicts[i]['Mag'])
@@ -2559,7 +2571,10 @@ class PickingGUI:
         else:
             self.dictMagnitude['Magnitude'] /= self.dictMagnitude['Station Count']
             self.dictMagnitude['Uncertainty'] = np.var(staMags)
-        print "new network magnitude: %.2f (Variance: %.2f)" % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+        msg = "new network magnitude: %.2f (Variance: %.2f)" % \
+                (self.dictMagnitude['Magnitude'],
+                 self.dictMagnitude['Uncertainty'])
+        appendTextview(self.textviewStdOut, msg)
         self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
         try:
             self.netMagText.set_text(self.netMagLabel)
@@ -2567,6 +2582,10 @@ class PickingGUI:
             pass
     
     def calculateEpiHypoDists(self):
+        if not 'Longitude' in self.dictOrigin or \
+           not 'Latitude' in self.dictOrigin:
+            err = "Error: No coordinates for origin!"
+            appendTextview(self.textviewStdErr, err)
         epidists = []
         for i in range(len(self.streams)):
             x, y = utlGeoKm(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
@@ -2596,7 +2615,6 @@ class PickingGUI:
                 
                 amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
                 timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
@@ -2606,35 +2624,36 @@ class PickingGUI:
                 mag /= 2.
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s,%s' % (self.streams[i][1].stats.channel, self.streams[i][2].stats.channel)
-                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
                          self.dicts[i]['MagChannel'])
+                appendTextview(self.textviewStdOut, msg)
             
             elif (self.dicts[i].has_key('MagMin1') and
                   self.dicts[i].has_key('MagMax1')):
                 amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
                 timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s' % self.streams[i][1].stats.channel
-                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
                          self.dicts[i]['MagChannel'])
+                appendTextview(self.textviewStdOut, msg)
             
             elif (self.dicts[i].has_key('MagMin2') and
                   self.dicts[i].has_key('MagMax2')):
                 amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
                 timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
-                #print self.dicts[i]['pazN']
                 mag = estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
                                         self.dicts[i]['distHypo'])
                 self.dicts[i]['Mag'] = mag
                 self.dicts[i]['MagChannel'] = '%s' % self.streams[i][2].stats.channel
-                print 'calculated new magnitude for %s: %0.2f (channels: %s)' \
+                msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
                          self.dicts[i]['MagChannel'])
+                appendTextview(self.textviewStdOut, msg)
     
     #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
     def showWadati(self):
@@ -2643,7 +2662,13 @@ class PickingGUI:
         against S-P time for every station and doing a linear regression
         using rpy. An estimate of Vp/Vs is given by the slope + 1.
         """
-        import rpy
+        try:
+            import rpy
+        except:
+            err = "Error: Package rpy could not be imported!\n" + \
+                  "(We should switch to scipy polyfit, anyway!)"
+            appendTextview(self.textviewStdErr, err)
+            return
         pTimes = []
         spTimes = []
         stations = []
@@ -2660,7 +2685,8 @@ class PickingGUI:
             else:
                 continue
         if len(pTimes) < 2:
-            print "Error: Got less than 2 P-S Pairs."
+            err = "Error: Less than 2 P-S Pairs!"
+            appendTextview(self.textviewStdErr, err)
             return
         my_lsfit = rpy.r.lsfit(pTimes, spTimes)
         gradient = my_lsfit['coefficients']['X']
@@ -2700,9 +2726,9 @@ class PickingGUI:
 
     def showEventMap(self):
         if self.dictOrigin == {}:
-            print "no hypocenter data."
+            err = "Error: No hypocenter data!"
+            appendTextview(self.textviewStdErr, err)
             return
-        #print self.dicts[0]
         self.figEventMap = plt.figure(1000)
         self.figEventMap.canvas.set_window_title("Event Map")
         self.axEventMap = self.figEventMap.add_subplot(111)
@@ -2846,7 +2872,8 @@ class PickingGUI:
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
         Sub(event_type, "user").text = self.username
-        Sub(event_type, "public").text = "%s" % self.flagPublicEvent
+        Sub(event_type, "public").text = "%s" % \
+                self.checkbuttonPublicEvent.get_active()
         
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
@@ -2909,7 +2936,8 @@ class PickingGUI:
                 if 'Psynth' in d:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = str(d['Pres'])
-                    if self.dictOrigin['Program'] == "hyp2000":
+                    if self.dictOrigin['Program'] == "hyp2000" and \
+                       'PsynthWeight' in d:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(d['PsynthWeight'])
                     else:
@@ -2977,7 +3005,8 @@ class PickingGUI:
                 if 'Ssynth' in d:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
-                    if self.dictOrigin['Program'] == "hyp2000":
+                    if self.dictOrigin['Program'] == "hyp2000" and \
+                       'SsynthWeight' in d:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(d['SsynthWeight'])
                     else:
@@ -3010,8 +3039,14 @@ class PickingGUI:
             depth = Sub(origin, "depth")
             Sub(depth, "value").text = str(dO['Depth'])
             Sub(depth, "uncertainty").text = str(dO['Depth Error'])
-            Sub(origin, "depth_type").text = "from location program"
-            Sub(origin, "earth_mod").text = dO['Used Model']
+            if 'Depth Type' in dO:
+                Sub(origin, "depth_type").text = str(dO['Depth Type'])
+            else:
+                Sub(origin, "depth_type")
+            if 'Earth Model' in dO:
+                Sub(origin, "earth_mod").text = dO['Earth Model']
+            else:
+                Sub(origin, "earth_mod")
             if dO['Program'] == "hyp2000":
                 uncertainty = Sub(origin, "originUncertainty")
                 Sub(uncertainty, "preferredDescription").text = "uncertainty ellipse"
@@ -3117,10 +3152,12 @@ class PickingGUI:
             self.dictEvent['xmlEventID'] = '19700101000000'
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
         # create XML and also save in temporary directory for inspection purposes
-        print "creating xml..."
+        msg = "creating xml..."
+        appendTextview(self.textviewStdOut, msg)
         data = self.dicts2XML()
         tmpfile = self.tmp_dir + name + ".xml"
-        print "writing xml as %s (for quick inspection only)" % tmpfile
+        msg = "writing xml as %s (for debugging purposes only!)" % tmpfile
+        appendTextview(self.textviewStdOut, msg)
         open(tmpfile, "w").write(data)
 
         #construct and send the header
@@ -3137,14 +3174,20 @@ class PickingGUI:
         # get the response
         statuscode, statusmessage, header = webservice.getreply()
         if statuscode!=201:
-           print "User: ", self.username
-           print "Name: ", name
-           print "Server: ", self.server['Server'], path
-           print "Response: ", statuscode, statusmessage
-           print "Headers: ", header
+            msg = "User: %s" % self.username
+            msg += "\nName: %s" % name
+            msg += "\nServer: %s%s" % (self.server['Server'], path)
+            msg += "\nResponse: %s %s" % (statuscode, statusmessage)
+            msg += "\nHeader:"
+            msg += "\n%s" % str(header).strip()
+            appendTextview(self.textviewStdOut, msg)
+        else:
+            err = "Warning/Error: Got HTTP status code 201!?!"
+            appendTextview(self.textviewStdErr, err)
     
     def clearDictionaries(self):
-        print "Clearing previous data."
+        msg = "Clearing previous data."
+        appendTextview(self.textviewStdOut, msg)
         for i in range(len(self.dicts)):
             for k in self.dicts[i].keys():
                 if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
@@ -3162,7 +3205,8 @@ class PickingGUI:
         self.dictEvent['xmlEventID'] = None
 
     def clearOriginMagnitudeDictionaries(self):
-        print "Clearing previous event data."
+        msg = "Clearing previous origin and magnitude data."
+        appendTextview(self.textviewStdOut, msg)
         # we need to delete all station magnitude information from all dicts
         for i in range(len(self.dicts)):
             for k in self.dicts[i].keys():
@@ -3183,7 +3227,8 @@ class PickingGUI:
         self.dictEvent['xmlEventID'] = None
 
     def clearFocmecDictionary(self):
-        print "Clearing previous focal mechanism data."
+        msg = "Clearing previous focal mechanism data."
+        appendTextview(self.textviewStdOut, msg)
         self.dictFocalMechanism = {}
         self.focMechList = []
         self.focMechCurrent = None
@@ -3261,7 +3306,8 @@ class PickingGUI:
         if not self.seishubEventCount:
             self.seishubEventCount = len(xml.xpath(u".//resource_name"))
             self.seishubEventCurrent = 0
-            print "%i events are available from Seishub" % self.seishubEventCount
+            msg = "%i events are available from Seishub" % self.seishubEventCount
+            appendTextview(self.textviewStdOut, msg)
             if self.seishubEventCount == 0:
                 return
         else:
@@ -3275,9 +3321,6 @@ class PickingGUI:
         # Hack to show xml resource as document id
         document_id = node.text
         
-        print "Fetching event %i of %i (event_id: %s)" %  \
-              (self.seishubEventCurrent + 1, self.seishubEventCount,
-               document_id)
         resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
                        node.text
         resource_req = urllib2.Request(resource_url)
@@ -3285,6 +3328,11 @@ class PickingGUI:
         fp = urllib2.urlopen(resource_req)
         resource_xml = parse(fp)
         fp.close()
+        if resource_xml.xpath(u".//event_type/user"):
+            user = resource_xml.xpath(u".//event_type/user")[0].text
+        else:
+            user = None
+
         #analyze picks:
         for pick in resource_xml.xpath(u".//pick"):
             # attributes
@@ -3451,6 +3499,16 @@ class PickingGUI:
             except:
                 pass
             try:
+                self.dictOrigin['Depth Type'] = \
+                        origin.xpath(".//depth_type")[0].text
+            except:
+                pass
+            try:
+                self.dictOrigin['Earth Model'] = \
+                        origin.xpath(".//earth_mod")[0].text
+            except:
+                pass
+            try:
                 self.dictOrigin['used P Count'] = \
                         int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
             except:
@@ -3562,7 +3620,10 @@ class PickingGUI:
                 pass
         except:
             pass
-        print "Event data from seishub loaded."
+        msg = "Fetched event %i of %i (event_id: %s, user: %s)" % \
+              (self.seishubEventCurrent + 1, self.seishubEventCount,
+               document_id, user)
+        appendTextview(self.textviewStdOut, msg)
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
