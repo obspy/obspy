@@ -549,13 +549,12 @@ class PickingGUI:
         # we bind the figure to the FigureCanvas, so that it will be
         # drawn using the specific backend graphic functions
         self.canv = FigureCanvas(self.fig)
-        self.canv.show()
-        #try:
-        #    #not working with ion3 and other windowmanagers...
-        #    self.fig.set_size_inches(20, 10, forward = True)
-        #except:
-        #    pass
-        self.win.maximize()
+        try:
+            #might not be working with ion3 and other windowmanagers...
+            #self.fig.set_size_inches(20, 10, forward = True)
+            self.win.maximize()
+        except:
+            pass
         # embed the canvas into the empty area left in glade window
         place1 = self.gla.get_widget("hboxObspyck")
         place1.pack_start(self.canv, True, True)
@@ -631,6 +630,7 @@ class PickingGUI:
         # or command line default values
         self.spinbuttonHighpass.set_value(self.options.highpass)
         self.spinbuttonLowpass.set_value(self.options.lowpass)
+        self.canv.show()
         gtk.main()
         #XXX gtk gui end
 
