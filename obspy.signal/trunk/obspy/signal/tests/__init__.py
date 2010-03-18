@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from obspy.signal import invsim, trigger, util
-from obspy.signal.tests import test_invsim, test_filter, test_rotate, \
-    test_trigger, test_util, test_cpxtrace
+from obspy.signal.tests import test_invsim, test_freqattributes, test_filter, \
+    test_rotate, test_trigger, test_util, test_cpxtrace, test_hoctavbands, \
+    test_polarization
 import doctest
 import unittest
 
@@ -21,6 +22,10 @@ def suite():
     suite.addTest(test_trigger.suite())
     suite.addTest(test_util.suite())
     suite.addTest(test_cpxtrace.suite())
+    suite.addTest(test_freqattributes.suite())
+    suite.addTest(test_hoctavbands.suite())
+    suite.addTest(test_polarization.suite())
+    suite.addTest(test_invsim.suite())
     return suite
 
 

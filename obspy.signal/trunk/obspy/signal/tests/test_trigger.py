@@ -3,11 +3,14 @@
 The obspy.signal.trigger test suite.
 """
 
+from ctypes import ArgumentError
 from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer, arPick
 from obspy.signal.util import lib
-from ctypes import ArgumentError
 import numpy as np
-import unittest, os, inspect, gzip
+import unittest
+import os
+import inspect
+import gzip
 
 
 class TriggerTestCase(unittest.TestCase):
@@ -78,7 +81,8 @@ class TriggerTestCase(unittest.TestCase):
         """
         data = []
         for channel in ['z', 'n', 'e']:
-            file = os.path.join(self.path, 'loc_RJOB20050801145719850.' + channel)
+            file = os.path.join(self.path,
+                                'loc_RJOB20050801145719850.' + channel)
             data.append(np.loadtxt(file, dtype='float32'))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
@@ -95,7 +99,8 @@ class TriggerTestCase(unittest.TestCase):
         """
         Test trigger onset function
         """
-        on_of = np.array([[6.0, 31], [69, 94], [131, 181], [215, 265], [278, 315]])
+        on_of = np.array([[6.0, 31], [69, 94], [131, 181], [215, 265],
+                          [278, 315]])
         cft = np.concatenate((np.sin(np.arange(0, 5 * np.pi, 0.1)) + 1,
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 2.1,
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 0.4))

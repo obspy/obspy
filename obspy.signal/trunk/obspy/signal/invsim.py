@@ -12,9 +12,11 @@ Python Module for Instrument Correction (Seismology), PAZ
 Poles and zeros information must be given in SEED convention, correction to
 m/s.
 
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 import math as M
@@ -25,7 +27,7 @@ import util
 
 def cosTaper(npts, p):
     """
-    Cosinus Taper.
+    Cosine Taper.
 
     >>> tap = cosTaper(100,1.0)
     >>> tap2 = 0.5*(1+np.cos(np.linspace(np.pi,2*np.pi,50)))
@@ -38,9 +40,9 @@ def cosTaper(npts, p):
     True
 
     :type npts: Int
-    :param npts: Number of points of cosinus taper.
+    :param npts: Number of points of cosine taper.
     :type p: Float
-    :param p: Percent of cosinus taper.
+    :param p: Percent of cosine taper.
     :rtype: float numpy ndarray
     :return: Cosine taper array/vector of length npts.
     """
@@ -70,7 +72,7 @@ def detrend(trace):
 def cornFreq2Paz(fc, damp=0.707):
     """
     Convert corner frequency and damping to poles and zeros. 2 zeros at
-    postion (0j, 0j) are given as output  (m/s).
+    position (0j, 0j) are given as output  (m/s).
 
     :param fc: Corner frequency
     :param damping: Corner frequency
@@ -88,7 +90,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
 
     :note: In order to plot/calculate the phase you need to multiply the
         complex part by -1. This results from the different definition of
-        the fourier transform and the phase. The numpy.fft is defined as
+        the Fourier transform and the phase. The numpy.fft is defined as
         A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
         signal is defined A(jw) = | A(jw) | e^{j\phi}. That is in order to
         calculate the phase the complex conjugate of the signal needs to be
@@ -96,7 +98,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
         As the range of phi is from -pi to pi you could add 2*pi to the
         negative values in order to get a plot from [0, 2pi]:
         where(phi<0,phi+2*pi,phi); plot(f,phi)
-    
+
     :type poles: List of complex numbers
     :param poles: The poles of the transfer function
     :type zeros: List of complex numbers
@@ -128,7 +130,7 @@ def specInv(spec, wlev):
     Invert Spectrum and shrink values under water-level of max spec
     amplitude. The water-level is given in db scale.
 
-    :note: In place opertions on spec, translated from PITSA spr_sinv.c
+    :note: In place operations on spec, translated from PITSA spr_sinv.c
     :param spec: Real spectrum as returned by numpy.fft.rfft
     :param wlev: Water level to use 
     """
@@ -155,14 +157,14 @@ def specInv(spec, wlev):
 
 def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     """
-    Simulate seismometer. 
-    
+    Simulate seismometer.
+
     This function works in the frequency domain, where nfft is the next power 
     of len(data) to avoid warp around effects during convolution. The inverse 
     of the frequency response of the seismometer is convolved with the spectrum 
     of the data and with the frequency response of the seismometer to
     simulate.
-    
+
     :type data: Numpy Ndarray
     :param data: Seismogram, (zero mean?)
     :type samp_rate: Float
@@ -237,7 +239,7 @@ def paz2AmpValueOfFreqResp(paz, freq):
     Returns Amplitude at one frequency for the given poles and zeros
 
     The amplitude of the freq is estimated according to "Of Poles and
-    Zeros", Fank Scherbaum, p 43.
+    Zeros", Frank Scherbaum, p 43.
 
     :param paz: Given poles and zeros
     :param freq: Given frequency
@@ -250,7 +252,7 @@ def paz2AmpValueOfFreqResp(paz, freq):
     0.2830262
     """
     jw = complex(0, 2 * np.pi * freq) #angular frequency
-    fac = complex(1,0)
+    fac = complex(1, 0)
     for zero in paz['zeros']: #numerator
         fac *= (jw - zero)
     for pole in paz['poles']: #denumerator
@@ -293,8 +295,8 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) * woodander['sensitivity']
     wa_ampl *= 1000 #convert to mm
-    magnitude = np.log10(wa_ampl) + np.log10(h_dist/100.0) + \
-                0.00301*(h_dist - 100.0) + 3.0
+    magnitude = np.log10(wa_ampl) + np.log10(h_dist / 100.0) + \
+                0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
 

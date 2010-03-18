@@ -4,14 +4,13 @@
 The freqattributes.core test suite.
 """
 
-#from obspy.signal import freqattributes, util
+from obspy.signal import freqattributes, util
+from scipy import signal
 import inspect
+import numpy as np
 import os
 import unittest
-import numpy as np
-import util
-import freqattributes
-from scipy import signal
+
 
 # only tests for windowed data are implemented currently
 
@@ -37,10 +36,10 @@ class FreqTraceTestCase(unittest.TestCase):
         self.n = 256
         self.fs = 75
         self.smoothie = 3
-        self.fk = [2,1,0,-1,-2]
-        self.inc = int(0.05*self.fs)
+        self.fk = [2, 1, 0, -1, -2]
+        self.inc = int(0.05 * self.fs)
         self.nc = 12
-        self.p = np.floor(3*np.log(self.fs))
+        self.p = np.floor(3 * np.log(self.fs))
         #[0] Time (k*inc)
         #[1] A_norm
         #[2] dA_norm
@@ -85,10 +84,10 @@ class FreqTraceTestCase(unittest.TestCase):
         #[41] drect
         #[42] plan
         #[43] dplan
-        self.data_win,self.nwin,self.no_win = util.enframe(self.data,
-                    signal.hamming(self.n), self.inc)
-        self.data_win_bc,self.nwin_,self.no_win_ = util.enframe(self.data,
-                     np.ones(self.n),self.inc)
+        self.data_win, self.nwin, self.no_win = \
+            util.enframe(self.data, signal.hamming(self.n), self.inc)
+        self.data_win_bc, self.nwin_, self.no_win_ = \
+            util.enframe(self.data, np.ones(self.n), self.inc)
         #self.data_win = data
 
     def tearDown(self):
@@ -97,50 +96,53 @@ class FreqTraceTestCase(unittest.TestCase):
     def test_cfrequency(self):
         """
         """
-        cfreq = freqattributes.cfrequency(self.data_win_bc,
-                          self.fs,self.smoothie,self.fk)
-        rms = np.sqrt(np.sum((cfreq[0]-self.res[:,18])**2)/
-                          np.sum(self.res[:,18]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((cfreq[1]-self.res[:,19])**2)/
-                          np.sum(self.res[:,19]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        cfreq = freqattributes.cfrequency(self.data_win_bc, self.fs,
+                                          self.smoothie, self.fk)
+        rms = np.sqrt(np.sum((cfreq[0] - self.res[:, 18]) ** 2) /
+                      np.sum(self.res[:, 18] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((cfreq[1] - self.res[:, 19]) ** 2) /
+                      np.sum(self.res[:, 19] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
     def test_bwith(self):
         """
         """
-        bwith = freqattributes.bwith(self.data_win,
-                                self.fs,self.smoothie,self.fk)
-        rms = np.sqrt(np.sum((bwith[0]-self.res[:,16])**2)/
-                                np.sum(self.res[:,16]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((bwith[1]-self.res[:,17])**2)/
-                                np.sum(self.res[:,17]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        bwith = freqattributes.bwith(self.data_win, self.fs, self.smoothie,
+                                     self.fk)
+        rms = np.sqrt(np.sum((bwith[0] - self.res[:, 16]) ** 2) /
+                      np.sum(self.res[:, 16] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((bwith[1] - self.res[:, 17]) ** 2) /
+                      np.sum(self.res[:, 17] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
     def test_domper(self):
         """
         """
-        dperiod = freqattributes.domperiod(self.data_win,
-                                  self.fs,self.smoothie,self.fk)
-        rms = np.sqrt(np.sum((dperiod[0]-self.res[:,14])**2)/
-                                  np.sum(self.res[:,14]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((dperiod[1]-self.res[:,15])**2)/
-                                  np.sum(self.res[:,15]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        dperiod = freqattributes.domperiod(self.data_win, self.fs,
+                                           self.smoothie, self.fk)
+        rms = np.sqrt(np.sum((dperiod[0] - self.res[:, 14]) ** 2) /
+                      np.sum(self.res[:, 14] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((dperiod[1] - self.res[:, 15]) ** 2) /
+                      np.sum(self.res[:, 15] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
     def test_logcep(self):
         """
         """
-        cep = freqattributes.logcep(self.data_win,self.fs,self.nc,
-                                    self.p,self.n, 'Hamming')
-        rms = np.sqrt(np.sum((cep[0]-self.res[:,11])**2)/np.sum(self.res[:,11]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((cep[1]-self.res[:,12])**2)/np.sum(self.res[:,12]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((cep[2]-self.res[:,13])**2)/np.sum(self.res[:,13]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        cep = freqattributes.logcep(self.data_win, self.fs, self.nc, self.p,
+                                    self.n, 'Hamming')
+        rms = np.sqrt(np.sum((cep[0] - self.res[:, 11]) ** 2) /
+                      np.sum(self.res[:, 11] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((cep[1] - self.res[:, 12]) ** 2) /
+                      np.sum(self.res[:, 12] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((cep[2] - self.res[:, 13]) ** 2) /
+                      np.sum(self.res[:, 13] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
 
 def suite():
@@ -148,4 +150,3 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
-    

@@ -4,14 +4,13 @@
 The polarization.core test suite.
 """
 
-#from obspy.signal import polarization, util
-import polarization
-import util
+from obspy.signal import polarization, util
 from scipy import signal
 import inspect
 import numpy as np
 import os
 import unittest
+
 
 # only tests for windowed data are implemented currently
 
@@ -45,9 +44,9 @@ class PolarizationTestCase(unittest.TestCase):
         self.n = 256
         self.fs = 75
         self.smoothie = 3
-        self.fk = [2,1,0,-1,-2]
-        self.inc = int(0.05*self.fs)
-        self.norm = pow(np.max(data_z),2)
+        self.fk = [2, 1, 0, -1, -2]
+        self.inc = int(0.05 * self.fs)
+        self.norm = pow(np.max(data_z), 2)
         #[0] Time (k*inc)
         #[1] A_norm
         #[2] dA_norm
@@ -92,12 +91,12 @@ class PolarizationTestCase(unittest.TestCase):
         #[41] drect
         #[42] plan
         #[43] dplan
-        self.data_win_z,self.nwin,self.no_win = util.enframe(data_z,
-                                             signal.hamming(self.n),self.inc)
-        self.data_win_e,self.nwin,self.no_win = util.enframe(data_e,
-                                             signal.hamming(self.n),self.inc)
-        self.data_win_n,self.nwin,self.no_win = util.enframe(data_n,
-                                             signal.hamming(self.n),self.inc)
+        self.data_win_z, self.nwin, self.no_win = \
+            util.enframe(data_z, signal.hamming(self.n), self.inc)
+        self.data_win_e, self.nwin, self.no_win = \
+            util.enframe(data_e, signal.hamming(self.n), self.inc)
+        self.data_win_n, self.nwin, self.no_win = \
+            util.enframe(data_n, signal.hamming(self.n), self.inc)
 
     def tearDown(self):
         pass
@@ -105,18 +104,23 @@ class PolarizationTestCase(unittest.TestCase):
     def test_polarization(self):
         """
         """
-        pol=polarization.eigval(self.data_win_e,self.data_win_n,
-                                     self.data_win_z,self.norm)
-        rms = np.sqrt(np.sum((pol[0]-self.res[:,34])**2)/np.sum(self.res[:,34]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((pol[1]-self.res[:,35])**2)/np.sum(self.res[:,35]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((pol[2]-self.res[:,36])**2)/np.sum(self.res[:,36]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((pol[3]-self.res[:,40])**2)/np.sum(self.res[:,40]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((pol[4]-self.res[:,42])**2)/np.sum(self.res[:,42]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        pol = polarization.eigval(self.data_win_e, self.data_win_n,
+                                  self.data_win_z, self.norm)
+        rms = np.sqrt(np.sum((pol[0] - self.res[:, 34]) ** 2) /
+                      np.sum(self.res[:, 34] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[1] - self.res[:, 35]) ** 2) /
+                      np.sum(self.res[:, 35] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[2] - self.res[:, 36]) ** 2) /
+                      np.sum(self.res[:, 36] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[3] - self.res[:, 40]) ** 2) /
+                      np.sum(self.res[:, 40] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[4] - self.res[:, 42]) ** 2) /
+                      np.sum(self.res[:, 42] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
 
 def suite():

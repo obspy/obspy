@@ -10,16 +10,20 @@
 """
 Various Seismogram Rotation Functions
 
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from numpy import sin, cos
 from math import sqrt, pi, asin, tan, atan, atan2
 
+
 def rotate_NE_RT(n, e, ba):
-    """Rotates horizontal components of a seismogram:
+    """
+    Rotates horizontal components of a seismogram.
   
     The North- and East-Component of a seismogram will be rotated in Radial
     and Transversal Component. The angle is given as the back-azimuth, that is

@@ -4,14 +4,12 @@
 The hoctavbands.core test suite.
 """
 
-#from obspy.signal import hoctavbands, util
+from obspy.signal import hoctavbands, util
+from scipy import signal
 import inspect
+import numpy as np
 import os
 import unittest
-import numpy as np
-import util
-import hoctavbands
-from scipy import signal
 
 # only tests for windowed data are implemented currently
 
@@ -37,8 +35,8 @@ class HoctavbandsTestCase(unittest.TestCase):
         self.n = 256
         self.fs = 75
         self.smoothie = 3
-        self.fk = [2,1,0,-1,-2]
-        self.inc = int(0.05*self.fs)
+        self.fk = [2, 1, 0, -1, -2]
+        self.inc = int(0.05 * self.fs)
         self.fc1 = 0.68
         self.nofb = 8
         #[0] Time (k*inc)
@@ -85,41 +83,41 @@ class HoctavbandsTestCase(unittest.TestCase):
         #[41] drect
         #[42] plan
         #[43] dplan
-        self.data_win,self.nwin,self.no_win = util.enframe(data,
-                                 signal.hamming(self.n),self.inc)
-    
+        self.data_win, self.nwin, self.no_win = \
+            util.enframe(data, signal.hamming(self.n), self.inc)
+
     def tearDown(self):
         pass
 
     def test_hoctavbands(self):
         """
         """
-        hob = hoctavbands.sonogram(self.data_win,self.fs,self.fc1,
-                            self.nofb, self.no_win,self.fk)
-        rms = np.sqrt(np.sum((hob[:,0]-self.res[:,20])**2)/
-                            np.sum(self.res[:,20]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,1]-self.res[:,21])**2)/
-                            np.sum(self.res[:,21]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,2]-self.res[:,22])**2)/
-                            np.sum(self.res[:,22]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,3]-self.res[:,23])**2)/
-                            np.sum(self.res[:,23]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,4]-self.res[:,24])**2)/
-                            np.sum(self.res[:,24]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,5]-self.res[:,25])**2)/
-                            np.sum(self.res[:,25]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,6]-self.res[:,26])**2)/
-                            np.sum(self.res[:,26]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((hob[:,7]-self.res[:,27])**2)/
-                            np.sum(self.res[:,27]**2))
-        self.assertEqual(rms < 1.e-5, True)
+        hob = hoctavbands.sonogram(self.data_win, self.fs, self.fc1,
+                                   self.nofb, self.no_win, self.fk)
+        rms = np.sqrt(np.sum((hob[:, 0] - self.res[:, 20]) ** 2) /
+                      np.sum(self.res[:, 20] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 1] - self.res[:, 21]) ** 2) /
+                      np.sum(self.res[:, 21] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 2] - self.res[:, 22]) ** 2) /
+                      np.sum(self.res[:, 22] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 3] - self.res[:, 23]) ** 2) /
+                      np.sum(self.res[:, 23] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 4] - self.res[:, 24]) ** 2) /
+                      np.sum(self.res[:, 24] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 5] - self.res[:, 25]) ** 2) /
+                      np.sum(self.res[:, 25] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 6] - self.res[:, 26]) ** 2) /
+                      np.sum(self.res[:, 26] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((hob[:, 7] - self.res[:, 27]) ** 2) /
+                      np.sum(self.res[:, 27] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
 
 
 def suite():

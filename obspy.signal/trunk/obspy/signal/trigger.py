@@ -15,9 +15,11 @@ Two versions, a fast ctypes one and a bit slower python one. Further the
 classic and delayed STA/LTA, the carlstatrig and the zdecect are
 implemented. (see Withers et al. 1998 p. 98).
 
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from util import lib
@@ -28,6 +30,7 @@ import numpy as np
 def recStalta(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
+
     Fast version written in C.
 
     :note: This version directly uses a C version via CTypes
@@ -41,11 +44,11 @@ def recStalta(a, nsta, nlta):
     :return: Charactristic function of recursive STA/LTA
     """
     lib.recstalta.argtypes = [np.ctypeslib.ndpointer(dtype='float64',
-                                                    ndim=1,
-                                                    flags='C_CONTIGUOUS'),
+                                                     ndim=1,
+                                                     flags='C_CONTIGUOUS'),
                               np.ctypeslib.ndpointer(dtype='float64',
-                                                    ndim=1,
-                                                    flags='C_CONTIGUOUS'),
+                                                     ndim=1,
+                                                     flags='C_CONTIGUOUS'),
                               C.c_int, C.c_int, C.c_int]
     lib.recstalta.restype = C.c_void_p
     # be nice and adapt type if necessary
@@ -59,6 +62,7 @@ def recStalta(a, nsta, nlta):
 def recStaltaPy(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
+
     Bit slower version written in Python.
     
     :note: There exists a faster version of this trigger wrapped in C
@@ -150,9 +154,10 @@ def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
     eta[:Nlta] = -1.0
     return eta
 
+
 def classicStaLta(a, Nsta, Nlta):
     """
-    Computes the standard STA/LTA from a given imput array a. The length of
+    Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by Nsta in samples, respectively is the length of the
     LTA given by Nlta in samples.
 
@@ -191,6 +196,7 @@ def classicStaLta(a, Nsta, Nlta):
     # return STA/LTA ratio
     sta[0:Nlta] = 0
     return sta / lta
+
 
 def delayedStaLta(a, Nsta, Nlta):
     """

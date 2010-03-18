@@ -9,23 +9,24 @@
 """
 Polarization Analysis
 
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from scipy import stats
 import numpy as np
-import util
 
 
-def eigval(datax,datay,dataz,normf=1):
+def eigval(datax, datay, dataz, normf=1):
     """
     Polarization attributes of a signal:
-    
-    Computes the rectinelearity, the planarity and the eigenvalues of the given
+
+    Computes the rectilinearity, the planarity and the eigenvalues of the given
     data which can be windowed or not.
-    
+
     :param datax: Data of x component, type numpy.ndarray.
     :param datay: Data of y component, type numpy.ndarray.
     :param dataz: Data of z component, type numpy.ndarray.
@@ -36,27 +37,27 @@ def eigval(datax,datay,dataz,normf=1):
     :return rect: Rectilinearity.
     :return plan: Planarity.
     """
-    covmat = np.zeros([3,3])
-    leigenv1 = np.zeros(datax.shape[0],dtype='float64')
-    leigenv2 = np.zeros(datax.shape[0],dtype='float64')
-    leigenv3 = np.zeros(datax.shape[0],dtype='float64')
-    rect = np.zeros(datax.shape[0],dtype='float64')
-    plan = np.zeros(datax.shape[0],dtype='float64')
+    covmat = np.zeros([3, 3])
+    leigenv1 = np.zeros(datax.shape[0], dtype='float64')
+    leigenv2 = np.zeros(datax.shape[0], dtype='float64')
+    leigenv3 = np.zeros(datax.shape[0], dtype='float64')
+    rect = np.zeros(datax.shape[0], dtype='float64')
+    plan = np.zeros(datax.shape[0], dtype='float64')
     i = 0
     for i in xrange(datax.shape[0]):
-        covmat[0][0] = stats.cov(datax[i,:],datax[i,:])
-        covmat[0][1] = covmat[1][0] = stats.cov(datax[i,:],datay[i,:])
-        covmat[0][2] = covmat[2][0] = stats.cov(datax[i,:],dataz[i,:])
-        covmat[1][1] = stats.cov(datay[i,:],datay[i,:])
-        covmat[1][2] = covmat[2][1] = stats.cov(dataz[i,:],datay[i,:])
-        covmat[2][2] = stats.cov(dataz[i,:],dataz[i,:])
+        covmat[0][0] = stats.cov(datax[i, :], datax[i, :])
+        covmat[0][1] = covmat[1][0] = stats.cov(datax[i, :], datay[i, :])
+        covmat[0][2] = covmat[2][0] = stats.cov(datax[i, :], dataz[i, :])
+        covmat[1][1] = stats.cov(datay[i, :], datay[i, :])
+        covmat[1][2] = covmat[2][1] = stats.cov(dataz[i, :], datay[i, :])
+        covmat[2][2] = stats.cov(dataz[i, :], dataz[i, :])
         eigenv = np.sort(np.linalg.eigvals(covmat))
         leigenv1[i] = eigenv[0]
         leigenv2[i] = eigenv[1]
         leigenv3[i] = eigenv[2]
-        rect[i] = 1-((eigenv[1]+eigenv[0])/(2*eigenv[2]))
-        plan[i] = 1-((2*eigenv[0])/(eigenv[1]+eigenv[2]))
-    leigenv1 = leigenv1/normf
-    leigenv2 = leigenv2/normf
-    leigenv3 = leigenv3/normf
-    return leigenv1,leigenv2,leigenv3,rect,plan
+        rect[i] = 1 - ((eigenv[1] + eigenv[0]) / (2 * eigenv[2]))
+        plan[i] = 1 - ((2 * eigenv[0]) / (eigenv[1] + eigenv[2]))
+    leigenv1 = leigenv1 / normf
+    leigenv2 = leigenv2 / normf
+    leigenv3 = leigenv3 / normf
+    return leigenv1, leigenv2, leigenv3, rect, plan

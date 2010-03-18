@@ -5,11 +5,11 @@ The Filter test suite.
 """
 
 from obspy.signal.util import xcorr, lib_name
-import numpy as np
 import ctypes as C
 import inspect
-import unittest
+import numpy as np
 import os
+import unittest
 
 
 class UtilTestCase(unittest.TestCase):
@@ -83,6 +83,7 @@ class UtilTestCase(unittest.TestCase):
 
         self.assertAlmostEquals(0.0, shift.value)
         self.assertAlmostEquals(1.0, coe_p.value)
+
 
 def suite():
     return unittest.makeSuite(UtilTestCase, 'test')

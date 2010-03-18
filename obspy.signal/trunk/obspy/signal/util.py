@@ -2,18 +2,19 @@
 """
 Various additional utilities for obspy.signal.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from numpy import size
-from scipy import signal, fix
+from scipy import signal, fix, fftpack
 import ctypes as C
 import math as M
 import numpy as np
 import os
 import platform
-import sys
 
 
 # Import shared libsignal library depending on the platform.
@@ -152,33 +153,6 @@ def nextpow2(i):
     return int(M.pow(2, buf))
 
 
-def smooth(x, smoothie):
-    suma = np.zeros(size(x))
-    if smoothie > 1:
-        if (len(x) > 1 and len(x) < size(x)):
-            out_add = np.append(np.append([x[0, :]]*smoothie, x, axis=0),
-                                [x[(len(x) - 1), :]]*smoothie, axis=0)
-            msg = "Smoothfunction for multidimensional signals needs to " + \
-                  "be implemented\n"
-            sys.stdout.write(msg)
-        #   out = filter(ones(1,smoothie)/smoothie,1,out_add)
-        #   out[1:smoothie,:] = []
-        else:
-            out_add = np.append(np.append([x[0]] * smoothie, x),
-                                [x[size(x) - 1]] * smoothie)
-            for i in xrange(smoothie, len(x) + smoothie):
-                sum = 0
-                for k in range(-smoothie, smoothie):
-                    sum = sum + out_add[i + k]
-                suma[i - smoothie] = float(sum) / (2 * smoothie)
-            out = suma
-            out[0:smoothie] = out[smoothie]
-            out[size(x) - 1 - smoothie:size(x)] = out[size(x) - 1 - smoothie]
-    else:
-        out = x
-    return out
-
-
 def enframe(x, win, inc):
     nx = len(x)
     nwin = len(win)
@@ -199,47 +173,48 @@ def enframe(x, win, inc):
     no_win, _ = f.shape
     return f, length, no_win
 
-def smooth(x,smoothie):
-    suma=np.zeros(np.size(x))
-    if smoothie>1:
-        if ( len(x) > 1 and len(x)<np.size(x) ):
+
+def smooth(x, smoothie):
+    suma = np.zeros(np.size(x))
+    if smoothie > 1:
+        if (len(x) > 1 and len(x) < np.size(x)):
             #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
             #                     [x[(len(x)-1),:]]*smoothie,axis=0)
-            out_add =(np.append([x[0,:]]*int(smoothie),x,axis=0))
+            out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
             help = np.transpose(out_add)
-            out = signal.lfilter(np.ones(smoothie)/smoothie,1,help)
+            out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
             out = np.transpose(out)
-            out = out[smoothie:len(out),:]
+            out = out[smoothie:len(out), :]
             #out = filter(ones(1,smoothie)/smoothie,1,out_add)
             #out[1:smoothie,:] = []
         else:
-            out_add=np.append(np.append([x[0]]*smoothie,x),
-                               [x[np.size(x)-1]]*smoothie)
-            for i in xrange(smoothie,len(x)+smoothie):
+            out_add = np.append(np.append([x[0]] * smoothie, x),
+                               [x[np.size(x) - 1]] * smoothie)
+            for i in xrange(smoothie, len(x) + smoothie):
                 sum = 0
-                for k in range(-smoothie,smoothie):
-                    sum = sum+out_add[i+k]
-                    suma[i-smoothie]=float(sum)/(2*smoothie)
+                for k in range(-smoothie, smoothie):
+                    sum = sum + out_add[i + k]
+                    suma[i - smoothie] = float(sum) / (2 * smoothie)
                     out = suma
                     out[0:smoothie] = out[smoothie]
-                    out[np.size(x)-1-smoothie:np.size(x)]=out[np.size(x)-1-
-                                        smoothie]
+                    out[np.size(x) - 1 - smoothie:np.size(x)] = \
+                        out[np.size(x) - 1 - smoothie]
     else:
-        out=x
+        out = x
     return out
 
-def rdct(x,n=0):
-    m,k = x.shape
-    if (n==0):
-        n=m
-        b=1
-        a=np.sqrt(2*n)
-        x=np.append([x[0:n:2,:]], [x[2*np.fix(n/2):0:-2,:]],axis = 1)
-        x=x[0,:,:]
-        z=np.append(np.sqrt(2.),2.*np.exp((-0.5j*float(np.pi/n))*
-                                   np.arange(1,n)))
-        y=np.real(np.multiply(np.transpose(fftpack.fft(np.transpose(x))),
-                          np.transpose(np.array([z] ))*np.ones(k)) )/float(a)
+
+def rdct(x, n=0):
+    m, k = x.shape
+    if (n == 0):
+        n = m
+        a = np.sqrt(2 * n)
+        x = np.append([x[0:n:2, :]], [x[2 * np.fix(n / 2):0:-2, :]], axis=1)
+        x = x[0, :, :]
+        z = np.append(np.sqrt(2.), 2. * np.exp((-0.5j * float(np.pi / n)) *
+                                   np.arange(1, n)))
+        y = np.real(np.multiply(np.transpose(fftpack.fft(np.transpose(x))),
+                          np.transpose(np.array([z])) * np.ones(k))) / float(a)
         return y
 
 

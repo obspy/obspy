@@ -150,14 +150,14 @@ class InvSimTestCase(unittest.TestCase):
         import for these test either.
         """
         paz = {'gain': 60077000.0,
-               'poles': [(-0.037004000000000002+0.037016j),
-                         (-0.037004000000000002-0.037016j),
-                         (-251.33000000000001+0j),
-                         (-131.03999999999999-467.29000000000002j),
-                         (-131.03999999999999+467.29000000000002j)],
+               'poles': [(-0.037004000000000002 + 0.037016j),
+                         (-0.037004000000000002 - 0.037016j),
+                         (-251.33000000000001 + 0j),
+                         (-131.03999999999999 - 467.29000000000002j),
+                         (-131.03999999999999 + 467.29000000000002j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
-        
+
         stats = {'network': 'BW', 'station': 'RJOB', 'sampling_rate': 200.0,
                  'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3), 'npts': 6001,
                  'channel': 'EHZ'}
@@ -169,7 +169,7 @@ class InvSimTestCase(unittest.TestCase):
         f.close()
         # Generate the stream from data verify it
         st = Stream([Trace(header=stats, data=srl_data)])
-        st.verify()        
+        st.verify()
         one_hertz = cornFreq2Paz(1.0) # 1Hz instrument
         #2 Correct for frequency response of the instrument
         res = seisSim(st[0].data.astype("float32"),
@@ -201,7 +201,7 @@ class InvSimTestCase(unittest.TestCase):
                'gain': 1.0, \
                'sensitivity': 671140000.0}
         mag_RTSH = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
-        self.assertAlmostEqual(mag_RTSH,  2.1653454839257327)
+        self.assertAlmostEqual(mag_RTSH, 2.1653454839257327)
         mag_RTBE = estimateMagnitude(paz, 3.61e4, 0.08, 2.197)
         self.assertAlmostEqual(mag_RTBE, 1.2334841683429503)
         mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
@@ -217,6 +217,7 @@ class InvSimTestCase(unittest.TestCase):
     #    g.read(file,format='MSEED')
     #    # paz of test file
     #    samp_rate = 200.0
+
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')

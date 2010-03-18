@@ -10,9 +10,11 @@
 """
 Various Seismogram Filtering Functions
 
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from numpy import array, where, fft
@@ -165,8 +167,7 @@ def highpass(data, freq, df=200, corners=4):
     """
     Butterworth-Highpass Filter.
 
-    Filter data removing data below certain frequency freq using corners 
-        corners.
+    Filter data removing data below certain frequency freq using corners.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
