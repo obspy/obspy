@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+#-------------------------------------------------------------------
+# Filename: hoctavbands.py
+#   Author: Conny Hammer
+#    Email: conny@geo.uni-potsdam.de
+#
+# Copyright (C) 2008-2010 Conny Hammer
+#-------------------------------------------------------------------
+"""
+Half Octav Bands
+
+
+:copyright: The ObsPy Development Team (devs@obspy.org)
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
+
+from scipy import signal
+from scipy import fftpack
+import numpy as np
+#from obspy.signal import util
+import util
+
+def sonogram(data,fs,fc1,nofb,no_win,fk):
+    """
+    Sonogramm of a signal:
+    
+    Computes the sonogram of the given data which can be windowed or not.
+    The sonogram is determind by the power in half octav bands of the given
+    data.
+    
+    If data are windowed the analytic signal and the envelope of each window
+    is returned.
+    
+    :param data: Data to make envelope of, type numpy.ndarray.
+    :param fs: Sampling frequency in Hz.
+    :param fc1: Center frequency of lowest half octav band.
+    :param nofb: Number of half octav bands.
+    :param no_win: Number of data windows.
+    :return hob: Half octav bands.
+    """
+    fc = np.zeros([nofb])
+    fmin = np.zeros([nofb])
+    fmax = np.zeros([nofb])
+    
+    fc[0] = float(fc1)
+    fmin[0] = fc[0]/np.sqrt(float(5./3.))
+    fmax[0] = fc[0]*np.sqrt(float(5./3.))
+    for i in range(1,nofb):
+       fc[i] = fc[i-1]*1.5
+       fmin[i] = fc[i]/np.sqrt(float(5./3.))
+       fmax[i] = fc[i]*np.sqrt(float(5./3.))
+    nfft = util.nextpow2(data.shape[np.size(data.shape)-1])
+    c = np.zeros((data.shape),dtype='complex64')
+    c = fftpack.fft(data,nfft)
+    z = np.zeros([len(c[:,1]),nofb])
+    z_tot = np.zeros(len(c[:,1]))
+    hob = np.zeros([no_win,nofb])
+    for k in range (no_win):
+        for j in range (len(c[1,:])):
+            z_tot[k] = z_tot[k]+pow(np.abs(c[k,j]),2)
+        for i in range (nofb):
+            for j in range(int(round(fmin[i]*nfft*1./float(fs),0)),
+                            int(round(fmax[i]*nfft*1./float(fs),0))+1):
+                z[k,i] = z[k,i]+pow(np.abs(c[k,j-1]),2)
+            hob[k,i] = np.log(z[k,i]/z_tot[k])
+    return hob

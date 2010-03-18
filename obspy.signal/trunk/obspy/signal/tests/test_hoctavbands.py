@@ -1,23 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-The cpxtrace.core test suite.
+The hoctavbands.core test suite.
 """
 
-#from obspy.signal import cpxtrace, util
-from scipy import signal
+#from obspy.signal import hoctavbands, util
 import inspect
-import numpy as np
 import os
 import unittest
+import numpy as np
 import util
-import cpxtrace
+import hoctavbands
+from scipy import signal
 
 # only tests for windowed data are implemented currently
 
-class CpxTraceTestCase(unittest.TestCase):
+class HoctavbandsTestCase(unittest.TestCase):
     """
-    Test cases for complex trace analysis
+    Test cases for half octav bands
     """
     def setUp(self):
         # directory where the test files are located
@@ -29,7 +29,7 @@ class CpxTraceTestCase(unittest.TestCase):
         f.close()
         file = os.path.join(self.path, 'MBGA_Z.ASC')
         f = open(file)
-        self.data = np.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         #self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         #self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
@@ -39,6 +39,8 @@ class CpxTraceTestCase(unittest.TestCase):
         self.smoothie = 3
         self.fk = [2,1,0,-1,-2]
         self.inc = int(0.05*self.fs)
+        self.fc1 = 0.68
+        self.nofb = 8
         #[0] Time (k*inc)
         #[1] A_norm
         #[2] dA_norm
@@ -83,58 +85,45 @@ class CpxTraceTestCase(unittest.TestCase):
         #[41] drect
         #[42] plan
         #[43] dplan
-        self.data_win,self.nwin,self.no_win = util.enframe(self.data, 
-                           signal.hamming(self.n ), self.inc)
-        #self.data_win = data
-
+        self.data_win,self.nwin,self.no_win = util.enframe(data,
+                                 signal.hamming(self.n),self.inc)
+    
     def tearDown(self):
         pass
 
-    def test_normenvelope(self):
+    def test_hoctavbands(self):
         """
         """
-        #A_cpx,A_real = cpxtrace.envelope(self.data_win)
-        Anorm = cpxtrace.normEnvelope(self.data_win,self.fs,
-                          self.smoothie,self.fk)
-        rms = np.sqrt(np.sum((Anorm[0]-self.res[:,1])**2)/
-                          np.sum(self.res[:,1]**2))
+        hob = hoctavbands.sonogram(self.data_win,self.fs,self.fc1,
+                            self.nofb, self.no_win,self.fk)
+        rms = np.sqrt(np.sum((hob[:,0]-self.res[:,20])**2)/
+                            np.sum(self.res[:,20]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((Anorm[1]-self.res[:,2])**2)/np.sum(self.res[:,2]**2))
+        rms = np.sqrt(np.sum((hob[:,1]-self.res[:,21])**2)/
+                            np.sum(self.res[:,21]**2))
         self.assertEqual(rms < 1.e-5, True)
-
-    def test_centroid(self):
-        """
-        """
-        centroid = cpxtrace.centroid(self.data_win,self.fk)
-        rms = np.sqrt(np.sum((centroid[0]-self.res[:,5])**2)/
-                      np.sum(self.res[:,5]**2))
+        rms = np.sqrt(np.sum((hob[:,2]-self.res[:,22])**2)/
+                            np.sum(self.res[:,22]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((centroid[1]-self.res[:,6])**2)/
-                        np.sum(self.res[:,6]**2))
+        rms = np.sqrt(np.sum((hob[:,3]-self.res[:,23])**2)/
+                            np.sum(self.res[:,23]**2))
         self.assertEqual(rms < 1.e-5, True)
-
-    def test_instFreq(self):
-        """
-        """
-        omega = cpxtrace.instFreq(self.data_win,self.fs,self.fk)
-        rms = np.sqrt(np.sum((omega[0]-self.res[:,7])**2)/np.sum(self.res[:,7]**2))
+        rms = np.sqrt(np.sum((hob[:,4]-self.res[:,24])**2)/
+                            np.sum(self.res[:,24]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((omega[1]-self.res[:,8])**2)/np.sum(self.res[:,8]**2))
+        rms = np.sqrt(np.sum((hob[:,5]-self.res[:,25])**2)/
+                            np.sum(self.res[:,25]**2))
         self.assertEqual(rms < 1.e-5, True)
-
-    def test_instBwith(self):
-        """
-        """
-        sigma = cpxtrace.instBwith(self.data_win,self.fs,self.fk)
-        rms = np.sqrt(np.sum((sigma[0]-self.res[:,9])**2)/np.sum(self.res[:,9]**2))
+        rms = np.sqrt(np.sum((hob[:,6]-self.res[:,26])**2)/
+                            np.sum(self.res[:,26]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((sigma[1]-self.res[:,10])**2)/
-                        np.sum(self.res[:,10]**2))
+        rms = np.sqrt(np.sum((hob[:,7]-self.res[:,27])**2)/
+                            np.sum(self.res[:,27]**2))
         self.assertEqual(rms < 1.e-5, True)
 
 
 def suite():
-    return unittest.makeSuite(CpxTraceTestCase, 'test')
+    return unittest.makeSuite(HoctavbandsTestCase, 'test')
 
 
 if __name__ == '__main__':

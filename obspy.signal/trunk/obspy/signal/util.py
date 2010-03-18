@@ -199,6 +199,49 @@ def enframe(x, win, inc):
     no_win, _ = f.shape
     return f, length, no_win
 
+def smooth(x,smoothie):
+    suma=np.zeros(np.size(x))
+    if smoothie>1:
+        if ( len(x) > 1 and len(x)<np.size(x) ):
+            #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
+            #                     [x[(len(x)-1),:]]*smoothie,axis=0)
+            out_add =(np.append([x[0,:]]*int(smoothie),x,axis=0))
+            help = np.transpose(out_add)
+            out = signal.lfilter(np.ones(smoothie)/smoothie,1,help)
+            out = np.transpose(out)
+            out = out[smoothie:len(out),:]
+            #out = filter(ones(1,smoothie)/smoothie,1,out_add)
+            #out[1:smoothie,:] = []
+        else:
+            out_add=np.append(np.append([x[0]]*smoothie,x),
+                               [x[np.size(x)-1]]*smoothie)
+            for i in xrange(smoothie,len(x)+smoothie):
+                sum = 0
+                for k in range(-smoothie,smoothie):
+                    sum = sum+out_add[i+k]
+                    suma[i-smoothie]=float(sum)/(2*smoothie)
+                    out = suma
+                    out[0:smoothie] = out[smoothie]
+                    out[np.size(x)-1-smoothie:np.size(x)]=out[np.size(x)-1-
+                                        smoothie]
+    else:
+        out=x
+    return out
+
+def rdct(x,n=0):
+    m,k = x.shape
+    if (n==0):
+        n=m
+        b=1
+        a=np.sqrt(2*n)
+        x=np.append([x[0:n:2,:]], [x[2*np.fix(n/2):0:-2,:]],axis = 1)
+        x=x[0,:,:]
+        z=np.append(np.sqrt(2.),2.*np.exp((-0.5j*float(np.pi/n))*
+                                   np.arange(1,n)))
+        y=np.real(np.multiply(np.transpose(fftpack.fft(np.transpose(x))),
+                          np.transpose(np.array([z] ))*np.ones(k)) )/float(a)
+        return y
+
 
 if __name__ == '__main__':
     import doctest

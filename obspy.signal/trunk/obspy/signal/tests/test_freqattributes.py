@@ -1,23 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-The cpxtrace.core test suite.
+The freqattributes.core test suite.
 """
 
-#from obspy.signal import cpxtrace, util
-from scipy import signal
+#from obspy.signal import freqattributes, util
 import inspect
-import numpy as np
 import os
 import unittest
+import numpy as np
 import util
-import cpxtrace
+import freqattributes
+from scipy import signal
 
 # only tests for windowed data are implemented currently
 
-class CpxTraceTestCase(unittest.TestCase):
+class FreqTraceTestCase(unittest.TestCase):
     """
-    Test cases for complex trace analysis
+    Test cases for frequency attributes
     """
     def setUp(self):
         # directory where the test files are located
@@ -39,6 +39,8 @@ class CpxTraceTestCase(unittest.TestCase):
         self.smoothie = 3
         self.fk = [2,1,0,-1,-2]
         self.inc = int(0.05*self.fs)
+        self.nc = 12
+        self.p = np.floor(3*np.log(self.fs))
         #[0] Time (k*inc)
         #[1] A_norm
         #[2] dA_norm
@@ -83,59 +85,67 @@ class CpxTraceTestCase(unittest.TestCase):
         #[41] drect
         #[42] plan
         #[43] dplan
-        self.data_win,self.nwin,self.no_win = util.enframe(self.data, 
-                           signal.hamming(self.n ), self.inc)
+        self.data_win,self.nwin,self.no_win = util.enframe(self.data,
+                    signal.hamming(self.n), self.inc)
+        self.data_win_bc,self.nwin_,self.no_win_ = util.enframe(self.data,
+                     np.ones(self.n),self.inc)
         #self.data_win = data
 
     def tearDown(self):
         pass
 
-    def test_normenvelope(self):
+    def test_cfrequency(self):
         """
         """
-        #A_cpx,A_real = cpxtrace.envelope(self.data_win)
-        Anorm = cpxtrace.normEnvelope(self.data_win,self.fs,
-                          self.smoothie,self.fk)
-        rms = np.sqrt(np.sum((Anorm[0]-self.res[:,1])**2)/
-                          np.sum(self.res[:,1]**2))
+        cfreq = freqattributes.cfrequency(self.data_win_bc,
+                          self.fs,self.smoothie,self.fk)
+        rms = np.sqrt(np.sum((cfreq[0]-self.res[:,18])**2)/
+                          np.sum(self.res[:,18]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((Anorm[1]-self.res[:,2])**2)/np.sum(self.res[:,2]**2))
-        self.assertEqual(rms < 1.e-5, True)
-
-    def test_centroid(self):
-        """
-        """
-        centroid = cpxtrace.centroid(self.data_win,self.fk)
-        rms = np.sqrt(np.sum((centroid[0]-self.res[:,5])**2)/
-                      np.sum(self.res[:,5]**2))
-        self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((centroid[1]-self.res[:,6])**2)/
-                        np.sum(self.res[:,6]**2))
+        rms = np.sqrt(np.sum((cfreq[1]-self.res[:,19])**2)/
+                          np.sum(self.res[:,19]**2))
         self.assertEqual(rms < 1.e-5, True)
 
-    def test_instFreq(self):
+    def test_bwith(self):
         """
         """
-        omega = cpxtrace.instFreq(self.data_win,self.fs,self.fk)
-        rms = np.sqrt(np.sum((omega[0]-self.res[:,7])**2)/np.sum(self.res[:,7]**2))
+        bwith = freqattributes.bwith(self.data_win,
+                                self.fs,self.smoothie,self.fk)
+        rms = np.sqrt(np.sum((bwith[0]-self.res[:,16])**2)/
+                                np.sum(self.res[:,16]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((omega[1]-self.res[:,8])**2)/np.sum(self.res[:,8]**2))
+        rms = np.sqrt(np.sum((bwith[1]-self.res[:,17])**2)/
+                                np.sum(self.res[:,17]**2))
         self.assertEqual(rms < 1.e-5, True)
 
-    def test_instBwith(self):
+    def test_domper(self):
         """
         """
-        sigma = cpxtrace.instBwith(self.data_win,self.fs,self.fk)
-        rms = np.sqrt(np.sum((sigma[0]-self.res[:,9])**2)/np.sum(self.res[:,9]**2))
+        dperiod = freqattributes.domperiod(self.data_win,
+                                  self.fs,self.smoothie,self.fk)
+        rms = np.sqrt(np.sum((dperiod[0]-self.res[:,14])**2)/
+                                  np.sum(self.res[:,14]**2))
         self.assertEqual(rms < 1.e-5, True)
-        rms = np.sqrt(np.sum((sigma[1]-self.res[:,10])**2)/
-                        np.sum(self.res[:,10]**2))
+        rms = np.sqrt(np.sum((dperiod[1]-self.res[:,15])**2)/
+                                  np.sum(self.res[:,15]**2))
+        self.assertEqual(rms < 1.e-5, True)
+
+    def test_logcep(self):
+        """
+        """
+        cep = freqattributes.logcep(self.data_win,self.fs,self.nc,
+                                    self.p,self.n, 'Hamming')
+        rms = np.sqrt(np.sum((cep[0]-self.res[:,11])**2)/np.sum(self.res[:,11]**2))
+        self.assertEqual(rms < 1.e-5, True)
+        rms = np.sqrt(np.sum((cep[1]-self.res[:,12])**2)/np.sum(self.res[:,12]**2))
+        self.assertEqual(rms < 1.e-5, True)
+        rms = np.sqrt(np.sum((cep[2]-self.res[:,13])**2)/np.sum(self.res[:,13]**2))
         self.assertEqual(rms < 1.e-5, True)
 
 
 def suite():
-    return unittest.makeSuite(CpxTraceTestCase, 'test')
-
+    return unittest.makeSuite(FreqTraceTestCase, 'test')
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
+    
