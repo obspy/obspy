@@ -238,21 +238,13 @@ class PickingGUI:
         self.cleanQuit()
 
     def on_comboboxPhaseType_changed(self, event):
-        phase_num = self.comboboxPhaseType.get_active()
-        phase_name = self.dictPhaseInverse[phase_num]
-        self.flagPhase = phase_num
-        self.pickingColor = self.dictPhaseColors[phase_name]
-        for l in self.multicursor.lines:
-            l.set_color(self.pickingColor)
+        self.updateMulticursorColor()
         self.redraw()
 
     def on_togglebuttonFilter_toggled(self, event):
         self.updatePlot()
 
     def on_comboboxFilterType_changed(self, event):
-        filter_num = self.comboboxFilterType.get_active()
-        filter_name = self.dictFiltTyp[filter_num]
-        self.flagFiltTyp = self.dictFiltTyp[filter_name]
         if self.togglebuttonFilter.get_active():
             self.updatePlot()
 
@@ -262,6 +254,9 @@ class PickingGUI:
             self.updatePlot()
 
     def on_spinbuttonHighpass_value_changed(self, event):
+        if not self.togglebuttonFilter.get_active() or \
+           self.comboboxFilterType.get_active_text() == "Lowpass":
+            return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
         if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
@@ -274,13 +269,15 @@ class PickingGUI:
         if self.spinbuttonHighpass.get_value() < minimum:
             err = "Warning: Lowpass frequency is not supported by length of trace!"
             appendTextview(self.textviewStdErr, err)
-        if self.togglebuttonFilter.get_active():
-            self.updatePlot()
+        self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
         self.canv.grab_focus()
 
     def on_spinbuttonLowpass_value_changed(self, event):
+        if not self.togglebuttonFilter.get_active() or \
+           self.comboboxFilterType.get_active_text() == "Highpass":
+            return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
         if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
@@ -292,8 +289,7 @@ class PickingGUI:
         if self.spinbuttonLowpass.get_value() > maximum:
             err = "Warning: Highpass frequency is lower than Nyquist!"
             appendTextview(self.textviewStdErr, err)
-        if self.togglebuttonFilter.get_active():
-            self.updatePlot()
+        self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
         self.canv.grab_focus()
@@ -332,32 +328,45 @@ class PickingGUI:
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
-        self.valFiltHigh=self.options.highpass #XXX DEPRECATED
-        self.valFiltLow=self.options.lowpass #XXX DEPRECATED
-        self.flagWheelZoom=True #Switch use of mousewheel for zooming
-        self.dictPhaseColors={'P':'red', 'S':'blue', 'Psynth':'black', 'Ssynth':'black', 'Mag':'green'}
-        self.dictPhaseLinestyles={'P':'-', 'S':'-', 'Psynth':'--', 'Ssynth':'--'}
-        self.magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
-        self.magMinMarker='x'
-        self.magMaxMarker='x'
-        self.magMarkerEdgeWidth=1.8
-        self.magMarkerSize=20
-        self.axvlinewidths=1.2
+        self.flagWheelZoom = True #Switch use of mousewheel for zooming
+        self.dictPhaseColors = {'P':'red', 'S':'blue', 'Psynth':'black',
+                                'Ssynth':'black', 'Mag':'green'}
+        self.dictPhaseLinestyles = {'P':'-', 'S':'-', 'Psynth':'--',
+                                    'Ssynth':'--'}
+        #Estimating the maximum/minimum in a sample-window around click
+        self.magPickWindow = 10
+        self.magMinMarker = 'x'
+        self.magMaxMarker = 'x'
+        self.magMarkerEdgeWidth = 1.8
+        self.magMarkerSize = 20
+        self.axvlinewidths = 1.2
         #dictionary for key-bindings
-        self.dictKeybindings = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
-                           'setMagMin': 'alt', 'setMagMax': ' ', 'switchPhase': 'control',
-                           'delMagMinMax': 'escape', 'switchWheelZoom': 'z',
-                           'switchPan': 'p', 'prevStream': 'y', 'nextStream': 'x',
-                           'setPWeight0': '0', 'setPWeight1': '1', 'setPWeight2': '2',
-                           'setPWeight3': '3', # 'setPWeight4': '4', 'setPWeight5': '5',
-                           'setSWeight0': '0', 'setSWeight1': '1', 'setSWeight2': '2',
-                           'setSWeight3': '3', # 'setSWeight4': '4', 'setSWeight5': '5',
-                           'setPPolUp': 'u', 'setPPolPoorUp': '+',
-                           'setPPolDown': 'd', 'setPPolPoorDown': '-',
-                           'setSPolUp': 'u', 'setSPolPoorUp': '+',
-                           'setSPolDown': 'd', 'setSPolPoorDown': '-',
-                           'setPOnsetImpulsive': 'i', 'setPOnsetEmergent': 'e',
-                           'setSOnsetImpulsive': 'i', 'setSOnsetEmergent': 'e'}
+        self.dictKeybindings = {'setPick': 'alt', 'setPickError': ' ',
+                'delPick': 'escape', 'setMagMin': 'alt', 'setMagMax': ' ',
+                'switchPhase': 'control', 'delMagMinMax': 'escape',
+                'switchWheelZoom': 'z', 'switchPan': 'p', 'prevStream': 'y',
+                'nextStream': 'x', 'setWeight0': '0', 'setWeight1': '1',
+                'setWeight2': '2', 'setWeight3': '3',
+                #'setWeight4': '4', 'setWeight5': '5',
+                'setPolUp': 'u', 'setPolPoorUp': '+', 'setPolDown': 'd',
+                'setPolPoorDown': '-', 'setOnsetImpulsive': 'i',
+                'setOnsetEmergent': 'e'}
+        # check for conflicting keybindings. 
+        # we check twice, because keys for setting picks and magnitudes
+        # are allowed to interfere...
+        tmp_keys = self.dictKeybindings.copy()
+        tmp_keys.pop('setMagMin')
+        tmp_keys.pop('setMagMax')
+        tmp_keys.pop('delMagMinMax')
+        if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
+            msg = "Interfering keybindings. Please check variable " + \
+                  "self.dictKeybindings"
+            raise(msg)
+        if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
+            msg = "Interfering keybindings. Please check variable " + \
+                  "self.dictKeybindings"
+            raise(msg)
+
         self.tmp_dir = tempfile.mkdtemp() + '/'
         self.threeDlocPath = self.options.pluginpath + '/3dloc/'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
@@ -584,45 +593,6 @@ class PickingGUI:
         self.textviewStdOut = self.gla.get_widget("textviewStdOut")
         self.textviewStdErr = self.gla.get_widget("textviewStdErr")
 
-        #XXX Do we really need all this dictionary stuff for phase/filter-type?
-        #XXX We could also check against the active model-label of the boxes
-        #XXX at the respective points in the code...
-        #XXX e.g. if self.comboboxFiltType.get_model()[self.comboboxPhaseType.get_active()][0] == 'Bandpass': do bandpass...
-        #XXX the same holds for the filter type flags and dictionaries!
-        # there's a bug in glade so we have to set the default value for the
-        # two comboboxes here by hand
-        # we also have to make a connection between the combobox labels and our
-        # internal event handling (to determine what to do on the various key
-        # press events...)
-        # activate first item in the combobox designed with glade:
-        self.flagPhase = 0
-        self.dictPhase = {} # old hardcoded-way: = {'P':0, 'S':1, 'Mag':2}
-        # XXX this is from the old version...:
-        # XXX We need the reverted dictionary for switching throug the Phase radio button
-        self.dictPhaseInverse = {} #XXX do we really need this second dict?
-        modelPhase = self.comboboxPhaseType.get_model()
-        for i, modelrow in enumerate(modelPhase):
-            # we assume there is only one element per row!
-            self.dictPhase[modelrow[0]] = i
-            self.dictPhaseInverse[i] = modelrow[0]
-        print self.dictPhase
-        print self.dictPhaseInverse
-        # XXX not necessary, is done automatically by on_..._changed-event:
-        ###phase = self.dictPhaseInverse[self.flagPhase]
-        ###self.pickingColor = self.dictPhaseColors[phase]  #['P']
-        self.comboboxPhaseType.set_active(self.flagPhase)
-            
-        # now do the same with the filter-Type combobox
-        # assign our dictionaries for internal handling
-        self.flagFiltTyp = 0
-        self.comboboxFilterType.set_active(self.flagFiltTyp)
-        self.dictFiltTyp = {} # old hardcoded-way: = {'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
-        modelFilt = self.comboboxFilterType.get_model()
-        for i, modelrow in enumerate(modelFilt):
-            # we assume there is only one element per row!
-            self.dictFiltTyp[i] = modelrow[0]
-        print self.dictFiltTyp
-        
         # Set up initial plot
         #self.fig = plt.figure()
         #self.fig.canvas.set_window_title("ObsPyck")
@@ -632,24 +602,24 @@ class PickingGUI:
         #except:
         #    pass
         self.drawAxes()
-        self.addPhaseButtons()
         #redraw()
         #self.fig.canvas.draw()
         # Activate all mouse/key/Cursor-events
-        self.keypress = self.canv.mpl_connect('key_press_event', self.pick)
-        self.keypressWheelZoom = self.canv.mpl_connect('key_press_event', self.switchWheelZoom)
-        self.keypressPan = self.canv.mpl_connect('key_press_event', self.switchPan)
-        self.keypressNextPrev = self.canv.mpl_connect('key_press_event', self.switchStream)
-        self.keypressSwitchPhase = self.canv.mpl_connect('key_press_event', self.switchPhase)
-        self.buttonpressBlockRedraw = self.canv.mpl_connect('button_press_event', self.blockRedraw)
-        self.buttonreleaseAllowRedraw = self.canv.mpl_connect('button_release_event', self.allowRedraw)
-        self.scroll = self.canv.mpl_connect('scroll_event', self.zoom)
-        self.scroll_button = self.canv.mpl_connect('button_press_event', self.zoom_reset)
-        #multicursor = mplMultiCursor(fig.canvas,axs, useblit=True, color='black', linewidth=1, ls='dotted')
-        self.multicursor = MultiCursor(self.fig.canvas,self.axs, useblit=True, color=self.dictPhaseColors['P'], linewidth=1, ls='dotted')
-        for l in self.multicursor.lines:
-            l.set_color(self.dictPhaseColors['P'])
-        self.radioPhase.circles[0].set_facecolor(self.dictPhaseColors['P'])
+        self.canv.mpl_connect('key_press_event', self.keypress)
+        self.canv.mpl_connect('scroll_event', self.scroll)
+        self.canv.mpl_connect('button_release_event', self.buttonrelease)
+        self.canv.mpl_connect('button_press_event', self.buttonpress)
+        self.multicursor = MultiCursor(self.canv, self.axs, useblit=True,
+                                       color='k', linewidth=1, ls='dotted')
+        
+        # there's a bug in glade so we have to set the default value for the
+        # two comboboxes here by hand, otherwise the boxes are empty at startup
+        # we also have to make a connection between the combobox labels and our
+        # internal event handling (to determine what to do on the various key
+        # press events...)
+        # activate first item in the combobox designed with glade:
+        self.comboboxPhaseType.set_active(0)
+        self.comboboxFilterType.set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
         # grab focus, otherwise the mpl key_press events get lost...
@@ -658,7 +628,7 @@ class PickingGUI:
         # >> the combobox-type buttons grab the focus. if really necessary the
         # >> focus can be rest by clicking the "set focus on plot" button...
         # XXX a possible workaround would be to manually grab focus whenever
-        # one of the combobox buttons or spinbuttons is clicked/updated
+        # one of the combobox buttons or spinbuttons is clicked/updated (DONE!)
         nofocus_recursive(self.win)
         self.comboboxPhaseType.set_focus_on_click(False)
         self.comboboxFilterType.set_focus_on_click(False)
@@ -672,7 +642,6 @@ class PickingGUI:
         self.spinbuttonLowpass.set_value(self.options.lowpass)
         self.canv.show()
         gtk.main()
-        #XXX gtk gui end
 
     
     ## Trim all to same length, us Z as reference
@@ -682,14 +651,10 @@ class PickingGUI:
     
     
     def drawAxes(self):
-        #XXX wanted to change to seconds on x-axis but there is one problem:
-        # during picking it's convenient to round to the nearest sample
-        # with float seconds on the x-axis it's not so easy anymore
         npts = self.streams[self.stPt][0].stats.npts
         smprt = self.streams[self.stPt][0].stats.sampling_rate
         dt = 1. / smprt
         self.t = np.arange(0., dt * npts, dt)
-        #self.t = np.arange(self.streams[self.stPt][0].stats.npts)
         self.axs = []
         self.plts = []
         self.trans = []
@@ -716,7 +681,7 @@ class PickingGUI:
         self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.10, hspace=0.01, right=0.999, top=0.95, left=0.08)
+        self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1250,690 +1215,677 @@ class PickingGUI:
         except:
             pass
     
-    def addFiltButtons(self):
-        #add filter buttons
-        self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        #XXX DEPRECATED
-        self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(False,False,self.flagSpectrogram,False))
-        self.check.on_clicked(self.funcFilt)
-        self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-        self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
-        self.radio.on_clicked(self.funcFiltTyp)
+    #def addFiltButtons(self):
+    #    #add filter buttons
+    #    self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+    #    #XXX DEPRECATED
+    #    self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(False,False,self.flagSpectrogram,False))
+    #    self.check.on_clicked(self.funcFilt)
+    #    self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
+    #    self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
+    #    self.radio.on_clicked(self.funcFiltTyp)
+    #    
+    #def addPhaseButtons(self):
+    #    #add phase buttons
+    #    self.axPhase = self.fig.add_axes([0.05, 0.02, 0.05, 0.05],frameon=False,axisbg='lightgrey')
+    #    self.radioPhase = RadioButtons(self.axPhase, ('P', 'S', 'Mag'),activecolor='k')
+    #    self.radioPhase.on_clicked(self.funcPhase)
         
-    def addPhaseButtons(self):
-        #add phase buttons
-        self.axPhase = self.fig.add_axes([0.05, 0.02, 0.05, 0.05],frameon=False,axisbg='lightgrey')
-        self.radioPhase = RadioButtons(self.axPhase, ('P', 'S', 'Mag'),activecolor='k')
-        self.radioPhase.on_clicked(self.funcPhase)
-        
-    def updateLow(self,val):
-        if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 2:
-            return
-        else:
-            self.updatePlot()
-    
-    def updateHigh(self,val):
-        if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 3:
-            return
-        else:
-            self.updatePlot()
+    #def updateLow(self,val):
+    #    if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 2:
+    #        return
+    #    else:
+    #        self.updatePlot()
+    #
+    #def updateHigh(self,val):
+    #    if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 3:
+    #        return
+    #    else:
+    #        self.updatePlot()
     
     
     def redraw(self):
         for line in self.multicursor.lines:
             line.set_visible(False)
-        self.fig.canvas.draw()
+        self.canv.draw()
     
     def updatePlot(self):
         filt=[]
         #filter data
         if self.togglebuttonFilter.get_active():
-            if self.checkbuttonZeroPhase.get_active():
-                if self.flagFiltTyp==0:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpassZPHSH(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "Zero-Phase Bandpass: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==1:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstopZPHSH(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "Zero-Phase Bandstop: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==2:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpassZPHSH(tr.data,self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "Zero-Phase Lowpass: %.2f Hz"%(self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==3:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(highpassZPHSH(tr.data,self.spinbuttonHighpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "Zero-Phase Highpass: %.2f Hz"%(self.spinbuttonHighpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-            else:
-                if self.flagFiltTyp==0:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(bandpass(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "One-Pass Bandpass: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==1:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(bandstop(tr.data,self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "One-Pass Bandstop: %.2f-%.2f Hz"%(self.spinbuttonHighpass.get_value(),self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==2:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(lowpass(tr.data,self.spinbuttonLowpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "One-Pass Lowpass: %.2f Hz"%(self.spinbuttonLowpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
-                if self.flagFiltTyp==3:
-                    for tr in self.streams[self.stPt].traces:
-                        filt.append(highpass(tr.data,self.spinbuttonHighpass.get_value(),df=tr.stats.sampling_rate))
-                    msg = "One-Pass Highpass: %.2f Hz"%(self.spinbuttonHighpass.get_value())
-                    appendTextview(self.textviewStdOut, msg)
+            zerophase = self.checkbuttonZeroPhase.get_active()
+            freq_highpass = self.spinbuttonHighpass.get_value()
+            freq_lowpass = self.spinbuttonLowpass.get_value()
+            filter_name = self.comboboxFilterType.get_active_text()
+            for tr in self.streams[self.stPt].traces:
+                if filter_name == "Bandpass":
+                    filt.append(bandpass(tr.data, freq_highpass, freq_lowpass,
+                            df=tr.stats.sampling_rate, zerophase=zerophase))
+                    msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
+                            (filter_name, zerophase, freq_highpass,
+                             freq_lowpass)
+                elif filter_name == "Bandstop":
+                    filt.append(bandstop(tr.data, freq_highpass, freq_lowpass,
+                            df=tr.stats.sampling_rate, zerophase=zerophase))
+                    msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
+                            (filter_name, zerophase, freq_highpass,
+                             freq_lowpass)
+                elif filter_name == "Lowpass":
+                    filt.append(lowpass(tr.data, freq_lowpass,
+                            df=tr.stats.sampling_rate, zerophase=zerophase))
+                    msg = "%s (zerophase=%s): %.2f Hz" % (filter_name,
+                                                          zerophase,
+                                                          freq_lowpass)
+                elif filter_name == "Highpass":
+                    filt.append(highpass(tr.data, freq_highpass,
+                            df=tr.stats.sampling_rate, zerophase=zerophase))
+                    msg = "%s (zerophase=%s): %.2f Hz" % (filter_name,
+                                                          zerophase,
+                                                          freq_highpass)
+                else:
+                    err = "Unrecognized Filter Option. Showing unfiltered " + \
+                          "data."
+                    appendTextview(self.textviewStdErr, err)
+                    filt.append(tr.data)
+            appendTextview(self.textviewStdOut, msg)
             #make new plots
-            for i in range(len(self.plts)):
-                self.plts[i].set_ydata(filt[i])
+            for i, plot in enumerate(self.plts):
+                plot.set_ydata(filt[i])
         else:
             #make new plots
-            for i in range(len(self.plts)):
-                self.plts[i].set_ydata(self.streams[self.stPt][i].data)
+            for i, plot in enumerate(self.plts):
+                plot.set_ydata(self.streams[self.stPt][i].data)
             msg = "Unfiltered Traces"
             appendTextview(self.textviewStdOut, msg)
         # Update all subplots
         self.redraw()
     
-    def funcFilt(self, label):
-        if label=='Filter':
-            print "DEPRECATED!"
-            raise
-            #self.flagFilt=not self.flagFilt
-            #self.updatePlot()
-        elif label=='Zero-Phase':
-            print "DEPRECATED!"
-            raise
-            #self.flagFiltZPH=not self.flagFiltZPH
-            #if self.flagFilt:
-            #    self.updatePlot()
-        elif label=='Spectrogram':
-            self.flagSpectrogram = not self.flagSpectrogram
-            self.delAxes()
-            self.drawAxes()
-            self.fig.canvas.draw()
-    
-    def funcFiltTyp(self, label):
-        self.flagFiltTyp=self.dictFiltTyp[label]
-        if self.togglebuttonFilter.get_active():
-            self.updatePlot()
-    
-    def funcPhase(self, label):
-        self.flagPhase=self.dictPhase[label]
-        self.pickingColor=self.dictPhaseColors[label]
-        for l in self.multicursor.lines:
-            l.set_color(self.pickingColor)
-        self.radioPhase.circles[self.flagPhase].set_facecolor(self.pickingColor)
-        self.redraw()
-    
-    def funcSwitchPhase(self):
-        self.radioPhase.circles[self.flagPhase].set_facecolor(self.axPhase._axisbg)
-        self.flagPhase=(self.flagPhase+1)%len(self.dictPhase)
-        self.pickingColor=self.dictPhaseColors[self.dictPhaseInverse[self.flagPhase]]
-        for l in self.multicursor.lines:
-            l.set_color(self.pickingColor)
-        self.radioPhase.circles[self.flagPhase].set_facecolor(self.pickingColor)
-        self.redraw()
-    
-    
-    
-    
     # Define the event that handles the setting of P- and S-wave picks
-    def pick(self, event):
-        #import ipdb; ipdb.set_trace()
-        #We want to round from the picking location to
-        #the time value of the nearest time sample:
-        samp_rate = self.streams[self.stPt][0].stats.sampling_rate
-        pickSample = event.xdata * samp_rate
-        pickSample = round(pickSample)
-        pickSample = pickSample / samp_rate
-        # we need the position of the cursor location
-        # in the seismogram array:
-        xpos = pickSample * samp_rate
+    def keypress(self, event):
+        phase_type = self.comboboxPhaseType.get_active_text()
+        keys = self.dictKeybindings
+        dict = self.dicts[self.stPt]
         
-        # Set new P Pick
-        if self.flagPhase==0 and event.key==self.dictKeybindings['setPick']:
-            self.delPLine()
-            self.delPLabel()
-            self.delPsynthLine()
-            self.dicts[self.stPt]['P'] = pickSample
-            self.drawPLine()
-            self.drawPLabel()
-            self.drawPsynthLine()
-            self.drawPsynthLabel()
-            #check if the new P pick lies outside of the Error Picks
-            try:
-                if self.dicts[self.stPt]['P']<self.dicts[self.stPt]['PErr1']:
+        #######################################################################
+        # Start of key events related to picking                              #
+        #######################################################################
+        # For some key events (picking events) we need information on the x/y
+        # position of the cursor:
+        if event.key in (keys['setPick'], keys['setPickError'],
+                         keys['setMagMin'], keys['setMagMax']):
+            # some keypress events only make sense inside our matplotlib axes
+            if not event.inaxes in self.axs:
+                return
+            #We want to round from the picking location to
+            #the time value of the nearest time sample:
+            samp_rate = self.streams[self.stPt][0].stats.sampling_rate
+            pickSample = event.xdata * samp_rate
+            pickSample = round(pickSample)
+            pickSample = pickSample / samp_rate
+            # we need the position of the cursor location
+            # in the seismogram array:
+            xpos = pickSample * samp_rate
+
+        if event.key == keys['setPick']:
+            # some keypress events only make sense inside our matplotlib axes
+            if not event.inaxes in self.axs:
+                return
+            if phase_type == 'P':
+                self.delPLine()
+                self.delPLabel()
+                self.delPsynthLine()
+                dict['P'] = pickSample
+                self.drawPLine()
+                self.drawPLabel()
+                self.drawPsynthLine()
+                self.drawPsynthLabel()
+                #check if the new P pick lies outside of the Error Picks
+                if 'PErr1' in dict and dict['P'] < dict['PErr1']:
                     self.delPErr1Line()
                     self.delPErr1()
-            except:
-                pass
-            try:
-                if self.dicts[self.stPt]['P']>self.dicts[self.stPt]['PErr2']:
+                if 'PErr2' in dict and dict['P'] > dict['PErr2']:
                     self.delPErr2Line()
                     self.delPErr2()
-            except:
-                pass
-            # Update all subplots
-            self.redraw()
-            # Console output
-            msg = "P Pick set at %.3f" % self.dicts[self.stPt]['P']
-            appendTextview(self.textviewStdOut, msg)
-        # Set P Pick weight
-        if self.dicts[self.stPt].has_key('P'):
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight0']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PWeight']=0
-                self.drawPLabel()
                 self.redraw()
-                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
+                msg = "P Pick set at %.3f" % dict['P']
                 appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight1']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PWeight']=1
-                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                appendTextview(self.textviewStdOut, msg)
-                self.drawPLabel()
-                self.redraw()
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight2']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PWeight']=2
-                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                appendTextview(self.textviewStdOut, msg)
-                self.drawPLabel()
-                self.redraw()
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPWeight3']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PWeight']=3
-                msg = "P Pick weight set to %i"%self.dicts[self.stPt]['PWeight']
-                appendTextview(self.textviewStdOut, msg)
-                self.drawPLabel()
-                self.redraw()
-        # Set P Pick polarity
-        if self.dicts[self.stPt].has_key('P'):
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolUp']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PPol']='up'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorUp']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PPol']='poorup'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolDown']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PPol']='down'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==0 and event.key==self.dictKeybindings['setPPolPoorDown']:
-                self.delPLabel()
-                self.dicts[self.stPt]['PPol']='poordown'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P Pick polarity set to %s"%self.dicts[self.stPt]['PPol']
-                appendTextview(self.textviewStdOut, msg)
-        # Set P Pick onset
-        if self.dicts[self.stPt].has_key('P'):
-            if self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetImpulsive']:
-                self.delPLabel()
-                self.dicts[self.stPt]['POnset'] = 'impulsive'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
-                appendTextview(self.textviewStdOut, msg)
-            elif self.flagPhase == 0 and event.key == self.dictKeybindings['setPOnsetEmergent']:
-                self.delPLabel()
-                self.dicts[self.stPt]['POnset'] = 'emergent'
-                self.drawPLabel()
-                self.redraw()
-                msg = "P pick onset set to %s" % self.dicts[self.stPt]['POnset']
-                appendTextview(self.textviewStdOut, msg)
-        # Set new S Pick
-        if self.flagPhase==1 and event.key==self.dictKeybindings['setPick']:
-            self.delSLine()
-            self.delSLabel()
-            self.delSsynthLine()
-            self.dicts[self.stPt]['S'] = pickSample
-            self.dicts[self.stPt]['Saxind'] = self.axs.index(event.inaxes)
-            self.drawSLine()
-            self.drawSLabel()
-            self.drawSsynthLine()
-            self.drawSsynthLabel()
-            #check if the new S pick lies outside of the Error Picks
-            try:
-                if self.dicts[self.stPt]['S']<self.dicts[self.stPt]['SErr1']:
+                return
+            elif phase_type == 'S':
+                self.delSLine()
+                self.delSLabel()
+                self.delSsynthLine()
+                dict['S'] = pickSample
+                dict['Saxind'] = self.axs.index(event.inaxes)
+                self.drawSLine()
+                self.drawSLabel()
+                self.drawSsynthLine()
+                self.drawSsynthLabel()
+                #check if the new S pick lies outside of the Error Picks
+                if 'SErr1' in dict and dict['S'] < dict['SErr1']:
                     self.delSErr1Line()
                     self.delSErr1()
-            except:
-                pass
-            try:
-                if self.dicts[self.stPt]['S']>self.dicts[self.stPt]['SErr2']:
+                if 'SErr2' in dict and dict['S'] > dict['SErr2']:
                     self.delSErr2Line()
                     self.delSErr2()
-            except:
-                pass
-            # Update all subplots
-            self.redraw()
-            # Console output
-            msg = "S Pick set at %.3f" % self.dicts[self.stPt]['S']
-            appendTextview(self.textviewStdOut, msg)
-        # Set S Pick weight
-        if self.dicts[self.stPt].has_key('S'):
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight0']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SWeight']=0
-                self.drawSLabel()
                 self.redraw()
-                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
+                msg = "S Pick set at %.3f" % dict['S']
                 appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight1']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SWeight']=1
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight2']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SWeight']=2
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSWeight3']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SWeight']=3
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick weight set to %i"%self.dicts[self.stPt]['SWeight']
-                appendTextview(self.textviewStdOut, msg)
-        # Set S Pick polarity
-        if self.dicts[self.stPt].has_key('S'):
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolUp']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SPol']='up'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorUp']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SPol']='poorup'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolDown']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SPol']='down'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
-                appendTextview(self.textviewStdOut, msg)
-            if self.flagPhase==1 and event.key==self.dictKeybindings['setSPolPoorDown']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SPol']='poordown'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S Pick polarity set to %s"%self.dicts[self.stPt]['SPol']
-                appendTextview(self.textviewStdOut, msg)
-        # Set S Pick onset
-        if self.dicts[self.stPt].has_key('S'):
-            if self.flagPhase == 1 and event.key == self.dictKeybindings['setSOnsetImpulsive']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SOnset'] = 'impulsive'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
-                appendTextview(self.textviewStdOut, msg)
-            elif self.flagPhase == 1 and event.key == self.dictKeybindings['setSOnsetEmergent']:
-                self.delSLabel()
-                self.dicts[self.stPt]['SOnset'] = 'emergent'
-                self.drawSLabel()
-                self.redraw()
-                msg = "S pick onset set to %s" % self.dicts[self.stPt]['SOnset']
-                appendTextview(self.textviewStdOut, msg)
-        # Remove P Pick
-        if self.flagPhase==0 and event.key==self.dictKeybindings['delPick']:
-            # Try to remove all existing Pick lines and P Pick variable
-            self.delPLine()
-            self.delP()
-            self.delPWeight()
-            self.delPPol()
-            self.delPOnset()
-            self.delPLabel()
-            # Try to remove existing Pick Error 1 lines and variable
-            self.delPErr1Line()
-            self.delPErr1()
-            # Try to remove existing Pick Error 2 lines and variable
-            self.delPErr2Line()
-            self.delPErr2()
-            # Update all subplots
-            self.redraw()
-        # Remove S Pick
-        if self.flagPhase==1 and event.key==self.dictKeybindings['delPick']:
-            # Try to remove all existing Pick lines and P Pick variable
-            self.delSLine()
-            self.delS()
-            self.delSWeight()
-            self.delSPol()
-            self.delSOnset()
-            self.delSLabel()
-            # Try to remove existing Pick Error 1 lines and variable
-            self.delSErr1Line()
-            self.delSErr1()
-            # Try to remove existing Pick Error 2 lines and variable
-            self.delSErr2Line()
-            self.delSErr2()
-            # Update all subplots
-            self.redraw()
-        # Set new P Pick uncertainties
-        if self.flagPhase==0 and event.key==self.dictKeybindings['setPickError']:
-            # Set Flag to determine scenario
-            try:
-                # Set left Error Pick
-                if pickSample < self.dicts[self.stPt]['P']:
-                    errFlag=1
-                # Set right Error Pick
-                else:
-                    errFlag=2
-            # Set no Error Pick (no P Pick yet)
-            except:
                 return
-            # Case 1
-            if errFlag==1:
-                # Define global variables seen outside
-                # Remove old lines from the plot before plotting the new ones
+
+        if event.key == keys['setWeight0']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PWeight']=0
+                self.drawPLabel()
+                self.redraw()
+                msg = "P Pick weight set to %i"%dict['PWeight']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SWeight']=0
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick weight set to %i"%dict['SWeight']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setWeight1']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PWeight']=1
+                msg = "P Pick weight set to %i"%dict['PWeight']
+                appendTextview(self.textviewStdOut, msg)
+                self.drawPLabel()
+                self.redraw()
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SWeight']=1
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick weight set to %i"%dict['SWeight']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setWeight2']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PWeight']=2
+                msg = "P Pick weight set to %i"%dict['PWeight']
+                appendTextview(self.textviewStdOut, msg)
+                self.drawPLabel()
+                self.redraw()
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SWeight']=2
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick weight set to %i"%dict['SWeight']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setWeight3']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PWeight']=3
+                msg = "P Pick weight set to %i"%dict['PWeight']
+                appendTextview(self.textviewStdOut, msg)
+                self.drawPLabel()
+                self.redraw()
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SWeight']=3
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick weight set to %i"%dict['SWeight']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setPolUp']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PPol']='up'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P Pick polarity set to %s"%dict['PPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SPol']='up'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick polarity set to %s"%dict['SPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setPolPoorUp']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PPol']='poorup'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P Pick polarity set to %s"%dict['PPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SPol']='poorup'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick polarity set to %s"%dict['SPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setPolDown']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PPol']='down'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P Pick polarity set to %s"%dict['PPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SPol']='down'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick polarity set to %s"%dict['SPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setPolPoorDown']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['PPol']='poordown'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P Pick polarity set to %s"%dict['PPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SPol']='poordown'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S Pick polarity set to %s"%dict['SPol']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setOnsetImpulsive']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['POnset'] = 'impulsive'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P pick onset set to %s" % dict['POnset']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SOnset'] = 'impulsive'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S pick onset set to %s" % dict['SOnset']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setOnsetEmergent']:
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                self.delPLabel()
+                dict['POnset'] = 'emergent'
+                self.drawPLabel()
+                self.redraw()
+                msg = "P pick onset set to %s" % dict['POnset']
+                appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                self.delSLabel()
+                dict['SOnset'] = 'emergent'
+                self.drawSLabel()
+                self.redraw()
+                msg = "S pick onset set to %s" % dict['SOnset']
+                appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['delPick']:
+            if phase_type == 'P':
+                self.delPLine()
+                self.delP()
+                self.delPWeight()
+                self.delPPol()
+                self.delPOnset()
+                self.delPLabel()
                 self.delPErr1Line()
-                # Save time value of sample nearest to error pick
-                self.dicts[self.stPt]['PErr1'] = pickSample
-                # Plot the lines for the P Error pick in all three traces
-                self.drawPErr1Line()
-                # Update all subplots
-                self.redraw()
-                # Console output
-                msg = "P Error Pick 1 set at %.3f" % \
-                        self.dicts[self.stPt]['PErr1']
-                appendTextview(self.textviewStdOut, msg)
-            # Case 2
-            if errFlag==2:
-                # Define global variables seen outside
-                # Remove old lines from the plot before plotting the new ones
+                self.delPErr1()
                 self.delPErr2Line()
-                # Save time value of sample nearest to error pick
-                self.dicts[self.stPt]['PErr2'] = pickSample
-                # Plot the lines for the P Error pick in all three traces
-                self.drawPErr2Line()
-                # Update all subplots
+                self.delPErr2()
                 self.redraw()
-                # Console output
-                msg = "P Error Pick 2 set at %.3f" % \
-                        self.dicts[self.stPt]['PErr2']
-                appendTextview(self.textviewStdOut, msg)
-        # Set new S Pick uncertainties
-        if self.flagPhase==1 and event.key==self.dictKeybindings['setPickError']:
-            # Set Flag to determine scenario
-            try:
-                # Set left Error Pick
-                if pickSample < self.dicts[self.stPt]['S']:
-                    errFlag=1
-                # Set right Error Pick
-                else:
-                    errFlag=2
-            # Set no Error Pick (no S Pick yet)
-            except:
                 return
-            # Case 1
-            if errFlag==1:
-                # Define global variables seen outside
-                # Remove old lines from the plot before plotting the new ones
+            elif phase_type == 'S':
+                self.delSLine()
+                self.delS()
+                self.delSWeight()
+                self.delSPol()
+                self.delSOnset()
+                self.delSLabel()
                 self.delSErr1Line()
-                # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['SErr1'] = pickSample
-                # Plot the lines for the S Error pick in all three traces
-                self.drawSErr1Line()
-                # Update all subplots
-                self.redraw()
-                # Console output
-                msg = "S Error Pick 1 set at %.3f" % \
-                        self.dicts[self.stPt]['SErr1']
-                appendTextview(self.textviewStdOut, msg)
-            # Case 2
-            if errFlag==2:
-                # Define global variables seen outside
-                # Remove old lines from the plot before plotting the new ones
+                self.delSErr1()
                 self.delSErr2Line()
-                # Save sample value of error pick (round to integer sample value)
-                self.dicts[self.stPt]['SErr2'] = pickSample
-                # Plot the lines for the S Error pick in all three traces
-                self.drawSErr2Line()
-                # Update all subplots
+                self.delSErr2()
                 self.redraw()
-                # Console output
-                msg = "S Error Pick 2 set at %.3f" % \
-                        self.dicts[self.stPt]['SErr2']
-                appendTextview(self.textviewStdOut, msg)
-        # Magnitude estimation picking:
-        if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMin'] and len(self.axs) > 2:
-            if event.inaxes == self.axs[1]:
-                self.delMagMinCross1()
-                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                self.dicts[self.stPt]['MagMin1']=np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                # save time of magnitude minimum in seconds
-                tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                tmp_magtime = tmp_magtime / samp_rate
-                self.dicts[self.stPt]['MagMin1T'] = tmp_magtime
-                #delete old MagMax Pick, if new MagMin Pick is higher
-                try:
-                    if self.dicts[self.stPt]['MagMin1'] > self.dicts[self.stPt]['MagMax1']:
+                return
+
+        if event.key == keys['setPickError']:
+            # some keypress events only make sense inside our matplotlib axes
+            if not event.inaxes in self.axs:
+                return
+            if phase_type == 'P':
+                if not 'P' in dict:
+                    return
+                # Set left Error Pick
+                if pickSample < dict['P']:
+                    self.delPErr1Line()
+                    dict['PErr1'] = pickSample
+                    self.drawPErr1Line()
+                    self.redraw()
+                    msg = "P Error Pick 1 set at %.3f" % dict['PErr1']
+                    appendTextview(self.textviewStdOut, msg)
+                # Set right Error Pick
+                elif pickSample > dict['P']:
+                    self.delPErr2Line()
+                    dict['PErr2'] = pickSample
+                    self.drawPErr2Line()
+                    self.redraw()
+                    msg = "P Error Pick 2 set at %.3f" % dict['PErr2']
+                    appendTextview(self.textviewStdOut, msg)
+                return
+            elif phase_type == 'S':
+                if not 'S' in dict:
+                    return
+                # Set left Error Pick
+                if pickSample < dict['S']:
+                    self.delSErr1Line()
+                    dict['SErr1'] = pickSample
+                    self.drawSErr1Line()
+                    self.redraw()
+                    msg = "S Error Pick 1 set at %.3f" % dict['SErr1']
+                    appendTextview(self.textviewStdOut, msg)
+                # Set right Error Pick
+                elif pickSample > dict['S']:
+                    self.delSErr2Line()
+                    dict['SErr2'] = pickSample
+                    self.drawSErr2Line()
+                    self.redraw()
+                    msg = "S Error Pick 2 set at %.3f" % dict['SErr2']
+                    appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setMagMin']:
+            # some keypress events only make sense inside our matplotlib axes
+            if not event.inaxes in self.axs:
+                return
+            if phase_type == 'Mag':
+                if len(self.axs) != 3:
+                    err = "Magnitude picking only supported with 3 axes."
+                    appendTextview(self.textviewStdErr, err)
+                    return
+                if event.inaxes is self.axs[1]:
+                    self.delMagMinCross1()
+                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                    dict['MagMin1'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    # save time of magnitude minimum in seconds
+                    tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    tmp_magtime = tmp_magtime / samp_rate
+                    dict['MagMin1T'] = tmp_magtime
+                    #delete old MagMax Pick, if new MagMin Pick is higher
+                    if 'MagMax1' in dict and dict['MagMin1'] > dict['MagMax1']:
                         self.delMagMaxCross1()
                         self.delMagMax1()
-                except:
-                    pass
-                self.drawMagMinCross1()
-                self.redraw()
-                msg = "Minimum for magnitude estimation set: %s at %.3f" % \
-                        (self.dicts[self.stPt]['MagMin1'], self.dicts[self.stPt]['MagMin1T'])
-                appendTextview(self.textviewStdOut, msg)
-            elif event.inaxes == self.axs[2]:
-                self.delMagMinCross2()
-                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                self.dicts[self.stPt]['MagMin2']=np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                # save time of magnitude minimum in seconds
-                tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                tmp_magtime = tmp_magtime / samp_rate
-                self.dicts[self.stPt]['MagMin2T'] = tmp_magtime
-                #delete old MagMax Pick, if new MagMin Pick is higher
-                try:
-                    if self.dicts[self.stPt]['MagMin2'] > self.dicts[self.stPt]['MagMax2']:
+                    self.drawMagMinCross1()
+                    self.redraw()
+                    msg = "Minimum for magnitude estimation set: %s at %.3f" \
+                            % (dict['MagMin1'], dict['MagMin1T'])
+                    appendTextview(self.textviewStdOut, msg)
+                elif event.inaxes is self.axs[2]:
+                    self.delMagMinCross2()
+                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                    dict['MagMin2'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    # save time of magnitude minimum in seconds
+                    tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    tmp_magtime = tmp_magtime / samp_rate
+                    dict['MagMin2T'] = tmp_magtime
+                    #delete old MagMax Pick, if new MagMin Pick is higher
+                    if 'MagMax2' in dict and dict['MagMin2'] > dict['MagMax2']:
                         self.delMagMaxCross2()
                         self.delMagMax2()
-                except:
-                    pass
-                self.drawMagMinCross2()
-                self.redraw()
-                msg = "Minimum for magnitude estimation set: %s at %.3f" % \
-                        (self.dicts[self.stPt]['MagMin2'], self.dicts[self.stPt]['MagMin2T'])
-                appendTextview(self.textviewStdOut, msg)
-        if self.flagPhase==2 and event.key==self.dictKeybindings['setMagMax'] and len(self.axs) > 2:
-            if event.inaxes == self.axs[1]:
-                self.delMagMaxCross1()
-                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                self.dicts[self.stPt]['MagMax1']=np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                # save time of magnitude maximum in seconds
-                tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                tmp_magtime = tmp_magtime / samp_rate
-                self.dicts[self.stPt]['MagMax1T'] = tmp_magtime
-                #delete old MagMax Pick, if new MagMax Pick is higher
-                try:
-                    if self.dicts[self.stPt]['MagMin1'] > self.dicts[self.stPt]['MagMax1']:
+                    self.drawMagMinCross2()
+                    self.redraw()
+                    msg = "Minimum for magnitude estimation set: %s at %.3f" \
+                            % (dict['MagMin2'], dict['MagMin2T'])
+                    appendTextview(self.textviewStdOut, msg)
+                return
+
+        if event.key == keys['setMagMax']:
+            # some keypress events only make sense inside our matplotlib axes
+            if not event.inaxes in self.axs:
+                return
+            if phase_type == 'Mag':
+                if len(self.axs) != 3:
+                    err = "Magnitude picking only supported with 3 axes."
+                    appendTextview(self.textviewStdErr, err)
+                    return
+                if event.inaxes is self.axs[1]:
+                    self.delMagMaxCross1()
+                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                    dict['MagMax1'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    # save time of magnitude maximum in seconds
+                    tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    tmp_magtime = tmp_magtime / samp_rate
+                    dict['MagMax1T'] = tmp_magtime
+                    #delete old MagMax Pick, if new MagMax Pick is higher
+                    if 'MagMin1' in dict and dict['MagMin1'] > dict['MagMax1']:
                         self.delMagMinCross1()
                         self.delMagMin1()
-                except:
-                    pass
-                self.drawMagMaxCross1()
-                self.redraw()
-                msg = "Maximum for magnitude estimation set: %s at %.3f" % \
-                        (self.dicts[self.stPt]['MagMax1'], self.dicts[self.stPt]['MagMax1T'])
-                appendTextview(self.textviewStdOut, msg)
-            elif event.inaxes == self.axs[2]:
-                self.delMagMaxCross2()
-                ydata=event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                cutoffSamples=xpos-self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                self.dicts[self.stPt]['MagMax2']=np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                # save time of magnitude maximum in seconds
-                tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                tmp_magtime = tmp_magtime / samp_rate
-                self.dicts[self.stPt]['MagMax2T'] = tmp_magtime
-                #delete old MagMax Pick, if new MagMax Pick is higher
-                try:
-                    if self.dicts[self.stPt]['MagMin2'] > self.dicts[self.stPt]['MagMax2']:
+                    self.drawMagMaxCross1()
+                    self.redraw()
+                    msg = "Maximum for magnitude estimation set: %s at %.3f" \
+                            % (dict['MagMax1'], dict['MagMax1T'])
+                    appendTextview(self.textviewStdOut, msg)
+                elif event.inaxes is self.axs[2]:
+                    self.delMagMaxCross2()
+                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                    dict['MagMax2'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    # save time of magnitude maximum in seconds
+                    tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
+                    tmp_magtime = tmp_magtime / samp_rate
+                    dict['MagMax2T'] = tmp_magtime
+                    #delete old MagMax Pick, if new MagMax Pick is higher
+                    if 'MagMin2' in dict and dict['MagMin2'] > dict['MagMax2']:
                         self.delMagMinCross2()
                         self.delMagMin2()
-                except:
-                    pass
-                self.drawMagMaxCross2()
-                self.redraw()
-                msg = "Maximum for magnitude estimation set: %s at %.3f" % \
-                        (self.dicts[self.stPt]['MagMax2'],self.dicts[self.stPt]['MagMax2T'])
-                appendTextview(self.textviewStdOut, msg)
-        if self.flagPhase == 2 and event.key == self.dictKeybindings['delMagMinMax']:
-            if event.inaxes == self.axs[1]:
-                self.delMagMaxCross1()
-                self.delMagMinCross1()
-                self.delMagMin1()
-                self.delMagMax1()
-            elif event.inaxes == self.axs[2]:
-                self.delMagMaxCross2()
-                self.delMagMinCross2()
-                self.delMagMin2()
-                self.delMagMax2()
-            else:
+                    self.drawMagMaxCross2()
+                    self.redraw()
+                    msg = "Maximum for magnitude estimation set: %s at %.3f" \
+                            % (dict['MagMax2'], dict['MagMax2T'])
+                    appendTextview(self.textviewStdOut, msg)
                 return
-            self.redraw()
-    
-    # Define zoom events for the mouse scroll wheel
-    def zoom(self,event):
-        # Zoom in on scroll-up
-        if event.button=='up' and self.flagWheelZoom:
-            # Calculate and set new axes boundaries from old ones
-            (left,right)=self.axs[0].get_xbound()
-            left+=(event.xdata-left)/2
-            right-=(right-event.xdata)/2
-            self.axs[0].set_xbound(lower=left,upper=right)
-            # Update all subplots
-            self.redraw()
-        # Zoom out on scroll-down
-        if event.button=='down' and self.flagWheelZoom:
-            # Calculate and set new axes boundaries from old ones
-            (left,right)=self.axs[0].get_xbound()
-            left-=(event.xdata-left)/2
-            right+=(right-event.xdata)/2
-            self.axs[0].set_xbound(lower=left,upper=right)
-            # Update all subplots
-            self.redraw()
-    
-    # Define zoom reset for the mouse button 2 (always scroll wheel!?)
-    def zoom_reset(self,event):
-        if event.button==2:
-            # Use Z trace limits as boundaries
-            self.axs[0].set_xbound(lower=self.xMin,upper=self.xMax)
-            self.axs[0].set_ybound(lower=self.yMin,upper=self.yMax)
-            # Update all subplots
-            self.redraw()
-            msg = "Resetting axes"
-            appendTextview(self.textviewStdOut, msg)
-    
-    def switchWheelZoom(self,event):
-        if event.key==self.dictKeybindings['switchWheelZoom']:
-            self.flagWheelZoom=not self.flagWheelZoom
+
+        if event.key == keys['delMagMinMax']:
+            if phase_type == 'Mag':
+                if event.inaxes is self.axs[1]:
+                    self.delMagMaxCross1()
+                    self.delMagMinCross1()
+                    self.delMagMin1()
+                    self.delMagMax1()
+                elif event.inaxes is self.axs[2]:
+                    self.delMagMaxCross2()
+                    self.delMagMinCross2()
+                    self.delMagMin2()
+                    self.delMagMax2()
+                else:
+                    return
+                self.redraw()
+                return
+        #######################################################################
+        # End of key events related to picking                                #
+        #######################################################################
+        
+        if event.key == keys['switchWheelZoom']:
+            self.flagWheelZoom = not self.flagWheelZoom
             if self.flagWheelZoom:
                 msg = "Mouse wheel zooming activated"
                 appendTextview(self.textviewStdOut, msg)
             else:
                 msg = "Mouse wheel zooming deactivated"
                 appendTextview(self.textviewStdOut, msg)
-    
-    def switchPan(self,event):
-        if event.key==self.dictKeybindings['switchPan']:
-            self.fig.canvas.toolbar.pan()
-            self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
+            return
+
+        if event.key == keys['switchPan']:
+            self.toolbar.pan()
+            self.canv.widgetlock.release(self.toolbar)
             self.redraw()
             msg = "Switching pan mode"
             appendTextview(self.textviewStdOut, msg)
-    
-    #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
-    def multicursorReinit(self):
-        self.fig.canvas.mpl_disconnect(self.multicursor.id1)
-        self.fig.canvas.mpl_disconnect(self.multicursor.id2)
-        self.multicursor.__init__(self.fig.canvas,self.axs, useblit=True, color='black', linewidth=1, ls='dotted')
-        #fig.canvas.draw_idle()
-        #multicursor._update()
-        #multicursor.needclear=True
-        #multicursor.background = fig.canvas.copy_from_bbox(fig.canvas.figure.bbox)
-        #fig.canvas.restore_region(multicursor.background)
-        #fig.canvas.blit(fig.canvas.figure.bbox)
-        for l in self.multicursor.lines:
-            l.set_color(self.pickingColor)
-    
-    def switchPhase(self, event):
-        if event.key==self.dictKeybindings['switchPhase']:
-            self.funcSwitchPhase()
+            return
+        
+        # iterate the phase type combobox
+        if event.key == keys['switchPhase']:
+            combobox = self.comboboxPhaseType
+            phase_count = len(combobox.get_model())
+            phase_next = (combobox.get_active() + 1) % phase_count
+            combobox.set_active(phase_next)
             msg = "Switching Phase button"
             appendTextview(self.textviewStdOut, msg)
+            return
             
-    def switchStream(self, event):
-        if event.key==self.dictKeybindings['prevStream']:
-            self.stPt=(self.stPt-1)%self.stNum
+        if event.key == keys['prevStream']:
+            self.stPt = (self.stPt - 1) % self.stNum
             xmin, xmax = self.axs[0].get_xlim()
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
-            #self.delSliders()
             self.multicursorReinit()
             self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
             msg = "Going to previous stream"
             appendTextview(self.textviewStdOut, msg)
-        if event.key==self.dictKeybindings['nextStream']:
-            self.stPt=(self.stPt+1)%self.stNum
+            return
+
+        if event.key == keys['nextStream']:
+            self.stPt = (self.stPt + 1) % self.stNum
             xmin, xmax = self.axs[0].get_xlim()
             self.delAxes()
             self.drawAxes()
             self.drawSavedPicks()
-            #self.delSliders()
             self.multicursorReinit()
             self.axs[0].set_xlim(xmin, xmax)
             self.updatePlot()
             msg = "Going to next stream"
             appendTextview(self.textviewStdOut, msg)
+            return
             
-    def blockRedraw(self, event):
-        if event.button==1 or event.button==3:
-            self.multicursor.visible=False
-            self.fig.canvas.widgetlock(self.fig.canvas.toolbar)
-            
-    def allowRedraw(self, event):
-        if event.button==1 or event.button==3:
-            self.multicursor.visible=True
-            self.fig.canvas.widgetlock.release(self.fig.canvas.toolbar)
+    # Define zooming for the mouse scroll wheel
+    def scroll(self, event):
+        if not self.flagWheelZoom:
+            return
+        # Calculate and set new axes boundaries from old ones
+        (left, right) = self.axs[0].get_xbound()
+        # Zoom in on scroll-up
+        if event.button == 'up':
+            left += (event.xdata - left) / 2
+            right -= (right - event.xdata) / 2
+        # Zoom out on scroll-down
+        elif event.button == 'down':
+            left -= (event.xdata - left) / 2
+            right += (right - event.xdata) / 2
+        self.axs[0].set_xbound(lower=left, upper=right)
+        self.redraw()
+    
+    # Define zoom reset for the mouse button 2 (always scroll wheel!?)
+    def buttonpress(self, event):
+        # set widgetlock when pressing mouse buttons and dont show cursor
+        # cursor should not be plotted when making a zoom selection etc.
+        if event.button == 1 or event.button == 3:
+            self.multicursor.visible = False
+            self.canv.widgetlock(self.toolbar)
+        # show traces from start to end
+        # (Use Z trace limits as boundaries)
+        elif event.button == 2:
+            self.axs[0].set_xbound(lower=self.xMin, upper=self.xMax)
+            self.axs[0].set_ybound(lower=self.yMin, upper=self.yMax)
+            # Update all subplots
+            self.redraw()
+            msg = "Resetting axes"
+            appendTextview(self.textviewStdOut, msg)
+    
+    def buttonrelease(self, event):
+        # release widgetlock when releasing mouse buttons
+        if event.button == 1 or event.button == 3:
+            self.multicursor.visible = True
+            self.canv.widgetlock.release(self.toolbar)
+    
+    #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
+    def multicursorReinit(self):
+        self.canv.mpl_disconnect(self.multicursor.id1)
+        self.canv.mpl_disconnect(self.multicursor.id2)
+        self.multicursor.__init__(self.canv, self.axs, useblit=True,
+                                  color='black', linewidth=1, ls='dotted')
+        self.updateMulticursorColor()
+
+    def updateMulticursorColor(self):
+        phase_name = self.comboboxPhaseType.get_active_text()
+        color = self.dictPhaseColors[phase_name]
+        for l in self.multicursor.lines:
+            l.set_color(color)
     
     def load3dlocSyntheticPhases(self):
         try:
@@ -3256,9 +3208,7 @@ class PickingGUI:
                    k != 'PErr2' and k != 'POnset' and k != 'PPol' and \
                    k != 'PWeight' and k != 'S' and k != 'SErr1' and \
                    k != 'SErr2' and k != 'SOnset' and k != 'SPol' and \
-                   k != 'SWeight' and k != 'Saxind' and \
-                   k != 'MagMin1' and k != 'MagMin2' and \
-                   k != 'MagMax1'  and k != 'MagMax2':
+                   k != 'SWeight' and k != 'Saxind':
                     del self.dicts[i][k]
             self.dicts[i]['MagUse'] = True
         self.dictOrigin = {}
