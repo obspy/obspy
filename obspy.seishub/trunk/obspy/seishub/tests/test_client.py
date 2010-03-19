@@ -17,7 +17,7 @@ class ClientTestCase(unittest.TestCase):
     def test_getStations(self):
         """
         """
-        client = Client("http://teide:8080", timeout=30)
+        client = Client("http://teide.geophysik.uni-muenchen.de:8080")
         data = client.waveform.getNetworkIds()
         print data
         data = client.waveform.getStationIds()
@@ -27,8 +27,11 @@ class ClientTestCase(unittest.TestCase):
         data = client.waveform.getChannelIds()
         print data
         t = UTCDateTime('20100310')
-        st = client.waveform.getWaveform("BW", "HROE", "", "EHN", t, t + 1800)
-        print st
+        print client.waveform.getWaveform("BW", "HROE", "", "EHN", t, t + 1800)
+        t = UTCDateTime("2009-09-03 00:00:00")
+        print client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
+        t = UTCDateTime("2010-03-19 00:00:01")
+        print client.waveform.getWaveform("BW", "MANZ", "", "EHZ", t, t + 20)
         t1 = UTCDateTime('20070101')
         t2 = UTCDateTime('20100101')
         st = client.waveform.getPreview("BW", "RTLI", "", "EHN", t1, t2)
