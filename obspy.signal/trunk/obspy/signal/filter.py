@@ -22,7 +22,7 @@ from scipy.fftpack import hilbert
 from scipy.signal import iirfilter, lfilter, remez, convolve, get_window
 
 
-def bandpass(data, freqmin, freqmax, df=200, corners=4):
+def bandpass(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
@@ -35,12 +35,19 @@ def bandpass(data, freqmin, freqmax, df=200, corners=4):
     :param df: Sampling rate in Hz; Default 200.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
+    :param zerophase: If True, apply filter once forwards and once backwards.
+        This results in twice the number of corners but zero phase shift in
+        the resulting filtered trace.
     :return: Filtered data.
     """
     fe = 0.5 * df
     [b, a] = iirfilter(corners, [freqmin / fe, freqmax / fe], btype='band',
                        ftype='butter', output='ba')
-    return lfilter(b, a, data)
+    if zerophase:
+        firstpass = lfilter(b, a, data)
+        return lfilter(b, a, firstpass[::-1])[::-1]
+    else:
+        return lfilter(b, a, data)
 
 
 def bandpassZPHSH(data, freqmin, freqmax, df=200, corners=2):
@@ -64,12 +71,10 @@ def bandpassZPHSH(data, freqmin, freqmax, df=200, corners=2):
         filter sections
     :return: Filtered data.
     """
-    x = bandpass(data, freqmin, freqmax, df, corners)
-    x = bandpass(x[::-1], freqmin, freqmax, df, corners)
-    return x[::-1]
+    return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
-def bandstop(data, freqmin, freqmax, df=200, corners=4):
+def bandstop(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
     """
     Butterworth-Bandstop Filter.
 
@@ -82,12 +87,19 @@ def bandstop(data, freqmin, freqmax, df=200, corners=4):
     :param df: Sampling rate in Hz; Default 200.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
+    :param zerophase: If True, apply filter once forwards and once backwards.
+        This results in twice the number of corners but zero phase shift in
+        the resulting filtered trace.
     :return: Filtered data.
     """
     fe = 0.5 * df
     [b, a] = iirfilter(corners, [freqmin / fe, freqmax / fe],
                        btype='bandstop', ftype='butter', output='ba')
-    return lfilter(b, a, data)
+    if zerophase:
+        firstpass = lfilter(b, a, data)
+        return lfilter(b, a, firstpass[::-1])[::-1]
+    else:
+        return lfilter(b, a, data)
 
 
 def bandstopZPHSH(data, freqmin, freqmax, df=200, corners=2):
@@ -112,12 +124,10 @@ def bandstopZPHSH(data, freqmin, freqmax, df=200, corners=2):
         filter sections
     :return: Filtered data.
     """
-    x = bandstop(data, freqmin, freqmax, df, corners)
-    x = bandstop(x[::-1], freqmin, freqmax, df, corners)
-    return x[::-1]
+    return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
-def lowpass(data, freq, df=200, corners=4):
+def lowpass(data, freq, df=200, corners=4, zerophase=False):
     """
     Butterworth-Lowpass Filter.
 
@@ -129,12 +139,19 @@ def lowpass(data, freq, df=200, corners=4):
     :param df: Sampling rate in Hz; Default 200.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
+    :param zerophase: If True, apply filter once forwards and once backwards.
+        This results in twice the number of corners but zero phase shift in
+        the resulting filtered trace.
     :return: Filtered data.
     """
     fe = 0.5 * df
     [b, a] = iirfilter(corners, freq / fe, btype='lowpass', ftype='butter',
                        output='ba')
-    return lfilter(b, a, data)
+    if zerophase:
+        firstpass = lfilter(b, a, data)
+        return lfilter(b, a, firstpass[::-1])[::-1]
+    else:
+        return lfilter(b, a, data)
 
 
 def lowpassZPHSH(data, freq, df=200, corners=2):
@@ -158,12 +175,10 @@ def lowpassZPHSH(data, freq, df=200, corners=2):
         filter sections
     :return: Filtered data.
     """
-    x = lowpass(data, freq, df, corners)
-    x = lowpass(x[::-1], freq, df, corners)
-    return x[::-1]
+    return lowpass(data, freq, df, corners, zerophase=True)
 
 
-def highpass(data, freq, df=200, corners=4):
+def highpass(data, freq, df=200, corners=4, zerophase=False):
     """
     Butterworth-Highpass Filter.
 
@@ -174,12 +189,19 @@ def highpass(data, freq, df=200, corners=4):
     :param df: Sampling rate in Hz; Default 200.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
+    :param zerophase: If True, apply filter once forwards and once backwards.
+        This results in twice the number of corners but zero phase shift in
+        the resulting filtered trace.
     :return: Filtered data.
     """
     fe = 0.5 * df
     [b, a] = iirfilter(corners, freq / fe, btype='highpass', ftype='butter',
                        output='ba')
-    return lfilter(b, a, data)
+    if zerophase:
+        firstpass = lfilter(b, a, data)
+        return lfilter(b, a, firstpass[::-1])[::-1]
+    else:
+        return lfilter(b, a, data)
 
 
 def highpassZPHSH(data, freq, df=200, corners=2):
@@ -203,9 +225,7 @@ def highpassZPHSH(data, freq, df=200, corners=2):
         filter sections
     :return: Filtered data.
     """
-    x = highpass(data, freq, df, corners)
-    x = highpass(x[::-1], freq, df, corners)
-    return x[::-1]
+    return highpass(data, freq, df, corners, zerophase=True)
 
 
 def envelope(data):
