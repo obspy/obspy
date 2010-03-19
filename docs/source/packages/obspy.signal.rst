@@ -51,3 +51,6 @@
         trigger
         util
         cpxtrace
+        polarization
+        hoctavbands
+        freqattributes
