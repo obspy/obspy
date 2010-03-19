@@ -122,6 +122,8 @@ class _WaveformMapperClient(object):
             kwargs[map[i]] = args[i]
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
+        if data == '':
+            raise Exception("No waveform data available")
         # unpickle
         stream = pickle.loads(data)
         if len(stream) == 0:
