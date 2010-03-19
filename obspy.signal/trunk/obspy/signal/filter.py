@@ -52,24 +52,7 @@ def bandpass(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
 
 def bandpassZPHSH(data, freqmin, freqmax, df=200, corners=2):
     """
-    Zero-Phase-Shift Butterworth-Bandpass Filter.
-
-    Filter data from freqmin to freqmax using corners corners and doing 2 runs
-    over the data, one from left to right and one from right to left.
-    Note that the default corners is 2, because of the two runs involved.
-
-    NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at 
-    the end of the trace! As this part of the trace is assumed to generally be 
-    of low interest/importance this issue is ignored at the moment.
-    Try obspy.signal/branches/visual_test_filter.py for showing the issue.
-
-    :param data: Data to filter, type numpy.ndarray.
-    :param freqmin: Pass band low corner frequency.
-    :param freqmax: Pass band high corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
-        filter sections
-    :return: Filtered data.
+    DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
@@ -104,25 +87,7 @@ def bandstop(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
 
 def bandstopZPHSH(data, freqmin, freqmax, df=200, corners=2):
     """
-    Zero-Phase-Shift Butterworth-Bandstop Filter.
-
-    Filter data removing data between frequencies freqmin and freqmax using
-    corners corners and doing 2 runs over the data, one from left to right and
-    one from right to left.
-    Note that the default corners is 2, because of the two runs involved.
-
-    NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at 
-    the end of the trace! As this part of the trace is assumed to generally be 
-    of low interest/importance this issue is ignored at the moment.
-    Try obspy.signal/branches/visual_test_filter.py for showing the issue.
-
-    :param data: Data to filter, type numpy.ndarray.
-    :param freqmin: Stop band low corner frequency.
-    :param freqmax: Stop band high corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
-        filter sections
-    :return: Filtered data.
+    DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
@@ -156,24 +121,7 @@ def lowpass(data, freq, df=200, corners=4, zerophase=False):
 
 def lowpassZPHSH(data, freq, df=200, corners=2):
     """
-    Zero-Phase-Shift Butterworth-Lowpass Filter.
-
-    Filter data removing data over certain frequency freq using corners corners
-    and doing 2 runs over the data, one from left to right and one from right
-    to left.
-    Note that the default corners is 2, because of the two runs involved.
-
-    NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at 
-    the end of the trace! As this part of the trace is assumed to generally be 
-    of low interest/importance this issue is ignored at the moment.
-    Try obspy.signal/branches/visual_test_filter.py for showing the issue.
-
-    :param data: Data to filter, type numpy.ndarray.
-    :param freq: Filter corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
-        filter sections
-    :return: Filtered data.
+    DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
     return lowpass(data, freq, df, corners, zerophase=True)
 
@@ -206,24 +154,7 @@ def highpass(data, freq, df=200, corners=4, zerophase=False):
 
 def highpassZPHSH(data, freq, df=200, corners=2):
     """
-    Zero-Phase-Shift Butterworth-Highpass Filter.
-
-    Filter data removing data below certain frequency freq using corners 
-    corners and doing 2 runs over the data, one from left to right and one 
-    from right to left.
-    Note that the default corners is 2, because of the two runs involved.
-
-    NOTE: The Zero-Phase filters deviate from PITSA's zero-phase filters at 
-    the end of the trace! As this part of the trace is assumed to generally be 
-    of low interest/importance this issue is ignored at the moment.
-    Try obspy.signal/branches/visual_test_filter.py for showing the issue.
-
-    :param data: Data to filter, type numpy.ndarray.
-    :param freq: Filter corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
-        filter sections
-    :return: Filtered data.
+    DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
     return highpass(data, freq, df, corners, zerophase=True)
 

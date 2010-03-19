@@ -78,8 +78,8 @@ class FilterTestCase(unittest.TestCase):
         freq2 = 10
         corners = 2
         # filter trace
-        datcorr = bandpassZPHSH(data, freq1, freq2, df=samp_rate,
-                                corners=corners)
+        datcorr = bandpass(data, freq1, freq2, df=samp_rate,
+                           corners=corners, zerophase=True)
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
         f = gzip.open(file)
@@ -139,7 +139,8 @@ class FilterTestCase(unittest.TestCase):
         freq = 5
         corners = 2
         # filter trace
-        datcorr = lowpassZPHSH(data, freq, df=samp_rate, corners=corners)
+        datcorr = lowpass(data, freq, df=samp_rate, corners=corners,
+                          zerophase=True)
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
         f = gzip.open(file)
@@ -200,7 +201,8 @@ class FilterTestCase(unittest.TestCase):
         freq = 10
         corners = 2
         # filter trace
-        datcorr = highpassZPHSH(data, freq, df=samp_rate, corners=corners)
+        datcorr = highpass(data, freq, df=samp_rate, corners=corners,
+                           zerophase=True)
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
         f = gzip.open(file)
