@@ -237,8 +237,24 @@ class PickingGUI:
     def on_buttonQuit_clicked(self, event):
         self.cleanQuit()
 
+    def on_comboboxPhaseType_changed(self, event):
+        phase_num = self.comboboxPhaseType.get_active()
+        phase_name = self.dictPhaseInverse[phase_num]
+        self.flagPhase = phase_num
+        self.pickingColor = self.dictPhaseColors[phase_name]
+        for l in self.multicursor.lines:
+            l.set_color(self.pickingColor)
+        self.redraw()
+
     def on_togglebuttonFilter_toggled(self, event):
         self.updatePlot()
+
+    def on_comboboxFilterType_changed(self, event):
+        filter_num = self.comboboxFilterType.get_active()
+        filter_name = self.dictFiltTyp[filter_num]
+        self.flagFiltTyp = self.dictFiltTyp[filter_name]
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
 
     def on_checkbuttonZeroPhase_toggled(self, event):
         # if the filter flag is not set, we don't have to update the plot
@@ -316,21 +332,11 @@ class PickingGUI:
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
-        self.flagFilt=False #XXX DEPRECATED #False:no filter  True:filter
-        self.flagFiltTyp=0 #0: bandpass 1: bandstop 2:lowpass 3: highpass
-        self.dictFiltTyp={'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
-        self.flagFiltZPH=False #XXX DEPRECATED #False: no zero-phase True: zero-phase filtering
         self.valFiltHigh=self.options.highpass #XXX DEPRECATED
         self.valFiltLow=self.options.lowpass #XXX DEPRECATED
         self.flagWheelZoom=True #Switch use of mousewheel for zooming
-        self.flagPhase=0 #0:P 1:S 2:Magnitude
-        self.dictPhase={'P':0, 'S':1, 'Mag':2}
-        self.dictPhaseInverse = {} # We need the reverted dictionary for switching throug the Phase radio button
-        for i in self.dictPhase.items():
-            self.dictPhaseInverse[i[1]] = i[0]
         self.dictPhaseColors={'P':'red', 'S':'blue', 'Psynth':'black', 'Ssynth':'black', 'Mag':'green'}
         self.dictPhaseLinestyles={'P':'-', 'S':'-', 'Psynth':'--', 'Ssynth':'--'}
-        self.pickingColor = self.dictPhaseColors['P']
         self.magPickWindow=10 #Estimating the maximum/minimum in a sample-window around click
         self.magMinMarker='x'
         self.magMaxMarker='x'
@@ -578,11 +584,45 @@ class PickingGUI:
         self.textviewStdOut = self.gla.get_widget("textviewStdOut")
         self.textviewStdErr = self.gla.get_widget("textviewStdErr")
 
-        # there's a bug in glade so we have to set the default value for the two
-        # comboboxes here by hand
-        self.comboboxPhaseType.set_active(0)
-        self.comboboxFilterType.set_active(0)
-
+        #XXX Do we really need all this dictionary stuff for phase/filter-type?
+        #XXX We could also check against the active model-label of the boxes
+        #XXX at the respective points in the code...
+        #XXX e.g. if self.comboboxFiltType.get_model()[self.comboboxPhaseType.get_active()][0] == 'Bandpass': do bandpass...
+        #XXX the same holds for the filter type flags and dictionaries!
+        # there's a bug in glade so we have to set the default value for the
+        # two comboboxes here by hand
+        # we also have to make a connection between the combobox labels and our
+        # internal event handling (to determine what to do on the various key
+        # press events...)
+        # activate first item in the combobox designed with glade:
+        self.flagPhase = 0
+        self.dictPhase = {} # old hardcoded-way: = {'P':0, 'S':1, 'Mag':2}
+        # XXX this is from the old version...:
+        # XXX We need the reverted dictionary for switching throug the Phase radio button
+        self.dictPhaseInverse = {} #XXX do we really need this second dict?
+        modelPhase = self.comboboxPhaseType.get_model()
+        for i, modelrow in enumerate(modelPhase):
+            # we assume there is only one element per row!
+            self.dictPhase[modelrow[0]] = i
+            self.dictPhaseInverse[i] = modelrow[0]
+        print self.dictPhase
+        print self.dictPhaseInverse
+        # XXX not necessary, is done automatically by on_..._changed-event:
+        ###phase = self.dictPhaseInverse[self.flagPhase]
+        ###self.pickingColor = self.dictPhaseColors[phase]  #['P']
+        self.comboboxPhaseType.set_active(self.flagPhase)
+            
+        # now do the same with the filter-Type combobox
+        # assign our dictionaries for internal handling
+        self.flagFiltTyp = 0
+        self.comboboxFilterType.set_active(self.flagFiltTyp)
+        self.dictFiltTyp = {} # old hardcoded-way: = {'Bandpass':0, 'Bandstop':1, 'Lowpass':2, 'Highpass':3}
+        modelFilt = self.comboboxFilterType.get_model()
+        for i, modelrow in enumerate(modelFilt):
+            # we assume there is only one element per row!
+            self.dictFiltTyp[i] = modelrow[0]
+        print self.dictFiltTyp
+        
         # Set up initial plot
         #self.fig = plt.figure()
         #self.fig.canvas.set_window_title("ObsPyck")
