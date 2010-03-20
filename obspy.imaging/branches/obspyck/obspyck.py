@@ -237,8 +237,36 @@ class PickingGUI:
     def on_buttonQuit_clicked(self, event):
         self.cleanQuit()
 
+    def on_buttonPreviousStream_clicked(self, event):
+        self.stPt = (self.stPt - 1) % self.stNum
+        xmin, xmax = self.axs[0].get_xlim()
+        self.delAxes()
+        self.drawAxes()
+        self.drawSavedPicks()
+        self.multicursorReinit()
+        self.axs[0].set_xlim(xmin, xmax)
+        self.updatePlot()
+        msg = "Going to previous stream"
+        self.updateStreamLabels()
+        appendTextview(self.textviewStdOut, msg)
+
+    def on_buttonNextStream_clicked(self, event):
+        self.stPt = (self.stPt + 1) % self.stNum
+        xmin, xmax = self.axs[0].get_xlim()
+        self.delAxes()
+        self.drawAxes()
+        self.drawSavedPicks()
+        self.multicursorReinit()
+        self.axs[0].set_xlim(xmin, xmax)
+        self.updatePlot()
+        msg = "Going to next stream"
+        self.updateStreamLabels()
+        appendTextview(self.textviewStdOut, msg)
+
     def on_comboboxPhaseType_changed(self, event):
         self.updateMulticursorColor()
+        #self.updateComboboxPhaseTypeColor()
+        self.updateButtonPhaseTypeColor()
         self.redraw()
 
     def on_togglebuttonFilter_toggled(self, event):
@@ -582,6 +610,11 @@ class PickingGUI:
         # define handles for all buttons/GUI-elements we interact with
         self.checkbuttonPublicEvent = \
                 self.gla.get_widget("checkbuttonPublicEvent")
+        self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
+        self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
+        self.labelStreamName = self.gla.get_widget("labelStreamName")
+        self.buttonNextStream = self.gla.get_widget("buttonNextStream")
+        self.buttonPhaseType = self.gla.get_widget("buttonPhaseType")
         self.comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
         self.togglebuttonFilter = self.gla.get_widget("togglebuttonFilter")
         self.comboboxFilterType = self.gla.get_widget("comboboxFilterType")
@@ -640,6 +673,7 @@ class PickingGUI:
         # or command line default values
         self.spinbuttonHighpass.set_value(self.options.highpass)
         self.spinbuttonLowpass.set_value(self.options.lowpass)
+        self.updateStreamLabels()
         self.canv.show()
         gtk.main()
 
@@ -669,7 +703,9 @@ class PickingGUI:
                         sharex=self.axs[0], sharey=self.axs[0]))
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
                                                                              self.axs[i].transAxes))
-            self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
+                self.axs[i].xaxis.set_ticks_position("top")
+            self.axs[-1].xaxis.set_ticks_position("both")
+            #self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if not self.flagSpectrogram:
                 self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
@@ -678,10 +714,14 @@ class PickingGUI:
                             self.streams[self.stPt][i].stats.sampling_rate,
                             axis = self.axs[i],
                             nwin = self.streams[self.stPt][i].stats.npts * 4 / self.streams[self.stPt][i].stats.sampling_rate)
-        self.supTit=self.fig.suptitle("%s -- %s, %s" % (self.streams[self.stPt][0].stats.starttime, self.streams[self.stPt][0].stats.endtime, self.streams[self.stPt][0].stats.station))
+        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (self.streams[self.stPt][0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                                                         self.streams[self.stPt][0].stats.starttime.microsecond / 1e3 + 0.5,
+                                                         self.streams[self.stPt][0].stats.endtime.strftime("%H:%M:%S"),
+                                                         self.streams[self.stPt][0].stats.endtime.microsecond / 1e3 + 0.5))
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
+        #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
+        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1201,7 +1241,6 @@ class PickingGUI:
             appendTextview(self.textviewStdOut, msg)
         except:
             pass
-            
     
     def delAxes(self):
         for a in self.axs:
@@ -1214,35 +1253,6 @@ class PickingGUI:
             self.fig.texts.remove(self.supTit)
         except:
             pass
-    
-    #def addFiltButtons(self):
-    #    #add filter buttons
-    #    self.axFilt = self.fig.add_axes([0.22, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-    #    #XXX DEPRECATED
-    #    self.check = CheckButtons(self.axFilt, ('Filter','Zero-Phase','Spectrogram','Public Event'),(False,False,self.flagSpectrogram,False))
-    #    self.check.on_clicked(self.funcFilt)
-    #    self.axFiltTyp = self.fig.add_axes([0.40, 0.02, 0.15, 0.15],frameon=False,axisbg='lightgrey')
-    #    self.radio = RadioButtons(self.axFiltTyp, ('Bandpass', 'Bandstop', 'Lowpass', 'Highpass'),activecolor='k')
-    #    self.radio.on_clicked(self.funcFiltTyp)
-    #    
-    #def addPhaseButtons(self):
-    #    #add phase buttons
-    #    self.axPhase = self.fig.add_axes([0.05, 0.02, 0.05, 0.05],frameon=False,axisbg='lightgrey')
-    #    self.radioPhase = RadioButtons(self.axPhase, ('P', 'S', 'Mag'),activecolor='k')
-    #    self.radioPhase.on_clicked(self.funcPhase)
-        
-    #def updateLow(self,val):
-    #    if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 2:
-    #        return
-    #    else:
-    #        self.updatePlot()
-    #
-    #def updateHigh(self,val):
-    #    if not self.togglebuttonFilter.get_active() or self.flagFiltTyp == 3:
-    #        return
-    #    else:
-    #        self.updatePlot()
-    
     
     def redraw(self):
         for line in self.multicursor.lines:
@@ -1808,29 +1818,19 @@ class PickingGUI:
             return
             
         if event.key == keys['prevStream']:
-            self.stPt = (self.stPt - 1) % self.stNum
-            xmin, xmax = self.axs[0].get_xlim()
-            self.delAxes()
-            self.drawAxes()
-            self.drawSavedPicks()
-            self.multicursorReinit()
-            self.axs[0].set_xlim(xmin, xmax)
-            self.updatePlot()
-            msg = "Going to previous stream"
-            appendTextview(self.textviewStdOut, msg)
+            #would be nice if the button would show the click, but it is
+            #too brief to be seen
+            #self.buttonPreviousStream.set_state(True)
+            self.buttonPreviousStream.clicked()
+            #self.buttonPreviousStream.set_state(False)
             return
 
         if event.key == keys['nextStream']:
-            self.stPt = (self.stPt + 1) % self.stNum
-            xmin, xmax = self.axs[0].get_xlim()
-            self.delAxes()
-            self.drawAxes()
-            self.drawSavedPicks()
-            self.multicursorReinit()
-            self.axs[0].set_xlim(xmin, xmax)
-            self.updatePlot()
-            msg = "Going to next stream"
-            appendTextview(self.textviewStdOut, msg)
+            #would be nice if the button would show the click, but it is
+            #too brief to be seen
+            #self.buttonNextStream.set_state(True)
+            self.buttonNextStream.clicked()
+            #self.buttonNextStream.set_state(False)
             return
             
     # Define zooming for the mouse scroll wheel
@@ -1886,6 +1886,25 @@ class PickingGUI:
         color = self.dictPhaseColors[phase_name]
         for l in self.multicursor.lines:
             l.set_color(color)
+
+    def updateButtonPhaseTypeColor(self):
+        phase_name = self.comboboxPhaseType.get_active_text()
+        style = self.buttonPhaseType.get_style().copy()
+        color = gtk.gdk.color_parse(self.dictPhaseColors[phase_name])
+        style.bg[gtk.STATE_INSENSITIVE] = color
+        self.buttonPhaseType.set_style(style)
+
+    #def updateComboboxPhaseTypeColor(self):
+    #    phase_name = self.comboboxPhaseType.get_active_text()
+    #    props = self.comboboxPhaseType.get_cells()[0].props
+    #    color = gtk.gdk.color_parse(self.dictPhaseColors[phase_name])
+    #    props.cell_background_gdk = color
+
+    def updateStreamLabels(self):
+        self.labelStreamNumber.set_markup("<tt>%02i/%02i</tt>" % \
+                (self.stPt + 1, self.stNum))
+        self.labelStreamName.set_markup("<tt><b>%s</b></tt>" % \
+                self.dicts[self.stPt]['Station'])
     
     def load3dlocSyntheticPhases(self):
         try:
