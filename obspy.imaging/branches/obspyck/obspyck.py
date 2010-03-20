@@ -19,7 +19,6 @@ import base64
 import datetime
 import time
 import urllib2
-import warnings
 import tempfile
 
 #sys.path.append('/baysoft/obspy/obspy/branches/symlink')
@@ -68,8 +67,8 @@ def nofocus_recursive(widget):
         children = widget.get_children()
     except AttributeError:
         return
-    for w in children:
-        nofocus_recursive(w)
+    for widg in children:
+        nofocus_recursive(widg)
 
 def appendTextview(GTKtextview, string):
     """
@@ -253,6 +252,7 @@ class PickingGUI:
     def on_buttonNextStream_clicked(self, event):
         self.stPt = (self.stPt + 1) % self.stNum
         xmin, xmax = self.axs[0].get_xlim()
+        self.delAllItems()
         self.delAxes()
         self.drawAxes()
         self.drawSavedPicks()
@@ -457,8 +457,8 @@ class PickingGUI:
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
-            for k, v in self.dictKeybindings.iteritems():
-                print "%s: \"%s\"" % (k, v)
+            for key, value in self.dictKeybindings.iteritems():
+                print "%s: \"%s\"" % (key, value)
             return
 
         # Return, if no streams are given
@@ -470,6 +470,8 @@ class PickingGUI:
         # - either one Z or three ZNE traces
         # - no two streams for any station (of same network)
         sta_list = set()
+        # we need to go through streams/dicts backwards in order not to get
+        # problems because of the pop() statement
         for i in range(len(self.streams))[::-1]:
             st = self.streams[i]
             net_sta = "%s:%s" % (st[0].stats.network.strip(),
@@ -507,43 +509,46 @@ class PickingGUI:
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
         self.dicts = []
-        for i in range(len(self.streams)):
+        for ignored in self.streams:
             self.dicts.append({})
-        self.dictsMap = {} #XXX not used yet!
+        #XXX not used: self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
+        # we need to go through streams/dicts backwards in order not to get
+        # problems because of the pop() statement
         for i in range(len(self.streams))[::-1]:
-            self.dicts[i]['MagUse'] = True
-            sta = self.streams[i][0].stats.station.strip()
-            self.dicts[i]['Station'] = sta
-            self.dictsMap[sta] = self.dicts[i]
+            dict = self.dicts[i]
+            st = self.streams[i]
+            dict['MagUse'] = True
+            sta = st[0].stats.station.strip()
+            dict['Station'] = sta
+            #XXX not used: self.dictsMap[sta] = dict
             self.eventMapColors.append((0.,  1.,  0.,  1.))
-            #XXX uncomment following lines for use with dynamically acquired data from seishub!
-            net = self.streams[i][0].stats.network.strip()
+            net = st[0].stats.network.strip()
             print "=" * 70
             print sta
             if net == '':
                 net = 'BW'
-                print "Warning: Got no network information, setting to default: BW"
+                print "Warning: Got no network information, setting to " + \
+                      "default: BW"
             print "-" * 70
-            date = self.streams[i][0].stats.starttime.date
+            date = st[0].stats.starttime.date
             print 'fetching station metadata from seishub...'
             try:
-                lon, lat, ele = getCoord(self.client,  net, sta) 
-                self.dicts[i]['StaLon'] = lon
-                self.dicts[i]['StaLat'] = lat
-                self.dicts[i]['StaEle'] = ele / 1000. # all depths in km!
-                print self.dicts[i]['StaLon'], self.dicts[i]['StaLat'], \
-                      self.dicts[i]['StaEle']
-                self.dicts[i]['pazZ'] = self.client.station.getPAZ(net, sta, date,
-                        channel_id = self.streams[i][0].stats.channel)
-                print self.dicts[i]['pazZ']
-                if len(self.streams[i]) == 3:
-                    self.dicts[i]['pazN'] = self.client.station.getPAZ(net, sta,
-                            date, channel_id = self.streams[i][1].stats.channel)
-                    self.dicts[i]['pazE'] = self.client.station.getPAZ(net, sta,
-                            date, channel_id = self.streams[i][2].stats.channel)
-                    print self.dicts[i]['pazN']
-                    print self.dicts[i]['pazE']
+                lon, lat, ele = getCoord(self.client, net, sta) 
+                dict['StaLon'] = lon
+                dict['StaLat'] = lat
+                dict['StaEle'] = ele / 1000. # all depths in km!
+                print dict['StaLon'], dict['StaLat'], dict['StaEle']
+                dict['pazZ'] = self.client.station.getPAZ(net, sta, date,
+                        channel_id=st[0].stats.channel)
+                print dict['pazZ']
+                if len(st) == 3:
+                    dict['pazN'] = self.client.station.getPAZ(net, sta, date,
+                            channel_id=st[1].stats.channel)
+                    dict['pazE'] = self.client.station.getPAZ(net, sta, date,
+                            channel_id=st[2].stats.channel)
+                    print dict['pazN']
+                    print dict['pazE']
             except:
                 print 'Error: could not fetch station metadata. Discarding stream.'
                 self.streams.pop(i)
@@ -565,8 +570,8 @@ class PickingGUI:
                     tr.data -= tr.data.mean()
 
         #Define a pointer to navigate through the streams
-        self.stNum=len(self.streams)
-        self.stPt=0
+        self.stNum = len(self.streams)
+        self.stPt = 0
     
         #XXX gtk gui
         self.gla = gtk.glade.XML('obspyck.glade', 'windowObspyck')
@@ -717,7 +722,7 @@ class PickingGUI:
         self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (self.streams[self.stPt][0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          self.streams[self.stPt][0].stats.starttime.microsecond / 1e3 + 0.5,
                                                          self.streams[self.stPt][0].stats.endtime.strftime("%H:%M:%S"),
-                                                         self.streams[self.stPt][0].stats.endtime.microsecond / 1e3 + 0.5))
+                                                         self.streams[self.stPt][0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
         #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
@@ -742,517 +747,540 @@ class PickingGUI:
         self.drawMagMaxCross2()
     
     def drawPLine(self):
-        if not self.dicts[self.stPt].has_key('P'):
+        if hasattr(self, "PLines"):
+            self.delPLine()
+        dict = self.dicts[self.stPt]
+        if not 'P' in dict:
             return
-        self.PLines=[]
-        for i in range(len(self.axs)):
-            self.PLines.append(self.axs[i].axvline(self.dicts[self.stPt]['P'],color=self.dictPhaseColors['P'],linewidth=self.axvlinewidths,label='P',linestyle=self.dictPhaseLinestyles['P']))
+        self.PLines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['P'], color=self.dictPhaseColors['P'],
+                              linewidth=self.axvlinewidths,
+                              linestyle=self.dictPhaseLinestyles['P'])
+            self.PLines.append(line)
     
     def delPLine(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.PLines[i])
-        except:
-            pass
-        try:
-            del self.PLines
-        except:
-            pass
+        if not hasattr(self, "PLines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.PLines[i] in ax.lines:
+                ax.lines.remove(self.PLines[i])
+        del self.PLines
     
     def drawPsynthLine(self):
-        if not self.dicts[self.stPt].has_key('Psynth'):
+        if hasattr(self, "PsynthLines"):
+            self.delPsynthLine()
+        dict = self.dicts[self.stPt]
+        if not 'Psynth' in dict:
             return
-        self.PsynthLines=[]
-        for i in range(len(self.axs)):
-            self.PsynthLines.append(self.axs[i].axvline(self.dicts[self.stPt]['Psynth'],color=self.dictPhaseColors['Psynth'],linewidth=self.axvlinewidths,label='Psynth',linestyle=self.dictPhaseLinestyles['Psynth']))
+        self.PsynthLines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['Psynth'], linewidth=self.axvlinewidths,
+                              color=self.dictPhaseColors['Psynth'],
+                              linestyle=self.dictPhaseLinestyles['Psynth'])
+            self.PsynthLines.append(line)
     
     def delPsynthLine(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.PsynthLines[i])
-        except:
-            pass
-        try:
-            del self.PsynthLines
-        except:
-            pass
+        if not hasattr(self, "PsynthLines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.PsynthLines[i] in ax.lines:
+                ax.lines.remove(self.PsynthLines[i])
+        del self.PsynthLines
     
     def drawPLabel(self):
-        if not self.dicts[self.stPt].has_key('P'):
+        dict = self.dicts[self.stPt]
+        if not 'P' in dict:
             return
-        PLabelString = 'P:'
-        if not self.dicts[self.stPt].has_key('POnset'):
-            PLabelString += '_'
-        else:
-            if self.dicts[self.stPt]['POnset'] == 'impulsive':
-                PLabelString += 'I'
-            elif self.dicts[self.stPt]['POnset'] == 'emergent':
-                PLabelString += 'E'
+        label = 'P:'
+        if 'POnset' in dict:
+            if dict['POnset'] == 'impulsive':
+                label += 'I'
+            elif dict['POnset'] == 'emergent':
+                label += 'E'
             else:
-                PLabelString += '?'
-        if not self.dicts[self.stPt].has_key('PPol'):
-            PLabelString += '_'
+                label += '?'
         else:
-            if self.dicts[self.stPt]['PPol'] == 'up':
-                PLabelString += 'U'
-            elif self.dicts[self.stPt]['PPol'] == 'poorup':
-                PLabelString += '+'
-            elif self.dicts[self.stPt]['PPol'] == 'down':
-                PLabelString += 'D'
-            elif self.dicts[self.stPt]['PPol'] == 'poordown':
-                PLabelString += '-'
+            label += '_'
+        if 'PPol' in dict:
+            if dict['PPol'] == 'up':
+                label += 'U'
+            elif dict['PPol'] == 'poorup':
+                label += '+'
+            elif dict['PPol'] == 'down':
+                label += 'D'
+            elif dict['PPol'] == 'poordown':
+                label += '-'
             else:
-                PLabelString += '?'
-        if not self.dicts[self.stPt].has_key('PWeight'):
-            PLabelString += '_'
+                label += '?'
         else:
-            PLabelString += str(self.dicts[self.stPt]['PWeight'])
-        self.PLabel = self.axs[0].text(self.dicts[self.stPt]['P'], 1 - 0.04 * len(self.axs),
-                                       '  ' + PLabelString, transform = self.trans[0],
+            label += '_'
+        if 'PWeight' in dict:
+            label += str(dict['PWeight'])
+        else:
+            label += '_'
+        self.PLabel = self.axs[0].text(dict['P'], 1 - 0.01 * len(self.axs),
+                                       '  ' + label, transform = self.trans[0],
                                        color = self.dictPhaseColors['P'],
-                                       family = 'monospace')
+                                       family = 'monospace', va="top")
     
     def delPLabel(self):
-        try:
+        if not hasattr(self, "PLabel"):
+            return
+        if self.PLabel in self.axs[0].texts:
             self.axs[0].texts.remove(self.PLabel)
-        except:
-            pass
-        try:
-            del self.PLabel
-        except:
-            pass
+        del self.PLabel
     
     def drawPsynthLabel(self):
-        if not self.dicts[self.stPt].has_key('Psynth'):
+        dict = self.dicts[self.stPt]
+        if not 'Psynth' in dict:
             return
-        PsynthLabelString = 'Psynth: %+.3fs' % self.dicts[self.stPt]['Pres']
-        self.PsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Psynth'], 1 - 0.08 * len(self.axs), '  ' + PsynthLabelString,
-                             transform = self.trans[0], color=self.dictPhaseColors['Psynth'])
+        label = 'Psynth: %+.3fs' % dict['Pres']
+        self.PsynthLabel = self.axs[0].text(dict['Psynth'],
+                1 - 0.03 * len(self.axs), '  ' + label, va="top",
+                transform=self.trans[0], color=self.dictPhaseColors['Psynth'])
     
     def delPsynthLabel(self):
-        try:
+        if not hasattr(self, "PsynthLabel"):
+            return
+        if self.PsynthLabel in self.axs[0].texts:
             self.axs[0].texts.remove(self.PsynthLabel)
-        except:
-            pass
-        try:
-            del self.PsynthLabel
-        except:
-            pass
+        del self.PsynthLabel
     
     def drawPErr1Line(self):
-        if not self.dicts[self.stPt].has_key('P') or not self.dicts[self.stPt].has_key('PErr1'):
+        if hasattr(self, "PErr1Lines"):
+            self.delPErr1Line()
+        dict = self.dicts[self.stPt]
+        if not 'P' in dict or not 'PErr1' in dict:
             return
-        self.PErr1Lines=[]
-        for i in range(len(self.axs)):
-            self.PErr1Lines.append(self.axs[i].axvline(self.dicts[self.stPt]['PErr1'],ymin=0.25,ymax=0.75,color=self.dictPhaseColors['P'],linewidth=self.axvlinewidths,label='PErr1'))
+        self.PErr1Lines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['PErr1'], ymin=0.25, ymax=0.75,
+                              color=self.dictPhaseColors['P'],
+                              linewidth=self.axvlinewidths)
+            self.PErr1Lines.append(line)
     
     def delPErr1Line(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.PErr1Lines[i])
-        except:
-            pass
-        try:
-            del self.PErr1Lines
-        except:
-            pass
+        if not hasattr(self, "PErr1Lines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.PErr1Lines[i] in ax.lines:
+                ax.lines.remove(self.PErr1Lines[i])
+        del self.PErr1Lines
     
     def drawPErr2Line(self):
-        if not self.dicts[self.stPt].has_key('P') or not self.dicts[self.stPt].has_key('PErr2'):
+        if hasattr(self, "PErr2Lines"):
+            self.delPErr2Line()
+        dict = self.dicts[self.stPt]
+        if not 'P' in dict or not 'PErr2' in dict:
             return
-        self.PErr2Lines=[]
-        for i in range(len(self.axs)):
-            self.PErr2Lines.append(self.axs[i].axvline(self.dicts[self.stPt]['PErr2'],ymin=0.25,ymax=0.75,color=self.dictPhaseColors['P'],linewidth=self.axvlinewidths,label='PErr2'))
+        self.PErr2Lines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['PErr2'], ymin=0.25, ymax=0.75,
+                              color=self.dictPhaseColors['P'],
+                              linewidth=self.axvlinewidths)
+            self.PErr2Lines.append(line)
     
     def delPErr2Line(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.PErr2Lines[i])
-        except:
-            pass
-        try:
-            del self.PErr2Lines
-        except:
-            pass
+        if not hasattr(self, "PErr2Lines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.PErr2Lines[i] in ax.lines:
+                ax.lines.remove(self.PErr2Lines[i])
+        del self.PErr2Lines
 
     def drawSLine(self):
-        if not self.dicts[self.stPt].has_key('S'):
+        if hasattr(self, "SLines"):
+            self.delSLine()
+        dict = self.dicts[self.stPt]
+        if not 'S' in dict:
             return
-        self.SLines=[]
-        for i in range(len(self.axs)):
-            self.SLines.append(self.axs[i].axvline(self.dicts[self.stPt]['S'],color=self.dictPhaseColors['S'],linewidth=self.axvlinewidths,label='S',linestyle=self.dictPhaseLinestyles['S']))
+        self.SLines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['S'], color=self.dictPhaseColors['S'],
+                              linewidth=self.axvlinewidths,
+                              linestyle=self.dictPhaseLinestyles['S'])
+            self.SLines.append(line)
     
     def delSLine(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.SLines[i])
-        except:
-            pass
-        try:
-            del self.SLines
-        except:
-            pass
+        if not hasattr(self, "SLines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.SLines[i] in ax.lines:
+                ax.lines.remove(self.SLines[i])
+        del self.SLines
     
     def drawSsynthLine(self):
-        if not self.dicts[self.stPt].has_key('Ssynth'):
+        if hasattr(self, "SsynthLines"):
+            self.delSsynthLine()
+        dict = self.dicts[self.stPt]
+        if not 'Ssynth' in dict:
             return
-        self.SsynthLines=[]
-        for i in range(len(self.axs)):
-            self.SsynthLines.append(self.axs[i].axvline(self.dicts[self.stPt]['Ssynth'],color=self.dictPhaseColors['Ssynth'],linewidth=self.axvlinewidths,label='Ssynth',linestyle=self.dictPhaseLinestyles['Ssynth']))
+        self.SsynthLines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['Ssynth'], linewidth=self.axvlinewidths,
+                              color=self.dictPhaseColors['Ssynth'],
+                              linestyle=self.dictPhaseLinestyles['Ssynth'])
+            self.SsynthLines.append(line)
     
     def delSsynthLine(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.SsynthLines[i])
-        except:
-            pass
-        try:
-            del self.SsynthLines
-        except:
-            pass
+        if not hasattr(self, "SsynthLines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.SsynthLines[i] in ax.lines:
+                ax.lines.remove(self.SsynthLines[i])
+        del self.SsynthLines
     
     def drawSLabel(self):
-        if not self.dicts[self.stPt].has_key('S'):
+        dict = self.dicts[self.stPt]
+        if not 'S' in dict:
             return
-        SLabelString = 'S:'
-        if not self.dicts[self.stPt].has_key('SOnset'):
-            SLabelString += '_'
-        else:
-            if self.dicts[self.stPt]['SOnset'] == 'impulsive':
-                SLabelString += 'I'
-            elif self.dicts[self.stPt]['SOnset'] == 'emergent':
-                SLabelString += 'E'
+        label = 'S:'
+        if 'SOnset' in dict:
+            if dict['SOnset'] == 'impulsive':
+                label += 'I'
+            elif dict['SOnset'] == 'emergent':
+                label += 'E'
             else:
-                SLabelString += '?'
-        if not self.dicts[self.stPt].has_key('SPol'):
-            SLabelString += '_'
+                label += '?'
         else:
-            if self.dicts[self.stPt]['SPol'] == 'up':
-                SLabelString += 'U'
-            elif self.dicts[self.stPt]['SPol'] == 'poorup':
-                SLabelString += '+'
-            elif self.dicts[self.stPt]['SPol'] == 'down':
-                SLabelString += 'D'
-            elif self.dicts[self.stPt]['SPol'] == 'poordown':
-                SLabelString += '-'
+            label += '_'
+        if 'SPol' in dict:
+            if dict['SPol'] == 'up':
+                label += 'U'
+            elif dict['SPol'] == 'poorup':
+                label += '+'
+            elif dict['SPol'] == 'down':
+                label += 'D'
+            elif dict['SPol'] == 'poordown':
+                label += '-'
             else:
-                SLabelString += '?'
-        if not self.dicts[self.stPt].has_key('SWeight'):
-            SLabelString += '_'
+                label += '?'
         else:
-            SLabelString += str(self.dicts[self.stPt]['SWeight'])
-        self.SLabel = self.axs[0].text(self.dicts[self.stPt]['S'], 1 - 0.04 * len(self.axs),
-                                       '  ' + SLabelString, transform = self.trans[0],
+            label += '_'
+        if 'SWeight' in dict:
+            label += str(dict['SWeight'])
+        else:
+            label += '_'
+        self.SLabel = self.axs[0].text(dict['S'], 1 - 0.01 * len(self.axs),
+                                       '  ' + label, transform = self.trans[0],
                                        color = self.dictPhaseColors['S'],
-                                       family = 'monospace')
+                                       family = 'monospace', va="top")
     
     def delSLabel(self):
-        try:
+        if not hasattr(self, "SLabel"):
+            return
+        if self.SLabel in self.axs[0].texts:
             self.axs[0].texts.remove(self.SLabel)
-        except:
-            pass
-        try:
-            del self.SLabel
-        except:
-            pass
+        del self.SLabel
     
     def drawSsynthLabel(self):
-        if not self.dicts[self.stPt].has_key('Ssynth'):
+        dict = self.dicts[self.stPt]
+        if not 'Ssynth' in dict:
             return
-        SsynthLabelString = 'Ssynth: %+.3fs' % self.dicts[self.stPt]['Sres']
-        self.SsynthLabel = self.axs[0].text(self.dicts[self.stPt]['Ssynth'], 1 - 0.08 * len(self.axs), '\n  ' + SsynthLabelString,
-                             transform = self.trans[0], color=self.dictPhaseColors['Ssynth'])
+        label = 'Ssynth: %+.3fs' % dict['Sres']
+        self.SsynthLabel = self.axs[0].text(dict['Ssynth'],
+                1 - 0.03 * len(self.axs), '  ' + label, va="top",
+                transform=self.trans[0], color=self.dictPhaseColors['Ssynth'])
     
     def delSsynthLabel(self):
-        try:
+        if not hasattr(self, "SsynthLabel"):
+            return
+        if self.SsynthLabel in self.axs[0].texts:
             self.axs[0].texts.remove(self.SsynthLabel)
-        except:
-            pass
-        try:
-            del self.SsynthLabel
-        except:
-            pass
+        del self.SsynthLabel
     
     def drawSErr1Line(self):
-        if not self.dicts[self.stPt].has_key('S') or not self.dicts[self.stPt].has_key('SErr1'):
+        if hasattr(self, "SErr1Lines"):
+            self.delSErr1Line()
+        dict = self.dicts[self.stPt]
+        if not 'S' in dict or not 'SErr1' in dict:
             return
-        self.SErr1Lines=[]
-        for i in range(len(self.axs)):
-            self.SErr1Lines.append(self.axs[i].axvline(self.dicts[self.stPt]['SErr1'],ymin=0.25,ymax=0.75,color=self.dictPhaseColors['S'],linewidth=self.axvlinewidths,label='SErr1'))
+        self.SErr1Lines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['SErr1'], ymin=0.25, ymax=0.75,
+                              color=self.dictPhaseColors['S'],
+                              linewidth=self.axvlinewidths)
+            self.SErr1Lines.append(line)
     
     def delSErr1Line(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.SErr1Lines[i])
-        except:
-            pass
-        try:
-            del self.SErr1Lines
-        except:
-            pass
+        if not hasattr(self, "SErr1Lines"):
+            return
+        for i, ax in enumerate(self.axs):
+            if self.SErr1Lines[i] in ax.lines:
+                ax.lines.remove(self.SErr1Lines[i])
+        del self.SErr1Lines
     
     def drawSErr2Line(self):
-        if not self.dicts[self.stPt].has_key('S') or not self.dicts[self.stPt].has_key('SErr2'):
+        if hasattr(self, "SErr2Lines"):
+            self.delSErr2Line()
+        dict = self.dicts[self.stPt]
+        if not 'S' in dict or not 'SErr2' in dict:
             return
-        self.SErr2Lines=[]
-        for i in range(len(self.axs)):
-            self.SErr2Lines.append(self.axs[i].axvline(self.dicts[self.stPt]['SErr2'],ymin=0.25,ymax=0.75,color=self.dictPhaseColors['S'],linewidth=self.axvlinewidths,label='SErr2'))
+        self.SErr2Lines = []
+        for ax in self.axs:
+            line = ax.axvline(dict['SErr2'], ymin=0.25, ymax=0.75,
+                              color=self.dictPhaseColors['S'],
+                              linewidth=self.axvlinewidths)
+            self.SErr2Lines.append(line)
     
     def delSErr2Line(self):
-        try:
-            for i in range(len(self.axs)):
-                self.axs[i].lines.remove(self.SErr2Lines[i])
-        except:
-            pass
-        try:
-            del self.SErr2Lines
-        except:
-            pass
-    
-    def drawMagMinCross1(self):
-        if not self.dicts[self.stPt].has_key('MagMin1') or len(self.axs) < 2:
+        if not hasattr(self, "SErr2Lines"):
             return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
+        for i, ax in enumerate(self.axs):
+            if self.SErr2Lines[i] in ax.lines:
+                ax.lines.remove(self.SErr2Lines[i])
+        del self.SErr2Lines
+
+    def drawMagMinCross1(self):
+        dict = self.dicts[self.stPt]
+        if not 'MagMin1' in dict or len(self.axs) < 2:
+            return
+        # we have to force the graph to the old axes limits because of the
+        # completely new line object creation
         xlims = list(self.axs[0].get_xlim())
         ylims = list(self.axs[0].get_ylim())
-        self.MagMinCross1 = self.axs[1].plot([self.dicts[self.stPt]['MagMin1T']] ,
-                                   [self.dicts[self.stPt]['MagMin1']] ,
-                                   markersize = self.magMarkerSize ,
-                                   markeredgewidth = self.magMarkerEdgeWidth ,
-                                   color = self.dictPhaseColors['Mag'],
-                                   marker = self.magMinMarker, zorder=2000)[0]
+        self.MagMinCross1 = self.axs[1].plot([dict['MagMin1T']],
+                [dict['MagMin1']], markersize=self.magMarkerSize,
+                markeredgewidth=self.magMarkerEdgeWidth,
+                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
+                zorder=2000)[0]
         self.axs[0].set_xlim(xlims)
         self.axs[0].set_ylim(ylims)
     
     def delMagMinCross1(self):
-        try:
-            self.axs[1].lines.remove(self.MagMinCross1)
-        except:
-            pass
+        if not hasattr(self, "MagMinCross1"):
+            return
+        ax = self.axs[1]
+        if self.MagMinCross1 in ax.lines:
+            ax.lines.remove(self.MagMinCross1)
     
     def drawMagMaxCross1(self):
-        if not self.dicts[self.stPt].has_key('MagMax1') or len(self.axs) < 2:
+        dict = self.dicts[self.stPt]
+        if not 'MagMax1' in dict or len(self.axs) < 2:
             return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
+        # we have to force the graph to the old axes limits because of the
+        # completely new line object creation
         xlims = list(self.axs[0].get_xlim())
         ylims = list(self.axs[0].get_ylim())
-        self.MagMaxCross1 = self.axs[1].plot([self.dicts[self.stPt]['MagMax1T']],
-                                   [self.dicts[self.stPt]['MagMax1']],
-                                   markersize = self.magMarkerSize,
-                                   markeredgewidth = self.magMarkerEdgeWidth,
-                                   color = self.dictPhaseColors['Mag'],
-                                   marker = self.magMaxMarker, zorder=2000)[0]
+        self.MagMaxCross1 = self.axs[1].plot([dict['MagMax1T']],
+                [dict['MagMax1']], markersize=self.magMarkerSize,
+                markeredgewidth=self.magMarkerEdgeWidth,
+                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
+                zorder=2000)[0]
         self.axs[0].set_xlim(xlims)
         self.axs[0].set_ylim(ylims)
     
     def delMagMaxCross1(self):
-        try:
-            self.axs[1].lines.remove(self.MagMaxCross1)
-        except:
-            pass
+        if not hasattr(self, "MagMaxCross1"):
+            return
+        ax = self.axs[1]
+        if self.MagMaxCross1 in ax.lines:
+            ax.lines.remove(self.MagMaxCross1)
     
     def drawMagMinCross2(self):
-        if not self.dicts[self.stPt].has_key('MagMin2') or len(self.axs) < 3:
+        dict = self.dicts[self.stPt]
+        if not 'MagMin2' in dict or len(self.axs) < 3:
             return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
+        # we have to force the graph to the old axes limits because of the
+        # completely new line object creation
         xlims = list(self.axs[0].get_xlim())
         ylims = list(self.axs[0].get_ylim())
-        self.MagMinCross2 = self.axs[2].plot([self.dicts[self.stPt]['MagMin2T']] ,
-                                   [self.dicts[self.stPt]['MagMin2']] ,
-                                   markersize = self.magMarkerSize ,
-                                   markeredgewidth = self.magMarkerEdgeWidth ,
-                                   color = self.dictPhaseColors['Mag'],
-                                   marker = self.magMinMarker, zorder=2000)[0]
+        self.MagMinCross2 = self.axs[2].plot([dict['MagMin2T']],
+                [dict['MagMin2']], markersize=self.magMarkerSize,
+                markeredgewidth=self.magMarkerEdgeWidth,
+                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
+                zorder=2000)[0]
         self.axs[0].set_xlim(xlims)
         self.axs[0].set_ylim(ylims)
     
     def delMagMinCross2(self):
-        try:
-            self.axs[2].lines.remove(self.MagMinCross2)
-        except:
-            pass
+        if not hasattr(self, "MagMinCross2"):
+            return
+        ax = self.axs[2]
+        if self.MagMinCross2 in ax.lines:
+            ax.lines.remove(self.MagMinCross2)
     
     def drawMagMaxCross2(self):
-        if not self.dicts[self.stPt].has_key('MagMax2') or len(self.axs) < 3:
+        dict = self.dicts[self.stPt]
+        if not 'MagMax2' in dict or len(self.axs) < 3:
             return
-        #we have to force the graph to the old axes limits because of the completely new line object creation
+        # we have to force the graph to the old axes limits because of the
+        # completely new line object creation
         xlims = list(self.axs[0].get_xlim())
         ylims = list(self.axs[0].get_ylim())
-        self.MagMaxCross2 = self.axs[2].plot([self.dicts[self.stPt]['MagMax2T']],
-                                   [self.dicts[self.stPt]['MagMax2']],
-                                   markersize = self.magMarkerSize,
-                                   markeredgewidth = self.magMarkerEdgeWidth,
-                                   color = self.dictPhaseColors['Mag'],
-                                   marker = self.magMaxMarker, zorder=2000)[0]
+        self.MagMaxCross2 = self.axs[2].plot([dict['MagMax2T']],
+                [dict['MagMax2']], markersize=self.magMarkerSize,
+                markeredgewidth=self.magMarkerEdgeWidth,
+                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
+                zorder=2000)[0]
         self.axs[0].set_xlim(xlims)
         self.axs[0].set_ylim(ylims)
     
     def delMagMaxCross2(self):
-        try:
-            self.axs[2].lines.remove(self.MagMaxCross2)
-        except:
-            pass
+        if not hasattr(self, "MagMaxCross2"):
+            return
+        ax = self.axs[2]
+        if self.MagMaxCross2 in ax.lines:
+            ax.lines.remove(self.MagMaxCross2)
     
     def delP(self):
-        try:
-            del self.dicts[self.stPt]['P']
-            msg = "P Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'P' in dict:
+            return
+        del dict['P']
+        msg = "P Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPsynth(self):
-        try:
-            del self.dicts[self.stPt]['Psynth']
-            msg = "synthetic P Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'Psynth' in dict:
+            return
+        del dict['Psynth']
+        msg = "synthetic P Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPWeight(self):
-        try:
-            del self.dicts[self.stPt]['PWeight']
-            msg = "P Pick weight deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'PWeight' in dict:
+            return
+        del dict['PWeight']
+        msg = "P Pick weight deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPPol(self):
-        try:
-            del self.dicts[self.stPt]['PPol']
-            msg = "P Pick polarity deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'PPol' in dict:
+            return
+        del dict['PPol']
+        msg = "P Pick polarity deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPOnset(self):
-        try:
-            del self.dicts[self.stPt]['POnset']
-            msg = "P Pick onset deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'POnset' in dict:
+            return
+        del dict['POnset']
+        msg = "P Pick onset deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPErr1(self):
-        try:
-            del self.dicts[self.stPt]['PErr1']
-            msg = "PErr1 Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'PErr1' in dict:
+            return
+        del dict['PErr1']
+        msg = "PErr1 Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delPErr2(self):
-        try:
-            del self.dicts[self.stPt]['PErr2']
-            msg = "PErr2 Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'PErr2' in dict:
+            return
+        del dict['PErr2']
+        msg = "PErr2 Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delS(self):
-        try:
-            del self.dicts[self.stPt]['S']
-            del self.dicts[self.stPt]['Saxind']
-            msg = "S Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'S' in dict:
+            return
+        del dict['S']
+        if 'Saxind' in dict:
+            del dict['Saxind']
+        msg = "S Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSsynth(self):
-        try:
-            del self.dicts[self.stPt]['Ssynth']
-            msg = "synthetic S Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'Ssynth' in dict:
+            return
+        del dict['Ssynth']
+        msg = "synthetic S Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSWeight(self):
-        try:
-            del self.dicts[self.stPt]['SWeight']
-            msg = "S Pick weight deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'SWeight' in dict:
+            return
+        del dict['SWeight']
+        msg = "S Pick weight deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSPol(self):
-        try:
-            del self.dicts[self.stPt]['SPol']
-            msg = "S Pick polarity deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'SPol' in dict:
+            return
+        del dict['SPol']
+        msg = "S Pick polarity deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSOnset(self):
-        try:
-            del self.dicts[self.stPt]['SOnset']
-            msg = "S Pick onset deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'SOnset' in dict:
+            return
+        del dict['SOnset']
+        msg = "S Pick onset deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSErr1(self):
-        try:
-            del self.dicts[self.stPt]['SErr1']
-            msg = "SErr1 Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'SErr1' in dict:
+            return
+        del dict['SErr1']
+        msg = "SErr1 Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delSErr2(self):
-        try:
-            del self.dicts[self.stPt]['SErr2']
-            msg = "SErr2 Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'SErr2' in dict:
+            return
+        del dict['SErr2']
+        msg = "SErr2 Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delMagMin1(self):
-        try:
-            del self.dicts[self.stPt]['MagMin1']
-            del self.dicts[self.stPt]['MagMin1T']
-            msg = "Magnitude Minimum Estimation Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'MagMin1' in dict:
+            return
+        del dict['MagMin1']
+        del dict['MagMin1T']
+        msg = "Magnitude Minimum Estimation Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delMagMax1(self):
-        try:
-            del self.dicts[self.stPt]['MagMax1']
-            del self.dicts[self.stPt]['MagMax1T']
-            msg = "Magnitude Maximum Estimation Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'MagMax1' in dict:
+            return
+        del dict['MagMax1']
+        del dict['MagMax1T']
+        msg = "Magnitude Maximum Estimation Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delMagMin2(self):
-        try:
-            del self.dicts[self.stPt]['MagMin2']
-            del self.dicts[self.stPt]['MagMin2T']
-            msg = "Magnitude Minimum Estimation Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'MagMin2' in dict:
+            return
+        del dict['MagMin2']
+        del dict['MagMin2T']
+        msg = "Magnitude Minimum Estimation Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
             
     def delMagMax2(self):
-        try:
-            del self.dicts[self.stPt]['MagMax2']
-            del self.dicts[self.stPt]['MagMax2T']
-            msg = "Magnitude Maximum Estimation Pick deleted"
-            appendTextview(self.textviewStdOut, msg)
-        except:
-            pass
+        dict = self.dicts[self.stPt]
+        if not 'MagMax2' in dict:
+            return
+        del dict['MagMax2']
+        del dict['MagMax2T']
+        msg = "Magnitude Maximum Estimation Pick deleted"
+        appendTextview(self.textviewStdOut, msg)
     
     def delAxes(self):
-        for a in self.axs:
-            try:
-                self.fig.delaxes(a)
-                del a
-            except:
-                pass
-        try:
+        for ax in self.axs:
+            if ax in self.fig.axes: 
+                self.fig.delaxes(ax)
+            del ax
+        if self.supTit in self.fig.texts:
             self.fig.texts.remove(self.supTit)
-        except:
-            pass
     
     def redraw(self):
         for line in self.multicursor.lines:
@@ -1293,8 +1321,8 @@ class PickingGUI:
                                                           zerophase,
                                                           freq_highpass)
                 else:
-                    err = "Unrecognized Filter Option. Showing unfiltered " + \
-                          "data."
+                    err = "Error: Unrecognized Filter Option. Showing " + \
+                          "unfiltered data."
                     appendTextview(self.textviewStdErr, err)
                     filt.append(tr.data)
             appendTextview(self.textviewStdOut, msg)
@@ -1680,8 +1708,9 @@ class PickingGUI:
             if not event.inaxes in self.axs:
                 return
             if phase_type == 'Mag':
-                if len(self.axs) != 3:
-                    err = "Magnitude picking only supported with 3 axes."
+                if len(self.axs) < 2:
+                    err = "Error: Magnitude picking only supported with a " + \
+                          "minimum of 2 axes."
                     appendTextview(self.textviewStdErr, err)
                     return
                 if event.inaxes is self.axs[1]:
@@ -1727,8 +1756,9 @@ class PickingGUI:
             if not event.inaxes in self.axs:
                 return
             if phase_type == 'Mag':
-                if len(self.axs) != 3:
-                    err = "Magnitude picking only supported with 3 axes."
+                if len(self.axs) < 2:
+                    err = "Error: Magnitude picking only supported with a " + \
+                          "minimum of 2 axes."
                     appendTextview(self.textviewStdErr, err)
                     return
                 if event.inaxes is self.axs[1]:
@@ -1932,28 +1962,29 @@ class PickingGUI:
                                     int(phase[6]), float(phase[7]))
             phResid = float(phase[8])
             phUTCTime += phResid
-            for i in range(len(self.streams)):
+            for i, dict in enumerate(self.dicts):
+                st = self.streams[i]
                 # check for matching station names
-                if not phStat == self.streams[i][0].stats.station.strip():
+                if not phStat == st[0].stats.station.strip():
                     continue
                 else:
                     # check if synthetic pick is within time range of stream
-                    if (phUTCTime > self.streams[i][0].stats.endtime or
-                        phUTCTime < self.streams[i][0].stats.starttime):
-                        msg = "Synthetic pick outside timespan."
-                        warnings.warn(msg)
+                    if (phUTCTime > st[0].stats.endtime or \
+                        phUTCTime < st[0].stats.starttime):
+                        err = "Warning: Synthetic pick outside timespan."
+                        appendTextview(self.textviewStdErr, err)
                         continue
                     else:
                         # phSeconds is the time in seconds after the stream-
                         # starttime at which the time of the synthetic phase
                         # is located
-                        phSeconds = phUTCTime - self.streams[i][0].stats.starttime
+                        phSeconds = phUTCTime - st[0].stats.starttime
                         if phType == 'P':
-                            self.dicts[i]['Psynth'] = phSeconds
-                            self.dicts[i]['Pres'] = phResid
+                            dict['Psynth'] = phSeconds
+                            dict['Pres'] = phResid
                         elif phType == 'S':
-                            self.dicts[i]['Ssynth'] = phSeconds
-                            self.dicts[i]['Sres'] = phResid
+                            dict['Ssynth'] = phSeconds
+                            dict['Sres'] = phResid
         self.drawPsynthLine()
         self.drawPsynthLabel()
         self.drawSsynthLine()
@@ -1967,27 +1998,28 @@ class PickingGUI:
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
-        for i in range(len(self.streams)):
-            lon = self.dicts[i]['StaLon']
-            lat = self.dicts[i]['StaLat']
-            ele = self.dicts[i]['StaEle']
+        for i, dict in enumerate(self.dicts):
+            st = self.streams[i]
+            lon = dict['StaLon']
+            lat = dict['StaLat']
+            ele = dict['StaEle']
             self.coords.append([lon, lat])
-            if self.dicts[i].has_key('P'):
-                t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['P']
+            if 'P' in dict:
+                t = st[0].stats.starttime
+                t += dict['P']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
-                delta = self.dicts[i]['PErr2'] - self.dicts[i]['PErr1']
-                f.write(fmt % (self.dicts[i]['Station'], 'P', date, delta,
-                               lon, lat, ele / 1e3))
-            if self.dicts[i].has_key('S'):
-                t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['S']
+                delta = dict['PErr2'] - dict['PErr1']
+                f.write(fmt % (dict['Station'], 'P', date, delta, lon, lat,
+                               ele / 1e3))
+            if 'S' in dict:
+                t = st[0].stats.starttime
+                t += dict['S']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
-                delta = self.dicts[i]['SErr2'] - self.dicts[i]['SErr1']
-                f.write(fmt % (self.dicts[i]['Station'], 'S', date, delta,
-                               lon, lat, ele / 1e3))
+                delta = dict['SErr2'] - dict['SErr1']
+                f.write(fmt % (dict['Station'], 'S', date, delta, lon, lat,
+                               ele / 1e3))
         f.close()
         msg = 'Phases for 3Dloc:'
         appendTextview(self.textviewStdOut, msg)
@@ -2004,19 +2036,19 @@ class PickingGUI:
         #fmt = "ONTN  349.00   96.00C"
         fmt = "%4s  %6.2f  %6.2f%1s\n"
         count = 0
-        for d in self.dicts:
-            if 'PAzim' not in d or 'PInci' not in d or 'PPol' not in d:
+        for dict in self.dicts:
+            if 'PAzim' not in dict or 'PInci' not in dict or 'PPol' not in dict:
                 continue
-            sta = d['Station'][:4] #focmec has only 4 chars
-            azim = d['PAzim']
-            inci = d['PInci']
-            if d['PPol'] == 'up':
+            sta = dict['Station'][:4] #focmec has only 4 chars
+            azim = dict['PAzim']
+            inci = dict['PInci']
+            if dict['PPol'] == 'up':
                 pol = 'U'
-            elif d['PPol'] == 'poorup':
+            elif dict['PPol'] == 'poorup':
                 pol = '+'
-            elif d['PPol'] == 'down':
+            elif dict['PPol'] == 'down':
                 pol = 'D'
-            elif d['PPol'] == 'poordown':
+            elif dict['PPol'] == 'poordown':
                 pol = '-'
             else:
                 continue
@@ -2056,12 +2088,10 @@ class PickingGUI:
         msg = "selecting Focal Mechanism No.  1 of %2i:" % self.focMechCount
         appendTextview(self.textviewStdOut, msg)
         self.dictFocalMechanism = self.focMechList[0]
+        dF = self.dictFocalMechanism
         msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
-                (self.dictFocalMechanism['Dip'],
-                 self.dictFocalMechanism['Strike'],
-                 self.dictFocalMechanism['Rake'],
-                 self.dictFocalMechanism['Errors'],
-                 self.dictFocalMechanism['Station Polarity Count'])
+                (dF['Dip'], dF['Strike'], dF['Rake'], dF['Errors'],
+                 dF['Station Polarity Count'])
         appendTextview(self.textviewStdOut, msg)
 
     def nextFocMec(self):
@@ -2096,59 +2126,53 @@ class PickingGUI:
                    self.dictFocalMechanism['Rake']], fig=fig)
         # plot the alternative solutions
         if self.focMechList != []:
-            for d in self.focMechList:
-                Beachball([d['Strike'], d['Dip'], d['Rake']],
+            for dict in self.focMechList:
+                Beachball([dict['Strike'], dict['Dip'], dict['Rake']],
                           nofill=True, fig=fig, edgecolor='k',
                           linewidth=1., alpha=0.3)
+        dF = self.dictFocalMechanism
         try:
             fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
-                    (self.dictFocalMechanism['Dip'],
-                     self.dictFocalMechanism['Strike'],
-                     self.dictFocalMechanism['Rake']) + \
-                     "Errors: %i/%i" % \
-                     (self.dictFocalMechanism['Errors'],
-                      self.dictFocalMechanism['Station Polarity Count']),
+                    (dF['Dip'], dF['Strike'], dF['Rake']) + \
+                     "Errors: %i/%i" % (dF['Errors'],
+                                        dF['Station Polarity Count']),
                      fontsize=10)
         except:
             fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
-                    (self.dictFocalMechanism['Dip'],
-                     self.dictFocalMechanism['Strike'],
-                     self.dictFocalMechanism['Rake']) + \
-                     "Used Polarities: %i" % \
-                     self.dictFocalMechanism['Station Polarity Count'],
+                    (dF['Dip'], dF['Strike'], dF['Rake']) + \
+                     "Used Polarities: %i" % dF['Station Polarity Count'],
                      fontsize=10)
         fig.canvas.set_window_title("Focal Mechanism (%i of %i)" % \
-                (self.focMechCurrent + 1,
-                 self.focMechCount))
+                (self.focMechCurrent + 1, self.focMechCount))
         fig.subplots_adjust(top=0.88) # make room for suptitle
         # values 0.02 and 0.96 fit best over the outer edges of beachball
         #ax = fig.add_axes([0.00, 0.02, 1.00, 0.96], polar=True)
         ax = fig.add_axes([0.00, 0.02, 1.00, 0.84], polar=True)
         ax.set_axis_off()
-        for d in self.dicts:
-            if 'PAzim' in d and 'PInci' in d and 'PPol' in d:
-                if d['PPol'] == "up":
+        for dict in self.dicts:
+            if 'PAzim' in dict and 'PInci' in dict and 'PPol' in dict:
+                if dict['PPol'] == "up":
                     color = "black"
-                elif d['PPol'] == "poorup":
+                elif dict['PPol'] == "poorup":
                     color = "darkgrey"
-                elif d['PPol'] == "poordown":
+                elif dict['PPol'] == "poordown":
                     color = "lightgrey"
-                elif d['PPol'] == "down":
+                elif dict['PPol'] == "down":
                     color = "white"
                 else:
                     continue
                 # southern hemisphere projection
-                if d['PInci'] > 90:
-                    inci = 180. - d['PInci']
-                    #azim = -180. + d['PAzim']
+                if dict['PInci'] > 90:
+                    inci = 180. - dict['PInci']
+                    #azim = -180. + dict['PAzim']
                 else:
-                    inci = d['PInci']
-                azim = d['PAzim']
+                    inci = dict['PInci']
+                azim = dict['PAzim']
                 #we have to hack the azimuth because of the polar plot
                 #axes orientation
                 plotazim = (np.pi / 2.) - ((azim / 180.) * np.pi)
                 ax.scatter([plotazim], [inci], facecolor=color)
-                ax.text(plotazim, inci, " " + d['Station'],
+                ax.text(plotazim, inci, " " + dict['Station'],
                         fontsize=10, va="top")
         #this fits the 90 degree incident value to the beachball edge best
         ax.set_ylim([0., 91])
@@ -2220,58 +2244,55 @@ class PickingGUI:
         #fmt2 = "  BGLD4739.14N01300.75E 930"
         fmt2 = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
         #self.coords = []
-        for i in range(len(self.streams)):
-            sta = self.dicts[i]['Station']
-            lon = self.dicts[i]['StaLon']
+        for i, dict in enumerate(self.dicts):
+            sta = dict['Station']
+            lon = dict['StaLon']
             lon_deg = int(lon)
             lon_min = (lon - lon_deg) * 60.
-            lat = self.dicts[i]['StaLat']
+            lat = dict['StaLat']
             lat_deg = int(lat)
             lat_min = (lat - lat_deg) * 60.
-            ele = self.dicts[i]['StaEle'] * 1000
+            ele = dict['StaEle'] * 1000
             f2.write(fmt2 % (sta, lat_deg, lat_min, lon_deg, lon_min, ele))
-            #self.coords.append([lon, lat])
-            if not self.dicts[i].has_key('P') and not self.dicts[i].has_key('S'):
+            if not 'P' in dict and not 'S' in dict:
                 continue
-            if self.dicts[i].has_key('P'):
+            if 'P' in dict:
                 t = self.streams[i][0].stats.starttime
-                t += self.dicts[i]['P']
+                t += dict['P']
                 date = t.strftime("%y%m%d%H%M%S")
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
-                if self.dicts[i].has_key('POnset'):
-                    if self.dicts[i]['POnset'] == 'impulsive':
+                if 'POnset' in dict:
+                    if dict['POnset'] == 'impulsive':
                         onset = 'I'
-                    elif self.dicts[i]['POnset'] == 'emergent':
+                    elif dict['POnset'] == 'emergent':
                         onset = 'E'
                     else: #XXX check for other names correctly!!!
                         onset = '?'
                 else:
                     onset = '?'
-                if self.dicts[i].has_key('PPol'):
-                    if self.dicts[i]['PPol'] == "up" or \
-                       self.dicts[i]['PPol'] == "poorup":
+                if 'PPol' in dict:
+                    if dict['PPol'] == "up" or dict['PPol'] == "poorup":
                         polarity = "U"
-                    elif self.dicts[i]['PPol'] == "down" or \
-                         self.dicts[i]['PPol'] == "poordown":
+                    elif dict['PPol'] == "down" or dict['PPol'] == "poordown":
                         polarity = "D"
                     else: #XXX check for other names correctly!!!
-                        polarity = "D"
+                        polarity = "?"
                 else:
                     polarity = "?"
-                if self.dicts[i].has_key('PWeight'):
-                    weight = int(self.dicts[i]['PWeight'])
+                if 'PWeight' in dict:
+                    weight = int(dict['PWeight'])
                 else:
                     weight = 0
                 f.write(fmtP % (sta, onset, polarity, weight, date))
-            if self.dicts[i].has_key('S'):
-                if not self.dicts[i].has_key('P'):
+            if 'S' in dict:
+                if not 'P' in dict:
                     err = "Warning: Trying to print a Hypo2000 phase file " + \
                           "with an S phase without P phase.\n" + \
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
                     appendTextview(self.textviewStdErr, err)
                 t2 = self.streams[i][0].stats.starttime
-                t2 += self.dicts[i]['S']
+                t2 += dict['S']
                 # if the S time's absolute minute is higher than that of the
                 # P pick, we have to add 60 to the S second count for the
                 # hypo 2000 output file
@@ -2279,36 +2300,34 @@ class PickingGUI:
                 mindiff = (t2.minute - t.minute + 60) % 60
                 abs_sec = t2.second + (mindiff * 60)
                 if abs_sec > 99:
-                    msg = "S phase seconds are greater than 99 which is " + \
-                          "not covered by the hypo phase file format! " + \
-                          "Omitting S phase of station %s!!!" % sta
-                    warnings.warn(msg)
+                    err = "Warning: S phase seconds are greater than 99 " + \
+                          "which is not covered by the hypo phase file " + \
+                          "format! Omitting S phase of station %s!" % sta
+                    appendTextview(self.textviewStdErr, err)
                     f.write("\n")
                     continue
                 date2 = str(abs_sec)
                 date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
-                if self.dicts[i].has_key('SOnset'):
-                    if self.dicts[i]['SOnset'] == 'impulsive':
+                if 'SOnset' in dict:
+                    if dict['SOnset'] == 'impulsive':
                         onset2 = 'I'
-                    elif self.dicts[i]['SOnset'] == 'emergent':
+                    elif dict['SOnset'] == 'emergent':
                         onset2 = 'E'
                     else: #XXX check for other names correctly!!!
                         onset2 = '?'
                 else:
                     onset2 = '?'
-                if self.dicts[i].has_key('SPol'):
-                    if self.dicts[i]['SPol'] == "up" or \
-                       self.dicts[i]['SPol'] == "poorup":
+                if 'SPol' in dict:
+                    if dict['SPol'] == "up" or dict['SPol'] == "poorup":
                         polarity2 = "U"
-                    elif self.dicts[i]['SPol'] == "down" or \
-                         self.dicts[i]['SPol'] == "poordown":
+                    elif dict['SPol'] == "down" or dict['SPol'] == "poordown":
                         polarity2 = "D"
                     else: #XXX check for other names correctly!!!
-                        polarity2 = "D"
+                        polarity2 = "?"
                 else:
                     polarity2 = "?"
-                if self.dicts[i].has_key('SWeight'):
-                    weight2 = int(self.dicts[i]['SWeight'])
+                if 'SWeight' in dict:
+                    weight2 = int(dict['SWeight'])
                 else:
                     weight2 = 0
                 f.write(fmtS % (date2, onset2, polarity2, weight2))
@@ -2322,7 +2341,7 @@ class PickingGUI:
         msg = 'Stations for Hypo2000:'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Stationsfile)
-        subprocess.call(self.hyp2000Call, shell = True)
+        subprocess.call(self.hyp2000Call, shell=True)
         msg = '--> hyp2000 finished'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Summary)
@@ -2397,17 +2416,18 @@ class PickingGUI:
         model = line[49:].strip()
 
         # assign origin info
-        self.dictOrigin['Longitude'] = lon
-        self.dictOrigin['Latitude'] = lat
-        self.dictOrigin['Depth'] = depth
-        self.dictOrigin['Longitude Error'] = errXY
-        self.dictOrigin['Latitude Error'] = errXY
-        self.dictOrigin['Depth Error'] = errZ
-        self.dictOrigin['Standarderror'] = rms #XXX stimmt diese Zuordnung!!!?!
-        self.dictOrigin['Azimuthal Gap'] = gap
-        self.dictOrigin['Depth Type'] = "from location program"
-        self.dictOrigin['Earth Model'] = model
-        self.dictOrigin['Time'] = time
+        dO = self.dictOrigin
+        dO['Longitude'] = lon
+        dO['Latitude'] = lat
+        dO['Depth'] = depth
+        dO['Longitude Error'] = errXY
+        dO['Latitude Error'] = errXY
+        dO['Depth Error'] = errZ
+        dO['Standarderror'] = rms #XXX stimmt diese Zuordnung!!!?!
+        dO['Azimuthal Gap'] = gap
+        dO['Depth Type'] = "from location program"
+        dO['Earth Model'] = model
+        dO['Time'] = time
         
         # goto station and phases info lines
         while True:
@@ -2418,8 +2438,9 @@ class PickingGUI:
             if line.startswith(" STA NET COM L CR DIST AZM"):
                 break
         
-        self.dictOrigin['used P Count'] = 0
-        self.dictOrigin['used S Count'] = 0
+        dO['used P Count'] = 0
+        dO['used S Count'] = 0
+        #XXX caution: we sometimes access the prior element!
         for i in range(len(lines)):
             # check which type of phase
             if lines[i][32] == "P":
@@ -2456,137 +2477,120 @@ class PickingGUI:
 
             # search for streamnumber corresponding to pick
             streamnum = None
-            for i in range(len(self.streams)):
-                if station.strip() != self.dicts[i]['Station']:
+            for i, dict in enumerate(self.dicts):
+                if station.strip() != dict['Station']:
                     continue
                 else:
                     streamnum = i
                     break
-            if streamnum == None:
-                message = "Did not find matching stream for pick data " + \
-                          "with station id: \"%s\"" % station.strip()
-                warnings.warn(message)
+            if streamnum is None:
+                err = "Warning: Did not find matching stream for pick " + \
+                      "data with station id: \"%s\"" % station.strip()
+                appendTextview(self.textviewStdErr, err)
                 continue
             
             # assign synthetic phase info
+            dict = self.dicts[streamnum]
             if type == "P":
-                self.dictOrigin['used P Count'] += 1
-                self.dicts[streamnum]['Psynth'] = res + \
-                                                  self.dicts[streamnum]['P']
-                self.dicts[streamnum]['Pres'] = res
-                self.dicts[streamnum]['PAzim'] = azimuth
-                self.dicts[streamnum]['PInci'] = incident
+                dO['used P Count'] += 1
+                dict['Psynth'] = res + dict['P']
+                dict['Pres'] = res
+                dict['PAzim'] = azimuth
+                dict['PInci'] = incident
                 if onset:
-                    self.dicts[streamnum]['POnset'] = onset
+                    dict['POnset'] = onset
                 if polarity:
-                    self.dicts[streamnum]['PPol'] = polarity
-                #XXX how to set the weight???
+                    dict['PPol'] = polarity
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
-                self.dicts[streamnum]['PsynthWeight'] = weight
-                #self.dicts[streamnum]['PResInfo'] = '\n\n %+0.3fs' % res
-                #if self.dicts[streamnum].has_key('PPol'):
-                #    self.dicts[streamnum]['PResInfo'] += '  %s' % \
-                #            self.dicts[streamnum]['PPol']
+                dict['PsynthWeight'] = weight
             elif type == "S":
-                self.dictOrigin['used S Count'] += 1
-                self.dicts[streamnum]['Ssynth'] = res + \
-                                                  self.dicts[streamnum]['S']
-                self.dicts[streamnum]['Sres'] = res
-                self.dicts[streamnum]['SAzim'] = azimuth
-                self.dicts[streamnum]['SInci'] = incident
+                dO['used S Count'] += 1
+                dict['Ssynth'] = res + dict['S']
+                dict['Sres'] = res
+                dict['SAzim'] = azimuth
+                dict['SInci'] = incident
                 if onset:
-                    self.dicts[streamnum]['SOnset'] = onset
+                    dict['SOnset'] = onset
                 if polarity:
-                    self.dicts[streamnum]['SPol'] = polarity
-                #XXX how to set the weight???
+                    dict['SPol'] = polarity
                 # we use weights 0,1,2,3 but hypo2000 outputs floats...
-                self.dicts[streamnum]['SsynthWeight'] = weight
-                #self.dicts[streamnum]['SResInfo'] = '\n\n\n %+0.3fs' % res
-                #if self.dicts[streamnum].has_key('SPol'):
-                #    self.dicts[streamnum]['SResInfo'] += '  %s' % \
-                #            self.dicts[streamnum]['SPol']
-        self.dictOrigin['used Station Count'] = len(self.dicts)
-        for st in self.dicts:
-            if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.dictOrigin['used Station Count'] -= 1
+                dict['SsynthWeight'] = weight
+        dO['used Station Count'] = len(self.dicts)
+        for dict in self.dicts:
+            if not ('Psynth' in dict or 'Ssynth' in dict):
+                dO['used Station Count'] -= 1
 
     def load3dlocData(self):
         #self.load3dlocSyntheticPhases()
         event = open(self.threeDlocOutfile).readline().split()
-        self.dictOrigin['Longitude'] = float(event[8])
-        self.dictOrigin['Latitude'] = float(event[9])
-        self.dictOrigin['Depth'] = float(event[10])
-        self.dictOrigin['Longitude Error'] = float(event[11])
-        self.dictOrigin['Latitude Error'] = float(event[12])
-        self.dictOrigin['Depth Error'] = float(event[13])
-        self.dictOrigin['Standarderror'] = float(event[14])
-        self.dictOrigin['Azimuthal Gap'] = float(event[15])
-        self.dictOrigin['Depth Type'] = "from location program"
-        self.dictOrigin['Earth Model'] = "STAUFEN"
-        self.dictOrigin['Time'] = UTCDateTime(int(event[2]), int(event[3]),
-                                              int(event[4]), int(event[5]),
-                                              int(event[6]), float(event[7]))
-        self.dictOrigin['used P Count'] = 0
-        self.dictOrigin['used S Count'] = 0
+        dO = self.dictOrigin
+        dO['Longitude'] = float(event[8])
+        dO['Latitude'] = float(event[9])
+        dO['Depth'] = float(event[10])
+        dO['Longitude Error'] = float(event[11])
+        dO['Latitude Error'] = float(event[12])
+        dO['Depth Error'] = float(event[13])
+        dO['Standarderror'] = float(event[14])
+        dO['Azimuthal Gap'] = float(event[15])
+        dO['Depth Type'] = "from location program"
+        dO['Earth Model'] = "STAUFEN"
+        dO['Time'] = UTCDateTime(int(event[2]), int(event[3]), int(event[4]),
+                                 int(event[5]), int(event[6]), float(event[7]))
+        dO['used P Count'] = 0
+        dO['used S Count'] = 0
         lines = open(self.threeDlocInfile).readlines()
         for line in lines:
             pick = line.split()
-            for i in range(len(self.streams)):
-                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+            for st in self.streams:
+                if pick[0].strip() == st[0].stats.station.strip():
                     if pick[1] == 'P':
-                        self.dictOrigin['used P Count'] += 1
+                        dO['used P Count'] += 1
                     elif pick[1] == 'S':
-                        self.dictOrigin['used S Count'] += 1
+                        dO['used S Count'] += 1
                     break
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
             pick = line.split()
-            for i in range(len(self.streams)):
-                if pick[0].strip() == self.streams[i][0].stats.station.strip():
+            for i, st in enumerate(self.streams):
+                if pick[0].strip() == st[0].stats.station.strip():
+                    dict = self.dicts[i]
                     if pick[1] == 'P':
-                        self.dicts[i]['PAzim'] = float(pick[9])
-                        self.dicts[i]['PInci'] = float(pick[10])
-                        #self.dicts[i]['PResInfo'] = '\n\n %+0.3fs' % float(pick[8])
-                        #if self.dicts[i].has_key('PPol'):
-                        #    self.dicts[i]['PResInfo'] += '  %s' % self.dicts[i]['PPol']
-                            
+                        dict['PAzim'] = float(pick[9])
+                        dict['PInci'] = float(pick[10])
                     elif pick[1] == 'S':
-                        self.dicts[i]['SAzim'] = float(pick[9])
-                        self.dicts[i]['SInci'] = float(pick[10])
-                        #self.dicts[i]['SResInfo'] = '\n\n\n %+0.3fs' % float(pick[8])
-                        #if self.dicts[i].has_key('SPol'):
-                        #    self.dicts[i]['SResInfo'] += '  %s' % self.dicts[i]['SPol']
+                        dict['SAzim'] = float(pick[9])
+                        dict['SInci'] = float(pick[10])
                     break
-        self.dictOrigin['used Station Count'] = len(self.dicts)
-        for st in self.dicts:
-            if not (st.has_key('Psynth') or st.has_key('Ssynth')):
-                self.dictOrigin['used Station Count'] -= 1
+        dO['used Station Count'] = len(self.dicts)
+        for dict in self.dicts:
+            if not ('Psynth' in dict or 'Ssynth' in dict):
+                dO['used Station Count'] -= 1
     
     def updateNetworkMag(self):
         msg = "updating network magnitude..."
         appendTextview(self.textviewStdOut, msg)
-        self.dictMagnitude['Station Count'] = 0
-        self.dictMagnitude['Magnitude'] = 0
+        dM = self.dictMagnitude
+        dM['Station Count'] = 0
+        dM['Magnitude'] = 0
         staMags = []
-        for i in range(len(self.streams)):
-            if self.dicts[i]['MagUse'] and self.dicts[i].has_key('Mag'):
-                msg = "%s: %.1f" % (self.dicts[i]['Station'],
-                                    self.dicts[i]['Mag'])
+        for dict in self.dicts:
+            if dict['MagUse'] and 'Mag' in dict:
+                msg = "%s: %.1f" % (dict['Station'], dict['Mag'])
                 appendTextview(self.textviewStdOut, msg)
-                self.dictMagnitude['Station Count'] += 1
-                self.dictMagnitude['Magnitude'] += self.dicts[i]['Mag']
-                staMags.append(self.dicts[i]['Mag'])
-        if self.dictMagnitude['Station Count'] == 0:
-            self.dictMagnitude['Magnitude'] = np.nan
-            self.dictMagnitude['Uncertainty'] = np.nan
+                dM['Station Count'] += 1
+                dM['Magnitude'] += dict['Mag']
+                staMags.append(dict['Mag'])
+        if dM['Station Count'] == 0:
+            dM['Magnitude'] = np.nan
+            dM['Uncertainty'] = np.nan
         else:
-            self.dictMagnitude['Magnitude'] /= self.dictMagnitude['Station Count']
-            self.dictMagnitude['Uncertainty'] = np.var(staMags)
+            dM['Magnitude'] /= dM['Station Count']
+            dM['Uncertainty'] = np.var(staMags)
         msg = "new network magnitude: %.2f (Variance: %.2f)" % \
-                (self.dictMagnitude['Magnitude'],
-                 self.dictMagnitude['Uncertainty'])
+                (dM['Magnitude'], dM['Uncertainty'])
         appendTextview(self.textviewStdOut, msg)
-        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (dM['Magnitude'],
+                                                           dM['Uncertainty'])
         try:
             self.netMagText.set_text(self.netMagLabel)
         except:
@@ -2598,72 +2602,68 @@ class PickingGUI:
             err = "Error: No coordinates for origin!"
             appendTextview(self.textviewStdErr, err)
         epidists = []
-        for i in range(len(self.streams)):
-            x, y = utlGeoKm(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
-                            self.dicts[i]['StaLon'], self.dicts[i]['StaLat'])
-            z = abs(self.dicts[i]['StaEle'] - self.dictOrigin['Depth'])
-            self.dicts[i]['distX'] = x
-            self.dicts[i]['distY'] = y
-            self.dicts[i]['distZ'] = z
-            self.dicts[i]['distEpi'] = np.sqrt(x**2 + y**2)
+        for dict in self.dicts:
+            x, y = utlGeoKm(self.dictOrigin['Longitude'],
+                            self.dictOrigin['Latitude'],
+                            dict['StaLon'], dict['StaLat'])
+            z = abs(dict['StaEle'] - self.dictOrigin['Depth'])
+            dict['distX'] = x
+            dict['distY'] = y
+            dict['distZ'] = z
+            dict['distEpi'] = np.sqrt(x**2 + y**2)
             # Median and Max/Min of epicentral distances should only be used
             # for stations with a pick that goes into the location.
             # The epicentral distance of all other stations may be needed for
             # magnitude estimation nonetheless.
-            if self.dicts[i].has_key('Psynth') or self.dicts[i].has_key('Ssynth'):
-                epidists.append(self.dicts[i]['distEpi'])
-            self.dicts[i]['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
+            if 'Psynth' in dict or 'Ssynth' in dict:
+                epidists.append(dict['distEpi'])
+            dict['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
         self.dictOrigin['Maximum Distance'] = max(epidists)
         self.dictOrigin['Minimum Distance'] = min(epidists)
         self.dictOrigin['Median Distance'] = np.median(epidists)
 
     def calculateStationMagnitudes(self):
-        for i in range(len(self.streams)):
-            if (self.dicts[i].has_key('MagMin1') and
-                self.dicts[i].has_key('MagMin2') and
-                self.dicts[i].has_key('MagMax1') and
-                self.dicts[i].has_key('MagMax2')):
+        for i, dict in enumerate(self.dicts):
+            st = self.streams[i]
+            if 'MagMin1' in dict and 'MagMin2' in dict and \
+               'MagMax1' in dict and 'MagMax2' in dict:
                 
-                amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
-                timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
-                                        self.dicts[i]['distHypo'])
-                amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
-                timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
-                mag += estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
-                                         self.dicts[i]['distHypo'])
+                amp = dict['MagMax1'] - dict['MagMin1']
+                timedelta = abs(dict['MagMax1T'] - dict['MagMin1T'])
+                mag = estimateMagnitude(dict['pazN'], amp, timedelta,
+                                        dict['distHypo'])
+                amp = dict['MagMax2'] - dict['MagMin2']
+                timedelta = abs(dict['MagMax2T'] - dict['MagMin2T'])
+                mag += estimateMagnitude(dict['pazE'], amp, timedelta,
+                                         dict['distHypo'])
                 mag /= 2.
-                self.dicts[i]['Mag'] = mag
-                self.dicts[i]['MagChannel'] = '%s,%s' % (self.streams[i][1].stats.channel, self.streams[i][2].stats.channel)
+                dict['Mag'] = mag
+                dict['MagChannel'] = '%s,%s' % (st[1].stats.channel,
+                                                st[2].stats.channel)
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
-                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
-                         self.dicts[i]['MagChannel'])
+                      % (dict['Station'], dict['Mag'], dict['MagChannel'])
                 appendTextview(self.textviewStdOut, msg)
             
-            elif (self.dicts[i].has_key('MagMin1') and
-                  self.dicts[i].has_key('MagMax1')):
-                amp = self.dicts[i]['MagMax1'] - self.dicts[i]['MagMin1']
-                timedelta = abs(self.dicts[i]['MagMax1T'] - self.dicts[i]['MagMin1T'])
-                mag = estimateMagnitude(self.dicts[i]['pazN'], amp, timedelta,
-                                        self.dicts[i]['distHypo'])
-                self.dicts[i]['Mag'] = mag
-                self.dicts[i]['MagChannel'] = '%s' % self.streams[i][1].stats.channel
+            elif 'MagMin1' in dict and 'MagMax1' in dict:
+                amp = dict['MagMax1'] - dict['MagMin1']
+                timedelta = abs(dict['MagMax1T'] - dict['MagMin1T'])
+                mag = estimateMagnitude(dict['pazN'], amp, timedelta,
+                                        dict['distHypo'])
+                dict['Mag'] = mag
+                dict['MagChannel'] = '%s' % st[1].stats.channel
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
-                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
-                         self.dicts[i]['MagChannel'])
+                      % (dict['Station'], dict['Mag'], dict['MagChannel'])
                 appendTextview(self.textviewStdOut, msg)
             
-            elif (self.dicts[i].has_key('MagMin2') and
-                  self.dicts[i].has_key('MagMax2')):
-                amp = self.dicts[i]['MagMax2'] - self.dicts[i]['MagMin2']
-                timedelta = abs(self.dicts[i]['MagMax2T'] - self.dicts[i]['MagMin2T'])
-                mag = estimateMagnitude(self.dicts[i]['pazE'], amp, timedelta,
-                                        self.dicts[i]['distHypo'])
-                self.dicts[i]['Mag'] = mag
-                self.dicts[i]['MagChannel'] = '%s' % self.streams[i][2].stats.channel
+            elif 'MagMin2' in dict and 'MagMax2' in dict:
+                amp = dict['MagMax2'] - dict['MagMin2']
+                timedelta = abs(dict['MagMax2T'] - dict['MagMin2T'])
+                mag = estimateMagnitude(dict['pazE'], amp, timedelta,
+                                        dict['distHypo'])
+                dict['Mag'] = mag
+                dict['MagChannel'] = '%s' % st[2].stats.channel
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
-                      % (self.dicts[i]['Station'], self.dicts[i]['Mag'],
-                         self.dicts[i]['MagChannel'])
+                      % (dict['Station'], dict['Mag'], dict['MagChannel'])
                 appendTextview(self.textviewStdOut, msg)
     
     #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
@@ -2683,16 +2683,17 @@ class PickingGUI:
         pTimes = []
         spTimes = []
         stations = []
-        for i in range(len(self.dicts)):
-            if self.dicts[i].has_key('P') and self.dicts[i].has_key('S'):
-                p = self.streams[i][0].stats.starttime
-                p += self.dicts[i]['P']
+        for i, dict in enumerate(self.dicts):
+            if 'P' in dict and 'S' in dict:
+                st = self.streams[i]
+                p = st[0].stats.starttime
+                p += dict['P']
                 p = "%.3f" % p.getTimeStamp()
                 p = float(p[-7:])
                 pTimes.append(p)
-                sp = self.dicts[i]['S'] - self.dicts[i]['P']
+                sp = dict['S'] - dict['P']
                 spTimes.append(sp)
-                stations.append(self.dicts[i]['Station'])
+                stations.append(dict['Station'])
             else:
                 continue
         if len(pTimes) < 2:
@@ -2714,14 +2715,14 @@ class PickingGUI:
         fig.canvas.set_window_title("Wadati Diagram")
         ax = fig.add_subplot(111)
         ax.scatter(pTimes, spTimes)
-        for i in range(len(stations)):
-            ax.text(pTimes[i], spTimes[i], stations[i], va = "top")
+        for i, station in enumerate(stations):
+            ax.text(pTimes[i], spTimes[i], station, va = "top")
         ax.plot([x0, x1], [y0, y1])
         ax.axhline(0, color = "blue", ls = ":")
         # origin time estimated by wadati plot
         ax.axvline(x0, color = "blue", ls = ":", label = "origin time from wadati diagram")
         # origin time from event location
-        if self.dictOrigin.has_key('Time'):
+        if 'Time' in self.dictOrigin:
             otime = "%.3f" % self.dictOrigin['Time'].getTimeStamp()
             otime = float(otime[-7:])
             ax.axvline(otime, color = "red", ls = ":", label = "origin time from event location")
@@ -2736,99 +2737,91 @@ class PickingGUI:
         plt.show()
 
     def showEventMap(self):
-        if self.dictOrigin == {}:
+        dM = self.dictMagnitude
+        dO = self.dictOrigin
+        if dO == {}:
             err = "Error: No hypocenter data!"
             appendTextview(self.textviewStdErr, err)
             return
         self.figEventMap = plt.figure(1000)
         self.figEventMap.canvas.set_window_title("Event Map")
         self.axEventMap = self.figEventMap.add_subplot(111)
-        self.axEventMap.scatter([self.dictOrigin['Longitude']], [self.dictOrigin['Latitude']],
-                             30, color = 'red', marker = 'o')
-        errLon, errLat = utlLonLat(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
-                               self.dictOrigin['Longitude Error'], self.dictOrigin['Latitude Error'])
-        errLon -= self.dictOrigin['Longitude']
-        errLat -= self.dictOrigin['Latitude']
-        self.axEventMap.text(self.dictOrigin['Longitude'],
-                             self.dictOrigin['Latitude'],
+        self.axEventMap.scatter([dO['Longitude']], [dO['Latitude']], 30,
+                                color='red', marker='o')
+        errLon, errLat = utlLonLat(dO['Longitude'], dO['Latitude'],
+                                   dO['Longitude Error'], dO['Latitude Error'])
+        errLon -= dO['Longitude']
+        errLat -= dO['Latitude']
+        self.axEventMap.text(dO['Longitude'], dO['Latitude'],
                              ' %7.3f +/- %0.2fkm\n' % \
-                             (self.dictOrigin['Longitude'],
-                              self.dictOrigin['Longitude Error']) + \
+                             (dO['Longitude'], dO['Longitude Error']) + \
                              ' %7.3f +/- %0.2fkm\n' % \
-                             (self.dictOrigin['Latitude'],
-                              self.dictOrigin['Latitude Error']) + \
+                             (dO['Latitude'], dO['Latitude Error']) + \
                              '  %.1fkm +/- %.1fkm' % \
-                             (self.dictOrigin['Depth'],
-                              self.dictOrigin['Depth Error']),
-                             va = 'top', family = 'monospace')
+                             (dO['Depth'], dO['Depth Error']),
+                             va='top', family='monospace')
         try:
-            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
-            self.netMagText = self.axEventMap.text(self.dictOrigin['Longitude'], self.dictOrigin['Latitude'],
-                              self.netMagLabel,
-                              va = 'top',
-                              color = 'green',
-                              family = 'monospace')
+            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % \
+                    (dM['Magnitude'], dM['Uncertainty'])
+            self.netMagText = self.axEventMap.text(dO['Longitude'],
+                    dO['Latitude'], self.netMagLabel, va='top',
+                    color='green', family = 'monospace')
         except:
             pass
-        errorell = Ellipse(xy = [self.dictOrigin['Longitude'], self.dictOrigin['Latitude']],
-                      width = errLon, height = errLat, angle = 0, fill = False)
+        errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
+                width=errLon, height=errLat, angle=0, fill=False)
         self.axEventMap.add_artist(errorell)
         self.scatterMagIndices = []
         self.scatterMagLon = []
         self.scatterMagLat = []
-        for i in range(len(self.streams)):
+        for i, dict in enumerate(self.dicts):
             # determine which stations are used in location
-            if self.dicts[i].has_key('Pres') or self.dicts[i].has_key('Sres'):
+            if 'Pres' in dict or 'Sres' in dict:
                 stationColor = 'black'
             else:
                 stationColor = 'gray'
             # plot stations at respective coordinates with names
-            self.axEventMap.scatter([self.dicts[i]['StaLon']],
-                                    [self.dicts[i]['StaLat']], s = 150,
-                                    marker = 'v', color = '',
-                                    edgecolor = stationColor)
-            self.axEventMap.text(self.dicts[i]['StaLon'],
-                                 self.dicts[i]['StaLat'],
-                                 '  ' + self.dicts[i]['Station'],
-                                 color = stationColor,
-                                 va = 'top', family = 'monospace')
-            if self.dicts[i].has_key('Pres'):
-                presinfo = '\n\n %+0.3fs' % self.dicts[i]['Pres']
-                if self.dicts[i].has_key('PPol'):
-                    presinfo += '  %s' % self.dicts[i]['PPol']
-                self.axEventMap.text(self.dicts[i]['StaLon'],
-                                     self.dicts[i]['StaLat'],
-                                     presinfo, va = 'top',
-                                     family = 'monospace',
-                                     color = self.dictPhaseColors['P'])
-            if self.dicts[i].has_key('Sres'):
-                sresinfo = '\n\n\n %+0.3fs' % self.dicts[i]['Sres']
-                if self.dicts[i].has_key('SPol'):
-                    sresinfo += '  %s' % self.dicts[i]['SPol']
-                self.axEventMap.text(self.dicts[i]['StaLon'],
-                                     self.dicts[i]['StaLat'],
-                                     sresinfo, va = 'top',
-                                     family = 'monospace',
-                                     color = self.dictPhaseColors['S'])
-            if self.dicts[i].has_key('Mag'):
+            self.axEventMap.scatter([dict['StaLon']], [dict['StaLat']], s=150,
+                                    marker='v', color='',
+                                    edgecolor=stationColor)
+            self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+                                 '  ' + dict['Station'],
+                                 color=stationColor, va='top',
+                                 family='monospace')
+            if 'Pres' in dict:
+                presinfo = '\n\n %+0.3fs' % dict['Pres']
+                if 'PPol' in dict:
+                    presinfo += '  %s' % dict['PPol']
+                self.axEventMap.text(dict['StaLon'], dict['StaLat'], presinfo,
+                                     va='top', family='monospace',
+                                     color=self.dictPhaseColors['P'])
+            if 'Sres' in dict:
+                sresinfo = '\n\n\n %+0.3fs' % dict['Sres']
+                if 'SPol' in dict:
+                    sresinfo += '  %s' % dict['SPol']
+                self.axEventMap.text(dict['StaLon'], dict['StaLat'], sresinfo,
+                                     va='top', family='monospace',
+                                     color=self.dictPhaseColors['S'])
+            if 'Mag' in dict:
                 self.scatterMagIndices.append(i)
-                self.scatterMagLon.append(self.dicts[i]['StaLon'])
-                self.scatterMagLat.append(self.dicts[i]['StaLat'])
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '  ' + self.dicts[i]['Station'], va = 'top',
-                                  family = 'monospace')
-                self.axEventMap.text(self.dicts[i]['StaLon'], self.dicts[i]['StaLat'],
-                                  '\n\n\n\n  %0.2f (%s)' % (self.dicts[i]['Mag'],
-                                  self.dicts[i]['MagChannel']), va = 'top',
-                                  family = 'monospace',
-                                  color = self.dictPhaseColors['Mag'])
+                self.scatterMagLon.append(dict['StaLon'])
+                self.scatterMagLat.append(dict['StaLat'])
+                self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+                                     '  ' + dict['Station'], va='top',
+                                     family='monospace')
+                self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+                                     '\n\n\n\n  %0.2f (%s)' % \
+                                     (dict['Mag'], dict['MagChannel']),
+                                     va='top', family='monospace',
+                                     color=self.dictPhaseColors['Mag'])
             if len(self.scatterMagLon) > 0 :
-                self.scatterMag = self.axEventMap.scatter(self.scatterMagLon, self.scatterMagLat, s = 150,
-                                     marker = 'v', color = '', edgecolor = 'black', picker = 10)
+                self.scatterMag = self.axEventMap.scatter(self.scatterMagLon,
+                        self.scatterMagLat, s=150, marker='v', color='',
+                        edgecolor='black', picker=10)
                 
         self.axEventMap.set_xlabel('Longitude')
         self.axEventMap.set_ylabel('Latitude')
-        self.axEventMap.set_title(self.dictOrigin['Time'])
+        self.axEventMap.set_title(dO['Time'])
         self.axEventMap.axis('equal')
         #XXX disabled because it plots the wrong info if the event was
         # fetched from seishub
@@ -2889,12 +2882,11 @@ class PickingGUI:
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
         # go through all stream-dictionaries and look for picks
-        for i in range(len(self.streams)):
-            d = self.dicts[i]
+        for i, dict in enumerate(self.dicts):
             st = self.streams[i]
 
             # write P Pick info
-            if 'P' in d:
+            if 'P' in dict:
                 pick = Sub(xml, "pick")
                 wave = Sub(pick, "waveform")
                 wave.set("networkCode", st[0].stats.network) 
@@ -2904,66 +2896,66 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = st[0].stats.starttime
-                picktime += d['P']
+                picktime += dict['P']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if 'PErr1' in d and 'PErr2' in d:
-                    temp = d['PErr2'] - d['PErr1']
+                if 'PErr1' in dict and 'PErr2' in dict:
+                    temp = dict['PErr2'] - dict['PErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "P"
                 phase_compu = ""
-                if 'POnset' in d:
-                    Sub(pick, "onset").text = d['POnset']
-                    if d['POnset'] == "impulsive":
+                if 'POnset' in dict:
+                    Sub(pick, "onset").text = dict['POnset']
+                    if dict['POnset'] == "impulsive":
                         phase_compu += "I"
-                    elif d['POnset'] == "emergent":
+                    elif dict['POnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
                     phase_compu += "?"
                 phase_compu += "P"
-                if 'PPol' in d:
-                    Sub(pick, "polarity").text = d['PPol']
-                    if d['PPol'] == 'up':
+                if 'PPol' in dict:
+                    Sub(pick, "polarity").text = dict['PPol']
+                    if dict['PPol'] == 'up':
                         phase_compu += "U"
-                    elif d['PPol'] == 'poorup':
+                    elif dict['PPol'] == 'poorup':
                         phase_compu += "+"
-                    elif d['PPol'] == 'down':
+                    elif dict['PPol'] == 'down':
                         phase_compu += "D"
-                    elif d['PPol'] == 'poordown':
+                    elif dict['PPol'] == 'poordown':
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
                     phase_compu += "?"
-                if 'PWeight' in d:
-                    Sub(pick, "weight").text = '%i' % d['PWeight']
-                    phase_compu += "%1i" % d['PWeight']
+                if 'PWeight' in dict:
+                    Sub(pick, "weight").text = '%i' % dict['PWeight']
+                    phase_compu += "%1i" % dict['PWeight']
                 else:
                     Sub(pick, "weight")
                     phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
-                if 'Psynth' in d:
+                if 'Psynth' in dict:
                     Sub(pick, "phase_compu").text = phase_compu
-                    Sub(Sub(pick, "phase_res"), "value").text = str(d['Pres'])
+                    Sub(Sub(pick, "phase_res"), "value").text = str(dict['Pres'])
                     if self.dictOrigin['Program'] == "hyp2000" and \
-                       'PsynthWeight' in d:
+                       'PsynthWeight' in dict:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
-                                str(d['PsynthWeight'])
+                                str(dict['PsynthWeight'])
                     else:
                         Sub(Sub(pick, "phase_weight"), "value")
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = str(d['PAzim'])
-                    Sub(Sub(pick, "incident"), "value").text = str(d['PInci'])
+                    Sub(Sub(pick, "azimuth"), "value").text = str(dict['PAzim'])
+                    Sub(Sub(pick, "incident"), "value").text = str(dict['PInci'])
                     Sub(Sub(pick, "epi_dist"), "value").text = \
-                            str(d['distEpi'])
+                            str(dict['distEpi'])
                     Sub(Sub(pick, "hyp_dist"), "value").text = \
-                            str(d['distHypo'])
+                            str(dict['distHypo'])
         
             # write S Pick info
-            if 'S' in d:
-                axind = d['Saxind']
+            if 'S' in dict:
+                axind = dict['Saxind']
                 pick = Sub(xml, "pick")
                 wave = Sub(pick, "waveform")
                 wave.set("networkCode", st[axind].stats.network) 
@@ -2973,62 +2965,62 @@ class PickingGUI:
                 date = Sub(pick, "time")
                 # prepare time of pick
                 picktime = st[axind].stats.starttime
-                picktime += d['S']
+                picktime += dict['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
-                if 'SErr1' in d and 'SErr2' in d:
-                    temp = d['SErr2'] - d['SErr1']
+                if 'SErr1' in dict and 'SErr2' in dict:
+                    temp = dict['SErr2'] - dict['SErr1']
                     Sub(date, "uncertainty").text = str(temp)
                 else:
                     Sub(date, "uncertainty")
                 Sub(pick, "phaseHint").text = "S"
                 phase_compu = ""
-                if 'SOnset' in d:
-                    Sub(pick, "onset").text = d['SOnset']
-                    if d['SOnset'] == "impulsive":
+                if 'SOnset' in dict:
+                    Sub(pick, "onset").text = dict['SOnset']
+                    if dict['SOnset'] == "impulsive":
                         phase_compu += "I"
-                    elif d['SOnset'] == "emergent":
+                    elif dict['SOnset'] == "emergent":
                         phase_compu += "E"
                 else:
                     Sub(pick, "onset")
                     phase_compu += "?"
                 phase_compu += "S"
-                if 'SPol' in d:
-                    Sub(pick, "polarity").text = d['SPol']
-                    if d['SPol'] == 'up':
+                if 'SPol' in dict:
+                    Sub(pick, "polarity").text = dict['SPol']
+                    if dict['SPol'] == 'up':
                         phase_compu += "U"
-                    elif d['SPol'] == 'poorup':
+                    elif dict['SPol'] == 'poorup':
                         phase_compu += "+"
-                    elif d['SPol'] == 'down':
+                    elif dict['SPol'] == 'down':
                         phase_compu += "D"
-                    elif d['SPol'] == 'poordown':
+                    elif dict['SPol'] == 'poordown':
                         phase_compu += "-"
                 else:
                     Sub(pick, "polarity")
                     phase_compu += "?"
-                if 'SWeight' in d:
-                    Sub(pick, "weight").text = '%i' % d['SWeight']
-                    phase_compu += "%1i" % d['SWeight']
+                if 'SWeight' in dict:
+                    Sub(pick, "weight").text = '%i' % dict['SWeight']
+                    phase_compu += "%1i" % dict['SWeight']
                 else:
                     Sub(pick, "weight")
                     phase_compu += "?"
                 Sub(Sub(pick, "min_amp"), "value") #XXX what is min_amp???
                 
-                if 'Ssynth' in d:
+                if 'Ssynth' in dict:
                     Sub(pick, "phase_compu").text = phase_compu
-                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % self.dicts[i]['Sres']
+                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % dict['Sres']
                     if self.dictOrigin['Program'] == "hyp2000" and \
-                       'SsynthWeight' in d:
+                       'SsynthWeight' in dict:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
-                                str(d['SsynthWeight'])
+                                str(dict['SsynthWeight'])
                     else:
                         Sub(Sub(pick, "phase_weight"), "value")
                     Sub(Sub(pick, "phase_delay"), "value")
-                    Sub(Sub(pick, "azimuth"), "value").text = str(d['SAzim'])
-                    Sub(Sub(pick, "incident"), "value").text = str(d['SInci'])
+                    Sub(Sub(pick, "azimuth"), "value").text = str(dict['SAzim'])
+                    Sub(Sub(pick, "incident"), "value").text = str(dict['SInci'])
                     Sub(Sub(pick, "epi_dist"), "value").text = \
-                            str(d['distEpi'])
+                            str(dict['distEpi'])
                     Sub(Sub(pick, "hyp_dist"), "value").text = \
-                            str(d['distHypo'])
+                            str(dict['distHypo'])
 
         #origin output
         dO = self.dictOrigin
@@ -3099,20 +3091,19 @@ class PickingGUI:
                 Sub(mag, "uncertainty").text = str(dM['Uncertainty'])
             Sub(magnitude, "type").text = "Ml"
             Sub(magnitude, "stationCount").text = '%i' % dM['Station Count']
-            for i in range(len(self.streams)):
-                d = self.dicts[i]
+            for i, dict in enumerate(self.dicts):
                 st = self.streams[i]
-                if 'Mag' in d:
+                if 'Mag' in dict:
                     stationMagnitude = Sub(xml, "stationMagnitude")
                     mag = Sub(stationMagnitude, 'mag')
-                    Sub(mag, 'value').text = str(d['Mag'])
+                    Sub(mag, 'value').text = str(dict['Mag'])
                     Sub(mag, 'uncertainty').text
-                    Sub(stationMagnitude, 'station').text = str(d['Station'])
-                    if d['MagUse']:
+                    Sub(stationMagnitude, 'station').text = str(dict['Station'])
+                    if dict['MagUse']:
                         Sub(stationMagnitude, 'weight').text = str(1. / dM['Station Count'])
                     else:
                         Sub(stationMagnitude, 'weight').text = "0"
-                    Sub(stationMagnitude, 'channels').text = str(d['MagChannel'])
+                    Sub(stationMagnitude, 'channels').text = str(dict['MagChannel'])
         
         #focal mechanism output
         dF = self.dictFocalMechanism
@@ -3199,13 +3190,13 @@ class PickingGUI:
     def clearDictionaries(self):
         msg = "Clearing previous data."
         appendTextview(self.textviewStdOut, msg)
-        for i in range(len(self.dicts)):
-            for k in self.dicts[i].keys():
-                if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
-                   k != 'StaEle' and k != 'pazZ' and k != 'pazN' and \
-                   k != 'pazE':
-                    del self.dicts[i][k]
-            self.dicts[i]['MagUse'] = True
+        dont_delete = ['Station', 'StaLat', 'StaLon', 'StaEle',
+                       'pazZ', 'pazN', 'pazE']
+        for dict in self.dicts:
+            for key in dict.keys():
+                if not key in dont_delete:
+                    del dict[key]
+            dict['MagUse'] = True
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictFocalMechanism = {}
@@ -3218,18 +3209,16 @@ class PickingGUI:
     def clearOriginMagnitudeDictionaries(self):
         msg = "Clearing previous origin and magnitude data."
         appendTextview(self.textviewStdOut, msg)
+        dont_delete = ['Station', 'StaLat', 'StaLon', 'StaEle', 'pazZ', 'pazN',
+                       'pazE', 'P', 'PErr1', 'PErr2', 'POnset', 'PPol',
+                       'PWeight', 'S', 'SErr1', 'SErr2', 'SOnset', 'SPol',
+                       'SWeight', 'Saxind']
         # we need to delete all station magnitude information from all dicts
-        for i in range(len(self.dicts)):
-            for k in self.dicts[i].keys():
-                if k != 'Station' and k != 'StaLat' and k != 'StaLon' and \
-                   k != 'StaEle' and k != 'pazZ' and k != 'pazN' and \
-                   k != 'pazE' and k != 'P' and k != 'PErr1' and \
-                   k != 'PErr2' and k != 'POnset' and k != 'PPol' and \
-                   k != 'PWeight' and k != 'S' and k != 'SErr1' and \
-                   k != 'SErr2' and k != 'SOnset' and k != 'SPol' and \
-                   k != 'SWeight' and k != 'Saxind':
-                    del self.dicts[i][k]
-            self.dicts[i]['MagUse'] = True
+        for dict in self.dicts:
+            for key in dict.keys():
+                if not key in dont_delete:
+                    del dict[key]
+            dict['MagUse'] = True
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictEvent = {}
@@ -3352,16 +3341,16 @@ class PickingGUI:
             channel = id['channelCode']
             streamnum = None
             # search for streamnumber corresponding to pick
-            for i in range(len(self.streams)):
-                if station.strip() != self.dicts[i]['Station']:
+            for i, dict in enumerate(self.dicts):
+                if station.strip() != dict['Station']:
                     continue
                 else:
                     streamnum = i
                     break
-            if streamnum == None:
-                message = "Did not find matching stream for pick data " + \
-                          "with station id: \"%s\"" % station.strip()
-                warnings.warn(message)
+            if streamnum is None:
+                err = "Warning: Did not find matching stream for pick " + \
+                      "data with station id: \"%s\"" % station.strip()
+                appendTextview(self.textviewStdErr, err)
                 continue
             # values
             time = pick.xpath(".//time/value")[0].text
@@ -3410,59 +3399,60 @@ class PickingGUI:
                 uncertainty = float(uncertainty)
                 uncertainty /= 2.
             # assign to dictionary
+            dict = self.dicts[streamnum]
             if pick.xpath(".//phaseHint")[0].text == "P":
-                self.dicts[streamnum]['P'] = time
+                dict['P'] = time
                 if uncertainty:
-                    self.dicts[streamnum]['PErr1'] = time - uncertainty
-                    self.dicts[streamnum]['PErr2'] = time + uncertainty
+                    dict['PErr1'] = time - uncertainty
+                    dict['PErr2'] = time + uncertainty
                 if onset:
-                    self.dicts[streamnum]['POnset'] = onset
+                    dict['POnset'] = onset
                 if polarity:
-                    self.dicts[streamnum]['PPol'] = polarity
+                    dict['PPol'] = polarity
                 if weight:
-                    self.dicts[streamnum]['PWeight'] = int(weight)
+                    dict['PWeight'] = int(weight)
                 if phase_res:
-                    self.dicts[streamnum]['Psynth'] = time + float(phase_res)
-                    self.dicts[streamnum]['Pres'] = float(phase_res)
+                    dict['Psynth'] = time + float(phase_res)
+                    dict['Pres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
                 if phase_weight:
-                    self.dicts[streamnum]['PsynthWeight'] = phase_weight
+                    dict['PsynthWeight'] = phase_weight
                 if azimuth:
-                    self.dicts[streamnum]['PAzim'] = float(azimuth)
+                    dict['PAzim'] = float(azimuth)
                 if incident:
-                    self.dicts[streamnum]['PInci'] = float(incident)
+                    dict['PInci'] = float(incident)
             if pick.xpath(".//phaseHint")[0].text == "S":
-                self.dicts[streamnum]['S'] = time
+                dict['S'] = time
                 # XXX maybe dangerous to check last character:
                 if channel.endswith('N'):
-                    self.dicts[streamnum]['Saxind'] = 1
+                    dict['Saxind'] = 1
                 if channel.endswith('E'):
-                    self.dicts[streamnum]['Saxind'] = 2
+                    dict['Saxind'] = 2
                 if uncertainty:
-                    self.dicts[streamnum]['SErr1'] = time - uncertainty
-                    self.dicts[streamnum]['SErr2'] = time + uncertainty
+                    dict['SErr1'] = time - uncertainty
+                    dict['SErr2'] = time + uncertainty
                 if onset:
-                    self.dicts[streamnum]['SOnset'] = onset
+                    dict['SOnset'] = onset
                 if polarity:
-                    self.dicts[streamnum]['SPol'] = polarity
+                    dict['SPol'] = polarity
                 if weight:
-                    self.dicts[streamnum]['SWeight'] = int(weight)
+                    dict['SWeight'] = int(weight)
                 if phase_res:
-                    self.dicts[streamnum]['Ssynth'] = time + float(phase_res)
-                    self.dicts[streamnum]['Sres'] = float(phase_res)
+                    dict['Ssynth'] = time + float(phase_res)
+                    dict['Sres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
                 if phase_weight:
-                    self.dicts[streamnum]['SsynthWeight'] = phase_weight
+                    dict['SsynthWeight'] = phase_weight
                 if azimuth:
-                    self.dicts[streamnum]['SAzim'] = float(azimuth)
+                    dict['SAzim'] = float(azimuth)
                 if incident:
-                    self.dicts[streamnum]['SInci'] = float(incident)
+                    dict['SInci'] = float(incident)
             if epi_dist:
-                self.dicts[streamnum]['distEpi'] = float(epi_dist)
+                dict['distEpi'] = float(epi_dist)
             if hyp_dist:
-                self.dicts[streamnum]['distHypo'] = float(hyp_dist)
+                dict['distHypo'] = float(hyp_dist)
 
         #analyze origin:
         try:
