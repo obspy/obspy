@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
-#check for textboxes and other stuff:
-#http://code.enthought.com/projects/traits/docs/html/tutorials/traits_ui_scientific_app.html
-
-#matplotlib.use('gtkagg')
-
-from lxml.etree import SubElement as Sub, parse, tostring
-from lxml.etree import fromstring, Element
+from lxml.etree import SubElement as Sub
+from lxml.etree import fromstring, Element, parse, tostring
 from optparse import OptionParser
 import numpy as np
 import fnmatch
@@ -34,16 +29,8 @@ from obspy.imaging.beachball import Beachball
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
-from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
 from matplotlib.patches import Ellipse
 from matplotlib.ticker import FuncFormatter
-
-#imports for the buttons
-import matplotlib.colors as colors
-import matplotlib.patches as patches
-import matplotlib.mathtext as mathtext
-import matplotlib.artist as artist
-import matplotlib.image as image
 
 #gtk
 import gtk
@@ -102,6 +89,10 @@ class MultiCursor(mplMultiCursor):
         self.needclear = False
         self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
         self.id2=self.canvas.mpl_connect('draw_event', self.clear)
+    
+    #def set_visible(self, boolean):
+    #    for line in self.lines:
+    #        line.set_visible(boolean)
     
 def getCoord(client, network, station):
     """
@@ -168,9 +159,9 @@ class PickingGUI:
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
-        self.showEventMap()
-        self.drawAllItems()
-        self.redraw()
+        #self.drawAllItems()
+        #self.redraw()
+        self.togglebuttonShowMap.set_active(True)
 
     def on_buttonDo3dloc_clicked(self, event):
         self.delAllItems()
@@ -183,9 +174,9 @@ class PickingGUI:
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
-        self.showEventMap()
-        self.drawAllItems()
-        self.redraw()
+        #self.drawAllItems()
+        #self.redraw()
+        self.togglebuttonShowMap.set_active(True)
 
     def on_buttonCalcMag_clicked(self, event):
         self.calculateEpiHypoDists()
@@ -198,18 +189,115 @@ class PickingGUI:
         self.dictFocalMechanism['Program'] = "focmec"
         self.doFocmec()
 
-    def on_buttonShowMap_clicked(self, event):
-        self.showEventMap()
+    def on_togglebuttonShowMap_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec, self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.checkbuttonPublicEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram]
+        state = self.togglebuttonShowMap.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.drawEventMap()
+            self.multicursor.visible = False
+            self.toolbar.pan(True)
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delEventMap()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawSavedPicks()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
 
-    def on_buttonShowFocMec_clicked(self, event):
-        self.showFocMec()
+    def on_togglebuttonShowFocMec_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDoFocmec, self.togglebuttonShowMap,
+                              self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.checkbuttonPublicEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram]
+        state = self.togglebuttonShowFocMec.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            #XXX do the FocMec-Plot
+            self.multicursor.visible = False
+            self.toolbar.pan(False)
+            self.toolbar.zoom(False)
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            #XXX delete the FocMec-Plot
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawSavedPicks()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
 
     def on_buttonNextFocMec_clicked(self, event):
-        self.nextFocMec()
-        self.showFocMec()
+        err = "Error: Proper reimplementation needed..."
+        appendTextview(self.textviewStdErr, err)
+        #XXX self.nextFocMec()
+        #XXX self.showFocMec()
 
-    def on_buttonShowWadati_clicked(self, event):
-        self.showWadati()
+    def on_togglebuttonShowWadati_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec, self.togglebuttonShowMap,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.checkbuttonPublicEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram]
+        state = self.togglebuttonShowWadati.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            #XXX do Wadati Plot
+            self.multicursor.visible = False
+            self.toolbar.pan(False)
+            self.toolbar.zoom(False)
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            #XXX delete Wadati Plot
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawSavedPicks()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
 
     def on_buttonGetNextEvent_clicked(self, event):
         self.delAllItems()
@@ -588,7 +676,7 @@ class PickingGUI:
         self.gla.signal_autoconnect(d)
         # get the main window widget and set its title
         self.win = self.gla.get_widget('windowObspyck')
-        self.win.set_title("ObsPyck")
+        #self.win.set_title("ObsPyck")
         # matplotlib code to generate an empty Axes
         # we define no dimensions for Figure because it will be
         # expanded to the whole empty space on main window widget
@@ -613,6 +701,19 @@ class PickingGUI:
         self.canv.widgetlock.release(self.toolbar)
 
         # define handles for all buttons/GUI-elements we interact with
+        self.buttonClearAll = self.gla.get_widget("buttonClearAll")
+        self.buttonClearOrigMag = self.gla.get_widget("buttonClearOrigMag")
+        self.buttonClearFocMec = self.gla.get_widget("buttonClearFocMec")
+        self.buttonDoHyp2000 = self.gla.get_widget("buttonDoHyp2000")
+        self.buttonDo3dloc = self.gla.get_widget("buttonDo3dloc")
+        self.buttonCalcMag = self.gla.get_widget("buttonCalcMag")
+        self.buttonDoFocmec = self.gla.get_widget("buttonDoFocmec")
+        self.togglebuttonShowMap = self.gla.get_widget("togglebuttonShowMap")
+        self.togglebuttonShowFocMec = self.gla.get_widget("togglebuttonShowFocMec")
+        self.buttonNextFocMec = self.gla.get_widget("buttonNextFocMec")
+        self.togglebuttonShowWadati = self.gla.get_widget("togglebuttonShowWadati")
+        self.buttonGetNextEvent = self.gla.get_widget("buttonGetNextEvent")
+        self.buttonSendEvent = self.gla.get_widget("buttonSendEvent")
         self.checkbuttonPublicEvent = \
                 self.gla.get_widget("checkbuttonPublicEvent")
         self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
@@ -727,6 +828,9 @@ class PickingGUI:
         self.yMin, self.yMax=self.axs[0].get_ylim()
         #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
         self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
+        self.toolbar.update()
+        self.toolbar.pan(False)
+        self.toolbar.zoom(True)
     
     def drawSavedPicks(self):
         self.drawPLine()
@@ -1340,6 +1444,8 @@ class PickingGUI:
     
     # Define the event that handles the setting of P- and S-wave picks
     def keypress(self, event):
+        if self.togglebuttonShowMap.get_active():
+            return
         phase_type = self.comboboxPhaseType.get_active_text()
         keys = self.dictKeybindings
         dict = self.dicts[self.stPt]
@@ -1865,6 +1971,8 @@ class PickingGUI:
             
     # Define zooming for the mouse scroll wheel
     def scroll(self, event):
+        if self.togglebuttonShowMap.get_active():
+            return
         if not self.flagWheelZoom:
             return
         # Calculate and set new axes boundaries from old ones
@@ -1882,6 +1990,8 @@ class PickingGUI:
     
     # Define zoom reset for the mouse button 2 (always scroll wheel!?)
     def buttonpress(self, event):
+        if self.togglebuttonShowMap.get_active():
+            return
         # set widgetlock when pressing mouse buttons and dont show cursor
         # cursor should not be plotted when making a zoom selection etc.
         if event.button == 1 or event.button == 3:
@@ -1898,6 +2008,8 @@ class PickingGUI:
             appendTextview(self.textviewStdOut, msg)
     
     def buttonrelease(self, event):
+        if self.togglebuttonShowMap.get_active():
+            return
         # release widgetlock when releasing mouse buttons
         if event.button == 1 or event.button == 3:
             self.multicursor.visible = True
@@ -1910,6 +2022,7 @@ class PickingGUI:
         self.multicursor.__init__(self.canv, self.axs, useblit=True,
                                   color='black', linewidth=1, ls='dotted')
         self.updateMulticursorColor()
+        self.canv.widgetlock.release(self.toolbar)
 
     def updateMulticursorColor(self):
         phase_name = self.comboboxPhaseType.get_active_text()
@@ -2109,7 +2222,8 @@ class PickingGUI:
                  self.dictFocalMechanism['Errors'],
                  self.dictFocalMechanism['Station Polarity Count'])
         appendTextview(self.textviewStdOut, msg)
-
+    
+    #XXX replace with drawFocMec
     def showFocMec(self):
         if self.dictFocalMechanism == {}:
             err = "Error: No focal mechanism data!"
@@ -2667,6 +2781,7 @@ class PickingGUI:
                 appendTextview(self.textviewStdOut, msg)
     
     #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
+    #XXX replace with drawWadati()
     def showWadati(self):
         """
         Shows a Wadati diagram plotting P time in (truncated) Julian seconds
@@ -2736,16 +2851,17 @@ class PickingGUI:
         fig.canvas.draw()
         plt.show()
 
-    def showEventMap(self):
+    def drawEventMap(self):
         dM = self.dictMagnitude
         dO = self.dictOrigin
         if dO == {}:
             err = "Error: No hypocenter data!"
             appendTextview(self.textviewStdErr, err)
             return
-        self.figEventMap = plt.figure(1000)
-        self.figEventMap.canvas.set_window_title("Event Map")
-        self.axEventMap = self.figEventMap.add_subplot(111)
+        #toolbar.pan()
+        #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
+        self.axEventMap = self.fig.add_subplot(111)
+        self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
         self.axEventMap.scatter([dO['Longitude']], [dO['Latitude']], 30,
                                 color='red', marker='o')
         errLon, errLat = utlLonLat(dO['Longitude'], dO['Latitude'],
@@ -2781,7 +2897,7 @@ class PickingGUI:
             else:
                 stationColor = 'gray'
             # plot stations at respective coordinates with names
-            self.axEventMap.scatter([dict['StaLon']], [dict['StaLat']], s=150,
+            self.axEventMap.scatter([dict['StaLon']], [dict['StaLat']], s=300,
                                     marker='v', color='',
                                     edgecolor=stationColor)
             self.axEventMap.text(dict['StaLon'], dict['StaLat'],
@@ -2823,8 +2939,8 @@ class PickingGUI:
         self.axEventMap.set_ylabel('Latitude')
         self.axEventMap.set_title(dO['Time'])
         self.axEventMap.axis('equal')
-        #XXX disabled because it plots the wrong info if the event was
-        # fetched from seishub
+        #####XXX disabled because it plots the wrong info if the event was
+        ##### fetched from seishub
         #####lines = open(self.threeDlocOutfile).readlines()
         #####infoEvent = lines[0].rstrip()
         #####infoPicks = ''
@@ -2836,19 +2952,31 @@ class PickingGUI:
         #####self.axEventMap.text(0.02, 0.90, infoPicks, transform = self.axEventMap.transAxes,
         #####                  fontsize = 10, verticalalignment = 'top',
         #####                  family = 'monospace')
-        self.figEventMap.canvas.mpl_connect('pick_event', self.selectMagnitudes)
+        # save id to disconnect when switching back to stream dislay
+        self.eventMapPickEvent = self.canv.mpl_connect('pick_event',
+                                                       self.selectMagnitudes)
         try:
             self.scatterMag.set_facecolors(self.eventMapColors)
         except:
             pass
-        plt.show()
+
+    def delEventMap(self):
+        try:
+            self.canv.mpl_disconnect(self.eventMapPickEvent)
+        except AttributeError:
+            pass
+        self.fig.delaxes(self.axEventMap)
+        del self.axEventMap
 
     def selectMagnitudes(self, event):
+        if not self.togglebuttonShowMap.get_active():
+            return
         if event.artist != self.scatterMag:
             return
         i = self.scatterMagIndices[event.ind[0]]
         j = event.ind[0]
-        self.dicts[i]['MagUse'] = not self.dicts[i]['MagUse']
+        dict = self.dicts[i]
+        dict['MagUse'] = not dict['MagUse']
         #print event.ind[0]
         #print i
         #print event.artist
@@ -2856,7 +2984,7 @@ class PickingGUI:
         #    print di['MagUse']
         #print i
         #print self.dicts[i]['MagUse']
-        if self.dicts[i]['MagUse']:
+        if dict['MagUse']:
             self.eventMapColors[j] = (0.,  1.,  0.,  1.)
         else:
             self.eventMapColors[j] = (0.,  0.,  0.,  0.)
@@ -2865,7 +2993,7 @@ class PickingGUI:
         #print self.scatterMag.get_facecolors()
         #event.artist.set_facecolors(self.eventMapColors)
         self.updateNetworkMag()
-        self.figEventMap.canvas.draw()
+        self.canv.draw()
 
     def dicts2XML(self):
         """
@@ -3212,7 +3340,10 @@ class PickingGUI:
         dont_delete = ['Station', 'StaLat', 'StaLon', 'StaEle', 'pazZ', 'pazN',
                        'pazE', 'P', 'PErr1', 'PErr2', 'POnset', 'PPol',
                        'PWeight', 'S', 'SErr1', 'SErr2', 'SOnset', 'SPol',
-                       'SWeight', 'Saxind']
+                       'SWeight', 'Saxind',
+                       #dont delete the manually picked maxima/minima
+                       'MagMin1', 'MagMin1T', 'MagMax1', 'MagMax1T',
+                       'MagMin2', 'MagMin2T', 'MagMax2', 'MagMax2T',]
         # we need to delete all station magnitude information from all dicts
         for dict in self.dicts:
             for key in dict.keys():
