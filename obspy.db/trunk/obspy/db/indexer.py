@@ -7,6 +7,7 @@ from obspy.core.util import _getPlugins
 from obspy.db.util import createPreview
 import fnmatch
 import os
+import time
 
 
 class WaveformFileCrawler:
@@ -21,57 +22,68 @@ class WaveformFileCrawler:
         """
         Add a new file into or modifies existing file in database.
         """
+        if len(dataset) < 0:
+            return
         session = self.session()
+        data = dataset[0]
+        # check for duplicates
+        if self.options.check_duplicates:
+            query = session.query(WaveformFile, WaveformChannel)
+            query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+            query = query.filter(WaveformFile.file == data['file'])
+            query = query.filter(WaveformChannel.network == data['network'])
+            query = query.filter(WaveformChannel.station == data['station'])
+            query = query.filter(WaveformChannel.location == data['location'])
+            query = query.filter(WaveformChannel.channel == data['channel'])
+            query = query.filter(WaveformChannel.starttime == data['starttime'])
+            query = query.filter(WaveformChannel.endtime == data['endtime'])
+            if query.count() > 0:
+                msg = "Duplicate entry '%s' in '%s'."
+                self.log.error(msg % (data['file'], data['path']))
+                return
+        # fetch or create path
+        try:
+            # search for existing path
+            query = session.query(WaveformPath)
+            path = query.filter_by(path=data['path']).one()
+        except:
+            # create new path entry
+            path = WaveformPath(data)
+            session.add(path)
+        # search and delete existing file entry
+        msg = "Inserted"
+        if path.id is not None:
+            # search for existing file
+            query = session.query(WaveformFile)
+            files = query.filter_by(path_id=path.id,
+                                    file=data['file']).all()
+            if files:
+                msg = "Updated"
+            # delete existing file entry and all related information
+            for file in files:
+                session.delete(file)
+        # create new file entry
+        file = WaveformFile(data)
+        path.files.append(file)
+        # add channel entries
         for data in dataset:
-            # fetch or create path
-            try:
-                query = session.query(WaveformPath)
-                path = query.filter_by(path=data['path']).one()
-            except:
-                path = WaveformPath(data)
-                session.add(path)
-            # fetch or create file
-            try:
-                file = path.files.filter(file=data['file']).one()
-            except:
-                file = WaveformFile(data)
-                path.files.append(file)
-            # fetch or create channel
-            try:
-                # search for existing channel
-                channel = file.channels.filter(network=data['network'],
-                                               station=data['station'],
-                                               location=data['location'],
-                                               channel=data['channel'],
-                                               starttime=data['starttime'],
-                                               endtime=data['endtime']).one()
-            except:
-                # create new channel object
-                msg = 'Inserting'
-                channel = WaveformChannel(data)
-            else:
-                # modify existing channel object
-                msg = 'Updating'
-                channel.update(data)
-                # remove all gaps
-                session.delete(channel.gaps)
-                # remove all features
-                session.delete(channel.features)
+            # create new channel entry
+            channel = WaveformChannel(data)
+            file.channels.append(channel)
             # add gaps
             for gap in data['gaps']:
                 channel.gaps.append(WaveformGaps(gap))
             # add features
             for feature in data['features']:
                 channel.features.append(WaveformFeatures(feature))
-            file.channels.append(channel)
-            try:
-                session.commit()
-            except Exception, e:
-                session.rollback()
-                self.log.error(str(e))
-            else:
-                self.log.debug("%s '%s' in '%s'" % (msg, data['file'],
-                                                    data['path']))
+        try:
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            self.log.error(str(e))
+        else:
+            self.log.debug("%s '%s' in '%s'" % (msg, data['file'],
+                                                data['path']))
         session.close()
 
     def _delete(self, path, file=None):
@@ -111,25 +123,22 @@ class WaveformFileCrawler:
 
     def _select(self, path=None):
         """
+        Fetch entry from database.
         """
         session = self.session()
         if path:
-            # check database for file entries in path
-            query = session.query(WaveformPath)
-            if path:
-                query = query.filter(WaveformPath.path == path)
-            try:
-                query = query.first()
-                result = dict([(f.file, f.mtime) for f in query.files])
-            except:
-                result = {}
+            # check database for file entries in specific path
+            result = session.query("file", "mtime").from_statement("""
+                SELECT file, mtime
+                FROM default_waveform_paths as p, default_waveform_files as f
+                WHERE p.id=f.path_id
+                AND p.path=:path""").params(path=path).all()
+            result = dict(result)
         else:
-            # check database for all path entries
-            query = session.query(WaveformPath.path)
-            try:
-                result = [p.path for p in query.all()]
-            except:
-                result = []
+            # get all path entries from database
+            result = session.query("path").from_statement("""
+                SELECT path FROM default_waveform_paths""").all()
+            result = [r[0] for r in result]
         session.close()
         return result
 
@@ -183,7 +192,7 @@ class WaveformFileCrawler:
         # create new walker
         self._walker = os.walk(self._root, topdown=True, followlinks=True)
         # clean up paths
-        if self.cleanup:
+        if self.options.cleanup:
             paths = self._select()
             for path in paths:
                 if not os.path.isdir(path):
@@ -218,7 +227,7 @@ class WaveformFileCrawler:
             self.log.debug("Crawling root '%s' ..." % self._root)
             return
         # remove files or paths starting with a dot
-        if self.skip_dots:
+        if self.options.skip_dots:
             for file in files:
                 if file.startswith('.'):
                     files.remove(file)
@@ -254,7 +263,7 @@ class WaveformFileCrawler:
             else:
                 patterns = ['*.*']
             # normalize and absolute path name
-            path = os.path.normpath(path)
+            path = os.path.normpath(os.path.abspath(path))
             # check path
             if not os.path.isdir(path):
                 self.log.warn("Skipping inaccessible path '%s' ..." % path)
@@ -271,7 +280,7 @@ class WaveformFileCrawler:
         if not self.running:
             return
         # skip if input queue is full
-        if len(self.input_queue) > self.number_of_cpus:
+        if len(self.input_queue) > self.options.number_of_cpus:
             return
         # try to finalize a single processed stream object from output queue
         self._processOutputQueue()
@@ -283,7 +292,7 @@ class WaveformFileCrawler:
         except IndexError:
             # file list is empty
             # clean up not existing files in current path
-            if self.cleanup:
+            if self.options.cleanup:
                 for file in self._db_files.keys():
                     self._delete(self._current_path, file)
             # jump into next directory
@@ -295,29 +304,34 @@ class WaveformFileCrawler:
         # process a single file
         path = self._current_path
         filepath = os.path.join(path, file)
-        # check if already processed
-        if filepath in self.work_queue:
-            return
         # get file stats
         try:
             stats = os.stat(filepath)
+            mtime = int(stats.st_mtime)
         except Exception, e:
             self.log.error(str(e))
             return
         # compare with database entries
-        if file not in self._db_files:
+        if file not in self._db_files.keys():
             # file does not exists in database -> add file
             self.input_queue[filepath] = (path, file, self.features)
             return
         # file is already in database
         # -> remove from file list so it won't be deleted on database cleanup
-        db_file_mtime = self._db_files.pop(file)
-        # -> compare modification times of current file with database entry
-        if int(stats.st_mtime) == db_file_mtime:
+        try:
+            db_file_mtime = self._db_files.pop(file)
+        except:
             return
+        # -> compare modification times of current file with database entry
+        if mtime == db_file_mtime:
+            return
+        # check if recent
+        if self.options.recent:
+            # skip older files
+            if time.time() - mtime > 24 * 60 * 60 * self.options.recent:
+                return
         # modification time differs -> update file
-        self.input_queue[filepath] = (path, file, [])
-        return
+        self.input_queue[filepath] = (path, file, self.features)
 
 
 def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):

@@ -58,7 +58,7 @@ class WaveformFile(Base):
 class WaveformChannel(Base):
     __tablename__ = 'default_waveform_channels'
     __table_args__ = (UniqueConstraint('network', 'station', 'location',
-                                       'channel', 'starttime', 'endtime'))
+                                       'channel', 'file_id'))
 
     id = Column(Integer, primary_key=True)
     file_id = Column(Integer, ForeignKey('default_waveform_files.id'),

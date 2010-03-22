@@ -66,7 +66,6 @@ def _runIndexer(options):
         work_queue = manager.list()
         out_queue = manager.list()
         log_queue = manager.list()
-        cpu_list = []
         # filter
         if options.filter:
             filter = options.filter
@@ -77,24 +76,21 @@ def _runIndexer(options):
             p = multiprocessing.Process(target=worker, args=args)
             p.daemon = True
             p.start()
-            cpu_list.append(p)
         # connect to database
         engine = create_engine(options.db_uri, encoding='utf-8',
                                convert_unicode=True)
         metadata = Base.metadata
         metadata.create_all(engine, checkfirst=True)
-        # init db + options
+        # initialize database + options
         Session = sessionmaker(bind=engine)
         service.session = Session
-        service.skip_dots = options.skip_dots
-        service.cleanup = options.cleanup
+        service.options = options
         service.log = logging
         # set queues
         service.input_queue = in_queue
         service.work_queue = work_queue
         service.output_queue = out_queue
         service.log_queue = log_queue
-        service.number_of_cpus = options.number_of_cpus
         service.paths = paths
         service._resetWalker()
         service._stepWalker()
@@ -123,41 +119,43 @@ Be aware that features must be provided behind file patterns (if any)! There is
 no default feature enabled.
 Default path option is 'data=*.*'.""")
     parser.add_option("-u", default='sqlite:///indexer.sqlite', type="string",
-                      dest="db_uri",
-                      help="Database connection URI, such as "
-                           "postgresql://scott:tiger@localhost/mydatabase."
-                           " Default is a SQLite database './indexer.sqlite'.")
-    parser.add_option("-f", type="string", dest="filter",
-                      help="Filter waveform files before storing into the DB.",
-                      default="")
+        dest="db_uri",
+        help="Database connection URI, such as "
+             "postgresql://scott:tiger@localhost/mydatabase."
+             "Default is a SQLite database './indexer.sqlite'.")
     parser.add_option("-n", type="int", dest="number_of_cpus",
-                      help="Number of CPUs used for the indexer.",
-                      default=multiprocessing.cpu_count())
+        help="Number of CPUs used for the indexer.",
+        default=multiprocessing.cpu_count())
     parser.add_option("-i", type="float", default=0.1, dest="poll_interval",
-                      help="Poll interval for file crawler in seconds "
-                           "(default is 0.1 seconds).")
-    parser.add_option("-v", action="store_true", dest="verbose",
-                      default=False,
-                      help="Verbose output.")
-    parser.add_option("-l", type="string", dest="log",
-                      help="Log file name. If no log file is given, stdout" + \
-                      "is used.", default="")
+        help="Poll interval for file crawler in seconds (default is 0.1).")
+    parser.add_option("-r", type="int", dest="recent", default=0,
+        help="Index only recent files modified within the provided" + \
+             "number of days. This option is deactivated by default.")
+    parser.add_option("-v", action="store_true", dest="verbose", default=False,
+        help="Verbose output.")
+    parser.add_option("-l", type="string", dest="log", default="",
+        help="Log file name. If no log file is given, stdout will be used.")
+    parser.add_option("-f", "--filter", type="string", dest="filter",
+        help="Filter waveform files using a custom class" + \
+             "before storing into the database.", default="")
     parser.add_option("--cleanup", action="store_true", dest="cleanup",
-                      default=False,
-                      help="Clean database from non-existing files or paths "
-                           "if activated, but will skip all paths marked as "
-                           "archived in the database.")
-    parser.add_option("--all_files",
-                      action="store_false", dest="skip_dots", default=True,
-                      help="The indexer will automatically skip paths or "
-                           "files starting with a dot. This option forces to "
-                           "parse all paths and files.")
+        default=False,
+        help="Clean database from non-existing files or paths " + \
+             "if activated, but will skip all paths marked as " + \
+             "archived in the database.")
+    parser.add_option("--check_duplicates", action="store_true",
+        dest="check_duplicates", default=False,
+        help="Checks for duplicate entries within database." + \
+             "This feature will slow down the indexer progress.")
+    parser.add_option("--all_files", action="store_false", dest="skip_dots",
+        default=True,
+        help="The indexer will automatically skip paths or "
+             "files starting with a dot. This option forces to "
+             "parse all paths and files.")
     parser.add_option("--host", type="string", dest="host",
-                      help="Server host name. Default is 'localhost'.",
-                      default="localhost")
-    parser.add_option("--port", type="int", dest="port",
-                      help="Port number. Default is '8081'.",
-                      default=8081)
+        help="Server host name. Default is 'localhost'.", default="localhost")
+    parser.add_option("--port", type="int", dest="port", default=8081,
+        help="Port number. Default is '8081'.")
 
     (options, _) = parser.parse_args()
     # set level of verbosity
