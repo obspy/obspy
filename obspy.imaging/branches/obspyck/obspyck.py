@@ -17,6 +17,7 @@ import urllib2
 import tempfile
 
 #sys.path.append('/baysoft/obspy/obspy/branches/symlink')
+#os.chdir("/baysoft/obspyck/")
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
 from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
@@ -585,11 +586,19 @@ class PickingGUI:
                 self.streams.pop(i)
                 continue
             if not (len(st.traces) == 1 or len(st.traces) == 3):
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
+                print 'Stream %s discarded. Reason: Number of traces != (1 or 3)' % net_sta
+                for j, tr in enumerate(st.traces):
+                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
+                    print tr.stats
                 self.streams.pop(i)
                 continue
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
+                print 'Stream %s discarded. Reason: Exactly one trace present but this is no Z trace' % net_sta
+                for j, tr in enumerate(st.traces):
+                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
+                    print tr.stats
                 self.streams.pop(i)
                 continue
             if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
@@ -599,7 +608,11 @@ class PickingGUI:
                                         st[1].stats.station.strip() or
                                         st[0].stats.station.strip() !=
                                         st[2].stats.station.strip()):
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces. Stream discarded.'
+                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
+                print 'Stream %s discarded. Reason: Exactly three traces present but they are not ZNE' % net_sta
+                for j, tr in enumerate(st.traces):
+                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
+                    print tr.stats
                 self.streams.pop(i)
                 continue
             sta_list.add(net_sta)
