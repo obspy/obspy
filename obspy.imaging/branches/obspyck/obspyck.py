@@ -208,6 +208,7 @@ class PickingGUI:
             button.set_sensitive(not state)
         if state:
             self.delAxes()
+            self.fig.clear()
             self.drawEventMap()
             self.multicursor.visible = False
             self.toolbar.pan(True)
@@ -215,6 +216,7 @@ class PickingGUI:
             self.canv.draw()
         else:
             self.delEventMap()
+            self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
             self.drawSavedPicks()
@@ -242,14 +244,17 @@ class PickingGUI:
             button.set_sensitive(not state)
         if state:
             self.delAxes()
-            #XXX do the FocMec-Plot
+            self.fig.clear()
+            self.drawFocMec()
             self.multicursor.visible = False
-            self.toolbar.pan(False)
-            self.toolbar.zoom(False)
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
         else:
-            #XXX delete the FocMec-Plot
+            self.delFocMec()
+            self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
             self.drawSavedPicks()
@@ -259,10 +264,12 @@ class PickingGUI:
             self.canv.draw()
 
     def on_buttonNextFocMec_clicked(self, event):
-        err = "Error: Proper reimplementation needed..."
-        appendTextview(self.textviewStdErr, err)
-        #XXX self.nextFocMec()
-        #XXX self.showFocMec()
+        self.nextFocMec()
+        if self.togglebuttonShowFocMec.get_active():
+            self.delFocMec()
+            self.fig.clear()
+            self.drawFocMec()
+            self.canv.draw()
 
     def on_togglebuttonShowWadati_clicked(self, event):
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
@@ -283,14 +290,15 @@ class PickingGUI:
             button.set_sensitive(not state)
         if state:
             self.delAxes()
-            #XXX do Wadati Plot
+            self.fig.clear()
+            self.drawWadati()
             self.multicursor.visible = False
-            self.toolbar.pan(False)
-            self.toolbar.zoom(False)
+            self.toolbar.pan()
             self.toolbar.update()
             self.canv.draw()
         else:
-            #XXX delete Wadati Plot
+            self.delWadati()
+            self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
             self.drawSavedPicks()
@@ -328,6 +336,7 @@ class PickingGUI:
         self.stPt = (self.stPt - 1) % self.stNum
         xmin, xmax = self.axs[0].get_xlim()
         self.delAxes()
+        self.fig.clear()
         self.drawAxes()
         self.drawSavedPicks()
         self.multicursorReinit()
@@ -342,6 +351,7 @@ class PickingGUI:
         xmin, xmax = self.axs[0].get_xlim()
         self.delAllItems()
         self.delAxes()
+        self.fig.clear()
         self.drawAxes()
         self.drawSavedPicks()
         self.multicursorReinit()
@@ -780,6 +790,7 @@ class PickingGUI:
         self.spinbuttonHighpass.set_value(self.options.highpass)
         self.spinbuttonLowpass.set_value(self.options.lowpass)
         self.updateStreamLabels()
+        self.multicursorReinit()
         self.canv.show()
         gtk.main()
 
@@ -2208,7 +2219,7 @@ class PickingGUI:
         appendTextview(self.textviewStdOut, msg)
 
     def nextFocMec(self):
-        if not self.focMechCount:
+        if self.focMechCount is None:
             return
         self.focMechCurrent = (self.focMechCurrent + 1) % self.focMechCount
         self.dictFocalMechanism = self.focMechList[self.focMechCurrent]
@@ -2224,44 +2235,44 @@ class PickingGUI:
         appendTextview(self.textviewStdOut, msg)
     
     #XXX replace with drawFocMec
-    def showFocMec(self):
+    def drawFocMec(self):
         if self.dictFocalMechanism == {}:
             err = "Error: No focal mechanism data!"
             appendTextview(self.textviewStdErr, err)
             return
         # make up the figure:
-        fig = plt.figure(1002, figsize=(2, 2))
-        fig.clear()
+        fig = self.fig
+        self.axsFocMec = []
+        axs = self.axsFocMec
         fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
         
         # plot the selected solution
-        Beachball([self.dictFocalMechanism['Strike'],
-                   self.dictFocalMechanism['Dip'],
-                   self.dictFocalMechanism['Rake']], fig=fig)
+        dF = self.dictFocalMechanism
+        axs.append(Beachball([dF['Strike'], dF['Dip'], dF['Rake']], fig=fig))
         # plot the alternative solutions
         if self.focMechList != []:
             for dict in self.focMechList:
-                Beachball([dict['Strike'], dict['Dip'], dict['Rake']],
+                axs.append(Beachball([dict['Strike'], dict['Dip'],
+                          dict['Rake']],
                           nofill=True, fig=fig, edgecolor='k',
-                          linewidth=1., alpha=0.3)
-        dF = self.dictFocalMechanism
-        try:
-            fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
-                    (dF['Dip'], dF['Strike'], dF['Rake']) + \
-                     "Errors: %i/%i" % (dF['Errors'],
-                                        dF['Station Polarity Count']),
-                     fontsize=10)
-        except:
-            fig.suptitle("Dip: %6.2f  Strike: %6.2f  Rake: %6.2f\n" % \
-                    (dF['Dip'], dF['Strike'], dF['Rake']) + \
-                     "Used Polarities: %i" % dF['Station Polarity Count'],
-                     fontsize=10)
-        fig.canvas.set_window_title("Focal Mechanism (%i of %i)" % \
-                (self.focMechCurrent + 1, self.focMechCount))
+                          linewidth=1., alpha=0.3))
+        text = "Focal Mechanism (%i of %i)" % \
+               (self.focMechCurrent + 1, self.focMechCount)
+        text += "\nDip: %6.2f  Strike: %6.2f  Rake: %6.2f" % \
+                (dF['Dip'], dF['Strike'], dF['Rake'])
+        if 'Errors' in dF:
+            text += "\nErrors: %i/%i" % (dF['Errors'],
+                                         dF['Station Polarity Count'])
+        else:
+            text += "\nUsed Polarities: %i" % dF['Station Polarity Count']
+        #fig.canvas.set_window_title("Focal Mechanism (%i of %i)" % \
+        #        (self.focMechCurrent + 1, self.focMechCount))
         fig.subplots_adjust(top=0.88) # make room for suptitle
         # values 0.02 and 0.96 fit best over the outer edges of beachball
         #ax = fig.add_axes([0.00, 0.02, 1.00, 0.96], polar=True)
-        ax = fig.add_axes([0.00, 0.02, 1.00, 0.84], polar=True)
+        self.axFocMecStations = fig.add_axes([0.00,0.02,1.00,0.84], polar=True)
+        ax = self.axFocMecStations
+        ax.set_title(text)
         ax.set_axis_off()
         for dict in self.dicts:
             if 'PAzim' in dict and 'PInci' in dict and 'PPol' in dict:
@@ -2286,11 +2297,20 @@ class PickingGUI:
                 #axes orientation
                 plotazim = (np.pi / 2.) - ((azim / 180.) * np.pi)
                 ax.scatter([plotazim], [inci], facecolor=color)
-                ax.text(plotazim, inci, " " + dict['Station'],
-                        fontsize=10, va="top")
+                ax.text(plotazim, inci, " " + dict['Station'], va="top")
         #this fits the 90 degree incident value to the beachball edge best
         ax.set_ylim([0., 91])
-        fig.canvas.draw()
+        self.canv.draw()
+
+    def delFocMec(self):
+        if hasattr(self, "axFocMecStations"):
+            self.fig.delaxes(self.axFocMecStations)
+            del self.axFocMecStations
+        if hasattr(self, "axsFocMec"):
+            for ax in self.axsFocMec:
+                if ax in self.fig.axes: 
+                    self.fig.delaxes(ax)
+                del ax
 
     def doHyp2000(self):
         """
@@ -2782,7 +2802,7 @@ class PickingGUI:
     
     #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
     #XXX replace with drawWadati()
-    def showWadati(self):
+    def drawWadati(self):
         """
         Shows a Wadati diagram plotting P time in (truncated) Julian seconds
         against S-P time for every station and doing a linear regression
@@ -2826,30 +2846,43 @@ class PickingGUI:
         x0 = - (intercept / gradient)
         x1 = max(pTimes)
         y1 = (gradient * float(x1)) + intercept
-        fig = plt.figure(1001)
-        fig.canvas.set_window_title("Wadati Diagram")
+
+        fig = self.fig
+        self.axWadati = fig.add_subplot(111)
+        self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
+        ax = self.axWadati
         ax = fig.add_subplot(111)
+
         ax.scatter(pTimes, spTimes)
         for i, station in enumerate(stations):
             ax.text(pTimes[i], spTimes[i], station, va = "top")
         ax.plot([x0, x1], [y0, y1])
-        ax.axhline(0, color = "blue", ls = ":")
+        ax.axhline(0, color="blue", ls=":")
         # origin time estimated by wadati plot
-        ax.axvline(x0, color = "blue", ls = ":", label = "origin time from wadati diagram")
+        ax.axvline(x0, color="blue", ls=":",
+                   label="origin time from wadati diagram")
         # origin time from event location
         if 'Time' in self.dictOrigin:
             otime = "%.3f" % self.dictOrigin['Time'].getTimeStamp()
             otime = float(otime[-7:])
-            ax.axvline(otime, color = "red", ls = ":", label = "origin time from event location")
-        ax.text(0.1, 0.7, "Vp/Vs: %.2f\nSum of squared residuals: %.3f" % (vpvs, ressqrsum), transform = ax.transAxes)
-        ax.text(0.1, 0.1, "Origin time from event location", color = "red", transform = ax.transAxes)
+            ax.axvline(otime, color="red", ls=":",
+                       label="origin time from event location")
+        ax.text(0.1, 0.7, "Vp/Vs: %.2f\nSum of squared residuals: %.3f" % \
+                (vpvs, ressqrsum), transform=ax.transAxes)
+        ax.text(0.1, 0.1, "Origin time from event location", color="red",
+                transform=ax.transAxes)
         #ax.axis("auto")
         ax.set_xlim(min(x0 - 1, otime - 1), max(pTimes) + 1)
         ax.set_ylim(-1, max(spTimes) + 1)
         ax.set_xlabel("absolute P times (julian seconds, truncated)")
-        ax.set_xlabel("P-S times (seconds)")
-        fig.canvas.draw()
-        plt.show()
+        ax.set_ylabel("P-S times (seconds)")
+        ax.set_title("Wadati Diagram")
+        self.canv.draw()
+
+    def delWadati(self):
+        if hasattr(self, "axWadati"):
+            self.fig.delaxes(self.axWadati)
+            del self.axWadati
 
     def drawEventMap(self):
         dM = self.dictMagnitude
@@ -2937,7 +2970,10 @@ class PickingGUI:
                 
         self.axEventMap.set_xlabel('Longitude')
         self.axEventMap.set_ylabel('Latitude')
-        self.axEventMap.set_title(dO['Time'])
+        time = dO['Time']
+        timestr = time.strftime("%Y-%m-%d  %H:%M:%S")
+        timestr += ".%02d" % (time.microsecond / 1e4 + 0.5)
+        self.axEventMap.set_title(timestr)
         self.axEventMap.axis('equal')
         #####XXX disabled because it plots the wrong info if the event was
         ##### fetched from seishub
@@ -2965,8 +3001,9 @@ class PickingGUI:
             self.canv.mpl_disconnect(self.eventMapPickEvent)
         except AttributeError:
             pass
-        self.fig.delaxes(self.axEventMap)
-        del self.axEventMap
+        if hasattr(self, "axEventMap"):
+            self.fig.delaxes(self.axEventMap)
+            del self.axEventMap
 
     def selectMagnitudes(self, event):
         if not self.togglebuttonShowMap.get_active():
