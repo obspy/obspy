@@ -28,8 +28,10 @@ class WaveformFileCrawler:
         data = dataset[0]
         # check for duplicates
         if self.options.check_duplicates:
-            query = session.query(WaveformFile, WaveformChannel)
+            query = session.query(WaveformFile, WaveformChannel, WaveformPath)
+            query = query.filter(WaveformPath.id == WaveformFile.path_id)
             query = query.filter(WaveformFile.id == WaveformChannel.file_id)
+            query = query.filter(WaveformPath.path != data['path'])
             query = query.filter(WaveformFile.file == data['file'])
             query = query.filter(WaveformChannel.network == data['network'])
             query = query.filter(WaveformChannel.station == data['station'])
