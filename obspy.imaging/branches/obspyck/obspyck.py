@@ -437,8 +437,12 @@ class PickingGUI:
         #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
 
     def debug(self):
-        import ipdb
-        ipdb.set_trace()
+        try:
+            import ipdb
+            ipdb.set_trace()
+        except ImportError:
+            import pdb
+            pdb.set_trace()
 
     def setFocusToMatplotlib(self):
         self.canv.grab_focus()
