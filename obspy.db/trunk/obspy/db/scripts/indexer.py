@@ -129,8 +129,8 @@ Default path option is 'data=*.*'.""")
     parser.add_option("-i", type="float", default=0.1, dest="poll_interval",
         help="Poll interval for file crawler in seconds (default is 0.1).")
     parser.add_option("-r", type="int", dest="recent", default=0,
-        help="Index only recent files modified within the provided" + \
-             "number of days. This option is deactivated by default.")
+        help="Index only recent files modified within the given" + \
+             "number of hours. This option is deactivated by default.")
     parser.add_option("-v", action="store_true", dest="verbose", default=False,
         help="Verbose output.")
     parser.add_option("-l", type="string", dest="log", default="",

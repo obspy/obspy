@@ -22,7 +22,7 @@ class WaveformFileCrawler:
         """
         Add a new file into or modifies existing file in database.
         """
-        if len(dataset) < 0:
+        if len(dataset) < 1:
             return
         session = self.session()
         data = dataset[0]
@@ -311,6 +311,14 @@ class WaveformFileCrawler:
         except Exception, e:
             self.log.error(str(e))
             return
+        # check if recent
+        if self.options.recent:
+            # skip older files
+            if time.time() - mtime > 60 * 60 * self.options.recent:
+                try:
+                    db_file_mtime = self._db_files.pop(file)
+                except:
+                    return
         # compare with database entries
         if file not in self._db_files.keys():
             # file does not exists in database -> add file
@@ -325,11 +333,6 @@ class WaveformFileCrawler:
         # -> compare modification times of current file with database entry
         if mtime == db_file_mtime:
             return
-        # check if recent
-        if self.options.recent:
-            # skip older files
-            if time.time() - mtime > 24 * 60 * 60 * self.options.recent:
-                return
         # modification time differs -> update file
         self.input_queue[filepath] = (path, file, self.features)
 
