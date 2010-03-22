@@ -549,7 +549,10 @@ class PickingGUI:
         # indicates how many events are available from seishub
         self.seishubEventCount = None
         # save username of current user
-        self.username = os.environ['USER']
+        try:
+            self.username = os.getlogin()
+        except:
+            self.username = os.environ['USER']
         # setup server information
         self.server = {}
         self.server['Name'] = self.options.servername # "teide"
