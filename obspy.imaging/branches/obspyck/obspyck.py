@@ -509,9 +509,10 @@ class PickingGUI:
                 (self.threeDlocPath, self.tmp_dir), shell=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
-        self.threeDlocCall = 'export D3_VELOCITY=%s;' % \
+        self.threeDlocCall = 'export D3_VELOCITY=%s/;' % \
                 self.threeDlocPath_D3_VELOCITY + \
-                'export D3_VELOCITY_2=%s;' % self.threeDlocPath_D3_VELOCITY_2
+                'export D3_VELOCITY_2=%s/;' % \
+                self.threeDlocPath_D3_VELOCITY_2 + \
                 'cd %s; 3dloc_pitsa' % self.tmp_dir
         self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
@@ -825,15 +826,24 @@ class PickingGUI:
     
     
     def drawAxes(self):
-        npts = self.streams[self.stPt][0].stats.npts
-        smprt = self.streams[self.stPt][0].stats.sampling_rate
-        dt = 1. / smprt
-        self.t = np.arange(0., dt * npts, dt)
+        st = self.streams[self.stPt]
+        #we start all our x-axes at 0 with the starttime of the first (Z) trace
+        starttime_global = st[0].stats.starttime
         self.axs = []
         self.plts = []
         self.trans = []
-        trNum = len(self.streams[self.stPt].traces)
+        self.t = []
+        trNum = len(st.traces)
         for i in range(trNum):
+            npts = st[i].stats.npts
+            smprt = st[i].stats.sampling_rate
+            #make sure that the relative times of the x-axes get mapped to our
+            #global stream (absolute) starttime (starttime of first (Z) trace)
+            starttime_local = st[i].stats.starttime - starttime_global
+            dt = 1. / smprt
+            self.t.append(np.arange(starttime_local,
+                                    starttime_local + (dt * npts),
+                                    dt))
             if i == 0:
                 self.axs.append(self.fig.add_subplot(trNum,1,i+1))
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
@@ -845,19 +855,17 @@ class PickingGUI:
                                                                              self.axs[i].transAxes))
                 self.axs[i].xaxis.set_ticks_position("top")
             self.axs[-1].xaxis.set_ticks_position("both")
-            #self.axs[i].set_ylabel(self.streams[self.stPt][i].stats.station+" "+self.streams[self.stPt][i].stats.channel)
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if not self.flagSpectrogram:
-                self.plts.append(self.axs[i].plot(self.t, self.streams[self.stPt][i].data, color='k',zorder=1000)[0])
+                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
             else:
-                spectrogram(self.streams[self.stPt][i].data,
-                            self.streams[self.stPt][i].stats.sampling_rate,
-                            axis = self.axs[i],
-                            nwin = self.streams[self.stPt][i].stats.npts * 4 / self.streams[self.stPt][i].stats.sampling_rate)
-        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (self.streams[self.stPt][0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
-                                                         self.streams[self.stPt][0].stats.starttime.microsecond / 1e3 + 0.5,
-                                                         self.streams[self.stPt][0].stats.endtime.strftime("%H:%M:%S"),
-                                                         self.streams[self.stPt][0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
+                spectrogram(st[i].data, st[i].stats.sampling_rate,
+                            axis=self.axs[i],
+                            nwin=st[i].stats.npts * 4 / st[i].stats.sampling_rate)
+        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                                                         st[0].stats.starttime.microsecond / 1e3 + 0.5,
+                                                         st[0].stats.endtime.strftime("%H:%M:%S"),
+                                                         st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
         self.xMin, self.xMax=self.axs[0].get_xlim()
         self.yMin, self.yMax=self.axs[0].get_ylim()
         #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
