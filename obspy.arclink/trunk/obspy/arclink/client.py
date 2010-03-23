@@ -13,7 +13,6 @@ from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from telnetlib import Telnet
-import bz2
 import os
 import sys
 import time
@@ -212,7 +211,12 @@ class Client(Telnet):
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
-            rtype += " compression=bzip2"
+            try:
+                import bz2
+            except:
+                compressed = False
+            else:
+                rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
         rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
                                        (end_datetime + 1).formatArcLink(),
@@ -263,7 +267,12 @@ class Client(Telnet):
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
-            rtype += " compression=bzip2"
+            try:
+                import bz2
+            except:
+                compressed = False
+            else:
+                rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
         rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
                                        (end_datetime + 1).formatArcLink(),
