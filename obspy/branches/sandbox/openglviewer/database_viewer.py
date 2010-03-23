@@ -12,7 +12,7 @@ if __name__ == '__main__':
     Just testing some stuff.
     """
     # Path to the previews.
-    preview_path = '/Users/lion/Documents/workspace/test_files/preview/'
+    preview_path = 'preview/'
 
     # Launch the globally available Environment class which later needs to be
     # given as an argument to most other class instances.

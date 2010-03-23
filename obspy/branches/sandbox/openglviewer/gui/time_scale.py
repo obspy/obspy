@@ -13,15 +13,20 @@ class TimeScale(GUIElement):
     """
     def __init__(self, *args, **kwargs):
         super(TimeScale, self).__init__(self, **kwargs)
+        # Some default values.
+        self.subscale_height = 15
         # Items that collect all subitems for easy tracking and deleting.
         self.year_boxes = []
         self.year_labels = []
-        self.month_items = []
-        self.day_items = []
+        self.month_boxes = []
+        self.month_labels = []
+        #self.day_boxes = []
+        #self.day_labels = []
         # Create the time scale.
         self.createTimeScale()
         # Create the subscales.
         self.yearScale()
+        self.monthScale()
 
     def createTimeScale(self):
         """
@@ -74,40 +79,41 @@ class TimeScale(GUIElement):
         self.year_frame_t = glydget.Rectangle(\
                             geo.horizontal_margin + geo.graph_start_x,
                             self.win.window.height - geo.vertical_margin - 3,
-                            self.width - geo.graph_start_x - 3, 10,
+                            self.width - geo.graph_start_x - 3, self.subscale_height,
                             (100, 100, 100, 255), filled = False)
         self.month_frame_t = glydget.Rectangle(\
                             geo.horizontal_margin + geo.graph_start_x,
-                            self.win.window.height - geo.vertical_margin - 14,
-                            self.width - geo.graph_start_x - 3, 10,
+                            self.win.window.height - geo.vertical_margin -\
+                            self.subscale_height - 4,
+                            self.width - geo.graph_start_x - 3, self.subscale_height,
                             (100, 100, 100, 255), filled = False)
-        self.day_frame_t = glydget.Rectangle(\
-                            geo.horizontal_margin + geo.graph_start_x,
-                            self.win.window.height - geo.vertical_margin - 25,
-                            self.width - geo.graph_start_x - 3, 10,
-                            (100, 100, 100, 255), filled = False)
+        #self.day_frame_t = glydget.Rectangle(\
+        #                    geo.horizontal_margin + geo.graph_start_x,
+        #                    self.win.window.height - geo.vertical_margin - 25,
+        #                    self.width - geo.graph_start_x - 3, self.subscale_height,
+        #                    (100, 100, 100, 255), filled = False)
         self.year_frame_b = glydget.Rectangle(\
                             geo.horizontal_margin + geo.graph_start_x,
                             geo.status_bar_height + geo.time_scale - 3,
-                            self.width - geo.graph_start_x - 3, 10,
+                            self.width - geo.graph_start_x - 3, self.subscale_height,
                             (100, 100, 100, 255), filled = False)
         self.month_frame_b = glydget.Rectangle(\
                             geo.horizontal_margin + geo.graph_start_x,
                             geo.status_bar_height + geo.time_scale - 14,
-                            self.width - geo.graph_start_x - 3, 10,
+                            self.width - geo.graph_start_x - 3, self.subscale_height,
                             (100, 100, 100, 255), filled = False)
-        self.day_frame_b = glydget.Rectangle(\
-                            geo.horizontal_margin + geo.graph_start_x,
-                            geo.status_bar_height + geo.time_scale - 25,
-                            self.width - geo.graph_start_x - 3, 10,
-                            (100, 100, 100, 255), filled = False)
+        #self.day_frame_b = glydget.Rectangle(\
+        #                    geo.horizontal_margin + geo.graph_start_x,
+        #                    geo.status_bar_height + geo.time_scale - 25,
+        #                    self.width - geo.graph_start_x - 3, self.subscale_height,
+        #                    (100, 100, 100, 255), filled = False)
         # Add boxes to batch.
         self.year_frame_t.build(batch = self.batch, group = self.group)
         self.month_frame_t.build(batch = self.batch, group = self.group)
-        self.day_frame_t.build(batch = self.batch, group = self.group)
+        #self.day_frame_t.build(batch = self.batch, group = self.group)
         self.year_frame_b.build(batch = self.batch, group = self.group)
         self.month_frame_b.build(batch = self.batch, group = self.group)
-        self.day_frame_b.build(batch = self.batch, group = self.group)
+        #self.day_frame_b.build(batch = self.batch, group = self.group)
         # Add to object_list.
         self.win.object_list.append(self)
         
@@ -129,8 +135,8 @@ class TimeScale(GUIElement):
             start_y = self.win.window.height - geo.vertical_margin - 4
         else:
             start_y = geo.status_bar_height + geo.time_scale - 4
-        end_y = start_y - 8
-        y_range = 8
+        end_y = start_y - self.subscale_height - 2
+        y_range = self.subscale_height - 2
         # Get the number of years.
         year_count = endtime.year - starttime.year
         years = range(starttime.year, endtime.year + 1)
@@ -178,7 +184,7 @@ class TimeScale(GUIElement):
                                           color = (0,0,0,255), bold = True))
             self.year_layout = pyglet.text.DocumentLabel(document = year_document,
                                x = (end_frac + start_frac)/2 * x_range + start_x,
-                               y = start_y - 11.0,
+                               y = start_y - 13.0,
                                batch = self.batch, anchor_x = 'center',
                                anchor_y = 'bottom', group = self.group)
             self.year_labels.append((self.year_layout, start_frac, end_frac))
@@ -198,30 +204,58 @@ class TimeScale(GUIElement):
         x_range = end_x - start_x
         # Top or bottom year scala.
         if top:
-            start_y = self.win.window.height - geo.vertical_margin - 4
+            start_y = self.win.window.height - geo.vertical_margin -\
+                self.subscale_height - 5
         else:
-            start_y = geo.status_bar_height + geo.time_scale - 4
-        end_y = start_y - 8
-        y_range = 8
+            start_y = geo.status_bar_height + geo.time_scale - \
+                self.subscale_height - 5
+        end_y = start_y - self.subscale_height - 2
+        y_range = self.subscale_height - 2
         # Get the number of months.
-        
-        years = range(starttime.year, endtime.year + 1)
+        if endtime.year == starttime.year:
+            months = (endtime.month - starttime.month) + 1
+        else:
+            months = 0
+            years = endtime.year - starttime.year
+            # If more than one year add twelve months per year.
+            if years > 1:
+                months += 12 * (years -1)
+            # Get boundaries.
+            months += (12 - starttime.month) + 1
+            months += endtime.month
+        months_count = range(months)
         # Loop over all years.
-        even_color = (200,200,200,255)
-        odd_color = (150,150,150,255)
-        for _i, year in enumerate(years):
+        odd_color = (200,200,200,255)
+        even_color = (150,150,150,255)
+        # Loop over every month.
+        for month in months_count:
+            # Get the year and month of the currently treated month.
+            cur_month = starttime.month + month
+            if cur_month > 12:
+                cur_year = starttime.year + (cur_month//12)
+            else:
+                cur_year = starttime.year
+            cur_month = cur_month % 12
+            # Account for weird modulo operation.
+            if cur_month == 0:
+                cur_month = 12
             # Some variables.
-            start_of_year = UTCDateTime(year, 1, 1)
-            end_of_year = UTCDateTime(year+1, 1, 1) - 1
+            start_of_month = UTCDateTime(cur_year, cur_month, 1)
+            if cur_month + 1> 12:
+                cur_month = 1
+                cur_year += 1
+            else:
+                cur_month += 1
+            end_of_month = UTCDateTime(cur_year, cur_month, 1)
             # Calculate boundaries.
-            start_frac = (start_of_year - starttime) / time_range
+            start_frac = (start_of_month - starttime) / time_range
             if start_frac < 0:
                 start_frac = 0
             start = start_frac * x_range
             if start < 0:
                 start = 0
             start += start_x
-            end_frac = (endtime - end_of_year) / time_range
+            end_frac = (endtime - end_of_month) / time_range
             end_frac = 1.0 - end_frac
             if end_frac > 1.0:
                 end_frac = 1.0
@@ -231,29 +265,30 @@ class TimeScale(GUIElement):
                 end = x_range
             end += start_x
             graph_width = (end_frac - start_frac) * x_range
-            if _i%2:
+            if month%2:
                 color = odd_color
             else:
                 color = even_color
             # Add half a pixel to avoid rounding issues.
-            year_box = glydget.Rectangle(start, start_y,
+            month_box = glydget.Rectangle(start, start_y,
                         graph_width + 0.5, y_range, color)
-            year_box.build(batch = self.batch, group = self.group)
+            month_box.build(batch = self.batch, group = self.group)
             # Add to list for easier tracking.
-            self.year_boxes.append((year_box, start_frac, end_frac))
+            self.month_boxes.append((month_box, start_frac, end_frac))
             # If two narrow do not add a name.
             if graph_width < 30:
                 continue
             # Add name.
-            year_document = pyglet.text.decode_text(str(year))
-            year_document.set_style(0, 5, dict(font_name='Arial', font_size=8.5, 
+            name = start_of_month.strftime('%b')
+            month_document = pyglet.text.decode_text(name)
+            month_document.set_style(0, 5, dict(font_name='Arial', font_size=8.5, 
                                           color = (0,0,0,255), bold = True))
-            self.year_layout = pyglet.text.DocumentLabel(document = year_document,
+            self.month_layout = pyglet.text.DocumentLabel(document = month_document,
                                x = (end_frac + start_frac)/2 * x_range + start_x,
-                               y = start_y - 11.0,
+                               y = start_y - 13.0,
                                batch = self.batch, anchor_x = 'center',
                                anchor_y = 'bottom', group = self.group)
-            self.year_labels.append((self.year_layout, start_frac, end_frac))
+            self.month_labels.append((self.month_layout, start_frac, end_frac))
 
     def resizeYearTimeScale(self, width, height, top = True):
         """
@@ -270,21 +305,20 @@ class TimeScale(GUIElement):
             start_y = self.win.window.height - geo.vertical_margin - 4
         else:
             start_y = geo.status_bar_height + geo.time_scale - 4
-        end_y = start_y - 8
-        y_range = 8
+        end_y = start_y - self.subscale_height - 2
+        y_range = self.subscale_height - 2
         # Resize and move the boxes.
         for year in self.year_boxes:
             year[0].begin_update()
             # Add half a pixel to avoid rounding issues.
-            year[0].resize((year[2] - year[1]) * x_range + 0.5, 8)
+            year[0].resize((year[2] - year[1]) * x_range + 0.5, self.subscale_height - 2)
             year[0].move(year[1] * x_range + start_x, start_y)
             year[0].end_update()
         # Move the labels.
         for label in self.year_labels:
-            print label[1], label[2]
             label[0].begin_update()
             label[0].x = (label[2] + label[1])/2 * x_range + start_x
-            label[0].y = start_y - 11
+            label[0].y = start_y - 13.0
             label[0].end_update()
 
     def changeTimeScale(self):
@@ -298,8 +332,15 @@ class TimeScale(GUIElement):
             label[0].delete()
         self.year_boxes = []
         self.year_labels = []
+        for month in self.month_boxes:
+            month[0].delete()
+        for label in self.month_labels:
+            label[0].delete()
+        self.month_boxes = []
+        self.month_labels = []
         # Create new time subscales.
         self.yearScale()
+        self.monthScale()
 
     def resize(self, width, height):
         """
@@ -346,34 +387,35 @@ class TimeScale(GUIElement):
         self.bottom_frame2.end_update()
         # Resize the time scales.
         self.year_frame_t.begin_update()
-        self.year_frame_t.resize(self.width - geo.graph_start_x - 3, 10)
+        self.year_frame_t.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
         self.year_frame_t.move(geo.horizontal_margin + geo.graph_start_x,
                             self.win.window.height - geo.vertical_margin - 3)
         self.year_frame_t.end_update()
 
         self.month_frame_t.begin_update()
-        self.month_frame_t.resize(self.width - geo.graph_start_x - 3, 10)
+        self.month_frame_t.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
         self.month_frame_t.move(geo.horizontal_margin + geo.graph_start_x,
-                            self.win.window.height - geo.vertical_margin - 14)
+                            self.win.window.height - geo.vertical_margin -\
+                                self.subscale_height - 4)
         self.month_frame_t.end_update()
 
-        self.day_frame_t.begin_update()
-        self.day_frame_t.resize(self.width - geo.graph_start_x - 3, 10)
-        self.day_frame_t.move(geo.horizontal_margin + geo.graph_start_x,
-                            self.win.window.height - geo.vertical_margin - 25)
-        self.day_frame_t.end_update()
+#        self.day_frame_t.begin_update()
+#        self.day_frame_t.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
+#        self.day_frame_t.move(geo.horizontal_margin + geo.graph_start_x,
+#                            self.win.window.height - geo.vertical_margin - 25)
+#        self.day_frame_t.end_update()
 
         self.year_frame_b.begin_update()
-        self.year_frame_b.resize(self.width - geo.graph_start_x - 3, 10)
+        self.year_frame_b.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
         self.year_frame_b.end_update()
 
         self.month_frame_b.begin_update()
-        self.month_frame_b.resize(self.width - geo.graph_start_x - 3, 10)
+        self.month_frame_b.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
         self.month_frame_b.end_update()
 
-        self.day_frame_b.begin_update()
-        self.day_frame_b.resize(self.width - geo.graph_start_x - 3, 10)
-        self.day_frame_b.end_update()
+#        self.day_frame_b.begin_update()
+#        self.day_frame_b.resize(self.width - geo.graph_start_x - 3, self.subscale_height)
+#        self.day_frame_b.end_update()
 
         # Resize the year subscale.
         self.resizeYearTimeScale(width, height)
