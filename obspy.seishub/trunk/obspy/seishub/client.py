@@ -114,10 +114,11 @@ class _WaveformMapperClient(object):
             :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :param end_datetime: end time as 
             :class:`~obspy.core.utcdatetime.UTCDateTime` object
+        :param apply_filter: apply filter, default False.
         :return: :class:`~obspy.core.stream.Stream` object.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id',
-               'start_datetime', 'end_datetime']
+               'start_datetime', 'end_datetime', 'apply_filter']
         for i in range(len(args)):
             kwargs[map[i]] = args[i]
         url = '/seismology/waveform/getWaveform'
