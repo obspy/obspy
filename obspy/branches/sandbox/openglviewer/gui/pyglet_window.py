@@ -7,7 +7,7 @@ from obspy.core import UTCDateTime
 from status_bar import StatusBar
 from background import Background
 from scroll_bar import ScrollBar
-from status_bar import StatusBar
+from time_scale import TimeScale
 
 class PygletWindow(object):
     """
@@ -19,6 +19,8 @@ class PygletWindow(object):
         """
         # Set environment.
         self.env = env
+        # Create geometry instance.
+        self.geometry = Geometry()
         # Read quarks and set default values.
         self._setDefaultValues(**kwargs)
         # Create the window.
@@ -35,7 +37,8 @@ class PygletWindow(object):
         # Create status bar if desired.
         if self.status_bar:
             # The status bar should always be seen. Add to a very high group.
-            self.status_bar = StatusBar(parent = self, group = 999)
+            self.status_bar = StatusBar(parent = self, group = 999,
+                                height = self.geometry.status_bar_height)
         # These cannot be created earlier as they need some already set up GUI
         # Elements.
         # XXX: Need to make more dynamic.
@@ -45,7 +48,9 @@ class PygletWindow(object):
         # Add a scroll bar. Should also always be on top.
         self.scroll_bar = ScrollBar(parent = self, group = 999)
         # Add the menu.
-        self.menu = Menu(parent = self, group = 999, width = self.menu_width)
+        self.menu = Menu(parent = self, group = 999, width = self.geometry.menu_width)
+        # Add the Time Scale.
+        self.time_scale = TimeScale(parent = self, group = 999)
 
     def setOpenGLState(self):
         """
@@ -95,12 +100,12 @@ class PygletWindow(object):
         # Number of bars for each waveform plot.
         self.detail = 1000
         # Logarithmic scale.
-        self.log_scale = 1.00000001
+        self.log_scale = 10
         # List to store the actual WaveformPlot objects.
         self.waveforms = []
         # Start- and Endtime of the plots. Needs to be stored into the window
         # object because it has to be the same for all traces.
-        self.starttime = kwargs.get('starttime', UTCDateTime(2010,1,1))
+        self.starttime = kwargs.get('starttime', UTCDateTime(2009,12,15))
         self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,1) - 1.0)
         # Waveform Layer. Waveforms will need some more layers. I will just add
         # three.
@@ -111,8 +116,6 @@ class PygletWindow(object):
         # Offset of the waveform plots in the y-direction.
         # XXX: Currently used?
         self.waveform_offset = 0
-        # Total width of the menu.
-        self.menu_width = kwargs.get('menu_width', 200)
 
     def _createdOrderedGroups(self):
         """
@@ -135,13 +138,13 @@ class PygletWindow(object):
         # Screen properties.
         screen_width = self.window.screen.width
         screen_height = self.window.screen.height
-        # Set the size to 90% percent of the screen in either direction.
-        self.window.set_size(int(screen_width * 0.9), int(screen_height * 0.9))
+        # Set the size to 85% percent of the screen in either direction.
+        self.window.set_size(int(screen_width * 0.85), int(screen_height * 0.85))
         # Set a minium size.
         self.window.set_minimum_size(640, 480)
         # Move to the center of the screen.
-        x = (screen_width - int(screen_width * 0.9))//2
-        y = (screen_height - int(screen_height * 0.9))//2
+        x = (screen_width - int(screen_width * 0.85))//2
+        y = (screen_height - int(screen_height * 0.85))//2
         self.window.set_location(x,y) 
         # Finally make the window visible.
         self.window.set_visible()
@@ -175,11 +178,35 @@ class PygletWindow(object):
         if self.waveform_offset > 0:
             self.waveform_offset = 0
         # Avoid going too far down.
-        if self.current_view_span - self.waveform_offset > self.max_viewable:
-            if self.current_view_span > self.max_viewable:
+        max_view = self.max_viewable + self.win.geometry.time_scale
+        if self.current_view_span - self.waveform_offset > max_view:
+            if self.current_view_span > max_view:
                 self.waveform_offset = 0
             else:
-                self.waveform_offset = -((10 + self.max_viewable) - \
+                self.waveform_offset = -((10 + max_view) - \
                                       self.current_view_span)
         # Update the scroll_bar.
         self.scroll_bar.changePosition()
+
+class Geometry(object):
+    """
+    Stores all geometry information necessary in a central place.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Sets default values.
+        """
+        # Set default margins.
+        self.vertical_margin = kwargs.get('vertical_margin', 10)
+        self.horizontal_margin = kwargs.get('horizontal_margin', 10)
+        # Width of the scroll_bar.
+        self.scroll_bar_width = kwargs.get('scroll_bar_width', 10)
+        # Width of the menu
+        self.menu_width = kwargs.get('menu_width', 195)
+        # Height of the time_scale.
+        self.time_scale = 48
+        # Height of the status_bar.
+        self.status_bar_height = 16
+        # The offset of all actual waveform graphs on the left side.
+        self.graph_start_x = 125
+

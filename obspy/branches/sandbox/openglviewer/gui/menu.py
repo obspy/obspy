@@ -14,10 +14,6 @@ class Menu(GUIElement):
     """
     def __init__(self, *args, **kwargs):
         super(Menu, self).__init__(self, **kwargs)
-        # Vertical margin.
-        self.vert_margin = 5
-        # Total space available for the menu.
-        self.width = kwargs.get('width', 140)
         self.createMenu()
 
     def createMenu(self):
@@ -63,9 +59,11 @@ class Menu(GUIElement):
         starttime = UTCDateTime(str(button.parent.children[1].text))
         endtime = UTCDateTime(str(button.parent.children[2].text))
         self.win.starttime = UTCDateTime(starttime)
-        self.win.endttime = UTCDateTime(endtime)
+        self.win.endtime = UTCDateTime(endtime)
         for waveform in self.win.waveforms:
             waveform.replot()
+        # Update time scale.
+        self.win.time_scale.changeTimeScale()
 
     def change_detail(self, button):
         """
@@ -76,7 +74,7 @@ class Menu(GUIElement):
             detail = 2000
         elif detail < 100:
             detail = 100
-        # Update Text if necessary.
+        #Update Text if necessary.
         button.parent.children[1].text = str(detail)
         self.win.detail = detail
         for waveform in self.win.waveforms:
@@ -160,6 +158,7 @@ class Menu(GUIElement):
                 box = glydget.Folder(station,
                       glydget.VBox(channels_list, homogeneous = False), active\
                                     = False)
+                box.title.style.font_size = 8
                 station_list.append(box)
             network_box = glydget.Folder(network,
                           glydget.VBox(station_list, homogeneous = False))
@@ -211,11 +210,15 @@ class Menu(GUIElement):
         self.menu = glydget.VBox(items, homogeneous = False)
         self.menu.style = glydget.theme.debug
         # Fixed width and variable height.
-        self.menu.resize(self.width - 2 * self.vert_margin,1)
+        self.menu.resize(self.win.geometry.menu_width, 1)
 
     def resize(self, width, height):
         """
         Handles the resizing.
         """
         x_pos = self.win.window.width
-        self.menu.move(x_pos - self.width - 2 * self.vert_margin, self.win.window.height-5)
+        self.menu.move(x_pos - self.win.geometry.menu_width -\
+                       self.win.geometry.horizontal_margin -\
+                       self.win.geometry.scroll_bar_width,
+                       self.win.window.height - \
+                       self.win.geometry.vertical_margin)

@@ -34,9 +34,6 @@ class WaveformPlot(GUIElement):
         self.path = kwargs.get('dir', None)
         # Prepare the data.
         self.readAndMergeData()
-        # Symetric margins around the plots.
-        self.vertical_margin = kwargs.get('vertical_margin', 5)
-        self.horizontal_margin = kwargs.get('horizontal_margin', 10)
         # Height of plot.
         self.height = kwargs.get('height', 40)
         # Inner padding. Currently used for top, bottom and left border.
@@ -45,35 +42,52 @@ class WaveformPlot(GUIElement):
         self.win.waveforms.append(self)
         # Current position in self.win.waveforms.
         self.position = len(self.win.waveforms)
+        # Get the offsets.
+        self.calculateOffsets()
         # Group to handle the positioning and the scrolling with the GPU.
-        self.group1 = WaveformGroup(self.win, self.horizontal_margin,
-                     (self.position-1)*(self.height + self.vertical_margin) +\
-                     self.vertical_margin + self.height, 1)
-        self.group2 = WaveformGroup(self.win, self.horizontal_margin,
-                     (self.position-1)*(self.height + self.vertical_margin) +\
-                     self.vertical_margin + self.height, 2)
-        self.group3 = WaveformGroup(self.win, self.horizontal_margin,
-                     (self.position-1)*(self.height + self.vertical_margin) +\
-                     self.vertical_margin + self.height, 3)
-        self.plot_group = WaveformGroup(self.win, self.horizontal_margin,
-                     (self.position-1)*(self.height + self.vertical_margin) +\
-                     self.vertical_margin + self.height, 2, plot = True)
+        self.group1 = WaveformGroup(self.win, self.x_offset, self.y_offset, 1)
+        self.group2 = WaveformGroup(self.win, self.x_offset, self.y_offset, 2)
+        self.group3 = WaveformGroup(self.win, self.x_offset, self.y_offset, 3)
+        self.plot_group = WaveformGroup(self.win, self.x_offset, self.y_offset, 2,
+                                   plot = True)
         # Create and bind plot.
         self.initPlot()
         # Create title.
         self.createTitle()
         # Update the viewable area of the window.
         self.win.max_viewable = len(self.win.waveforms) * \
-                                (self.vertical_margin + self.height)
+                                (self.win.geometry.vertical_margin + self.height)
+        # Push the handlers to handle mouse clicks on the waveform plot.
+        self.win.window.push_handlers(self.on_mouse_press)
 
-    def updatePositions(self):
+    def calculateOffsets(self):
+        """
+        Read self.position and write the current offsets to class variables.
+        """
+        self.x_offset = self.win.geometry.horizontal_margin
+        self.y_offset = (self.position-1)*(self.height + \
+                        self.win.geometry.vertical_margin) + \
+                        self.win.geometry.vertical_margin + self.height
+
+    def getOwnGeometry(self):
+        """
+        Return a tuple with(x_start, x_end, y_start, y_end)
+        """
+        return (self.x_offset, self.x_offset + self.width,
+                self.win.window.height - self.y_offset, 
+                self.win.window.height - self.y_offset + self.height)
+
+    def updatePosition(self):
         """
         Updates the position of the graph after one other graph has been
         deleted.
         """
-        # XXX: Not implemented yet.
-        offset = (self.position-1)*(self.height + self.vertical_margin) +\
-                     self.vertical_margin + self.height
+        # Recalculate the position.
+        self.calculateOffsets()
+        # Update all the groups.
+        for group in [self.group1, self.group2, self.group3, self.plot_group]:
+            group.x_offset = self.x_offset
+            group.y_offset = self.y_offset
 
     def readAndMergeData(self):
         """
@@ -85,6 +99,9 @@ class WaveformPlot(GUIElement):
             # XXX: Need to use the Error handling object.
             self.win.status_bar.error_text = "Reading failed."
             return
+        # XXX: Not a real world test case.
+        for tr in stream:
+            tr.data = np.require(tr.data, 'float32')
         try:
             stream.merge()
         except:
@@ -114,8 +131,8 @@ class WaveformPlot(GUIElement):
         self.ptp = ptp.astype('float32')
         # Create a logarithmic axis.
         if self.win.log_scale:
-            self.ptp[self.ptp>1] = (np.log(self.ptp[self.ptp>1])/\
-                                    np.log(self.win.log_scale)) + 1
+            self.ptp += 1
+            self.ptp = np.log(self.ptp)/np.log(self.win.log_scale)
         # Adjust to fit in the window.
         self.ptp /= self.ptp.max()
         # Exclude the boundaries.
@@ -124,6 +141,53 @@ class WaveformPlot(GUIElement):
         if is_masked(self.ptp):
             self.ptp.fill_value = 0.0
             self.ptp = self.ptp.filled()
+        # Assure that very small values are also visible. Only true gaps are 0
+        # and will stay 0.
+        self.ptp[(self.ptp > 0) & (self.ptp < 0.5)] = 0.5
+
+    def addDeleteButton(self):
+        """
+        Adds a delete Button to the plot.
+        """
+        # Show delete Button.
+        button_text = "{font_name 'Arial'}{font_size 8}" + \
+                     "{color (255, 0, 0, 255)}[delete]"
+        button_document = pyglet.text.decode_attributed(button_text)
+        self.delete_button_end_x = self.graph_start_x - 5
+        self.delete_button_start_y = self.height - 25
+        self.button_layout = pyglet.text.DocumentLabel(document = button_document,
+                          x = self.delete_button_end_x, y =
+                              self.delete_button_start_y, width = 20,
+                              batch = self.batch, anchor_x = 'right', anchor_y = 'top',
+                              group = self.group1, multiline = False)
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        """
+        Handles all mouse presses inside the Waveform plot.
+        """
+        x_min, x_max, y_min, y_max = self.getOwnGeometry()
+        # Check whether or not in bounds.
+        if x >= x_min and x <= x_max and y >= y_min and y <= y_max:
+            # Check whether or not the delete Button was hit.
+            if x < x_min + self.delete_button_end_x and \
+               x > x_min + self.delete_button_end_x - 35 and \
+               y < y_min + self.delete_button_start_y and \
+               y > y_min + self.delete_button_start_y - 15:
+                # Delete.
+                position = self.position
+                self._delete()
+                # Adjust the position of all following waveform plots.
+                for waveform in self.win.waveforms:
+                    if waveform.position > position:
+                        waveform.position -= 1
+                        waveform.updatePosition()
+                # The position of the plot is also the position in the collected
+                # waveforms.
+                # XXX: Test if this is always correct. This is a likely error.
+                del self.win.waveforms[position - 1]
+                # Set new status text.
+                self.win.status_bar.setText('%i Traces' % len(self.win.waveforms))
+
 
     def _delete(self):
         """
@@ -134,6 +198,7 @@ class WaveformPlot(GUIElement):
         self.bars.delete()
         self.title_layout.delete()
         self.stats_layout.delete()
+        self.button_layout.delete()
         self.box.delete()
         self.graph_box.delete()
         self.plot.delete()
@@ -152,8 +217,8 @@ class WaveformPlot(GUIElement):
         """
         # Trim the data. Pad if necessary.
         # XXX: Need to adjust to newer obspy version.
-        # self.stream.trim(self.win.starttime, self.win.endtime, pad = True)
-        self.stream.trim(self.win.starttime, self.win.endtime)
+        self.stream.trim(self.win.starttime, self.win.endtime, pad = True)
+        #self.stream.trim(self.win.starttime, self.win.endtime)
         # Writes class attributes.
         self.starttime = self.stream[0].stats.starttime
         self.endtime = self.stream[0].stats.endtime
@@ -219,18 +284,18 @@ class WaveformPlot(GUIElement):
         the CPU.
 
         The plot will go from (0,0) to (self.win.window.width - 2 *
-        self.horizontal_margin - self.win.scroll_bar.width, self.height).
+        self.win.geometry.horizontal_margin - self.win.geometry.scroll_bar_width, self.height).
         """
         y = self.height
-        width = self.win.window.width - 2 * self.horizontal_margin - \
-                self.win.scroll_bar.width - self.win.menu_width
+        self.width = self.win.window.width - 3 * self.win.geometry.horizontal_margin - \
+                self.win.geometry.scroll_bar_width - self.win.geometry.menu_width
         # The box is slighty smaller than the border.
-        self.plot = glydget.Rectangle(1, y-1, width-2,
+        self.plot = glydget.Rectangle(1, y-1, self.width-2,
                         self.height-2,
                         [255, 255, 255, 250, 255, 255, 255, 240,
                         255, 255, 255, 230, 255, 255, 255, 215])
         # also create a box around it.
-        self.box = glydget.Rectangle(0, y, width,
+        self.box = glydget.Rectangle(0, y, self.width,
                         self.height,
                         (205, 55, 55, 250), filled=False)
         # Add to batch.
@@ -239,7 +304,7 @@ class WaveformPlot(GUIElement):
         # Add actual graph. Also set class variables for later easier access.
         self.graph_start_x = 125
         self.graph_start_y = y - self.pad
-        self.graph_width = width - self.graph_start_x - self.pad
+        self.graph_width = self.width - self.graph_start_x - self.pad
         # Set the scaling factor of the plot accordingly.
         self.plot_group.plot = self.graph_width/100.0
         self.plot_group.plot_offset = self.graph_start_x
@@ -249,6 +314,8 @@ class WaveformPlot(GUIElement):
                          self.graph_height,
                         (0, 0, 0, 250), filled=False)
         self.graph_box.build(batch = self.batch, group = self.group2)
+        # Create a delete Button.
+        self.addDeleteButton()
         # Add to object_list.
         self.win.object_list.append(self)
 
@@ -256,18 +323,18 @@ class WaveformPlot(GUIElement):
         """
         All adjustments neccessary on resize.
         """
-        width = self.win.window.width - 2 * self.horizontal_margin -\
-                self.win.scroll_bar.width - self.win.menu_width
+        self.width = self.win.window.width - 3 * self.win.geometry.horizontal_margin -\
+                self.win.geometry.scroll_bar_width - self.win.geometry.menu_width
         y = self.height
         # The box is slighty smaller than the border.
         self.plot.begin_update()
-        self.plot.resize(width-2,self.height-2)
+        self.plot.resize(self.width-2,self.height-2)
         self.plot.end_update()
         self.box.begin_update()
-        self.box.resize(width,self.height)
+        self.box.resize(self.width,self.height)
         self.box.end_update()
         # Update the graph. Also update the variables.
-        self.graph_width = width - 125 - self.pad
+        self.graph_width = self.width - 125 - self.pad
         self.graph_height = self.height - 4
         self.graph_box.begin_update()
         self.graph_box.resize(self.graph_width, self.graph_height)

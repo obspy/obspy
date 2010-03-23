@@ -31,6 +31,7 @@ class WaveformGroup(pyglet.graphics.Group):
         # window.
         self.y_offset = y_offset
         self.current_offset = self.win.window.height - self.y_offset
+        # If self.plot is True an additional gScalef will be called.
         self.plot = plot
         self.plot_offset = plot_offset
 
@@ -41,11 +42,13 @@ class WaveformGroup(pyglet.graphics.Group):
         if self.plot:
             self.current_offset = self.win.window.height - self.y_offset
             glTranslatef(self.x_offset + self.plot_offset,
-                         self.current_offset -self.win.waveform_offset, 0.0)
+                         self.current_offset -self.win.waveform_offset -\
+                         self.win.geometry.time_scale, 0.0)
             glScalef(self.plot, 1.0, 1.0)
         else:
             self.current_offset = self.win.window.height - self.y_offset
-            glTranslatef(self.x_offset, self.current_offset - self.win.waveform_offset, 0.0)
+            glTranslatef(self.x_offset, self.current_offset -\
+                         self.win.waveform_offset - self.win.geometry.time_scale, 0.0)
 
     def unset_state(self): 
         """
@@ -55,7 +58,10 @@ class WaveformGroup(pyglet.graphics.Group):
             glScalef(1.0/self.plot, 1.0, 1.0)
             self.current_offset = self.win.window.height - self.y_offset
             glTranslatef(-self.x_offset - self.plot_offset,
-                         -self.current_offset +self.win.waveform_offset, 0.0)
+                         -self.current_offset +self.win.waveform_offset +\
+                         self.win.geometry.time_scale, 0.0)
         else:
             self.current_offset = self.win.window.height - self.y_offset
-            glTranslatef(-self.x_offset, -self.current_offset + self.win.waveform_offset, 0.0)
+            glTranslatef(-self.x_offset, -self.current_offset +\
+                         self.win.waveform_offset + \
+                         self.win.geometry.time_scale, 0.0)
