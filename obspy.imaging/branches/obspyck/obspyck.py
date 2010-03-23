@@ -500,17 +500,23 @@ class PickingGUI:
             raise(msg)
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
+
+        # we have to control which binaries to use depending on architecture...
         architecture = platform.architecture()[0]
-        self.threeDlocPath = self.options.pluginpath + '/3dloc/'
         if architecture == '32bit':
             self.threeDlocBinaryName = '3dloc_pitsa_32bit'
+            self.hyp2000BinaryName = 'hyp2000_32bit'
         elif architecture == '64bit':
             self.threeDlocBinaryName = '3dloc_pitsa_64bit'
+            self.hyp2000BinaryName = 'hyp2000_64bit'
         else:
             msg = "Warning: Could not determine architecture (32/64bit). " + \
                   "Using 32bit 3dloc binary."
             warnings.warn(msg)
             self.threeDlocBinaryName = '3dloc_pitsa_32bit'
+            self.hyp2000BinaryName = 'hyp2000_32bit'
+
+        self.threeDlocPath = self.options.pluginpath + '/3dloc/'
         self.threeDlocPath_D3_VELOCITY = self.threeDlocPath + 'D3_VELOCITY'
         self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
@@ -538,7 +544,8 @@ class PickingGUI:
                    self.hyp2000Summary)
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
                            'cd $HYP2000_DATA;' + \
-                           './hyp2000 < bay2000.inp &> /dev/null'
+                           './%s < bay2000.inp' % \
+                           self.hyp2000BinaryName
         self.focmecPath = self.options.pluginpath + '/focmec/'
         self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
         self.focmecStdout = self.tmp_dir + 'focmec.stdout'
