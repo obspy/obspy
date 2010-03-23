@@ -39,6 +39,7 @@ attributes ``starttime`` and ``endtime`` of the Stats object are
 
 Example
 -------
+Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy.core import read
 >>> st = read('gaps.mseed')
