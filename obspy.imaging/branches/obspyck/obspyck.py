@@ -500,6 +500,8 @@ class PickingGUI:
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
         self.threeDlocPath = self.options.pluginpath + '/3dloc/'
+        self.threeDlocPath_D3_VELOCITY = self.threeDlocPath + 'D3_VELOCITY'
+        self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
         self.threeDlocInfile = self.tmp_dir + '3dloc-in'
         # copy 3dloc files to temp directory (only na.in)
@@ -507,8 +509,9 @@ class PickingGUI:
                 (self.threeDlocPath, self.tmp_dir), shell=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
-        self.threeDlocCall = 'export D3_VELOCITY=/scratch/rh_vel/vp_5836/;' + \
-                'export D3_VELOCITY_2=/scratch/rh_vel/vs_32220/;' + \
+        self.threeDlocCall = 'export D3_VELOCITY=%s;' % \
+                self.threeDlocPath_D3_VELOCITY + \
+                'export D3_VELOCITY_2=%s;' % self.threeDlocPath_D3_VELOCITY_2
                 'cd %s; 3dloc_pitsa' % self.tmp_dir
         self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
