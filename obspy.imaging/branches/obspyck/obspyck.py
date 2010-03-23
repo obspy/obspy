@@ -8,6 +8,7 @@ import fnmatch
 import shutil
 import sys
 import os
+import platform
 import subprocess
 import httplib
 import base64
@@ -499,7 +500,17 @@ class PickingGUI:
             raise(msg)
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
+        architecture = platform.architecture()[0]
         self.threeDlocPath = self.options.pluginpath + '/3dloc/'
+        if architecture == '32bit':
+            self.threeDlocBinaryName = '3dloc_pitsa_32bit'
+        elif architecture == '64bit':
+            self.threeDlocBinaryName = '3dloc_pitsa_64bit'
+        else:
+            msg = "Warning: Could not determine architecture (32/64bit). " + \
+                  "Using 32bit 3dloc binary."
+            warnings.warn(msg)
+            self.threeDlocBinaryName = '3dloc_pitsa_32bit'
         self.threeDlocPath_D3_VELOCITY = self.threeDlocPath + 'D3_VELOCITY'
         self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
@@ -513,7 +524,7 @@ class PickingGUI:
                 self.threeDlocPath_D3_VELOCITY + \
                 'export D3_VELOCITY_2=%s/;' % \
                 self.threeDlocPath_D3_VELOCITY_2 + \
-                'cd %s; ./3dloc_pitsa' % self.tmp_dir
+                'cd %s; ./%s' % (self.tmp_dir, self.threeDlocBinaryName)
         self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
         self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
