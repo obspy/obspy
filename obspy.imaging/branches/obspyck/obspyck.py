@@ -3160,7 +3160,7 @@ class PickingGUI:
                 wave.set("locationCode", st[axind].stats.location) 
                 date = Sub(pick, "time")
                 # prepare time of pick
-                picktime = st[axind].stats.starttime
+                picktime = st[0].stats.starttime
                 picktime += dict['S']
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if 'SErr1' in dict and 'SErr2' in dict:
@@ -3348,6 +3348,10 @@ class PickingGUI:
         # which is intended for testing purposes only
         if self.options.local:
             self.dictEvent['xmlEventID'] = '19700101000000'
+        # if we did no location at all, and only picks hould be saved the
+        # EventID ist still not set, so we have to do this now.
+        if self.dictEvent['xmlEventID'] is None:
+            self.setXMLEventID()
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
         # create XML and also save in temporary directory for inspection purposes
         msg = "creating xml..."
