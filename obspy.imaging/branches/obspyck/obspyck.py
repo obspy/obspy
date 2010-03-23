@@ -513,7 +513,7 @@ class PickingGUI:
                 self.threeDlocPath_D3_VELOCITY + \
                 'export D3_VELOCITY_2=%s/;' % \
                 self.threeDlocPath_D3_VELOCITY_2 + \
-                'cd %s; 3dloc_pitsa' % self.tmp_dir
+                'cd %s; ./3dloc_pitsa' % self.tmp_dir
         self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
         self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
         self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
