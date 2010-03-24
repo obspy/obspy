@@ -21,8 +21,7 @@ import tempfile
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
-from obspy.signal.filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH
-from obspy.signal.filter import lowpass, lowpassZPHSH, highpass, highpassZPHSH
+from obspy.signal.filter import bandpass, bandstop, lowpass, highpass
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
