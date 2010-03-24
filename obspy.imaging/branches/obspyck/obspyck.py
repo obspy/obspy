@@ -3952,6 +3952,13 @@ def main():
                       default="/baysoft/obspyck/",
                       help="Path to local directory containing the folders" + \
                            " with the files for the external programs")
+    parser.add_option("--starttime-offset", type="float",
+                      dest="starttime_offset", default=0.0,
+                      help="Offset to add to specified starttime in " + \
+                      "seconds. Thus a time from an automatic picker " + \
+                      "can be used with a specified offset for the " + \
+                      "starttime. E.g. to request a waveform starting 30 " + \
+                      "seconds earlier than the specified time use -30.")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
@@ -3991,6 +3998,7 @@ def main():
     else:
         try:
             t = UTCDateTime(options.time)
+            t = t + options.starttime_offset
             baseurl = "http://" + options.servername + ":%i" % options.port
             client = Client(base_url=baseurl, user=options.user,
                             password=options.password, timeout=options.timeout)
