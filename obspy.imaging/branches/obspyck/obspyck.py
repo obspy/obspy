@@ -36,7 +36,12 @@ from matplotlib.ticker import FuncFormatter
 
 #gtk
 import gtk
+import gobject #we use this only for redirecting StdOut and StdErr
 import gtk.glade
+try:
+    import pango #we use this only for changing the font in the textviews
+except:
+    pass
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
 from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
@@ -95,7 +100,19 @@ class MultiCursor(mplMultiCursor):
     #def set_visible(self, boolean):
     #    for line in self.lines:
     #        line.set_visible(boolean)
-    
+ 
+# we pimp our gtk textview elements, so that they are accesible via a write()
+# method. we use this to redirect stdout and stderr to our textviews
+# See: http://cssed.sourceforge.net/docs/
+#      pycssed_developers_guide-html-0.1/x139.html
+class WritableTextView:
+    def __init__(self, textview):
+        self.textview = textview
+    def write(self, string):        
+        buffer = self.textview.get_buffer()
+        iter = buffer.get_end_iter()
+        buffer.insert(iter,string)
+   
 def getCoord(client, network, station):
     """
     Returns longitude, latitude and elevation of given station from given
@@ -128,7 +145,7 @@ def formatXTicklabels(x,pos):
         return "%.3f" % x
 
 class PickingGUI:
-    
+        
     ###########################################################################
     # Start of list of event handles that get connected to GUI Elements       #
     # Note: All fundtions starting with "on_" get connected to GUI Elements   #
@@ -453,12 +470,18 @@ class PickingGUI:
         #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
 
     def debug(self):
+        sys.stdout = self.stdout_backup
+        sys.stderr = self.stderr_backup
         try:
             import ipdb
             ipdb.set_trace()
         except ImportError:
             import pdb
             pdb.set_trace()
+        self.stdout_backup = sys.stdout
+        self.stderr_backup = sys.stderr
+        sys.stdout = self.textviewStdOutWritable
+        sys.stderr = self.textviewStdErrWritable
 
     def setFocusToMatplotlib(self):
         self.canv.grab_focus()
@@ -536,7 +559,7 @@ class PickingGUI:
         self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
         self.threeDlocInfile = self.tmp_dir + '3dloc-in'
-        # copy 3dloc files to temp directory (only na.in)
+        # copy 3dloc files to temp directory
         subprocess.call('cp %s/* %s &> /dev/null' % \
                 (self.threeDlocPath, self.tmp_dir), shell=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
@@ -849,6 +872,25 @@ class PickingGUI:
         self.updateStreamLabels()
         self.multicursorReinit()
         self.canv.show()
+
+        # redirect stdout and stderr
+        # first we need to create a new subinstance with write method
+        self.textviewStdOutWritable = WritableTextView(self.textviewStdOut)
+        self.textviewStdErrWritable = WritableTextView(self.textviewStdErr)
+        self.stdout_backup = sys.stdout
+        self.stderr_backup = sys.stderr
+        sys.stdout = self.textviewStdOutWritable
+        sys.stderr = self.textviewStdErrWritable
+
+        # change fonts of textview
+        # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
+        try:
+            fontDescription = pango.FontDescription("monospace condensed 9")
+            self.textviewStdOut.modify_font(fontDescription)
+            self.textviewStdErr.modify_font(fontDescription)
+        except NameError:
+            pass
+
         gtk.main()
 
     
@@ -2181,7 +2223,11 @@ class PickingGUI:
 
     def do3dLoc(self):
         self.setXMLEventID()
-        subprocess.call(self.threeDlocPreCall, shell = True)
+        #subprocess.call(self.threeDlocPreCall, shell=True)
+        sub = subprocess.Popen(self.threeDlocPreCall, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sys.stdout.write("".join(sub.stdout.readlines()))
+        sys.stderr.write("".join(sub.stderr.readlines()))
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
@@ -2212,7 +2258,11 @@ class PickingGUI:
         msg = 'Phases for 3Dloc:'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.threeDlocInfile)
-        subprocess.call(self.threeDlocCall, shell = True)
+        #subprocess.call(self.threeDlocCall, shell=True)
+        sub = subprocess.Popen(self.threeDlocCall, shell=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sys.stdout.write("".join(sub.stdout.readlines()))
+        sys.stderr.write("".join(sub.stderr.readlines()))
         msg = '--> 3dloc finished'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.threeDlocOutfile)
@@ -2246,8 +2296,11 @@ class PickingGUI:
         msg = 'Phases for focmec: %i' % count
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.focmecPhasefile)
-        exitcode = subprocess.call(self.focmecCall, shell=True)
-        if exitcode == 1:
+        sub = subprocess.Popen(self.focmecCall, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sys.stdout.write("".join(sub.stdout.readlines()))
+        sys.stderr.write("".join(sub.stderr.readlines()))
+        if sub.returncode == 1:
             err = "Error: focmec did not find a suitable solution!"
             appendTextview(self.textviewStdErr, err)
             return
@@ -2432,7 +2485,10 @@ class PickingGUI:
         84-85 2  A2     2-letter station location code (component extension).
         """
         self.setXMLEventID()
-        subprocess.call(self.hyp2000PreCall, shell = True)
+        sub = subprocess.Popen(self.hyp2000PreCall, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sys.stdout.write("".join(sub.stdout.readlines()))
+        sys.stderr.write("".join(sub.stderr.readlines()))
         f = open(self.hyp2000Phasefile, 'w')
         f2 = open(self.hyp2000Stationsfile, 'w')
         network = "BW"
@@ -2539,7 +2595,10 @@ class PickingGUI:
         msg = 'Stations for Hypo2000:'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Stationsfile)
-        subprocess.call(self.hyp2000Call, shell=True)
+        sub = subprocess.Popen(self.hyp2000Call, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sys.stdout.write("".join(sub.stdout.readlines()))
+        sys.stderr.write("".join(sub.stderr.readlines()))
         msg = '--> hyp2000 finished'
         appendTextview(self.textviewStdOut, msg)
         self.catFile(self.hyp2000Summary)
@@ -3953,7 +4012,8 @@ def main():
                     continue
                 try:
                     st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                                                     t + options.duration)
+                                                     t + options.duration,
+                                                     apply_filter=True)
                     print net_sta, "fetched successfully."
                     sta_fetched.add(net_sta)
                 except:
