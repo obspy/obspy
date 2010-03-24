@@ -3017,6 +3017,7 @@ class PickingGUI:
         #toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
         self.axEventMap = self.fig.add_subplot(111)
+        self.axEventMap.set_aspect('equal', adjustable="datalim")
         self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
         self.axEventMap.scatter([dO['Longitude']], [dO['Latitude']], 30,
                                 color='red', marker='o')
@@ -3032,14 +3033,15 @@ class PickingGUI:
                              '  %.1fkm +/- %.1fkm' % \
                              (dO['Depth'], dO['Depth Error']),
                              va='top', family='monospace')
-        try:
-            self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % \
+        if 'Standarderror' in dO:
+            self.axEventMap.text(dO['Longitude'], dO['Latitude'],
+                    "\n\n\n\n Residual: %s s" % dO['Standarderror'], va='top', color='red', family = 'monospace')
+        if 'Magnitude' in dM and 'Uncertainty' in dM:
+            self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % \
                     (dM['Magnitude'], dM['Uncertainty'])
             self.netMagText = self.axEventMap.text(dO['Longitude'],
                     dO['Latitude'], self.netMagLabel, va='top',
                     color='green', family = 'monospace')
-        except:
-            pass
         errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
                 width=errLon, height=errLat, angle=0, fill=False)
         self.axEventMap.add_artist(errorell)
@@ -3097,7 +3099,6 @@ class PickingGUI:
         timestr = time.strftime("%Y-%m-%d  %H:%M:%S")
         timestr += ".%02d" % (time.microsecond / 1e4 + 0.5)
         self.axEventMap.set_title(timestr)
-        self.axEventMap.axis('equal')
         #####XXX disabled because it plots the wrong info if the event was
         ##### fetched from seishub
         #####lines = open(self.threeDlocOutfile).readlines()
