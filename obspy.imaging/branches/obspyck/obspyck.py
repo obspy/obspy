@@ -312,10 +312,25 @@ class PickingGUI:
     def on_buttonGetNextEvent_clicked(self, event):
         self.delAllItems()
         self.clearDictionaries()
-        self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
-                                     self.streams[0][0].stats.endtime)
+        # check if event list is empty and force an update if this is the case
+        if not hasattr(self, "seishubEventList"):
+            self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+                                            self.streams[0][0].stats.endtime)
+        # iterate event number to fetch
+        self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
+                                   self.seishubEventCount
+        resource_name = self.seishubEventList[self.seishubEventCurrent].text
+        self.getEventFromSeishub(resource_name)
+        #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
+        #                             self.streams[0][0].stats.endtime)
         self.drawAllItems()
         self.redraw()
+        
+        #XXX 
+
+    def on_buttonUpdateEventList_clicked(self, event):
+        self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+                                        self.streams[0][0].stats.endtime)
 
     def on_buttonSendEvent_clicked(self, event):
         self.uploadSeishub()
@@ -3393,17 +3408,13 @@ class PickingGUI:
 
         # get the response
         statuscode, statusmessage, header = webservice.getreply()
-        if statuscode!=201:
-            msg = "User: %s" % self.username
-            msg += "\nName: %s" % name
-            msg += "\nServer: %s%s" % (self.server['Server'], path)
-            msg += "\nResponse: %s %s" % (statuscode, statusmessage)
-            msg += "\nHeader:"
-            msg += "\n%s" % str(header).strip()
-            appendTextview(self.textviewStdOut, msg)
-        else:
-            err = "Warning/Error: Got HTTP status code 201!?!"
-            appendTextview(self.textviewStdErr, err)
+        msg = "User: %s" % self.username
+        msg += "\nName: %s" % name
+        msg += "\nServer: %s%s" % (self.server['Server'], path)
+        msg += "\nResponse: %s %s" % (statuscode, statusmessage)
+        #msg += "\nHeader:"
+        #msg += "\n%s" % str(header).strip()
+        appendTextview(self.textviewStdOut, msg)
     
     def clearDictionaries(self):
         msg = "Clearing previous data."
@@ -3488,61 +3499,15 @@ class PickingGUI:
         self.drawMagMinCross1()
         self.drawMagMaxCross2()
         self.drawMagMinCross2()
-
-    def getNextEventFromSeishub(self, starttime, endtime):
-        """
-        Updates dictionary with pick data for first event which origin time
-        is between startime and endtime.
-        Warning:
-         * When using the stream starttime an interesting event may not be
-           found because the origin time may be before the stream starttime!
-         * If more than one event is found in given time range only the first
-           one is used, all others are disregarded!
-
-        :param starttime: Start datetime as UTCDateTime
-        :param endtime: End datetime as UTCDateTime
-        """
-        
-        # two search criteria are applied:
-        # - first pick of event must be before stream endtime
-        # - last pick of event must be after stream starttime
-        # thus we get any event with at least one pick in between start/endtime
-        url = self.server['BaseUrl'] + \
-              "/seismology/event/getList?" + \
-              "min_last_pick=%s&max_first_pick=%s" % \
-              (str(starttime), str(endtime))
-        req = urllib2.Request(url)
-        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
-        req.add_header("Authorization", "Basic %s" % auth)
-
-        f = urllib2.urlopen(req)
-        xml = parse(f)
-        f.close()
-
-        picklist = []
-
-        # iterate the counter that indicates which event to fetch
-        if not self.seishubEventCount:
-            self.seishubEventCount = len(xml.xpath(u".//resource_name"))
-            self.seishubEventCurrent = 0
-            msg = "%i events are available from Seishub" % self.seishubEventCount
-            appendTextview(self.textviewStdOut, msg)
-            if self.seishubEventCount == 0:
-                return
-        else:
-            self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
-                                       self.seishubEventCount
-
-        # define which event data we will fetch
-        node = xml.xpath(u".//resource_name")[self.seishubEventCurrent]
+    
+    def getEventFromSeishub(self, resource_name):
         #document = xml.xpath(".//document_id")
         #document_id = document[self.seishubEventCurrent].text
         # Hack to show xml resource as document id
-        document_id = node.text
-        
         resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
-                       node.text
+                       resource_name
         resource_req = urllib2.Request(resource_url)
+        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
         resource_req.add_header("Authorization", "Basic %s" % auth)
         fp = urllib2.urlopen(resource_req)
         resource_xml = parse(fp)
@@ -3842,7 +3807,45 @@ class PickingGUI:
             pass
         msg = "Fetched event %i of %i (event_id: %s, user: %s)" % \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
-               document_id, user)
+               resource_name, user)
+        appendTextview(self.textviewStdOut, msg)
+
+    def updateEventListFromSeishub(self, starttime, endtime):
+        """
+        Searches for events in the database and stores a list of resource
+        names. All events with at least one pick set in between start- and
+        endtime are returned.
+
+        :param starttime: Start datetime as UTCDateTime
+        :param endtime: End datetime as UTCDateTime
+        """
+        
+        # two search criteria are applied:
+        # - first pick of event must be before stream endtime
+        # - last pick of event must be after stream starttime
+        # thus we get any event with at least one pick in between start/endtime
+        url = self.server['BaseUrl'] + \
+              "/seismology/event/getList?" + \
+              "min_last_pick=%s&max_first_pick=%s" % \
+              (str(starttime), str(endtime))
+        req = urllib2.Request(url)
+        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+        req.add_header("Authorization", "Basic %s" % auth)
+
+        f = urllib2.urlopen(req)
+        xml = parse(f)
+        f.close()
+
+        # populate list with resource names of all available events
+        self.seishubEventList = xml.xpath(u".//resource_name")
+
+        self.seishubEventCount = len(self.seishubEventList)
+        # we set the current event-pointer to the last list element, because we
+        # iterate the counter immediately when fetching the first event...
+        self.seishubEventCurrent = self.seishubEventCount - 1
+        msg = "%i events are available from Seishub" % self.seishubEventCount
+        for event in self.seishubEventList:
+            msg += "\n  - %s" % event.text
         appendTextview(self.textviewStdOut, msg)
 
 def main():
