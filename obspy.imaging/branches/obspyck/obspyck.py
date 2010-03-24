@@ -213,13 +213,17 @@ class PickingGUI:
                               self.buttonClearFocMec, self.buttonDoHyp2000,
                               self.buttonDo3dloc, self.buttonCalcMag,
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec, self.togglebuttonShowWadati,
+                              self.buttonNextFocMec,
+                              self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
                               self.togglebuttonSpectrogram]
         state = self.togglebuttonShowMap.get_active()
@@ -251,11 +255,14 @@ class PickingGUI:
                               self.buttonDoFocmec, self.togglebuttonShowMap,
                               self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
                               self.togglebuttonSpectrogram]
         state = self.togglebuttonShowFocMec.get_active()
@@ -297,11 +304,14 @@ class PickingGUI:
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
                               self.buttonNextFocMec, self.togglebuttonShowMap,
                               self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
                               self.togglebuttonSpectrogram]
         state = self.togglebuttonShowWadati.get_active()
@@ -499,6 +509,8 @@ class PickingGUI:
         self.options = options
         #Define some flags, dictionaries and plotting options
         self.flagWheelZoom = True #Switch use of mousewheel for zooming
+        #this next flag indicates if we zoom on time or amplitude axis
+        self.flagWheelZoomAmplitude = False
         self.dictPhaseColors = {'P':'red', 'S':'blue', 'Psynth':'black',
                                 'Ssynth':'black', 'Mag':'green'}
         self.dictPhaseLinestyles = {'P':'-', 'S':'-', 'Psynth':'--',
@@ -520,7 +532,7 @@ class PickingGUI:
                 #'setWeight4': '4', 'setWeight5': '5',
                 'setPolUp': 'u', 'setPolPoorUp': '+', 'setPolDown': 'd',
                 'setPolPoorDown': '-', 'setOnsetImpulsive': 'i',
-                'setOnsetEmergent': 'e'}
+                'setOnsetEmergent': 'e', 'switchWheelZoomAxis': 'shift'}
         # check for conflicting keybindings. 
         # we check twice, because keys for setting picks and magnitudes
         # are allowed to interfere...
@@ -803,6 +815,7 @@ class PickingGUI:
         self.buttonNextFocMec = self.gla.get_widget("buttonNextFocMec")
         self.togglebuttonShowWadati = self.gla.get_widget("togglebuttonShowWadati")
         self.buttonGetNextEvent = self.gla.get_widget("buttonGetNextEvent")
+        self.buttonUpdateEventList = self.gla.get_widget("buttonUpdateEventList")
         self.buttonSendEvent = self.gla.get_widget("buttonSendEvent")
         self.checkbuttonPublicEvent = \
                 self.gla.get_widget("checkbuttonPublicEvent")
@@ -815,7 +828,9 @@ class PickingGUI:
         self.togglebuttonFilter = self.gla.get_widget("togglebuttonFilter")
         self.comboboxFilterType = self.gla.get_widget("comboboxFilterType")
         self.checkbuttonZeroPhase = self.gla.get_widget("checkbuttonZeroPhase")
+        self.labelHighpass = self.gla.get_widget("labelHighpass")
         self.spinbuttonHighpass = self.gla.get_widget("spinbuttonHighpass")
+        self.labelLowpass = self.gla.get_widget("labelLowpass")
         self.spinbuttonLowpass = self.gla.get_widget("spinbuttonLowpass")
         self.togglebuttonSpectrogram = \
                 self.gla.get_widget("togglebuttonSpectrogram")
@@ -835,6 +850,7 @@ class PickingGUI:
         #self.fig.canvas.draw()
         # Activate all mouse/key/Cursor-events
         self.canv.mpl_connect('key_press_event', self.keypress)
+        self.canv.mpl_connect('key_release_event', self.keyrelease)
         self.canv.mpl_connect('scroll_event', self.scroll)
         self.canv.mpl_connect('button_release_event', self.buttonrelease)
         self.canv.mpl_connect('button_press_event', self.buttonpress)
@@ -2052,6 +2068,9 @@ class PickingGUI:
                 appendTextview(self.textviewStdOut, msg)
             return
 
+        if event.key == keys['switchWheelZoomAxis']:
+            self.flagWheelZoomAmplitude = True
+
         if event.key == keys['switchPan']:
             self.toolbar.pan()
             self.canv.widgetlock.release(self.toolbar)
@@ -2085,7 +2104,12 @@ class PickingGUI:
             self.buttonNextStream.clicked()
             #self.buttonNextStream.set_state(False)
             return
-            
+    
+    def keyrelease(self, event):
+        keys = self.dictKeybindings
+        if event.key == keys['switchWheelZoomAxis']:
+            self.flagWheelZoomAmplitude = False
+
     # Define zooming for the mouse scroll wheel
     def scroll(self, event):
         if self.togglebuttonShowMap.get_active():
@@ -2094,15 +2118,27 @@ class PickingGUI:
             return
         # Calculate and set new axes boundaries from old ones
         (left, right) = self.axs[0].get_xbound()
+        (bottom, top) = self.axs[0].get_ybound()
         # Zoom in on scroll-up
         if event.button == 'up':
-            left += (event.xdata - left) / 2
-            right -= (right - event.xdata) / 2
+            if self.flagWheelZoomAmplitude:
+                top /= 2.
+                bottom /= 2.
+            else:
+                left += (event.xdata - left) / 2
+                right -= (right - event.xdata) / 2
         # Zoom out on scroll-down
         elif event.button == 'down':
-            left -= (event.xdata - left) / 2
-            right += (right - event.xdata) / 2
-        self.axs[0].set_xbound(lower=left, upper=right)
+            if self.flagWheelZoomAmplitude:
+                top *= 2.
+                bottom *= 2.
+            else:
+                left -= (event.xdata - left) / 2
+                right += (right - event.xdata) / 2
+        if self.flagWheelZoomAmplitude:
+            self.axs[0].set_ybound(lower=bottom, upper=top)
+        else:
+            self.axs[0].set_xbound(lower=left, upper=right)
         self.redraw()
     
     # Define zoom reset for the mouse button 2 (always scroll wheel!?)
@@ -2846,7 +2882,7 @@ class PickingGUI:
         msg = "new network magnitude: %.2f (Variance: %.2f)" % \
                 (dM['Magnitude'], dM['Uncertainty'])
         appendTextview(self.textviewStdOut, msg)
-        self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (dM['Magnitude'],
+        self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % (dM['Magnitude'],
                                                            dM['Uncertainty'])
         try:
             self.netMagText.set_text(self.netMagLabel)
@@ -3025,23 +3061,30 @@ class PickingGUI:
                                    dO['Longitude Error'], dO['Latitude Error'])
         errLon -= dO['Longitude']
         errLat -= dO['Latitude']
-        self.axEventMap.text(dO['Longitude'], dO['Latitude'],
-                             ' %7.3f +/- %0.2fkm\n' % \
+        ypos = 0.97
+        xpos = 0.03
+        self.axEventMap.text(xpos, ypos,
+                             '%7.3f +/- %0.2fkm\n' % \
                              (dO['Longitude'], dO['Longitude Error']) + \
-                             ' %7.3f +/- %0.2fkm\n' % \
+                             '%7.3f +/- %0.2fkm\n' % \
                              (dO['Latitude'], dO['Latitude Error']) + \
                              '  %.1fkm +/- %.1fkm' % \
                              (dO['Depth'], dO['Depth Error']),
-                             va='top', family='monospace')
+                             va='top', ha='left', family='monospace',
+                             transform=self.axEventMap.transAxes)
         if 'Standarderror' in dO:
-            self.axEventMap.text(dO['Longitude'], dO['Latitude'],
-                    "\n\n\n\n Residual: %s s" % dO['Standarderror'], va='top', color='red', family = 'monospace')
+            self.axEventMap.text(xpos, ypos, "\n\n\n\n Residual: %.3f s" % \
+                    dO['Standarderror'], va='top', ha='left',
+                    color=self.dictPhaseColors['P'],
+                    transform=self.axEventMap.transAxes,
+                    family='monospace')
         if 'Magnitude' in dM and 'Uncertainty' in dM:
             self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % \
                     (dM['Magnitude'], dM['Uncertainty'])
-            self.netMagText = self.axEventMap.text(dO['Longitude'],
-                    dO['Latitude'], self.netMagLabel, va='top',
-                    color='green', family = 'monospace')
+            self.netMagText = self.axEventMap.text(xpos, ypos,
+                    self.netMagLabel, va='top', ha='left',
+                    transform=self.axEventMap.transAxes,
+                    color=self.dictPhaseColors['Mag'], family='monospace')
         errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
                 width=errLon, height=errLat, angle=0, fill=False)
         self.axEventMap.add_artist(errorell)
@@ -3807,7 +3850,7 @@ class PickingGUI:
             try:
                 mag = magnitude.xpath(".//mag/value")[0].text
                 self.dictMagnitude['Magnitude'] = float(mag)
-                self.netMagLabel = '\n\n\n\n  %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+                self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
             except:
                 pass
             try:
