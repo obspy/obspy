@@ -60,7 +60,7 @@ def nearestPow2(x):
 
 def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False, 
                 outfile=None, format=None, axis=None, dbscale=False,
-                mult=8.0):
+                mult=8.0, cmap=None):
     """
     Computes and plots logarithmic spectrogram of the input trace.
     
@@ -132,7 +132,7 @@ def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False,
         time -= halfbin_time
         freq -= halfbin_freq
         X, Y = np.meshgrid(time, freq)
-        ax.pcolor(X, Y, spectrogram)
+        ax.pcolor(X, Y, spectrogram, cmap=cmap)
         ax.semilogy()
     else:
         # this method is much much faster!
@@ -140,7 +140,8 @@ def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False,
         # center bin
         extent = (time[0] - halfbin_time, time[-1] + halfbin_time, \
                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
-        ax.imshow(spectrogram, interpolation="nearest", extent=extent)
+        ax.imshow(spectrogram, interpolation="nearest", extent=extent,
+                  cmap=cmap)
 
     # set correct way of axis, whitespace before and after with window
     # length
