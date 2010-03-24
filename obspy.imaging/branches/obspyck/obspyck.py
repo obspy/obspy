@@ -224,7 +224,8 @@ class PickingGUI:
                               self.checkbuttonZeroPhase,
                               self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram]
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
         state = self.togglebuttonShowMap.get_active()
         for button in buttons_deactivate:
             button.set_sensitive(not state)
@@ -263,7 +264,8 @@ class PickingGUI:
                               self.checkbuttonZeroPhase,
                               self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram]
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
         state = self.togglebuttonShowFocMec.get_active()
         for button in buttons_deactivate:
             button.set_sensitive(not state)
@@ -312,7 +314,8 @@ class PickingGUI:
                               self.checkbuttonZeroPhase,
                               self.labelHighpass, self.labelLowpass,
                               self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram]
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
         state = self.togglebuttonShowWadati.get_active()
         for button in buttons_deactivate:
             button.set_sensitive(not state)
@@ -464,8 +467,32 @@ class PickingGUI:
         self.canv.grab_focus()
 
     def on_togglebuttonSpectrogram_toggled(self, event):
-        err = "Error: Not implemented yet!"
-        appendTextview(self.textviewStdErr, err)
+        buttons_deactivate = [self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass]
+        state = self.togglebuttonSpectrogram.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            msg = "Showing spectrograms (takes a few seconds with log-option)."
+        else:
+            msg = "Showing seismograms."
+        xmin, xmax = self.axs[0].get_xlim()
+        self.delAllItems()
+        self.delAxes()
+        self.fig.clear()
+        self.drawAxes()
+        self.drawSavedPicks()
+        self.multicursorReinit()
+        self.axs[0].set_xlim(xmin, xmax)
+        self.updatePlot()
+        appendTextview(self.textviewStdOut, msg)
+
+    def on_checkbuttonSpectrogramLog_toggled(self, event):
+        if self.togglebuttonSpectrogram.get_active():
+            self.on_togglebuttonSpectrogram_toggled(event)
     ###########################################################################
     # End of list of event handles that get connected to GUI Elements         #
     ###########################################################################
@@ -614,7 +641,7 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.flagSpectrogram = False
+        self.spectrogramColormap = matplotlib.cm.gist_heat_r
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
         # indicates how many events are available from seishub
@@ -833,6 +860,8 @@ class PickingGUI:
         self.spinbuttonLowpass = self.gla.get_widget("spinbuttonLowpass")
         self.togglebuttonSpectrogram = \
                 self.gla.get_widget("togglebuttonSpectrogram")
+        self.checkbuttonSpectrogramLog = \
+                self.gla.get_widget("checkbuttonSpectrogramLog")
         self.textviewStdOut = self.gla.get_widget("textviewStdOut")
         self.textviewStdErr = self.gla.get_widget("textviewStdErr")
 
@@ -946,12 +975,13 @@ class PickingGUI:
                 self.axs[i].xaxis.set_ticks_position("top")
             self.axs[-1].xaxis.set_ticks_position("both")
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-            if not self.flagSpectrogram:
-                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
+            if self.togglebuttonSpectrogram.get_active():
+                log = self.checkbuttonSpectrogramLog.get_active()
+                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
+                            cmap=self.spectrogramColormap, axis=self.axs[i],
+                            zorder=-10)
             else:
-                spectrogram(st[i].data, st[i].stats.sampling_rate,
-                            axis=self.axs[i],
-                            nwin=st[i].stats.npts * 4 / st[i].stats.sampling_rate)
+                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
         self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          st[0].stats.starttime.microsecond / 1e3 + 0.5,
                                                          st[0].stats.endtime.strftime("%H:%M:%S"),
