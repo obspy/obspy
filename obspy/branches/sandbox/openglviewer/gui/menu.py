@@ -21,7 +21,7 @@ class Menu(GUIElement):
         """
         Creates the Menu.
         """
-        self._getFolder()
+        self._getIndex()
         # Various calls to show and position the menu.
         self.menu.show(batch = self.batch, group = self.group)
         x_pos = self.win.window.width
@@ -90,14 +90,14 @@ class Menu(GUIElement):
         for waveform in self.win.waveforms:
             waveform.replot()
 
-    def _getFolder(self):
+    def _getIndex(self):
         """
         Builds the folders.
         """
-        paths = self.env.paths
+        self.networks = self.env.networks
         folders = []
         # Get networks.
-        networks = paths.keys()
+        networks = self.networks.keys()
         networks.sort()
         network_list = []
 
@@ -113,17 +113,24 @@ class Menu(GUIElement):
             """
             Inline Function for creating plots.
             """
-            channel = button.parent.children[0].text + '.D'
+            channel = button.parent.children[0].text
             station = button.parent.parent.parent.title.text.split()[-1]
-            networkt =\
+            network =\
             button.parent.parent.parent.parent.parent.title.text.split()[-1]
-            if channel == 'EH*.D':
+            # Split station if necessary.
+            temp = station.split('.')
+            if len(temp) > 1:
+                station = temp[0]
+                location = temp[1]
+            else:
+                location = ''
+            if channel == 'EH*':
                 for sub_channel in button.parent.parent.children:
                     chan = sub_channel.children[0].text
                     if chan == 'EHE' or chan == 'EHN' or chan == 'EHZ':
-                        add_plot(self.win, network, station, chan + '.D')
+                        add_plot(self.win, network, station, location, chan)
             else:
-                add_plot(self.win, network, station, channel)
+                add_plot(self.win, network, station, location, channel)
 
         def delete_all(button):
             """
@@ -138,10 +145,9 @@ class Menu(GUIElement):
                 if type(item) == WaveformPlot:
                     del item
             self.win.status_bar.setText('0 Traces')
-
         # Loop over networks.
         for network in networks:
-            stations = paths[network].keys()
+            stations = self.networks[network].keys()
             stations.sort()
             station_list = []
             # Add Buttons to quickly select all similar channels.
@@ -153,25 +159,33 @@ class Menu(GUIElement):
             station_list.append(all_channels)
             # Loop over all stations.
             for station in stations:
-                channels = paths[network][station]
-                channels.sort()
+                locations = self.networks[network][station].keys()
+                locations.sort()
                 channels_list = []
-                # Button to select all EH* stations.
-                all_stations = glydget.ToggleButton('EH*',
-                                                    False, on_toggle)
-                channels_list.append(glydget.HBox([all_stations],
-                                     homogeneous = False))
-                for channel in channels:
-                    button = glydget.ToggleButton(channel.split('.')[0], False, on_toggle)
-                    channels_list.append(glydget.HBox([button],
+                for location in locations:
+                    # Button to select all EH* stations.
+                    all_stations = glydget.ToggleButton('EH*',
+                                                        False, on_toggle)
+                    channels_list.append(glydget.HBox([all_stations],
                                          homogeneous = False))
-                box = glydget.Folder(station,
-                      glydget.VBox(channels_list, homogeneous = False), active\
-                                    = False)
-                box.title.style.font_size = 8
-                station_list.append(box)
+                    channels = self.networks[network][station][location]
+                    channels.sort()
+                    for channel in channels[0]:
+                        button = glydget.ToggleButton(channel, False, on_toggle)
+                        channels_list.append(glydget.HBox([button],
+                                             homogeneous = False))
+                    if location:
+                        station_name = '%s.%s' % (station, location)
+                    else:
+                        station_name = station
+                    box = glydget.Folder(station_name,
+                          glydget.VBox(channels_list, homogeneous = False), active\
+                                        = False)
+                    box.title.style.font_size = 8
+                    station_list.append(box)
             network_box = glydget.Folder(network,
-                          glydget.VBox(station_list, homogeneous = False))
+                          glydget.VBox(station_list, homogeneous = False),
+                                         active = False)
             network_list.append(network_box)
         # Menu to select the times.
         start = glydget.Entry(str(self.win.starttime))
@@ -224,6 +238,16 @@ class Menu(GUIElement):
         self.menu.style = glydget.theme.debug
         # Fixed width and variable height.
         self.menu.resize(self.win.geometry.menu_width, 1)
+
+    def scrollMenu(self, scroll_y):
+        """
+        Scrolls the Menu.
+        """
+        new_y_pos = self.menu.y - 3 * scroll_y
+        max_height =  self.win.window.height - self.win.geometry.vertical_margin
+        if new_y_pos > max_height:
+            new_y_pos = max_height
+        self.menu.move(self.menu.x, new_y_pos)
 
     def resize(self, width, height):
         """

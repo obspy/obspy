@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
         XXX: Need way better implementation.
         """
-        win.mouse_scroll(scroll_x, scroll_y)
+        win.mouse_scroll(x, y, scroll_x, scroll_y)
 
     @window.event
     def on_draw(*args, **kwargs):

@@ -18,7 +18,7 @@ class StatusBar(GUIElement):
         self.height = kwargs.get('height', 16)
         self.createBar()
         self.text = ''
-        self.error_text = ''
+        self.error = ''
         self.createMessages()
 
     def createBar(self):
@@ -46,7 +46,7 @@ class StatusBar(GUIElement):
         messages.
         """
         # Error Messages.
-        error_document = pyglet.text.decode_text(self.error_text)
+        error_document = pyglet.text.decode_text(self.error)
         error_document.set_style(0, 2, dict(font_name='arial',
                                  bold=True, font_size=10, color=(200,0,0,255)))
         self.error_layout = pyglet.text.DocumentLabel(document = error_document,
@@ -72,6 +72,15 @@ class StatusBar(GUIElement):
         self.text_layout.begin_update()
         self.text_layout.text = self.text
         self.text_layout.end_update()
+
+    def setError(self, text):
+        """
+        Sets the text.
+        """
+        self.error = text
+        self.error_layout.begin_update()
+        self.error_layout.text = self.error
+        self.error_layout.end_update()
 
     def resize(self, width, height):
         """

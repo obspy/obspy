@@ -7,6 +7,7 @@ from obspy.core import UTCDateTime
 from status_bar import StatusBar
 from background import Background
 from scroll_bar import ScrollBar
+from seishub import Seishub
 from time_scale import TimeScale
 
 class PygletWindow(object):
@@ -47,10 +48,16 @@ class PygletWindow(object):
         self.current_view_span = self.window.height - self.status_bar.height
         # Add a scroll bar. Should also always be on top.
         self.scroll_bar = ScrollBar(parent = self, group = 999)
+        # Connect to SeisHub Server.
+        self.seishub = Seishub(parent = self, group = 1)
         # Add the menu.
         self.menu = Menu(parent = self, group = 999, width = self.geometry.menu_width)
         # Add the Time Scale.
         self.time_scale = TimeScale(parent = self, group = 999)
+        geo = self.geometry
+        # Start of menu.
+        self.menu_start = self.window.width - (geo.menu_width +\
+                    geo.horizontal_margin + geo.scroll_bar_width)
 
     def setOpenGLState(self):
         """
@@ -105,8 +112,8 @@ class PygletWindow(object):
         self.waveforms = []
         # Start- and Endtime of the plots. Needs to be stored into the window
         # object because it has to be the same for all traces.
-        self.starttime = kwargs.get('starttime', UTCDateTime(2009,12,20))
-        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,11) - 1.0)
+        self.starttime = kwargs.get('starttime', UTCDateTime(2010,1,1))
+        self.endtime = kwargs.get('endtime', UTCDateTime(2010,3,1) - 1.0)
         # Waveform Layer. Waveforms will need some more layers. I will just add
         # three.
         # XXX: Maybe switch to some more elegant solution.
@@ -158,6 +165,10 @@ class PygletWindow(object):
         """
         Handles all calls necessary on resize.
         """
+        geo = self.geometry
+        # Start of menu.
+        self.menu_start = self.window.width - (geo.menu_width +\
+                    geo.horizontal_margin + geo.scroll_bar_width)
         # Update vertical span of the window.
         self.current_view_span = height - self.status_bar.height
         # Call the resize method of all objects in the current window.
@@ -174,23 +185,29 @@ class PygletWindow(object):
         self.window.clear()
         self.batch.draw()
 
-    def mouse_scroll(self, scroll_x, scroll_y):
+    def mouse_scroll(self, x, y, scroll_x, scroll_y):
         """
         Called every time the mouse wheel is scrolled.
         """
-        self.waveform_offset += 4 * scroll_y
-        if self.waveform_offset > 0:
-            self.waveform_offset = 0
-        # Avoid going too far down.
-        max_view = self.max_viewable + self.win.geometry.time_scale
-        if self.current_view_span - self.waveform_offset > max_view:
-            if self.current_view_span > max_view:
+        # Check if in the menu.
+        if x > self.menu_start:
+            # Scroll the menu.
+            self.menu.scrollMenu(scroll_y)
+        # Otherwise scroll the waveforms
+        else:
+            self.waveform_offset += 4 * scroll_y
+            if self.waveform_offset > 0:
                 self.waveform_offset = 0
-            else:
-                self.waveform_offset = -((10 + max_view) - \
-                                      self.current_view_span)
-        # Update the scroll_bar.
-        self.scroll_bar.changePosition()
+            # Avoid going too far down.
+            max_view = self.max_viewable + self.win.geometry.time_scale
+            if self.current_view_span - self.waveform_offset > max_view:
+                if self.current_view_span > max_view:
+                    self.waveform_offset = 0
+                else:
+                    self.waveform_offset = -((10 + max_view) - \
+                                          self.current_view_span)
+            # Update the scroll_bar.
+            self.scroll_bar.changePosition()
 
 class Geometry(object):
     """
@@ -206,7 +223,7 @@ class Geometry(object):
         # Width of the scroll_bar.
         self.scroll_bar_width = kwargs.get('scroll_bar_width', 10)
         # Width of the menu
-        self.menu_width = kwargs.get('menu_width', 195)
+        self.menu_width = kwargs.get('menu_width', 235)
         # Height of the time_scale.
         self.time_scale = 63
         # Height of the status_bar.

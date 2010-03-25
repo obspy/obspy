@@ -31,12 +31,13 @@ def get_channels(base_path):
 
     return directories
 
-def add_plot(window, network, station, channel):
+def add_plot(window, network, station, location, channel):
     """
     XXX: Just for testing purposes.
     """
     network = str(network)
     station = str(station)
+    location = str(location)
     channel = str(channel)
     if network == '*' or station == '*' or channel == '*':
         # XXX: Only works for station wildcard.
@@ -52,10 +53,9 @@ def add_plot(window, network, station, channel):
                 WaveformPlot(parent = window, group = 2, dir = path)
     else:
         # Check if already there.
-        id = network + '.' + station + '..' + channel
+        id = network + '.' + station + '.' + location + '.' + channel
         for waveform in window.waveforms:
-            if waveform.header + '.D'  == id:
+            if waveform.header  == id:
                 return
-        path = window.env.path + network + os.path.sep + station + os.path.sep + \
-               channel + os.path.sep
-        WaveformPlot(parent = window, group = 2, dir = path)
+        WaveformPlot(parent = window, group = 2, id = (network, station,
+                                                       location, channel))

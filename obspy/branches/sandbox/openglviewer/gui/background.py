@@ -11,7 +11,7 @@ class Background(GUIElement):
     def __init__(self, *args, **kwargs):
         super(Background, self).__init__(self, *args, **kwargs)
         # Background colors. Can take 4 full colors for color gradient.
-        self.bg_colors = kwargs.get('bg_color', [100,100,100,255,70,70,70,255])
+        self.bg_colors = kwargs.get('bg_color', [155,155,155,255])
         # Just four values result in a uniform background.
         if len(self.bg_colors) == 4:
             self.bg_colors = self.bg_colors*4

@@ -31,9 +31,15 @@ class WaveformPlot(GUIElement):
         self.endtime = kwargs.get('endtime', UTCDateTime(1971,1,1))
         self.time_range = self.endtime - self.starttime
         # Path to the files.
-        self.path = kwargs.get('dir', None)
+        self.id = kwargs.get('id', None)
         # Prepare the data.
+        self.stream = None
         self.readAndMergeData()
+        if self.stream is None:
+            msg = 'Error fetching %s.%s.%s.%s from %s' % (self.id[0],
+                    self.id[1], self.id[2], self.id[3], self.win.seishub.server)
+            self.win.status_bar.setError(msg)
+            del self
         # Height of plot.
         self.height = kwargs.get('height', 40)
         # Inner padding. Currently used for top, bottom and left border.
@@ -96,12 +102,14 @@ class WaveformPlot(GUIElement):
         Reads the data to self.stream
         """
         try:
-            stream = read(self.path + '*')
+            stream = self.win.seishub.getPreview(self.id)
         except:
             # XXX: Need to use the Error handling object.
             self.win.status_bar.error_text = "Reading failed."
             return
         # XXX: Not a real world test case.
+        if len(stream) == 0:
+            return
         for tr in stream:
             tr.data = np.require(tr.data, 'float32')
         try:

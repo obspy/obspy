@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 from time import time
 from utils import get_channels
 
@@ -17,6 +18,8 @@ class DatabaseEnvironment(object):
     def setPath(self, base_path):
         self.path = base_path
         self.paths = get_channels(base_path)
+        self.seishub_server = 'http://localhost:7777'
+        self.cache_dir = 'cache'
             
 
 
