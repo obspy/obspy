@@ -207,9 +207,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                 for encoding in encoding_values.keys():
                     trace_list[0][1] = data.astype(encoding_values[encoding])
                     trace_list[0][0]['sampletype'] = encoding_values[encoding]
-                    filename = 'temp.%s.%s.%s.mseed' % (reclen, byteorder,
-                                                        encoding)
-                    temp_file = os.path.join(self.path, filename)
+                    temp_file = NamedTemporaryFile().name
                     mseed.writeMSTraces(copy.deepcopy(trace_list), temp_file,
                                         encoding=encoding, byteorder=byteorder,
                                         reclen=reclen)
@@ -231,7 +229,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         trace_list = mseed.readMSTraces(filename)
         self.assertEqual(len(trace_list), 4)
         # Write File to temporary file.
-        outfile = unicode('tempfile.mseed')
+        outfile = NamedTemporaryFile().name
         mseed.writeMSTraces(copy.deepcopy(trace_list), outfile)
         # Read the same file again and compare it to the original file.
         new_trace_list = mseed.readMSTraces(outfile)
@@ -368,11 +366,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         fh = open(filename, 'rb')
         first_ten_records = fh.read(10 * 512)
         fh.close()
+        file_list = []
         for _i in range(10):
-            fh = open(str(_i) + '_temp.mseed', 'wb')
+            tempfile = NamedTemporaryFile().name
+            file_list.append(tempfile)
+            fh = open(tempfile, 'wb')
             fh.write(first_ten_records[_i * 512: (_i + 1) * 512])
             fh.close()
-        file_list = [str(_i) + '_temp.mseed' for _i in range(10)]
         # Randomize list.
         file_list.sort(key=lambda _x: random.random())
         # Init MSRecord and MSFileParam structure
