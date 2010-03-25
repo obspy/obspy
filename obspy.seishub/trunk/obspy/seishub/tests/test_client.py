@@ -117,6 +117,15 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(item in data)
 
     def test_getPreview(self):
+        # multiple channels / MiniSEED
+        t1 = UTCDateTime('20080101')
+        t2 = UTCDateTime('20080201')
+        st = self.client.waveform.getPreview("BW", "*", "", "EHZ", t1, t2)
+        self.assertEqual(len(st), 18)
+        self.assertEqual(st[0].stats.network, 'BW')
+        self.assertEqual(st[0].stats.channel, 'EHZ')
+        self.assertEqual(st[0].stats.delta, 60.0)
+        # single channel / GSE2
         t1 = UTCDateTime('20070101')
         t2 = UTCDateTime('20100101')
         st = self.client.waveform.getPreview("BW", "RTLI", "", "EHN", t1, t2)
