@@ -9,6 +9,7 @@ SeisHub database client for ObsPy.
 from lxml import objectify
 import pickle
 import sys
+import time
 import urllib2
 
 
@@ -31,6 +32,13 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
+    def ping(self):
+        """
+        Ping the SeisHub server.
+        """
+        t1 = time.time()
+        urllib2.urlopen(self.base_url).read()
+        return (time.time() - t1) * 1000.0
 
     def _fetch(self, url, *args, **kwargs):
         remoteaddr = self.base_url + url + '?'

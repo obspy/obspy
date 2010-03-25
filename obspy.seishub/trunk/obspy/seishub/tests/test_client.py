@@ -42,6 +42,11 @@ class ClientTestCase(unittest.TestCase):
         for item in items:
             self.assertTrue(item in data)
 
+    def test_ping(self):
+        # current server
+        time = self.client.ping()
+        self.assertTrue(isinstance(time, float))
+
     def test_getStationIds(self):
         #1 - all stations
         items = ['ABRI', 'BGLD', 'BW01', 'CRLZ', 'DHFO', 'FUR', 'FURT', 'GRC1',
