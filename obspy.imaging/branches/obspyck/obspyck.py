@@ -959,9 +959,13 @@ class PickingGUI:
             #global stream (absolute) starttime (starttime of first (Z) trace)
             starttime_local = st[i].stats.starttime - starttime_global
             dt = 1. / smprt
-            self.t.append(np.arange(starttime_local,
-                                    starttime_local + (dt * npts),
-                                    dt))
+            sampletimes = np.arange(starttime_local,
+                    starttime_local + (dt * npts), dt)
+            # sometimes our arange is one item too long (why??), so we just cut
+            # off the last item if this is the case
+            if len(sampletimes) == npts + 1:
+                sampletimes = sampletimes[:-1]
+            self.t.append(sampletimes)
             if i == 0:
                 self.axs.append(self.fig.add_subplot(trNum,1,i+1))
                 self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
