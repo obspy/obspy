@@ -746,7 +746,8 @@ class PickingGUI:
             date = st[0].stats.starttime.date
             print 'fetching station metadata from seishub...'
             try:
-                lon, lat, ele = getCoord(self.client, net, sta) 
+                lon, lat, ele = getCoord(self.client, net, sta)
+                print lon, lat, ele
                 dict['StaLon'] = lon
                 dict['StaLat'] = lat
                 dict['StaEle'] = ele / 1000. # all depths in km!
@@ -2310,7 +2311,7 @@ class PickingGUI:
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = dict['PErr2'] - dict['PErr1']
                 f.write(fmt % (dict['Station'], 'P', date, delta, lon, lat,
-                               ele / 1e3))
+                               ele))
             if 'S' in dict:
                 t = st[0].stats.starttime
                 t += dict['S']
@@ -2318,7 +2319,7 @@ class PickingGUI:
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 delta = dict['SErr2'] - dict['SErr1']
                 f.write(fmt % (dict['Station'], 'S', date, delta, lon, lat,
-                               ele / 1e3))
+                               ele))
         f.close()
         msg = 'Phases for 3Dloc:'
         self.textviewStdOutImproved.write(msg)
