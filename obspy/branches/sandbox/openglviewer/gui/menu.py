@@ -4,6 +4,7 @@
 from gui_element import GUIElement
 from obspy.core import UTCDateTime
 from waveform_plot import WaveformPlot
+from dialog import Dialog
 import theme
 import glydget
 from utils import add_plot
@@ -22,12 +23,18 @@ class Menu(GUIElement):
         """
         self._getFolder()
         # Various calls to show and position the menu.
-        self.menu.show()
+        self.menu.show(batch = self.batch, group = self.group)
         x_pos = self.win.window.width
         self.menu.move(x_pos - 150, self.win.window.height-5)
         self.win.window.push_handlers(self.menu)  
         # Add to object list to handle the resizing.
         self.win.object_list.append(self)
+
+    def openOptionsMenu(self, button):
+        """
+        Creates a new option screen.
+        """
+        dia = Dialog(parent = self, group =999)
 
     def change_scale(self, button):
         """
@@ -62,6 +69,9 @@ class Menu(GUIElement):
         self.win.endtime = UTCDateTime(endtime)
         for waveform in self.win.waveforms:
             waveform.replot()
+        # Update text of the items.
+        button.parent.children[1].text = str(self.win.starttime)
+        button.parent.children[2].text = str(self.win.endtime)
         # Update time scale.
         self.win.time_scale.changeTimeScale()
 
@@ -207,6 +217,9 @@ class Menu(GUIElement):
         items.extend(network_list)
         items.extend([seperator2, options, scaleButtons])
         items.append(detailBox)
+        # Button to enter the options menu.
+        optionsButton = glydget.Button('Options', self.openOptionsMenu)
+        items.append(optionsButton)
         self.menu = glydget.VBox(items, homogeneous = False)
         self.menu.style = glydget.theme.debug
         # Fixed width and variable height.

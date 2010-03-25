@@ -3,6 +3,7 @@
 
 from background import Background
 from database_environment import DatabaseEnvironment
+from dialog import Dialog
 from gui_element import GUIElement
 from pyglet_window import PygletWindow
 from scroll_bar import ScrollBar

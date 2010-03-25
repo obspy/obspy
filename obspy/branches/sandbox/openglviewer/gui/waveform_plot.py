@@ -74,8 +74,10 @@ class WaveformPlot(GUIElement):
         Return a tuple with(x_start, x_end, y_start, y_end)
         """
         return (self.x_offset, self.x_offset + self.width,
-                self.win.window.height - self.y_offset, 
-                self.win.window.height - self.y_offset + self.height)
+                self.win.window.height - self.y_offset -\
+                self.win.geometry.time_scale, 
+                self.win.window.height - self.y_offset + self.height - 
+                self.win.geometry.time_scale)
 
     def updatePosition(self):
         """

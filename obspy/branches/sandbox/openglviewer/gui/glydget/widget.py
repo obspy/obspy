@@ -186,7 +186,7 @@ class Widget(object):
         '''
 
         self._batch = batch or self._batch or pyglet.graphics.Batch()
-        self.bg_group = group or self._bg_group
+        self._bg_group = group or self._bg_group
         if not self._bg_group:
             self._bg_group = pyglet.graphics.OrderedGroup(0,group)
         group = self._bg_group.parent

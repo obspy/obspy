@@ -74,7 +74,7 @@ class PygletWindow(object):
         """
         index = int(index)
         if index < 0:
-            index = 0
+            return self.top_group1
         elif index > (self.layers - 1):
             index = (self.layers - 1)
         return self.groups[index]
@@ -105,8 +105,8 @@ class PygletWindow(object):
         self.waveforms = []
         # Start- and Endtime of the plots. Needs to be stored into the window
         # object because it has to be the same for all traces.
-        self.starttime = kwargs.get('starttime', UTCDateTime(2009,12,15))
-        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,1) - 1.0)
+        self.starttime = kwargs.get('starttime', UTCDateTime(2009,12,20))
+        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,11) - 1.0)
         # Waveform Layer. Waveforms will need some more layers. I will just add
         # three.
         # XXX: Maybe switch to some more elegant solution.
@@ -125,6 +125,10 @@ class PygletWindow(object):
         self.groups = []
         for _i in xrange(self.layers):
             self.groups.append(pyglet.graphics.OrderedGroup(_i))
+        # Create one top level group. Useful for dialog boxes and other stuff
+        # that goes over everything else.
+        self.top_group1 = pyglet.graphics.OrderedGroup(99)
+        self.top_group2 = pyglet.graphics.OrderedGroup(9999)
         
 
     def createWindow(self):
@@ -204,7 +208,7 @@ class Geometry(object):
         # Width of the menu
         self.menu_width = kwargs.get('menu_width', 195)
         # Height of the time_scale.
-        self.time_scale = 48
+        self.time_scale = 63
         # Height of the status_bar.
         self.status_bar_height = 16
         # The offset of all actual waveform graphs on the left side.
