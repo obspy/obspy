@@ -698,7 +698,7 @@ class PickingGUI:
         self.focMechCount = None
         self.dictEvent = {}
         self.dictEvent['xmlEventID'] = None
-        self.spectrogramColormap = matplotlib.cm.gist_heat_r
+        self.spectrogramColormap = matplotlib.cm.jet
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
         # indicates how many events are available from seishub
