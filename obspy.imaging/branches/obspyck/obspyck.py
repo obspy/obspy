@@ -3746,8 +3746,7 @@ class PickingGUI:
                 if 'Ssynth' in dict:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = '%s' % dict['Sres']
-                    if self.dictOrigin['Program'] == "hyp2000" and \
-                       'SsynthWeight' in dict:
+                    if 'SsynthWeight' in dict:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(dict['SsynthWeight'])
                     else:
