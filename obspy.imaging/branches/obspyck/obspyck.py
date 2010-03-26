@@ -125,7 +125,28 @@ def getCoord(client, network, station):
 
     return coord
 
-def formatXTicklabels(x,pos):
+def gk2lonlat(x, y):
+    """
+    This function converts X/Y Gauss-Krueger coordinates (zone 4, central
+    meridian 12 deg) to Longitude/Latitude in WGS84 reference ellipsoid.
+    We do this using the Linux command line tool cs2cs.
+    """
+    # convert to meters first
+    x *= 1000.
+    y *= 1000.
+
+    command = "echo \"%.3f %.3f\"" % (x, y)
+    command += " | cs2cs +init=epsg:31468 +to +init=epsg:4326 -f %.4f"
+
+    sub = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+
+    line = sub.stdout.readline().split()
+    lon = float(line[0])
+    lat = float(line[1])
+    return (lon, lat)
+
+def formatXTicklabels(x, pos):
     """
     Make a nice formatting for y axis ticklabels: minutes:seconds.microsec
     """
@@ -173,8 +194,8 @@ class PickingGUI:
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
-        #self.drawAllItems()
-        #self.redraw()
+        self.drawAllItems()
+        self.redraw()
         self.togglebuttonShowMap.set_active(True)
 
     def on_buttonDo3dloc_clicked(self, event):
@@ -188,8 +209,22 @@ class PickingGUI:
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
-        #self.drawAllItems()
-        #self.redraw()
+        self.drawAllItems()
+        self.redraw()
+        self.togglebuttonShowMap.set_active(True)
+
+    def on_buttonDoNLLoc_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "NLLoc"
+        self.doNLLoc()
+        self.loadNLLocOutput()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.drawAllItems()
+        self.redraw()
         self.togglebuttonShowMap.set_active(True)
 
     def on_buttonCalcMag_clicked(self, event):
@@ -206,7 +241,8 @@ class PickingGUI:
     def on_togglebuttonShowMap_clicked(self, event):
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag,
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
                               self.buttonNextFocMec,
                               self.togglebuttonShowWadati,
@@ -247,7 +283,8 @@ class PickingGUI:
     def on_togglebuttonShowFocMec_clicked(self, event):
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag,
                               self.buttonDoFocmec, self.togglebuttonShowMap,
                               self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
@@ -297,7 +334,8 @@ class PickingGUI:
     def on_togglebuttonShowWadati_clicked(self, event):
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonCalcMag,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag,
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
                               self.buttonNextFocMec, self.togglebuttonShowMap,
                               self.buttonGetNextEvent, self.buttonSendEvent,
@@ -578,23 +616,31 @@ class PickingGUI:
         if architecture == '32bit':
             self.threeDlocBinaryName = '3dloc_pitsa_32bit'
             self.hyp2000BinaryName = 'hyp2000_32bit'
+            self.focmecScriptName = 'rfocmec_32bit'
+            self.nllocBinaryName = 'NLLoc_32bit'
         elif architecture == '64bit':
             self.threeDlocBinaryName = '3dloc_pitsa_64bit'
             self.hyp2000BinaryName = 'hyp2000_64bit'
+            self.focmecScriptName = 'rfocmec_64bit'
+            self.nllocBinaryName = 'NLLoc_64bit'
         else:
             msg = "Warning: Could not determine architecture (32/64bit). " + \
                   "Using 32bit 3dloc binary."
             warnings.warn(msg)
             self.threeDlocBinaryName = '3dloc_pitsa_32bit'
             self.hyp2000BinaryName = 'hyp2000_32bit'
-
+            self.focmecScriptName = 'rfocmec_32bit'
+            self.nllocBinaryName = 'NLLoc_32bit'
+        
+        #######################################################################
+        # 3dloc ###############################################################
         self.threeDlocPath = self.options.pluginpath + '/3dloc/'
         self.threeDlocPath_D3_VELOCITY = self.threeDlocPath + 'D3_VELOCITY'
         self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
         self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
         self.threeDlocInfile = self.tmp_dir + '3dloc-in'
         # copy 3dloc files to temp directory
-        subprocess.call('cp %s/* %s &> /dev/null' % \
+        subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.threeDlocPath, self.tmp_dir), shell=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
@@ -603,30 +649,45 @@ class PickingGUI:
                 'export D3_VELOCITY_2=%s/;' % \
                 self.threeDlocPath_D3_VELOCITY_2 + \
                 'cd %s; ./%s' % (self.tmp_dir, self.threeDlocBinaryName)
+        #######################################################################
+        # Hyp2000 #############################################################
         self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
-        self.hyp2000Controlfile = self.hyp2000Path + 'bay2000.inp'
+        self.hyp2000Controlfilename = 'bay2000.inp'
         self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
         self.hyp2000Stationsfile = self.tmp_dir + 'stations.dat'
         self.hyp2000Summary = self.tmp_dir + 'hypo.prt'
         # copy hypo2000 files to temp directory
-        subprocess.call('cp %s/* %s &> /dev/null' % \
+        subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.hyp2000Path, self.tmp_dir), shell=True)
         self.hyp2000PreCall = 'rm %s %s %s &> /dev/null' \
                 % (self.hyp2000Phasefile, self.hyp2000Stationsfile,
                    self.hyp2000Summary)
         self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
-                           'cd $HYP2000_DATA;' + \
-                           './%s < bay2000.inp &> /dev/null' % \
-                           self.hyp2000BinaryName
+                'cd $HYP2000_DATA; ./%s < %s &> /dev/null' % \
+                (self.hyp2000BinaryName, self.hyp2000Controlfilename)
+        #######################################################################
+        # NLLoc ###############################################################
+        self.nllocPath = self.options.pluginpath + '/nlloc/'
+        self.nllocControlfilename = 'locate_BY1500.nlloc'
+        self.nllocPhasefile = self.tmp_dir + 'nlloc.obs'
+        self.nllocSummary = self.tmp_dir + 'nlloc.hyp'
+        # copy nlloc files to temp directory
+        subprocess.call('cp -P %s/* %s &> /dev/null' % \
+                (self.nllocPath, self.tmp_dir), shell=True)
+        self.nllocPreCall = 'rm %s/nlloc* &> /dev/null' % (self.tmp_dir)
+        self.nllocCall = 'cd %s; ./%s %s; mv nlloc.*.*.*.loc.hyp %s' % \
+                (self.tmp_dir, self.nllocBinaryName, self.nllocControlfilename,
+                 self.nllocSummary)
+        #######################################################################
+        # focmec ##############################################################
         self.focmecPath = self.options.pluginpath + '/focmec/'
         self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
         self.focmecStdout = self.tmp_dir + 'focmec.stdout'
         self.focmecSummary = self.tmp_dir + 'focmec.out'
         # copy focmec files to temp directory
-        subprocess.call('cp %s/* %s &> /dev/null' % \
+        subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.focmecPath, self.tmp_dir), shell=True)
-        self.focmecCall = 'cd %s;' % (self.tmp_dir) + \
-                          './rfocmec'
+        self.focmecCall = 'cd %s; ./%s' % (self.tmp_dir, self.focmecScriptName)
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictFocalMechanism = {} # currently selected focal mechanism
@@ -751,7 +812,6 @@ class PickingGUI:
                 dict['StaLon'] = lon
                 dict['StaLat'] = lat
                 dict['StaEle'] = ele / 1000. # all depths in km!
-                print dict['StaLon'], dict['StaLat'], dict['StaEle']
                 dict['pazZ'] = self.client.station.getPAZ(net, sta, date,
                         channel_id=st[0].stats.channel)
                 print dict['pazZ']
@@ -831,6 +891,7 @@ class PickingGUI:
         self.buttonClearFocMec = self.gla.get_widget("buttonClearFocMec")
         self.buttonDoHyp2000 = self.gla.get_widget("buttonDoHyp2000")
         self.buttonDo3dloc = self.gla.get_widget("buttonDo3dloc")
+        self.buttonDoNLLoc = self.gla.get_widget("buttonDoNLLoc")
         self.buttonCalcMag = self.gla.get_widget("buttonCalcMag")
         self.buttonDoFocmec = self.gla.get_widget("buttonDoFocmec")
         self.togglebuttonShowMap = self.gla.get_widget("togglebuttonShowMap")
@@ -2308,12 +2369,28 @@ class PickingGUI:
             lat = dict['StaLat']
             ele = dict['StaEle']
             self.coords.append([lon, lat])
+            # if the error picks are not set, we use a default of three samples
+            default_error = 3 / st[0].stats.sampling_rate
             if 'P' in dict:
                 t = st[0].stats.starttime
                 t += dict['P']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
-                delta = dict['PErr2'] - dict['PErr1']
+                if 'PErr1' in dict:
+                    error_1 = dict['PErr1']
+                else:
+                    err = "Warning: Left error pick for P missing. " + \
+                          "Using a default of 3 samples left of P."
+                    self.textviewStdErrImproved.write(err)
+                    error_1 = dict['P'] - default_error
+                if 'PErr2' in dict:
+                    error_2 = dict['PErr2']
+                else:
+                    err = "Warning: Right error pick for P missing. " + \
+                          "Using a default of 3 samples right of P."
+                    self.textviewStdErrImproved.write(err)
+                    error_2 = dict['P'] + default_error
+                delta = error_2 - error_1
                 f.write(fmt % (dict['Station'], 'P', date, delta, lon, lat,
                                ele))
             if 'S' in dict:
@@ -2321,7 +2398,21 @@ class PickingGUI:
                 t += dict['S']
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
-                delta = dict['SErr2'] - dict['SErr1']
+                if 'SErr1' in dict:
+                    error_1 = dict['SErr1']
+                else:
+                    err = "Warning: Left error pick for S missing. " + \
+                          "Using a default of 3 samples left of S."
+                    self.textviewStdErrImproved.write(err)
+                    error_1 = dict['S'] - default_error
+                if 'SErr2' in dict:
+                    error_2 = dict['SErr2']
+                else:
+                    err = "Warning: Right error pick for S missing. " + \
+                          "Using a default of 3 samples right of S."
+                    self.textviewStdErrImproved.write(err)
+                    error_2 = dict['S'] + default_error
+                delta = error_2 - error_1
                 f.write(fmt % (dict['Station'], 'S', date, delta, lon, lat,
                                ele))
         f.close()
@@ -2507,56 +2598,6 @@ class PickingGUI:
         """
         Writes input files for hyp2000 and starts the hyp2000 program via a
         system call.
-        Information on the file formats can be found at:
-        http://geopubs.wr.usgs.gov/open-file/of02-171/of02-171.pdf p.30
-
-        Quote:
-        The traditional USGS phase data input format (not Y2000 compatible)
-        Some fields were added after the original HYPO71 phase format
-        definition.
-        
-        Col. Len. Format Data
-         1    4  A4       4-letter station site code. Also see col 78.
-         5    2  A2       P remark such as "IP". If blank, any P time is
-                          ignored.
-         7    1  A1       P first motion such as U, D, +, -, C, D.
-         8    1  I1       Assigned P weight code.
-         9    1  A1       Optional 1-letter station component.
-        10   10  5I2      Year, month, day, hour and minute.
-        20    5  F5.2     Second of P arrival.
-        25    1  1X       Presently unused.
-        26    6  6X       Reserved remark field. This field is not copied to
-                          output files.
-        32    5  F5.2     Second of S arrival. The S time will be used if this
-                          field is nonblank.
-        37    2  A2, 1X   S remark such as "ES".
-        40    1  I1       Assigned weight code for S.
-        41    1  A1, 3X   Data source code. This is copied to the archive
-                          output.
-        45    3  F3.0     Peak-to-peak amplitude in mm on Develocorder viewer
-                          screen or paper record.
-        48    3  F3.2     Optional period in seconds of amplitude read on the
-                          seismogram. If blank, use the standard period from
-                          station file.
-        51    1  I1       Amplitude magnitude weight code. Same codes as P & S.
-        52    3  3X       Amplitude magnitude remark (presently unused).
-        55    4  I4       Optional event sequence or ID number. This number may
-                          be replaced by an ID number on the terminator line.
-        59    4  F4.1     Optional calibration factor to use for amplitude
-                          magnitudes. If blank, the standard cal factor from
-                          the station file is used.
-        63    3  A3       Optional event remark. Certain event remarks are
-                          translated into 1-letter codes to save in output.
-        66    5  F5.2     Clock correction to be added to both P and S times.
-        71    1  A1       Station seismogram remark. Unused except as a label
-                          on output.
-        72    4  F4.0     Coda duration in seconds.
-        76    1  I1       Duration magnitude weight code. Same codes as P & S.
-        77    1  1X       Reserved.
-        78    1  A1       Optional 5th letter of station site code.
-        79    3  A3       Station component code.
-        82    2  A2       Station network code.
-        84-85 2  A2     2-letter station location code (component extension).
         """
         self.setXMLEventID()
         sub = subprocess.Popen(self.hyp2000PreCall, shell=True,
@@ -2565,112 +2606,24 @@ class PickingGUI:
         err = "".join(sub.stderr.readlines())
         self.textviewStdOutImproved.write(msg)
         self.textviewStdErrImproved.write(err)
+
         f = open(self.hyp2000Phasefile, 'w')
-        f2 = open(self.hyp2000Stationsfile, 'w')
-        network = "BW"
-        #fmt = "RWMOIP?0 091229124412.22       13.99IS?0"
-        fmtP = "%4s%1sP%1s%1i %15s"
-        fmtS = "%12s%1sS%1s%1i\n"
-        #fmt2 = "  BGLD4739.14N01300.75E 930"
-        fmt2 = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
-        #self.coords = []
-        for i, dict in enumerate(self.dicts):
-            sta = dict['Station']
-            lon = dict['StaLon']
-            lon_deg = int(lon)
-            lon_min = (lon - lon_deg) * 60.
-            lat = dict['StaLat']
-            lat_deg = int(lat)
-            lat_min = (lat - lat_deg) * 60.
-            ele = dict['StaEle'] * 1000
-            f2.write(fmt2 % (sta, lat_deg, lat_min, lon_deg, lon_min, ele))
-            if not 'P' in dict and not 'S' in dict:
-                continue
-            if 'P' in dict:
-                t = self.streams[i][0].stats.starttime
-                t += dict['P']
-                date = t.strftime("%y%m%d%H%M%S")
-                date += ".%02d" % (t.microsecond / 1e4 + 0.5)
-                if 'POnset' in dict:
-                    if dict['POnset'] == 'impulsive':
-                        onset = 'I'
-                    elif dict['POnset'] == 'emergent':
-                        onset = 'E'
-                    else: #XXX check for other names correctly!!!
-                        onset = '?'
-                else:
-                    onset = '?'
-                if 'PPol' in dict:
-                    if dict['PPol'] == "up" or dict['PPol'] == "poorup":
-                        polarity = "U"
-                    elif dict['PPol'] == "down" or dict['PPol'] == "poordown":
-                        polarity = "D"
-                    else: #XXX check for other names correctly!!!
-                        polarity = "?"
-                else:
-                    polarity = "?"
-                if 'PWeight' in dict:
-                    weight = int(dict['PWeight'])
-                else:
-                    weight = 0
-                f.write(fmtP % (sta, onset, polarity, weight, date))
-            if 'S' in dict:
-                if not 'P' in dict:
-                    err = "Warning: Trying to print a Hypo2000 phase file " + \
-                          "with an S phase without P phase.\n" + \
-                          "This case might not be covered correctly and " + \
-                          "could screw our file up!"
-                    self.textviewStdErrImproved.write(err)
-                t2 = self.streams[i][0].stats.starttime
-                t2 += dict['S']
-                # if the S time's absolute minute is higher than that of the
-                # P pick, we have to add 60 to the S second count for the
-                # hypo 2000 output file
-                # +60 %60 is necessary if t.min = 57, t2.min = 2 e.g.
-                mindiff = (t2.minute - t.minute + 60) % 60
-                abs_sec = t2.second + (mindiff * 60)
-                if abs_sec > 99:
-                    err = "Warning: S phase seconds are greater than 99 " + \
-                          "which is not covered by the hypo phase file " + \
-                          "format! Omitting S phase of station %s!" % sta
-                    self.textviewStdErrImproved.write(err)
-                    f.write("\n")
-                    continue
-                date2 = str(abs_sec)
-                date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
-                if 'SOnset' in dict:
-                    if dict['SOnset'] == 'impulsive':
-                        onset2 = 'I'
-                    elif dict['SOnset'] == 'emergent':
-                        onset2 = 'E'
-                    else: #XXX check for other names correctly!!!
-                        onset2 = '?'
-                else:
-                    onset2 = '?'
-                if 'SPol' in dict:
-                    if dict['SPol'] == "up" or dict['SPol'] == "poorup":
-                        polarity2 = "U"
-                    elif dict['SPol'] == "down" or dict['SPol'] == "poordown":
-                        polarity2 = "D"
-                    else: #XXX check for other names correctly!!!
-                        polarity2 = "?"
-                else:
-                    polarity2 = "?"
-                if 'SWeight' in dict:
-                    weight2 = int(dict['SWeight'])
-                else:
-                    weight2 = 0
-                f.write(fmtS % (date2, onset2, polarity2, weight2))
-            else:
-                f.write("\n")
+        phases_hypo71 = self.dicts2hypo71Phases()
+        f.write(phases_hypo71)
         f.close()
+
+        f2 = open(self.hyp2000Stationsfile, 'w')
+        stations_hypo71 = self.dicts2hypo71Stations()
+        f2.write(stations_hypo71)
         f2.close()
+
         msg = 'Phases for Hypo2000:'
         self.textviewStdOutImproved.write(msg)
         self.catFile(self.hyp2000Phasefile)
         msg = 'Stations for Hypo2000:'
         self.textviewStdOutImproved.write(msg)
         self.catFile(self.hyp2000Stationsfile)
+
         sub = subprocess.Popen(self.hyp2000Call, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
@@ -2681,12 +2634,255 @@ class PickingGUI:
         self.textviewStdOutImproved.write(msg)
         self.catFile(self.hyp2000Summary)
 
+    def doNLLoc(self):
+        """
+        Writes input files for NLLoc and starts the NonLinLoc program via a
+        system call.
+        """
+        self.setXMLEventID()
+        sub = subprocess.Popen(self.nllocPreCall, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        msg = "".join(sub.stdout.readlines())
+        err = "".join(sub.stderr.readlines())
+        self.textviewStdOutImproved.write(msg)
+        self.textviewStdErrImproved.write(err)
+
+        f = open(self.nllocPhasefile, 'w')
+        phases_hypo71 = self.dicts2hypo71Phases()
+        f.write(phases_hypo71)
+        f.close()
+
+        msg = 'Phases for NLLoc:'
+        self.textviewStdOutImproved.write(msg)
+        self.catFile(self.nllocPhasefile)
+
+        sub = subprocess.Popen(self.nllocCall, shell=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        msg = "".join(sub.stdout.readlines())
+        err = "".join(sub.stderr.readlines())
+        self.textviewStdOutImproved.write(msg)
+        self.textviewStdErrImproved.write(err)
+        msg = '--> NLLoc finished'
+        self.textviewStdOutImproved.write(msg)
+        self.catFile(self.nllocSummary)
+
     def catFile(self, file):
         lines = open(file).readlines()
         msg = ""
         for line in lines:
             msg += line
         self.textviewStdOutImproved.write(msg)
+
+    def loadNLLocOutput(self):
+        lines = open(self.nllocSummary).readlines()
+        if not lines:
+            err = "Error: NLLoc output file (%s) does not exist!" % \
+                    self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        # goto origin time info line
+        try:
+            line = lines.pop(0)
+            while not line.startswith("GEOGRAPHIC  OT"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct location info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        line = line.split()
+        year = int(line[2])
+        month = int(line[3])
+        day = int(line[4])
+        hour = int(line[5])
+        minute = int(line[6])
+        seconds = float(line[7])
+        time = UTCDateTime(year, month, day, hour, minute, seconds)
+
+        # goto location quality info line
+        try:
+            line = lines.pop(0)
+            while not line.startswith("QUALITY"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct location info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        line = line.split()
+        rms = float(line[8])
+        gap = int(line[12])
+
+        # goto location quality info line
+        try:
+            line = lines.pop(0)
+            while not line.startswith("STATISTICS"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct location info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        line = line.split()
+        errorellipse_axis1_azim = float(line[20])
+        errorellipse_axis1_dip = float(line[22])
+        errorellipse_axis1_len = float(line[24])
+        errorellipse_axis2_azim = float(line[26])
+        errorellipse_axis2_dip = float(line[28])
+        errorellipse_axis2_len = float(line[30])
+        errorellipse_axis3_len = float(line[32])
+        # XXX it would be way nicer to calculate the correct XY and Z errors
+        errX = np.mean([errorellipse_axis1_len, errorellipse_axis2_len,
+                        errorellipse_axis3_len])
+        errY = errX
+        errZ = errX
+
+        # goto gaussian expectation origin location info line
+        # XXX should we use the (slightly different) maximum likelihood
+        # XXX hypocenter instead?!
+        try:
+            line = lines.pop(0)
+            while not line.startswith("STAT_GEOG"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct location info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        line = line.split()
+        y = float(line[2])
+        x = float(line[4])
+        depth = - float(line[6]) # depth: negative down!
+        
+        lon, lat = gk2lonlat(x, y)
+        
+        # determine which model was used:
+        controlfile = self.tmp_dir + "/" + self.nllocControlfilename
+        lines2 = open(controlfile).readlines()
+        line2 = lines2.pop()
+        while not line2.startswith("LOCFILES"):
+            line2 = lines2.pop()
+        line2 = line2.split()
+        model = line2[3]
+        model = model.split("/")[-1]
+
+        # assign origin info
+        dO = self.dictOrigin
+        dO['Longitude'] = lon
+        dO['Latitude'] = lat
+        dO['Depth'] = depth
+        dO['Longitude Error'] = errX
+        dO['Latitude Error'] = errY
+        dO['Depth Error'] = errZ
+        dO['Standarderror'] = rms #XXX stimmt diese Zuordnung!!!?!
+        dO['Azimuthal Gap'] = gap
+        dO['Depth Type'] = "from location program"
+        dO['Earth Model'] = model
+        dO['Time'] = time
+        
+        # goto synthetic phases info lines
+        try:
+            line = lines.pop(0)
+            while not line.startswith("PHASE ID"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct synthetic phase info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+
+        # remove all non phase-info-lines from bottom of list
+        try:
+            badline = lines.pop()
+            while not badline.startswith("END_PHASE"):
+                badline = lines.pop()
+        except:
+            err = "Error: Could not remove unwanted lines at bottom of " + \
+                  "NLLoc outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        dO['used P Count'] = 0
+        dO['used S Count'] = 0
+
+        # go through all phase info lines
+        for line in lines:
+            line = line.split()
+            # check which type of phase
+            if line[4] == "P":
+                type = "P"
+            elif line[4] == "S":
+                type = "S"
+            else:
+                continue
+            # get values from line
+            station = line[0]
+            azimuth = float(line[22])
+            # XXX no incident info?!?
+            incident = 0.
+            if line[3] == "I":
+                onset = "impulsive"
+            elif line[3] == "E":
+                onset = "emergent"
+            else:
+                onset = None
+            if line[5] == "U":
+                polarity = "up"
+            elif line[5] == "D":
+                polarity = "down"
+            else:
+                polarity = None
+            res = float(line[16])
+            weight = float(line[17])
+
+            # search for streamnumber corresponding to pick
+            streamnum = None
+            for i, dict in enumerate(self.dicts):
+                if station.strip() != dict['Station']:
+                    continue
+                else:
+                    streamnum = i
+                    break
+            if streamnum is None:
+                err = "Warning: Did not find matching stream for pick " + \
+                      "data with station id: \"%s\"" % station.strip()
+                self.textviewStdErrImproved.write(err)
+                continue
+            
+            # assign synthetic phase info
+            dict = self.dicts[streamnum]
+            if type == "P":
+                dO['used P Count'] += 1
+                dict['Psynth'] = res + dict['P']
+                dict['Pres'] = res
+                dict['PAzim'] = azimuth
+                dict['PInci'] = incident
+                if onset:
+                    dict['POnset'] = onset
+                if polarity:
+                    dict['PPol'] = polarity
+                # we use weights 0,1,2,3 but NLLoc outputs floats...
+                dict['PsynthWeight'] = weight
+            elif type == "S":
+                dO['used S Count'] += 1
+                dict['Ssynth'] = res + dict['S']
+                dict['Sres'] = res
+                dict['SAzim'] = azimuth
+                dict['SInci'] = incident
+                if onset:
+                    dict['SOnset'] = onset
+                if polarity:
+                    dict['SPol'] = polarity
+                # we use weights 0,1,2,3 but NLLoc outputs floats...
+                dict['SsynthWeight'] = weight
+        dO['used Station Count'] = len(self.dicts)
+        for dict in self.dicts:
+            if not ('Psynth' in dict or 'Ssynth' in dict):
+                dO['used Station Count'] -= 1
 
     def loadHyp2000Data(self):
         #self.load3dlocSyntheticPhases()
@@ -3240,6 +3436,175 @@ class PickingGUI:
         #event.artist.set_facecolors(self.eventMapColors)
         self.updateNetworkMag()
         self.canv.draw()
+    
+    def dicts2hypo71Stations(self):
+        """
+        Returns the station location information in self.dicts in hypo71
+        stations file format as a string. This string can then be written to
+        a file.
+        """
+        fmt = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
+        hypo71_string = ""
+
+        for i, dict in enumerate(self.dicts):
+            sta = dict['Station']
+            lon = dict['StaLon']
+            lon_deg = int(lon)
+            lon_min = (lon - lon_deg) * 60.
+            lat = dict['StaLat']
+            lat_deg = int(lat)
+            lat_min = (lat - lat_deg) * 60.
+            # hypo 71 format uses elevation in meters not kilometers
+            ele = dict['StaEle'] * 1000
+            hypo71_string += fmt % (sta, lat_deg, lat_min, lon_deg, lon_min,
+                                    ele)
+
+        return hypo71_string
+    
+    def dicts2hypo71Phases(self):
+        """
+        Returns the pick information in self.dicts in hypo71 phase file format
+        as a string. This string can then be written to a file.
+
+        Information on the file formats can be found at:
+        http://geopubs.wr.usgs.gov/open-file/of02-171/of02-171.pdf p.30
+
+        Quote:
+        The traditional USGS phase data input format (not Y2000 compatible)
+        Some fields were added after the original HYPO71 phase format
+        definition.
+        
+        Col. Len. Format Data
+         1    4  A4       4-letter station site code. Also see col 78.
+         5    2  A2       P remark such as "IP". If blank, any P time is
+                          ignored.
+         7    1  A1       P first motion such as U, D, +, -, C, D.
+         8    1  I1       Assigned P weight code.
+         9    1  A1       Optional 1-letter station component.
+        10   10  5I2      Year, month, day, hour and minute.
+        20    5  F5.2     Second of P arrival.
+        25    1  1X       Presently unused.
+        26    6  6X       Reserved remark field. This field is not copied to
+                          output files.
+        32    5  F5.2     Second of S arrival. The S time will be used if this
+                          field is nonblank.
+        37    2  A2, 1X   S remark such as "ES".
+        40    1  I1       Assigned weight code for S.
+        41    1  A1, 3X   Data source code. This is copied to the archive
+                          output.
+        45    3  F3.0     Peak-to-peak amplitude in mm on Develocorder viewer
+                          screen or paper record.
+        48    3  F3.2     Optional period in seconds of amplitude read on the
+                          seismogram. If blank, use the standard period from
+                          station file.
+        51    1  I1       Amplitude magnitude weight code. Same codes as P & S.
+        52    3  3X       Amplitude magnitude remark (presently unused).
+        55    4  I4       Optional event sequence or ID number. This number may
+                          be replaced by an ID number on the terminator line.
+        59    4  F4.1     Optional calibration factor to use for amplitude
+                          magnitudes. If blank, the standard cal factor from
+                          the station file is used.
+        63    3  A3       Optional event remark. Certain event remarks are
+                          translated into 1-letter codes to save in output.
+        66    5  F5.2     Clock correction to be added to both P and S times.
+        71    1  A1       Station seismogram remark. Unused except as a label
+                          on output.
+        72    4  F4.0     Coda duration in seconds.
+        76    1  I1       Duration magnitude weight code. Same codes as P & S.
+        77    1  1X       Reserved.
+        78    1  A1       Optional 5th letter of station site code.
+        79    3  A3       Station component code.
+        82    2  A2       Station network code.
+        84-85 2  A2     2-letter station location code (component extension).
+        """
+
+        fmtP = "%4s%1sP%1s%1i %15s"
+        fmtS = "%12s%1sS%1s%1i\n"
+        hypo71_string = ""
+
+        for i, dict in enumerate(self.dicts):
+            sta = dict['Station']
+            if not 'P' in dict and not 'S' in dict:
+                continue
+            if 'P' in dict:
+                t = self.streams[i][0].stats.starttime
+                t += dict['P']
+                date = t.strftime("%y%m%d%H%M%S")
+                date += ".%02d" % (t.microsecond / 1e4 + 0.5)
+                if 'POnset' in dict:
+                    if dict['POnset'] == 'impulsive':
+                        onset = 'I'
+                    elif dict['POnset'] == 'emergent':
+                        onset = 'E'
+                    else: #XXX check for other names correctly!!!
+                        onset = '?'
+                else:
+                    onset = '?'
+                if 'PPol' in dict:
+                    if dict['PPol'] == "up" or dict['PPol'] == "poorup":
+                        polarity = "U"
+                    elif dict['PPol'] == "down" or dict['PPol'] == "poordown":
+                        polarity = "D"
+                    else: #XXX check for other names correctly!!!
+                        polarity = "?"
+                else:
+                    polarity = "?"
+                if 'PWeight' in dict:
+                    weight = int(dict['PWeight'])
+                else:
+                    weight = 0
+                hypo71_string += fmtP % (sta, onset, polarity, weight, date)
+            if 'S' in dict:
+                if not 'P' in dict:
+                    err = "Warning: Trying to print a Hypo2000 phase file " + \
+                          "with an S phase without P phase.\n" + \
+                          "This case might not be covered correctly and " + \
+                          "could screw our file up!"
+                    self.textviewStdErrImproved.write(err)
+                t2 = self.streams[i][0].stats.starttime
+                t2 += dict['S']
+                # if the S time's absolute minute is higher than that of the
+                # P pick, we have to add 60 to the S second count for the
+                # hypo 2000 output file
+                # +60 %60 is necessary if t.min = 57, t2.min = 2 e.g.
+                mindiff = (t2.minute - t.minute + 60) % 60
+                abs_sec = t2.second + (mindiff * 60)
+                if abs_sec > 99:
+                    err = "Warning: S phase seconds are greater than 99 " + \
+                          "which is not covered by the hypo phase file " + \
+                          "format! Omitting S phase of station %s!" % sta
+                    self.textviewStdErrImproved.write(err)
+                    hypo71_string += "\n"
+                    continue
+                date2 = str(abs_sec)
+                date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
+                if 'SOnset' in dict:
+                    if dict['SOnset'] == 'impulsive':
+                        onset2 = 'I'
+                    elif dict['SOnset'] == 'emergent':
+                        onset2 = 'E'
+                    else: #XXX check for other names correctly!!!
+                        onset2 = '?'
+                else:
+                    onset2 = '?'
+                if 'SPol' in dict:
+                    if dict['SPol'] == "up" or dict['SPol'] == "poorup":
+                        polarity2 = "U"
+                    elif dict['SPol'] == "down" or dict['SPol'] == "poordown":
+                        polarity2 = "D"
+                    else: #XXX check for other names correctly!!!
+                        polarity2 = "?"
+                else:
+                    polarity2 = "?"
+                if 'SWeight' in dict:
+                    weight2 = int(dict['SWeight'])
+                else:
+                    weight2 = 0
+                hypo71_string += fmtS % (date2, onset2, polarity2, weight2)
+            else:
+                hypo71_string += "\n"
+
+        return hypo71_string
 
     def dicts2XML(self):
         """
@@ -3313,8 +3678,7 @@ class PickingGUI:
                 if 'Psynth' in dict:
                     Sub(pick, "phase_compu").text = phase_compu
                     Sub(Sub(pick, "phase_res"), "value").text = str(dict['Pres'])
-                    if self.dictOrigin['Program'] == "hyp2000" and \
-                       'PsynthWeight' in dict:
+                    if 'PsynthWeight' in dict:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(dict['PsynthWeight'])
                     else:
