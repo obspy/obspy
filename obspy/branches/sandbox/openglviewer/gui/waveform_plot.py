@@ -33,7 +33,7 @@ class WaveformPlot(GUIElement):
         # Path to the files.
         self.id = kwargs.get('id', None)
         # Prepare the data.
-        self.stream = None
+        self.stream = kwargs.get('stream', None)
         self.readAndMergeData()
         if self.stream is None:
             msg = 'Error fetching %s.%s.%s.%s from %s' % (self.id[0],
@@ -41,7 +41,7 @@ class WaveformPlot(GUIElement):
             self.win.status_bar.setError(msg)
             del self
         # Height of plot.
-        self.height = kwargs.get('height', 40)
+        self.height = kwargs.get('height', 80)
         # Inner padding. Currently used for top, bottom and left border.
         self.pad = kwargs.get('pad', 2)
         # Bind to waveform list of window.
@@ -101,25 +101,8 @@ class WaveformPlot(GUIElement):
         """
         Reads the data to self.stream
         """
-        try:
-            stream = self.win.seishub.getPreview(self.id)
-        except:
-            # XXX: Need to use the Error handling object.
-            self.win.status_bar.error_text = "Reading failed."
-            return
-        # XXX: Not a real world test case.
-        if len(stream) == 0:
-            return
-        for tr in stream:
-            tr.data = np.require(tr.data, 'float32')
-        try:
-            stream.merge()
-        except:
-            self.win.status_bar.error_text = "Merging failed."
-            return
-        self.stream = stream
         # Copy the stream to always have an original version.
-        self.org_stream = deepcopy(stream)
+        self.org_stream = deepcopy(self.stream)
 
     def createMinMaxList(self):
         """

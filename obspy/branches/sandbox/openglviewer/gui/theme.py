@@ -53,15 +53,19 @@ default.background_colors[state.activated] = [255,255,255,150]*4
 
 # --- ObsPy  Database viewer---
 database = Style()
-database.colors[state.default]      = [255,255,255,255]
-database.foreground_colors[state.default]   = [255,255,255,20]*8
-database.background_colors[state.default]   = [255,255,255,20]*4
-database.colors[state.focused]      = [255,255,255,255]
-database.foreground_colors[state.focused]   = [255,255,255,100]*8
-database.background_colors[state.focused]   = [255,255,255,100]*4
-database.colors[state.activated]    = [255,255,255,255]
-database.foreground_colors[state.activated] = [255,255,255,150]*8
-database.background_colors[state.activated] = [255,255,255,150]*4
+database.halign = 0.5
+database.font_size = 10
+database.colors[state.default]      = [0,0,0,255]
+database.foreground_colors[state.default]   = [155,155,155,255]*8
+#database.background_colors[state.default]   = [195,195,195,255]*4
+database.background_colors[state.default]   = [100,100,100,255,
+                                               100,100,100,255,130,130,130,255,130,130,130,255]
+database.colors[state.focused]      = [50,50,50,255]
+database.foreground_colors[state.focused]   = [155,155,155,100]*8
+database.background_colors[state.focused]   = [200,200,200,255]*4
+database.colors[state.activated]    = [155,155,155,255]
+database.foreground_colors[state.activated] = [155,155,155,150]*8
+database.background_colors[state.activated] = [100,100,100,255]*4
 
 # --- Window ---
 Window = Style()

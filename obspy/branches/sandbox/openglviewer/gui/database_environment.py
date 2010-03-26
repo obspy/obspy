@@ -3,7 +3,6 @@
 
 import os
 from time import time
-from utils import get_channels
 
 class DatabaseEnvironment(object):
     """
@@ -16,12 +15,8 @@ class DatabaseEnvironment(object):
         self.errorHandler = ErrorHandler()
 
     def setPath(self, base_path):
-        self.path = base_path
-        self.paths = get_channels(base_path)
         self.seishub_server = 'http://localhost:7777'
         self.cache_dir = 'cache'
-            
-
 
 class Error(object):
     """
@@ -34,14 +29,12 @@ class Error(object):
         self.timestamp = time()
         self.msg = msg
 
-
 class CaughtException(Exception):
     """
     This error is used for Exceptions that will be handled by the error
     handler.
     """
     pass
-
 
 class ErrorHandler(object):
     """

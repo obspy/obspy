@@ -29,16 +29,17 @@ class Seishub(GUIElement):
         del self.networks['Server']
         self.env.networks = self.networks
 
-    def getPreview(self, id):
-        network = id[0]
-        station = id[1]
-        location = id[2]
-        channel = id[3]
+    def getPreview(self, network, station, location, channel, starttime,
+                   endtime):
+        if not starttime:
+            starttime = self.win.starttime
+        if not endtime:
+            endtime = self.win.endtime
         print network, station, location, channel
         print self.win.starttime
         print self.win.endtime
         stream = self.client.waveform.getPreview(network, station, location, channel,
-                                      self.win.starttime, self.win.endtime)
+                                      starttime, endtime)
         print stream
         return stream
 

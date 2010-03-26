@@ -7,7 +7,6 @@ from waveform_plot import WaveformPlot
 from dialog import Dialog
 import theme
 import glydget
-from utils import add_plot
 
 class Menu(GUIElement):
     """
@@ -21,6 +20,12 @@ class Menu(GUIElement):
         """
         Creates the Menu.
         """
+        # Some helper variables.
+        geo = self.win.geometry
+        self.available_heigth = self.win.window.height - 2 *\
+            geo.vertical_margin - geo.status_bar_height
+        self.y_start = self.win.window.height - self.win.geometry.vertical_margin
+        # Get the Index from the Server.
         self._getIndex()
         # Various calls to show and position the menu.
         self.menu.show(batch = self.batch, group = self.group)
@@ -107,7 +112,7 @@ class Menu(GUIElement):
             """
             channel = button.text[-3:] + '.D'
             network = button.parent.parent.parent.title.text.split()[-1]
-            add_plot(self.win, network, '*', channel)
+            self.win.utils.add_plot(network, '*', channel)
 
         def on_toggle(button):
             """
@@ -128,9 +133,9 @@ class Menu(GUIElement):
                 for sub_channel in button.parent.parent.children:
                     chan = sub_channel.children[0].text
                     if chan == 'EHE' or chan == 'EHN' or chan == 'EHZ':
-                        add_plot(self.win, network, station, location, chan)
+                        self.win.utils.add_plot(network, station, location, chan)
             else:
-                add_plot(self.win, network, station, location, channel)
+                self.win.utils.add_plot(network, station, location, channel)
 
         def delete_all(button):
             """
@@ -172,6 +177,7 @@ class Menu(GUIElement):
                     channels.sort()
                     for channel in channels[0]:
                         button = glydget.ToggleButton(channel, False, on_toggle)
+                        button.style = theme.database
                         channels_list.append(glydget.HBox([button],
                                              homogeneous = False))
                     if location:
@@ -182,17 +188,23 @@ class Menu(GUIElement):
                           glydget.VBox(channels_list, homogeneous = False), active\
                                         = False)
                     box.title.style.font_size = 8
+                    box.style = theme.database
                     station_list.append(box)
             network_box = glydget.Folder(network,
                           glydget.VBox(station_list, homogeneous = False),
                                          active = False)
+            network_box.style = theme.database
             network_list.append(network_box)
         # Menu to select the times.
         start = glydget.Entry(str(self.win.starttime))
         end = glydget.Entry(str(self.win.endtime))
+        start.style = theme.database
+        end.style = theme.database
         time_button = glydget.Button('OK', self.change_times)
-        times = glydget.VBox([glydget.Label('Select Timeframe:'), start,
-                      end, time_button], homogeneous=False)
+        time_button.style = theme.database
+        time_label =glydget.Label('Select Timeframe:')
+        time_label.style = theme.database
+        times = glydget.VBox([time_label, start, end, time_button], homogeneous=False)
         # Add buttons to change the scale.
         self.normalScaleButton = glydget.ToggleButton('normal', False,
                                      self.change_scale)
@@ -216,26 +228,36 @@ class Menu(GUIElement):
                                      self.normalScaleButton,
                                      self.logScaleButton],
                                      homogeneous = False)
+        scaleButtons.style = theme.database
         deleteButton = glydget.Button('Delete all', delete_all)
+        deleteButton.style = theme.database
         # Button and input field to change the detail.
-        detailBox = glydget.HBox([glydget.Label('Detail:'),
-                                  glydget.Entry(str(self.win.detail)),
-                                  glydget.Button('OK', self.change_detail)],
+        detail_label = glydget.Label('Detail:')
+        detail_box = glydget.Entry(str(self.win.detail))
+        detail_button = glydget.Button('OK', self.change_detail)
+        detail_label.style = theme.database
+        detail_box.style = theme.database
+        detail_button.style = theme.database
+        detailBox = glydget.HBox([detail_label, detail_box, detail_button],
                                   homogeneous = False)
         seperator1 = \
                 glydget.Label('----------------------------------------------')
+        seperator1.style = theme.database
         seperator2 = \
                 glydget.Label('----------------------------------------------')
+        seperator2.style = theme.database
         options = glydget.Label('Options:')
+        seperator2.style = theme.database
         items = [times, seperator1, deleteButton]
         items.extend(network_list)
         items.extend([seperator2, options, scaleButtons])
         items.append(detailBox)
         # Button to enter the options menu.
         optionsButton = glydget.Button('Options', self.openOptionsMenu)
+        optionsButton.style = theme.database
         items.append(optionsButton)
         self.menu = glydget.VBox(items, homogeneous = False)
-        self.menu.style = glydget.theme.debug
+        self.menu.style = theme.database
         # Fixed width and variable height.
         self.menu.resize(self.win.geometry.menu_width, 1)
 
@@ -243,16 +265,26 @@ class Menu(GUIElement):
         """
         Scrolls the Menu.
         """
+        geo = self.win.geometry
         new_y_pos = self.menu.y - 3 * scroll_y
-        max_height =  self.win.window.height - self.win.geometry.vertical_margin
-        if new_y_pos > max_height:
-            new_y_pos = max_height
+        total_height = self.menu.height + geo.vertical_margin + \
+                       geo.status_bar_height
+        if new_y_pos > total_height:
+            new_y_pos = total_height
+        if self.menu.height <= self.available_heigth\
+                or new_y_pos < self.y_start:
+            new_y_pos = self.y_start
         self.menu.move(self.menu.x, new_y_pos)
 
     def resize(self, width, height):
         """
         Handles the resizing.
         """
+        # Some helper variables for the scrolling of the menu.
+        geo = self.win.geometry
+        self.available_heigth = self.win.window.height - 2 *\
+            geo.vertical_margin - geo.status_bar_height
+        self.y_start = self.win.window.height - self.win.geometry.vertical_margin
         x_pos = self.win.window.width
         self.menu.move(x_pos - self.win.geometry.menu_width -\
                        self.win.geometry.horizontal_margin -\

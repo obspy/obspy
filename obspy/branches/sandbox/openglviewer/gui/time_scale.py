@@ -374,7 +374,7 @@ class TimeScale(GUIElement):
                 # Add to list for easier tracking.
                 self.day_boxes.append((day_box, start_frac, end_frac))
             # If two narrow do not add a name.
-            if graph_width < 12:
+            if graph_width < 13:
                 continue
             # Add name.
             name = str(today.day)

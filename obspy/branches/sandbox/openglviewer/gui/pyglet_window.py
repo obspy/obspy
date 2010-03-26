@@ -9,6 +9,7 @@ from background import Background
 from scroll_bar import ScrollBar
 from seishub import Seishub
 from time_scale import TimeScale
+from utils import Utils
 
 class PygletWindow(object):
     """
@@ -22,6 +23,7 @@ class PygletWindow(object):
         self.env = env
         # Create geometry instance.
         self.geometry = Geometry()
+        geo = self.geometry
         # Read quarks and set default values.
         self._setDefaultValues(**kwargs)
         # Create the window.
@@ -33,6 +35,10 @@ class PygletWindow(object):
         # Create the ordered groups used to get a layer like drawing of the
         # window.
         self._createdOrderedGroups()
+        # Create Utils class.
+        self.utils = Utils(parent = self, group = 1)
+        # Connect to SeisHub Server.
+        self.seishub = Seishub(parent = self, group = 1)
         # Add a background and add it to group 0.
         Background(parent = self, group = 0)
         # Create status bar if desired.
@@ -48,13 +54,11 @@ class PygletWindow(object):
         self.current_view_span = self.window.height - self.status_bar.height
         # Add a scroll bar. Should also always be on top.
         self.scroll_bar = ScrollBar(parent = self, group = 999)
-        # Connect to SeisHub Server.
-        self.seishub = Seishub(parent = self, group = 1)
         # Add the menu.
         self.menu = Menu(parent = self, group = 999, width = self.geometry.menu_width)
+        geo.menu_width = self.menu.menu.width
         # Add the Time Scale.
         self.time_scale = TimeScale(parent = self, group = 999)
-        geo = self.geometry
         # Start of menu.
         self.menu_start = self.window.width - (geo.menu_width +\
                     geo.horizontal_margin + geo.scroll_bar_width)
@@ -64,9 +68,9 @@ class PygletWindow(object):
         Sets some global OpenGL states.
         """
         # Enable transparency.
-        pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
-                              pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
-        pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+        #pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
+        #                      pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+        #pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 
 
     def getGroup(self, index):
@@ -113,7 +117,7 @@ class PygletWindow(object):
         # Start- and Endtime of the plots. Needs to be stored into the window
         # object because it has to be the same for all traces.
         self.starttime = kwargs.get('starttime', UTCDateTime(2010,1,1))
-        self.endtime = kwargs.get('endtime', UTCDateTime(2010,3,1) - 1.0)
+        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,20) - 1.0)
         # Waveform Layer. Waveforms will need some more layers. I will just add
         # three.
         # XXX: Maybe switch to some more elegant solution.
@@ -223,7 +227,7 @@ class Geometry(object):
         # Width of the scroll_bar.
         self.scroll_bar_width = kwargs.get('scroll_bar_width', 10)
         # Width of the menu
-        self.menu_width = kwargs.get('menu_width', 235)
+        self.menu_width = kwargs.get('menu_width', 10)
         # Height of the time_scale.
         self.time_scale = 63
         # Height of the status_bar.
