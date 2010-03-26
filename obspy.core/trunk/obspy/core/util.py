@@ -12,8 +12,8 @@ from pkg_resources import require, iter_entry_points
 import ctypes as C
 import numpy as np
 import os
-import tempfile
 import sys
+import tempfile
 
 
 _sys_is_le = sys.byteorder == 'little'
@@ -62,6 +62,8 @@ class AttribDict(dict, object):
         super(AttribDict, self).__setitem__(key, value)
 
     def __getitem__(self, name):
+        if name in self.readonly:
+            return self.__dict__[name]
         return super(AttribDict, self).__getitem__(name)
 
     def __delitem__(self, name):

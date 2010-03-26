@@ -107,6 +107,10 @@ class Stats(AttribDict):
         Traceback (most recent call last):
         ...
         AttributeError: Attribute "endtime" in Stats object is read only!
+        >>> stats['endtime'] = UTCDateTime(2009, 1, 1, 12, 0, 0)
+        Traceback (most recent call last):
+        ...
+        AttributeError: Attribute "endtime" in Stats object is read only!
 
     (4)
         The attribute ``npts`` will be automatically updated from the 
@@ -121,6 +125,9 @@ class Stats(AttribDict):
     """
 
     readonly = ['endtime']
+    sampling_rate = 1.0
+    starttime = UTCDateTime(0)
+    npts = 0
 
     def __init__(self, header={}):
         """
@@ -141,10 +148,6 @@ class Stats(AttribDict):
     def __setitem__(self, key, value):
         """
         """
-        # filter read only attributes
-        if key in self.readonly:
-            msg = "Attribute \"%s\" in Stats object is read only!" % (key)
-            raise AttributeError(msg)
         # keys which need to refresh derived values
         if key in ['delta', 'sampling_rate', 'starttime', 'npts']:
             # ensure correct data type
@@ -184,7 +187,16 @@ class Stats(AttribDict):
         else:
             delta = (self.npts - 1) / float(self.sampling_rate)
         endtime = self.starttime + delta
-        super(Stats, self).__setitem__('endtime', endtime)
+        self.__dict__['endtime'] = endtime
+
+    def setEndtime(self, value):
+        msg = "Attribute \"endtime\" in Stats object is read only!"
+        raise AttributeError(msg)
+
+    def getEndtime(self):
+        return self.__dict__['endtime']
+
+    endtime = property(getEndtime, setEndtime)
 
 
 class Trace(object):
@@ -576,7 +588,7 @@ class Trace(object):
         # check if in boundary
         delta = int(math.floor(round((endtime - self.stats.endtime) * \
                                self.stats.sampling_rate, 7)))
-        if delta == 0 or (delta>0 and not pad):
+        if delta == 0 or (delta > 0 and not pad):
             return
         if delta > 0 and pad:
             try:

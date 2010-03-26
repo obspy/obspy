@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
 from obspy.core import Stats, Stream, Trace
 from obspy.core.util import AttribDict
 import copy
@@ -175,9 +174,17 @@ class StatsTestCase(unittest.TestCase):
         stats = Stats()
         stats.muh = 1
         stats['maeh'] = 'hallo'
-        picklestring = pickle.dumps(stats)
-        fp = StringIO(picklestring)
-        stats2 = pickle.load(fp)
+        # ASCII
+        temp = pickle.dumps(stats, protocol=0)
+        stats2 = pickle.loads(temp)
+        self.assertEquals(stats, stats2)
+        # old binary
+        temp = pickle.dumps(stats, protocol=1)
+        stats2 = pickle.loads(temp)
+        self.assertEquals(stats, stats2)
+        # new binary
+        temp = pickle.dumps(stats, protocol=2)
+        stats2 = pickle.loads(temp)
         self.assertEquals(stats, stats2)
 
 
