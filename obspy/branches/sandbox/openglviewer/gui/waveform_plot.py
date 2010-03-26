@@ -224,7 +224,8 @@ class WaveformPlot(GUIElement):
         # Create an array containing the quad coordinates for each vertical
         # line.
         quads = np.empty(self.win.detail * 8)
-        # Write the x_values.
+        # Write the x_values. They will go from 0 to 100 and later be stretched
+        # with OpenGL calls.
         x_values = np.linspace(0, 100, self.win.detail + 1)
         quads[0::8] = x_values[:-1]
         quads[2::8] = x_values[:-1]

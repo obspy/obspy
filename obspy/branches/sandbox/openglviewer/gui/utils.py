@@ -3,6 +3,7 @@
 
 from gui_element import GUIElement
 import numpy as np
+from obspy.core import Stream, UTCDateTime
 import pickle
 import os
 from waveform_plot import WaveformPlot
@@ -57,6 +58,9 @@ class Utils(GUIElement):
         files = [file for file in files if file[-7:] == '--cache' and file.split('--')[0] == '%s[%s]' % (channel, location)]
         # If not file exists move on.
         if len(files) == 0:
+            if self.env.debug:
+                print ' * No cached file found for %s.%s.%s.%s' \
+                    % (network, station, location, channel)
             stream = self.getWaveform(network, station, location, channel, station_path)
         else:
             # Otherwise figure out if the requested time span is already cached.
@@ -79,37 +83,54 @@ class Utils(GUIElement):
             # Load all cached files.
             stream = self.loadFiles(times)
             # Get the gaps.
-            stream += self.loadGaps(missing_time_frames)
+            if missing_time_frames:
+                if self.env.debug:
+                    print ' * Only partially cached file found for %s.%s.%s.%s.' \
+                          % (network, station, location, channel) +\
+                          ' Requesting the rest from SeisHub...'
+                stream += self.loadGaps(missing_time_frames, network, station,
+                                        location, channel)
+            else:
+                if self.env.debug:
+                    print ' * Cached file found for %s.%s.%s.%s' \
+                        % (network, station, location, channel)
             # Merge everything and pickle once again.
             stream.merge(method = 1, interpolation_samples = -1)
             # Pickle the stream object for future reference. Do not pickle it if it
             # is smaller than 200 samples. Just not worth the hassle.
             if stream[0].stats.npts > 200:
+                # Delete all the old files.
+                for _, _, file in times:
+                    os.remove(file)
                 filename = os.path.join(station_path, '%s[%s]--%s--%s--cache' % \
                             (channel, location, str(stream[0].stats.starttime.timestamp),
                              str(stream[0].stats.endtime.timestamp)))
                 file = open(filename, 'wb')
-                pickle.dump(stream, file, 2)
+                pickle.dump(stream, file, 0)
                 file.close()
         if len(stream):
             WaveformPlot(parent = self.win, group = 2, stream = stream)
 
-    def loadGaps(frames, network, station, location, channel):
+    def loadGaps(self, frames, network, station, location, channel):
         """
         Returns a stream object that will contain all time spans from the
         provided list.
         """
         streams = []
-        for frame in missing_time_frames:
+        for frame in frames:
             temp = self.win.seishub.getPreview(network, station, location,
-                                        channel, frames[0], frames[1])
-            # Convert to float32.
-            temp[0].data = np.require(temp[0].data)
-            streams.append(temp)
-        stream = streams[0]
-        if len(streams) > 1:
-            for _i in streams[1:]:
-                stream += _i
+                        channel, UTCDateTime(frame[0]), UTCDateTime(frame[1]))
+            # Convert to float32
+            if len(temp):
+                temp[0].data = np.require(temp[0].data, 'float32')
+                streams.append(temp)
+        if len(streams):
+            stream = streams[0]
+            if len(streams) > 1:
+                for _i in streams[1:]:
+                    stream += _i
+        else:
+            stream = Stream()
         return stream
 
 
@@ -145,7 +166,8 @@ class Utils(GUIElement):
                         (channel, location, str(stream[0].stats.starttime.timestamp),
                          str(stream[0].stats.endtime.timestamp)))
             file = open(filename, 'wb')
-            pickle.dump(stream, file, 2)
+            # There is some problem with protocol 2.
+            pickle.dump(stream, file, 0)
             file.close()
         return stream
 

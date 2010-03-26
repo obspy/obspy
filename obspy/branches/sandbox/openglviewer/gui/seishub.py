@@ -35,12 +35,19 @@ class Seishub(GUIElement):
             starttime = self.win.starttime
         if not endtime:
             endtime = self.win.endtime
-        print network, station, location, channel
-        print self.win.starttime
-        print self.win.endtime
+        if self.env.debug:
+            print '==========================================================='
+            print 'Requesting %s.%s.%s.%s' % \
+                    (network, station, location, channel)
+            print ' * from %s-%s' % (starttime, endtime)
+            print ' * SeisHub Server = %s' % self.env.seishub_server
         stream = self.client.waveform.getPreview(network, station, location, channel,
                                       starttime, endtime)
-        print stream
+        if self.env.debug:
+            print ''
+            print ' * Received from Seishub:'
+            print stream
+            print '==========================================================='
         return stream
 
     def connectToServer(self):

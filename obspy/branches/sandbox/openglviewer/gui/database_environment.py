@@ -11,12 +11,12 @@ class DatabaseEnvironment(object):
     Also used to store global variables since they are available to all other
     methods.
     """
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.errorHandler = ErrorHandler()
-
-    def setPath(self, base_path):
+        # Some globally available variables.
         self.seishub_server = 'http://localhost:7777'
         self.cache_dir = 'cache'
+        self.debug = kwargs.get('debug', False)
 
 class Error(object):
     """

@@ -16,9 +16,7 @@ if __name__ == '__main__':
 
     # Launch the globally available Environment class which later needs to be
     # given as an argument to most other class instances.
-    env = DatabaseEnvironment()
-    # Path to be accesseable by all submodules.
-    env.setPath(preview_path + '2010/')
+    env = DatabaseEnvironment(debug = True)
         
     # Set the window.
     win = PygletWindow(env = env)
