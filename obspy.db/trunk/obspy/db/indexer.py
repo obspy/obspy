@@ -320,7 +320,8 @@ class WaveformFileCrawler:
                 try:
                     db_file_mtime = self._db_files.pop(file)
                 except:
-                    return
+                    pass
+                return
         # compare with database entries
         if file not in self._db_files.keys():
             # file does not exists in database -> add file
