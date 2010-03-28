@@ -16,7 +16,6 @@ Polarization Analysis
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from scipy import stats
 import numpy as np
 
 
@@ -45,12 +44,15 @@ def eigval(datax, datay, dataz, normf=1):
     plan = np.zeros(datax.shape[0], dtype='float64')
     i = 0
     for i in xrange(datax.shape[0]):
-        covmat[0][0] = stats.cov(datax[i, :], datax[i, :])
-        covmat[0][1] = covmat[1][0] = stats.cov(datax[i, :], datay[i, :])
-        covmat[0][2] = covmat[2][0] = stats.cov(datax[i, :], dataz[i, :])
-        covmat[1][1] = stats.cov(datay[i, :], datay[i, :])
-        covmat[1][2] = covmat[2][1] = stats.cov(dataz[i, :], datay[i, :])
-        covmat[2][2] = stats.cov(dataz[i, :], dataz[i, :])
+        covmat[0][0] = np.cov(datax[i, :], rowvar=False)
+        covmat[0][1] = covmat[1][0] = np.cov(datax[i, :], datay[i, :],
+                                             rowvar=False)[0, 1]
+        covmat[0][2] = covmat[2][0] = np.cov(datax[i, :], dataz[i, :],
+                                             rowvar=False)[0, 1]
+        covmat[1][1] = np.cov(datay[i, :], rowvar=False)
+        covmat[1][2] = covmat[2][1] = np.cov(dataz[i, :], datay[i, :],
+                                             rowvar=False)[0, 1]
+        covmat[2][2] = np.cov(dataz[i, :], rowvar=False)
         eigenv = np.sort(np.linalg.eigvals(covmat))
         leigenv1[i] = eigenv[0]
         leigenv2[i] = eigenv[1]
