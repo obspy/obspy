@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 
 from copy import deepcopy, copy
+from datetime import datetime
 from math import ceil
 from obspy.core import UTCDateTime, Stream, Trace
 import StringIO
@@ -221,15 +222,15 @@ class WaveformPlotting(object):
             sampling_rate = sampling_rates.pop()
             if self.axis:
                 # if axis is existing tie the x axis together
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1, 
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
                                           axisbg=self.background_color,
                                           sharex=self.axis[0])
             else:
                 # if no other plots before, do not tie the axis
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1, 
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
                                           axisbg=self.background_color)
             self.axis.append(ax)
-            if (self.endtime - self.starttime) * sampling_rate  > 400000:
+            if (self.endtime - self.starttime) * sampling_rate > 400000:
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
@@ -245,7 +246,6 @@ class WaveformPlotting(object):
         self.__dayplotGetMinMaxValues(self, *args, **kwargs)
         # Normalize array
         self.__dayplotNormalizeValues(self, *args, **kwargs)
-        from datetime import datetime
         # Get timezone information. If none is  given, use local time.
         self.time_offset = kwargs.get('time_offset',
                            round((UTCDateTime(datetime.now()) - \
@@ -265,7 +265,7 @@ class WaveformPlotting(object):
             else:
                 self.repeat = self.steps
         # Create axis to plot on.
-        ax = fig.add_subplot(1, 1, 1, axisbg=self.background_color)
+        ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
         # Adjust the subplots to be symmetrical. Also make some more room
         # at the top.
         self.fig.subplots_adjust(left=0.12, right=0.88, top=0.88)
@@ -437,7 +437,7 @@ class WaveformPlotting(object):
         # slower than first creating an empty array and then setting the mask
         # to True. But on numpy 1.1 this results in a 0-D array which can not
         # be indexed.
-        y_values = np.ma.masked_all(2 *self.width)
+        y_values = np.ma.masked_all(2 * self.width)
         y_values[0::2] = minmax[:, 0]
         y_values[1::2] = minmax[:, 1]
         ax.plot(x_values, y_values, color=self.color)
@@ -585,7 +585,7 @@ class WaveformPlotting(object):
         It will also convert all values to floats.
         """
         # Convert to native floats.
-        self.extreme_values = self.extreme_values.astype(np.float) *\
+        self.extreme_values = self.extreme_values.astype(np.float) * \
                               self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         self.extreme_values -= self.extreme_values.mean()
@@ -671,7 +671,7 @@ class WaveformPlotting(object):
         The design and look of the whole plot to be produced.
         """
         # Setup figure and axes
-        self.fig = plt.figure(num=None, dpi=self.dpi, 
+        self.fig = plt.figure(num=None, dpi=self.dpi,
                               figsize=(float(self.width) / self.dpi,
                                        float(self.height) / self.dpi))
         # XXX: Figure out why this is needed sometimes.

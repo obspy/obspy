@@ -40,15 +40,14 @@ USA.
 """
 
 #Needs to be done before importing pyplot and the like.
-from matplotlib import pyplot as plt, patches, lines
+from matplotlib import pyplot as plt, patches
+from matplotlib.collections import PatchCollection
+from matplotlib.path import Path
 from numpy import array, linalg, zeros, sqrt, fabs, arcsin, arccos, pi, cos, \
     power, abs, arange, sin, ones, arctan2, ndarray, concatenate
 from pylab import show
 import StringIO
 import doctest
-import matplotlib.patches as patches
-from matplotlib.path import Path
-from matplotlib.collections import PatchCollection
 
 
 D2R = pi / 180
@@ -58,7 +57,7 @@ EPSILON = 0.00001
 
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
-          alpha=1.0, xy=(0,0), width=200, size=100, nofill=False,
+          alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100):
     """
     Return a beach ball as a collection which can be connected to an
@@ -115,10 +114,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
             colors, p = plotDC(np1, size, xy=xy, width=width)
         else:
-            colors, p = plotMT(T, N, P, size, outline=True, 
+            colors, p = plotMT(T, N, P, size, outline=True,
                                plot_zerotrace=True, xy=xy, width=width)
     else:
-        colors, p =  plotDC(np1, size=size, xy=xy, width=width)
+        colors, p = plotDC(np1, size=size, xy=xy, width=width)
 
 
     if nofill:
@@ -137,8 +136,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     collection.set_zorder(zorder)
     return collection
 
-def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k', 
-              bgcolor='w', alpha=1.0, xy=(0,0), width=200, outfile=None,
+def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
+              bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
               format=None, nofill=False, fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
@@ -170,8 +169,8 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
 
     # plot the collection
     collection = Beach(fm, linewidth=linewidth, facecolor=facecolor,
-                       edgecolor=edgecolor, bgcolor=bgcolor, 
-                       alpha=alpha, nofill=nofill, xy=(0,0), 
+                       edgecolor=edgecolor, bgcolor=bgcolor,
+                       alpha=alpha, nofill=nofill, xy=(0, 0),
                        width=plot_size, size=plot_size)
     ax.add_collection(collection)
 
@@ -192,8 +191,8 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
         return fig
 
 
-def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True, 
-           x0=0, y0=0, xy=(0,0), width=200):
+def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
+           x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
     
@@ -207,7 +206,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     """
     collect = []
     colors = []
-    res = width/float(size)
+    res = width / float(size)
     b = 1
     big_iso = 0
     j = 1
@@ -248,11 +247,11 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     if fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
         # pure implosion-explosion
         if vi > 0.:
-            cir = patches.Circle(xy, radius=width/2.0)
+            cir = patches.Circle(xy, radius=width / 2.0)
             collect.append(cir)
             colors.append('b')
         if vi < 0.:
-            cir = patches.Circle(xy, radius=width/2.0)
+            cir = patches.Circle(xy, radius=width / 2.0)
             collect.append(cir)
             colors.append('w')
         return colors, collect
@@ -276,12 +275,12 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     # between -1 and 1 - f there will be no nodes whatsoever
 
     if iso < -1:
-        cir = patches.Circle(xy, radius=width/2.0)
+        cir = patches.Circle(xy, radius=width / 2.0)
         collect.append(cir)
         colors.append('w')
         return colors, collect
     elif iso > 1 - f:
-        cir = patches.Circle(xy, radius=width/2.0)
+        cir = patches.Circle(xy, radius=width / 2.0)
         collect.append(cir)
         colors.append('b')
         return colors, collect
@@ -370,7 +369,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         rgb1 = 'w'
         rgb2 = 'b'
 
-    cir = patches.Circle(xy, radius=width/2.0)
+    cir = patches.Circle(xy, radius=width / 2.0)
     collect.append(cir)
     colors.append(rgb2)
     if n == 0:
@@ -507,7 +506,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         return colors, collect
 
 
-def plotDC(np1, size=200, xy=(0,0), width=200):
+def plotDC(np1, size=200, xy=(0, 0), width=200):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
     
@@ -576,10 +575,10 @@ def plotDC(np1, size=200, xy=(0,0), width=200):
     Y = Y * D / 90
 
     # calculate resolution
-    res = width/float(size)
+    res = width / float(size)
 
     # construct the patches
-    collect = [patches.Circle(xy, radius=width/2.0)]
+    collect = [patches.Circle(xy, radius=width / 2.0)]
     collect.append(xy2patch(Y, X, res, xy))
     return ['b', 'w'], collect
 
@@ -589,9 +588,9 @@ def xy2patch(x, y, res, xy):
     y = y * res + xy[1]
     verts = zip(x.tolist(), y.tolist())
     codes = [Path.MOVETO]
-    codes.extend([Path.LINETO]*(len(x)-2))
+    codes.extend([Path.LINETO] * (len(x) - 2))
     codes.append(Path.CLOSEPOLY)
-    path = Path(verts, codes) 
+    path = Path(verts, codes)
     return patches.PathPatch(path)
 
 def Pol2Cart(th, r):
