@@ -260,7 +260,10 @@ def logbankm(p, n, fs, w):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
     elif (w == 'Hamming'):
         v = 1. - 0.92 / 1.08 * np.cos(v * float(np.pi / 2))
-    xx = sparse.csr_matrix((v, help)).todense()
+    # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a 
+    # transposed matrix depending on the installed NumPy version - using
+    # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
+    xx = sparse.coo_matrix((v, help)).transpose().todense()
     return xx, mn - 1, mx - 1
 
 
