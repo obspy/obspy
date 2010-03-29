@@ -118,7 +118,7 @@ class Utils(GUIElement):
                             (channel, location, str(stream[0].stats.starttime.timestamp),
                              str(stream[0].stats.endtime.timestamp)))
                 file = open(filename, 'wb')
-                pickle.dump(stream, file, 0)
+                pickle.dump(stream, file, 2)
                 file.close()
         if len(stream):
             if new_plot:
@@ -183,8 +183,7 @@ class Utils(GUIElement):
                         (channel, location, str(stream[0].stats.starttime.timestamp),
                          str(stream[0].stats.endtime.timestamp)))
             file = open(filename, 'wb')
-            # There is some problem with protocol 2.
-            pickle.dump(stream, file, 0)
+            pickle.dump(stream, file, 2)
             file.close()
         return stream
 
