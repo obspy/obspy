@@ -14,7 +14,7 @@ class DatabaseEnvironment(object):
     def __init__(self, *args, **kwargs):
         self.errorHandler = ErrorHandler()
         # Some globally available variables.
-        self.seishub_server = 'http://localhost:7777'
+        self.seishub_server = 'http://teide:8080'
         self.cache_dir = 'cache'
         self.debug = kwargs.get('debug', False)
 

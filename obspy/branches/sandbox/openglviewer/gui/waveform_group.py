@@ -39,29 +39,28 @@ class WaveformGroup(pyglet.graphics.Group):
         """
         Translate Waveform group.
         """
+        self.current_offset = self.win.window.height - self.y_offset
         if self.plot:
-            self.current_offset = self.win.window.height - self.y_offset
+            # XXX: Find better way to stretch the yscale. 7 is a weird and
+            # not totally exact value. The large calculations also are a pretty
+            # big performance hog. Need to only update these on scroll or
+            # resizing events. Something is also wrong with these calculations.
             glTranslatef(self.x_offset + self.plot_offset,
-                         self.current_offset -self.win.waveform_offset -\
-                         self.win.geometry.time_scale, 0.0)
-            glScalef(self.plot, 1.0, 1.0)
+                         self.current_offset - (self.plot[1]*100+3) \
+                         - self.win.waveform_offset, 0.0)
+            glScalef(self.plot[0], self.plot[1], 0.0)
         else:
-            self.current_offset = self.win.window.height - self.y_offset
-            glTranslatef(self.x_offset, self.current_offset -\
-                         self.win.waveform_offset - self.win.geometry.time_scale, 0.0)
+            glTranslatef(self.x_offset, self.current_offset - self.win.waveform_offset, 0.0)
 
     def unset_state(self): 
         """
         Undo translation to not affect other elements.
         """
+        self.current_offset = self.win.window.height - self.y_offset
         if self.plot:
-            glScalef(1.0/self.plot, 1.0, 1.0)
-            self.current_offset = self.win.window.height - self.y_offset
+            glScalef(1.0/self.plot[0], 1.0/self.plot[1], 1.0)
             glTranslatef(-self.x_offset - self.plot_offset,
-                         -self.current_offset +self.win.waveform_offset +\
-                         self.win.geometry.time_scale, 0.0)
+                         -self.current_offset + (self.plot[1]*100+3)\
+                         + self.win.waveform_offset, 0.0)
         else:
-            self.current_offset = self.win.window.height - self.y_offset
-            glTranslatef(-self.x_offset, -self.current_offset +\
-                         self.win.waveform_offset + \
-                         self.win.geometry.time_scale, 0.0)
+            glTranslatef(-self.x_offset, -self.current_offset + self.win.waveform_offset, 0.0)

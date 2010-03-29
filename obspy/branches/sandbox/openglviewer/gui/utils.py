@@ -21,7 +21,7 @@ class Utils(GUIElement):
         # Additional seconds that will be requested from SeisHub as a buffer.
         self.buffer = 5
 
-    def add_plot(self, network, station, location, channel):
+    def add_plot(self, network, station, location, channel, new_plot = True):
         """
         Will check whether the requested waveform is already available in the cache
         directory and otherwise fetch it from a SeisHub Server.
@@ -32,6 +32,11 @@ class Utils(GUIElement):
         L-- network
             L-- station
                 L-- channel[location]--starttime_timestamp--endtime_timestamp.cache
+
+
+        :param new_plot: Boolean value. If True a new plot will be created.
+                                        Otherwise the stream object will be
+                                        returned.
         """
         network = str(network)
         station = str(station)
@@ -42,9 +47,10 @@ class Utils(GUIElement):
         if '*' in id:
             return
         # Check if it already exists.
-        for waveform in self.win.waveforms:
-            if waveform.header  == id:
-                return
+        if new_plot:
+            for waveform in self.win.waveforms:
+                if waveform.header  == id:
+                    return
         # Go through directory structure and create all necessary folders if
         # necessary.
         network_path = os.path.join(self.env.cache_dir, network)
@@ -62,9 +68,12 @@ class Utils(GUIElement):
                 print ' * No cached file found for %s.%s.%s.%s' \
                     % (network, station, location, channel)
             stream = self.getWaveform(network, station, location, channel, station_path)
+            if not stream:
+                self.win.status_bar.setError('No data available')
+                return
         else:
             # Otherwise figure out if the requested time span is already cached.
-            times = [(float(file.split('--')[1]), (file.split('--')[2]),
+            times = [(float(file.split('--')[1]), float(file.split('--')[2]),
                       os.path.join(station_path, file)) for file in files]
             starttime = self.win.starttime.timestamp
             endtime = self.win.endtime.timestamp
@@ -90,6 +99,9 @@ class Utils(GUIElement):
                           ' Requesting the rest from SeisHub...'
                 stream += self.loadGaps(missing_time_frames, network, station,
                                         location, channel)
+                if not stream:
+                    self.win.status_bar.setError('No data available')
+                    return
             else:
                 if self.env.debug:
                     print ' * Cached file found for %s.%s.%s.%s' \
@@ -109,7 +121,10 @@ class Utils(GUIElement):
                 pickle.dump(stream, file, 0)
                 file.close()
         if len(stream):
-            WaveformPlot(parent = self.win, group = 2, stream = stream)
+            if new_plot:
+                WaveformPlot(parent = self.win, group = 2, stream = stream)
+            else:
+                return stream
 
     def loadGaps(self, frames, network, station, location, channel):
         """
@@ -156,6 +171,8 @@ class Utils(GUIElement):
         """
         stream = self.win.seishub.getPreview(network, station, location,
                  channel, starttime, endtime)
+        if not len(stream):
+            return None
         # It will always return exactly one Trace. Make sure the data is in
         # float32.
         stream[0].data = np.require(stream[0].data, 'float32')
@@ -171,10 +188,36 @@ class Utils(GUIElement):
             file.close()
         return stream
 
+    def adaptPlotHeight(self):
+        """
+        Adapts the plot height depending on the number of plots visible and the
+        current size of the window.
 
+        Should get called each time the number of plots changes or the window
+        is resized.
+        """
+        geo = self.win.geometry
+        # Total height available for plots.
+        available_height = self.win.current_view_span -\
+                           geo.time_scale
+        # Forumla used:
+        #available_height = len(self.win.waveforms) * (geo.plot_height +
+        #            geo.vertical_margin) + geo.vertical_margin
+        plot_height = (available_height - geo.vertical_margin) / \
+                          float(len(self.win.waveforms))  - geo.vertical_margin
+        # Adhere to the border values.
+        if plot_height > geo.max_plot_height:
+            plot_height = geo.max_plot_height
+        if plot_height < geo.min_plot_height:
+            plot_height = geo.min_plot_height
+        # Finally change the height.
+        self.change_height(plot_height)
         
-            
-
-
-
+    def change_height(self, height):
+        """
+        Changes the height of each plot.
+        """
+        self.win.geometry.plot_height = height
+        for waveform in self.win.waveforms:
+            waveform.updateHeight()
 

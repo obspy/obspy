@@ -117,7 +117,7 @@ class PygletWindow(object):
         # Start- and Endtime of the plots. Needs to be stored into the window
         # object because it has to be the same for all traces.
         self.starttime = kwargs.get('starttime', UTCDateTime(2010,1,1))
-        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,20) - 1.0)
+        self.endtime = kwargs.get('endtime', UTCDateTime(2010,2,19) - 1.0)
         # Waveform Layer. Waveforms will need some more layers. I will just add
         # three.
         # XXX: Maybe switch to some more elegant solution.
@@ -178,6 +178,9 @@ class PygletWindow(object):
         # Call the resize method of all objects in the current window.
         for object in self.object_list:
             object.resize(width, height)
+        # Just one call to the adaptive plot height is needed.
+        if self.waveforms:
+            self.utils.adaptPlotHeight()
 
 
     def draw(self, *args, **kwargs):
@@ -233,5 +236,10 @@ class Geometry(object):
         # Height of the status_bar.
         self.status_bar_height = 16
         # The offset of all actual waveform graphs on the left side.
-        self.graph_start_x = 125
+        self.graph_start_x = 140
+        # Height of a single waveform plot object. Will be updated if it
+        # changes.
+        self.plot_height = 80
+        self.min_plot_height = 25
+        self.max_plot_height = 80
 
