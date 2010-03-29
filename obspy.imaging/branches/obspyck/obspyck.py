@@ -146,6 +146,41 @@ def gk2lonlat(x, y):
     lat = float(line[1])
     return (lon, lat)
 
+def errorEllipsoid2CartesianErrors(azimuth1, dip1, len1, azimuth2, dip2, len2,
+                                   len3):
+    """
+    This method converts the location error of NLLoc given as the 3D error
+    ellipsoid (two azimuths, two dips and three axis lengths) to a cartesian
+    representation.
+    We calculate the cartesian representation of each of the ellipsoids three
+    eigenvectors and use the maximum of these vectors components on every axis.
+    """
+    z = len1 * np.sin(np.radians(dip1))
+    xy = len1 * np.cos(np.radians(dip1))
+    x = xy * np.sin(np.radians(azimuth1))
+    y = xy * np.cos(np.radians(azimuth1))
+    v1 = np.array([x, y, z])
+
+    z = len2 * np.sin(np.radians(dip2))
+    xy = len2 * np.cos(np.radians(dip2))
+    x = xy * np.sin(np.radians(azimuth2))
+    y = xy * np.cos(np.radians(azimuth2))
+    v2 = np.array([x, y, z])
+
+    v3 = np.cross(v1, v2)
+    v3 /= np.sqrt(np.dot(v3, v3))
+    v3 *= len3
+
+    v1 = np.abs(v1)
+    v2 = np.abs(v2)
+    v3 = np.abs(v3)
+
+    error_x = max([v1[0], v2[0], v3[0]])
+    error_y = max([v1[1], v2[1], v3[1]])
+    error_z = max([v1[2], v2[2], v3[2]])
+    
+    return (error_x, error_y, error_z)
+
 def formatXTicklabels(x, pos):
     """
     Make a nice formatting for y axis ticklabels: minutes:seconds.microsec
@@ -2727,18 +2762,20 @@ class PickingGUI:
             return
         
         line = line.split()
-        errorellipse_axis1_azim = float(line[20])
-        errorellipse_axis1_dip = float(line[22])
-        errorellipse_axis1_len = float(line[24])
-        errorellipse_axis2_azim = float(line[26])
-        errorellipse_axis2_dip = float(line[28])
-        errorellipse_axis2_len = float(line[30])
-        errorellipse_axis3_len = float(line[32])
-        # XXX it would be way nicer to calculate the correct XY and Z errors
-        errX = np.mean([errorellipse_axis1_len, errorellipse_axis2_len,
-                        errorellipse_axis3_len])
-        errY = errX
-        errZ = errX
+        # read in the error ellipsoid representation of the location error.
+        # this is given as azimuth/dip/length of axis 1 and 2 and as length
+        # of axis 3.
+        azim1 = float(line[20])
+        dip1 = float(line[22])
+        len1 = float(line[24])
+        azim2 = float(line[26])
+        dip2 = float(line[28])
+        len2 = float(line[30])
+        len3 = float(line[32])
+
+        errX, errY, errZ = errorEllipsoid2CartesianErrors(azim1, dip1, len1,
+                                                          azim2, dip2, len2,
+                                                          len3)
 
         # goto gaussian expectation origin location info line
         # XXX should we use the (slightly different) maximum likelihood
