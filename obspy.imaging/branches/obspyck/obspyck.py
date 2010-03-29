@@ -2821,9 +2821,15 @@ class PickingGUI:
                 continue
             # get values from line
             station = line[0]
-            azimuth = float(line[22])
-            # XXX no incident info?!?
-            incident = 0.
+            azimuth = float(line[23])
+            incident = float(line[24])
+            # if we do the location on traveltime-grids without angle-grids we
+            # do not get ray azimuth/incidence. but we can at least use the
+            # station to hypocenter azimuth which is very close (~2 deg) to the
+            # ray azimuth
+            if azimuth == 0.0 and incident == 0.0:
+                azimuth = float(line[22])
+                incident = np.nan
             if line[3] == "I":
                 onset = "impulsive"
             elif line[3] == "E":
@@ -3745,7 +3751,7 @@ class PickingGUI:
                 
                 if 'Ssynth' in dict:
                     Sub(pick, "phase_compu").text = phase_compu
-                    Sub(Sub(pick, "phase_res"), "value").text = '%s' % dict['Sres']
+                    Sub(Sub(pick, "phase_res"), "value").text = str(dict['Sres'])
                     if 'SsynthWeight' in dict:
                         Sub(Sub(pick, "phase_weight"), "value").text = \
                                 str(dict['SsynthWeight'])
