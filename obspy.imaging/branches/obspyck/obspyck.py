@@ -304,6 +304,9 @@ class PickingGUI:
             self.toolbar.pan(True)
             self.toolbar.update()
             self.canv.draw()
+            self.textviewStdOutImproved.write("http://maps.google.de/maps" + \
+                    "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
+                    self.dictOrigin['Longitude']))
         else:
             self.delEventMap()
             self.fig.clear()
