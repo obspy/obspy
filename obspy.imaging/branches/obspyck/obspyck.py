@@ -2606,7 +2606,7 @@ class PickingGUI:
                 # southern hemisphere projection
                 if dict['PInci'] > 90:
                     inci = 180. - dict['PInci']
-                    #azim = -180. + dict['PAzim']
+                    azim = -180. + dict['PAzim']
                 else:
                     inci = dict['PInci']
                 azim = dict['PAzim']
