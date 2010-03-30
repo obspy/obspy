@@ -9,6 +9,7 @@ from obspy.core import UTCDateTime
 from status_bar import StatusBar
 from background import Background
 from scroll_bar import ScrollBar
+from timers import Timers
 from seishub import Seishub
 from time_scale import TimeScale
 from utils import Utils
@@ -71,6 +72,8 @@ class PygletWindow(object):
         self.hand_cursor = self.window.get_system_mouse_cursor(self.window.CURSOR_HAND)
         # Init zoom box handler.
         self.zoomBox()
+        # Start timers.
+        self.Timers = Timers(parent = self, group = 1)
 
     def setOpenGLState(self):
         """

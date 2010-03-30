@@ -15,6 +15,7 @@ class DatabaseEnvironment(object):
         self.errorHandler = ErrorHandler()
         # Some globally available variables.
         self.seishub_server = 'http://localhost:7777'
+        self.seishub_ping_interval = 1
         self.cache_dir = 'cache'
         self.debug = kwargs.get('debug', False)
 

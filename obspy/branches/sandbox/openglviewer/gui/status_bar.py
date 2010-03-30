@@ -61,8 +61,16 @@ class StatusBar(GUIElement):
         self.text_layout = pyglet.text.DocumentLabel(document = text_document,
                           x = 2, y = 3, batch = self.batch, anchor_x = 'left',
                           group = self.group)
-
         self.text = self.text_layout.text
+        # Server Messages.
+        server_document = pyglet.text.decode_text(self.error)
+        server_document.set_style(0, 2, dict(font_name='arial',
+                                 bold=True, font_size=10, color=(50,50,50,255)))
+        self.server_layout = pyglet.text.DocumentLabel(document = server_document,
+                          x = self.win.window.width/2.0, y = 3,
+                          batch = self.batch, anchor_x = 'center',
+                          group = self.group)
+        self.server_text = self.server_layout.text
 
     def setText(self, text):
         """
@@ -81,6 +89,15 @@ class StatusBar(GUIElement):
         self.error_layout.begin_update()
         self.error_layout.text = self.error
         self.error_layout.end_update()
+
+    def setServer(self, text):
+        """
+        Sets the text.
+        """
+        self.server = text
+        self.server_layout.begin_update()
+        self.server_layout.text = self.server
+        self.server_layout.end_update()
 
     def resize(self, width, height):
         """

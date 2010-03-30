@@ -9,6 +9,7 @@ from pyglet_window import PygletWindow
 from scroll_bar import ScrollBar
 from seishub import Seishub
 from status_bar import StatusBar
+from timers import Timers
 from waveform_plot import WaveformPlot
 from waveform_group import WaveformGroup
 from menu import Menu
