@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import pyglet
+from pyglet.window import mouse
+import glydget
 from menu import Menu
 from obspy.core import UTCDateTime
 from status_bar import StatusBar
@@ -35,17 +37,20 @@ class PygletWindow(object):
         # Create the ordered groups used to get a layer like drawing of the
         # window.
         self._createdOrderedGroups()
-        # Create Utils class.
-        self.utils = Utils(parent = self, group = 1)
-        # Connect to SeisHub Server.
-        self.seishub = Seishub(parent = self, group = 1)
         # Add a background and add it to group 0.
         Background(parent = self, group = 0)
+        # Connect to SeisHub Server.
+        self.seishub = Seishub(parent = self, group = 1)
         # Create status bar if desired.
         if self.status_bar:
             # The status bar should always be seen. Add to a very high group.
             self.status_bar = StatusBar(parent = self, group = 999,
-                                height = self.geometry.status_bar_height)
+                                height = self.geometry.status_bar_height,
+                                error = self.default_error)
+        # Create Utils class.
+        self.utils = Utils(parent = self, group = 1)
+        # Add the Time Scale.
+        self.time_scale = TimeScale(parent = self, group = 999)
         # These cannot be created earlier as they need some already set up GUI
         # Elements.
         # XXX: Need to make more dynamic.
@@ -57,20 +62,24 @@ class PygletWindow(object):
         # Add the menu.
         self.menu = Menu(parent = self, group = 999, width = self.geometry.menu_width)
         geo.menu_width = self.menu.menu.width
-        # Add the Time Scale.
-        self.time_scale = TimeScale(parent = self, group = 999)
         # Start of menu.
         self.menu_start = self.window.width - (geo.menu_width +\
                     geo.horizontal_margin + geo.scroll_bar_width)
+        # Preload some cursors for faster access.
+        self.default_cursor = \
+                        self.window.get_system_mouse_cursor(self.window.CURSOR_DEFAULT)
+        self.hand_cursor = self.window.get_system_mouse_cursor(self.window.CURSOR_HAND)
+        # Init zoom box handler.
+        self.zoomBox()
 
     def setOpenGLState(self):
         """
         Sets some global OpenGL states.
         """
         # Enable transparency.
-        #pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
-        #                      pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
-        #pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
+        pyglet.gl.glBlendFunc(pyglet.gl.GL_SRC_ALPHA,
+                              pyglet.gl.GL_ONE_MINUS_SRC_ALPHA)
+        pyglet.gl.glEnable(pyglet.gl.GL_BLEND)
 
 
     def getGroup(self, index):
@@ -127,6 +136,10 @@ class PygletWindow(object):
         # Offset of the waveform plots in the y-direction.
         # XXX: Currently used?
         self.waveform_offset = 0
+        # Zoom box.
+        self.zoom_box = None
+        # Default error.
+        self.default_error = ''
 
     def _createdOrderedGroups(self):
         """
@@ -178,10 +191,10 @@ class PygletWindow(object):
         # Call the resize method of all objects in the current window.
         for object in self.object_list:
             object.resize(width, height)
-        # Just one call to the adaptive plot height is needed.
+        # Just one call to the adaptive plot height is needed. Therefore the
+        # calls need to be here.
         if self.waveforms:
             self.utils.adaptPlotHeight()
-
 
     def draw(self, *args, **kwargs):
         """
@@ -191,6 +204,120 @@ class PygletWindow(object):
         """
         self.window.clear()
         self.batch.draw()
+        
+    def zoomBox(self):
+        """
+        Creates zoom box.
+        """
+        def on_mouse_motion(x, y, dx, dy):
+            """
+            Called every time the mouse moves.
+            """
+            if in_box(x, y):
+                # Change the cursor if inside the box.
+                self.window.set_mouse_cursor(self.hand_cursor)
+            else:
+                self.window.set_mouse_cursor(self.default_cursor)
+
+        def on_mouse_press(x, y, button, modifiers):
+            """
+            Called on a mouse button press.
+            """
+            geo = self.geometry
+            if in_box(x, y):
+                if button & mouse.LEFT:
+                    # Some variables.
+                    start = geo.horizontal_margin + geo.graph_start_x
+                    end =  self.window.width - 2 * geo.horizontal_margin - \
+                            geo.scroll_bar_width - geo.menu_width - 3
+                    span = end - start
+                    # Time calculations.
+                    time_span = self.win.endtime - self.win.starttime
+                    starttime = self.win.starttime + float(self.zoom_box_min_x -\
+                            start)/span * time_span
+                    endtime = self.win.starttime + float(self.zoom_box_max_x -\
+                            start)/span * time_span
+                    self.utils.changeTimes(starttime, endtime)
+                    delete_and_pop_handlers()
+                # If the right button is pressed, delete the box.
+                elif button & mouse.RIGHT:
+                    delete_and_pop_handlers()
+
+        def in_box(x, y):
+            """
+            Checks whether the mouse is in the box.
+            """
+            if self.zoom_box and x <= self.zoom_box_max_x and \
+            x >= self.zoom_box_min_x and y >= self.zoom_box_min_y and \
+            y <= self.zoom_box_max_y:
+                return True
+            else:
+                return False
+
+        def delete_and_pop_handlers():
+            """
+            Deletes the box, the frame and pops the top handlers from the
+            stack.
+            """
+            self.zoom_box.delete()
+            self.zoom_frame.delete()
+            self.zoom_box = None
+            # Popping handlers.
+            # XXX: Are these always the right handlers??
+            self.win.window.pop_handlers()
+            # Return to the default cursor.
+            self.window.set_mouse_cursor(self.default_cursor)
+
+        def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+            """
+            Actual handler needed for pushing.
+            """
+            geo = self.geometry
+            height = self.window.height - 2 * geo.vertical_margin - 3 -\
+                geo.status_bar_height
+            start = geo.horizontal_margin + geo.graph_start_x
+            end =  self.window.width - 2 * geo.horizontal_margin - \
+                    geo.scroll_bar_width - geo.menu_width - 3
+            # If the box already exists, update it.
+            if self.zoom_box:
+                if x < start:
+                    x = start
+                elif x > end:
+                    x = end
+                self.zoom_box.begin_update()
+                self.zoom_box.resize(x - self.zoom_start - 2, height - 2)
+                self.zoom_box.end_update()
+                self.zoom_frame.begin_update()
+                self.zoom_frame.resize(x - self.zoom_start, height)
+                self.zoom_frame.end_update()
+                self.zoom_box_min_x = self.zoom_start
+                self.zoom_box_max_x = self.zoom_start + x - self.zoom_start
+                self.zoom_box_max_y = self.window.height - geo.vertical_margin\
+                                      - 3
+                self.zoom_box_min_y = self.zoom_box_max_y - height
+                if self.zoom_box_min_x > self.zoom_box_max_x:
+                    self.zoom_box_min_x, self.zoom_box_max_x = \
+                    self.zoom_box_max_x, self.zoom_box_min_x
+            # Otherwise create a new box.
+            else:
+                self.zoom_start = x
+                self.zoom_box = glydget.Rectangle(x + 1, self.window.height -\
+                                  self.geometry.vertical_margin - 5, 1,
+                                  height - 2, [255,255,255,155,255,255,255,100,
+                                           255,255,255,200,255,255,255,120])
+                self.zoom_frame = glydget.Rectangle(x, self.window.height -\
+                                  self.geometry.vertical_margin - 3, 1,
+                                  height, (0,0,0,200), filled = False)
+                self.zoom_box.build(batch = self.batch, group = self.groups[-1])
+                self.zoom_frame.build(batch = self.batch, group = self.groups[-1])
+                self.zoom_box_min_x = x
+                self.zoom_box_max_x = x+1
+                # Push the handlers for the box.
+                self.zoom_handlers = \
+                        self.win.window.push_handlers(on_mouse_motion, on_mouse_press)
+        # Push the handlers.
+        self.win.window.push_handlers(on_mouse_drag)
+
 
     def mouse_scroll(self, x, y, scroll_x, scroll_y):
         """
@@ -242,4 +369,7 @@ class Geometry(object):
         self.plot_height = 80
         self.min_plot_height = 25
         self.max_plot_height = 80
+        # Inner padding of the waveform plots.. Currently used for top, bottom
+        # and left border.
+        self.graph_pad = 2
 

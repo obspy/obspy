@@ -18,7 +18,7 @@ class StatusBar(GUIElement):
         self.height = kwargs.get('height', 16)
         self.createBar()
         self.text = ''
-        self.error = ''
+        self.error = kwargs.get('error', '')
         self.createMessages()
 
     def createBar(self):

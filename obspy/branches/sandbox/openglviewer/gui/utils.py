@@ -69,7 +69,9 @@ class Utils(GUIElement):
                     % (network, station, location, channel)
             stream = self.getWaveform(network, station, location, channel, station_path)
             if not stream:
-                self.win.status_bar.setError('No data available')
+                msg = 'No data available for %s.%s.%s.%s for the selected timeframes'\
+                    % (network, station, location, channel)
+                self.win.status_bar.setError(msg)
                 return
         else:
             # Otherwise figure out if the requested time span is already cached.
@@ -100,7 +102,9 @@ class Utils(GUIElement):
                 stream += self.loadGaps(missing_time_frames, network, station,
                                         location, channel)
                 if not stream:
-                    self.win.status_bar.setError('No data available')
+                    msg = 'No data available for %s.%s.%s.%s for the selected timeframes'\
+                        % (network, station, location, channel)
+                    self.win.status_bar.setError(msg)
                     return
             else:
                 if self.env.debug:
@@ -186,6 +190,20 @@ class Utils(GUIElement):
             pickle.dump(stream, file, 2)
             file.close()
         return stream
+
+    def changeTimes(self, starttime, endtime):
+        """
+        Changes the time scale on each plot and the time_scale itsself.
+        """
+        self.win.starttime = starttime
+        self.win.endtime = endtime
+        for waveform in self.win.waveforms:
+            waveform.replot()
+        # Update time scale.
+        self.win.time_scale.changeTimeScale()
+        # Also update the labels of the menu.
+        self.win.menu.starttime.text = str(self.win.starttime)
+        self.win.menu.endtime.text = str(self.win.endtime)
 
     def adaptPlotHeight(self):
         """

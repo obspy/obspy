@@ -70,15 +70,10 @@ class Menu(GUIElement):
         """
         starttime = UTCDateTime(str(button.parent.children[1].text))
         endtime = UTCDateTime(str(button.parent.children[2].text))
-        self.win.starttime = UTCDateTime(starttime)
-        self.win.endtime = UTCDateTime(endtime)
-        for waveform in self.win.waveforms:
-            waveform.replot()
+        self.win.utils.changeTimes(starttime, endtime)
         # Update text of the items.
         button.parent.children[1].text = str(self.win.starttime)
         button.parent.children[2].text = str(self.win.endtime)
-        # Update time scale.
-        self.win.time_scale.changeTimeScale()
 
     def change_detail(self, button):
         """
@@ -196,15 +191,15 @@ class Menu(GUIElement):
             network_box.style = theme.database
             network_list.append(network_box)
         # Menu to select the times.
-        start = glydget.Entry(str(self.win.starttime))
-        end = glydget.Entry(str(self.win.endtime))
-        start.style = theme.database
-        end.style = theme.database
+        self.starttime = glydget.Entry(str(self.win.starttime))
+        self.endtime = glydget.Entry(str(self.win.endtime))
+        self.starttime.style = theme.database
+        self.endtime.style = theme.database
         time_button = glydget.Button('OK', self.change_times)
         time_button.style = theme.database
         time_label =glydget.Label('Select Timeframe:')
         time_label.style = theme.database
-        times = glydget.VBox([time_label, start, end, time_button], homogeneous=False)
+        times = glydget.VBox([time_label, self.starttime, self.endtime, time_button], homogeneous=False)
         # Add buttons to change the scale.
         self.normalScaleButton = glydget.ToggleButton('normal', False,
                                      self.change_scale)

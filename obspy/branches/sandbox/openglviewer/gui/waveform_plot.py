@@ -45,7 +45,7 @@ class WaveformPlot(GUIElement):
         self.max_height = kwargs.get('max_height', 80)
         self.min_height = kwargs.get('min_height', 25)
         # Inner padding. Currently used for top, bottom and left border.
-        self.pad = kwargs.get('pad', 2)
+        self.pad = self.win.geometry.graph_pad
         # Bind to waveform list of window.
         self.win.waveforms.append(self)
         # Current position in self.win.waveforms.

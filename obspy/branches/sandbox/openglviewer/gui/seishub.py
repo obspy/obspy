@@ -55,6 +55,17 @@ class Seishub(GUIElement):
         Connects to the SeisHub server.
         """
         self.client = Client(base_url = self.server)
+        self.ping()
+
+    def ping(self):
+        """
+        Ping the server.
+        """
+        try:
+            self.client.ping()
+        except:
+            msg = 'No connection to SeisHub server %s' % self.server
+            self.win.default_error = msg
 
     def getIndex(self):
         """
