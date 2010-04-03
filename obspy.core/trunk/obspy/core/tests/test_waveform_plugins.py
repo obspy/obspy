@@ -23,7 +23,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         tmpfile = NamedTemporaryFile().name
         # generate empty file
-        f = open(tmpfile)
+        f = open(tmpfile, 'wb')
         f.write("")
         f.close()
         formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
@@ -33,7 +33,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
                                         'isFormat')
             self.assertFalse(False, isFormat(tmpfile))
         os.remove(tmpfile)
-
 
     def test_readAndWriteAllInstalledWaveformPlugins(self):
         """
