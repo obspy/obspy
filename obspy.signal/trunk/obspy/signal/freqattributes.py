@@ -296,10 +296,10 @@ def logcep(data, fs, nc, p, n, w):
     y = np.log(np.maximum (m * abs(f[a - 1:b, :]), ath))
     z = util.rdct(y)
     z = z[1:, :]
-    nc = nc + 1
+    #nc = nc + 1
     nf = np.size(z, 1)
     if (p > nc):
-        z = z[:, nc:]
+        z = z[:nc, :]
     elif (p < nc):
         z = np.vstack([z, np.zeros(nf, nc - p)])
     return z
