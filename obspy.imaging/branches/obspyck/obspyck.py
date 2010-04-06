@@ -277,7 +277,7 @@ class PickingGUI:
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
                               self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
                               self.buttonNextFocMec,
                               self.togglebuttonShowWadati,
@@ -322,7 +322,7 @@ class PickingGUI:
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
                               self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
                               self.buttonDoFocmec, self.togglebuttonShowMap,
                               self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
@@ -373,7 +373,7 @@ class PickingGUI:
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
                               self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
                               self.buttonDoFocmec, self.togglebuttonShowFocMec,
                               self.buttonNextFocMec, self.togglebuttonShowMap,
                               self.buttonGetNextEvent, self.buttonSendEvent,
@@ -706,16 +706,14 @@ class PickingGUI:
         #######################################################################
         # NLLoc ###############################################################
         self.nllocPath = self.options.pluginpath + '/nlloc/'
-        self.nllocControlfilename = 'locate_BY1500.nlloc'
         self.nllocPhasefile = self.tmp_dir + 'nlloc.obs'
         self.nllocSummary = self.tmp_dir + 'nlloc.hyp'
         # copy nlloc files to temp directory
         subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.nllocPath, self.tmp_dir), shell=True)
         self.nllocPreCall = 'rm %s/nlloc* &> /dev/null' % (self.tmp_dir)
-        self.nllocCall = 'cd %s; ./%s %s; mv nlloc.*.*.*.loc.hyp %s' % \
-                (self.tmp_dir, self.nllocBinaryName, self.nllocControlfilename,
-                 self.nllocSummary)
+        self.nllocCall = 'cd %s; ./%s %%s; mv nlloc.*.*.*.loc.hyp %s' % \
+                (self.tmp_dir, self.nllocBinaryName, self.nllocSummary)
         #######################################################################
         # focmec ##############################################################
         self.focmecPath = self.options.pluginpath + '/focmec/'
@@ -930,6 +928,7 @@ class PickingGUI:
         self.buttonDoHyp2000 = self.gla.get_widget("buttonDoHyp2000")
         self.buttonDo3dloc = self.gla.get_widget("buttonDo3dloc")
         self.buttonDoNLLoc = self.gla.get_widget("buttonDoNLLoc")
+        self.comboboxNLLocModel = self.gla.get_widget("comboboxNLLocModel")
         self.buttonCalcMag = self.gla.get_widget("buttonCalcMag")
         self.buttonDoFocmec = self.gla.get_widget("buttonDoFocmec")
         self.togglebuttonShowMap = self.gla.get_widget("togglebuttonShowMap")
@@ -989,6 +988,7 @@ class PickingGUI:
         # activate first item in the combobox designed with glade:
         self.comboboxPhaseType.set_active(0)
         self.comboboxFilterType.set_active(0)
+        self.comboboxNLLocModel.set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
         # grab focus, otherwise the mpl key_press events get lost...
@@ -1001,6 +1001,7 @@ class PickingGUI:
         nofocus_recursive(self.win)
         self.comboboxPhaseType.set_focus_on_click(False)
         self.comboboxFilterType.set_focus_on_click(False)
+        self.comboboxNLLocModel.set_focus_on_click(False)
         self.canv.set_property("can_default", True)
         self.canv.set_property("can_focus", True)
         self.canv.grab_default()
@@ -2677,6 +2678,11 @@ class PickingGUI:
         Writes input files for NLLoc and starts the NonLinLoc program via a
         system call.
         """
+        # determine which model should be used in location
+        controlfilename = "locate_%s.nlloc" % \
+                          self.comboboxNLLocModel.get_active_text()
+        nllocCall = self.nllocCall % controlfilename
+
         self.setXMLEventID()
         sub = subprocess.Popen(self.nllocPreCall, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -2694,7 +2700,7 @@ class PickingGUI:
         self.textviewStdOutImproved.write(msg)
         self.catFile(self.nllocPhasefile)
 
-        sub = subprocess.Popen(self.nllocCall, shell=True,
+        sub = subprocess.Popen(nllocCall, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
@@ -2801,7 +2807,9 @@ class PickingGUI:
         lon, lat = gk2lonlat(x, y)
         
         # determine which model was used:
-        controlfile = self.tmp_dir + "/" + self.nllocControlfilename
+        controlfilename = "locate_%s.nlloc" % \
+                          self.comboboxNLLocModel.get_active_text()
+        controlfile = self.tmp_dir + "/last.in"
         lines2 = open(controlfile).readlines()
         line2 = lines2.pop()
         while not line2.startswith("LOCFILES"):
