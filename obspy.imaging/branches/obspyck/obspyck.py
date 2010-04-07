@@ -2807,8 +2807,6 @@ class PickingGUI:
         lon, lat = gk2lonlat(x, y)
         
         # determine which model was used:
-        controlfilename = "locate_%s.nlloc" % \
-                          self.comboboxNLLocModel.get_active_text()
         controlfile = self.tmp_dir + "/last.in"
         lines2 = open(controlfile).readlines()
         line2 = lines2.pop()
