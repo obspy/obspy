@@ -31,7 +31,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.patches import Ellipse
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, FormatStrFormatter
+from matplotlib.ticker import MaxNLocator
 
 #gtk
 import gtk
@@ -145,6 +146,42 @@ def gk2lonlat(x, y):
     lon = float(line[0])
     lat = float(line[1])
     return (lon, lat)
+
+def readNLLocScatter(scat_filename, textviewStdErrImproved):
+    """
+    This function reads location and values of pdf scatter samples from the
+    specified NLLoc *.scat binary file (type "<f4", 4 header values, then 4
+    floats per sample: x, y, z, pdf value) and converts X/Y Gauss-Krueger
+    coordinates (zone 4, central meridian 12 deg) to Longitude/Latitude in
+    WGS84 reference ellipsoid.
+    We do this using the Linux command line tool cs2cs.
+    Messages on stderr are written to specified GUI textview.
+    Returns an array of xy pairs.
+    """
+
+    # read data, omit the first 4 values (header information) and reshape
+    data = np.fromfile(scat_filename, dtype="<f4").astype("float")[4:]
+    data = data.reshape((len(data)/4, 4))
+
+    # convert km to m (*1000), use x/y/z values (columns 0/1/2,
+    # write a file to pipe to cs2cs later
+    tmp_file = tempfile.mkstemp(suffix='.scat',
+                                dir=os.path.dirname(scat_filename))[1]
+    file_lonlat = scat_filename + ".lonlat"
+    np.savetxt(tmp_file, (data[:,:3]*1000.), fmt='%.3f')
+
+    command = "cs2cs +init=epsg:31468 +to +init=epsg:4326 -E -f %.6f " + \
+              "< %s > %s" % (tmp_file, file_lonlat)
+
+    sub = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE)
+
+    err = "".join(sub.stderr.readlines())
+    textviewStdErrImproved.write(err)
+    
+    data = np.loadtxt(file_lonlat, usecols=[3,4,2])
+
+    return data
 
 def errorEllipsoid2CartesianErrors(azimuth1, dip1, len1, azimuth2, dip2, len2,
                                    len3):
@@ -708,12 +745,15 @@ class PickingGUI:
         self.nllocPath = self.options.pluginpath + '/nlloc/'
         self.nllocPhasefile = self.tmp_dir + 'nlloc.obs'
         self.nllocSummary = self.tmp_dir + 'nlloc.hyp'
+        self.nllocScatterBin = self.tmp_dir + 'nlloc.scat'
         # copy nlloc files to temp directory
         subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.nllocPath, self.tmp_dir), shell=True)
         self.nllocPreCall = 'rm %s/nlloc* &> /dev/null' % (self.tmp_dir)
-        self.nllocCall = 'cd %s; ./%s %%s; mv nlloc.*.*.*.loc.hyp %s' % \
-                (self.tmp_dir, self.nllocBinaryName, self.nllocSummary)
+        self.nllocCall = 'cd %s; ./%s %%s' % (self.tmp_dir,
+                                              self.nllocBinaryName) + \
+                '; mv nlloc.*.*.*.loc.hyp %s' % self.nllocSummary + \
+                '; mv nlloc.*.*.*.loc.scat %s' % self.nllocScatterBin
         #######################################################################
         # focmec ##############################################################
         self.focmecPath = self.options.pluginpath + '/focmec/'
@@ -3453,11 +3493,62 @@ class PickingGUI:
         except:
             pass
 
+        # make hexbin scatter plot, if located with NLLoc
+        # XXX no vital commands should come after this block, as we do not
+        # handle exceptions!
+        if 'Program' in dO and dO['Program'] == "NLLoc" and \
+           os.path.isfile(self.nllocScatterBin):
+            cmap = matplotlib.cm.gist_heat_r
+            data = readNLLocScatter(self.nllocScatterBin,
+                                    self.textviewStdErrImproved)
+            data = data.swapaxes(0, 1)
+            self.axEventMap.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
+
+            self.axEventMapInletXY = self.fig.add_axes([0.8, 0.8, 0.16, 0.16])
+            self.axEventMapInletXZ = self.fig.add_axes([0.8, 0.73, 0.16, 0.06],
+                    sharex=self.axEventMapInletXY)
+            self.axEventMapInletZY = self.fig.add_axes([0.73, 0.8, 0.06, 0.16],
+                    sharey=self.axEventMapInletXY)
+            
+            # z axis in km
+            self.axEventMapInletXY.hexbin(data[0], data[1], cmap=cmap)
+            self.axEventMapInletXZ.hexbin(data[0], data[2]/1000., cmap=cmap)
+            self.axEventMapInletZY.hexbin(data[2]/1000., data[1], cmap=cmap)
+
+            self.axEventMapInletXZ.invert_yaxis()
+            self.axEventMapInletZY.invert_xaxis()
+            self.axEventMapInletXY.axis("equal")
+            
+            formatter = FormatStrFormatter("%.3f")
+            self.axEventMapInletXY.xaxis.set_major_formatter(formatter)
+            self.axEventMapInletXY.yaxis.set_major_formatter(formatter)
+            
+            # only draw very few ticklabels in our tiny subaxes
+            for ax in [self.axEventMapInletXZ.xaxis,
+                       self.axEventMapInletXZ.yaxis,
+                       self.axEventMapInletZY.xaxis,
+                       self.axEventMapInletZY.yaxis]:
+                ax.set_major_locator(MaxNLocator(nbins=3))
+            
+            # hide ticklabels on XY plot
+            for ax in [self.axEventMapInletXY.xaxis,
+                       self.axEventMapInletXY.yaxis]:
+                plt.setp(ax.get_ticklabels(), visible=False)
+
     def delEventMap(self):
         try:
             self.canv.mpl_disconnect(self.eventMapPickEvent)
         except AttributeError:
             pass
+        if hasattr(self, "axEventMapInletXY"):
+            self.fig.delaxes(self.axEventMapInletXY)
+            del self.axEventMapInletXY
+        if hasattr(self, "axEventMapInletXZ"):
+            self.fig.delaxes(self.axEventMapInletXZ)
+            del self.axEventMapInletXZ
+        if hasattr(self, "axEventMapInletZY"):
+            self.fig.delaxes(self.axEventMapInletZY)
+            del self.axEventMapInletZY
         if hasattr(self, "axEventMap"):
             self.fig.delaxes(self.axEventMap)
             del self.axEventMap
