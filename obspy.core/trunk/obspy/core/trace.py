@@ -500,7 +500,7 @@ class Trace(object):
                   "plot ObsPy Trace objects."
             raise Exception(msg)
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        waveform.plotWaveform()
+        return waveform.plotWaveform()
 
     def write(self, filename, format, **kwargs):
         """

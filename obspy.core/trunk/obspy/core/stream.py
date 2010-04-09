@@ -462,7 +462,7 @@ class Stream(object):
             print msg
             raise
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        waveform.plotWaveform()
+        return waveform.plotWaveform()
 
     def pop(self, index= -1):
         """
