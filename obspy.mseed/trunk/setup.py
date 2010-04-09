@@ -71,7 +71,8 @@ lib = MyExtension('libmseed',
                            src + 'pack.c', src + 'packdata.c',
                            src + 'traceutils.c', src + 'tracelist.c',
                            src + 'unpack.c', src + 'unpackdata.c',
-                           src + 'selection.c', src + 'logging.c'],
+                           src + 'selection.c', src + 'logging.c',
+                           src + 'fileutils_addon.c'],
                   export_symbols=symbols,
                   extra_link_args=extra_link_args)
 
