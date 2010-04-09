@@ -538,6 +538,7 @@ class Trace(object):
         >>> tr.stats.starttime
         UTCDateTime(1970, 1, 1, 0, 0, 8)
         """
+        org_dtype = self.data.dtype
         if isinstance(starttime, float) or isinstance(starttime, int):
             starttime = UTCDateTime(self.stats.starttime) + starttime
         elif not isinstance(starttime, UTCDateTime):
@@ -562,7 +563,7 @@ class Trace(object):
             self.data = np.ma.concatenate((gap, self.data))
             return
         elif starttime > self.stats.endtime:
-            self.data = np.empty(0)
+            self.data = np.empty(0, dtype = org_dtype)
             return
         elif delta > 0:
             self.data = self.data[delta:]
@@ -581,6 +582,7 @@ class Trace(object):
         >>> tr.stats.endtime
         UTCDateTime(1970, 1, 1, 0, 0, 2)
         """
+        org_dtype = self.data.dtype
         if isinstance(endtime, float) or isinstance(endtime, int):
             endtime = UTCDateTime(self.stats.endtime) - endtime
         elif not isinstance(endtime, UTCDateTime):
@@ -603,7 +605,7 @@ class Trace(object):
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
                                    delta * self.stats.delta
-            self.data = np.empty(0)
+            self.data = np.empty(0, dtype = org_dtype)
             return
         # cut from right
         if pad:

@@ -247,7 +247,8 @@ class LibMSEED(object):
 
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
-                     dataquality=1, verbose=0):
+                     dataquality=1, verbose=0, starttime = None, 
+                     endtime = None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -274,7 +275,9 @@ class LibMSEED(object):
                                          dataflag=dataflag,
                                          skipnotdata=skipnotdata,
                                          dataquality=dataquality,
-                                         verbose=verbose)
+                                         verbose=verbose,
+                                         starttime=starttime,
+                                         endtime=endtime)
         chain = mstg.contents.traces.contents
         numtraces = mstg.contents.numtraces
         # Loop over traces and append to trace_list.
@@ -354,7 +357,8 @@ class LibMSEED(object):
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
                              sampratetol= -1, dataflag=1, skipnotdata=1,
-                             dataquality=1, verbose=0):
+                             dataquality=1, verbose=0, starttime = None,
+                             endtime = None):
         """
         Reads MiniSEED data from file. Returns MSTraceGroup structure.
         
@@ -378,12 +382,23 @@ class LibMSEED(object):
         """
         # Creates MSTraceGroup Structure
         mstg = clibmseed.mst_initgroup(None)
-        # Uses libmseed to read the file and populate the MSTraceGroup
-        errcode = clibmseed.ms_readtraces(
-            C.pointer(mstg), filename, reclen, timetol, sampratetol,
-            dataquality, skipnotdata, dataflag, verbose)
-        if errcode != 0:
-            raise Exception("Error in ms_readtraces")
+        if starttime and endtime:
+            starttime = long(starttime.timestamp * HPTMODULUS)
+            endtime = long(endtime.timestamp * HPTMODULUS)
+            # Uses libmseed to read the file and populate the MSTraceGroup
+            errcode = clibmseed.ms_readtraces_window(
+                C.pointer(mstg), filename, reclen, timetol, sampratetol,
+                dataquality, skipnotdata, dataflag, verbose, starttime,
+                endtime)
+            if errcode != 0:
+                raise Exception("Error in ms_readtraces")
+        else:
+            # Uses libmseed to read the file and populate the MSTraceGroup
+            errcode = clibmseed.ms_readtraces(
+                C.pointer(mstg), filename, reclen, timetol, sampratetol,
+                dataquality, skipnotdata, dataflag, verbose)
+            if errcode != 0:
+                raise Exception("Error in ms_readtraces")
         return mstg
 
     def getFirstRecordHeaderInfo(self, filename):

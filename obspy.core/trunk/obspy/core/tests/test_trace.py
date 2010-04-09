@@ -225,6 +225,21 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(trace.stats.starttime, start + 0.5)
         self.assertEquals(trace.stats.endtime, end - 0.5)
 
+    def test_trimAllDoesNotChangeDtype(self):
+        """
+        If a Trace is completely trimmed, e.g. no data samples are remaining,
+        the dtype should remain unchanged.
+
+        A trace with no data samples is not really senseful but the dtype
+        should not be changed anyways.
+        """
+        # Choose non native dtype.
+        tr = Trace(np.arange(100, dtype = 'int16'))
+        tr.trim(UTCDateTime(10000), UTCDateTime(20000))
+        # Assert the result.
+        self.assertEqual(len(tr.data), 0)
+        self.assertEqual(tr.data.dtype, 'int16')
+
     def test_addTraceWithGap(self):
         """
         Tests __add__ method of the Trace class.

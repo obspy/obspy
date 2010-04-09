@@ -122,6 +122,13 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
             st.extend(_read(file, format, headonly, **kwargs).traces)
         if len(st) == 0:
             raise Exception("Cannot open file/files", pathname)
+    # Trim if times are given.
+    starttime = kwargs.get('starttime')
+    endtime = kwargs.get('endtime')
+    if starttime:
+        st.ltrim(starttime)
+    if endtime:
+        st.rtrim(endtime)
     return st
 
 
@@ -611,6 +618,7 @@ class Stream(object):
         """
         for trace in self:
             trace.trim(starttime, endtime, pad)
+        self.traces = [tr for tr in self if tr.stats.npts]
 
     def ltrim(self, starttime, pad=False):
         """
@@ -618,6 +626,7 @@ class Stream(object):
         """
         for trace in self:
             trace.ltrim(starttime, pad)
+        self.traces = [tr for tr in self if tr.stats.npts]
 
     def rtrim(self, endtime, pad=False):
         """
@@ -625,6 +634,7 @@ class Stream(object):
         """
         for trace in self:
             trace.rtrim(endtime, pad)
+        self.traces = [tr for tr in self if tr.stats.npts]
 
     def slice(self, starttime, endtime):
         """

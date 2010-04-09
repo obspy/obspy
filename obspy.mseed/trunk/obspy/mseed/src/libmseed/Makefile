@@ -10,7 +10,7 @@ GCCFLAGS = -O2 -Wall -fPIC
 
 LIB_OBJS = fileutils.o genutils.o gswap.o lmplatform.o lookup.o \
            msrutils.o pack.o packdata.o traceutils.o tracelist.o \
-           unpack.o unpackdata.o selection.o logging.o
+           unpack.o unpackdata.o selection.o logging.o fileutils_addon.o
 
 MAJOR_VER = 2
 MINOR_VER = 4

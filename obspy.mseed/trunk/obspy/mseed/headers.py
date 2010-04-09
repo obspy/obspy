@@ -444,6 +444,12 @@ clibmseed.ms_readtraces.argtypes = [
     C.c_double, C.c_short, C.c_short, C.c_short, C.c_short]
 clibmseed.ms_readtraces.restype = C.c_int
 
+clibmseed.ms_readtraces_window.argtypes = [
+    C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
+    C.c_double, C.c_short, C.c_short, C.c_short, C.c_short, C.c_int64,
+    C.c_int64]
+clibmseed.ms_readtraces_window.restype = C.c_int
+
 clibmseed.msr_starttime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_starttime.restype = C.c_int64
 

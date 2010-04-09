@@ -9,7 +9,7 @@ from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
-from obspy.mseed.headers import PyFile_FromFile
+from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS
 from obspy.mseed.libmseed import clibmseed, MSStruct
 import copy
 import ctypes as C
@@ -158,6 +158,36 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(station[i], header['station'])
             self.assertEqual(npts[i], len(trace_list[0][1]))
         del trace_list, header, data
+
+    def test_readMSTraces_window(self):
+        """
+        Tests reading only the first couple of samples.
+        """
+        mseed_file = os.path.join(self.path,
+                              unicode('BW.BGLD.__.EHE.D.2008.001.first_10_percent'))
+        mseed = LibMSEED()
+        # Read the usual way.
+        trace_list = mseed.readMSTraces(mseed_file)
+        self.assertEqual(len(trace_list), 1)
+        org_data = trace_list[0][1]
+        # Get start list and convert it.
+        start = trace_list[0][0]['starttime']
+        start = UTCDateTime(start/float(HPTMODULUS))
+        end = trace_list[0][0]['endtime']
+        end = UTCDateTime(end/float(HPTMODULUS))
+        # Read the first 10 seconds.
+        trace_list2 = mseed.readMSTraces(mseed_file, starttime = start,
+                                        endtime = start + 10)
+        new_data = trace_list2[0][1]
+        # Make sure the array is actually smaller.
+        self.assertTrue(len(org_data) > len(new_data))
+        # Assert the arrays.
+        np.testing.assert_array_equal(org_data[:len(new_data)],new_data)
+        # Read a last time and read the whole file.
+        trace_list3 = mseed.readMSTraces(mseed_file, starttime = start,
+                                        endtime = end)
+        np.testing.assert_array_equal(org_data, trace_list3[0][1])
+        del trace_list, trace_list2, trace_list3
 
     def test_readHeader(self):
         """

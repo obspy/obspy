@@ -668,6 +668,28 @@ class StreamTestCase(unittest.TestCase):
                   (4 * 1440 - 1) * trace1.stats.delta
         self.assertEquals(st[0].stats.endtime, endtime)
 
+    def test_trimRemovingEmptyTraces(self):
+        """
+        A stream containing several empty traces after triming should throw
+        away the emtpy traces.
+        """
+        # create Stream.
+        trace1 = Trace(data = np.zeros(10))
+        trace1.stats.delta = 1.0
+        trace2 = Trace(data = np.ones(10))
+        trace2.stats.delta = 1.0
+        trace2.stats.starttime = UTCDateTime(1000)
+        trace3 = Trace(data = np.arange(10))
+        trace3.stats.delta = 1.0
+        trace3.stats.starttime = UTCDateTime(2000)
+        stream = Stream([trace1, trace2, trace3])
+        stream.trim(UTCDateTime(900), UTCDateTime(1100))
+        # Check if only trace2 is still in the Stream object.
+        self.assertEqual(len(stream), 1)
+        np.testing.assert_array_equal(np.ones(10), stream[0].data)
+        self.assertEqual(stream[0].stats.starttime, UTCDateTime(1000))
+        self.assertEqual(stream[0].stats.npts, 10)
+
     def test_trimWithSmallSamplingRate(self):
         """
         Bugfix for cutting multiple traces with very small sampling rate.

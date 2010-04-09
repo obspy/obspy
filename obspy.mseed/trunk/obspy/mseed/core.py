@@ -70,14 +70,15 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     else:
         kwargs['starttime'] = kwargs.get('starttime', None)
         kwargs['endtime'] = kwargs.get('endtime', None)
-        if starttime or endtime or platform.system() == "Windows" or quality:
+        if platform.system() == "Windows" or quality:
             # 4x slower on Mac
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
                          starttime=starttime, endtime=endtime, reclen=reclen,
                          quality = quality)
         else:
             # problem on windows with big files (>=20 MB)
-            trace_list = __libmseed__.readMSTraces(filename, reclen=reclen)
+            trace_list = __libmseed__.readMSTraces(filename, reclen=reclen,
+                         starttime = starttime, endtime = endtime)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
