@@ -1,7 +1,8 @@
 @echo off
 SETLOCAL
 
-set PYTHON="python"
+REM set PYTHON="C:\Program Files (x86)\Python2.6\python"
+set PYTHON="C:\Program Files\Python26\python"
 
 cd ..
 
