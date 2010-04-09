@@ -15,7 +15,7 @@ import numpy as np
 # Further entries: pre-generated libraries
 if platform.system() == 'Windows':
     if platform.architecture()[0] == '64bit':
-        lib_names = ['libmseed.pyd']
+        lib_names = ['libmseed.pyd', '_libmseed.win64.dll']
     else:
         lib_names = ['libmseed.pyd', '_libmseed.win32.dll']
 elif platform.system() == 'Darwin':
