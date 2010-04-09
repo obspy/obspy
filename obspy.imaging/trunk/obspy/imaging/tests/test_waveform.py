@@ -41,18 +41,16 @@ class WaveformTestCase(unittest.TestCase):
         time_delta = endtime - starttime
         number_of_samples = time_delta * sampling_rate + 1
         # Calculate first sine wave.
-        curve = np.linspace(0, 2 * np.pi, int(number_of_samples//2))
+        curve = np.linspace(0, 2 * np.pi, int(number_of_samples // 2))
         # Superimpose it with a smaller but shorter wavelength sine wave.
         curve = np.sin(curve) + 0.2 * np.sin(10 * curve)
         # To get a thick curve alternate between two curves.
         data = np.empty(number_of_samples)
         # Check if even number and adjust if necessary.
         if number_of_samples % 2 == 0:
-            length = number_of_samples
             data[0::2] = curve
             data[1::2] = curve + 0.2
         else:
-            length = number_of_samples - 1
             data[-1] = 0.0
             data[0:-1][0::2] = curve
             data[0:-1][1::2] = curve + 0.2
@@ -64,38 +62,26 @@ class WaveformTestCase(unittest.TestCase):
         tr.stats.station = 'OBSPY'
         tr.stats.channel = 'TEST'
         tr.data = data
-        return Stream(traces = [tr])
+        return Stream(traces=[tr])
 
     def test_dataRemainsUnchanged(self):
         """
         Data should not be changed when plotting.
         """
-        # Use once with straight plotting.
+        # Use once with straight plotting with random calibration factor
         st = self.createStream(UTCDateTime(0), UTCDateTime(1000), 1)
-        # Random calibration factor.
         st[0].stats.calib = 0.2343
-        # File to write to to avoid the starting of an X server or other
-        # graphical interaction.
-        tempfile = NamedTemporaryFile().name
         org_data = deepcopy(st[0].data)
-        st.plot(outfile = tempfile, format = 'png')
-        os.remove(tempfile)
+        st.plot(format='png')
+        # compare with original data
         np.testing.assert_array_equal(org_data, st[0].data)
-        del st
-        # Now with min-max list creation.
-        # Use once with straight plotting.
+        # Now with min-max list creation (more than 400000 samples).
         st = self.createStream(UTCDateTime(0), UTCDateTime(600000), 1)
-        # Random calibration factor.
         st[0].stats.calib = 0.2343
-        # File to write to to avoid the starting of an X server or other
-        # graphical interaction.
-        tempfile = NamedTemporaryFile().name
         org_data = deepcopy(st[0].data)
-        st.plot(outfile = tempfile, format = 'png')
-        os.remove(tempfile)
+        st.plot(format='png')
+        # compare with original data
         np.testing.assert_array_equal(org_data, st[0].data)
-        del st
-        
 
     def test_plotEmptyStream(self):
         """
@@ -126,7 +112,7 @@ class WaveformTestCase(unittest.TestCase):
         st = self.createStream(start, start + 3600, 1000.0)
         filename = 'OneHourManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
-        
+
     def test_plotOneHourFewSamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -146,8 +132,8 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3/4, 500.0)
-        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 500.0)
+        st = self.createStream(start, start + 3600 * 3 / 4, 500.0)
+        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         filename = 'SimpleGapManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
@@ -159,8 +145,8 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3/4, 5.0)
-        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 5.0)
+        st = self.createStream(start, start + 3600 * 3 / 4, 5.0)
+        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         filename = 'SimpleGapFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
@@ -172,11 +158,11 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3/4, 500.0)
-        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 500.0)
+        st = self.createStream(start, start + 3600 * 3 / 4, 500.0)
+        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         st[0].stats.location = '01'
         st[1].stats.location = '01'
-        temp_st = self.createStream(start + 3600 * 3/4, start +  2.25 * 3600, 500.0)
+        temp_st = self.createStream(start + 3600 * 3 / 4, start + 2.25 * 3600, 500.0)
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapManySamples.png'
@@ -190,15 +176,16 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3/4, 5.0)
-        st += self.createStream(start + 2.25 * 3600, start +  3* 3600, 5.0)
+        st = self.createStream(start, start + 3600 * 3 / 4, 5.0)
+        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         st[0].stats.location = '01'
         st[1].stats.location = '01'
-        temp_st = self.createStream(start + 3600 * 3/4, start +  2.25 * 3600, 5.0)
+        temp_st = self.createStream(start + 3600 * 3 / 4, start + 2.25 * 3600, 5.0)
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
