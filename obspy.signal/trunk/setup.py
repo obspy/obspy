@@ -13,6 +13,7 @@ obspy.signal installer
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import os
+import platform
 
 
 VERSION = open(os.path.join("obspy", "signal", "VERSION.txt")).read()
@@ -29,11 +30,16 @@ class MyExtension(Extension):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
 
+macros = []
+if platform.system() == "Windows":
+    # disable some warnings for MSVC
+    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
+
 src = os.path.join('obspy', 'signal', 'src') + os.sep
 symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
            if s.strip() != '']
 lib = MyExtension('libsignal',
-                  define_macros=[],
+                  define_macros=macros,
                   libraries=[],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
                            src + 'coordtrans.c', src + 'pk_mbaer.c',

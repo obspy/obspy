@@ -46,7 +46,10 @@ from obspy.core.util import c_file_p, formatScientific
 # Import shared libmseed library depending on the platform.
 # XXX: trying multiple names for now - should be removed
 if platform.system() == 'Windows':
-    lib_names = ['gse_functions.pyd']
+    if platform.architecture()[0] == '64bit':
+        lib_names = ['gse_functions.pyd', '_gse_functions.win64.dll']
+    else:
+        lib_names = ['gse_functions.pyd', '_gse_functions.win32.dll']
 elif platform.system() == 'Darwin':
     lib_names = ['gse_functions.so', '_gse_functions.dylib']
     # 32 and 64 bit UNIX

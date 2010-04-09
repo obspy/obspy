@@ -20,7 +20,10 @@ import platform
 # Import shared libsignal library depending on the platform.
 # XXX: trying multiple names for now - should be removed
 if platform.system() == 'Windows':
-    lib_names = ['libsignal.pyd']
+    if platform.architecture()[0] == '64bit':
+        lib_names = ['libsignal.pyd', '_libsignal.win64.dll']
+    else:
+        lib_names = ['libsignal.pyd', '_libsignal.win32.dll']
 elif platform.system() == 'Darwin':
     lib_names = ['libsignal.so', '_libsignal.dylib']
 else:

@@ -27,6 +27,7 @@ obspy.gse2 installer
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import os
+import platform
 
 
 VERSION = open(os.path.join("obspy", "gse2", "VERSION.txt")).read()
@@ -42,12 +43,17 @@ class MyExtension(Extension):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
 
+macros = []
+if platform.system() == "Windows":
+    # disable some warnings for MSVC
+    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
+
 src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
 symbols = [s.strip()
            for s in open(src + 'gse_functions.def', 'r').readlines()[2:]
            if s.strip() != '']
 lib = MyExtension('gse_functions',
-                  define_macros=[],
+                  define_macros=macros,
                   libraries=[],
                   sources=[src + 'buf.c', src + 'gse_functions.c'],
                   export_symbols=symbols,
