@@ -145,7 +145,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Reads a full SEED volume.
         """
-        files = os.path.join(self.path, 'data', 'ArclinkRequest_340397.fseed')
+        files = os.path.join(self.path, 'data', 'fullseed.mseed')
         st = read(files)
         self.assertEquals(len(st), 3)
         self.assertEquals(len(st[0]), 602)
@@ -535,7 +535,7 @@ class CoreTestCase(unittest.TestCase):
         Tests isMSEED functionality.
         """
         # fullseed starting with blockette 010
-        file = os.path.join(self.path, 'data', 'ArclinkRequest_340397.fseed')
+        file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(isMSEED(file))
         st = read(file)
         self.assertEqual(len(st), 3)
