@@ -311,12 +311,10 @@ class WaveformPlotting(object):
 
         Slow and high memory consumption for large datasets.
         """
-        # Use deepcopy here, because the Traces are generally small and if more
-        # than one Trace is present, they will be merged and the original
-        # Stream object should not change.
+        # Copy to avoid any changes to original data.
+        trace = deepcopy(trace)
         if len(trace) > 1:
-            traces = deepcopy(trace)
-            stream = Stream(traces=traces)
+            stream = Stream(traces=trace)
             stream.merge()
             trace = stream[0]
         else:

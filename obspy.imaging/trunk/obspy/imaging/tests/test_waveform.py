@@ -5,8 +5,9 @@ The obspy.imaging.waveform test suite.
 
 from copy import deepcopy
 from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.util import NamedTemporaryFile
 import inspect
-import numpy as N
+import numpy as np
 import os
 import unittest
 
@@ -40,11 +41,11 @@ class WaveformTestCase(unittest.TestCase):
         time_delta = endtime - starttime
         number_of_samples = time_delta * sampling_rate + 1
         # Calculate first sine wave.
-        curve = N.linspace(0, 2 * N.pi, int(number_of_samples//2))
+        curve = np.linspace(0, 2 * np.pi, int(number_of_samples//2))
         # Superimpose it with a smaller but shorter wavelength sine wave.
-        curve = N.sin(curve) + 0.2 * N.sin(10 * curve)
+        curve = np.sin(curve) + 0.2 * np.sin(10 * curve)
         # To get a thick curve alternate between two curves.
-        data = N.empty(number_of_samples)
+        data = np.empty(number_of_samples)
         # Check if even number and adjust if necessary.
         if number_of_samples % 2 == 0:
             length = number_of_samples
@@ -64,6 +65,37 @@ class WaveformTestCase(unittest.TestCase):
         tr.stats.channel = 'TEST'
         tr.data = data
         return Stream(traces = [tr])
+
+    def test_dataRemainsUnchanged(self):
+        """
+        Data should not be changed when plotting.
+        """
+        # Use once with straight plotting.
+        st = self.createStream(UTCDateTime(0), UTCDateTime(1000), 1)
+        # Random calibration factor.
+        st[0].stats.calib = 0.2343
+        # File to write to to avoid the starting of an X server or other
+        # graphical interaction.
+        tempfile = NamedTemporaryFile().name
+        org_data = deepcopy(st[0].data)
+        st.plot(outfile = tempfile, format = 'png')
+        os.remove(tempfile)
+        np.testing.assert_array_equal(org_data, st[0].data)
+        del st
+        # Now with min-max list creation.
+        # Use once with straight plotting.
+        st = self.createStream(UTCDateTime(0), UTCDateTime(600000), 1)
+        # Random calibration factor.
+        st[0].stats.calib = 0.2343
+        # File to write to to avoid the starting of an X server or other
+        # graphical interaction.
+        tempfile = NamedTemporaryFile().name
+        org_data = deepcopy(st[0].data)
+        st.plot(outfile = tempfile, format = 'png')
+        os.remove(tempfile)
+        np.testing.assert_array_equal(org_data, st[0].data)
+        del st
+        
 
     def test_plotEmptyStream(self):
         """
