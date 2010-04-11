@@ -17,15 +17,17 @@ import os
 # left SAC attributes, right trace attributes
 convert_dict = {
     'npts': 'npts',
-    'delta':'sampling_rate',
+    'delta': 'sampling_rate',
     'kcmpnm': 'channel',
-    'kstnm': 'station'
+    'kstnm': 'station',
+    'scale': 'calib',
+    'knetwk': 'network'
 }
 
 #XXX NOTE not all values from the read in dictionary are converted
 # this is definetly a problem when reading an writing a read SAC file.
 sac_extra = [
-    'depmin', 'depmax', 'scale', 'odelta', 'b', 'e', 'o', 'a', 't0', 't1',
+    'depmin', 'depmax', 'odelta', 'b', 'e', 'o', 'a', 't0', 't1',
     't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo',
     'stel', 'stdp', 'evla', 'evlo', 'evdp', 'mag', 'user0', 'user1', 'user2',
     'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'dist',
@@ -35,7 +37,7 @@ sac_extra = [
     'iqual', 'isynth', 'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok',
     'lcalda', 'kevnm', 'khole', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
     'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
-    'knetwk', 'kdatrd', 'kinst',
+    'kdatrd', 'kinst',
 ]
 
 
