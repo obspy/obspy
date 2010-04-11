@@ -16,7 +16,7 @@ import sys
 from obspy.core import read
 from optparse import OptionParser
 from matplotlib.dates import date2num, num2date
-from matplotlib.pyplot import figure, show, savefig
+from matplotlib.pyplot import figure, show
 import numpy as np
 
 def main():
@@ -24,13 +24,13 @@ def main():
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
                       help="Format log file to test report")
-    (options, largs) = parser.parse_args()
+    (_, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
     if len(largs) == 0:
         parser.print_help()
         sys.exit(1)
-    
+
     #
     # Generate dictionary containing nested lists of start and end times per
     # station
@@ -49,8 +49,9 @@ def main():
             data.setdefault(_id, [])
             data[_id].append([date2num(tr.stats.starttime),
                               date2num(tr.stats.endtime)])
-            samp_int.setdefault(_id, 1.0 / (24 * 3600 * tr.stats.sampling_rate))
-    
+            samp_int.setdefault(_id,
+                                1.0 / (24 * 3600 * tr.stats.sampling_rate))
+
     #
     # Loop throught this dictionary
     ids = data.keys()
@@ -62,17 +63,17 @@ def main():
         startend = np.array(data[_id])
         offset = np.ones(len(startend)) * _i #generate list of y values
         ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
-        ax.hlines(offset, startend[:,0], startend[:,1])
+        ax.hlines(offset, startend[:, 0], startend[:, 1])
         # find the gaps
-        diffs = startend[1:,0] - startend[:-1,1] #currend.start - last.end
+        diffs = startend[1:, 0] - startend[:-1, 1] #currend.start - last.end
         gaps = startend[diffs > 1.8 * samp_int[_id], 1]
         if len(gaps) > 0:
             offset = offset[:len(gaps)]
-            ax.vlines(gaps, offset-0.4, offset + 0.4, 'r', linewidth=1)
-    
+            ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)
+
     #
     # Pretty format the plot
-    ax.set_ylim(0-0.5, _i + 0.5)
+    ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1), ids)
     fig.autofmt_xdate() #rotate date
     ax.set_title(" --- ".join(x.strftime('%Y%m%d %H:%M:%S')

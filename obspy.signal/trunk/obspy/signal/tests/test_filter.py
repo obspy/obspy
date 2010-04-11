@@ -4,8 +4,7 @@
 The Filter test suite.
 """
 
-from obspy.signal import bandpass, bandpassZPHSH, lowpass, lowpassZPHSH, \
-    highpass, highpassZPHSH
+from obspy.signal import bandpass, lowpass, highpass
 from obspy.signal.filter import envelope
 import inspect
 import os
@@ -114,7 +113,8 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = N.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / N.sum(data_pitsa ** 2))
+        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) /
+                     N.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_lowpassZPHSHVsPitsa(self):

@@ -5,7 +5,6 @@ The obspy.imaging.waveform test suite.
 
 from copy import deepcopy
 from obspy.core import Stream, Trace, UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 import inspect
 import numpy as np
 import os
