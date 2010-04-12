@@ -121,16 +121,15 @@ class TreeModel(QtCore.QAbstractItemModel):
         item = index.internalPointer()
 
         if not index.isValid():
-            return None
+	    return QtCore.QVariant()
 
         if role == QtCore.Qt.ToolTipRole:
-            return item.tooltip()
+            return QtCore.QVariant(item.tooltip())
 
         if role != QtCore.Qt.DisplayRole:
-            return None
+	    return QtCore.QVariant()
 
-
-        return item.data(index.column())
+        return QtCore.QVariant(item.data(index.column()))
 
     def getFullPath(self, index):
         """
@@ -147,9 +146,9 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     def headerData(self, section, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.rootItem.data(section)
+            return QtCore.QVariant(self.rootItem.data(section))
 
-        return None
+        return QtCore.QVariant(None)
 
     def index(self, row, column, parent):
         if not self.hasIndex(row, column, parent):
@@ -238,8 +237,10 @@ class TreeModel(QtCore.QAbstractItemModel):
                         ch_signal = st_child.child(st_child.childCount() - 1)
 
 class TreeSelector(QtGui.QItemSelectionModel):
-    def __init__(self, *args, **kwargs):
-        super(TreeSelector, self).__init__(*args, **kwargs)
+    def __init__(self, model, *args, **kwargs):
+	# XXX: Kwargs not working.
+        # super(TreeSelector, self).__init__(*args, **kwargs)
+        super(TreeSelector, self).__init__(model)
 
 class NetworkTree(QtGui.QTreeView):
     #add_channel = QtCore.pyqtSignal(str, str, str, str)

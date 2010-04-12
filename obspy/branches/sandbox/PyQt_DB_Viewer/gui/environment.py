@@ -19,8 +19,8 @@ class Environment(object):
         self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.res_dir,
                                                 'events.db'))
         # Handle the times for the plots.
-        self.starttime = UTCDateTime(2009, 1, 1)
-        self.endtime = UTCDateTime(2010, 1, 1) - 1
+        self.starttime = UTCDateTime(2009, 7, 1)
+        self.endtime = UTCDateTime(2009, 8, 1) - 1
         self.time_range = self.endtime - self.starttime
         # Debug.
         self.debug = kwargs.get('debug', False)

@@ -32,12 +32,23 @@ class Timers(QtCore.QThread):
         self.updateServerStatus()
         # Setup server timer.
         self.server_timer = QtCore.QTimer()
-        self.server_timer.timeout.connect(self.updateServerStatus)
+
+	# XXX: New method not working with PyQt4
+        # self.server_timer.timeout.connect(self.updateServerStatus)
+	#QtCore.SLOT("self.updateServerStatus()")
+	QtCore.QObject.connect(self.server_timer, QtCore.SIGNAL("timeout()"),\
+			       self.updateServerStatus) 
         # Call every ten second.
         self.server_timer.start(10000)
         # Setup time timer.
         self.time_timer = QtCore.QTimer()
-        self.time_timer.timeout.connect(self.updateCurrentTime)
+
+	# XXX: New method not working with PyQt4
+        # self.time_timer.timeout.connect(self.updateCurrentTime)
+	#QtCore.SLOT("self.updateCurrentTime()")
+	QtCore.QObject.connect(self.time_timer, QtCore.SIGNAL("timeout()"),\
+			       self.updateCurrentTime)
+
         # Call every  second.
         self.time_timer.start(1000)
         # Start main loop of the thread. Needed for the timers.

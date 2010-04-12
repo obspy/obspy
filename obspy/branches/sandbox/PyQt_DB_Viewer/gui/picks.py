@@ -59,7 +59,12 @@ class Picks(QtGui.QGroupBox):
         self.setLayout(self.pick_layout)
 
         # Connect the signal emmited when the combo box is changed.
-        self.combo_box.currentIndexChanged.connect(self.indexChanged)
+	# XXX: Not working with PyQt 4.4
+        # self.combo_box.currentIndexChanged.connect(self.indexChanged)
+	# Create slot.
+	#QtCore.SLOT("self.update(int)")
+	QtCore.QObject.connect(self.combo_box, QtCore.SIGNAL("currentIndexChanged(int)"),\
+			       self.indexChanged)
 
     def update(self):
         # Get events and picks from the database for the current timeframe.
@@ -72,8 +77,11 @@ class Picks(QtGui.QGroupBox):
 
     # The decorator is necessary because the signal emitted is overloaded and
     # just the integer one is handled here.
-    @QtCore.pyqtSlot(int)
+    # XXX: The decorator needs at least PyQt 4.5
+    # @QtCore.pyqtSlot(int)
     def indexChanged(self, index):
+	if type(index) != int:
+	    return
         if index == 0:
             self.overviewFrame.show()
             self.detailFrame.hide()

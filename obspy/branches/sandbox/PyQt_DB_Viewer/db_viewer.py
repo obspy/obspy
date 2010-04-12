@@ -12,7 +12,8 @@ class TabWidget(QtGui.QTabWidget):
     """
     def __init__(self, parent=None):
        super (TabWidget, self).__init__(parent)
-       self.setTabsClosable(False)
+       # XXX: Does not work with PyQt 4.4.
+       # self.setTabsClosable(False)
 
 if __name__ == '__main__':
     # Init environment.
@@ -51,13 +52,15 @@ if __name__ == '__main__':
     
     # Init Status bar.
     st = QtGui.QStatusBar()
+    env.st = st
     # Label to display the server status in the status bar. Need to init with
     # rich text if rich text should be used later on.
     env.server_status = QtGui.QLabel('<font color="#FF0000"></font>')
     st.addPermanentWidget(env.server_status)
     # Seperator Label.
     env.seperator = QtGui.QLabel()
-    env.seperator.setFrameShape(5)
+    # XXX: Not working with PyQt 4.4.
+    #env.seperator.setFrameShape(5)
     env.seperator.setFrameShadow(QtGui.QFrame.Raised)
     st.addPermanentWidget(env.seperator)
     # Label to display the current UTC time.
@@ -68,8 +71,8 @@ if __name__ == '__main__':
     timers = Timers(env = env)
 
     window.setCentralWidget(tab)
-    window.setStatusBar(st)
     # Create status bar.
+    window.setStatusBar(st)
     window.resize(1150, 700)
     # Startup the rest.
     main_window.startup()

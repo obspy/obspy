@@ -58,8 +58,14 @@ class MainWindow(QtGui.QWidget):
     def startup(self):
         self.env.seishub.startup()
         self.nw_tree.startup()
+
         # Connect some slots.
-        self.nw_tree.nw_select_model.selectionChanged.connect(self.waveforms.scene.add_channel)
+	# XXX: New method not working with PyQt4
+        # self.nw_tree.nw_select_model.selectionChanged.connect(self.waveforms.scene.add_channel)
+	#QtCore.SLOT("self.waveforms.scene.add_channel(int, int)")
+	QtCore.QObject.connect(self.nw_tree.nw_select_model, QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
+			       self.waveforms.scene.add_channel)
+
         web = Website(env = self.env)
         # Add a WebView to later display the map.
         file = open(os.path.join(self.env.res_dir, 'map.html'))
