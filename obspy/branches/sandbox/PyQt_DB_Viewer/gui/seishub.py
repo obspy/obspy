@@ -78,7 +78,7 @@ class Seishub(object):
         """
         Connects to the SeisHub server.
         """
-        self.client = Client(base_url = self.server)
+        self.client = Client(base_url=self.server)
         if self.ping():
             self.online = True
         else:
@@ -104,7 +104,7 @@ class Seishub(object):
         if not os.path.exists(self.pickle_file):
             self.reload_infos()
         # Read the dict.
-        file = open(self.pickle_file, 'r')
+        file = open(self.pickle_file, 'rb')
         self.networks = pickle.load(file)
         file.close()
 
@@ -161,7 +161,7 @@ class Seishub(object):
         self.networks['Server'] = self.client.base_url
         # Open file.
         file = open(self.pickle_file, 'wb')
-        pickle.dump(self.networks, file, protocol = 2)
+        pickle.dump(self.networks, file, protocol=2)
         file.close()
 
     def updateEventListFromSeishub(self, starttime, endtime):
@@ -180,7 +180,7 @@ class Seishub(object):
         # - first pick of event must be before stream endtime
         # - last pick of event must be after stream starttime
         # thus we get any event with at least one pick in between start/endtime
-        url = self.server+ "/seismology/event/getList?" + \
+        url = self.server + "/seismology/event/getList?" + \
             "min_last_pick=%s&max_first_pick=%s" % \
             (str(starttime), str(endtime))
         req = urllib2.Request(url)
@@ -195,7 +195,7 @@ class Seishub(object):
         self.seishubEventList = [(_i.text, UTCDateTime(_j.text)) for _i, _j \
                                  in zip(eventList, eventList_last_modified)]
         self.seishubEventCount = len(self.seishubEventList)
-        
+
     def removePicksOutofRange(self):
         """
         Reads all cached events and returns those with at least one pick in the
@@ -241,7 +241,7 @@ class Seishub(object):
         # Check if event already in database.
         self.db_files = self.env.db.getFilesAndModification()
         for _i, event in enumerate(self.seishubEventList):
-            self.env.setSplash('Loading event %i of %i' % ((_i+1), amount))
+            self.env.setSplash('Loading event %i of %i' % ((_i + 1), amount))
             if (event[0], str(event[1])) in self.db_files:
                 continue
             # If it exists, skip it.
@@ -280,7 +280,7 @@ class Seishub(object):
         files = [os.path.split(file)[1] for file in self.files]
         amount = len(self.seishubEventList)
         for _k, event in enumerate(self.seishubEventList):
-            self.env.setSplash('Parsing event %i of %i' % ((_k+1), amount))
+            self.env.setSplash('Parsing event %i of %i' % ((_k + 1), amount))
             if (event[0], str(event[1])) in self.db_files:
                 continue
             # Check if available.
@@ -290,5 +290,5 @@ class Seishub(object):
             self.env.db.addEventFile(file, event[1])
         if self.env.debug:
             t = time.time() - a
-            print 'Parsed %i events with %i picks in %f seconds.' %\
+            print 'Parsed %i events with %i picks in %f seconds.' % \
                         (self.seishubEventCount, self.pick_count, t)

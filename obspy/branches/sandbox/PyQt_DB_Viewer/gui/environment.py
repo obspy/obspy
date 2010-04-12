@@ -32,21 +32,21 @@ class Environment(object):
         self.buffer *= 60
         # Seishub Server.
         self.seishub_server = kwargs.get('seishub_server',
-                                         'http://teide:8080')
+                                         'http://teide.geophysik.uni-muenchen.de:8080')
         # Scale of the plots.
         self.log_scale = False
         # Start the SeisHub class.
-        self.seishub = Seishub(env = self)
+        self.seishub = Seishub(env=self)
         # Init the Database first. Does not need a network connection. Should
         # always work.
-        self.db = EventDB(env = self)
+        self.db = EventDB(env=self)
         # Start the waveform handler.
-        self.handler = WaveformHandler(env = self)
+        self.handler = WaveformHandler(env=self)
 
     def setSplash(self, text):
         """
         Updates the splash screen.
         """
         self.splash.showMessage(text, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
-                       QtCore.Qt.black) 
+                       QtCore.Qt.black)
         self.qApp.processEvents()

@@ -71,10 +71,10 @@ class TreeItem(object):
             data = self.data(0)
             # No seperate location handling. Is included in the channel data.
             if '.' in data:
-                path = '%s.%s.%s' % (self.parentItem.parentItem.data(0), 
+                path = '%s.%s.%s' % (self.parentItem.parentItem.data(0),
                                      self.parentItem.data(0), data)
             else:
-                path = '%s.%s..%s' % (self.parentItem.parentItem.data(0), 
+                path = '%s.%s..%s' % (self.parentItem.parentItem.data(0),
                                      self.parentItem.data(0), data)
         else:
             # Hopefully does not happen.
@@ -100,12 +100,12 @@ class TreeModel(QtCore.QAbstractItemModel):
         """
         super(TreeModel, self).__init__(parent)
         # Lade Datensatz 
-        f = open(filename) 
-        try: 
+        f = open(filename, 'rb')
+        try:
             self.networks = pickle.load(f)
             self.server = self.networks.pop('Server')
             self.query_date = self.networks.pop('Date')
-        finally: 
+        finally:
             f.close()
         # Set root item.
         self.rootItem = TreeItem(('Networks', 'Details'), 'root')
@@ -229,7 +229,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                     for channel in channels:
                         if len(location):
                             st_child.appendChild(TreeItem((location + '.'\
-                                        + channel), 'channel',  st_child))
+                                        + channel), 'channel', st_child))
                         else:
                             st_child.appendChild(TreeItem((channel), 'channel',
                                                                      st_child))
@@ -244,7 +244,7 @@ class TreeSelector(QtGui.QItemSelectionModel):
 
 class NetworkTree(QtGui.QTreeView):
     #add_channel = QtCore.pyqtSignal(str, str, str, str)
-    def __init__(self, waveforms, env, parent = None, *args, **kwargs):
+    def __init__(self, waveforms, env, parent=None, *args, **kwargs):
         super(NetworkTree, self).__init__(parent)
         self.env = env
         # Animate the Network tree.
