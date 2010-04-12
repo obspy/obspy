@@ -54,7 +54,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     tr.stats.station = "MANZ1"
                     tr.stats.location = "00"
                     tr.stats.channel = "EHE"
-                    tr.stats.calib = 0.999999
+                    tr.stats.calib = 0.199999
                     tr.stats.delta = 0.005
                     tr.stats.starttime = start
                     # create waveform file with given format and byte order
@@ -73,9 +73,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # check byte order
                     self.assertEquals(st[0].data.dtype.byteorder, '=')
                     # check meta data
+                    # MSEED and WAV do not contain the calibration factor
                     if format not in ['MSEED', 'WAV']:
-                        # MSEED does not contain the calibration factor
-                        self.assertAlmostEquals(st[0].stats.calib, 0.999999, 5)
+                        self.assertAlmostEquals(st[0].stats.calib, 0.199999, 5)
+                    else:
+                        self.assertEquals(st[0].stats.calib, 1.0)
                     if format not in ['WAV']:
                         self.assertEquals(st[0].stats.starttime, start)
                         self.assertEquals(st[0].stats.endtime, start + 9.995)
