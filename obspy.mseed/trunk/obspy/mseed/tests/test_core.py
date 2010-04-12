@@ -247,9 +247,9 @@ class CoreTestCase(unittest.TestCase):
             st[0].data = data.astype(seed_dtype)
             st.verify()
             st.write(tempfile, format="MSEED", encoding=encoding)
-            temp_st1 = read(tempfile)
-            np.testing.assert_array_equal(st[0].data, temp_st1[0].data)
-            del temp_st1
+            st2 = read(tempfile)
+            np.testing.assert_array_equal(st[0].data, st2[0].data)
+            del st2
             ms = MSStruct(tempfile)
             ms.read(-1, 1, 1, 0)
             self.assertEqual(ms.msr.contents.encoding, encoding)

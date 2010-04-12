@@ -4,7 +4,7 @@ The libmseed test suite.
 """
 
 from StringIO import StringIO
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, read
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
@@ -21,6 +21,7 @@ import sys
 import threading
 import time
 import unittest
+import struct
 
 
 class LibMSEEDTestCase(unittest.TestCase):
@@ -715,6 +716,35 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEquals(len(trace_list), 2)
         # clean up
         os.remove(tempfile)
+
+    def test_bugWriteReadFloat32SEEDWin32(self):
+        """
+        Test case for issue #64.
+        """
+        # create stream object
+        data = np.array([395.07809448, 395.0782, 1060.28112793, -1157.37487793,
+                         - 1236.56237793, 355.07028198, -1181.42175293],
+                        dtype=np.float32)
+        st = Stream([Trace(data=data)])
+        tempfile = NamedTemporaryFile().name
+        st.write(tempfile, format="MSEED")
+        # read temp file directly without libmseed
+        bin_data = open(tempfile, "rb").read()
+        bin_data = np.array(struct.unpack(">7f", bin_data[56:84]))
+        np.testing.assert_array_equal(data, bin_data)
+        # read via libmseed
+        mseed = LibMSEED()
+        # using readMSTraces
+        trace_list = mseed.readMSTraces(tempfile, verbose=1)
+        # using readMSTracesViaRecords
+        trace_list2 = mseed.readMSTracesViaRecords(tempfile, verbose=1)
+        # read via obspy
+        st2 = read(tempfile)
+        os.remove(tempfile)
+        # test results
+        np.testing.assert_array_equal(data, st2[0].data)
+        np.testing.assert_array_equal(data, trace_list[0][1])
+        np.testing.assert_array_equal(data, trace_list2[0][1])
 
 
 def suite():
