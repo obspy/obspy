@@ -47,17 +47,24 @@ class MyExtension(Extension):
 
 macros = []
 extra_link_args = []
+extra_compile_args = []
 if platform.system() == "Windows":
     macros.append(('WIN32', '1'))
     # disable some warnings for MSVC
     macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-    # Workaround Win32 + MinGW + Python 2.6 
-    # :see: http://bugs.python.org/issue3308
     if 'mingw32' in sys.argv or \
-       ('-c' not in sys.argv and get_default_compiler() == 'mingw32'):
+        ('-c' not in sys.argv and get_default_compiler() == 'mingw32'):
+        # Workaround Win32 + MinGW + Python 2.6 
+        # :see: http://bugs.python.org/issue3308
         macros.append(('time_t', '__int64'))
         macros.append(('localtime', '_localtime64'))
         macros.append(('gmtime', '_gmtime64'))
+    elif 'msvc' in sys.argv or \
+        ('-c' not in sys.argv and get_default_compiler() == 'msvc'):
+        if platform.architecture()[0] == '32bit':
+            # Workaround Win32 and MSVC - see issue #64 
+            extra_compile_args.append("/fp:strict")
+
 
 src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
 symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]
@@ -74,7 +81,8 @@ lib = MyExtension('libmseed',
                            src + 'selection.c', src + 'logging.c',
                            src + 'fileutils_addon.c'],
                   export_symbols=symbols,
-                  extra_link_args=extra_link_args)
+                  extra_link_args=extra_link_args,
+                  extra_compile_args=extra_compile_args)
 
 
 setup(
