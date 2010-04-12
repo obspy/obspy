@@ -121,7 +121,7 @@ Further Resources
 .. _IPGP:
         http://www.ipgp.fr
 .. _`ArcLink protocol`:
-        http://docs.obspy.org/obspy.arclink/trunk/docs/protocol.txt
+        https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink/trunk/docs/protocol.txt
 .. _introduction:
         http://www.webdc.eu/webdc_sum.html
 .. _`ArcLink server`:

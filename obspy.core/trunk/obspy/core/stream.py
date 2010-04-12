@@ -355,6 +355,9 @@ class Stream(object):
         """
         gap_list = []
         for _i in xrange(len(self.traces) - 1):
+            # skip traces with different network, station, location or channel
+            if self.traces[_i].id != self.traces[_i + 1].id:
+                continue
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
@@ -488,7 +491,8 @@ class Stream(object):
         """
         result = self.getGaps(**kwargs)
         print "%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                               'Next Sample', 'Gap', 'Samples')
+                                                'Next Sample', 'Gap',
+                                                'Samples')
         gaps = 0
         for r in result:
             if r[6] > 0:
@@ -616,25 +620,28 @@ class Stream(object):
         """
         Cuts all traces of this Stream object to given start and end time.
         """
-        for trace in self:
+        for trace in self.traces:
             trace.trim(starttime, endtime, pad)
-        self.traces = [tr for tr in self if tr.stats.npts]
+        # remove empty traces after trimming 
+        self.traces = [tr for tr in self.traces if tr.stats.npts]
 
     def ltrim(self, starttime, pad=False):
         """
         Cuts all traces of this Stream object to given start time.
         """
-        for trace in self:
+        for trace in self.traces:
             trace.ltrim(starttime, pad)
-        self.traces = [tr for tr in self if tr.stats.npts]
+        # remove empty traces after trimming 
+        self.traces = [tr for tr in self.traces if tr.stats.npts]
 
     def rtrim(self, endtime, pad=False):
         """
         Cuts all traces of this Stream object to given end time.
         """
-        for trace in self:
+        for trace in self.traces:
             trace.rtrim(endtime, pad)
-        self.traces = [tr for tr in self if tr.stats.npts]
+        # remove empty traces after trimming 
+        self.traces = [tr for tr in self.traces if tr.stats.npts]
 
     def slice(self, starttime, endtime):
         """

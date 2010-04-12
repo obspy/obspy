@@ -234,15 +234,19 @@ class StreamTestCase(unittest.TestCase):
         stream = self.mseed_stream
         gap_list = stream.getGaps()
         # Gaps list created with obspy.mseed
-        mseed_gap_list = [('BW', 'BGLD', '', 'EHE', UTCDateTime(2008, 1, 1, 0, \
-                          0, 1, 970000), UTCDateTime(2008, 1, 1, 0, 0, 4, \
-                          35000), 2.0649999999999999, 412.0), ('BW', 'BGLD',
-                          '', 'EHE', UTCDateTime(2008, 1, 1, 0, 0, 8, 150000),
-                          UTCDateTime(2008, 1, 1, 0, 0, 10, 215000),
-                          2.0649999999999999, 412.0), ('BW', 'BGLD', '', 'EHE',
-                          UTCDateTime(2008, 1, 1, 0, 0, 14, 330000),
-                          UTCDateTime(2008, 1, 1, 0, 0, 18, 455000), 4.125,
-                          824.0)]
+        mseed_gap_list = [
+            ('BW', 'BGLD', '', 'EHE',
+             UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
+             UTCDateTime(2008, 1, 1, 0, 0, 4, 35000),
+             2.0649999999999999, 412.0),
+            ('BW', 'BGLD', '', 'EHE',
+             UTCDateTime(2008, 1, 1, 0, 0, 8, 150000),
+             UTCDateTime(2008, 1, 1, 0, 0, 10, 215000),
+             2.0649999999999999, 412.0),
+            ('BW', 'BGLD', '', 'EHE',
+             UTCDateTime(2008, 1, 1, 0, 0, 14, 330000),
+             UTCDateTime(2008, 1, 1, 0, 0, 18, 455000),
+             4.125, 824.0)]
         # Assert the number of gaps.
         self.assertEqual(len(mseed_gap_list), len(gap_list))
         for _i in xrange(len(mseed_gap_list)):
@@ -254,6 +258,32 @@ class StreamTestCase(unittest.TestCase):
                                    places=3)
             self.assertAlmostEqual(mseed_gap_list[_i][7], gap_list[_i][7],
                                    places=3)
+
+    def test_getGapsMultiplexedStreams(self):
+        """
+        Tests the getGaps method of the Stream objects.
+        """
+        data = np.random.randint(0, 1000, 412)
+        # different channels
+        st = Stream()
+        for channel in ['EHZ', 'EHN', 'EHE']:
+            st.append(Trace(data=data, header={'channel': channel}))
+        self.assertEqual(len(st.getGaps()), 0)
+        # different locations
+        st = Stream()
+        for location in ['', '00', '01']:
+            st.append(Trace(data=data, header={'location': location}))
+        self.assertEqual(len(st.getGaps()), 0)
+        # different stations
+        st = Stream()
+        for station in ['MANZ', 'ROTZ', 'BLAS']:
+            st.append(Trace(data=data, header={'station': station}))
+        self.assertEqual(len(st.getGaps()), 0)
+        # different networks
+        st = Stream()
+        for network in ['BW', 'GE', 'GR']:
+            st.append(Trace(data=data, header={'network': network}))
+        self.assertEqual(len(st.getGaps()), 0)
 
     def test_pop(self):
         """
@@ -674,12 +704,12 @@ class StreamTestCase(unittest.TestCase):
         away the emtpy traces.
         """
         # create Stream.
-        trace1 = Trace(data = np.zeros(10))
+        trace1 = Trace(data=np.zeros(10))
         trace1.stats.delta = 1.0
-        trace2 = Trace(data = np.ones(10))
+        trace2 = Trace(data=np.ones(10))
         trace2.stats.delta = 1.0
         trace2.stats.starttime = UTCDateTime(1000)
-        trace3 = Trace(data = np.arange(10))
+        trace3 = Trace(data=np.arange(10))
         trace3.stats.delta = 1.0
         trace3.stats.starttime = UTCDateTime(2000)
         stream = Stream([trace1, trace2, trace3])
