@@ -809,6 +809,7 @@ class PickingGUI:
         sta_list = set()
         # we need to go through streams/dicts backwards in order not to get
         # problems because of the pop() statement
+        warn_msg = ""
         for i in range(len(self.streams))[::-1]:
             st = self.streams[i]
             net_sta = "%s:%s" % (st[0].stats.network.strip(),
@@ -819,24 +820,54 @@ class PickingGUI:
             # thus redundant. Here it is only necessary if working with
             # traces from local file system (option -l)
             if net_sta in sta_list:
-                print "Warning: Station/Network combination \"%s\" already " \
+                msg = "Warning: Station/Network combination \"%s\" already " \
                       % net_sta + "in stream list. Discarding stream."
+                print msg
+                warn_msg += msg + "\n"
                 self.streams.pop(i)
                 continue
-            if not (len(st.traces) == 1 or len(st.traces) == 3):
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
-                print 'Stream %s discarded. Reason: Number of traces != (1 or 3)' % net_sta
-                for j, tr in enumerate(st.traces):
-                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
-                    print tr.stats
-                self.streams.pop(i)
-                continue
+            if not len(st.traces) in [1, 3]:
+                msg = 'Warning: All streams must have either one Z trace ' + \
+                      'or a set of three ZNE traces.'
+                print msg
+                warn_msg += msg + "\n"
+                # remove all unknown channels ending with something other than
+                # Z/N/E and try again...
+                removed_channels = ""
+                for i in range(len(st))[::-1]:
+                    if not st[i].stats.channel[-1] in ["Z", "N", "E"]:
+                        removed_channels += " " + st[i].stats.channel
+                        st.remove(i)
+                if len(st.traces) in [1, 3]:
+                    msg = 'Warning: deleted some unknown channels in ' + \
+                          'stream %s:%s' % (net_sta, removed_channels)
+                    print msg
+                    warn_msg += msg + "\n"
+                    continue
+                else:
+                    msg = 'Stream %s discarded.' % net_sta + \
+                          'Reason: Number of traces != (1 or 3)'
+                    print msg
+                    warn_msg += msg + "\n"
+                    for j, tr in enumerate(st.traces):
+                        msg = 'Trace no. %i in Stream: %s\n%s' % \
+                                (j + 1, tr.stats.channel, tr.stats)
+                        print msg
+                        warn_msg += msg + "\n"
+                    self.streams.pop(i)
+                    continue
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
-                print 'Stream %s discarded. Reason: Exactly one trace present but this is no Z trace' % net_sta
+                msg = 'Warning: All streams must have either one Z trace ' + \
+                      'or a set of three ZNE traces.'
+                msg += 'Stream %s discarded. Reason: ' % net_sta + \
+                       'Exactly one trace present but this is no Z trace'
+                print msg
+                warn_msg += msg + "\n"
                 for j, tr in enumerate(st.traces):
-                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
-                    print tr.stats
+                    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                            (j + 1, tr.stats.channel, tr.stats)
+                    print msg
+                    warn_msg += msg + "\n"
                 self.streams.pop(i)
                 continue
             if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
@@ -846,11 +877,17 @@ class PickingGUI:
                                         st[1].stats.station.strip() or
                                         st[0].stats.station.strip() !=
                                         st[2].stats.station.strip()):
-                print 'Warning: All streams must have either one Z trace or a set of three ZNE traces.'
-                print 'Stream %s discarded. Reason: Exactly three traces present but they are not ZNE' % net_sta
+                msg = 'Warning: All streams must have either one Z trace ' + \
+                      'or a set of three ZNE traces.'
+                msg += 'Stream %s discarded. Reason: ' % net_sta + \
+                       'Exactly three traces present but they are not ZNE'
+                print msg
+                warn_msg += msg + "\n"
                 for j, tr in enumerate(st.traces):
-                    print 'Trace no. %i in Stream: %s' % (j + 1, tr.stats.channel)
-                    print tr.stats
+                    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                            (j + 1, tr.stats.channel, tr.stats)
+                    print msg
+                    warn_msg += msg + "\n"
                 self.streams.pop(i)
                 continue
             sta_list.add(net_sta)
@@ -1064,6 +1101,8 @@ class PickingGUI:
         self.stderr_backup = sys.stderr
         sys.stdout = self.textviewStdOutImproved
         sys.stderr = self.textviewStdErrImproved
+
+        self.textviewStdErrImproved.write(warn_msg)
 
         # change fonts of textview
         # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
