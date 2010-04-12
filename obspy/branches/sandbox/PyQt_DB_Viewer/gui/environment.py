@@ -16,7 +16,7 @@ class Environment(object):
         # Resources directory.
         self.res_dir = kwargs.get('res_dir', 'resources')
         # SQLite event database file.
-        self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.res_dir,
+        self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
                                                 'events.db'))
         # Handle the times for the plots.
         self.starttime = UTCDateTime(2009, 7, 1)
