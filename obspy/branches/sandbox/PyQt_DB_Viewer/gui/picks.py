@@ -28,10 +28,25 @@ class Picks(QtGui.QGroupBox):
         # stats.
         msg = '%i events with %i picks for the\nchosen timeframe.\n' %\
             (event_count, pick_count)
-        msg += 'XX  Source(s):\n Not yet implemented'
         self.pick_overview = QtGui.QLabel(msg)
         self.pick_overview.setWordWrap(True)
         self.overviewLayout.addWidget(self.pick_overview)
+
+        # Connect the signal emmited when the combo box is changed.
+	# XXX: Not working with PyQt 4.4
+        # self.combo_box.currentIndexChanged.connect(self.indexChanged)
+	# Create slot.
+	#QtCore.SLOT("self.update(int)")
+	QtCore.QObject.connect(self.combo_box, QtCore.SIGNAL("currentIndexChanged(int)"),\
+			       self.indexChanged)
+
+    def update(self):
+        # Get events and picks from the database for the current timeframe.
+        event_count, pick_count = self.env.db.getPickAndEventCount()
+        # stats.
+        msg = '%i events with %i picks for the\nchosen timeframe.\n' %\
+            (event_count, pick_count)
+        self.pick_overview.setText(msg)
         # channels.
         channel_ids = self.env.db.getChannelsWithPicks()
         self.detail_label = QtGui.QLabel('Channels with picks:')
@@ -57,23 +72,6 @@ class Picks(QtGui.QGroupBox):
         self.detailFrame.hide()
 
         self.setLayout(self.pick_layout)
-
-        # Connect the signal emmited when the combo box is changed.
-	# XXX: Not working with PyQt 4.4
-        # self.combo_box.currentIndexChanged.connect(self.indexChanged)
-	# Create slot.
-	#QtCore.SLOT("self.update(int)")
-	QtCore.QObject.connect(self.combo_box, QtCore.SIGNAL("currentIndexChanged(int)"),\
-			       self.indexChanged)
-
-    def update(self):
-        # Get events and picks from the database for the current timeframe.
-        event_count, pick_count = self.env.db.getPickAndEventCount()
-        # stats.
-        msg = '%i events with %i picks for the\nchosen timeframe.\n' %\
-            (event_count, pick_count)
-        msg += 'XX  Source(s):\n Not yet implemented'
-        self.pick_overview.setText(msg)
 
     # The decorator is necessary because the signal emitted is overloaded and
     # just the integer one is handled here.

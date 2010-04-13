@@ -73,3 +73,15 @@ class MainWindow(QtGui.QWidget):
         file.close()
         self.env.web.setHtml(html)
         self.picks.update()
+
+        css_url = QtCore.QUrl.fromLocalFile(os.path.abspath(self.env.css))
+
+        server = '%s/manage/seismology/stations' % self.env.seishub_server
+        print server
+        url = QtCore.QUrl(server)
+        url.setUserName('admin')
+        url.setPassword('admin')
+        # Might work with some Qt version...
+        self.env.station_browser.page().settings().setUserStyleSheetUrl(css_url)
+        self.env.station_browser.load(url)
+        self.env.station_browser.page().settings().setUserStyleSheetUrl(css_url)

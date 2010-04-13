@@ -13,14 +13,19 @@ class Environment(object):
     def __init__(self, *args, **kwargs):
         # Cache directory.
         self.cache_dir = kwargs.get('cache_dir', 'cache')
+        if not os.path.exists(self.cache_dir):
+            os.mkdir(self.cache_dir)
         # Resources directory.
         self.res_dir = kwargs.get('res_dir', 'resources')
         # SQLite event database file.
         self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
                                                 'events.db'))
+        self.css = os.path.join(self.res_dir, 'seishub.css')
+        # Network index pickled dict.
+        self.network_index = os.path.join(self.cache_dir, 'networks_index.pickle')
         # Handle the times for the plots.
-        self.starttime = UTCDateTime(2009, 7, 1)
-        self.endtime = UTCDateTime(2009, 8, 1) - 1
+        self.starttime = UTCDateTime(2009, 1, 1)
+        self.endtime = UTCDateTime(2010, 1, 1) - 1
         self.time_range = self.endtime - self.starttime
         # Debug.
         self.debug = kwargs.get('debug', False)
@@ -32,7 +37,7 @@ class Environment(object):
         self.buffer *= 60
         # Seishub Server.
         self.seishub_server = kwargs.get('seishub_server',
-                                         'http://teide.geophysik.uni-muenchen.de:8080')
+                                         'http://teide:8080')
         # Scale of the plots.
         self.log_scale = False
         # Start the SeisHub class.

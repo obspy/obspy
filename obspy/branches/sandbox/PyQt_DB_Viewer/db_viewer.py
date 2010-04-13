@@ -49,10 +49,16 @@ if __name__ == '__main__':
     #web.load(QtCore.QUrl('http://www.google.com'))
     env.web.show()
     tab.addTab(env.web, 'Map')
+
+    #Add station browser.
+    env.station_browser = QtWebKit.QWebView()
+    env.station_browser.show()
+    tab.addTab(env.station_browser, 'Station Browser')
     
     # Init Status bar.
     st = QtGui.QStatusBar()
     env.st = st
+
     # Label to display the server status in the status bar. Need to init with
     # rich text if rich text should be used later on.
     env.server_status = QtGui.QLabel('<font color="#FF0000"></font>')

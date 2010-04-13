@@ -57,16 +57,26 @@ class PreviewPlot(QtGui.QGraphicsRectItem):
         picks = self.env.db.getPicksForChannel(self.title)
         if picks:
             for pick in picks:
-                print pick
                 time = pick['time']
                 # The percent location in plot width of the pick.
                 percent = (time - self.env.starttime)/self.env.time_range
                 x = percent * self.plot_width
-                circle = QtGui.QGraphicsEllipseItem(self.x_start + x,
-                                            y_start + 40, 8, 8, self)
-                self.events.append(circle)
-                circle.setBrush(QtGui.QColor(255,0,0,200))
-                circle.setZValue(98)
+                line = QtGui.QGraphicsLineItem(self.x_start + x,
+                        self.y_start+1, self.x_start + x,
+                        self.y_start + self.plot_height -1, self)
+                self.events.append(line)
+                if pick['event_type'] == 'automatic':
+                    if 'p' in pick['phaseHint'].lower():
+                        line.setPen(QtGui.QColor(255,0,0,200))
+                    else:
+                        line.setPen(QtGui.QColor(200,0,0,200))
+                    line.setZValue(-100)
+                else:
+                    if 'p' in pick['phaseHint'].lower():
+                        line.setPen(QtGui.QColor(0,255,0,200))
+                    else:
+                        line.setPen(QtGui.QColor(0,200,0,200))
+                    line.setZValue(-90)
                 # Set tool tip.
                 tip = '<b>%s</b><br>%s<br>Phase: %s, Polarity: %s' % \
                         (pick['event_id'], pick['time'],
@@ -78,9 +88,9 @@ class PreviewPlot(QtGui.QGraphicsRectItem):
                 tip += 'Magnitude: %.2f (%s)<br>Time: %s' % \
                         (pick['magnitude'], pick['magnitude_type'],
                          pick['origin_time'])
-                circle.setToolTip(tip)
+                line.setToolTip(tip)
                 # Add percent value to circle object.
-                circle.percent = percent
+                line.percent = percent
 
 
     def resize(self, width, height):
@@ -102,8 +112,9 @@ class PreviewPlot(QtGui.QGraphicsRectItem):
         if hasattr(self, 'events'):
             for event in self.events:
                 x = event.percent * self.plot_width
-                event.setRect(self.x_start + x, self.y_start + 40, 8, 8)
-
+                event.setLine(self.x_start + x,
+                        self.y_start+1, self.x_start + x,
+                        self.y_start + self.plot_height -1)
 
 class WaveformScene(QtGui.QGraphicsScene):
     """
@@ -126,7 +137,6 @@ class WaveformScene(QtGui.QGraphicsScene):
         Is connected to selectionChanged signal. The first argument is the new
         selection and the second the old selection.
         """
-	print 'Add Waveform'
         # This is the path and the type of the requested waveform.
         # e.g. ('BW', 'network') or ('BW.FURT..EHE', 'channel')
         path = new_sel.indexes()[0].model().getFullPath(new_sel.indexes()[0])
@@ -136,21 +146,21 @@ class WaveformScene(QtGui.QGraphicsScene):
         # Get the stream item.
         network, station, location, channel = path[0].split('.')
         stream = self.env.handler.getItem(network, station, location, channel)
-	try:
-            preview = PreviewPlot(self.vmargin + len(self.waveforms)
-            		      * (self.plot_height + self.vmargin),
-            		      self.plot_height, self.hmargin, self.width(),
-            		      path[0], stream['minmax_stream'],
-            		      self.env.detail, self.env)
-            self.addItem(preview)
-            self.waveforms.append(preview)
-            # Manually update the scene Rectangle.
-            count = len(self.waveforms)
-            height = (count+1)*self.vmargin + count*self.plot_height
-            self.setSceneRect(0,0,self.width(), height)
-	except:
-	    msg = 'Error plotting/reveiving %s' % path[0]
-	    self.env.st.showMessage(msg, 5000)
+        #try:
+        preview = PreviewPlot(self.vmargin + len(self.waveforms)
+                      * (self.plot_height + self.vmargin),
+                      self.plot_height, self.hmargin, self.width(),
+                      path[0], stream['minmax_stream'],
+                      self.env.detail, self.env)
+        self.addItem(preview)
+        self.waveforms.append(preview)
+        # Manually update the scene Rectangle.
+        count = len(self.waveforms)
+        height = (count+1)*self.vmargin + count*self.plot_height
+        self.setSceneRect(0,0,self.width(), height)
+            #except:
+            #    msg = 'Error plotting/reveiving %s' % path[0]
+            #    self.env.st.showMessage(msg, 5000)
 
     def resize(self, width, height):
         """

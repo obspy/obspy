@@ -11,6 +11,7 @@ from glob import glob
 import pickle
 import time
 import urllib2
+from StringIO import StringIO
 
 class Seishub(object):
     """
@@ -24,7 +25,7 @@ class Seishub(object):
         # Set some class variables.
         self.server = env.seishub_server
         self.cache_dir = env.cache_dir
-        self.pickle_file = os.path.join(self.cache_dir, 'pickle_dict')
+        self.network_index = self.env.network_index
         self.picks = {}
         self.pick_count = 0
         self.pick_programs = set()
@@ -46,8 +47,7 @@ class Seishub(object):
         if self.online:
             self.updateEventListFromSeishub(self.env.starttime, self.env.endtime)
             # Download and cache events.
-            self.downloadAndCacheEvents()
-            self.parseEvents()
+            self.downloadAndParseEvents()
         # Otherwise read cached events and get those for the given time_span.
         else:
             msg = 'No connection to server. Will only use cached events..'
@@ -101,10 +101,10 @@ class Seishub(object):
         # Create Cache path if it does not exist.
         if not os.path.exists(self.cache_dir):
             os.mkdir(self.cache_dir)
-        if not os.path.exists(self.pickle_file):
+        if not os.path.exists(self.network_index):
             self.reload_infos()
         # Read the dict.
-        file = open(self.pickle_file, 'rb')
+        file = open(self.network_index, 'rb')
         self.networks = pickle.load(file)
         file.close()
 
@@ -112,19 +112,22 @@ class Seishub(object):
         """
         Reads all available networks, stations, ... from the seishub server.
         """
-        print 'Reloading infos...'
+        msg = 'Loading network index...'
+        self.env.setSplash(msg)
         self.networks = {}
         networks = self.client.waveform.getNetworkIds()
-        print networks
+        network_count = len(networks)
         # Get stations.
-        for key in networks:
-            print 'Network:', key
+        for _j, key in enumerate(networks):
             if not key:
                 continue
             self.networks[key] = {}
             stations = self.client.waveform.getStationIds(network_id=key)
-            for station in stations:
-                print 'Station:', station
+            station_count = len(stations)
+            for _i, station in enumerate(stations):
+                msg = 'Loading Network[%i/%i]/Station[%i/%i]:  %s.%s' % (_j + 1,
+                             network_count, _i+1, station_count, key, station)
+                self.env.setSplash(msg)
                 if not station:
                     continue
                 self.networks[key][station] = {}
@@ -154,13 +157,12 @@ class Seishub(object):
                         network_id=key , station_id=station,
                         location_id=location)
                     self.networks[key][station][location] = [channels]
-        print 'Done...start pickling...'
         # Add current date to Dictionary.
         self.networks['Date'] = UTCDateTime()
         # Also add the server to it.
         self.networks['Server'] = self.client.base_url
         # Open file.
-        file = open(self.pickle_file, 'wb')
+        file = open(self.network_index, 'wb')
         pickle.dump(self.networks, file, protocol=2)
         file.close()
 
@@ -196,56 +198,22 @@ class Seishub(object):
                                  in zip(eventList, eventList_last_modified)]
         self.seishubEventCount = len(self.seishubEventList)
 
-    def removePicksOutofRange(self):
+    def downloadAndParseEvents(self):
         """
-        Reads all cached events and returns those with at least one pick in the
-        selected time frame.
-        """
-        self.seishubEventCount = 0
-        picks = self.picks
-        self.picks = {}
-        self.pick_count = 0
-        events = set()
-        for channel in picks.keys():
-            chan = picks[channel]
-            chan_list = []
-            for pick in chan:
-                if pick['pick']['time'] >= self.env.starttime and \
-                   pick['pick']['time'] <= self.env.endtime:
-                    chan_list.append(pick)
-                    events.add(pick['meta']['id'])
-                    self.pick_count += 1
-            # Add to list if if picks are in the selected time frame.
-            if chan_list:
-                self.picks[channel] = chan_list
-        self.seishubEventCount = len(events)
-
-    def downloadAndCacheEvents(self):
-        """
-        Uses the event list and looks all events. If they are already cached do
-        not download them again.
+        Compares the fetched event list with the database and fetches all new
+        or updated events and writes them to the database.
         """
         # Nothing to do if no events.
         if not self.seishubEventCount:
             return
-        event_cache = os.path.join(self.cache_dir, 'event')
-        # Create path if necessary.
-        if not os.path.exists(event_cache):
-            os.mkdir(event_cache)
-        # Get a list of xml files in there.
-        path = os.path.join(event_cache, '*')
-        files = glob(path)
-        files = [os.path.split(file)[1] for file in files]
         # Loop over all events.
-        amount = len(self.seishubEventList)
-        # Check if event already in database.
+        event_count = len(self.seishubEventList)
+        # Get events and Modification Date from database.
         self.db_files = self.env.db.getFilesAndModification()
         for _i, event in enumerate(self.seishubEventList):
-            self.env.setSplash('Loading event %i of %i' % ((_i + 1), amount))
+            # Update splash screen.
+            self.env.setSplash('Loading event %i of %i' % ((_i + 1), event_count))
             if (event[0], str(event[1])) in self.db_files:
-                continue
-            # If it exists, skip it.
-            if event[0] in files:
                 continue
             url = self.server + "/xml/seismology/event/%s" % event[0]
             if self.env.debug:
@@ -259,36 +227,7 @@ class Seishub(object):
             except:
                 print 'Error requesting %s' % url
                 continue
-            # Write the cached file.
-            f = open(os.path.join(event_cache, event[0]), 'w')
-            f.write(e.read())
+            # Write StringIO.
+            file = StringIO(e.read())
+            self.env.db.addEventFile(file, event[1], event[0])
             e.close()
-            f.close()
-        # Once again to account for events that did not get downloaded.
-        self.files = glob(path)
-        if self.env.debug:
-            print 'Done downloading events.'
-
-    def parseEvents(self):
-        """
-        Parses all events in self.files and writes them to the database.
-        """
-        if self.env.debug:
-            a = time.time()
-            print 'Start parsing events.'
-        events_dict = {}
-        files = [os.path.split(file)[1] for file in self.files]
-        amount = len(self.seishubEventList)
-        for _k, event in enumerate(self.seishubEventList):
-            self.env.setSplash('Parsing event %i of %i' % ((_k + 1), amount))
-            if (event[0], str(event[1])) in self.db_files:
-                continue
-            # Check if available.
-            if not event[0] in files:
-                continue
-            file = os.path.join(self.cache_dir, 'event', event[0])
-            self.env.db.addEventFile(file, event[1])
-        if self.env.debug:
-            t = time.time() - a
-            print 'Parsed %i events with %i picks in %f seconds.' % \
-                        (self.seishubEventCount, self.pick_count, t)

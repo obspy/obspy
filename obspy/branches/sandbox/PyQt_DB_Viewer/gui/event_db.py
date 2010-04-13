@@ -69,8 +69,14 @@ class EventDB(object):
         #          p.polarity, e.magnitude, e.magnitude_type, p.network,
         #          p.station, p.location, p.channel FROM events e, picks p WHERE 
         #          (p.network = "%s") AND (p.station = "%s") AND
-        #          (p.location = "%s") AND (p.channel = "%s")''' % \
+        #          (p.location = "%s") AND (p.channel = "%s") AND e.event_id =
+        #          p.event_id''' % \
         #          (network, station, location, channel)
+        #import time
+        #a = time.time()
+        #self.c.execute(msg)
+        #self.db.commit()
+        #print 'Time taken: ', time.time()-a
         msg = '''select event_id, time, phaseHint, polarity from picks WHERE
                  network = "%s" AND station = "%s" AND
                  location = "%s" AND channel = "%s"''' % \
@@ -89,7 +95,8 @@ class EventDB(object):
                       'time': UTCDateTime(result[1]),
                       'phaseHint': result[2], 'polarity': result[3],
                       'magnitude': event['magnitude'],
-                      'magnitude_type': event['magnitude_type']}
+                      'magnitude_type': event['magnitude_type'],
+                      'event_type' : event['event_type']}
             result_dicts.append(r_dict)
         return result_dicts
 
@@ -101,7 +108,8 @@ class EventDB(object):
         :param event_id: Event id of the event
         """
         msg = '''SELECT origin_time, origin_latitude,
-                  origin_longitude, origin_depth, magnitude, magnitude_type
+                  origin_longitude, origin_depth, magnitude, magnitude_type,
+                  event_type
                   FROM events WHERE event_id = "%s"''' % event_id
         self.c.execute(msg)
         self.db.commit()
@@ -115,7 +123,8 @@ class EventDB(object):
             magnitude = 0.0
         return {'time': UTCDateTime(event[0]), 'latitude': float(event[1]),
                 'longitude': float(event[2]), 'depth': float(event[3]),
-                'magnitude': magnitude, 'magnitude_type': event[5]}
+                'magnitude': magnitude, 'magnitude_type': event[5], 
+                'event_type': event[6]}
 
     def getFilesAndModification(self):
         """
@@ -155,7 +164,7 @@ class EventDB(object):
         channels.sort()
         return channels
 
-    def addEventFile(self, file, last_modification_datetime):
+    def addEventFile(self, file, last_modification_datetime, filename):
         """
         Adds an event xml file to the database. If the event id already exists
         in the database, the existing event and all associated picks will be
@@ -167,10 +176,8 @@ class EventDB(object):
         :type last_modification_datetime: Last modification as returned by the
                                           SeisHub server.
         """
-        # Read the file and parse it.
-        f = open(file, 'r')
-        tree = parse(f)
-        f.close()
+        # Parse the StringIO.
+        tree = parse(file)
         # Get root element.
         root = tree.getroot()
         # Discard wrong xml file.
@@ -181,7 +188,7 @@ class EventDB(object):
         event_id = root.xpath('event_id/value')[0].text
         # Create dictionary that will later be used to create the database
         # entry.
-        event_dict = {'event_file': file,
+        event_dict = {'event_file': filename,
                       'event_file_last_modified': str(last_modification_datetime),
                       'event_id': event_id}
         # Remove any old references to this event.
@@ -189,6 +196,7 @@ class EventDB(object):
         # Parse XML and write event dictionary. Use try/except blocks for all
         # optional tags.
         # XXX: Better way than try/except?
+        event_dict['event_type'] = root.xpath('event_type/value')[0].text
         try:
             event_dict['user'] = root.xpath('event_type/user')[0].text
         except: pass
@@ -262,6 +270,13 @@ class EventDB(object):
             except:
                 print 'Problem with %s' % event_id
                 continue
+            # Account for weird ids.
+            if not pick_dict['network']:
+                pick_dict['network'] = 'BW'
+            if pick_dict['location'] == '01' and pick_dict['channel'] == 'HHZ'\
+               and 'earthworm' in filename:
+                pick_dict['location'] = ''
+                pick_dict['channel'] = 'EHZ'
             try:
                 pick_dict['time_uncertainty'] = pick.xpath('time/uncertainty')[0].text
             except: pass
@@ -299,10 +314,7 @@ class EventDB(object):
                                     _i is None else \
                                      str(_i)) for _i in table_dict.values()])
         sql_com = '''INSERT INTO %s %s VALUES %s''' % (table_name, keys, values)
-        try:
-            self.c.execute(sql_com)
-        except:
-            import ipdb;ipdb.set_trace()
+        self.c.execute(sql_com)
 
     def removeEventAndPicks(self, event_id):
         """

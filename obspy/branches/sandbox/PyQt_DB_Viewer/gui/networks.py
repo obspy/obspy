@@ -254,7 +254,7 @@ class NetworkTree(QtGui.QTreeView):
 
     def startup(self):
         # Init the Network selector.
-        nw_model = TreeModel(os.path.join(self.env.cache_dir, 'pickle_dict'))
+        nw_model = TreeModel(self.env.network_index)
         self.setModel(nw_model)
         self.nw_select_model = TreeSelector(nw_model)
         self.setSelectionModel(self.nw_select_model)
