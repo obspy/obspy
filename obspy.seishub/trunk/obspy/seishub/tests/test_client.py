@@ -130,12 +130,28 @@ class ClientTestCase(unittest.TestCase):
         t2 = UTCDateTime('20100101')
         st = self.client.waveform.getPreview("BW", "RTLI", "", "EHN", t1, t2)
         self.assertEqual(len(st), 1)
-        self.assertEqual(st[0].stats.network, 'BW')
-        self.assertEqual(st[0].stats.station, 'RTLI')
-        self.assertEqual(st[0].stats.location, '')
-        self.assertEqual(st[0].stats.channel, 'EHN')
+        self.assertEqual(st[0].id, 'BW.RTLI..EHN')
         self.assertEqual(st[0].stats.delta, 60.0)
         self.assertEqual(st[0].stats.npts, 182840)
+
+    def test_getPreviewByIds(self):
+        # multiple channels / MiniSEED
+        t1 = UTCDateTime('20080101')
+        t2 = UTCDateTime('20080201')
+        # via list
+        st = self.client.waveform.getPreviewByIds(['BW.MANZ..EHE',
+                                                   'BW.ROTZ..EHE'], t1, t2)
+        st.sort()
+        self.assertEqual(len(st), 2)
+        self.assertEqual(st[0].id, 'BW.MANZ..EHE')
+        self.assertEqual(st[1].id, 'BW.ROTZ..EHE')
+        # via string
+        st = self.client.waveform.getPreviewByIds('BW.MANZ..EHE,BW.ROTZ..EHE',
+                                                  t1, t2)
+        st.sort()
+        self.assertEqual(len(st), 2)
+        self.assertEqual(st[0].id, 'BW.MANZ..EHE')
+        self.assertEqual(st[1].id, 'BW.ROTZ..EHE')
 
     def test_getPAZ(self):
         t = UTCDateTime('20090808')

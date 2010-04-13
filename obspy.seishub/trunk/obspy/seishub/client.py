@@ -154,9 +154,35 @@ class _WaveformMapperClient(object):
         :return: :class:`~obspy.core.stream.Stream` object.
         """
         map = ['network_id', 'station_id', 'location_id', 'channel_id',
-               'start_datetime', 'end_datetime']
+               'start_datetime', 'end_datetime', 'trace_ids']
         for i in range(len(args)):
             kwargs[map[i]] = args[i]
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
+        if not data:
+            raise Exception("No waveform data available")
+        # unpickle
+        stream = pickle.loads(data)
+        return stream
+
+    def getPreviewByIds(self, *args, **kwargs):
+        """
+        Gets a preview of a Obspy Stream object.
+        
+        :param trace_ids: List of trace ids, e.g. ['BW.MANZ..EHE'].
+        :param start_datetime: start time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
+        :param end_datetime: end time as 
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object
+        :return: :class:`~obspy.core.stream.Stream` object.
+        """
+        map = ['trace_ids', 'start_datetime', 'end_datetime']
+        for i in range(len(args)):
+            kwargs[map[i]] = args[i]
+        # concatenate list of ids into string
+        if 'trace_ids' in kwargs:
+            if isinstance(kwargs['trace_ids'], list):
+                kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
         url = '/seismology/waveform/getPreview'
         data = self.client._fetch(url, **kwargs)
         if not data:
