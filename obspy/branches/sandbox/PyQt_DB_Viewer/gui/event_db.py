@@ -27,7 +27,7 @@ class EventDB(object):
         # Available tables.
         self.tables = ['events', 'picks']
 
-    def getPickAndEventCount(self, starttime = None, endtime = None):
+    def getPickAndEventCount(self, starttime=None, endtime=None):
         """
         Reads the database and returns a tuple with the first number being the
         number of events in the timeframe and the second being the number of
@@ -45,7 +45,7 @@ class EventDB(object):
         if not endtime:
             endtime = self.env.endtime
         start = '"%s"' % str(starttime)
-        end = '"%s"' % str(endtime) 
+        end = '"%s"' % str(endtime)
         command = '''SELECT event_id FROM picks WHERE time > %s
         AND time < %s''' % (start, end)
         self.c.execute(command)
@@ -72,8 +72,8 @@ class EventDB(object):
         #          (p.location = "%s") AND (p.channel = "%s")''' % \
         #          (network, station, location, channel)
         msg = '''select event_id, time, phaseHint, polarity from picks WHERE
-                 (network = "%s") AND (station = "%s") AND
-                 (location = "%s") AND (channel = "%s")''' % \
+                 network = "%s" AND station = "%s" AND
+                 location = "%s" AND channel = "%s"''' % \
                  (network, station, location, channel)
         self.c.execute(msg)
         self.db.commit()
@@ -100,7 +100,7 @@ class EventDB(object):
         :type event_id: String
         :param event_id: Event id of the event
         """
-        msg =  '''SELECT origin_time, origin_latitude,
+        msg = '''SELECT origin_time, origin_latitude,
                   origin_longitude, origin_depth, magnitude, magnitude_type
                   FROM events WHERE event_id = "%s"''' % event_id
         self.c.execute(msg)
@@ -128,7 +128,7 @@ class EventDB(object):
         files = self.c.fetchall()
         return [(os.path.basename(_i[0]), _i[1]) for _i in files]
 
-    def getChannelsWithPicks(self, starttime = None, endtime = None):
+    def getChannelsWithPicks(self, starttime=None, endtime=None):
         """
         Reads the database and returns a list with all channel ids that have
         picks in the chosen timeframe.
@@ -145,7 +145,7 @@ class EventDB(object):
         if not endtime:
             endtime = self.env.endtime
         start = '"%s"' % str(starttime)
-        end = '"%s"' % str(endtime) 
+        end = '"%s"' % str(endtime)
         command = '''SELECT network, station, location, channel FROM picks
                      WHERE time > %s AND time < %s''' % (start, end)
         self.c.execute(command)
@@ -195,52 +195,52 @@ class EventDB(object):
         try:
             event_dict['puplic'] = root.xpath('event_type/puplic')[0].text
         except: pass
-        event_dict['origin_time'] =\
+        event_dict['origin_time'] = \
                 str(UTCDateTime(root.xpath('origin/time/value')[0].text))
         try:
-            event_dict['origin_time_uncertainty'] =\
+            event_dict['origin_time_uncertainty'] = \
                     UTCDateTime(root.xpath('origin/time/uncertainty')[0].text)
         except: pass
-        event_dict['origin_latitude'] =\
+        event_dict['origin_latitude'] = \
                 float(root.xpath('origin/latitude/value')[0].text)
         try:
-            event_dict['origin_latitude_uncertainty'] =\
+            event_dict['origin_latitude_uncertainty'] = \
                     float(root.xpath('origin/latitude/uncertainty')[0].text)
         except: pass
-        event_dict['origin_longitude'] =\
+        event_dict['origin_longitude'] = \
                 float(root.xpath('origin/longitude/value')[0].text)
         try:
-            event_dict['origin_longitude_uncertainty'] =\
+            event_dict['origin_longitude_uncertainty'] = \
                     float(root.xpath('origin/longitude/uncertainty')[0].text)
         except: pass
-        event_dict['origin_depth'] =\
+        event_dict['origin_depth'] = \
                 float(root.xpath('origin/depth/value')[0].text)
         try:
-            event_dict['origin_depth_uncertainty'] =\
+            event_dict['origin_depth_uncertainty'] = \
                     float(root.xpath('origin/depth/uncertainty')[0].text)
         except: pass
         try:
-            event_dict['origin_depth_type'] =\
+            event_dict['origin_depth_type'] = \
                     root.xpath('origin/depth_type')[0].text
         except: pass
         try:
-            event_dict['origin_earth_mod'] =\
+            event_dict['origin_earth_mod'] = \
                     root.xpath('origin/earth_mod')[0].text
         except: pass
         try:
-            event_dict['magnitude'] =\
+            event_dict['magnitude'] = \
                     float(root.xpath('magnitude/mag/value')[0].text)
         except: pass
         try:
-            event_dict['magnitude_uncertainty'] =\
+            event_dict['magnitude_uncertainty'] = \
                     float(root.xpath('magnitude/mag/uncertainty')[0].text)
         except: pass
         try:
-            event_dict['magnitude_program'] =\
+            event_dict['magnitude_program'] = \
                     root.xpath('magnitude/program')[0].text
         except: pass
         try:
-            event_dict['magnitude_type'] =\
+            event_dict['magnitude_type'] = \
                     root.xpath('magnitude/type')[0].text
         except: pass
         # Write event.
@@ -359,4 +359,9 @@ class EventDB(object):
             onset TEXT,
             polarity TEXT,
             weight REAL)''')
+        # Create indexes.
+        self.c.execute('''CREATE INDEX idx_trace_id 
+            ON picks (network, station, location, channel)''')
+        self.c.execute('''CREATE INDEX idx_event_id 
+            ON events (event_id)''')
         self.db.commit()
