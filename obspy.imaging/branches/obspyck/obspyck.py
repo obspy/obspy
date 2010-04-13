@@ -485,8 +485,8 @@ class PickingGUI:
         resource_name = self.seishubEventList[self.seishubEventCurrent].text
         dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                    gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
-        dialog.set_markup("Delete <b><tt>%s</tt></b>?" % resource_name)
-        dialog.set_title("Delete event from database?")
+        dialog.set_markup("Delete event from database?\n\n<b><tt>%s</tt></b>" % resource_name)
+        dialog.set_title("Delete?")
         response = dialog.run()
         dialog.destroy()
         if response == gtk.RESPONSE_YES:
