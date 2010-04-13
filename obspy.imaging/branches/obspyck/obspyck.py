@@ -321,6 +321,7 @@ class PickingGUI:
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
+                              self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
@@ -365,6 +366,7 @@ class PickingGUI:
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
+                              self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
@@ -416,6 +418,7 @@ class PickingGUI:
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
                               self.checkbuttonPublicEvent,
+                              self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.labelStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
@@ -477,6 +480,18 @@ class PickingGUI:
         newstate = self.checkbuttonPublicEvent.get_active()
         msg = "Setting \"public\" flag of event to: %s" % newstate
         self.textviewStdOutImproved.write(msg)
+
+    def on_buttonDeleteEvent_clicked(self, event):
+        resource_name = self.seishubEventList[self.seishubEventCurrent].text
+        dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
+                                   gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
+        dialog.set_markup("Delete <b><tt>%s</tt></b>?" % resource_name)
+        dialog.set_title("Delete event from database?")
+        response = dialog.run()
+        dialog.destroy()
+        if response == gtk.RESPONSE_YES:
+            self.deleteEventInSeishub(resource_name)
+            self.on_buttonUpdateEventList_clicked(event)
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
         self.setFocusToMatplotlib()
@@ -1017,6 +1032,7 @@ class PickingGUI:
         self.buttonSendEvent = self.gla.get_widget("buttonSendEvent")
         self.checkbuttonPublicEvent = \
                 self.gla.get_widget("checkbuttonPublicEvent")
+        self.buttonDeleteEvent = self.gla.get_widget("buttonDeleteEvent")
         self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
         self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
         self.labelStreamName = self.gla.get_widget("labelStreamName")
@@ -4100,6 +4116,37 @@ class PickingGUI:
         statuscode, statusmessage, header = webservice.getreply()
         msg = "User: %s" % self.username
         msg += "\nName: %s" % name
+        msg += "\nServer: %s%s" % (self.server['Server'], path)
+        msg += "\nResponse: %s %s" % (statuscode, statusmessage)
+        #msg += "\nHeader:"
+        #msg += "\n%s" % str(header).strip()
+        self.textviewStdOutImproved.write(msg)
+
+    def deleteEventInSeishub(self, resource_name):
+        """
+        Delete xml file from seishub.
+        (Move to seishubs trash folder if this option is activated)
+        """
+        userid = "admin"
+        passwd = "admin"
+
+        auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
+
+        path = '/xml/seismology/event'
+        
+        #construct and send the header
+        webservice = httplib.HTTP(self.server['Server'])
+        webservice.putrequest("DELETE", path + '/' + resource_name)
+        webservice.putheader('Authorization', auth )
+        webservice.putheader("Host", "localhost")
+        webservice.putheader("User-Agent", "obspyck")
+        webservice.endheaders()
+
+        # get the response
+        statuscode, statusmessage, header = webservice.getreply()
+        msg = "Deleting Event!"
+        msg += "\nUser: %s" % self.username
+        msg += "\nName: %s" % resource_name
         msg += "\nServer: %s%s" % (self.server['Server'], path)
         msg += "\nResponse: %s %s" % (statuscode, statusmessage)
         #msg += "\nHeader:"
