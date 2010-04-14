@@ -5,6 +5,7 @@
 
 from obspy.db import __version__
 from obspy.db.db import Base
+from obspy.db.util import parseMappingData
 from obspy.db.indexer import worker, WaveformFileCrawler
 from optparse import OptionParser
 from sqlalchemy import create_engine
@@ -51,8 +52,9 @@ def _runIndexer(options):
     logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
     # initialize crawler
     service = WaveformIndexer((options.host, options.port), MyHandler)
+    service.log = logging
     try:
-        # paths
+        # prepare paths
         if ',' in options.data:
             paths = options.data.split(',')
         else:
@@ -60,19 +62,21 @@ def _runIndexer(options):
         paths = service._preparePaths(paths)
         if not paths:
             return
+        # prepare map file
+        if options.map_file:
+            data = open(options.map_file, 'r').readlines()
+            mappings = parseMappingData(data)
+        else:
+            mappings = {}
         # create file queue and worker processes
         manager = multiprocessing.Manager()
         in_queue = manager.dict()
         work_queue = manager.list()
         out_queue = manager.list()
         log_queue = manager.list()
-        # filter
-        if options.filter:
-            filter = options.filter
-        else:
-            filter = None
+        # spawn processes
         for i in range(options.number_of_cpus):
-            args = (i, in_queue, work_queue, out_queue, log_queue, filter)
+            args = (i, in_queue, work_queue, out_queue, log_queue, mappings)
             p = multiprocessing.Process(target=worker, args=args)
             p.daemon = True
             p.start()
@@ -85,7 +89,6 @@ def _runIndexer(options):
         Session = sessionmaker(bind=engine)
         service.session = Session
         service.options = options
-        service.log = logging
         # set queues
         service.input_queue = in_queue
         service.work_queue = work_queue
@@ -135,9 +138,9 @@ Default path option is 'data=*.*'.""")
         help="Verbose output.")
     parser.add_option("-l", type="string", dest="log", default="",
         help="Log file name. If no log file is given, stdout will be used.")
-    parser.add_option("-f", "--filter", type="string", dest="filter",
-        help="Filter waveform files using a custom class" + \
-             "before storing into the database.", default="")
+    parser.add_option("-m", "--mapping_file", type="string", dest="map_file",
+        help="Correct network, station, location and channel codes using a" + \
+             "custom mapping file.", default=None)
     parser.add_option("--cleanup", action="store_true", dest="cleanup",
         default=False,
         help="Clean database from non-existing files or paths " + \

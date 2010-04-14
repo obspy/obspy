@@ -177,7 +177,10 @@ class WaveformFileCrawler:
         except:
             pass
         else:
-            self.log.error(msg)
+            if msg.startswith('['):
+                self.log.error(msg)
+            else:
+                self.log.debug(msg)
 
     def _resetWalker(self):
         """
@@ -340,7 +343,7 @@ class WaveformFileCrawler:
         self.input_queue[filepath] = (path, file, self.features)
 
 
-def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):
+def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
@@ -360,21 +363,6 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):
                 all_features[key]['indexer_kwargs'] = cls['indexer_kwargs']
             except:
                 all_features[key]['indexer_kwargs'] = {}
-        # fetch and initialize all possible waveform filter plug-in
-        if filter:
-            plugins = _getPlugins('obspy.db.filter')
-            try:
-                # load plug-in
-                ep = plugins[filter]
-                cls = ep.load()
-                # initialize class
-                func = cls().filter
-            except:
-                msg = 'Could not initialize filter %s.'
-                log_queue.append(msg % (filter))
-                filter = None
-            else:
-                filter = func
         # loop through input queue
         while True:
             # fetch a unprocessed item
@@ -443,19 +431,22 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, filter=None):
                 result['calib'] = trace.stats.calib
                 result['npts'] = trace.stats.npts
                 result['sampling_rate'] = trace.stats.sampling_rate
-                # filter
-                if filter:
-                    try:
-                        ok = filter(result, trace)
-                    except Exception, e:
-                        msg = '[Applying filter] %s: %s'
-                        log_queue.append(msg % (filepath, e))
-                        continue
-                    else:
-                        if ok == False:
+                # check for any id mappings
+                if trace.id in mappings:
+                    old_id = trace.id
+                    for mapping in mappings[old_id]:
+                        if trace.stats.starttime and \
+                           trace.stats.starttime > mapping['endtime']:
                             continue
-                        elif isinstance(ok, dict):
-                            result = ok
+                        if trace.stats.endtime and \
+                           trace.stats.endtime < mapping['starttime']:
+                            continue
+                        trace.stats.network = mapping['network']
+                        trace.stats.station = mapping['station']
+                        trace.stats.location = mapping['location']
+                        trace.stats.channel = mapping['channel']
+                        log_queue.append("Mapping '%s' to '%s'" % (old_id,
+                                                                   trace.id))
                 # gaps/overlaps for current trace
                 result['gaps'] = gap_dict.get(trace.id, [])
                 # apply feature functions
