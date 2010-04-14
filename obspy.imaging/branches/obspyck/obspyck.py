@@ -2819,6 +2819,24 @@ class PickingGUI:
                     self.nllocSummary
             self.textviewStdErrImproved.write(err)
             return
+        # goto maximum likelihood origin location info line
+        try:
+            line = lines.pop(0)
+            while not line.startswith("HYPOCENTER"):
+                line = lines.pop(0)
+        except:
+            err = "Error: No correct location info found in NLLoc " + \
+                  "outputfile (%s)!" % self.nllocSummary
+            self.textviewStdErrImproved.write(err)
+            return
+        
+        line = line.split()
+        x = float(line[2])
+        y = float(line[4])
+        depth = - float(line[6]) # depth: negative down!
+        
+        lon, lat = gk2lonlat(x, y)
+        
         # goto origin time info line
         try:
             line = lines.pop(0)
@@ -2881,26 +2899,6 @@ class PickingGUI:
                                                           azim2, dip2, len2,
                                                           len3)
 
-        # goto gaussian expectation origin location info line
-        # XXX should we use the (slightly different) maximum likelihood
-        # XXX hypocenter instead?!
-        try:
-            line = lines.pop(0)
-            while not line.startswith("STAT_GEOG"):
-                line = lines.pop(0)
-        except:
-            err = "Error: No correct location info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
-            return
-        
-        line = line.split()
-        y = float(line[2])
-        x = float(line[4])
-        depth = - float(line[6]) # depth: negative down!
-        
-        lon, lat = gk2lonlat(x, y)
-        
         # determine which model was used:
         controlfile = self.tmp_dir + "/last.in"
         lines2 = open(controlfile).readlines()
