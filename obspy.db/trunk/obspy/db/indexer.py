@@ -201,6 +201,10 @@ class WaveformFileCrawler:
             paths = self._select()
             for path in paths:
                 if not os.path.isdir(path):
+                    # no path in filesystem
+                    self._delete(path)
+                elif not self._select(path):
+                    # empty path in database
                     self._delete(path)
         # logging
         self.log.debug("Crawling root '%s' ..." % self._root)
