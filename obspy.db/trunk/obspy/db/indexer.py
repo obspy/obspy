@@ -441,10 +441,10 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         if trace.stats.endtime and \
                            trace.stats.endtime < mapping['starttime']:
                             continue
-                        trace.stats.network = mapping['network']
-                        trace.stats.station = mapping['station']
-                        trace.stats.location = mapping['location']
-                        trace.stats.channel = mapping['channel']
+                        result['network'] = mapping['network']
+                        result['station'] = mapping['station']
+                        result['location'] = mapping['location']
+                        result['channel'] = mapping['channel']
                         log_queue.append("Mapping '%s' to '%s'" % (old_id,
                                                                    trace.id))
                 # gaps/overlaps for current trace

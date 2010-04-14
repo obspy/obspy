@@ -72,7 +72,8 @@ setup(
     test_suite="obspy.imaging.tests.suite",
     entry_points={
         'console_scripts': [
-            'obspy-scan = obspy.imaging.scripts.obspyscan:main'
+            'obspy-scan = obspy.imaging.scripts.obspyscan:main',
+            'obspy-plot = obspy.imaging.scripts.plot:main'
         ],
     },
 )
