@@ -451,16 +451,20 @@ class PickingGUI:
             self.canv.draw()
 
     def on_buttonGetNextEvent_clicked(self, event):
-        self.delAllItems()
-        self.clearDictionaries()
         # check if event list is empty and force an update if this is the case
         if not hasattr(self, "seishubEventList"):
             self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
                                             self.streams[0][0].stats.endtime)
+        if not self.seishubEventList:
+            msg = "No events available from seishub."
+            self.textviewStdOutImproved.write(msg)
+            return
         # iterate event number to fetch
         self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
                                    self.seishubEventCount
         resource_name = self.seishubEventList[self.seishubEventCurrent].text
+        self.delAllItems()
+        self.clearDictionaries()
         self.getEventFromSeishub(resource_name)
         #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
         #                             self.streams[0][0].stats.endtime)
