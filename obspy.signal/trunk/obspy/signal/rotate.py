@@ -93,15 +93,17 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2) :
     if lat1 > 90 or lat1 < -90:
         msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
         raise ValueError(msg)
-    if lon1 > 180 or lon1 < -180:
-        msg = "Longitude of Point 1 out of bounds! (-180 <= lon1 <= +180)"
-        raise ValueError(msg)
+    while lon1 > 180:
+        lon1 -= 360
+    while lon1 < -180:
+        lon1 += 360
     if lat2 > 90 or lat2 < -90:
         msg = "Latitude of Point 2 out of bounds! (-90 <= lat2 <=90)"
         raise ValueError(msg)
-    if lon2 > 180 or lon2 < -180:
-        msg = "Longitude of Point 2 out of bounds! (-180 <= lon2 <= +180)"
-        raise ValueError(msg)
+    while lon2 > 180:
+        lon2 -= 360
+    while lon2 < -180:
+        lon2 += 360
 
     #Data on the WGS84 reference ellipsoid:
     a = 6378137.0       #semimajor axis in m
