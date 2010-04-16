@@ -280,7 +280,7 @@ class CoreTestCase(unittest.TestCase):
         touching the rest.
         """
         temp = os.path.join(self.path, 'data', 'BW.BGLD.__.EHE.D.2008.001')
-        file = temp + '.first_10_percent'
+        file = temp + '.first_10_records'
         t = [UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
              UTCDateTime(2008, 1, 1, 0, 0, 4, 30000)]
         tr1 = read(file, starttime=t[0], endtime=t[1])[0]

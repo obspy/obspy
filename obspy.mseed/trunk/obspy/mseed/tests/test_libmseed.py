@@ -165,7 +165,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Tests reading only the first couple of samples.
         """
         mseed_file = os.path.join(self.path,
-                                  'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                  'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         mseed = LibMSEED()
         # Read the usual way.
         trace_list = mseed.readMSTraces(mseed_file)
@@ -282,7 +282,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         trace and without any gaps or overlaps.
         """
         mseed = LibMSEED()
-        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'test.mseed', 'timingquality.mseed']
         for _i in mseed_filenames:
             filename = os.path.join(self.path, _i)
@@ -336,19 +336,11 @@ class LibMSEEDTestCase(unittest.TestCase):
                               'lower_quantile': 25.0})
         # No timing quality set should result in an empty dictionary.
         filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        a = time.time()
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         tq = mseed.getTimingQuality(filename)
-        b = time.time()
         self.assertEqual(tq, {})
-        # It should be much slower when reading every record is parsed even if
-        # no timing quality is set. This test should work regardless of
-        # current CPU load due to the enormous difference in times.
-        c = time.time()
         tq = mseed.getTimingQuality(filename, first_record=False)
-        d = time.time()
         self.assertEqual(tq, {})
-        self.assertTrue(d - c > 10 * (b - a))
 
     def test_isMSEED(self):
         """
@@ -361,7 +353,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = LibMSEED()
         # Mini-SEED filenames.
-        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_percent',
+        mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
                            'timingquality.mseed']
         # Non Mini-SEED filenames.
@@ -385,14 +377,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = LibMSEED()
         filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         # Simply reading the file.
         f = open(filename, 'rb')
         info = mseed._getMSFileInfo(f, filename)
         f.close()
-        self.assertEqual(info['filesize'], 2201600)
+        self.assertEqual(info['filesize'], 5120)
         self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 4300)
+        self.assertEqual(info['number_of_records'], 10)
         self.assertEqual(info['excess_bytes'], 0)
         # Now with an open file. This should work regardless of the current
         # value of the file pointer and it should also not change the file
@@ -400,9 +392,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         open_file = open(filename, 'rb')
         open_file.seek(1234)
         info = mseed._getMSFileInfo(open_file, filename)
-        self.assertEqual(info['filesize'], 2201600)
+        self.assertEqual(info['filesize'], 5120)
         self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 4300)
+        self.assertEqual(info['number_of_records'], 10)
         self.assertEqual(info['excess_bytes'], 0)
         self.assertEqual(open_file.tell(), 1234)
         open_file.close()
@@ -412,9 +404,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         open_file.close()
         open_file_string.seek(111)
         info = mseed._getMSFileInfo(open_file_string, filename)
-        self.assertEqual(info['filesize'], 2201600)
+        self.assertEqual(info['filesize'], 5120)
         self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 4300)
+        self.assertEqual(info['number_of_records'], 10)
         self.assertEqual(info['excess_bytes'], 0)
         self.assertEqual(open_file_string.tell(), 111)
         # One more file containing two records.
@@ -460,8 +452,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         Both cases, with and without ms_p argument are tested.
         """
         filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        start, end = [1199145599915000L, 1199151207890000L]
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        start, end = [1199145599915000L, 1199145620510000L]
         # start and endtime
         ms = MSStruct(filename)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
@@ -482,7 +474,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = LibMSEED()
         # Use a medium sized file.
         mseed_file = os.path.join(self.path,
-                                  'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+                                  'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         # Read file into memory.
         f = open(mseed_file, 'rb')
         buffer = f.read()

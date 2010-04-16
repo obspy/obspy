@@ -25,7 +25,7 @@ Additionally the start- and endtime of the plot can be given as
 Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy.core import read
->>> st = read('BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+>>> st = read('http://examples.obspy.org/BW.BGLD.__.EHE.D.2008.001.first_10_percent')
 >>> print st
 3 Trace(s) in Stream:
 BW.BGLD..EHE | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0 Hz, 8640001 samples
@@ -39,7 +39,7 @@ BW.BGLD..EHZ | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0
     from obspy.core import read, UTCDateTime
     from copy import deepcopy
     from numpy.random import ranf
-    st = read('../obspy.mseed/trunk/obspy/mseed/tests/data/BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+    st = read('http://examples.obspy.org/BW.BGLD.__.EHE.D.2008.001.first_10_percent')
     st[0].stats.starttime = UTCDateTime(2010, 1, 1)
     starttime = st[0].stats.starttime
     st.trim(starttime, starttime + 60*60)
