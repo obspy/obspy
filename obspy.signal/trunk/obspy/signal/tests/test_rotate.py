@@ -95,6 +95,13 @@ class RotateTestCase(unittest.TestCase):
         self.assertEqual(alpha12_err < 1.0e-5, True)
         self.assertEqual(alpha21_err < 1.0e-5, True)
 
+        #calculate result with +- 360 for lon values
+        dist, alpha12, alpha21 = gps2DistAzimuth(lat1, lon1 + 360,
+                                                 lat2, lon2 - 720)
+        self.assertAlmostEqual(dist, calc_dist)
+        self.assertAlmostEqual(alpha12, calc_alpha12)
+        self.assertAlmostEqual(alpha21, calc_alpha21)
+
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')
