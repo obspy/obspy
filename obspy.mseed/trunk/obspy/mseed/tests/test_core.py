@@ -406,7 +406,7 @@ class CoreTestCase(unittest.TestCase):
 
         This test also checks the files created by libmseed to some extend.
         """
-        path = os.path.join(self.path, "data", "libmseed")
+        path = os.path.join(self.path, "data", "encoding")
         # Dictionary. The key is the filename, the value a tuple: dtype,
         # sampletype, encoding, content
         def_content = np.arange(1, 51, dtype='int32')
@@ -549,6 +549,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertTrue(isMSEED(file))
         st = read(file)
         self.assertEqual(len(st), 3)
+
+    def test_bizarreFiles(self):
+        """
+        Tests reading some bizarre MSEED files.
+        """
+        st1 = read(os.path.join(self.path, "data", "bizarre",
+                                "endiantest.be-header.be-data.mseed"))
+        st2 = read(os.path.join(self.path, "data", "bizarre",
+                                "endiantest.be-header.le-data.mseed"))
+        st3 = read(os.path.join(self.path, "data", "bizarre",
+                                "endiantest.le-header.be-data.mseed"))
+        st4 = read(os.path.join(self.path, "data", "bizarre",
+                                "endiantest.le-header.le-data.mseed"))
+        for st in [st1, st2, st3, st4]:
+            self.assertEqual(len(st), 1)
+            self.assertEqual(st[0].id, "NL.HGN.00.BHZ")
+            self.assertEqual(st[0].stats.starttime,
+                             UTCDateTime("2003-05-29T02:13:22.043400Z"))
+            self.assertEqual(st[0].stats.endtime,
+                             UTCDateTime("2003-05-29T02:18:20.693400Z"))
+            self.assertEqual(st[0].stats.npts, 11947)
+            self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
 
 
 def suite():
