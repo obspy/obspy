@@ -185,21 +185,6 @@ Parameters:
  'median': 50.0,
  'min': 0.0,
  'upper_quantile': 75.0}
-
-getFirstRecordHeaderInfo
-^^^^^^^^^^^^^^^^^^^^^^^^
-Takes a MiniSEED file and returns some header information from the first record.
-
-Returns a dictionary containing some header information from the first record
-of the MiniSEED file only. It returns the location, network, station and
-channel information. The advantage is that this method is very fast but keep in
-mind that it will only parse the first record.
-
-Parameters:
-    * filename = MiniSEED file. 
-
->>> mseed.getFirstRecordHeaderInfo('COP.BHE.DK.2009.050')
-{'channel': 'BHE', 'location': '', 'network': 'DK', 'station': 'COP'}
 """
 
 from obspy.core.util import _getVersionString

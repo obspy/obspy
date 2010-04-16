@@ -33,7 +33,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
@@ -43,9 +42,7 @@ import ctypes as C
 import math
 import numpy as np
 import warnings
-import operator
 import os
-import sys
 
 
 class LibMSEED(object):
@@ -220,7 +217,6 @@ class LibMSEED(object):
             file.close()
         return trace_list
 
-
     def _readQuality(self, file, filepos, chain, tq, dq):
         """
         Reads all quality informations from a file and writes it to tq and dq.
@@ -244,11 +240,10 @@ class LibMSEED(object):
         except:
             pass
 
-
     def readMSTraces(self, filename, reclen= -1, timetol= -1,
                      sampratetol= -1, dataflag=1, skipnotdata=1,
-                     dataquality=1, verbose=0, starttime = None, 
-                     endtime = None):
+                     dataquality=1, verbose=0, starttime=None,
+                     endtime=None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -357,8 +352,8 @@ class LibMSEED(object):
 
     def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
                              sampratetol= -1, dataflag=1, skipnotdata=1,
-                             dataquality=1, verbose=0, starttime = None,
-                             endtime = None):
+                             dataquality=1, verbose=0, starttime=None,
+                             endtime=None):
         """
         Reads MiniSEED data from file. Returns MSTraceGroup structure.
         
@@ -400,30 +395,6 @@ class LibMSEED(object):
             if errcode != 0:
                 raise Exception("Error in ms_readtraces")
         return mstg
-
-    def getFirstRecordHeaderInfo(self, filename):
-        """
-        Takes a MiniSEED file and returns header of the first record.
-        Method using ms_readmsr_r.
-        
-        Returns a dictionary containing some header information from the first
-        record of the MiniSEED file only. It returns the location, network,
-        station and channel information.
-        
-        :param filename: MiniSEED file string.
-        """
-        # read first header only
-        ms = MSStruct(filename, filepointer=False)
-        ms.read(-1, 0, 1, 0)
-        header = {}
-        # header attributes to be read
-        attributes = ('location', 'network', 'station', 'channel')
-        # loop over attributes
-        for _i in attributes:
-            header[_i] = getattr(ms.msr.contents, _i)
-        # Deallocate for debugging with valrgind
-        del ms
-        return header
 
     def getStartAndEndTime(self, filename):
         """
@@ -717,109 +688,6 @@ class LibMSEED(object):
         # length in bytes to read
         length_byte = record_length * (end_record - start_record + 1)
         return start_byte, length_byte
-
-    def cutMSFileByRecords(self, filename, starttime=None, endtime=None):
-        """
-        Cuts a MiniSEED file by cutting at records.
-        
-        For details see method _bytePosFromTime.
-        
-        :return: Byte string containing the cut file.
-        
-        :param filename: File string of the MiniSEED file to be cut.
-        :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        """
-        bytes = self._bytePosFromTime(filename, starttime=starttime,
-                                      endtime=endtime)
-        if bytes == None:
-            return ''
-        # Open file a seek to location
-        f = open(filename, "rb")
-        f.seek(bytes[0], 0)
-        # Read until end_location.
-        data = f.read(bytes[1])
-        f.close()
-        # Return the cut file string.
-        return data
-
-    def mergeAndCutMSFiles(self, file_list, starttime=None, endtime=None):
-        """
-        This method takes several MiniSEED files and returns one merged file.
-        
-        It is also possible to specify a start- and a endtime and all records
-        that are out of bounds will be cut.
-        If two not identical files cover a common time frame they will still
-        be merged and no data is lost.
-        
-        The input files can be given in any order but they have to be files
-        that contain only traces from one source and one component and the
-        traces inside the files have to be in chronological order. Otherwise
-        the produced output will not be correct. All files also have to be from
-        the same source.
-        
-        :param file_list: A list containing MiniSEED filename strings.
-        :param outfile: String of the file to be created.
-        :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` bject.
-        :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        :return: Byte string containing the merged and cut file.
-        """
-        # Copy file_list to not alter the provided list.
-        file_list = file_list[:]
-        # Remove duplicates in list
-        file_list = list(set(file_list))
-        # Check if all files in the list are from one source. Raise ValueError
-        # otherwise.
-        check_list = [self.getFirstRecordHeaderInfo(filename) for filename in\
-                      file_list]
-        for _i in range(len(check_list) - 1):
-            if check_list[_i] != check_list[_i + 1]:
-                raise ValueError
-        # Get the start- and the endtime for each file in filelist.
-        file_list = [[filename, self.getStartAndEndTime(filename)] for \
-                     filename in file_list]
-        # Sort the list first by endtime and then by starttime. This results
-        # in a list which is sorted by starttime first and then by endtime.
-        file_list = sorted(file_list, key=operator.itemgetter(1))
-        # Set start- and endtime if they have not been set.
-        if not starttime:
-            starttime = file_list[0][1][0]
-        if not endtime:
-            endtime = max([file[1][1] for file in file_list])
-        open_file = StringIO()
-        try:
-            # Loop over all files in file_list and append to final output file.
-            for file in file_list:
-                file_starttime = file[1][0]
-                file_endtime = file[1][1]
-                # If the starttime of the file is in range of the desired file.
-                if file_starttime >= starttime and file_starttime <= endtime:
-                    # If the whole file is inside the range, just append it.
-                    if file_endtime <= endtime:
-                        new_file = open(file[0], 'rb')
-                        open_file.write(new_file.read())
-                        new_file.close()
-                    # Otherwise cut it.
-                    else:
-                        open_file.write(self.cutMSFileByRecords(filename=\
-                                        file[0], starttime=starttime,
-                                        endtime=endtime))
-                # If some parts of the file are in range cut it. Neglect all
-                # other cases as they are not necessary.
-                elif file_starttime < starttime and file_endtime > starttime:
-                    open_file.write(self.cutMSFileByRecords(filename=file[0],
-                                    starttime=starttime, endtime=endtime))
-            # Close the open file
-            open_file.seek(0)
-            return open_file.read()
-        # Handle non existing files and files of the wrong type.
-        except IOError, error:
-            # Close file and remove the already written file.
-            open_file.close()
-            # Write to standard error.
-            sys.stderr.write(str(error) + '\n')
-            sys.stderr.write('No file has been written.\n')
-            sys.stderr.write('Please check your files and try again.\n')
 
     def unpack_steim2(self, data_string, npts, swapflag=0, verbose=0):
         """

@@ -272,30 +272,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                                          new_trace_list[_i][1])
         os.remove(outfile)
 
-    def test_readFirstHeaderInfo(self):
-        """
-        Reads and compares header info from the first record.
-        
-        The values can be read from the filename.
-        """
-        mseed = LibMSEED()
-        # Example 1
-        filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        header = mseed.getFirstRecordHeaderInfo(filename)
-        self.assertEqual(header['location'], '')
-        self.assertEqual(header['network'], 'BW')
-        self.assertEqual(header['station'], 'BGLD')
-        self.assertEqual(header['channel'], 'EHE')
-        # Example 2 again for leak checking
-        filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        header = mseed.getFirstRecordHeaderInfo(filename)
-        self.assertEqual(header['location'], '')
-        self.assertEqual(header['network'], 'BW')
-        self.assertEqual(header['station'], 'BGLD')
-        del header
-
 
     def test_getStartAndEndTime(self):
         """
@@ -321,106 +297,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                              mseed._convertMSTimeToDatetime(chain.endtime))
             clibmseed.mst_freegroup(C.pointer(mstg))
             del mstg, chain
-
-
-    def test_cutMSFileByRecord(self):
-        """
-        Tests file cutting on a record basis. 
-        
-        The cut file is compared to a manually cut file which start and end 
-        times will be read
-        """
-        mseed = LibMSEED()
-        temp = os.path.join(self.path, 'BW.BGLD.__.EHE.D.2008.001')
-        file = temp + '.first_10_percent'
-        # initialize first record
-        file1 = temp + '.first_record'
-        start1, end1 = mseed.getStartAndEndTime(file1)
-        self.assertEqual(start1, UTCDateTime(2007, 12, 31, 23, 59, 59, 915000))
-        self.assertEqual(end1, UTCDateTime(2008, 1, 1, 0, 0, 1, 970000))
-        record1 = open(file1, 'rb').read()
-        # initialize second record
-        file2 = temp + '.second_record'
-        start2, end2 = mseed.getStartAndEndTime(file2)
-        self.assertEqual(start2, UTCDateTime(2008, 1, 1, 0, 0, 1, 975000))
-        self.assertEqual(end2, UTCDateTime(2008, 1, 1, 0, 0, 4, 30000))
-        record2 = open(file2, 'rb').read()
-        # initialize third record
-        file3 = temp + '.third_record'
-        start3, end3 = mseed.getStartAndEndTime(file3)
-        self.assertEqual(start3, UTCDateTime(2008, 1, 1, 0, 0, 4, 35000))
-        self.assertEqual(end3, UTCDateTime(2008, 1, 1, 0, 0, 6, 90000))
-        record3 = open(file3, 'rb').read()
-        # Cut first record using fixed start and end time
-        data = mseed.cutMSFileByRecords(file, starttime=start1, endtime=end1)
-        self.assertEqual(data, record1)
-        # Cut first record using end time with rounding error and no given
-        # start time
-        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 969999)
-        data = mseed.cutMSFileByRecords(file, endtime=end)
-        self.assertEqual(data, record1)
-        # Cut first two records using start time with rounding error
-        start = start2 - 0.000001
-        end = start2 + 0.000001
-        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
-        self.assertEqual(data, record1 + record2)
-        # Cut second record without rounding error
-        start = UTCDateTime(2008, 1, 1, 0, 0, 1, 975000)
-        end = UTCDateTime(2008, 1, 1, 0, 0, 1, 975001)
-        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
-        self.assertEqual(data, record2)
-        # Cut first three records using times between records
-        start = end1 + 0.0025
-        end = start3 - 0.0025
-        data = mseed.cutMSFileByRecords(file, starttime=start, endtime=end)
-        self.assertEqual(data, record1 + record2 + record3)
-        # Cut nothing if end time is equal or less than start time
-        data = mseed.cutMSFileByRecords(file1, endtime=start1)
-        self.assertEqual(data, '')
-        data = mseed.cutMSFileByRecords(file1, endtime=start1 - 1)
-        self.assertEqual(data, '')
-        # Cut nothing if start time is equal or more than end time
-        data = mseed.cutMSFileByRecords(file1, starttime=end1)
-        self.assertEqual(data, '')
-        data = mseed.cutMSFileByRecords(file1, starttime=end1 + 1)
-        self.assertEqual(data, '')
-
-    def test_mergeAndCutMSFiles(self):
-        """
-        Creates ten small files, randomizes their order, merges the middle
-        eight files and compares it to the desired result.
-        """
-        mseed = LibMSEED()
-        filename = os.path.join(self.path,
-                                'BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-        #Create 10 small files.
-        fh = open(filename, 'rb')
-        first_ten_records = fh.read(10 * 512)
-        fh.close()
-        file_list = []
-        for _i in range(10):
-            tempfile = NamedTemporaryFile().name
-            file_list.append(tempfile)
-            fh = open(tempfile, 'wb')
-            fh.write(first_ten_records[_i * 512: (_i + 1) * 512])
-            fh.close()
-        # Randomize list.
-        file_list.sort(key=lambda _x: random.random())
-        # Init MSRecord and MSFileParam structure
-        ms = MSStruct(filename)
-        # Get the needed start- and endtime.
-        info = mseed._getMSFileInfo(ms.f, ms.file)
-        ms.f.seek(info['record_length'])
-        starttime = ms.getStart()
-        ms.f.seek(9 * info['record_length'])
-        endtime = ms.getStart()
-        del ms # for valgrind
-        # Create the merged file<
-        data = mseed.mergeAndCutMSFiles(file_list, starttime, endtime)
-        # Compare the file to the desired output.
-        self.assertEqual(data, first_ten_records[512:-512])
-        for _i in file_list:
-            os.remove(_i)
 
     def test_getDataQualityFlagsCount(self):
         """

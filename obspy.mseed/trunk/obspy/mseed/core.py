@@ -25,7 +25,7 @@ def isMSEED(filename):
 
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
-              reclen= -1, quality = False, **kwargs):
+              reclen= -1, quality=False, **kwargs):
     """
     Reads a given Mini-SEED file and returns an Stream object.
     
@@ -74,11 +74,11 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
             # 4x slower on Mac
             trace_list = __libmseed__.readMSTracesViaRecords(filename,
                          starttime=starttime, endtime=endtime, reclen=reclen,
-                         quality = quality)
+                         quality=quality)
         else:
             # problem on windows with big files (>=20 MB)
             trace_list = __libmseed__.readMSTraces(filename, reclen=reclen,
-                         starttime = starttime, endtime = endtime)
+                         starttime=starttime, endtime=endtime)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
@@ -104,9 +104,9 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
             __libmseed__._convertMSTimeToDatetime(header['endtime'])
         # Append quality informations if necessary.
         if quality:
-                header['mseed']['timing_quality']=\
+                header['mseed']['timing_quality'] = \
                 np.array(old_header['timing_quality'])
-                header['mseed']['data_quality_flags_count']= \
+                header['mseed']['data_quality_flags_count'] = \
                                       old_header['data_quality_flags']
         # Append traces.
         if headonly:
