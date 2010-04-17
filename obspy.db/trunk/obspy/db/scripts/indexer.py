@@ -84,6 +84,9 @@ def _runIndexer(options):
         engine = create_engine(options.db_uri, encoding='utf-8',
                                convert_unicode=True)
         metadata = Base.metadata
+        # recreate database
+        if options.drop_database:
+            metadata.drop_all(engine, checkfirst=True)
         metadata.create_all(engine, checkfirst=True)
         # initialize database + options
         Session = sessionmaker(bind=engine)
@@ -141,20 +144,23 @@ Default path option is 'data=*.*'.""")
     parser.add_option("-m", "--mapping_file", type="string", dest="map_file",
         help="Correct network, station, location and channel codes using a" + \
              "custom mapping file.", default=None)
-    parser.add_option("--cleanup", action="store_true", dest="cleanup",
-        default=False,
-        help="Clean database from non-existing files or paths " + \
-             "if activated, but will skip all paths marked as " + \
-             "archived in the database.")
-    parser.add_option("--check_duplicates", action="store_true",
-        dest="check_duplicates", default=False,
-        help="Checks for duplicate entries within database." + \
-             "This feature will slow down the indexer progress.")
     parser.add_option("--all_files", action="store_false", dest="skip_dots",
         default=True,
         help="The indexer will automatically skip paths or "
              "files starting with a dot. This option forces to "
              "parse all paths and files.")
+    parser.add_option("--check_duplicates", action="store_true",
+        dest="check_duplicates", default=False,
+        help="Checks for duplicate entries within database." + \
+             "This feature will slow down the indexer progress.")
+    parser.add_option("--cleanup", action="store_true", dest="cleanup",
+        default=False,
+        help="Clean database from non-existing files or paths " + \
+             "if activated, but will skip all paths marked as " + \
+             "archived in the database.")
+    parser.add_option("--drop_database", action="store_true",
+        dest="drop_database", default=False,
+        help="Deletes and recreates the complete database at start up.")
     parser.add_option("--host", type="string", dest="host",
         help="Server host name. Default is 'localhost'.", default="localhost")
     parser.add_option("--port", type="int", dest="port", default=8081,
