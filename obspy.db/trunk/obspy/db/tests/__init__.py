@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.tests import test_util
+from obspy.db.tests import test_util
 import unittest
 
 
