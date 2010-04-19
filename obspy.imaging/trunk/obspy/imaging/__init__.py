@@ -47,7 +47,7 @@ BW.BGLD..EHZ | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0
     st += deepcopy(st)
     st[1].stats.channel = 'EHN'
     st[2].stats.channel = 'EHZ'
-    st[1].data = st[1].data * (1.0 + ranf(st[0].stats.npts)/8
+    st[1].data = st[1].data * (1.0 + ranf(st[0].stats.npts)/8)
     st[2].data = st[2].data * (0.95 + ranf(st[0].stats.npts)/8)
     st.plot(color = 'gray', tick_format = '%I:%M %p')
 
