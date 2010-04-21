@@ -63,8 +63,12 @@ def isSAC(filename):
     st = os.stat(filename)
     sizecheck = st.st_size - (632 + 4 * npts)
     if sizecheck != 0:
-        # File-size and theoretical size inconsistent!
-        return False
+        ## check if if file is big-endian
+        npts = struct.unpack('>i', data)[0]
+        sizecheck = st.st_size - (632 + 4 * npts)
+        if sizecheck != 0:
+            # File-size and theoretical size inconsistent!
+            return False
     return True
 
 

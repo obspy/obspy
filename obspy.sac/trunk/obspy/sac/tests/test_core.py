@@ -20,6 +20,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(self.path, 'data', 'test.sac')
+        self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
             - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
@@ -33,6 +34,20 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC')[0]
+        self.assertEqual(tr.stats['station'], 'STA')
+        self.assertEqual(tr.stats.npts, 100)
+        self.assertEqual(tr.stats['sampling_rate'], 1.0)
+        self.assertEqual(tr.stats.get('channel'), 'Q')
+        self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
+        self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
+        np.testing.assert_array_almost_equal(self.testdata[0:10],
+                                             tr.data[0:10])
+
+    def test_readBigEndianViaObspy(self):
+        """
+        Read files via L{obspy.Stream}
+        """
+        tr = read(self.filebe, format='SAC')[0]
         self.assertEqual(tr.stats['station'], 'STA')
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
