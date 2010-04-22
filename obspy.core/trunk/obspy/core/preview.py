@@ -15,6 +15,7 @@ from obspy.core.trace import Trace
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
 
+
 def createPreview(trace, delta=60):
     """
     Creates a preview trace.
@@ -39,7 +40,7 @@ def createPreview(trace, delta=60):
     :class:`~obspy.core.Trace`
         New Trace object.
     """
-    if type(delta) != int or not delta:
+    if not isinstance(delta, int) or delta < 1:
         msg = 'The delta values need to be an Integer and at least 1.'
         raise TypeError(msg)
     data = trace.data
@@ -80,6 +81,7 @@ def createPreview(trace, delta=60):
     tr.stats.starttime = UTCDateTime(start_time)
     tr.stats.preview = True
     return tr
+
 
 def mergePreviews(stream):
     """
@@ -123,7 +125,7 @@ def mergePreviews(stream):
         # correct.
         sampling_rates = set([tr.stats.sampling_rate for tr in value])
         if len(sampling_rates) != 1:
-            msg = 'More than one sampling rate for traces with id %s.' %\
+            msg = 'More than one sampling rate for traces with id %s.' % \
                   value[0].id
             raise Exception(msg)
         delta = value[0].stats.delta
@@ -136,16 +138,16 @@ def mergePreviews(stream):
         # Get the minimum start and maximum endtime for all traces.
         min_starttime = min([tr.stats.starttime for tr in value])
         max_endtime = max([tr.stats.endtime for tr in value])
-        samples = (max_endtime - min_starttime)/delta + 1
-        data = np.empty(samples, dtype = dtype)
+        samples = (max_endtime - min_starttime) / delta + 1
+        data = np.empty(samples, dtype=dtype)
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
         # Create trace and give starttime.
-        new_trace = Trace(data = data)
+        new_trace = Trace(data=data)
         new_trace.starttime = min_starttime
         # Loop over all traces in value and add to data.
         for trace in value:
-            start_index = int((trace.stats.starttime - min_starttime)/delta)
+            start_index = int((trace.stats.starttime - min_starttime) / delta)
             end_index = start_index + len(trace.data)
             # Element-by-element comparision.
             data[start_index:end_index] = \
