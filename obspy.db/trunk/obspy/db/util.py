@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from obspy.core import UTCDateTime
 
+
 def parseMappingData(lines):
     """
     """

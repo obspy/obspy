@@ -105,12 +105,13 @@ class WaveformChannel(Base):
             data = data * self.calib
         tr = Trace(data=data)
         tr.stats.starttime = UTCDateTime(self.starttime)
-        tr.stats.delta = 60.0
+        tr.stats.delta = 30.0
         tr.stats.network = self.network
         tr.stats.station = self.station
         tr.stats.location = self.location
         tr.stats.channel = self.channel
         tr.stats.calib = self.calib
+        tr.stats.preview = True
         return tr
 
 

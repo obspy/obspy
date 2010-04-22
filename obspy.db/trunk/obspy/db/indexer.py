@@ -4,7 +4,7 @@ from obspy.core import read
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
     WaveformGaps, WaveformFeatures
 from obspy.core.util import _getPlugins
-from obspy.db.util import createPreview
+from obspy.core.preview import createPreview
 import fnmatch
 import os
 import time
@@ -470,7 +470,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         continue
                 # generate preview of trace
                 try:
-                    trace = createPreview(trace, 60.0)
+                    trace = createPreview(trace, 30)
                     result['preview'] = trace.data.dumps()
                 except Exception , e:
                     msg = '[Creating preview] %s: %s'
