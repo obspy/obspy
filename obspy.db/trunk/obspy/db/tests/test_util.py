@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.db.util import parseMappingData, createPreview
-from obspy.core import UTCDateTime, Trace
-import numpy as np
+from obspy.db.util import parseMappingData
 import unittest
 
 
@@ -52,42 +50,6 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(Exception, parseMappingData, data)
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2009-01-01 2008-01-01"]
         self.assertRaises(Exception, parseMappingData, data)
-
-    def test_createPreview(self):
-        """
-        Test for creating preview.
-        """
-        #1
-        trace = Trace(data=np.array([0] * 28 + [0, 1] * 30 + [-1, 1] * 29))
-        trace.stats.starttime = UTCDateTime(32)
-        preview = createPreview(trace, delta=60.0)
-        self.assertEqual(preview.stats.starttime, UTCDateTime(60))
-        self.assertEqual(preview.stats.endtime, UTCDateTime(120))
-        self.assertEqual(preview.stats.delta, 60.0)
-        np.testing.assert_array_equal(preview.data, np.array([1, 2]))
-        #2
-        trace = Trace(data=np.arange(0, 30))
-        preview = createPreview(trace, delta=60.0)
-        self.assertEqual(preview.stats.starttime, UTCDateTime(0))
-        self.assertEqual(preview.stats.endtime, UTCDateTime(0))
-        self.assertEqual(preview.stats.delta, 60.0)
-        np.testing.assert_array_equal(preview.data, np.array([29]))
-        #2
-        trace = Trace(data=np.arange(0, 60))
-        preview = createPreview(trace, delta=60.0)
-        self.assertEqual(preview.stats.starttime, UTCDateTime(0))
-        self.assertEqual(preview.stats.endtime, UTCDateTime(0))
-        self.assertEqual(preview.stats.delta, 60.0)
-        np.testing.assert_array_equal(preview.data, np.array([59]))
-        #3
-        trace = Trace(data=np.arange(0, 90))
-        preview = createPreview(trace, delta=60.0)
-        self.assertEqual(preview.stats.starttime, UTCDateTime(0))
-        self.assertEqual(preview.stats.endtime, UTCDateTime(60))
-        self.assertEqual(preview.stats.delta, 60.0)
-        np.testing.assert_array_equal(preview.data, np.array([59, 29]))
-
-
 
 def suite():
     return unittest.makeSuite(UtilTestCase, 'test')

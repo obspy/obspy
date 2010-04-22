@@ -1,56 +1,5 @@
 # -*- coding: utf-8 -*-
-
-from obspy.core import Trace, UTCDateTime
-import numpy as np
-
-
-def createPreview(trace, delta=60.0):
-    """
-    Creates a preview trace.
-    
-    A preview trace consists of maxima minus minima of all samples within
-    ``delta`` seconds. The parameter ``delta`` must be a multiple of the
-    sampling rate of the ``trace`` object.
-    """
-    data = trace.data
-    start_time = trace.stats.starttime.timestamp
-    # number of samples for a single slice of delta seconds
-    samples_per_slice = delta * trace.stats.sampling_rate
-    # minimum and maximum of samples before a static time marker
-    start = (delta - start_time % delta) * trace.stats.sampling_rate
-    start_time = start_time - start_time % delta
-    if start > (delta / 2) and data[0:start].size:
-        first_diff = [data[0:start].max() - data[0:start].min()]
-    else:
-        # skip starting samples
-        first_diff = []
-        start_time += delta
-    # number of complete slices of data
-    number_of_slices = int((len(data) - start) / samples_per_slice)
-    # minimum and maximum of remaining samples
-    end = samples_per_slice * number_of_slices + start
-    if end > (delta / 2) and data[end:].size:
-        last_diff = [data[end:].max() - data[end:].min()]
-    else:
-        # skip tailing samples
-        last_diff = []
-    # Fill NaN value with -1.
-    if np.isnan(last_diff):
-        last_diff = -1
-    # reshape matrix
-    data = trace.data[start:end].reshape([number_of_slices, samples_per_slice])
-    # get minimum and maximum for each row
-    diff = data.ptp(axis=1)
-    # fill NaN with -1 -> means missing data
-    data = np.ma.filled(diff, -1)
-    # append value of last diff
-    data = np.concatenate([first_diff, data, last_diff])
-    tr = Trace(data=data, header=trace.stats)
-    tr.stats.delta = delta
-    tr.stats.npts = len(data)
-    tr.stats.starttime = UTCDateTime(start_time)
-    return tr
-
+from obspy.core import UTCDateTime
 
 def parseMappingData(lines):
     """
