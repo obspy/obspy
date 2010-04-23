@@ -90,7 +90,6 @@ class UtilTestCase(unittest.TestCase):
         st = Stream(traces=[tr1, tr2])
         st2 = mergePreviews(st)
         self.assertEqual(len(st2.traces), 1)
-        # XXX: Bug 
         self.assertEqual(st2[0].stats.starttime, UTCDateTime(500))
         np.testing.assert_array_equal(st2[0].data, np.array([3, 2] * 100))
         # 2
