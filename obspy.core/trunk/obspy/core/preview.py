@@ -143,7 +143,7 @@ def mergePreviews(stream):
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
         # Create trace and give starttime.
-        new_trace = Trace(data=data)
+        new_trace = Trace(data = data, header = value[0].stats)
         new_trace.starttime = min_starttime
         # Loop over all traces in value and add to data.
         for trace in value:
