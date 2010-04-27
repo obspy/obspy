@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+A command-line program that converts XML-SEED into Dataless SEED files.
+"""
+
 from glob import glob
 from obspy.xseed.parser import Parser
 from optparse import OptionParser
@@ -63,7 +67,7 @@ def xseed2dataless(filename, options):
 
 
 def main():
-    usage = "usage: %prog [options] filename"
+    usage = "USAGE: %prog [options] filename"
     parser = OptionParser(usage)
     parser.add_option("-d", "--debug", default=False,
                       action="store_true", dest="debug",

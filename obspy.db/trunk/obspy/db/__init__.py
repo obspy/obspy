@@ -11,6 +11,7 @@ This class contains a simple waveform database.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
 from obspy.core.util import _getVersionString
 
 

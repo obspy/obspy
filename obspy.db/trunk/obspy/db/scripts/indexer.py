@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+A command-line program that indexes seismogram files into a database.
 """
 
 from obspy.db import __version__

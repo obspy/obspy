@@ -256,20 +256,21 @@ class ClientTestCase(unittest.TestCase):
         changed because the reference gets wrong.
         """
         paz = {'gain': 60077000.0,
-               'poles': [(-0.037004000000000002+0.037016j),
-                         (-0.037004000000000002-0.037016j),
-                         (-251.33000000000001+0j),
-                         (-131.03999999999999-467.29000000000002j),
-                         (-131.03999999999999+467.29000000000002j)],
-               'sensitivity': 2516778400.0,
+               'poles': [(-0.037004000000000002 + 0.037016j),
+                         (-0.037004000000000002 - 0.037016j),
+                         (-251.33000000000001 + 0j),
+                         (-131.03999999999999 - 467.29000000000002j),
+                         (-131.03999999999999 + 467.29000000000002j)],
+               'sensitivity': 2516778600.0,
                'zeros': [0j, 0j] }
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
         # Retrieve Data via Arclink
         client = Client(host="webdc.eu", port=18001)
         t = UTCDateTime("2009-08-24 00:20:03")
-        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t+30)
-        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ", t, t+30).values()[0]
+        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
+        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ",
+                                    t, t + 30).values()[0]
         self.assertEquals(paz['gain'], poles_zeros['gain'])
         self.assertEquals(paz['poles'], poles_zeros['poles'])
         self.assertEquals(paz['sensitivity'], poles_zeros['sensitivity'])
@@ -278,7 +279,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals('RJOB', st[0].stats['station'])
         self.assertEquals(200.0, st[0].stats['sampling_rate'])
         self.assertEquals(6001, st[0].stats['npts'])
-        self.assertEquals('2009-08-24T00:20:03.000000Z', str(st[0].stats['starttime']))
+        self.assertEquals('2009-08-24T00:20:03.000000Z',
+                          str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 

@@ -9,8 +9,11 @@ RESP files. The obspy.xseed module is tested against the complete ORFEUS
 Dataless SEED archive, the IRIS (US) Dataless SEED archive and against ArcLink
 response requests.  
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Allocate a Parser object and read/write
 ---------------------------------------

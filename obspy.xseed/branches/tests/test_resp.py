@@ -5,11 +5,18 @@ Conversion test suite for Dataless SEED into SEED RESP files.
 Runs tests against all Dataless SEED files within the data/dataless directory. 
 Output is created within the output/resp folder. Once generated files will
 be skipped. Clear the output/resp folder in order to rerun all tests.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from obspy.xseed import Parser
 import glob
 import os
+
 
 # paths
 dataless_path = os.path.join("data", "dataless")
@@ -89,14 +96,14 @@ for file in files:
         sp = Parser(file)
         sp.writeRESP(folder=resp_path)
         sp.writeRESP(folder=resp_path, zipped=True)
-        # Compare with RESP files generated with rdseed from IRIS 
+        # Compare with RESP files generated with rdseed from IRIS if existing
         for resp_file in glob.iglob(resp_path + os.sep + '*'):
             print '  ' + os.path.basename(resp_file)
-            org_resp_file = resp_file.replace('output' + os.sep, 'data' + os.sep)
-            _compareRESPFiles(org_resp_file, resp_file)
+            org_resp_file = resp_file.replace('output' + os.sep,
+                                              'data' + os.sep)
+            if os.path.exists(org_resp_file):
+                _compareRESPFiles(org_resp_file, resp_file)
     except Exception, e:
-        print e
-        import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isdir(resp_path):
             for f in glob.glob(os.path.join(resp_path, '*')):

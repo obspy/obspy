@@ -21,8 +21,11 @@ in order to create an European Integrated Data Center (EIDAC). Currently
 network: ORFEUS_, GFZ_ (GeoForschungsZentrum), INGV_ (Istituto Nazionale di
 Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: `GNU Lesser General Public License, Version 3`_ (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------

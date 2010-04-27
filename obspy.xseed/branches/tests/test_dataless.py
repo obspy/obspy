@@ -5,6 +5,12 @@ Conversion test suite for Dataless SEED into XML-SEED and vice versa.
 Runs tests against all Dataless SEED files within the data/dataless directory. 
 Output is created within the output/dataless folder. Once generated files will
 be skipped. Clear the output/dataless folder in order to rerun all tests.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from lxml import etree
@@ -13,15 +19,14 @@ import glob
 import os
 import sys
 
+
 # paths
 dataless_path = os.path.join("data", "dataless")
 output_path = os.path.join("output", "dataless")
 
 # validation schemas
-schema_10 = os.path.join(os.pardir, 'obspy', 'xseed' , 'tests', 'data',
-                                                        'xml-seed-1.0.xsd')
-schema_11 = os.path.join(os.pardir, 'obspy', 'xseed' , 'tests', 'data',
-                                                        'xml-seed-1.1.xsd')
+schema_10 = 'xml-seed-1.0.xsd'
+schema_11 = 'xml-seed-1.1.xsd'
 xml_doc_10 = etree.parse(schema_10)
 xml_doc_11 = etree.parse(schema_11)
 xmlschema10 = etree.XMLSchema(xml_doc_10)
@@ -144,8 +149,6 @@ for file in files:
         print "."
         sys.stdout.flush()
     except Exception, e:
-        print e
-        import pdb;pdb.set_trace()
         # remove all related files
         if os.path.isfile(xseedfile_10):
             os.remove(xseedfile_10)
@@ -155,4 +158,3 @@ for file in files:
             os.remove(seedfile)
         # raise actual exception
         raise
-

@@ -61,6 +61,7 @@ setup(
         'console_scripts': [
             'obspy-dataless2xseed = obspy.xseed.scripts.dataless2xseed:main',
             'obspy-xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
+            'obspy-dataless2resp = obspy.xseed.scripts.dataless2resp:main',
         ],
     },
 )
