@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ObsPy Test Suite Module.
+A command-line program that runs all ObsPy tests.
 
 All tests in ObsPy are located in the tests directory of the each specific
 module. The __init__.py of the tests directory itself as well as every test
 file located in the tests directory has a function called suite, which is
 executed using this script. Running the script with the verbose keyword exposes
 the names of all available test cases.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Examples
 --------
@@ -63,7 +69,7 @@ DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
 def _getSuites(verbosity=1, names=[]):
     """
-    The obspy test suite.
+    The ObsPy test suite.
     """
     if names == []:
         names = DEFAULT_MODULES

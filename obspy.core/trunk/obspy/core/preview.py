@@ -19,21 +19,20 @@ from obspy.core.utcdatetime import UTCDateTime
 def createPreview(trace, delta=60):
     """
     Creates a preview trace.
-    
+
     A preview trace consists of maxima minus minima of all samples within
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
-    
-    Attributes
+
+    Parameters
     ----------
     delta : integer, optional
         Difference between two preview points (default value is 60).
 
     Notes
     -----
-        This method will destroy the data in the original Trace object. This is
-        necessary for reduced memory usage. Deepcopy the Trace if you want to
-        continue using the original data.
+        This method will modify the original Trace object. Create a copy of the
+        Trace object if you want to continue using the original data.
 
     Returns
     -------
@@ -88,7 +87,7 @@ def mergePreviews(stream):
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
 
-    Attributes
+    Parameters
     ----------
     stream : :class:`~obspy.core.Stream`
         Stream object to be merged
@@ -113,16 +112,16 @@ def mergePreviews(stream):
         dtypes.append(trace.data.dtype)
     if len(traces) == 0:
         return Stream()
-    # Init new Stream object.
+    # Initialize new Stream object.
     new_stream = Stream()
     for value in traces.values():
         if len(value) == 1:
             new_stream.append(value)
             continue
         # All traces need to have the same delta value and also be on the same
-        # grid spacing. It is enough to only check the sampling rate because the
-        # algorithm that creates the preview assures that the grid spacing is
-        # correct.
+        # grid spacing. It is enough to only check the sampling rate because
+        # the algorithm that creates the preview assures that the grid spacing
+        # is correct.
         sampling_rates = set([tr.stats.sampling_rate for tr in value])
         if len(sampling_rates) != 1:
             msg = 'More than one sampling rate for traces with id %s.' % \
@@ -143,7 +142,7 @@ def mergePreviews(stream):
         # Fill with negative one values which corresponds to a gap.
         data[:] = -1
         # Create trace and give starttime.
-        new_trace = Trace(data = data, header = value[0].stats)
+        new_trace = Trace(data=data, header=value[0].stats)
         new_trace.starttime = min_starttime
         # Loop over all traces in value and add to data.
         for trace in value:

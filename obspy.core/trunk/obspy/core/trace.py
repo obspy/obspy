@@ -8,6 +8,7 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -298,7 +299,7 @@ class Trace(object):
         return self.data[index]
 
     def __add__(self, trace, method=0, interpolation_samples=0,
-                fill_value=None):
+                fill_value=None, sanity_checks=True):
         """
         Adds another Trace object to current trace.
 
@@ -321,6 +322,8 @@ class Trace(object):
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
             If set to -1 all overlapping samples are interpolated.
+        sanity_checks: boolean, optional
+            Enables some sanity checks before merging traces (default is True).
 
         Notes
         -----
@@ -370,17 +373,21 @@ class Trace(object):
                     1 + 2  : AAAAAAAAAAAA
         ======  ===============================================================
         """
-        if not isinstance(trace, Trace):
-            raise TypeError
-        #  check id
-        if self.getId() != trace.getId():
-            raise TypeError("Trace ID differs")
-        #  check sample rate
-        if self.stats.sampling_rate != trace.stats.sampling_rate:
-            raise TypeError("Sampling rate differs")
-        # check data type
-        if self.data.dtype != trace.data.dtype:
-            raise TypeError("Data type differs")
+        if sanity_checks:
+            if not isinstance(trace, Trace):
+                raise TypeError
+            #  check id
+            if self.getId() != trace.getId():
+                raise TypeError("Trace ID differs")
+            #  check sample rate
+            if self.stats.sampling_rate != trace.stats.sampling_rate:
+                raise TypeError("Sampling rate differs")
+            #  check calibration factor
+            if self.stats.calib != trace.stats.calib:
+                raise TypeError("Calibration factor differs")
+            # check data type
+            if self.data.dtype != trace.data.dtype:
+                raise TypeError("Data type differs")
         # check times
         if self.stats.starttime <= trace.stats.starttime:
             lt = self
@@ -563,7 +570,7 @@ class Trace(object):
             self.data = np.ma.concatenate((gap, self.data))
             return
         elif starttime > self.stats.endtime:
-            self.data = np.empty(0, dtype = org_dtype)
+            self.data = np.empty(0, dtype=org_dtype)
             return
         elif delta > 0:
             self.data = self.data[delta:]
@@ -605,7 +612,7 @@ class Trace(object):
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
                                    delta * self.stats.delta
-            self.data = np.empty(0, dtype = org_dtype)
+            self.data = np.empty(0, dtype=org_dtype)
             return
         # cut from right
         if pad:

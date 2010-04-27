@@ -8,6 +8,7 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
 from glob import iglob
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile, _getPlugins
@@ -52,6 +53,10 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
     headonly : bool, optional
         If set to True, read only the data header. This is most useful for
         scanning available meta information of huge data sets.
+    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        Specify the start time to read.
+    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        Specify the end time to read.
 
     Notes
     -----
@@ -102,8 +107,9 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
     (3) Reading via HTTP protocol.
 
         >>> from obspy.core import read
-        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
-        >>> print st  # doctest: +ELLIPSIS
+        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z") \
+            # doctest: +SKIP
+        >>> print st  # doctest: +ELLIPSIS +SKIP
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
@@ -117,6 +123,7 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         fh.close()
         os.remove(fh.name)
     else:
+        # file name
         pathname = pathname_or_url
         for file in iglob(pathname):
             st.extend(_read(file, format, headonly, **kwargs).traces)
@@ -134,7 +141,7 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
 
 def _read(filename, format=None, headonly=False, **kwargs):
     """
-    Reads a single file into a :class:`~obspy.core.stream.Stream` object.
+    Reads a single file into a ObsPy Stream object.
     """
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -698,14 +705,6 @@ class Stream(object):
                       "calibration factors.!"
                 raise Exception(msg)
 
-    def _createEmptyDataChunk(self, delta, dtype, fill_value):
-        if fill_value:
-            temp = np.ones(delta, dtype=dtype)
-            temp *= fill_value
-        else:
-            temp = np.ma.masked_all(delta, dtype=dtype)
-        return temp
-
     def merge(self, method=0, fill_value=None, interpolation_samples=0):
         """
         Merges ObsPy Trace objects with same IDs.
@@ -756,8 +755,10 @@ class Stream(object):
             # loop through traces of same id
             for _i in xrange(len(traces_dict[id])):
                 trace = traces_dict[id].pop(0)
+                # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(trace, method,
-                                              fill_value=fill_value)
+                                              fill_value=fill_value,
+                                              sanity_checks=False)
             self.traces.append(cur_trace)
 
 
