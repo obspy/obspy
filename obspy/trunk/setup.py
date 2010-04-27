@@ -19,7 +19,7 @@ distribute_setup.use_setuptools()
 from setuptools import find_packages, setup
 
 
-VERSION = '0.3.1'
+VERSION = '0.3.3'
 
 
 setup(
@@ -61,11 +61,11 @@ setup(
     namespace_packages=['obspy'],
     zip_safe=False,
     install_requires=[
-        'obspy.core>0.3.0',
-        'obspy.imaging>0.3.0',
-        'obspy.gse2>0.3.0',
-        'obspy.mseed>0.3.0',
-        'obspy.sac>0.3.0',
+        'obspy.core>0.3.2',
+        'obspy.imaging>0.3.2',
+        'obspy.gse2>0.3.2',
+        'obspy.mseed>0.3.2',
+        'obspy.sac>0.3.2',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy/trunk#egg=obspy-dev",
