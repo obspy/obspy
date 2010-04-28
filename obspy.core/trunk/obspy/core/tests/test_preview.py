@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.preview import createPreview, mergePreviews
+from obspy.core.preview import createPreview, mergePreviews, resamplePreview
 from obspy.core import Stream, Trace, UTCDateTime
 import numpy as np
 import unittest
@@ -104,6 +104,42 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.starttime, tr1.stats.starttime)
         np.testing.assert_array_equal(st2[0].data,
                                       np.array([1] * 10 + [-1] * 10 + [2] * 9))
+        
+    def test_resamplePreview(self):
+        """
+        Test for resampling preview.
+        """
+        # Trying to resample non-preview Traces should raise.
+        tr = Trace(data=np.empty(100))
+        self.assertRaises(Exception, resamplePreview, tr, 5)
+        # Currently only downsampling is supported.
+        tr = Trace(data = np.empty(20))
+        tr.stats.preview = True
+        self.assertRaises(NotImplementedError, resamplePreview, tr, 100)
+        # Fast method.
+        tr = Trace(data=np.array([1, 2, 3, 4] * 53 + [-1,0,1,2] * 53))
+        endtime = tr.stats.endtime
+        tr.stats.preview = True
+        omitted_samples = resamplePreview(tr, 100, method = 'fast')
+        # Assert things for this easy case.
+        self.assertEqual(tr.stats.endtime, endtime)
+        self.assertEqual(tr.stats.npts, 100)
+        self.assertEqual(omitted_samples, 24)
+        # This shows the inaccuracy of the fast method.
+        np.testing.assert_array_equal(tr.data,
+                            np.array([4] * 53 + [2] * 47))
+        # Slow but accurate method.
+        tr = Trace(data=np.array([1, 2, 3, 4] * 53 + [-1,0,1,2] * 53))
+        endtime = tr.stats.endtime
+        tr.stats.preview = True
+        omitted_samples = resamplePreview(tr, 100, method = 'accurate')
+        # Assert things for this easy case.
+        self.assertEqual(tr.stats.endtime, endtime)
+        self.assertEqual(tr.stats.npts, 100)
+        self.assertEqual(omitted_samples, 0)
+        # This method is much more accurate.
+        np.testing.assert_array_equal(tr.data,
+                            np.array([4] * 50 + [2] * 50))
 
 
 def suite():

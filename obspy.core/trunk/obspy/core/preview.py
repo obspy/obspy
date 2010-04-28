@@ -81,7 +81,6 @@ def createPreview(trace, delta=60):
     tr.stats.preview = True
     return tr
 
-
 def mergePreviews(stream):
     """
     Merges all preview traces in one Stream object. Does not change the
@@ -153,3 +152,81 @@ def mergePreviews(stream):
                 np.maximum(data[start_index:end_index], trace.data)
         new_stream.append(new_trace)
     return new_stream
+
+def resamplePreview(trace, samples, method = 'accurate'):
+    """
+    Resamples a preview Trace to the chosen number of samples.
+
+    Attributes
+    ----------
+    trace : :class:`~obspy.core.Trace`
+        Trace object to be resampled.
+    samples: integer
+        Desired number of samples.
+    method: string, optional
+        Resample method. Available are 'fast' and 'accurate'.
+        Defaults to 'accurate'.
+
+    Notes
+    -----
+        
+        This method will destroy the data in the original Trace object.
+        Deepcopy the Trace if you want to continue using the original data.
+
+        The fast method works by reshaping the data array to a
+        sample x int(npts/samples) matrix (npts are the number of samples in
+        the original trace) and taking the maximum of each row. Therefore
+        the last npts - int(npts/samples)*samples will be omitted. The worst
+        case scenario is resampling a 1999 samples array to 1000 samples. 999
+        samples, almost half the data will be omitted.
+
+        The accurate method has no such problems because it will move a window
+        over the whole array and take the maximum for each window. It loops
+        over each window and is up to 10 times slower than the fast method.
+        This of course is highly depended on the number of whished samples and
+        the original trace and usually the accurate method is still fast
+        enough.
+
+    Returns
+    -------
+        Nothing. The input Trace object will be altered.
+    """
+    # Only works for preview traces.
+    if not hasattr(trace.stats, 'preview') or not trace.stats.preview:
+        msg = 'Trace\n%s\n is no preview file.' % str(trace)
+        raise Exception(msg)
+    # Save same attributes for later use.
+    endtime = trace.stats.endtime
+    dtype = trace.data.dtype
+    npts = trace.stats.npts
+    # XXX: Interpolate?
+    if trace.stats.npts < samples:
+        msg = 'Can only downsample so far. Interpolation not yet implemented.'
+        raise NotImplementedError(msg)
+    # Return if no change is necessary. There obviously are no omitted samples.
+    elif trace.stats.npts == samples:
+        return 0
+    # Fast method.
+    if method == 'fast':
+        trace.data = trace.data[:int(npts/samples) * samples]
+        trace.data = trace.data.reshape(samples, int(len(trace.data)/samples))
+        trace.data = trace.data.max(axis = 1)
+        # Set new sampling rate.
+        trace.stats.delta = (endtime - trace.stats.starttime)/float(samples - 1)
+        # Return number of omitted samples.
+        return npts - int(npts/samples)*samples
+    # Slow but accurate method.
+    elif method == 'accurate':
+        data = trace.data
+        new_data = np.empty(samples, dtype = dtype)
+        step = trace.stats.npts / float(samples)
+        for _i in xrange(samples):
+            new_data[_i] = trace.data[int(_i*step): int((_i+1)*step)].max()
+        trace.data = new_data
+        # Set new sampling rate.
+        trace.stats.delta = (endtime - trace.stats.starttime)/float(samples - 1)
+        # Return number of omitted samples. Should be 0 for this method.
+        return npts - int(samples*step)
+    else:
+        msg = 'Unknown method'
+        raise Exception(msg)
