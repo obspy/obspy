@@ -17,7 +17,7 @@ import os
 # left SAC attributes, right trace attributes
 convert_dict = {
     'npts': 'npts',
-    'delta': 'sampling_rate',
+    'delta': 'delta',
     'kcmpnm': 'channel',
     'kstnm': 'station',
     'scale': 'calib',
@@ -174,7 +174,6 @@ def writeSAC(stream, filename, **kwargs):
         t.SetHvalue('nzmin', start.minute)
         t.SetHvalue('nzsec', start.second)
         t.SetHvalue('nzmsec', start.microsecond / 1e3)
-        t.SetHvalue('delta',1./trace.stats['sampling_rate'])
         if i != 0:
             filename = "%s%02d%s" % (base, i, ext)
         t.WriteSacBinary(filename)

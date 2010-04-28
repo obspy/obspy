@@ -81,8 +81,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     if format not in ['WAV']:
                         self.assertEquals(st[0].stats.starttime, start)
                         self.assertEquals(st[0].stats.endtime, start + 9.995)
-                        self.assertEquals(st[0].stats.delta, 0.005)
-                        self.assertEquals(st[0].stats.sampling_rate, 200.0)
+                        self.assertAlmostEquals(st[0].stats.delta, 0.005, 7)
+                        self.assertAlmostEquals(st[0].stats.sampling_rate,
+                                                200.0, 5)
                     # network/station/location/channel codes
                     if format in ['Q', 'SH_ASC', 'GSE2']:
                         # no network or location code in Q, SH_ASC, GSE2
