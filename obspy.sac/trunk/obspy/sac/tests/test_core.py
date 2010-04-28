@@ -124,6 +124,8 @@ class CoreTestCase(unittest.TestCase):
         st.write(self.filems2sac, format="SAC")
         st2 = read(self.filems2sac,format="SAC")
         self.assertEqual(st2[0].stats['npts'],st[0].stats['npts'])
+        if os.path.isfile(self.filems2sac):
+            os.remove(self.filems2sac)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
