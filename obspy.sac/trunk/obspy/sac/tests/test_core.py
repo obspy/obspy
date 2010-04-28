@@ -4,6 +4,7 @@ The sac.core test suite.
 """
 
 from obspy.core import Stream, Trace, read, AttribDict
+from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import copy
 import inspect
@@ -20,8 +21,6 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(self.path, 'data', 'test.sac')
-        self.filemseed = 'http://svn.geophysik.uni-muenchen.de/obspy/examples/test.mseed'
-        self.filems2sac = 'testmseed.sac'
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
@@ -120,12 +119,23 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_equal(tr.data, tr3.data)
 
     def test_convertMseed2Sac(self):
-        st = read(self.filemseed)
-        st.write(self.filems2sac, format="SAC")
-        st2 = read(self.filems2sac,format="SAC")
+        # setUp is called before every test, not only once at the
+        # beginning, that is we allocate the data just here
+        # generate artificial mseed data
+        np.random.seed(815)
+        head = {'network': 'NL', 'station': 'HGN', 'location': '00',
+                'channel': 'BHZ', 'calib': 1.0, 'sampling_rate': 40.0, 
+                'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400),
+                'mseed': {'dataquality': 'R'}}
+        data = np.random.randint(0, 5000, 11947).astype("int32")
+        st = Stream([Trace(header=head, data=data)])
+        # write them as SAC
+        ms2sac = 'testmseed.sac'
+        st.write(ms2sac, format="SAC")
+        st2 = read(ms2sac,format="SAC")
         self.assertEqual(st2[0].stats['npts'],st[0].stats['npts'])
-        if os.path.isfile(self.filems2sac):
-            os.remove(self.filems2sac)
+        # file must exist, we just created it
+        os.remove(ms2sac)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
