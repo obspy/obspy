@@ -20,6 +20,8 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(self.path, 'data', 'test.sac')
+        self.filemseed = 'http://svn.geophysik.uni-muenchen.de/obspy/examples/test.mseed'
+        self.filems2sac = 'testmseed.sac'
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
@@ -89,7 +91,7 @@ class CoreTestCase(unittest.TestCase):
         np.random.seed(815)
         st = Stream([Trace(data=np.random.randn(1000))])
         st.write(tempfile, format="SAC")
-        self.assertEqual(st[0].stats['sac'], AttribDict({'nvhdr': 1}))
+        self.assertEqual(st[0].stats['sac'], AttribDict({'nvhdr': 6}))
 
     def test_readAndWriteViaObspy(self):
         """
@@ -117,6 +119,11 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.get('nvhdr'), tr.stats.sac.get('nvhdr'))
         np.testing.assert_equal(tr.data, tr3.data)
 
+    def test_convertMseed2Sac(self):
+        st = read(self.filemseed)
+        st.write(self.filems2sac, format="SAC")
+        st2 = read(self.filems2sac,format="SAC")
+        self.assertEqual(st2[0].stats['npts'],st[0].stats['npts'])
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

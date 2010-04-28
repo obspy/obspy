@@ -151,8 +151,10 @@ def writeSAC(stream, filename, **kwargs):
         trace.stats.setdefault('starttime', UTCDateTime(0.0))
         # SAC version needed 0<version<20
         trace.stats.setdefault('sac', AttribDict())
-        trace.stats['sac'].setdefault('nvhdr', 1)
+        trace.stats['sac'].setdefault('nvhdr', 6)
+        # building array of floats, require correct type
         # filling ObsPy defaults
+        t.fromarray(np.require(trace.data, '<f4'))
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
@@ -172,8 +174,7 @@ def writeSAC(stream, filename, **kwargs):
         t.SetHvalue('nzmin', start.minute)
         t.SetHvalue('nzsec', start.second)
         t.SetHvalue('nzmsec', start.microsecond / 1e3)
-        # building array of floats, require correct type
-        t.seis = np.require(trace.data, '<f4')
+        t.SetHvalue('delta',1./trace.stats['sampling_rate'])
         if i != 0:
             filename = "%s%02d%s" % (base, i, ext)
         t.WriteSacBinary(filename)
