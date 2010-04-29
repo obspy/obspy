@@ -3,12 +3,12 @@ from random import randint
 from networks import TreeSelector
 
 
-class PreviewPlot(QtGui.QGraphicsRectItem):
+class PreviewPlot(QtGui.QGraphicsItemGroup):
     """
     Single preview plot item.
     """
-    def __init__(self, y_start, height, hmargin, width, title, stream, count,
-                 env):
+    def __init__(self, y_start, height, hmargin, width, title, stream, env,
+                 scene):
         """
         Init.
         """
@@ -18,40 +18,60 @@ class PreviewPlot(QtGui.QGraphicsRectItem):
         self.y_start = y_start
         self.plot_height = height
         self.plot_width = width - 2*self.hmargin
-        self.count = count
         self.stream = stream
-        super(PreviewPlot, self).__init__(self.x_start, self.y_start,
-                                          self.plot_width, self.plot_height)
+        self.scene = scene
+        self.count = self.stream[0].stats.npts
+        super(PreviewPlot, self).__init__()
+        self.background_box = QtGui.QGraphicsRectItem(self.x_start,
+                                self.y_start, self.plot_width, self.plot_height)
         # Set the title of the plot.
         self.title = title
         # Set background color.
-        self.setBrush(QtGui.QColor(200,200,200,255))
-        # Create title and move it.
-        self.channel_id = QtGui.QGraphicsSimpleTextItem(self.title, self)
-        self.channel_id.moveBy(10, self.y_start + 5)
-        self.channel_id.setZValue(100)
-        # It is possible to set a tooltip here.
-        #self.channel_id.setToolTip('asd')
-        # Create a box around the title. Make it the same size as the text.
-        self.id_box = QtGui.QGraphicsRectItem(self.channel_id.boundingRect(), self)
-        self.id_box.setBrush(QtGui.QColor(255,255,255,200))
-        self.id_box.setZValue(99)
-        self.id_box.moveBy(8, self.y_start + 3)
-        #Create some random data.
+        self.background_box.setBrush(QtGui.QColor(200,200,200,255))
+        self.background_box.setZValue(-200)
+        self.addToGroup(self.background_box)
+        # Create button.
+        self.button = QtGui.QPushButton(self.title)
+        self.button.move(8, self.y_start + 3)
+        self.menu = QtGui.QMenu(self.button)
+        self.delete_action = self.menu.addAction('Delete Trace')
+        self.button.setMenu(self.menu)
+        self.button.setStyleSheet("border: 1px solid #000000;")
+        self.button_in_scene = scene.addWidget(self.button)
+        self.button_in_scene.setZValue(10)
+        # Create a menu for the Button.
         step = self.plot_width/float(self.count)
+        # Plot the preview data.
         self.bars = []
         data = self.stream[0].data
-        half_height = self.plot_height/2.0
-        data /= data.max()/half_height
-        bottom = half_height - data
-        double = 2*data
-        for _j in xrange(self.count):
-            self.bars.append(QtGui.QGraphicsRectItem(self.x_start + _j*step,
-                                                     y_start + bottom[_j], step,
-                        double[_j], self))
-            # Fill with black color and disable the pen.
-            self.bars[-1].setBrush(QtGui.QColor(0,0,0,255))
-            self.bars[-1].setPen(QtGui.QPen(QtCore.Qt.PenStyle(0)))
+        data_max = data.max()
+        self.connectSlots()
+        if self.env.debug:
+            print '==================================='
+            print 'Actually plotted trace:'
+            print self.stream
+            print '==================================='
+        if data_max != -1:
+            # Middle of the graphic.
+            half_height = self.plot_height/2.0 - 0.5
+            # Let the maximum be at half_height
+            # The 0.5 is there because later we will add 0.5 to everything to
+            # also show very small amplitudes.
+            factor = 1/data_max * (half_height - 0.5)
+            data[data>=0] *= factor
+            bottom = half_height - data
+            top = 2*data + 1
+            for _j in xrange(self.count):
+                if data[_j] < 0:
+                    continue
+                self.bars.append(QtGui.QGraphicsRectItem(self.x_start + _j*step,
+                            y_start + bottom[_j], step, top[_j], self))
+                # Fill with black color and disable the pen.
+                self.bars[-1].setBrush(QtGui.QColor(0,0,0,255))
+                self.bars[-1].setPen(QtGui.QPen(QtCore.Qt.PenStyle(0)))
+                self.bars[-1].start_percentage =\
+                    (_j*step)/float(self.plot_width)
+                self.addToGroup(self.bars[-1])
         self.events = []
         # Plot events.
         picks = self.env.db.getPicksForChannel(self.title)
@@ -91,23 +111,39 @@ class PreviewPlot(QtGui.QGraphicsRectItem):
                 line.setToolTip(tip)
                 # Add percent value to circle object.
                 line.percent = percent
+                self.addToGroup(line)
 
+    def connectSlots(self):
+        """
+        Connect the slots of the PreviewPlot.
+        """
+        QtCore.QObject.connect(self.delete_action, QtCore.SIGNAL("triggered(bool)"), self.delete)
+
+    def deleteItems(self):
+        self.scene.removeItem(self)
+        self.button.deleteLater()
+
+    def delete(self, *args):
+        self.deleteItems()
+        # Call the parent to delete the reference to this particular plot. The
+        # garbage collector should be able to take care of the rest.
+        self.scene.removeFromWaveformList(self.title)
 
     def resize(self, width, height):
         """
         Resizes the single preview.
         """
         self.plot_width = width - 2*self.hmargin
-        self.setRect(self.x_start, self.y_start, self.plot_width,
+        box_rect = self.background_box.rect()
+        self.background_box.setRect(box_rect.x(), box_rect.y(), self.plot_width,
                      self.plot_height)
         # Resize all bars. Slow but this does not have to be fast. Using
         # transformations also works and would be a cleaner solution but
         # scrolling transformated items is painfully slow.
-        count = len(self.bars)
-        step = self.plot_width/float(count)
+        step = self.plot_width/float(self.count)
         for _i, bar in enumerate(self.bars):
             rect = bar.rect()
-            bar.setRect(self.x_start + _i*step, rect.y(), step, rect.height())
+            bar.setRect(self.x_start + bar.start_percentage * self.plot_width, rect.y(), step, rect.height())
         # Move all events.
         if hasattr(self, 'events'):
             for event in self.events:
@@ -140,27 +176,58 @@ class WaveformScene(QtGui.QGraphicsScene):
         # This is the path and the type of the requested waveform.
         # e.g. ('BW', 'network') or ('BW.FURT..EHE', 'channel')
         path = new_sel.indexes()[0].model().getFullPath(new_sel.indexes()[0])
+        # Do not plot already plotted channels.
+        current_items = [waveform.title for waveform in self.waveforms]
+        if path[0] in current_items:
+            return
         # Only plot channels.
         if path[1] != 'channel':
             return
+        self.addPlot(path[0])
+
+    def addPlot(self, channel_id):
         # Get the stream item.
-        network, station, location, channel = path[0].split('.')
+        network, station, location, channel = channel_id.split('.')
         stream = self.env.handler.getItem(network, station, location, channel)
         #try:
+        print stream['org_stream']
         preview = PreviewPlot(self.vmargin + len(self.waveforms)
                       * (self.plot_height + self.vmargin),
                       self.plot_height, self.hmargin, self.width(),
-                      path[0], stream['minmax_stream'],
-                      self.env.detail, self.env)
+                      channel_id, stream['minmax_stream'], self.env, self)
         self.addItem(preview)
         self.waveforms.append(preview)
         # Manually update the scene Rectangle.
         count = len(self.waveforms)
         height = (count+1)*self.vmargin + count*self.plot_height
         self.setSceneRect(0,0,self.width(), height)
-            #except:
-            #    msg = 'Error plotting/reveiving %s' % path[0]
-            #    self.env.st.showMessage(msg, 5000)
+
+
+    def removeFromWaveformList(self, title):
+        """
+        Removes the waveform with title title from self.waveforms.
+        """
+        titles = [waveform.title for waveform in self.waveforms]
+        index = titles.index(title)
+        del self.waveforms[index]
+        # Shift all further traces.
+        amount = (self.plot_height + self.vmargin)
+        for _i, waveform in enumerate(self.waveforms):
+            if _i<index:
+                continue
+            waveform.moveBy(0,-amount)
+            waveform.button_in_scene.moveBy(0, -amount)
+
+    def redraw(self):
+        """
+        Redraws everything with updated times.
+        """
+        items = [waveform.title for waveform in self.waveforms]
+        for waveform in self.waveforms:
+            waveform.deleteItems()
+        self.waveforms = []
+        for item in items:
+            self.addPlot(item)
 
     def resize(self, width, height):
         """
@@ -192,7 +259,7 @@ class Waveforms(QtGui.QGraphicsView):
         Gets called every time the viewport changes sizes. Make sure to call
         the ancestors resize event to handle all eventualities.
         """
-	#XXX: Very ugly: Does not work in Qt 4.4!!!
+        #XXX: Very ugly: Does not work in Qt 4.4!!!
         #super(Waveforms, self).resizeEvent(event) # The event sizes method also accounts for scroll bars and the like.
         size = event.size()
         # Finally resize the scene.

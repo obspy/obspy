@@ -11,12 +11,10 @@ class Timers(QtCore.QThread):
 
     def updateServerStatus(self):
         msg = 'SeisHub server %s: ' % self.env.seishub_server
-        connection = self.env.seishub.ping()
-        if connection:
-            self.env.seishub.online = True
+        self.env.seishub.ping()
+        if self.env.seishub.online:
             msg += '<font color="#339966">connected</font>'
         else:  
-            self.env.seishub.online = False
             msg += '<font color="#FF0000">no connection</font>'
         self.env.server_status.setText(msg)
 
@@ -33,9 +31,9 @@ class Timers(QtCore.QThread):
         # Setup server timer.
         self.server_timer = QtCore.QTimer()
 
-	# XXX: New method not working with PyQt4
+        # XXX: New method not working with PyQt4
         # self.server_timer.timeout.connect(self.updateServerStatus)
-	#QtCore.SLOT("self.updateServerStatus()")
+        #QtCore.SLOT("self.updateServerStatus()")
         QtCore.QObject.connect(self.server_timer, QtCore.SIGNAL("timeout()"),\
                        self.updateServerStatus) 
         # Call every ten second.
@@ -43,9 +41,9 @@ class Timers(QtCore.QThread):
         # Setup time timer.
         self.time_timer = QtCore.QTimer()
 
-	# XXX: New method not working with PyQt4
+        # XXX: New method not working with PyQt4
         # self.time_timer.timeout.connect(self.updateCurrentTime)
-	#QtCore.SLOT("self.updateCurrentTime()")
+        #QtCore.SLOT("self.updateCurrentTime()")
         QtCore.QObject.connect(self.time_timer, QtCore.SIGNAL("timeout()"),\
                        self.updateCurrentTime)
 

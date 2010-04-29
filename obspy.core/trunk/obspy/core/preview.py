@@ -115,7 +115,7 @@ def mergePreviews(stream):
     new_stream = Stream()
     for value in traces.values():
         if len(value) == 1:
-            new_stream.append(value)
+            new_stream.append(value[0])
             continue
         # All traces need to have the same delta value and also be on the same
         # grid spacing. It is enough to only check the sampling rate because

@@ -55,6 +55,11 @@ class Seishub(object):
 
     def getPreview(self, network, station, location, channel, starttime,
                    endtime):
+        # Return empty stream object if no online connection is available.
+        if not self.online:
+            if self.env.debug:
+                print 'No connection to SeisHub server.'
+            return None
         if not starttime:
             starttime = self.env.starttime
         if not endtime:
@@ -79,20 +84,21 @@ class Seishub(object):
         Connects to the SeisHub server.
         """
         self.client = Client(base_url=self.server)
-        if self.ping():
-            self.online = True
-        else:
-            self.online = False
+        self.ping()
 
     def ping(self):
         """
         Ping the server.
         """
         try:
-            self.client.ping()
-            return True
+            status = self.client.ping()
+            if status:
+                self.online = True
+                return True
         except:
-            return False
+            pass
+        self.online = False
+        return False
 
     def getIndex(self):
         """
@@ -112,6 +118,10 @@ class Seishub(object):
         """
         Reads all available networks, stations, ... from the seishub server.
         """
+        if not self.online:
+            msg = 'No connection to server. Cannot load the server index.'
+            self.env.setSplash(msg)
+            return
         msg = 'Loading network index...'
         self.env.setSplash(msg)
         self.networks = {}

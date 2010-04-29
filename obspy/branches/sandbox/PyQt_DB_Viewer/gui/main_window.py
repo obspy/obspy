@@ -9,22 +9,23 @@ import os
 
 class MainWindow(QtGui.QWidget):
     """
-    Sets the basic grid layout.
+    This is the main tab of the database viewer.
     """
     def __init__(self, env, parent=None):
+        """
+        Build the main window.
+        """
         QtGui.QWidget.__init__(self, parent)
         self.env = env
-
+        # Set title and layout for the main_window.
         self.setWindowTitle('Database Viewer')
         grid = QtGui.QGridLayout()
 
-
+        # Add the waveform viewer.
         self.waveforms = Waveforms(env = self.env)
-        #grid.addWidget(QtGui.QTextEdit('Left Side with some dummy text editing.'), 0, 0, 8, 7)
         grid.addWidget(self.waveforms, 0, 0, 12, 7)
 
-
-        # Add group box.
+        # Add the menu for the time_selection.
         times = QtGui.QGroupBox('Timeframe')
         grid.addWidget(times, 0,8,1,2)
         # Time frame layout.
@@ -35,35 +36,57 @@ class MainWindow(QtGui.QWidget):
         end_label = QtGui.QLabel('Endtime:')
         time_layout.addWidget(end_label,1,0)
         # Init date selector.
-        start_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.starttime))
-        start_date.setCalendarPopup(True)
-        time_layout.addWidget(start_date,0,1)
-        end_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.endtime))
-        end_date.setCalendarPopup(True)
-        time_layout.addWidget(end_date,1,1)
+        self.start_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.starttime))
+        self.start_date.setCalendarPopup(True)
+        time_layout.addWidget(self.start_date,0,1)
+        self.end_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.endtime))
+        self.end_date.setCalendarPopup(True)
+        time_layout.addWidget(self.end_date,1,1)
+        self.time_button = QtGui.QPushButton('Apply')
+        time_layout.addWidget(self.time_button, 2, 1)
         times.setLayout(time_layout)
 
-        # Instance picks.
+        QtCore.QObject.connect(self.time_button, QtCore.SIGNAL("clicked()"),
+                               self.changeTimes)
+
+        # Add the pick group box.
         self.picks = Picks(env = self.env)
         grid.addWidget(self.picks, 1, 8, 1, 2)
+        # Add the network tree.
 
-        # Network tree.
         self.nw_tree = NetworkTree(self.waveforms, env = self.env)
         grid.addWidget(self.nw_tree, 2, 8, 10, 2)
 
-    
-        # Init the grid.
+        # Set the layout and therefore display everything.
         self.setLayout(grid)
 
+    def changeTimes(self):
+        """
+        Changes the times.
+        """
+        starttime = utils.fromQDateTime(self.start_date.dateTime())
+        endtime = utils.fromQDateTime(self.end_date.dateTime())
+        # Do nothing if the times are the same.
+        if self.env.starttime == starttime and self.env.endtime == endtime:
+            return
+        self.env.starttime = starttime
+        self.env.endtime = endtime
+        self.env.time_range = endtime - starttime
+        self.waveforms.scene.redraw()
+
+
     def startup(self):
+        """
+        Some stuff that should get called after everything is loaded.
+        """
         self.env.seishub.startup()
         self.nw_tree.startup()
 
         # Connect some slots.
-	# XXX: New method not working with PyQt4
+        # XXX: New method not working with PyQt4
         # self.nw_tree.nw_select_model.selectionChanged.connect(self.waveforms.scene.add_channel)
-	#QtCore.SLOT("self.waveforms.scene.add_channel(int, int)")
-	QtCore.QObject.connect(self.nw_tree.nw_select_model, QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
+        #QtCore.SLOT("self.waveforms.scene.add_channel(int, int)")
+        QtCore.QObject.connect(self.nw_tree.nw_select_model, QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
 			       self.waveforms.scene.add_channel)
 
         web = Website(env = self.env)

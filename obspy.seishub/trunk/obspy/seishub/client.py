@@ -39,9 +39,12 @@ class Client(object):
         """
         Ping the SeisHub server.
         """
-        t1 = time.time()
-        urllib2.urlopen(self.base_url).read()
-        return (time.time() - t1) * 1000.0
+        try:
+            t1 = time.time()
+            urllib2.urlopen(self.base_url).read()
+            return (time.time() - t1) * 1000.0
+        except:
+            None
 
     def _fetch(self, url, *args, **kwargs):
         remoteaddr = self.base_url + url + '?'

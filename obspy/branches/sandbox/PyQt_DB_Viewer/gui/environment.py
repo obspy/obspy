@@ -37,7 +37,7 @@ class Environment(object):
         self.buffer *= 60
         # Seishub Server.
         self.seishub_server = kwargs.get('seishub_server',
-                                         'http://teide:8080')
+                                         'http://localhost:7777')
         # Scale of the plots.
         self.log_scale = False
         # Start the SeisHub class.

@@ -1,7 +1,6 @@
 from PyQt4 import QtCore, QtGui, QtWebKit
 
 from gui import MainWindow, Environment, Website, Timers
-
 import os
 import sys
 
@@ -12,19 +11,17 @@ class TabWidget(QtGui.QTabWidget):
     """
     def __init__(self, parent=None):
        super (TabWidget, self).__init__(parent)
-       # XXX: Does not work with PyQt 4.4.
-       # self.setTabsClosable(False)
 
 if __name__ == '__main__':
-    # Init environment.
+    # Init the environment.
     env = Environment(debug = True)
     # Init QApplication.
-    qApp = QtGui.QApplication(sys.argv)
-    env.qApp = qApp
+    env.qApp = QtGui.QApplication(sys.argv)
+
     # Removes the frame around the widgets in the status bar. May apparently
     # cause some other problems:
     # http://www.qtcentre.org/archive/index.php/t-1904.html
-    qApp.setStyleSheet("QStatusBar::item {border: 0px solid black}")
+    env.qApp.setStyleSheet("QStatusBar::item {border: 0px solid black}")
 
     # Init splash screen to show something is going on.
     pixmap = QtGui.QPixmap(os.path.join(env.res_dir, 'splash.png'))
@@ -32,25 +29,26 @@ if __name__ == '__main__':
     env.splash.show()
     env.splash.showMessage('Init interface...', QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
                    QtCore.Qt.black) 
-    # Force Qt to uodate outside of any event loop.
-    qApp.processEvents()
+    # Force Qt to uodate outside of any event loop to display the splash
+    # screen.
+    env.qApp.processEvents()
 
-    # Init the main window.
+    # Init the main application window.
     window = QtGui.QMainWindow()
 
     # Init Tabbed Interface.
     tab = TabWidget()
 
-    # Init the main window and add it to the tabs.
+    # Init the main tab and add it to the tabs-manager.
     main_window = MainWindow(env = env)
     tab.addTab(main_window, 'Main View')
 
+    # Create the map tab that just displays a web page.
     env.web = QtWebKit.QWebView()
-    #web.load(QtCore.QUrl('http://www.google.com'))
     env.web.show()
     tab.addTab(env.web, 'Map')
 
-    #Add station browser.
+    # Add the station browser tab.
     env.station_browser = QtWebKit.QWebView()
     env.station_browser.show()
     tab.addTab(env.station_browser, 'Station Browser')
@@ -77,15 +75,15 @@ if __name__ == '__main__':
     timers = Timers(env = env)
 
     window.setCentralWidget(tab)
-    # Create status bar.
+    # Set the status bar.
     window.setStatusBar(st)
     window.resize(1150, 700)
     # Startup the rest.
     main_window.startup()
-    qApp.processEvents()
+    env.qApp.processEvents()
 
     # After everything is loaded show the main window and close the splash
     # screen.
     window.show()
     env.splash.finish(window)
-    qApp.exec_()
+    env.qApp.exec_()
