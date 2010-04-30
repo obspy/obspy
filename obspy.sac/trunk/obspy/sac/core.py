@@ -14,7 +14,8 @@ import os
 
 
 # we put here everything but the time, they are going to stats.starttime
-# left SAC attributes, right trace attributes
+# left SAC attributes, right trace attributes, see also
+# http://www.iris.edu/KB/questions/13/SAC+file+format 
 convert_dict = {
     'npts': 'npts',
     'delta': 'delta',
