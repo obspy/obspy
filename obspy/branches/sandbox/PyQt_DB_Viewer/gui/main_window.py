@@ -74,6 +74,8 @@ class MainWindow(QtGui.QWidget):
         self.env.time_range = endtime - starttime
         self.waveforms.scene.redraw()
 
+    def graphics_start(self):
+        self.waveforms.scene.startup()
 
     def startup(self):
         """

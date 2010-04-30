@@ -1,6 +1,7 @@
-from PyQt4 import QtCore, QtGui, QtOpenGL
+from PyQt4 import QtCore, QtGui, QtOpenGL# Delete time scale.
 from random import randint
 from networks import TreeSelector
+from time_scale import TimeScale
 
 
 class PreviewPlot(QtGui.QGraphicsItemGroup):
@@ -14,10 +15,10 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         """
         self.env = env
         self.hmargin = hmargin
-        self.x_start = self.hmargin
+        self.x_start = self.hmargin - 1
         self.y_start = y_start
         self.plot_height = height
-        self.plot_width = width - 2*self.hmargin
+        self.plot_width = width - 2*self.hmargin + 3
         self.stream = stream
         self.scene = scene
         self.count = self.stream[0].stats.npts
@@ -133,7 +134,7 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         """
         Resizes the single preview.
         """
-        self.plot_width = width - 2*self.hmargin
+        self.plot_width = width - 2*self.hmargin + 3
         box_rect = self.background_box.rect()
         self.background_box.setRect(box_rect.x(), box_rect.y(), self.plot_width,
                      self.plot_height)
@@ -164,9 +165,19 @@ class WaveformScene(QtGui.QGraphicsScene):
         self.position = 0
         # List that keeps track of waveform objects.
         self.waveforms = []
-        self.hmargin = kwargs.get('hmargin', 5)
-        self.vmargin = kwargs.get('vmargin', 5)
+        self.hmargin = kwargs.get('hmargin', 0)
+        self.vmargin = kwargs.get('vmargin', 3)
         self.plot_height = kwargs.get('plot_height', 50)
+
+    def startup(self):
+        """
+        The Timescale can only be drawn once the scene is being used by a view.
+        Otherwise the width of the scene is 0
+        """
+        # Add the time scale.
+        print 'Timescale_width:', self.width()
+        self.time_scale = TimeScale(self.env, self, self.width())
+        self.addItem(self.time_scale)
 
     def add_channel(self, new_sel, old_sel):
         """
@@ -192,7 +203,7 @@ class WaveformScene(QtGui.QGraphicsScene):
         #try:
         print stream['org_stream']
         preview = PreviewPlot(self.vmargin + len(self.waveforms)
-                      * (self.plot_height + self.vmargin),
+                      * (self.plot_height + self.vmargin) + 55,
                       self.plot_height, self.hmargin, self.width(),
                       channel_id, stream['minmax_stream'], self.env, self)
         self.addItem(preview)
@@ -201,7 +212,6 @@ class WaveformScene(QtGui.QGraphicsScene):
         count = len(self.waveforms)
         height = (count+1)*self.vmargin + count*self.plot_height
         self.setSceneRect(0,0,self.width(), height)
-
 
     def removeFromWaveformList(self, title):
         """
@@ -228,6 +238,11 @@ class WaveformScene(QtGui.QGraphicsScene):
         self.waveforms = []
         for item in items:
             self.addPlot(item)
+        # Delete time scale.
+        self.removeItem(self.time_scale)
+        # Create new time scale.
+        self.time_scale = TimeScale(self.env, self, self.width())
+        self.addItem(self.time_scale)
 
     def resize(self, width, height):
         """
@@ -241,6 +256,9 @@ class WaveformScene(QtGui.QGraphicsScene):
         self.setSceneRect(0,0,width, height)
 
 class Waveforms(QtGui.QGraphicsView):
+    """
+    The Graphics View that shows the waveforms.
+    """
     def __init__(self, env, parent = None, *args, **kwargs):
         super(Waveforms, self).__init__(parent)
         self.env = env
@@ -259,7 +277,7 @@ class Waveforms(QtGui.QGraphicsView):
         Gets called every time the viewport changes sizes. Make sure to call
         the ancestors resize event to handle all eventualities.
         """
-        #XXX: Very ugly: Does not work in Qt 4.4!!!
+        # XXX: Very ugly: Does not work in Qt 4.4!!!
         #super(Waveforms, self).resizeEvent(event) # The event sizes method also accounts for scroll bars and the like.
         size = event.size()
         # Finally resize the scene.
