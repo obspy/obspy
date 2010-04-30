@@ -86,4 +86,6 @@ if __name__ == '__main__':
     # screen.
     window.show()
     env.splash.finish(window)
+    # Some graphics can only be drawn once the window is showing.
+    main_window.graphics_start()
     env.qApp.exec_()
