@@ -698,10 +698,21 @@ class StreamTestCase(unittest.TestCase):
                   (4 * 1440 - 1) * trace1.stats.delta
         self.assertEquals(st[0].stats.endtime, endtime)
 
+
+    def test_merge(self):
+        """
+        New merge bug
+        """
+        trace1 = Trace(data=np.random.randn(100))
+        trace2 = Trace(data=np.random.randn(110))
+        trace3 = Trace(data=np.random.randn(200))
+        st = Stream([trace1, trace2, trace3])
+        st.merge(method=1)
+
     def test_trimRemovingEmptyTraces(self):
         """
         A stream containing several empty traces after triming should throw
-        away the emtpy traces.
+        away the empty traces.
         """
         # create Stream.
         trace1 = Trace(data=np.zeros(10))
