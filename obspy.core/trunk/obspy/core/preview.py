@@ -72,8 +72,10 @@ def createPreview(trace, delta=60):
     # get minimum and maximum for each row
     diff = data.ptp(axis=1)
     # fill masked values with -1 -> means missing data
-    data = np.ma.filled(diff, -1) if is_masked(diff) else diff
-    data = np.concatenate([first_diff, data, last_diff])
+    if is_masked(diff):
+        diff = np.ma.filled(diff, -1)
+    data = np.concatenate([first_diff, diff, last_diff])
+    data = np.require(data, dtype="float32")
     tr = Trace(data=data, header=trace.stats)
     tr.stats.delta = delta
     tr.stats.npts = len(data)
@@ -153,7 +155,7 @@ def mergePreviews(stream):
         new_stream.append(new_trace)
     return new_stream
 
-def resamplePreview(trace, samples, method = 'accurate'):
+def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
@@ -208,25 +210,24 @@ def resamplePreview(trace, samples, method = 'accurate'):
         return 0
     # Fast method.
     if method == 'fast':
-        trace.data = trace.data[:int(npts/samples) * samples]
-        trace.data = trace.data.reshape(samples, int(len(trace.data)/samples))
-        trace.data = trace.data.max(axis = 1)
+        trace.data = trace.data[:int(npts / samples) * samples]
+        trace.data = trace.data.reshape(samples, int(len(trace.data) / samples))
+        trace.data = trace.data.max(axis=1)
         # Set new sampling rate.
-        trace.stats.delta = (endtime - trace.stats.starttime)/float(samples - 1)
+        trace.stats.delta = (endtime - trace.stats.starttime) / float(samples - 1)
         # Return number of omitted samples.
-        return npts - int(npts/samples)*samples
+        return npts - int(npts / samples) * samples
     # Slow but accurate method.
     elif method == 'accurate':
-        data = trace.data
-        new_data = np.empty(samples, dtype = dtype)
+        new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
         for _i in xrange(samples):
-            new_data[_i] = trace.data[int(_i*step): int((_i+1)*step)].max()
+            new_data[_i] = trace.data[int(_i * step): int((_i + 1) * step)].max()
         trace.data = new_data
         # Set new sampling rate.
-        trace.stats.delta = (endtime - trace.stats.starttime)/float(samples - 1)
+        trace.stats.delta = (endtime - trace.stats.starttime) / float(samples - 1)
         # Return number of omitted samples. Should be 0 for this method.
-        return npts - int(samples*step)
+        return npts - int(samples * step)
     else:
         msg = 'Unknown method'
         raise Exception(msg)
