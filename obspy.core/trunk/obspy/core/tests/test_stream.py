@@ -701,13 +701,62 @@ class StreamTestCase(unittest.TestCase):
 
     def test_merge(self):
         """
-        New merge bug
+        Test merging with method = 1.
         """
-        trace1 = Trace(data=np.random.randn(100))
-        trace2 = Trace(data=np.random.randn(110))
-        trace3 = Trace(data=np.random.randn(200))
+        # Test mergin three traces.
+        trace1 = Trace(data=np.ones(10))
+        trace2 = Trace(data=10*np.ones(11))
+        trace3 = Trace(data=2*np.ones(20))
         st = Stream([trace1, trace2, trace3])
         st.merge(method=1)
+        np.testing.assert_array_equal(st[0].data, 2*np.ones(20))
+        # Any contained traces with different data will be discarted::
+        #
+        #    Trace 1: 111111111111 (contained trace)
+        #    Trace 2:     55
+        #    1 + 2  : 111111111111
+        trace1 = Trace(data=np.ones(12))
+        trace2 = Trace(data=5*np.ones(2))
+        trace2.stats.starttime += 4
+        st = Stream([trace1, trace2])
+        st.merge(method=1)
+        np.testing.assert_array_equal(st[0].data, np.ones(12))
+        # No interpolation (``interpolation_samples=0``)::
+        #
+        #    Trace 1: 11111111
+        #    Trace 2:     55555555
+        #    1 + 2  : 111155555555
+        trace1 = Trace(data=np.ones(8))
+        trace2 = Trace(data=5*np.ones(8))
+        trace2.stats.starttime += 4
+        st = Stream([trace1, trace2])
+        st.merge(method=1)
+        np.testing.assert_array_equal(st[0].data, np.array([1] * 4 +[5] * 8))
+        # Interpolate first two samples (``interpolation_samples=2``)::
+        # 
+        #     Trace 1: 00000000
+        #     Trace 2:     66666666
+        #     1 + 2  : 000024666666 (interpolation_samples=2)
+        trace1 = Trace(data=np.zeros(8, dtype='int32'))
+        trace2 = Trace(data=6*np.ones(8, dtype='int32'))
+        trace2.stats.starttime += 4
+        st = Stream([trace1, trace2])
+        st.merge(method=1, interpolation_samples=2)
+        np.testing.assert_array_equal(st[0].data,
+                                      np.array([0] * 4 + [2] + [4] + [6] * 6))
+        # Interpolate all samples (``interpolation_samples=-1``)::
+        # 
+        #     Trace 1: 00000000
+        #     Trace 2:     55555555
+        #     1 + 2  : 000012345555
+        trace1 = Trace(data=np.zeros(8, dtype='int32'))
+        trace2 = Trace(data=5*np.ones(8, dtype='int32'))
+        trace2.stats.starttime += 4
+        st = Stream([trace1, trace2])
+        st.merge(method=1, interpolation_samples=-1)
+        np.testing.assert_array_equal(st[0].data,
+                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
+        
 
     def test_trimRemovingEmptyTraces(self):
         """

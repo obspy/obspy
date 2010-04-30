@@ -757,8 +757,8 @@ class Stream(object):
                 trace = traces_dict[id].pop(0)
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(trace, method,
-                                              fill_value=fill_value,
-                                              sanity_checks=False)
+                    fill_value=fill_value, sanity_checks=False,
+                    interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
 
 

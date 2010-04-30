@@ -364,7 +364,7 @@ class Trace(object):
                 
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
-                    1 + 2  : AAAABCDEFFFF ()
+                    1 + 2  : AAAABCDEFFFF
                 
                 Any contained traces with different data will be discarted::
                 
@@ -413,17 +413,19 @@ class Trace(object):
                                                fill_value)
                 data = [lt.data[:-delta], overlap, rt.data[delta:]]
             elif method == 1 and interpolation_samples >= -1:
-                ls = lt.data[-delta - 1]
+                try:
+                    ls = lt.data[-delta - 1]
+                except:
+                    ls = lt.data[0]
                 if interpolation_samples == -1:
-                    interpolate_samples = delta
-                rs = rt.data[interpolate_samples]
+                    interpolation_samples = delta
+                rs = rt.data[interpolation_samples]
                 # include left and right sample (delta + 2)
-                interpolation = ls + np.arange(interpolate_samples + 2) * \
-                                (ls - rs) / float(interpolate_samples - 1 + 2)
+                interpolation = np.linspace(ls, rs, interpolation_samples+2)
                 # cut ls and rs and ensure correct data type
-                interpolation = interpolation[1:-1].require(lt.data.dtype)
+                interpolation = np.require(interpolation[1:-1], lt.data.dtype)
                 data = [lt.data[:-delta], interpolation,
-                        rt.data[interpolate_samples:]]
+                        rt.data[interpolation_samples:]]
             else:
                 raise NotImplementedError
         elif delta < 0 and delta_endtime >= 0:
