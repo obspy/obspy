@@ -21,7 +21,8 @@ convert_dict = {
     'kcmpnm': 'channel',
     'kstnm': 'station',
     'scale': 'calib',
-    'knetwk': 'network'
+    'knetwk': 'network',
+    'khole': 'location'
 }
 
 #XXX NOTE not all values from the read in dictionary are converted
@@ -35,7 +36,7 @@ sac_extra = [
     'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'nvhdr', 'norid', 'nevid', 'nwfid',
     'iftype', 'idep', 'iztype', 'iinst', 'istreg', 'ievreg', 'ievtype',
     'iqual', 'isynth', 'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok',
-    'lcalda', 'kevnm', 'khole', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
+    'lcalda', 'kevnm', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
     'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
     'kdatrd', 'kinst',
 ]
