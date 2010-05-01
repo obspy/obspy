@@ -88,9 +88,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     if format in ['Q', 'SH_ASC', 'GSE2']:
                         # no network or location code in Q, SH_ASC, GSE2
                         self.assertEquals(st[0].id, ".MANZ1..EHE")
-                    elif format == 'SAC':
-                        # no location code in SAC
-                        self.assertEquals(st[0].id, "BW.MANZ1..EHE")
                     elif format not in ['WAV']:
                         self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
                     # remove temporary files

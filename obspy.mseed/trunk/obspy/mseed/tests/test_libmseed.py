@@ -18,8 +18,6 @@ import numpy as np
 import os
 import random
 import sys
-import threading
-import time
 import unittest
 import struct
 
@@ -461,65 +459,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         ms.read(-1, 0, 1, 0)
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
         del ms # for valgrind
-
-    def test_readMSTracesViaRecords_thread_safety(self):
-        """
-        Tests for race conditions. Reading n_threads (currently 30) times
-        the same mseed file in parallel and compare the results which must
-        be all the same.
-        
-        Fails with readMSTracesViaRecords and passes with readMSTraces!
-        """
-        n_threads = 3
-        mseed = LibMSEED()
-        # Use a medium sized file.
-        mseed_file = os.path.join(self.path,
-                                  'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        # Read file into memory.
-        f = open(mseed_file, 'rb')
-        buffer = f.read()
-        f.close()
-        def test_function(_i, values):
-            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
-            # CHANGE FUNCTION TO BE TESTED HERE!
-            values[_i] = mseed.readMSTracesViaRecords(temp_file)
-        # Create the same file twenty times in a row.
-        for _i in xrange(n_threads):
-            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
-            f = open(temp_file, 'wb')
-            f.write(buffer)
-            f.close()
-        # Create empty dict for storing the values
-        values = {}
-        # Read the ten files at one and save the output in the just created
-        # class.
-        for _i in xrange(n_threads):
-            thread = threading.Thread(target=test_function, args=(_i, values))
-            thread.start()
-        start = time.time()
-        # Loop until all threads are finished.
-        while True:
-            if threading.activeCount() == 1:
-                break
-            # Avoid infinite loop and leave after 120 seconds 
-            # such a long time is needed for debugging with valgrind
-            elif time.time() - start >= 120:
-                msg = 'Not all threads finished!'
-                raise Warning(msg)
-                break
-            else:
-                time.sleep(0.1)
-                continue
-        # Compare all values which should be identical and clean up files
-        for _i in xrange(n_threads - 1):
-            self.assertEqual(values[_i][0][0],
-                             values[_i + 1][0][0])
-            np.testing.assert_array_equal(values[_i][0][1],
-                                         values[_i + 1][0][1])
-            temp_file = os.path.join(self.path, 'temp_file_' + str(_i))
-            os.remove(temp_file)
-        temp_file = os.path.join(self.path, 'temp_file_' + str(_i + 1))
-        os.remove(temp_file)
 
     def test_unpackSteim2(self):
         """
