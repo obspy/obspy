@@ -185,6 +185,7 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
+    @skipIfAutomatedTest
     def test_Beach(self):
         """
         Tests to plot beachballs as collection into an existing axis
@@ -235,7 +236,8 @@ class BeachballTestCase(unittest.TestCase):
 
         # Set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
-        fig.savefig(os.path.join(self.path, 'beachball-collection.png'))
+        fig.savefig(os.path.join(self.path, 'bb-collection.png'))
+
 
 def suite():
     return unittest.makeSuite(BeachballTestCase, 'test')
