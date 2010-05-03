@@ -11,6 +11,12 @@ import os
 import unittest
 
 
+def skipIfAutomatedTest(func):
+    if __name__ == '__main__':
+        return func
+    return
+
+
 class WaveformTestCase(unittest.TestCase):
     """
     Test cases for waveform plotting.
@@ -19,10 +25,7 @@ class WaveformTestCase(unittest.TestCase):
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(path, 'output')
 
-    def tearDown(self):
-        pass
-
-    def createStream(self, starttime, endtime, sampling_rate):
+    def _createStream(self, starttime, endtime, sampling_rate):
         """
         Helper method to create a Stream object that can be used for testing
         waveform plotting.
@@ -68,14 +71,14 @@ class WaveformTestCase(unittest.TestCase):
         Data should not be changed when plotting.
         """
         # Use once with straight plotting with random calibration factor
-        st = self.createStream(UTCDateTime(0), UTCDateTime(1000), 1)
+        st = self._createStream(UTCDateTime(0), UTCDateTime(1000), 1)
         st[0].stats.calib = 0.2343
         org_data = deepcopy(st[0].data)
         st.plot(format='png')
         # compare with original data
         np.testing.assert_array_equal(org_data, st[0].data)
         # Now with min-max list creation (more than 400000 samples).
-        st = self.createStream(UTCDateTime(0), UTCDateTime(600000), 1)
+        st = self._createStream(UTCDateTime(0), UTCDateTime(600000), 1)
         st[0].stats.calib = 0.2343
         org_data = deepcopy(st[0].data)
         st.plot(format='png')
@@ -95,10 +98,11 @@ class WaveformTestCase(unittest.TestCase):
         and different sampling rates should raise an exception.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 10, 1.0)
-        st += self.createStream(start + 10, start + 20, 10.0)
+        st = self._createStream(start, start + 10, 1.0)
+        st += self._createStream(start + 10, start + 20, 10.0)
         self.assertRaises(Exception, st.plot)
 
+    @skipIfAutomatedTest
     def test_plotOneHourManySamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -108,10 +112,11 @@ class WaveformTestCase(unittest.TestCase):
         approach to plot the data.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600, 1000.0)
+        st = self._createStream(start, start + 3600, 1000.0)
         filename = 'OneHourManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
+    @skipIfAutomatedTest
     def test_plotOneHourFewSamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -119,10 +124,11 @@ class WaveformTestCase(unittest.TestCase):
         Uses a frequency of 10 Hz.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600, 10.0)
+        st = self._createStream(start, start + 3600, 10.0)
         filename = 'OneHourFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
+    @skipIfAutomatedTest
     def test_plotSimpleGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -131,11 +137,12 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3 / 4, 500.0)
-        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
+        st = self._createStream(start, start + 3600 * 3 / 4, 500.0)
+        st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         filename = 'SimpleGapManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
+    @skipIfAutomatedTest
     def test_plotSimpleGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -144,11 +151,12 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3 / 4, 5.0)
-        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
+        st = self._createStream(start, start + 3600 * 3 / 4, 5.0)
+        st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         filename = 'SimpleGapFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
+    @skipIfAutomatedTest
     def test_plotComplexGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -157,16 +165,18 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3 / 4, 500.0)
-        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
+        st = self._createStream(start, start + 3600 * 3 / 4, 500.0)
+        st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         st[0].stats.location = '01'
         st[1].stats.location = '01'
-        temp_st = self.createStream(start + 3600 * 3 / 4, start + 2.25 * 3600, 500.0)
+        temp_st = self._createStream(start + 3600 * 3 / 4, start + 2.25 * 3600,
+                                     500.0)
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
+    @skipIfAutomatedTest
     def test_plotComplexGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -175,11 +185,12 @@ class WaveformTestCase(unittest.TestCase):
         the end.
         """
         start = UTCDateTime(0)
-        st = self.createStream(start, start + 3600 * 3 / 4, 5.0)
-        st += self.createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
+        st = self._createStream(start, start + 3600 * 3 / 4, 5.0)
+        st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         st[0].stats.location = '01'
         st[1].stats.location = '01'
-        temp_st = self.createStream(start + 3600 * 3 / 4, start + 2.25 * 3600, 5.0)
+        temp_st = self._createStream(start + 3600 * 3 / 4, start + 2.25 * 3600,
+                                     5.0)
         temp_st[0].stats.location = '02'
         st += temp_st
         filename = 'ComplexGapFewSamples.png'

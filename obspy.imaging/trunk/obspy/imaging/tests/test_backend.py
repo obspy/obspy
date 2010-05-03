@@ -17,10 +17,10 @@ class BackendTestCase(unittest.TestCase):
     def test_Backend(self):
         """
         Test to see if tests are running without any X11 or any other display
-        variable set. Therefor, the Agg backend is chosen in
+        variable set. Therefore, the AGG backend is chosen in
         obspy.imaging.tests.__init__, and nothing must be imported before,
-        e.g. by obspy.imaging.__init__. The agg backend does not require and
-        display setting. It is therefor the optimal for programs on servers
+        e.g. by obspy.imaging.__init__. The AGG backend does not require and
+        display setting. It is therefore the optimal for programs on servers
         etc.
         """
         self.assertEqual('AGG', matplotlib.get_backend().upper())

@@ -12,6 +12,12 @@ import os
 import unittest
 
 
+def skipIfAutomatedTest(func):
+    if __name__ == '__main__':
+        return func
+    return
+
+
 class SpectrogramTestCase(unittest.TestCase):
     """
     Test cases for spectrogram plotting.
@@ -20,9 +26,7 @@ class SpectrogramTestCase(unittest.TestCase):
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(path, 'output')
 
-    def tearDown(self):
-        pass
-
+    @skipIfAutomatedTest
     def test_Waveform(self):
         """
         Create waveform plotting examples in tests/output directory.
@@ -40,7 +44,7 @@ class SpectrogramTestCase(unittest.TestCase):
                                 samp_rate=st[0].stats.sampling_rate)
         # check that outfile was modified
         stat = os.stat(outfile)
-        self.assertTrue( abs(stat.st_mtime - time.time()) < 3)
+        self.assertTrue(abs(stat.st_mtime - time.time()) < 3)
 
 
 def suite():

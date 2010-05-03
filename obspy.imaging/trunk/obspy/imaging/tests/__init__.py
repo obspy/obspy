@@ -3,13 +3,13 @@
 import matplotlib
 
 # this code is needed to run the tests without any X11 or any other
-# display, e.g. via a ssh connection. Import it only once, else a nasty
+# display, e.g. via a SSH connection. Import it only once, else a nasty
 # warning occurs.
 # :see: http://matplotlib.sourceforge.net/faq/howto_faq.html#matplotlib-in-a-web-application-server
 try:
-    matplotlib.use('Agg', warn=False)
+    matplotlib.use('AGG', warn=False)
 except TypeError: #needed for matplotlib 0.91.2
-    matplotlib.use('Agg')
+    matplotlib.use('AGG')
 from matplotlib import pyplot as plt
 
 from obspy.imaging.tests import test_backend, test_beachball, test_spectrogram
