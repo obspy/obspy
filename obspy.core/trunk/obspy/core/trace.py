@@ -254,9 +254,14 @@ class Trace(object):
         >>> str(tr) #doctest: +ELLIPSIS
         'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.00000...'
         """
-        out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
-              "%(starttime)s - %(endtime)s | " + \
-              "%(sampling_rate).1f Hz, %(npts)d samples"
+        if hasattr(self.stats, 'preview')  and self.stats.preview:
+            out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                  "%(starttime)s - %(endtime)s | " + \
+                  "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+        else:
+            out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                  "%(starttime)s - %(endtime)s | " + \
+                  "%(sampling_rate).1f Hz, %(npts)d samples"
         return out % (self.stats)
 
     def __len__(self):

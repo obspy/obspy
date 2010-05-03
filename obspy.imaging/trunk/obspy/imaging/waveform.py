@@ -33,6 +33,7 @@ from copy import deepcopy, copy
 from datetime import datetime
 from math import ceil
 from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core.preview import mergePreviews
 import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,7 +52,6 @@ class WaveformPlotting(object):
         """
         Checks some variables and maps the kwargs to class variables.
         """
-        # Map stream object.
         self.stream = kwargs.get('stream')
         # Check if it is a Stream or a Trace object.
         if isinstance(self.stream, Trace):
@@ -74,12 +74,16 @@ class WaveformPlotting(object):
         if not self.endtime:
             self.endtime = max([trace.stats.endtime for \
                            trace in self.stream])
+        # Map stream object and slice just in case.
+        self.stream = self.stream.slice(self.starttime, self.endtime)
         # Type of the plot.
         self.type = kwargs.get('type', 'normal')
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
         # below).
         self.max_npts = 400000
+        # If automerge is enabled. Merge traces with the same id for the plot.
+        self.automerge = kwargs.get('automerge', True)
         # Set default values.
         # The default value for the size is determined dynamically because
         # there might be more than one channel to plot.
@@ -94,7 +98,18 @@ class WaveformPlotting(object):
                 self.height = 600
             else:
                 # One plot for each trace.
-                count = len(set([tr.id for tr in self.stream]))
+                if self.automerge:
+                    count = []
+                    for tr in self.stream:
+                        if hasattr(tr.stats, 'preview') and tr.stats.preview:
+                            tr_id = tr.id + 'preview'
+                        else:
+                            tr_id = tr.id
+                        if not tr_id in count:
+                            count.append(tr_id)
+                    count = len(count)
+                else:
+                    count = len(self.stream)
                 self.height = count * 250
         else:
             self.width, self.height = self.size
@@ -183,29 +198,46 @@ class WaveformPlotting(object):
         Plots the whole time series for 400000 points and less. For more
         points it plots minmax values.
         """
-        # Generate sorted list of traces (no copy)
-        # Sort order, id, starttime, endtime
-        ids = set([tr.id for tr in self.stream])
         stream_new = []
-        for id in ids:
-            stream_new.append([])
+        # Just remove empty traces.
+        if not self.automerge:
             for tr in self.stream:
-                if tr.id == id:
-                    # does not copy the elements of the data array
-                    tr_ref = copy(tr)
-                    # Trim does nothing if times are outside
-                    if self.starttime >= tr_ref.stats.endtime or \
-                            self.endtime <= tr_ref.stats.starttime:
-                        continue
-                    tr_ref.trim(self.starttime, self.endtime)
-                    if tr_ref.data.size:
-                        stream_new[-1].append(tr_ref)
-            # delete if empty list
-            if not len(stream_new[-1]):
-                stream_new.pop()
-                continue
-            stream_new[-1].sort(key=lambda x: x.stats.endtime)
-            stream_new[-1].sort(key=lambda x: x.stats.starttime)
+                stream_new.append([])
+                if len(tr.data):
+                    stream_new[-1].append(tr)
+        else:
+            # Generate sorted list of traces (no copy)
+            # Sort order, id, starttime, endtime
+            ids = []
+            for tr in self.stream:
+                if hasattr(tr.stats, 'preview') and tr.stats.preview:
+                    id = tr.id + 'preview'
+                else:
+                    id = tr.id
+                if not id in ids:
+                    ids.append(id)
+            for id in ids:
+                stream_new.append([])
+                for tr in self.stream:
+                    if hasattr(tr.stats, 'preview') and tr.stats.preview:
+                        tr_id = tr.id + 'preview'
+                    else:
+                        tr_id = tr.id
+                    if tr_id == id:
+                        # does not copy the elements of the data array
+                        tr_ref = copy(tr)
+                        # Trim does nothing if times are outside
+                        if self.starttime >= tr_ref.stats.endtime or \
+                                self.endtime <= tr_ref.stats.starttime:
+                            continue
+                        if tr_ref.data.size:
+                            stream_new[-1].append(tr_ref)
+                # delete if empty list
+                if not len(stream_new[-1]):
+                    stream_new.pop()
+                    continue
+                stream_new[-1].sort(key=lambda x: x.stats.endtime)
+                stream_new[-1].sort(key=lambda x: x.stats.starttime)
         # If everything is lost in the process raise an Exception.
         if not len(stream_new):
             raise Exception("Nothing to plot")
@@ -220,16 +252,10 @@ class WaveformPlotting(object):
                 msg = "All traces with the same id need to have the same " + "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
-            if self.axis:
-                # if axis is existing tie the x axis together
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                          axisbg=self.background_color,
-                                          sharex=self.axis[0])
-            else:
-                # if no other plots before, do not tie the axis
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                          axisbg=self.background_color)
+            ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
+                                      axisbg=self.background_color)
             self.axis.append(ax)
+            # XXX: Also enable the minmax plotting for previews.
             if (self.endtime - self.starttime) * sampling_rate > 400000:
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
@@ -315,20 +341,49 @@ class WaveformPlotting(object):
         trace = deepcopy(trace)
         if len(trace) > 1:
             stream = Stream(traces=trace)
-            stream.merge()
+            # Merge with 'interpolation'. In case of overlaps this method will
+            # always use the longest available trace.
+            if hasattr(trace[0].stats, 'preview') and trace[0].stats.preview:
+                stream = Stream(traces = stream)
+                stream = mergePreviews(stream)
+            else:
+                stream.merge(method = 1)
             trace = stream[0]
         else:
             trace = trace[0]
+        # Check if it is a preview file and adjust accordingly.
+        # XXX: Will look weird if the preview file is too small.
+        if hasattr(trace.stats, 'preview') and trace.stats.preview:
+            # Mask the gaps.
+            trace.data = np.ma.masked_array(trace.data)
+            trace.data[trace.data==-1] = np.ma.masked
+            # Recreate the min_max scene.
+            dtype = trace.data.dtype
+            npts = trace.stats.npts
+            old_time_range = trace.stats.endtime - trace.stats.starttime
+            data = np.empty(2*trace.stats.npts, dtype=dtype)
+            data[0::2] = trace.data/2.0
+            data[1::2] = -trace.data/2.0
+            trace.data = data
+            # The times are not supposed to change.
+            trace.stats.delta = old_time_range / float(trace.stats.npts - 1)
         # Write to self.stats.
-        self.stats.append([trace.id, trace.data.mean(), trace.data.min(),
-                           trace.data.max()])
+        calib = trace.stats.calib
+        max = trace.data.max()
+        min = trace.data.min()
+        if hasattr(trace.stats, 'preview') and trace.stats.preview:
+            tr_id = trace.id + ' [preview]'
+        else:
+            tr_id = trace.id
+        self.stats.append([tr_id, calib * trace.data.mean(),
+                           calib * min, calib * max])
         # Pad the beginning and the end with masked values if necessary. Might
         # seem like overkill but it works really fast and is a clean solution
         # to gaps at the beginning/end.
         concat = [trace]
         if self.starttime != trace.stats.starttime:
             samples = (trace.stats.starttime - self.starttime) * \
-            trace.stats.sampling_rate
+                trace.stats.sampling_rate
             temp = [np.ma.masked_all(int(samples))]
             concat = temp.extend(concat)
             concat = temp
@@ -342,8 +397,7 @@ class WaveformPlotting(object):
             trace.data = np.ma.concatenate(concat)
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
-        # Apply calibration factor.
-        trace.data *= trace.stats.calib
+        trace.data *= calib
         ax.plot(trace.data, color=self.color)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
@@ -477,7 +531,8 @@ class WaveformPlotting(object):
         for _i, ax in enumerate(self.axis):
             mean = self.stats[_i][1]
             # Set the ylimit.
-            ax.set_ylim(mean - max_distance, mean + max_distance)
+            min_range = mean-max_distance
+            max_range = mean+max_distance
             # Set the location of the ticks.
             ticks = [mean - 0.7 * max_distance, mean, mean + 0.7 *
                            max_distance]
@@ -486,6 +541,7 @@ class WaveformPlotting(object):
             # Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='left',
                       fontsize='small', verticalalignment='center')
+            ax.set_ylim(min_range, max_range)
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):
         """
