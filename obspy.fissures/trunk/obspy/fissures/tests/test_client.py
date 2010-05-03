@@ -49,11 +49,10 @@ class ClientTestSuite(unittest.TestCase):
         """
         Retrieve networks_ids from DHI
         """
-        #client = Client(network_dc=("/edu/caltech/gps/k2","SCEDC_NetworkDC"))
         client = Client()
         print "This will take a very long time"
         ids = client.getNetworkIds()
-        self.assertEqual(['AD', 'AF', 'AF', 'AK', 'AL'], ids[0:5])
+        self.assertTrue('GE' in ids)
         self.assertTrue(len(ids) > 300)
 
     def test_getStationIds(self):
@@ -63,7 +62,7 @@ class ClientTestSuite(unittest.TestCase):
         client = Client()
         ids = client.getStationIds(network_id='GE')
         stations = ['BRNL', 'PMG', 'MORC', 'DSB', 'LID', 'WLF', 'STU',
-                'BGIO', 'MLR', 'KBS']
+                    'BGIO', 'MLR', 'KBS']
         self.assertEqual(stations, ids[0:10])
         self.assertTrue(len(ids) > 70)
 
