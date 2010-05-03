@@ -116,17 +116,20 @@ class SacioTestCase(unittest.TestCase):
         Test reading big endian binary files
         """
         tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        tfileb = os.path.join(os.path.dirname(__file__), 'data', 'test.sac.swap')
+        tfileb = os.path.join(os.path.dirname(__file__), 'data',
+                              'test.sac.swap')
         tl = sacio.ReadSac(tfilel)
         tb = sacio.ReadSac(tfileb)
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
+        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
+                         tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
         np.testing.assert_array_equal(tl.seis, tb.seis)
 
     def test_swapbytes(self):
         tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        tfileb = os.path.join(os.path.dirname(__file__), 'data', 'test.sac.swap')
+        tfileb = os.path.join(os.path.dirname(__file__), 'data',
+                              'test.sac.swap')
         tempfile = NamedTemporaryFile().name
         tb = sacio.ReadSac(tfileb)
         tb.swap_byte_order()
@@ -136,7 +139,8 @@ class SacioTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tl.seis, tr1.seis)
         self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'), tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
+        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
+                         tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
         os.remove(tempfile)
 
     def test_getdist(self):
@@ -150,7 +154,8 @@ class SacioTestCase(unittest.TestCase):
         t.SetHvalue('lcalda', 1)
         t.WriteSacBinary(tempfile)
         t2 = sacio.ReadSac(tempfile)
-        b = np.array([18486532.5788/1000.,65.654154562,305.975459869],dtype='>f4')
+        b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
+                     dtype='>f4')
         self.assertEqual(t2.GetHvalue('dist'), b[0])
         self.assertEqual(t2.GetHvalue('az'), b[1])
         self.assertEqual(t2.GetHvalue('baz'), b[2])
@@ -158,16 +163,16 @@ class SacioTestCase(unittest.TestCase):
 
     def test_isSAC(self):
         """
-        See if assertation is Raised if file ist not a sac file
+        Assertion is raised if file is not a SAC file
         """
         t = sacio.ReadSac()
         self.assertRaises(SacError, t.ReadSacFile, __file__)
 
     def test_getattr(self):
-        tfile = os.path.join(os.path.dirname(__file__), 'data','test.sac')
+        tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         tr = sacio.ReadSac(tfile)
-        self.assertEqual(tr.npts,tr.GetHvalue('npts'))
-        self.assertEqual(tr.kstnm,tr.GetHvalue('kstnm'))
+        self.assertEqual(tr.npts, tr.GetHvalue('npts'))
+        self.assertEqual(tr.kstnm, tr.GetHvalue('kstnm'))
 
 
 def suite():

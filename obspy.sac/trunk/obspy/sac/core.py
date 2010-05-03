@@ -131,7 +131,7 @@ def writeSAC(stream, filename, **kwargs):
     Writes SAC file.
     
     This function should NOT be called directly, it registers via the
-    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
     Parameters
@@ -147,10 +147,6 @@ def writeSAC(stream, filename, **kwargs):
     for trace in stream:
         t = ReadSac()
         t.InitArrays()
-        # Check for necessary values, set a default if they are missing
-        trace.stats.setdefault('npts', len(trace.data))
-        trace.stats.setdefault('sampling_rate', 1.0)
-        trace.stats.setdefault('starttime', UTCDateTime(0.0))
         # SAC version needed 0<version<20
         trace.stats.setdefault('sac', AttribDict())
         trace.stats['sac'].setdefault('nvhdr', 6)

@@ -13,7 +13,7 @@ Here is C. J. Ammon's his introductory comment:
 
 Version 2.0.3, by C.J. Ammon, Penn State
 This software is free and is distributed with no guarantees.
-For a more complete description, start python and enter,
+For a more complete description, start Python and enter,
 Suspected limitations: I don't used XY files much - I am
 not sure that those access routines are bug free.
 
@@ -35,7 +35,7 @@ Writing::
 
     WriteSacHeader    - write SAC header
     WriteSacBinary    - write binary SAC file
-    WriteSacXY        - write ascii SAC file
+    WriteSacXY        - write ASCII SAC file
     SetHvalue         - set SAC header variable
 
 Convenience::
@@ -52,6 +52,7 @@ Convenience::
 """
 
 from obspy.core import UTCDateTime
+from obspy.core.util import NamedTemporaryFile
 import numpy as np
 import os
 import time
@@ -70,7 +71,7 @@ class ReadSac(object):
     """
     Class for SAC file IO
 
-    Initialise with: t=ReadSac()
+    Initialize with: t=ReadSac()
     """
 
     def __init__(self, filen=False, headonly=False, alpha=False):
@@ -122,13 +123,11 @@ class ReadSac(object):
         """
         Function to initialize the floating, character and integer
         header arrays (self.hf, self.hs, self.hi) with dummy values. This
-        function is usefull for writing sac files from artificial data,
+        function is useful for writing SAC files from artificial data,
         thus the header arrays are not filled by a read method
         beforehand
-
-        :return: Nothing
         """
-        # The sac header has 70 floats, then 40 integers, then 192 bytes
+        # The SAC header has 70 floats, then 40 integers, then 192 bytes
         # in strings. Store them in array (an convert the char to a
         # list). That's a total of 632 bytes.
         #
@@ -137,7 +136,7 @@ class ReadSac(object):
         self.hf = np.ndarray(70, dtype='<f4')
         self.hf[:] = -12345.0
         #
-        # allocate the array for header ints
+        # allocate the array for header integers
         #self.hi = array.array('i',[-12345])*40
         self.hi = np.ndarray(40, dtype='<i4')
         self.hi[:] = -12345
@@ -180,7 +179,6 @@ class ReadSac(object):
         self.SetHvalue('evla', 0)
         self.SetHvalue('evlo', 0)
         self.SetHvalue('iftype', 1)
-
         self.SetHvalue('npts', len(trace))
         self.SetHvalue('delta', delta)
         self.SetHvalue('b', begin)
@@ -188,7 +186,7 @@ class ReadSac(object):
 
     def GetHvalue(self, item):
         """
-        Get a header value using the header arrays: GetHvalue("npts")
+        Get a header value using the header arrays: GetHvalue('npts')
 
         Return value is 1 if no problems occurred, zero otherwise.
         """
@@ -221,10 +219,10 @@ class ReadSac(object):
 
     def SetHvalue(self, item, value):
         """
-        Set a header value using the header arrays: ``SetHvalue("npts",2048)``
+        Set a header value using the header arrays: ``SetHvalue('npts', 2048)``
 
         >>> t = ReadSac()
-        >>> t.SetHvalue("kstnm","spiff")
+        >>> t.SetHvalue('kstnm', 'spiff')
         >>> t.GetHvalue('kstnm')
         'spiff   '
         """
@@ -268,7 +266,7 @@ class ReadSac(object):
             # size check info
             if sizecheck != 0:
                 msg = "File-size and theoretical size are inconsistent: %s\n" \
-                      "Check that headers are consistent with timeseries."
+                      "Check that headers are consistent with time series."
                 raise SacError(msg % name)
         # get the SAC file version number
         version = self.GetHvalue('nvhdr')
@@ -281,7 +279,7 @@ class ReadSac(object):
         """
         Read a header value into the header arrays
 
-        The header is split into three arrays - floats, ints, and strings
+        The header is split into three arrays - floats, integers, and strings
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
@@ -301,7 +299,7 @@ class ReadSac(object):
                 #--------------------------------------------------------------
                 # parse the header
                 #
-                # The sac header has 70 floats, 40 integers, then 192 bytes
+                # The SAC header has 70 floats, 40 integers, then 192 bytes
                 #    in strings. Store them in array (an convert the char to a
                 #    list). That's a total of 632 bytes.
                 #--------------------------------------------------------------
@@ -342,7 +340,6 @@ class ReadSac(object):
                             except SacError:
                                 pass
 
-
     def WriteSacHeader(self, fname):
         """
         Write a header value to the disk ``ok = WriteSacHeader(thePath)``
@@ -352,15 +349,16 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
+        >>> tmpfile = NamedTemporaryFile().name
         >>> t = ReadSac(file)
-        >>> t.WriteSacBinary('test2.sac')
+        >>> t.WriteSacBinary(tmpfile)
         >>> u = ReadSac()
-        >>> u.ReadSacHeader('test2.sac')
-        >>> u.SetHvalue('kstnm','spoff   ')
-        >>> u.WriteSacHeader('test2.sac')
-        >>> u.GetHvalueFromFile('test2.sac',"kstnm")
+        >>> u.ReadSacHeader(tmpfile)
+        >>> u.SetHvalue('kstnm', 'spoff   ')
+        >>> u.WriteSacHeader(tmpfile)
+        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
         'spoff   '
-        >>> os.remove('test2.sac')
+        >>> os.remove(tmpfile)
         """
         #--------------------------------------------------------------
         # open the file
@@ -465,13 +463,14 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'testxy.sac')
-        >>> t = ReadSac(file,alpha=True)
+        >>> tmpfile = NamedTemporaryFile().name
+        >>> t = ReadSac(file, alpha=True)
         >>> t.GetHvalue('npts')
         100
-        >>> t.WriteSacBinary('testbin.sac')
-        >>> os.path.exists('testbin.sac')
+        >>> t.WriteSacBinary(tmpfile)
+        >>> os.path.exists(tmpfile)
         True
-        >>> os.remove('testbin.sac')
+        >>> os.remove(tmpfile)
         """
         ###### open the file
         try:
@@ -528,14 +527,16 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
+        >>> tmpfile1 = NamedTemporaryFile().name
+        >>> tmpfile2 = NamedTemporaryFile().name
         >>> t = ReadSac(file)
-        >>> t.WriteSacXY('tmp3.sac')
-        >>> d = ReadSac('tmp3.sac',alpha=True)
-        >>> d.WriteSacBinary('tmp4.sac')
-        >>> os.stat('tmp4.sac')[6] == os.stat(file)[6]
+        >>> t.WriteSacXY(tmpfile1)
+        >>> d = ReadSac(tmpfile1, alpha=True)
+        >>> d.WriteSacBinary(tmpfile2)
+        >>> os.stat(tmpfile2)[6] == os.stat(file)[6]
         True
-        >>> os.remove('tmp3.sac')
-        >>> os.remove('tmp4.sac')
+        >>> os.remove(tmpfile1)
+        >>> os.remove(tmpfile2)
         """
         try:
             f = open(ofname, 'w')
@@ -568,11 +569,12 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
+        >>> tmpfile = NamedTemporaryFile().name
         >>> t=ReadSac(file)
-        >>> t.WriteSacBinary('test2.sac')
-        >>> os.stat('test2.sac')[6] == os.stat(file)[6]
+        >>> t.WriteSacBinary(tmpfile)
+        >>> os.stat(tmpfile)[6] == os.stat(file)[6]
         True
-        >>> os.remove('test2.sac')
+        >>> os.remove(tmpfile)
         """
         try:
             f = open(ofname, 'wb+')
@@ -672,13 +674,14 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
+        >>> tmpfile = NamedTemporaryFile().name
         >>> t = ReadSac(file)
-        >>> t.WriteSacBinary('test2.sac')
+        >>> t.WriteSacBinary(tmpfile)
         >>> u = ReadSac()
-        >>> u.SetHvalueInFile('test2.sac','kstnm','heinz   ')
-        >>> u.GetHvalueFromFile('test2.sac','kstnm')
+        >>> u.SetHvalueInFile(tmpfile, 'kstnm', 'heinz   ')
+        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
         'heinz   '
-        >>> os.remove('test2.sac')
+        >>> os.remove(tmpfile)
         """
         #
         #  Read in the Header
@@ -694,13 +697,14 @@ class ReadSac(object):
 
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
+        >>> tmpfile = NamedTemporaryFile().name
         >>> t = ReadSac(file)
-        >>> t.WriteSacBinary('test2.sac')
+        >>> t.WriteSacBinary(tmpfile)
         >>> u = ReadSac()
-        >>> u.SetHvalueInFile('test2.sac','kstnm','heinz   ')
-        >>> u.GetHvalueFromFile('test2.sac','kstnm')
+        >>> u.SetHvalueInFile(tmpfile, 'kstnm', 'heinz   ')
+        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
         'heinz   '
-        >>> os.remove('test2.sac')
+        >>> os.remove(tmpfile)
         """
         #
         #  Read in the Header
@@ -726,7 +730,6 @@ class ReadSac(object):
             return False
         else:
             return True
-
 
     def IsValidXYSacFile(self, thePath):
         """
@@ -797,10 +800,10 @@ class ReadSac(object):
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
         >>> t = ReadSac(file)
-        >>> t.SetHvalue('evla',48.15)
-        >>> t.SetHvalue('evlo',11.58333)
-        >>> t.SetHvalue('stla',-41.2869)
-        >>> t.SetHvalue('stlo',174.7746)
+        >>> t.SetHvalue('evla', 48.15)
+        >>> t.SetHvalue('evlo', 11.58333)
+        >>> t.SetHvalue('stla', -41.2869)
+        >>> t.SetHvalue('stlo', 174.7746)
         >>> t._get_dist_()
         >>> print round(t.GetHvalue('dist'), 2)
         18486.53
@@ -845,13 +848,14 @@ class ReadSac(object):
         ...                     'test.sac')
         >>> fileswap = os.path.join(os.path.dirname(__file__), 'tests',
         ...                         'data', 'test.sac.swap')
+        >>> tmpfile = NamedTemporaryFile().name
         >>> x = ReadSac(fileswap)
         >>> x.swap_byte_order()
-        >>> x.WriteSacBinary('tmp_swap.sac')
-        >>> tr1 = ReadSac('tmp_swap.sac')
+        >>> x.WriteSacBinary(tmpfile)
+        >>> tr1 = ReadSac(tmpfile)
         >>> tr2 = ReadSac(file)
-        >>> np.testing.assert_array_equal(tr1.seis,tr2.seis)
-        >>> os.remove('tmp_swap.sac')
+        >>> np.testing.assert_array_equal(tr1.seis, tr2.seis)
+        >>> os.remove(tmpfile)
         """
         if self.byteorder == 'big':
             bs = 'L'
@@ -864,14 +868,12 @@ class ReadSac(object):
         self.hf = self.hf.newbyteorder(bs)
         self.hi = self.hi.newbyteorder(bs)
 
-
-    def __getattr__(self,hname):
+    def __getattr__(self, hname):
         """
         convenience function to access header values
 
         :param hname: header variable name
-        
-        >>>
+
         >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
         ...                     'test.sac')
         >>> tr = ReadSac(file)
@@ -880,8 +882,7 @@ class ReadSac(object):
         """
         return self.GetHvalue(hname)
 
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-    if os.path.isfile('test2.sac'):
-        os.remove('test2.sac')
