@@ -113,12 +113,14 @@ def readSAC(filename, headonly=False, **kwargs):
     for i in sac_extra:
         header['sac'][i] = t.GetHvalue(i)
     # convert time to UTCDateTime
-    header['starttime'] = UTCDateTime(year=t.GetHvalue('nzyear'),
-                                      julday=t.GetHvalue('nzjday'),
-                                      hour=t.GetHvalue('nzhour'),
-                                      minute=t.GetHvalue('nzmin'),
-                                      second=t.GetHvalue('nzsec'),
-                                      microsecond=t.GetHvalue('nzmsec') * 1000)
+    header['starttime'] = t.starttime
+    if header['sac']['iztype'] == 11:
+        header['starttime'] += float(header['sac']['b'])
+    elif header['sac']['iztype'] in (9, -12345):
+        pass
+    else:
+        msg = "This iztype is not implemented, please write a bug report"
+        raise NotImplementedError(msg)
     if headonly:
         tr = Trace(header=header)
     else:
@@ -147,12 +149,9 @@ def writeSAC(stream, filename, **kwargs):
     for trace in stream:
         t = ReadSac()
         t.InitArrays()
-        # SAC version needed 0<version<20
-        trace.stats.setdefault('sac', AttribDict())
-        trace.stats['sac'].setdefault('nvhdr', 6)
         # building array of floats, require correct type
         # filling ObsPy defaults
-        t.fromarray(np.require(trace.data, '<f4'))
+        t.fromarray(trace.data)
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
@@ -164,8 +163,16 @@ def writeSAC(stream, filename, **kwargs):
                 t.SetHvalue(_i, trace.stats.sac[_i])
             except:
                 pass
-        # setting start time
+        # setting start time depending on iztype, if no sac extra header is
+        # defined iztype - 9 == Begin Time
         start = trace.stats.starttime
+        try:
+            if trace.stats['sac']['iztype'] == 11:
+                start -= float(trace.stats['sac']['b'])
+            elif trace.stats['sac']['iztype'] in (9, -12345):
+                pass
+        except KeyError:
+            pass
         t.SetHvalue('nzyear', start.year)
         t.SetHvalue('nzjday', start.strftime("%j"))
         t.SetHvalue('nzhour', start.hour)

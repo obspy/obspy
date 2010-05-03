@@ -182,6 +182,7 @@ class ReadSac(object):
         self.SetHvalue('npts', len(trace))
         self.SetHvalue('delta', delta)
         self.SetHvalue('b', begin)
+        self.SetHvalue('iztype', 9)
         self.SetHvalue('dist', distkm)
 
     def GetHvalue(self, item):
@@ -294,51 +295,48 @@ class ReadSac(object):
             f = open(fname, 'r')
         except IOError:
             raise SacIOError("No such file:" + fname)
-        else:
+        try:
+            #--------------------------------------------------------------
+            # parse the header
+            #
+            # The sac header has 70 floats, 40 integers, then 192 bytes
+            #    in strings. Store them in array (an convert the char to a
+            #    list). That's a total of 632 bytes.
+            #--------------------------------------------------------------
+            self.hf = np.fromfile(f, dtype='<f4', count=70)
+            self.hi = np.fromfile(f, dtype='<i4', count=40)
+            # read in the char values
+            self.hs = np.fromfile(f, dtype='|S8', count=24)
+        except EOFError, e:
+            self.hf = self.hi = self.hs = None
+            f.close()
+            raise SacIOError("Cannot read all header values: ", e)
+        try:
+            self.IsSACfile(fname)
+        except SacError, e:
             try:
-                #--------------------------------------------------------------
-                # parse the header
-                #
-                # The SAC header has 70 floats, 40 integers, then 192 bytes
-                #    in strings. Store them in array (an convert the char to a
-                #    list). That's a total of 632 bytes.
-                #--------------------------------------------------------------
-                self.hf = np.fromfile(f, dtype='<f4', count=70)
-                self.hi = np.fromfile(f, dtype='<i4', count=40)
+                # if it is not a valid SAC-file try with big endian
+                # byte order
+                f.seek(0, 0)
+                self.hf = np.fromfile(f, dtype='>f4', count=70)
+                self.hi = np.fromfile(f, dtype='>i4', count=40)
                 # read in the char values
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
-            except EOFError, e:
+                self.IsSACfile(fname)
+                self.byteorder = 'big'
+            except SacError, e:
                 self.hf = self.hi = self.hs = None
                 f.close()
-                raise SacIOError("Cannot read all header values: ", e)
-            else:
-                try:
-                    self.IsSACfile(fname)
-                except SacError, e:
-                    try:
-                        # if it is not a valid SAC-file try with big endian
-                        # byte order
-                        f.seek(0, 0)
-                        self.hf = np.fromfile(f, dtype='>f4', count=70)
-                        self.hi = np.fromfile(f, dtype='>i4', count=40)
-                        # read in the char values
-                        self.hs = np.fromfile(f, dtype='|S8', count=24)
-                        self.IsSACfile(fname)
-                        self.byteorder = 'big'
-                    except SacError, e:
-                        self.hf = self.hi = self.hs = None
-                        f.close()
-                        raise SacError(e)
-                    else:
-                        try:
-                            self._get_date_()
-                        except SacError:
-                            pass
-                        if self.GetHvalue('lcalda'):
-                            try:
-                                self._get_dist_()
-                            except SacError:
-                                pass
+                raise SacError(e)
+        try:
+            self._get_date_()
+        except SacError:
+            pass
+        if self.GetHvalue('lcalda'):
+            try:
+                self._get_dist_()
+            except SacError:
+                pass
 
     def WriteSacHeader(self, fname):
         """
@@ -398,64 +396,61 @@ class ReadSac(object):
             f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file:" + fname)
-        else:
+        try:
+            #--------------------------------------------------------------
+            # parse the header
+            #
+            # The sac header has 70 floats, 40 integers, then 192 bytes
+            #    in strings. Store them in array (an convert the char to a
+            #    list). That's a total of 632 bytes.
+            #--------------------------------------------------------------
+            self.hf = np.fromfile(f, dtype='<f4', count=70)
+            self.hi = np.fromfile(f, dtype='<i4', count=40)
+            # read in the char values
+            self.hs = np.fromfile(f, dtype='|S8', count=24)
+        except EOFError, e:
+            raise SacIOError("Cannot read any or no header values: ", e)
+        ##### only continue if it is a SAC file
+        try:
+            self.IsSACfile(fname)
+        except SacError:
             try:
-                #--------------------------------------------------------------
-                # parse the header
-                #
-                # The sac header has 70 floats, 40 integers, then 192 bytes
-                #    in strings. Store them in array (an convert the char to a
-                #    list). That's a total of 632 bytes.
-                #--------------------------------------------------------------
-                self.hf = np.fromfile(f, dtype='<f4', count=70)
-                self.hi = np.fromfile(f, dtype='<i4', count=40)
+                # if it is not a valid SAC-file try with big endian
+                # byte order
+                f.seek(0, 0)
+                self.hf = np.fromfile(f, dtype='>f4', count=70)
+                self.hi = np.fromfile(f, dtype='>i4', count=40)
                 # read in the char values
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
-            except EOFError, e:
-                raise SacIOError("Cannot read any or no header values: ", e)
+                self.IsSACfile(fname)
+                self.byteorder = 'big'
+            except SacError, e:
+                raise SacError(e)
+        #--------------------------------------------------------------
+        # read in the seismogram points
+        #--------------------------------------------------------------
+        # you just have to know it's in the 10th place
+        # actually, it's in the SAC manual
+        npts = self.hi[9]
+        try:
+            if self.byteorder == 'big':
+                self.seis = np.fromfile(f, dtype='>f4', count=npts)
             else:
-                ##### only continue if it is a SAC file
-                try:
-                    self.IsSACfile(fname)
-                except SacError:
-                    try:
-                        # if it is not a valid SAC-file try with big endian
-                        # byte order
-                        f.seek(0, 0)
-                        self.hf = np.fromfile(f, dtype='>f4', count=70)
-                        self.hi = np.fromfile(f, dtype='>i4', count=40)
-                        # read in the char values
-                        self.hs = np.fromfile(f, dtype='|S8', count=24)
-                        self.IsSACfile(fname)
-                        self.byteorder = 'big'
-                    except SacError, e:
-                        raise SacError(e)
-                #--------------------------------------------------------------
-                # read in the seismogram points
-                #--------------------------------------------------------------
-                # you just have to know it's in the 10th place
-                # actually, it's in the SAC manual
-                npts = self.hi[9]
-                try:
-                    if self.byteorder == 'big':
-                        self.seis = np.fromfile(f, dtype='>f4', count=npts)
-                    else:
-                        self.seis = np.fromfile(f, dtype='<f4', count=npts)
-                except EOFError, e:
-                    self.hf = self.hi = self.hs = self.seis = None
-                    f.close()
-                    msg = "Cannot read any or only some data points: "
-                    raise SacIOError(msg, e)
-                else:
-                    try:
-                        self._get_date_()
-                    except SacError:
-                        pass
-                    if self.GetHvalue('lcalda'):
-                        try:
-                            self._get_dist_()
-                        except SacError:
-                            pass
+                self.seis = np.fromfile(f, dtype='<f4', count=npts)
+        except EOFError, e:
+            self.hf = self.hi = self.hs = self.seis = None
+            f.close()
+            msg = "Cannot read any or only some data points: "
+            raise SacIOError(msg, e)
+        try:
+            self._get_date_()
+        except SacError:
+            pass
+        if self.GetHvalue('lcalda'):
+            try:
+                self._get_dist_()
+            except SacError:
+                pass
 
     def ReadSacXY(self, fname):
         """

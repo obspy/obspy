@@ -6,6 +6,7 @@ The sac.core test suite.
 from obspy.core import Stream, Trace, read, AttribDict
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.sac import ReadSac
 import copy
 import inspect
 import numpy as np
@@ -87,7 +88,8 @@ class CoreTestCase(unittest.TestCase):
         np.random.seed(815)
         st = Stream([Trace(data=np.random.randn(1000))])
         st.write(tempfile, format="SAC")
-        self.assertEqual(st[0].stats['sac'], AttribDict({'nvhdr': 6}))
+        st2 = read(tempfile, format="SAC")
+        self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
 
     def test_readAndWriteViaObspy(self):
         """
@@ -134,6 +136,23 @@ class CoreTestCase(unittest.TestCase):
         # file must exist, we just created it
         os.remove(tmpfile)
 
+
+    def test_iztype11(self):
+        # test that iztype 11 is read correctly
+        sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
+        tr = read(sod_file)[0]
+        sac = ReadSac(sod_file)
+        t1 = tr.stats.starttime - float(tr.stats.sac.b)
+        t2 = sac.starttime
+        self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
+        # see that iztype is written corretly
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format="SAC")
+        sac2 = ReadSac(tempfile)
+        self.assertEqual(sac2.iztype, 11)
+        self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
+        self.assertAlmostEqual(t2.timestamp, sac2.starttime.timestamp, 5)
+        os.remove(tempfile)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
