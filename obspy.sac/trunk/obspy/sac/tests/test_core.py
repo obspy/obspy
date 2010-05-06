@@ -154,6 +154,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(t2.timestamp, sac2.starttime.timestamp, 5)
         os.remove(tempfile)
 
+    def test_defaultvalues(self):
+        tr = read(self.file)[0]
+        self.assertEqual(tr.stats.calib,1.0)
+        self.assertEqual(tr.stats.location,'')
+        self.assertEqual(tr.stats.network,'')
+        
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 

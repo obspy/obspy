@@ -65,7 +65,7 @@ def isSAC(filename):
     st = os.stat(filename)
     sizecheck = st.st_size - (632 + 4 * npts)
     if sizecheck != 0:
-        ## check if if file is big-endian
+        # check if file is big-endian
         npts = struct.unpack('>i', data)[0]
         sizecheck = st.st_size - (632 + 4 * npts)
         if sizecheck != 0:
@@ -104,11 +104,16 @@ def readSAC(filename, headonly=False, **kwargs):
         t.ReadSacFile(filename)
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = {}
+
     for i, j in convert_dict.iteritems():
         value = t.GetHvalue(i)
         if isinstance(value, str):
             value = value.strip()
+            if value == '-12345':
+                value = ''
         header[j] = value
+    if header['calib'] == -12345.0:
+        header['calib'] = 1.0
     header['sac'] = {}
     for i in sac_extra:
         header['sac'][i] = t.GetHvalue(i)
