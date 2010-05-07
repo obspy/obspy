@@ -449,8 +449,10 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         result['station'] = mapping['station']
                         result['location'] = mapping['location']
                         result['channel'] = mapping['channel']
-                        log_queue.append("Mapping '%s' to '%s'" % (old_id,
-                                                                   trace.id))
+                        msg = "Mapping '%s' to '%s.%s.%s.%s'" % \
+                            (old_id, mapping['network'], mapping['station'],
+                            mapping['location'], mapping['channel'])
+                        log_queue.append(msg)
                 # gaps/overlaps for current trace
                 result['gaps'] = gap_dict.get(trace.id, [])
                 # apply feature functions
