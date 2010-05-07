@@ -3,7 +3,7 @@
 """
 """
 from obspy.core import read
-from obspy.db import __version__
+from obspy.imaging import __version__
 from optparse import OptionParser
 
 

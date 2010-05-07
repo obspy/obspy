@@ -54,7 +54,6 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(stream[0].stats.channel, 'BHZ')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.calib, 1.0e-00)
-        self.assertEqual(stream[0].stats.calib, 1.0e-00)
         # check last 4 samples
         data = [2.176000e+01, 2.195485e+01, 2.213356e+01, 2.229618e+01]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
