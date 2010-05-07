@@ -13,36 +13,32 @@ class StreamTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        # set specific seed value such that random numbers are reproduceable
+        # set specific seed value such that random numbers are reproducible
         np.random.seed(815)
         header = {'network': 'BW', 'station': 'BGLD',
-            'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
-            'npts': 412, 'sampling_rate': 200.0,
-            'channel': 'EHE'}
+                  'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
+                  'npts': 412, 'sampling_rate': 200.0,
+                  'channel': 'EHE'}
         trace1 = Trace(data=np.random.randint(0, 1000, 412),
-                                                header=deepcopy(header))
+                       header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
         trace2 = Trace(data=np.random.randint(0, 1000, 824),
-                                                header=deepcopy(header))
+                       header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
         trace3 = Trace(data=np.random.randint(0, 1000, 824),
-                                                header=deepcopy(header))
+                       header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
         trace4 = Trace(data=np.random.randint(0, 1000, 50668),
-                                                header=deepcopy(header))
+                       header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
-        trace = Trace(data=np.random.randint(0, 1000, 12000),
-                                                    header=header)
+        trace = Trace(data=np.random.randint(0, 1000, 12000), header=header)
         self.gse2_stream = Stream(traces=[trace])
-
-    def tearDown(self):
-        pass
 
     def test_setitem(self):
         """
@@ -143,10 +139,14 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the count method and __len__ attribute of the Stream object.
         """
+        # empty stream without traces
+        stream = Stream()
+        self.assertEqual(len(stream), 0)
+        self.assertEqual(stream.count(), 0)
+        # stream with traces
         stream = self.mseed_stream
-        self.assertEqual(4, len(stream))
-        self.assertEqual(4, stream.count())
-        self.assertEqual(stream.count(), len(stream))
+        self.assertEqual(len(stream), 4)
+        self.assertEqual(stream.count(), 4)
 
     def test_extend(self):
         """
@@ -616,15 +616,18 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].data.tolist(),
                          [0, 0, 0, 0, 0, None, None, 0, 0, 0])
 
-    def test_tabCompleteStats(self):
+    def test_tabCompletionTrace(self):
         """
-        Test tab completion of Stats object.
+        Test tab completion of Trace object.
         """
-        tr = self.mseed_stream[0]
+        tr = Trace()
         self.assertTrue('sampling_rate' in dir(tr.stats))
         self.assertTrue('npts' in dir(tr.stats))
         self.assertTrue('station' in dir(tr.stats))
         self.assertTrue('starttime' in dir(tr.stats))
+        self.assertTrue('endtime' in dir(tr.stats))
+        self.assertTrue('calib' in dir(tr.stats))
+        self.assertTrue('delta' in dir(tr.stats))
 
     def test_bugfixMergeDropTraceIfAlreadyContained(self):
         """
@@ -698,25 +701,24 @@ class StreamTestCase(unittest.TestCase):
                   (4 * 1440 - 1) * trace1.stats.delta
         self.assertEquals(st[0].stats.endtime, endtime)
 
-
-    def test_merge(self):
+    def test_mergeOverlapsMethod1(self):
         """
         Test merging with method = 1.
         """
-        # Test mergin three traces.
+        # Test merging three traces.
         trace1 = Trace(data=np.ones(10))
-        trace2 = Trace(data=10*np.ones(11))
-        trace3 = Trace(data=2*np.ones(20))
+        trace2 = Trace(data=10 * np.ones(11))
+        trace3 = Trace(data=2 * np.ones(20))
         st = Stream([trace1, trace2, trace3])
         st.merge(method=1)
-        np.testing.assert_array_equal(st[0].data, 2*np.ones(20))
-        # Any contained traces with different data will be discarted::
+        np.testing.assert_array_equal(st[0].data, 2 * np.ones(20))
+        # Any contained traces with different data will be discarded::
         #
         #    Trace 1: 111111111111 (contained trace)
         #    Trace 2:     55
         #    1 + 2  : 111111111111
         trace1 = Trace(data=np.ones(12))
-        trace2 = Trace(data=5*np.ones(2))
+        trace2 = Trace(data=5 * np.ones(2))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1)
@@ -727,18 +729,18 @@ class StreamTestCase(unittest.TestCase):
         #    Trace 2:     55555555
         #    1 + 2  : 111155555555
         trace1 = Trace(data=np.ones(8))
-        trace2 = Trace(data=5*np.ones(8))
+        trace2 = Trace(data=5 * np.ones(8))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1)
-        np.testing.assert_array_equal(st[0].data, np.array([1] * 4 +[5] * 8))
+        np.testing.assert_array_equal(st[0].data, np.array([1] * 4 + [5] * 8))
         # Interpolate first two samples (``interpolation_samples=2``)::
         # 
         #     Trace 1: 00000000
         #     Trace 2:     66666666
         #     1 + 2  : 000024666666 (interpolation_samples=2)
         trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=6*np.ones(8, dtype='int32'))
+        trace2 = Trace(data=6 * np.ones(8, dtype='int32'))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=2)
@@ -750,17 +752,30 @@ class StreamTestCase(unittest.TestCase):
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
         trace1 = Trace(data=np.zeros(8, dtype='int32'))
-        trace2 = Trace(data=5*np.ones(8, dtype='int32'))
+        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
-        st.merge(method=1, interpolation_samples=-1)
+        st.merge(method=1, interpolation_samples= -1)
         np.testing.assert_array_equal(st[0].data,
                           np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
-        
+        # Interpolate all samples (``interpolation_samples=5``)::
+        # Given number of samples is bigger than the actual overlap - should
+        # interpolate all samples 
+        # 
+        #     Trace 1: 00000000
+        #     Trace 2:     55555555
+        #     1 + 2  : 000012345555
+        trace1 = Trace(data=np.zeros(8, dtype='int32'))
+        trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
+        trace2.stats.starttime += 4
+        st = Stream([trace1, trace2])
+        st.merge(method=1, interpolation_samples=5)
+        np.testing.assert_array_equal(st[0].data,
+                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
 
     def test_trimRemovingEmptyTraces(self):
         """
-        A stream containing several empty traces after triming should throw
+        A stream containing several empty traces after trimming should throw
         away the empty traces.
         """
         # create Stream.
@@ -822,17 +837,17 @@ class StreamTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randn(1441))
         st = Stream([tr])
         st.verify()
-        # ASCII
+        # protocol 0 (ASCII)
         temp = pickle.dumps(st, protocol=0)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEquals(st[0].stats, st2[0].stats)
-        # old binary
+        # protocol 1 (old binary)
         temp = pickle.dumps(st, protocol=1)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEquals(st[0].stats, st2[0].stats)
-        # new binary
+        # protocol 2 (new binary)
         temp = pickle.dumps(st, protocol=2)
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
