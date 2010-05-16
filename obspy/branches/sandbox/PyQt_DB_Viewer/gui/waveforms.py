@@ -1,8 +1,11 @@
-from PyQt4 import QtCore, QtGui, QtOpenGL# Delete time scale.
-from random import randint
-from networks import TreeSelector
-from time_scale import TimeScale
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+from PyQt4 import QtCore, QtGui, QtOpenGL
+
+from networks import TreeSelector
+from random import randint
+from time_scale import TimeScale
 
 class PreviewPlot(QtGui.QGraphicsItemGroup):
     """
@@ -33,7 +36,7 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         self.addToGroup(self.background_box)
         # Create button.
         self.button = QtGui.QPushButton(self.title)
-        self.button.move(8, self.y_start + 3)
+        self.button.move(3, self.y_start + 3)
         self.menu = QtGui.QMenu(self.button)
         self.delete_action = self.menu.addAction('Delete Trace')
         self.button.setMenu(self.menu)
@@ -203,7 +206,7 @@ class WaveformScene(QtGui.QGraphicsScene):
         #try:
         print stream['org_stream']
         preview = PreviewPlot(self.vmargin + len(self.waveforms)
-                      * (self.plot_height + self.vmargin) + 55,
+                      * (self.plot_height + self.vmargin) + 70,
                       self.plot_height, self.hmargin, self.width(),
                       channel_id, stream['minmax_stream'], self.env, self)
         self.addItem(preview)
@@ -250,6 +253,9 @@ class WaveformScene(QtGui.QGraphicsScene):
         """
         for waveform in self.waveforms:
             waveform.resize(width, height)
+        # Check if available.
+        if hasattr(self, 'time_scale'):
+            self.time_scale.resize(width, height)
         # Manually update the scene Rectangle.
         count = len(self.waveforms)
         height = (count+1)*self.vmargin + count*self.plot_height

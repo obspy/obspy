@@ -30,14 +30,14 @@ class Environment(object):
         # Debug.
         self.debug = kwargs.get('debug', False)
         # Details of the plots.
-        self.detail = kwargs.get('detail', 100)
+        self.detail = kwargs.get('detail', 400)
         # How much data is loaded before and after the requested timespan in
         # minutes.
         self.buffer = kwargs.get('buffer', 120)
         self.buffer *= 60
         # Seishub Server.
         self.seishub_server = kwargs.get('seishub_server',
-                                         'http://localhost:7777')
+                                         'http://teide:8080')
         # Scale of the plots.
         self.log_scale = False
         # Start the SeisHub class.

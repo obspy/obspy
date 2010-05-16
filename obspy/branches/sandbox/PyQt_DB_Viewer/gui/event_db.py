@@ -100,6 +100,30 @@ class EventDB(object):
             result_dicts.append(r_dict)
         return result_dicts
 
+    def getEventsInTimeSpan(self, starttime = None, endtime = None):
+        """
+        Returns the events.
+        """
+        if not starttime:
+            starttime = self.env.starttime
+        if not endtime:
+            endtime = self.env.endtime
+        starttime = str(starttime)
+        endtime = str(endtime)
+        msg = '''SELECT event_id, event_type, magnitude, origin_time FROM events
+                 WHERE origin_time > "%s" and origin_time < "%s"''' % \
+                         (starttime, endtime)
+        self.c.execute(msg)
+        self.db.commit()
+        events = self.c.fetchall()
+        evs = []
+        for event in events:
+            evs.append({'event_id': event[0],
+             'event_type': event[1],
+             'magnitude': event[2],
+             'origin_time': UTCDateTime(event[3])})
+        return evs
+
     def getEvent(self, event_id):
         """
         Returns a dictionary containing information about event event_id.
