@@ -323,7 +323,7 @@ class PickingGUI:
                               self.checkbuttonPublicEvent,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
-                              self.labelStreamName, self.labelStreamNumber,
+                              self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
@@ -339,7 +339,8 @@ class PickingGUI:
             self.fig.clear()
             self.drawEventMap()
             self.multicursor.visible = False
-            self.toolbar.pan(True)
+            self.toolbar.pan()
+            self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
             self.textviewStdOutImproved.write("http://maps.google.de/maps" + \
@@ -368,7 +369,7 @@ class PickingGUI:
                               self.checkbuttonPublicEvent,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
-                              self.labelStreamName, self.labelStreamNumber,
+                              self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
@@ -420,7 +421,7 @@ class PickingGUI:
                               self.checkbuttonPublicEvent,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
-                              self.labelStreamName, self.labelStreamNumber,
+                              self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
@@ -508,20 +509,10 @@ class PickingGUI:
 
     def on_buttonPreviousStream_clicked(self, event):
         self.stPt = (self.stPt - 1) % self.stNum
-        xmin, xmax = self.axs[0].get_xlim()
-        self.delAxes()
-        self.fig.clear()
-        self.drawAxes()
-        self.drawSavedPicks()
-        self.multicursorReinit()
-        self.axs[0].set_xlim(xmin, xmax)
-        self.updatePlot()
-        msg = "Going to previous stream"
-        self.updateStreamLabels()
-        self.textviewStdOutImproved.write(msg)
+        self.comboboxStreamName.set_active(self.stPt)
 
-    def on_buttonNextStream_clicked(self, event):
-        self.stPt = (self.stPt + 1) % self.stNum
+    def on_comboboxStreamName_changed(self, event):
+        self.stPt = self.comboboxStreamName.get_active()
         xmin, xmax = self.axs[0].get_xlim()
         self.delAllItems()
         self.delAxes()
@@ -531,13 +522,16 @@ class PickingGUI:
         self.multicursorReinit()
         self.axs[0].set_xlim(xmin, xmax)
         self.updatePlot()
-        msg = "Going to next stream"
-        self.updateStreamLabels()
+        msg = "Going to stream: %s" % self.dicts[self.stPt]['Station']
+        self.updateStreamNumberLabel()
         self.textviewStdOutImproved.write(msg)
+
+    def on_buttonNextStream_clicked(self, event):
+        self.stPt = (self.stPt + 1) % self.stNum
+        self.comboboxStreamName.set_active(self.stPt)
 
     def on_comboboxPhaseType_changed(self, event):
         self.updateMulticursorColor()
-        #self.updateComboboxPhaseTypeColor()
         self.updateButtonPhaseTypeColor()
         self.redraw()
 
@@ -1039,7 +1033,7 @@ class PickingGUI:
         self.buttonDeleteEvent = self.gla.get_widget("buttonDeleteEvent")
         self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
         self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
-        self.labelStreamName = self.gla.get_widget("labelStreamName")
+        self.comboboxStreamName = self.gla.get_widget("comboboxStreamName")
         self.buttonNextStream = self.gla.get_widget("buttonNextStream")
         self.buttonPhaseType = self.gla.get_widget("buttonPhaseType")
         self.comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
@@ -1077,6 +1071,12 @@ class PickingGUI:
         self.multicursor = MultiCursor(self.canv, self.axs, useblit=True,
                                        color='k', linewidth=1, ls='dotted')
         
+        # fill the combobox list with the streams' station name
+        # first remove a temporary item set at startup
+        self.comboboxStreamName.remove_text(0)
+        for st in self.streams:
+            self.comboboxStreamName.append_text(st[0].stats['station'])
+
         # there's a bug in glade so we have to set the default value for the
         # two comboboxes here by hand, otherwise the boxes are empty at startup
         # we also have to make a connection between the combobox labels and our
@@ -1086,6 +1086,7 @@ class PickingGUI:
         self.comboboxPhaseType.set_active(0)
         self.comboboxFilterType.set_active(0)
         self.comboboxNLLocModel.set_active(0)
+        self.comboboxStreamName.set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
         # grab focus, otherwise the mpl key_press events get lost...
@@ -1124,12 +1125,14 @@ class PickingGUI:
 
         self.textviewStdErrImproved.write(warn_msg)
 
-        # change fonts of textview
+        # change fonts of textviews and of comboboxStreamName
         # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
         try:
             fontDescription = pango.FontDescription("monospace condensed 9")
             self.textviewStdOut.modify_font(fontDescription)
             self.textviewStdErr.modify_font(fontDescription)
+            fontDescription = pango.FontDescription("monospace bold 11")
+            self.comboboxStreamName.child.modify_font(fontDescription)
         except NameError:
             pass
 
@@ -2427,12 +2430,17 @@ class PickingGUI:
     #    color = gtk.gdk.color_parse(self.dictPhaseColors[phase_name])
     #    props.cell_background_gdk = color
 
-    def updateStreamLabels(self):
+    def updateStreamNumberLabel(self):
         self.labelStreamNumber.set_markup("<tt>%02i/%02i</tt>" % \
                 (self.stPt + 1, self.stNum))
-        self.labelStreamName.set_markup("<tt><b>%s</b></tt>" % \
-                self.dicts[self.stPt]['Station'])
     
+    def updateStreamNameCombobox(self):
+        self.comboboxStreamName.set_active(self.stPt)
+
+    def updateStreamLabels(self):
+        self.updateStreamNumberLabel()
+        self.updateStreamNameCombobox()
+
     def load3dlocSyntheticPhases(self):
         try:
             fhandle = open(self.threeDlocOutfile, 'r')
@@ -2622,6 +2630,7 @@ class PickingGUI:
             tempdict['Rake'] = float(line[2])
             tempdict['Errors'] = int(float(line[3])) # not used in xml
             tempdict['Station Polarity Count'] = count
+            tempdict['Possible Solution Count'] = len(lines)
             msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                     (tempdict['Dip'], tempdict['Strike'], tempdict['Rake'],
                      tempdict['Errors'], tempdict['Station Polarity Count'])
@@ -2654,7 +2663,6 @@ class PickingGUI:
                  self.dictFocalMechanism['Station Polarity Count'])
         self.textviewStdOutImproved.write(msg)
     
-    #XXX replace with drawFocMec
     def drawFocMec(self):
         if self.dictFocalMechanism == {}:
             err = "Error: No focal mechanism data!"
@@ -2712,7 +2720,7 @@ class PickingGUI:
                     azim = -180. + dict['PAzim']
                 else:
                     inci = dict['PInci']
-                azim = dict['PAzim']
+                    azim = dict['PAzim']
                 #we have to hack the azimuth because of the polar plot
                 #axes orientation
                 plotazim = (np.pi / 2.) - ((azim / 180.) * np.pi)
@@ -4065,6 +4073,8 @@ class PickingGUI:
             Sub(focmec, "stationPolarityCount").text = "%i" % \
                     dF['Station Polarity Count']
             Sub(focmec, "stationPolarityErrorCount").text = "%i" % dF['Errors']
+            Sub(focmec, "possibleSolutionCount").text = "%i" % \
+                    dF['Possible Solution Count']
 
         return tostring(xml, pretty_print=True, xml_declaration=True)
     
@@ -4501,6 +4511,36 @@ class PickingGUI:
                 pass
         except:
             pass
+
+        #analyze stationmagnitudes:
+        for stamag in resource_xml.xpath(u".//stationMagnitude"):
+            station = stamag.xpath(".//station")[0].text
+            streamnum = None
+            # search for streamnumber corresponding to pick
+            for i, dict in enumerate(self.dicts):
+                if station.strip() != dict['Station']:
+                    continue
+                else:
+                    streamnum = i
+                    break
+            if streamnum is None:
+                err = "Warning: Did not find matching stream for station " + \
+                      "magnitude data with id: \"%s\"" % station.strip()
+                self.textviewStdErrImproved.write(err)
+                continue
+            # values
+            mag = float(stamag.xpath(".//mag/value")[0].text)
+            mag_channel = stamag.xpath(".//channels")[0].text
+            mag_weight = float(stamag.xpath(".//weight")[0].text)
+            if mag_weight == 0:
+                mag_use = False
+            else:
+                mag_use = True
+            # assign to dictionary
+            dict = self.dicts[streamnum]
+            dict['Mag'] = mag
+            dict['MagUse'] = mag_use
+            dict['MagChannel'] = mag_channel
         
         #analyze focal mechanism:
         try:
@@ -4710,6 +4750,8 @@ def main():
                 st.sort()
                 st.reverse()
                 streams.append(st)
+        # sort streams by station name
+        streams = sorted(streams, key=lambda st: st[0].stats['station'])
 
     PickingGUI(client, streams, options)
 
