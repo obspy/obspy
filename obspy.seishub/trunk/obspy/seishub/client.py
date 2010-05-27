@@ -19,6 +19,34 @@ import urllib2
 class Client(object):
     """
     SeisHub database request Client class.
+
+    Notes
+    -----
+    The following classes are automatically linked with initialization.
+    Follow the links in "Linked Class" for more information. They register
+    via the name listed in "Entry Point".
+
+    ===================  ====================================================
+    Entry Point          Linked Class
+    ===================  ====================================================
+    ``Client.station``   :class:`~obspy.seishub.client._WaveformMapperClient`
+    ``Client.waveform``  :class:`~obspy.seishub.client._StationMapperClient`
+    ``Client.event``     :class:`~obspy.seishub.client._EventMapperClient`
+    ===================  ====================================================
+
+    Examples
+    --------
+
+    >>> from obspy.seishub import Client
+    >>> from obpsy.core import UTCDateTime
+    >>>
+    >>> t = UTCDateTime("2009-09-03 00:00:00") # doctest: +SKIP
+    >>> client = Client()
+    >>>
+    >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
+    >>> print st
+    1 Trace(s) in Stream:
+    .GP01..SHZ | 2009-09-03T00:00:00.000000Z - 2009-09-03T00:00:20.000000Z | 250.0 Hz, 5001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10):
@@ -34,30 +62,6 @@ class Client(object):
         opener = urllib2.build_opener(auth_handler)
         # install globally
         urllib2.install_opener(opener)
-
-    class waveform(object):
-        """
-        This class is dynamically linked to
-        :class:`~obspy.seishub.client._WaveformMapperClient`.
-        See the corresponding doc (follow the link above) for details.
-        """
-        pass
-
-    class station(object):
-        """
-        This class is dynamically linked to
-        :class:`~obspy.seishub.client._StationMapperClient`
-        see the corresponding documentation for details
-        """
-        pass
-
-    class event(object):
-        """
-        This class is dynamically linked to
-        :class:`~obspy.seishub.client._EventMapperClient`
-        see the corresponding documentation for details
-        """
-        pass
 
     def ping(self):
         """
