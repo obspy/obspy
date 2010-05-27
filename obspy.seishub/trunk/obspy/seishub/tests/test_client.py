@@ -124,14 +124,15 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st), 18)
         self.assertEqual(st[0].stats.network, 'BW')
         self.assertEqual(st[0].stats.channel, 'EHZ')
-        self.assertEqual(st[0].stats.delta, 60.0)
+        self.assertEqual(st[0].stats.delta, 30.0)
         # single channel / GSE2
         t1 = UTCDateTime('20070101')
         t2 = UTCDateTime('20100101')
         st = self.client.waveform.getPreview("BW", "RTLI", "", "EHN", t1, t2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, 'BW.RTLI..EHN')
-        self.assertEqual(st[0].stats.delta, 60.0)
+        self.assertEqual(st[0].stats.delta, 30.0)
+        import ipdb; ipdb.set_trace()
         self.assertEqual(st[0].stats.npts, 182840)
 
     def test_getPreviewByIds(self):
