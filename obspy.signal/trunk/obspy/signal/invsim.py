@@ -163,10 +163,11 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     of len(data) to avoid warp around effects during convolution. The inverse 
     of the frequency response of the seismometer is convolved with the spectrum 
     of the data and with the frequency response of the seismometer to
-    simulate.
+    simulate. A 5% cosine taper is taken before simulation. The data must
+    be detrended (e.g.) zero mean before hand.
 
     :type data: Numpy Ndarray
-    :param data: Seismogram, (zero mean?)
+    :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
     :type paz: Dictionary
