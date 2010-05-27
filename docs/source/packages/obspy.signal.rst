@@ -9,32 +9,32 @@
       :toctree: .
       :nosignatures:
 
+        ~trigger.arPick
         ~filter.bandpass
         ~filter.bandpassZPHSH
-        ~filter.lowpass
-        ~filter.lowpassZPHSH
-        ~filter.highpass
-        ~filter.highpassZPHSH
         ~filter.bandstop
         ~filter.bandstopZPHSH
+        ~trigger.carlStaTrig
+        ~trigger.classicStaLta
+        ~invsim.cornFreq2Paz
+        ~invsim.cosTaper
+        ~trigger.delayedStaLta
         ~filter.envelope
+        ~invsim.estimateMagnitude
+        ~rotate.gps2DistAzimuth
+        ~filter.highpass
+        ~filter.highpassZPHSH
+        ~filter.lowpass
+        ~filter.lowpassZPHSH
+        ~invsim.pazToFreqResp
+        ~trigger.pkBaer
+        ~trigger.recStalta
+        ~rotate.rotate_NE_RT
+        ~invsim.seisSim
         ~util.utlGeoKm
         ~util.utlLonLat
         ~util.xcorr
-        ~invsim.seisSim
-        ~invsim.cosTaper
-        ~invsim.estimateMagnitude
-        ~invsim.pazToFreqResp
-        ~invsim.cornFreq2Paz
-        ~rotate.rotate_NE_RT
-        ~rotate.gps2DistAzimuth
-        ~trigger.recStalta
-        ~trigger.pkBaer
-        ~trigger.arPick
         ~trigger.zdetect
-        ~trigger.delayedStaLta
-        ~trigger.classicStaLta
-        ~trigger.carlStaTrig
 
     .. comment to end block
 
