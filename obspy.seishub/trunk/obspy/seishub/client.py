@@ -35,6 +35,30 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
+    class waveform(object):
+        """
+        This class is dynamically linked to
+        :class:`~obspy.seishub.client._WaveformMapperClient`.
+        See the corresponding doc (follow the link above) for details.
+        """
+        pass
+
+    class station(object):
+        """
+        This class is dynamically linked to
+        :class:`~obspy.seishub.client._StationMapperClient`
+        see the corresponding documentation for details
+        """
+        pass
+
+    class event(object):
+        """
+        This class is dynamically linked to
+        :class:`~obspy.seishub.client._EventMapperClient`
+        see the corresponding documentation for details
+        """
+        pass
+
     def ping(self):
         """
         Ping the SeisHub server.
