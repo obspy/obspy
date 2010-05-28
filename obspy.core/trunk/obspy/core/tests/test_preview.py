@@ -56,7 +56,7 @@ class UtilTestCase(unittest.TestCase):
         """
         # Merging non-preview traces in one Stream object should raise.
         st = Stream(traces=[Trace(data=np.empty(2)),
-                              Trace(data=np.empty(2))])
+                            Trace(data=np.empty(2))])
         self.assertRaises(Exception, mergePreviews, st)
         # Merging empty traces should return an new empty Stream object.
         st = Stream()
@@ -126,8 +126,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(omitted_samples, 24)
         # This shows the inaccuracy of the fast method.
-        np.testing.assert_array_equal(tr.data,
-                            np.array([4] * 53 + [2] * 47))
+        np.testing.assert_array_equal(tr.data, np.array([4] * 53 + [2] * 47))
         # Slow but accurate method.
         tr = Trace(data=np.array([1, 2, 3, 4] * 53 + [-1, 0, 1, 2] * 53))
         endtime = tr.stats.endtime
@@ -138,8 +137,33 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(omitted_samples, 0)
         # This method is much more accurate.
-        np.testing.assert_array_equal(tr.data,
-                            np.array([4] * 50 + [2] * 50))
+        np.testing.assert_array_equal(tr.data, np.array([4] * 50 + [2] * 50))
+
+    def test_mergePreviews2(self):
+        """
+        Test case for issue #84.
+        """
+        tr1 = Trace(data=np.empty(2880))
+        tr1.stats.starttime = UTCDateTime("2010-01-01T00:00:00.670000Z")
+        tr1.stats.delta = 30.0
+        tr1.stats.preview = True
+        tr1.verify()
+        tr2 = Trace(data=np.empty(2881))
+        tr2.stats.starttime = UTCDateTime("2010-01-01T23:59:30.670000Z")
+        tr2.stats.delta = 30.0
+        tr2.stats.preview = True
+        tr2.verify()
+        st1 = Stream([tr1, tr2])
+        st1.verify()
+        # merge
+        st2 = mergePreviews(st1)
+        st2.verify()
+        # check 
+        self.assertTrue(st2[0].stats.preview)
+        self.assertEqual(st2[0].stats.starttime, tr1.stats.starttime)
+        self.assertEqual(st2[0].stats.endtime, tr2.stats.endtime)
+        self.assertEqual(st2[0].stats.npts, 5760)
+        self.assertEqual(len(st2[0]), 5760)
 
 
 def suite():

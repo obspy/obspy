@@ -132,8 +132,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, 'BW.RTLI..EHN')
         self.assertEqual(st[0].stats.delta, 30.0)
-        import ipdb; ipdb.set_trace()
-        self.assertEqual(st[0].stats.npts, 182840)
+        self.assertEqual(len(st[0]), 365679)
+        self.assertEqual(st[0].stats.npts, 365679)
 
     def test_getPreviewByIds(self):
         # multiple channels / MiniSEED

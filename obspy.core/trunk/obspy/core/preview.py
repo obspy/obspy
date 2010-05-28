@@ -83,6 +83,7 @@ def createPreview(trace, delta=60):
     tr.stats.preview = True
     return tr
 
+
 def mergePreviews(stream):
     """
     Merges all preview traces in one Stream object. Does not change the
@@ -144,7 +145,6 @@ def mergePreviews(stream):
         data[:] = -1
         # Create trace and give starttime.
         new_trace = Trace(data=data, header=value[0].stats)
-        new_trace.starttime = min_starttime
         # Loop over all traces in value and add to data.
         for trace in value:
             start_index = int((trace.stats.starttime - min_starttime) / delta)
@@ -152,8 +152,11 @@ def mergePreviews(stream):
             # Element-by-element comparision.
             data[start_index:end_index] = \
                 np.maximum(data[start_index:end_index], trace.data)
+        # set npts again, because data is changed in place
+        new_trace.stats.npts = len(data)
         new_stream.append(new_trace)
     return new_stream
+
 
 def resamplePreview(trace, samples, method='accurate'):
     """
