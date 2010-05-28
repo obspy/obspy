@@ -853,6 +853,40 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEquals(st[0].stats, st2[0].stats)
 
+    def test_getGaps2(self):
+        """
+        Test case for issue #73.
+        """
+        tr1 = Trace(data=np.empty(720000))
+        tr1.stats.starttime = UTCDateTime("2010-02-09T00:19:19.850000Z")
+        tr1.stats.sampling_rate = 200.0
+        tr1.verify()
+        tr2 = Trace(data=np.empty(720000))
+        tr2.stats.starttime = UTCDateTime("2010-02-09T01:19:19.850000Z")
+        tr2.stats.sampling_rate = 200.0
+        tr2.verify()
+        tr3 = Trace(data=np.empty(720000))
+        tr3.stats.starttime = UTCDateTime("2010-02-09T02:19:19.850000Z")
+        tr3.stats.sampling_rate = 200.0
+        tr3.verify()
+        st = Stream([tr1, tr2, tr3])
+        st.verify()
+        # same sampling rate should have no gaps
+        gaps = st.getGaps()
+        self.assertEquals(len(gaps), 0)
+        # different sampling rate should result in a gap
+        tr3.stats.sampling_rate = 50.0
+        gaps = st.getGaps()
+        self.assertEquals(len(gaps), 1)
+        # but different ids will be skipped (if only one trace)
+        tr3.stats.station = 'MANZ'
+        gaps = st.getGaps()
+        self.assertEquals(len(gaps), 0)
+        # multiple traces with same id will be handled again
+        tr2.stats.station = 'MANZ'
+        gaps = st.getGaps()
+        self.assertEquals(len(gaps), 1)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

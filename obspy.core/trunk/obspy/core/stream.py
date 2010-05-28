@@ -365,31 +365,38 @@ class Stream(object):
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
+            # different sampling rates should always result in a gap or overlap
+            if self.traces[_i].stats.delta == self.traces[_i + 1].stats.delta:
+                flag = True
+            else:
+                flag = False
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
-            duration = etime.timestamp - stime.timestamp
-            gap = etime.timestamp - stime.timestamp
+            delta = etime.timestamp - stime.timestamp
             # Check that any overlap is not larger than the trace coverage
-            if gap < 0:
+            if delta < 0:
                 temp = self.traces[_i + 1].stats['endtime'].timestamp - \
                        etime.timestamp
-                if (gap * -1) > temp:
-                    gap = -1 * temp
+                if (delta * -1) > temp:
+                    delta = -1 * temp
             # Check gap/overlap criteria
-            if min_gap and gap < min_gap:
+            if min_gap and delta < min_gap:
                 continue
-            if max_gap and gap > max_gap:
+            if max_gap and delta > max_gap:
                 continue
             # Number of missing samples
-            nsamples = int(round(math.fabs(gap) * stats['sampling_rate']))
-            if gap > 0:
+            nsamples = int(round(math.fabs(delta) * stats['sampling_rate']))
+            # skip if is equal to delta (1 / sampling rate)
+            if flag and nsamples == 1:
+                continue
+            elif delta > 0:
                 nsamples -= 1
             else:
                 nsamples += 1
             gap_list.append([stats['network'], stats['station'],
-                             stats['location'], stats['channel'], stime, etime,
-                             duration, nsamples])
+                             stats['location'], stats['channel'],
+                             stime, etime, delta, nsamples])
         return gap_list
 
     def insert(self, position, object):
@@ -498,15 +505,17 @@ class Stream(object):
         """
         result = self.getGaps(**kwargs)
         print "%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
-                                                'Next Sample', 'Gap',
+                                                'Next Sample', 'Delta',
                                                 'Samples')
         gaps = 0
+        overlaps = 0
         for r in result:
             if r[6] > 0:
                 gaps += 1
+            else:
+                overlaps += 1
             print "%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
                                                       r[4], r[5], r[6], r[7])
-        overlaps = len(result) - gaps
         print "Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)
 
     def remove(self, index):
