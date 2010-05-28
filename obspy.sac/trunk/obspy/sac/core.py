@@ -155,21 +155,22 @@ def writeSAC(stream, filename, **kwargs):
         t = ReadSac()
         t.InitArrays()
         # building array of floats, require correct type
-        # filling ObsPy defaults
-        t.fromarray(trace.data)
+        # filling in SAC/sacio specific defaults
+        t.fromarray(trace.data, begin=0.0, delta=trace.stats.delta)
+        # overwriting with ObsPy defaults
         for _j, _k in convert_dict.iteritems():
             try:
                 t.SetHvalue(_j, trace.stats[_k])
             except:
                 pass
-        # filling up SAC specific values
+        # overwriting up SAC specific values
         for _i in sac_extra:
             try:
                 t.SetHvalue(_i, trace.stats.sac[_i])
             except:
                 pass
         # setting start time depending on iztype, if no sac extra header is
-        # defined iztype - 9 == Begin Time
+        # defined iztype (9 == Begin Time)
         start = trace.stats.starttime
         try:
             if trace.stats['sac']['iztype'] == 11:
@@ -178,6 +179,7 @@ def writeSAC(stream, filename, **kwargs):
                 pass
         except KeyError:
             pass
+        # overwriting date and time
         t.SetHvalue('nzyear', start.year)
         t.SetHvalue('nzjday', start.strftime("%j"))
         t.SetHvalue('nzhour', start.hour)

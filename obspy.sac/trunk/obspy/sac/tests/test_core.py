@@ -118,6 +118,12 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_equal(tr.data, tr3.data)
 
     def test_convertMseed2Sac(self):
+        """
+        Test that an mseed file is correctly written to SAC.
+        All the header variables which are tagged as required by
+        http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
+        are controlled in this test
+        """
         # setUp is called before every test, not only once at the
         # beginning, that is we allocate the data just here
         # generate artificial mseed data
@@ -132,7 +138,17 @@ class CoreTestCase(unittest.TestCase):
         tmpfile = NamedTemporaryFile().name
         st.write(tmpfile, format="SAC")
         st2 = read(tmpfile, format="SAC")
-        self.assertEqual(st2[0].stats['npts'], st[0].stats['npts'])
+        # check all the required entries (see url in docstring)
+        self.assertEqual(st2[0].stats.npts, st[0].stats.npts)
+        self.assertEqual(st2[0].stats.sac.nvhdr, 6)
+        self.assertEqual(st2[0].stats.sac.b, 0.0)
+        # compare with correct digit size (nachkommastellen)
+        self.assertAlmostEqual((0.0 + st[0].stats.npts * \
+                               st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
+        self.assertEqual(st2[0].stats.sac.iftype, 1)
+        self.assertEqual(st2[0].stats.sac.leven, 1)
+        self.assertAlmostEqual(st2[0].stats.sampling_rate / \
+                               st[0].stats.sampling_rate, 1.0)
         # file must exist, we just created it
         os.remove(tmpfile)
 
@@ -153,6 +169,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.starttime.timestamp, 5)
         os.remove(tempfile)
+
 
     def test_defaultvalues(self):
         tr = read(self.file)[0]
