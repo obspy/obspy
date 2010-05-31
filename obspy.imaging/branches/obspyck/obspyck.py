@@ -510,6 +510,22 @@ class PickingGUI:
     # the corresponding signal is emitted when hitting return after entering
     # the password
     def on_entrySysopPassword_activate(self, event):
+        # test authentication information:
+        passwd = self.entrySysopPassword.get_text()
+        auth = 'Basic ' + (base64.encodestring('sysop:' + passwd)).strip()
+        webservice = httplib.HTTP(self.server['Server'])
+        webservice.putrequest("HEAD", '/xml/seismology/event/just_a_test')
+        webservice.putheader('Authorization', auth)
+        webservice.endheaders()
+        statuscode = webservice.getreply()[0]
+        # if authentication test fails empty password field and uncheck sysop
+        if statuscode == 401: # 401 means "Unauthorized"
+            self.checkbuttonSysop.set_active(False)
+            self.entrySysopPassword.set_text("")
+            err = "Error: Authentication as sysop failed! (Wrong password!?)"
+            self.textviewStdErrImproved.write(err)
+        else:
+            self.checkbuttonSysop.set_active(True)
         self.canv.grab_focus()
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
