@@ -53,9 +53,10 @@ from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolb
 # if it is selected in the glade GUI for the widget.
 # see: https://bugzilla.gnome.org/show_bug.cgi?id=322340
 def nofocus_recursive(widget):
-    # we have to exclude SpinButtons otherwise we cannot put anything into
-    # the spin button
-    if not isinstance(widget, gtk.SpinButton):
+    # we have to exclude SpinButtons and the entrySysopPassword otherwise we
+    # cannot put anything into them
+    if not isinstance(widget, gtk.SpinButton) and \
+       not isinstance(widget, gtk.Entry):
         widget.unset_flags(("GTK_CAN_FOCUS", "GTK_RECEIVES_DEFAULT"))
     try:
         children = widget.get_children()
@@ -320,7 +321,8 @@ class PickingGUI:
                               self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
-                              self.checkbuttonPublicEvent,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.comboboxStreamName, self.labelStreamNumber,
@@ -366,7 +368,8 @@ class PickingGUI:
                               self.togglebuttonShowWadati,
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
-                              self.checkbuttonPublicEvent,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.comboboxStreamName, self.labelStreamNumber,
@@ -418,7 +421,8 @@ class PickingGUI:
                               self.buttonNextFocMec, self.togglebuttonShowMap,
                               self.buttonGetNextEvent, self.buttonSendEvent,
                               self.buttonUpdateEventList,
-                              self.checkbuttonPublicEvent,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
                               self.comboboxStreamName, self.labelStreamNumber,
@@ -481,8 +485,8 @@ class PickingGUI:
     def on_buttonSendEvent_clicked(self, event):
         self.uploadSeishub()
 
-    def on_checkbuttonPublicEvent_toggled(self, event):
-        newstate = self.checkbuttonPublicEvent.get_active()
+    def on_checkbuttonPublishEvent_toggled(self, event):
+        newstate = self.checkbuttonPublishEvent.get_active()
         msg = "Setting \"public\" flag of event to: %s" % newstate
         self.textviewStdOutImproved.write(msg)
 
@@ -497,6 +501,16 @@ class PickingGUI:
         if response == gtk.RESPONSE_YES:
             self.deleteEventInSeishub(resource_name)
             self.on_buttonUpdateEventList_clicked(event)
+    
+    def on_checkbuttonSysop_toggled(self, event):
+        newstate = self.checkbuttonSysop.get_active()
+        msg = "Setting usage of \"sysop\"-account to: %s" % newstate
+        self.textviewStdOutImproved.write(msg)
+    
+    # the corresponding signal is emitted when hitting return after entering
+    # the password
+    def on_entrySysopPassword_activate(self, event):
+        self.canv.grab_focus()
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
         self.setFocusToMatplotlib()
@@ -550,6 +564,7 @@ class PickingGUI:
     def on_spinbuttonHighpass_value_changed(self, event):
         if not self.togglebuttonFilter.get_active() or \
            self.comboboxFilterType.get_active_text() == "Lowpass":
+            self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
@@ -571,6 +586,7 @@ class PickingGUI:
     def on_spinbuttonLowpass_value_changed(self, event):
         if not self.togglebuttonFilter.get_active() or \
            self.comboboxFilterType.get_active_text() == "Highpass":
+            self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
@@ -1028,9 +1044,11 @@ class PickingGUI:
         self.buttonGetNextEvent = self.gla.get_widget("buttonGetNextEvent")
         self.buttonUpdateEventList = self.gla.get_widget("buttonUpdateEventList")
         self.buttonSendEvent = self.gla.get_widget("buttonSendEvent")
-        self.checkbuttonPublicEvent = \
-                self.gla.get_widget("checkbuttonPublicEvent")
+        self.checkbuttonPublishEvent = \
+                self.gla.get_widget("checkbuttonPublishEvent")
         self.buttonDeleteEvent = self.gla.get_widget("buttonDeleteEvent")
+        self.checkbuttonSysop = self.gla.get_widget("checkbuttonSysop")
+        self.entrySysopPassword = self.gla.get_widget("entrySysopPassword")
         self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
         self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
         self.comboboxStreamName = self.gla.get_widget("comboboxStreamName")
@@ -3816,15 +3834,22 @@ class PickingGUI:
 
     def dicts2XML(self):
         """
-        Returns information of all dictionaries as xml file
+        Returns information of all dictionaries as xml file (type string)
         """
         xml =  Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
-        Sub(event_type, "user").text = self.username
+
+        # if the publish button is checked, we set the username in the xml to
+        # sysop and set the public flag in the xml
+        if self.checkbuttonSysop.get_active():
+            Sub(event_type, "user").text = "sysop"
+        else:
+            Sub(event_type, "user").text = self.username
+
         Sub(event_type, "public").text = "%s" % \
-                self.checkbuttonPublicEvent.get_active()
+                self.checkbuttonPublishEvent.get_active()
         
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
@@ -4088,8 +4113,18 @@ class PickingGUI:
         """
         Upload xml file to seishub
         """
-        userid = "admin"
-        passwd = "admin"
+
+        # check, if the event should be uploaded as sysop. in this case we set
+        # the username in the xml to "sysop" and also use the sysop-useraccount
+        # in seishub for the upload.
+        # the correct sysop password has to be entered in the box in the GUI
+        # otherwise the upload fails with "401 Unauthorized".
+        if self.checkbuttonSysop.get_active():
+            userid = "sysop"
+            passwd = self.entrySysopPassword.get_text()
+        else:
+            userid = "obspyck"
+            passwd = "obspyck"
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
@@ -4139,8 +4174,18 @@ class PickingGUI:
         Delete xml file from seishub.
         (Move to seishubs trash folder if this option is activated)
         """
-        userid = "admin"
-        passwd = "admin"
+
+        # check, if the event should be deleted as sysop. in this case we
+        # use the sysop-useraccount in seishub for the DELETE request.
+        # sysop may delete resources from any user.
+        # the correct sysop password has to be entered in the box in the GUI
+        # otherwise the upload fails with "401 Unauthorized".
+        if self.checkbuttonSysop.get_active():
+            userid = "sysop"
+            passwd = self.entrySysopPassword.get_text()
+        else:
+            userid = "obspyck"
+            passwd = "obspyck"
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
@@ -4256,7 +4301,7 @@ class PickingGUI:
         resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
                        resource_name
         resource_req = urllib2.Request(resource_url)
-        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+        auth = base64.encodestring('%s:%s' % ("obspyck", "obspyck"))[:-1]
         resource_req.add_header("Authorization", "Basic %s" % auth)
         fp = urllib2.urlopen(resource_req)
         resource_xml = parse(fp)
@@ -4608,7 +4653,7 @@ class PickingGUI:
               "min_last_pick=%s&max_first_pick=%s" % \
               (str(starttime), str(endtime))
         req = urllib2.Request(url)
-        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+        auth = base64.encodestring('%s:%s' % ("obspyck", "obspyck"))[:-1]
         req.add_header("Authorization", "Basic %s" % auth)
 
         f = urllib2.urlopen(req)
@@ -4649,9 +4694,9 @@ def main():
     parser.add_option("-p", "--port", type="int", dest="port",
                       help="Port of the seishub server",
                       default=8080)
-    parser.add_option("--user", dest="user", default='admin',
+    parser.add_option("--user", dest="user", default='obspyck',
                       help="Username for seishub server")
-    parser.add_option("--password", dest="password", default='admin',
+    parser.add_option("--password", dest="password", default='obspyck',
                       help="Password for seishub server")
     parser.add_option("--timeout", dest="timeout", type="int", default=10,
                       help="Timeout for seishub server")
