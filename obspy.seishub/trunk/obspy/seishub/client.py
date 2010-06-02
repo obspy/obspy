@@ -14,6 +14,7 @@ import pickle
 import sys
 import time
 import urllib2
+import urllib
 
 
 class Client(object):
@@ -75,18 +76,20 @@ class Client(object):
             None
 
     def _fetch(self, url, *args, **kwargs):
-        remoteaddr = self.base_url + url + '?'
+        params = {}
         for key, value in kwargs.iteritems():
             if not value:
                 continue
             if isinstance(value, tuple) and len(value) == 2:
-                remoteaddr += 'min_' + str(key) + '=' + str(value[0]) + '&'
-                remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
+                params['min_' + str(key)] = str(value[0])
+                params['max_' + str(key)] = str(value[1])
             elif isinstance(value, list) and len(value) == 2:
-                remoteaddr += 'min_' + str(key) + '=' + str(value[0]) + '&'
-                remoteaddr += 'max_' + str(key) + '=' + str(value[1]) + '&'
+                params['min_' + str(key)] = str(value[0])
+                params['max_' + str(key)] = str(value[1])
             else:
-                remoteaddr += str(key) + '=' + str(value) + '&'
+                params[str(key)] = str(value)
+        # replace special characters 
+        remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             response = urllib2.urlopen(remoteaddr)

@@ -36,6 +36,21 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.location, '')
         self.assertEqual(st[0].stats.channel, 'EHZ')
 
+    def test_getEventList(self):
+        c = self.client.event
+        # UTCDateTimes
+        events = c.getList(min_datetime=UTCDateTime("2010-05-27T15:00:00"),
+                           max_datetime=UTCDateTime("2010-05-27T20:00:00"))
+        self.assertEqual(len(events), 16)
+        # time strings with T as separator 
+        events = c.getList(min_datetime="2010-05-27T15:00:00",
+                           max_datetime="2010-05-27T20:00:00")
+        self.assertEqual(len(events), 16)
+        # time strings with space as separator 
+        events = c.getList(min_datetime="2010-05-27 15:00:00",
+                           max_datetime="2010-05-27 20:00:00")
+        self.assertEqual(len(events), 16)
+
     def test_getNetworkIds(self):
         items = ['BW', 'CZ', 'GR', 'NZ']
         data = self.client.waveform.getNetworkIds()
