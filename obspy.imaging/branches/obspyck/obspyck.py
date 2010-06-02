@@ -484,6 +484,8 @@ class PickingGUI:
 
     def on_buttonSendEvent_clicked(self, event):
         self.uploadSeishub()
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
 
     def on_checkbuttonPublishEvent_toggled(self, event):
         newstate = self.checkbuttonPublishEvent.get_active()
@@ -535,6 +537,8 @@ class PickingGUI:
         self.debug()
 
     def on_buttonQuit_clicked(self, event):
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
         self.cleanQuit()
 
     def on_buttonPreviousStream_clicked(self, event):
@@ -836,6 +840,8 @@ class PickingGUI:
         self.server['Server'] = self.server['Name'] + \
                                 ":%i" % self.server['Port']
         self.server['BaseUrl'] = "http://" + self.server['Server']
+        self.server['User'] = self.options.user # "obspyck"
+        self.server['Password'] = self.options.password # "obspyck"
         
         # If keybindings option is set only show keybindings and exit
         if self.options.keybindings:
@@ -1169,6 +1175,9 @@ class PickingGUI:
             self.comboboxStreamName.child.modify_font(fontDescription)
         except NameError:
             pass
+
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
 
         gtk.main()
 
@@ -3857,12 +3866,14 @@ class PickingGUI:
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
 
-        # if the publish button is checked, we set the username in the xml to
-        # sysop and set the public flag in the xml
+        # if the sysop checkbox is checked, we set the account in the xml
+        # to sysop (and also use sysop as the seishub user)
         if self.checkbuttonSysop.get_active():
-            Sub(event_type, "user").text = "sysop"
+            Sub(event_type, "account").text = "sysop"
         else:
-            Sub(event_type, "user").text = self.username
+            Sub(event_type, "account").text = self.server['User']
+        
+        Sub(event_type, "user").text = self.username
 
         Sub(event_type, "public").text = "%s" % \
                 self.checkbuttonPublishEvent.get_active()
@@ -4130,17 +4141,17 @@ class PickingGUI:
         Upload xml file to seishub
         """
 
-        # check, if the event should be uploaded as sysop. in this case we set
-        # the username in the xml to "sysop" and also use the sysop-useraccount
-        # in seishub for the upload.
-        # the correct sysop password has to be entered in the box in the GUI
-        # otherwise the upload fails with "401 Unauthorized".
+        # check, if the event should be uploaded as sysop. in this case we use
+        # the sysop-useraccount in seishub for the upload (and also set
+        # user_account in the xml to "sysop").
+        # the correctness of the sysop password is tested when checking the
+        # sysop box and entering the password immediately.
         if self.checkbuttonSysop.get_active():
             userid = "sysop"
             passwd = self.entrySysopPassword.get_text()
         else:
-            userid = "obspyck"
-            passwd = "obspyck"
+            userid = self.server['User']
+            passwd = self.server['Password']
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
@@ -4177,7 +4188,8 @@ class PickingGUI:
 
         # get the response
         statuscode, statusmessage, header = webservice.getreply()
-        msg = "User: %s" % self.username
+        msg = "Account: %s" % userid
+        msg += "\nUser: %s" % self.username
         msg += "\nName: %s" % name
         msg += "\nServer: %s%s" % (self.server['Server'], path)
         msg += "\nResponse: %s %s" % (statuscode, statusmessage)
@@ -4194,14 +4206,16 @@ class PickingGUI:
         # check, if the event should be deleted as sysop. in this case we
         # use the sysop-useraccount in seishub for the DELETE request.
         # sysop may delete resources from any user.
-        # the correct sysop password has to be entered in the box in the GUI
-        # otherwise the upload fails with "401 Unauthorized".
+        # at the moment deleted resources go to seishubs trash folder (and can
+        # easily be resubmitted using the http interface).
+        # the correctness of the sysop password is tested when checking the
+        # sysop box and entering the password immediately.
         if self.checkbuttonSysop.get_active():
             userid = "sysop"
             passwd = self.entrySysopPassword.get_text()
         else:
-            userid = "obspyck"
-            passwd = "obspyck"
+            userid = self.server['User']
+            passwd = self.server['Password']
 
         auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
 
@@ -4218,6 +4232,7 @@ class PickingGUI:
         # get the response
         statuscode, statusmessage, header = webservice.getreply()
         msg = "Deleting Event!"
+        msg += "\nAccount: %s" % userid
         msg += "\nUser: %s" % self.username
         msg += "\nName: %s" % resource_name
         msg += "\nServer: %s%s" % (self.server['Server'], path)
@@ -4317,11 +4332,17 @@ class PickingGUI:
         resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
                        resource_name
         resource_req = urllib2.Request(resource_url)
-        auth = base64.encodestring('%s:%s' % ("obspyck", "obspyck"))[:-1]
+        userid = self.server['User']
+        passwd = self.server['Password']
+        auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
         resource_req.add_header("Authorization", "Basic %s" % auth)
         fp = urllib2.urlopen(resource_req)
         resource_xml = parse(fp)
         fp.close()
+        if resource_xml.xpath(u".//event_type/account"):
+            account = resource_xml.xpath(u".//event_type/account")[0].text
+        else:
+            account = None
         if resource_xml.xpath(u".//event_type/user"):
             user = resource_xml.xpath(u".//event_type/user")[0].text
         else:
@@ -4645,15 +4666,15 @@ class PickingGUI:
                 pass
         except:
             pass
-        msg = "Fetched event %i of %i (event_id: %s, user: %s)" % \
+        msg = "Fetched event %i of %i (event_id: %s, account: %s, user: %s)"%\
               (self.seishubEventCurrent + 1, self.seishubEventCount,
-               resource_name, user)
+               resource_name, account, user)
         self.textviewStdOutImproved.write(msg)
 
-    def updateEventListFromSeishub(self, starttime, endtime):
+    def getEventListFromSeishub(self, starttime, endtime):
         """
-        Searches for events in the database and stores a list of resource
-        names. All events with at least one pick set in between start- and
+        Searches for events in the database and returns a lxml ElementTree
+        object. All events with at least one pick set in between start- and
         endtime are returned.
 
         :param starttime: Start datetime as UTCDateTime
@@ -4669,13 +4690,28 @@ class PickingGUI:
               "min_last_pick=%s&max_first_pick=%s" % \
               (str(starttime), str(endtime))
         req = urllib2.Request(url)
-        auth = base64.encodestring('%s:%s' % ("obspyck", "obspyck"))[:-1]
+        userid = self.server['User']
+        passwd = self.server['Password']
+        auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
         req.add_header("Authorization", "Basic %s" % auth)
 
         f = urllib2.urlopen(req)
         xml = parse(f)
         f.close()
 
+        return xml
+
+    def updateEventListFromSeishub(self, starttime, endtime):
+        """
+        Searches for events in the database and stores a list of resource
+        names. All events with at least one pick set in between start- and
+        endtime are returned.
+
+        :param starttime: Start datetime as UTCDateTime
+        :param endtime: End datetime as UTCDateTime
+        """
+        # get event list from seishub
+        xml = self.getEventListFromSeishub(starttime, endtime)
         # populate list with resource names of all available events
         self.seishubEventList = xml.xpath(u".//resource_name")
 
@@ -4687,6 +4723,65 @@ class PickingGUI:
         for event in self.seishubEventList:
             msg += "\n  - %s" % event.text
         self.textviewStdOutImproved.write(msg)
+
+    def checkForSysopEventDuplicates(self, starttime, endtime):
+        """
+        checks if there is more than one sysop event with picks in between
+        starttime and endtime. if that is the case, a warning is issued.
+        the user should then resolve this conflict by deleting events until
+        only one instance remains.
+        at the moment this check is conducted for the current timewindow when
+        submitting a sysop event.
+        """
+        # get event list from seishub
+        xml = self.getEventListFromSeishub(starttime, endtime)
+
+        resourcelist = xml.xpath(u".//resource_name")
+
+        sysoplist = []
+        
+        for resource in resourcelist:
+            
+            resource_name = resource.text
+
+            resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" +\
+                           resource_name
+            resource_req = urllib2.Request(resource_url)
+            userid = self.server['User']
+            passwd = self.server['Password']
+            auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
+            resource_req.add_header("Authorization", "Basic %s" % auth)
+            fp = urllib2.urlopen(resource_req)
+            resource_xml = parse(fp)
+            fp.close()
+
+            if resource_xml.xpath(u".//event_type/account"):
+                account = resource_xml.xpath(u".//event_type/account")[0].text
+            else:
+                continue
+
+            if account == "sysop":
+                sysoplist.append(resource_name)
+            else:
+                continue
+        
+        # if there is a possible duplicate, pop up a warning window and print a
+        # warning in the GUI error textview:
+        if len(sysoplist) > 1:
+            err = "ObsPyck found more than one sysop event in the current " + \
+                  "time window! Please check if these are duplicate " + \
+                  "events and delete old resources."
+            errlist = "\n".join(sysoplist)
+            self.textviewStdErrImproved.write(err)
+            self.textviewStdErrImproved.write(errlist)
+
+            dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
+                                       gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
+            dialog.set_markup(err + "\n\n<b><tt>%s</tt></b>" % errlist)
+            dialog.set_title("Possible Duplicate Event!")
+            response = dialog.run()
+            dialog.destroy()
+
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
