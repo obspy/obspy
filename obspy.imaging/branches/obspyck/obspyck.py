@@ -2953,6 +2953,15 @@ class PickingGUI:
         errX, errY, errZ = errorEllipsoid2CartesianErrors(azim1, dip1, len1,
                                                           azim2, dip2, len2,
                                                           len3)
+        
+        # XXX
+        # NLLOC uses error ellipsoid for 68% confidence interval relating to
+        # one standard deviation in the normal distribution.
+        # We multiply all errors by 2 to approximately get the 95% confidence
+        # level (two standard deviations)...
+        errX *= 2
+        errY *= 2
+        errZ *= 2
 
         # determine which model was used:
         controlfile = self.tmp_dir + "/last.in"
