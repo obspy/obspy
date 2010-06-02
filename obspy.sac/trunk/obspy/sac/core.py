@@ -6,10 +6,9 @@ SAC bindings to ObsPy core module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from obspy.core import Trace, UTCDateTime, Stream, AttribDict
+from obspy.core import Trace, Stream
 from obspy.sac.sacio import ReadSac
 import struct
-import numpy as np
 import os
 
 
