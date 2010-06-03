@@ -10,6 +10,9 @@ SeisHub database client for ObsPy.
 """
 
 from lxml import objectify
+from lxml.etree import Element, SubElement, tostring
+from datetime import datetime
+from math import log
 import pickle
 import sys
 import time
@@ -380,6 +383,100 @@ class _EventMapperClient(_BaseRESTClient):
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
+
+    def getKml(self, *args, **kwargs):
+        """
+        Posts an event.getList() and returns the results as a kml file.
+
+        :return: String containing kml information of all matching events. This
+                 string can be written to a file and loaded into e.g. Google
+                 Earth.
+        """
+        events = self.getList(*args, **kwargs)
+        timestamp = datetime.now()
+
+        # construct the kml file
+        kml = Element("kml")
+        kml.set("xmlns", "http://www.opengis.net/kml/2.2")
+        
+        document = SubElement(kml, "Document")
+        SubElement(document, "name").text = "Seishub Event Locations"
+        
+        # style definitions for earthquakes
+        style = SubElement(document, "Style")
+        style.set("id", "earthquake")
+
+        iconstyle = SubElement(style, "IconStyle")
+        SubElement(iconstyle, "scale").text = "0.5"
+        icon = SubElement(iconstyle, "Icon")
+        SubElement(icon, "href").text = "http://maps.google.com/mapfiles/kml/" + \
+                                 "shapes/earthquake.png"
+        hotspot = SubElement(iconstyle, "hotSpot")
+        hotspot.set("x", "0.5")
+        hotspot.set("y", "0")
+        hotspot.set("xunits", "fraction")
+        hotspot.set("yunits", "fraction")
+
+        labelstyle = SubElement(style, "LabelStyle")
+        SubElement(labelstyle, "color").text = "ff0000ff"
+        SubElement(labelstyle, "scale").text = "0.8"
+
+        folder = SubElement(document, "Folder")
+        SubElement(folder, "name").text = "Seishub Events (%s)" % \
+                                          timestamp.date()
+        SubElement(folder, "open").text = "1"
+        
+        # additional descriptions for the folder
+        descrip_str = "Fetched from: %s" % self.client.base_url
+        descrip_str += "\nFetched at: %s" % timestamp
+        descrip_str += "\n\nSearch options:\n"
+        descrip_str += "\n".join(["=".join(item) for item in kwargs.items()])
+        SubElement(folder, "description").text = descrip_str
+
+        style = SubElement(folder, "Style")
+        liststyle = SubElement(style, "ListStyle")
+        SubElement(liststyle, "listItemType").text = "check"
+        SubElement(liststyle, "bgColor").text = "00ffffff"
+        SubElement(liststyle, "maxSnippetLines").text = "5"
+        
+        # add one marker per event
+        interesting_keys = ['resource_name', 'localisation_method', 'account',
+                            'user', 'public', 'datetime', 'longitude',
+                            'latitude', 'depth', 'magnitude']
+        for event_dict in events:
+            placemark = SubElement(folder, "Placemark")
+            date = str(event_dict['datetime']).split(" ")[0]
+            mag = str(event_dict['magnitude'])
+            
+            # scale marker size to magnitude if this information is present
+            if mag:
+                mag = float(mag)
+                label = "%s: %.1f" % (date, mag)
+                icon_size = 1.2 * log(1.5 + mag)
+            else:
+                label = date
+                icon_size = 0.5
+            SubElement(placemark, "name").text = label
+            SubElement(placemark, "styleUrl").text = "#earthquake"
+            style = SubElement(placemark, "Style")
+            icon_style = SubElement(style, "IconStyle")
+            liststyle = SubElement(style, "ListStyle")
+            SubElement(liststyle, "maxSnippetLines").text = "5"
+            SubElement(icon_style, "scale").text = str(icon_size)
+            point = SubElement(placemark, "Point")
+            SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+                    (event_dict['longitude'], event_dict['latitude'])
+            
+            # detailed information on the event for the description
+            descrip_str = ""
+            for key in interesting_keys:
+                if not key in event_dict:
+                    continue
+                descrip_str += "\n%s: %s" % (key, event_dict[key])
+            SubElement(placemark, "description").text = descrip_str
+        
+        # generate and return kml string
+        return tostring(kml, pretty_print=True, xml_declaration=True)
 
 
 if __name__ == '__main__':
