@@ -25,32 +25,33 @@ import scipy.signal
 import util
 
 
-def cosTaper(npts, p):
+def cosTaper(npts, p=0.1):
     """
     Cosine Taper.
 
-    >>> tap = cosTaper(100,1.0)
+    >>> tap = cosTaper(100, 1.0)
     >>> tap2 = 0.5*(1+np.cos(np.linspace(np.pi,2*np.pi,50)))
     >>> (tap[0:50]==tap2).all()
     True
     >>> npts = 100
-    >>> p = .1
-    >>> tap3 = cosTaper(npts,p)
+    >>> p = 0.1
+    >>> tap3 = cosTaper(npts, p)
     >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
     True
 
     :type npts: Int
     :param npts: Number of points of cosine taper.
     :type p: Float
-    :param p: Percent of cosine taper.
+    :param p: Percent of cosine taper. Default is 10% which tapers 5% from
+              the beginning and 5% form the end
     :rtype: float numpy ndarray
     :return: Cosine taper array/vector of length npts.
     """
-    #
     if p == 0.0 or p == 1.0:
         frac = int(npts * p / 2.0)
     else:
         frac = int(npts * p / 2.0) + 1
+    # return concatenated beginning, middle and end
     return np.concatenate((
         0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, frac))),
         np.ones(npts - 2 * frac),
