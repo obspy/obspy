@@ -2502,6 +2502,9 @@ class PickingGUI:
             # RJOB P 2009 12 27 10 52 59.425 -0.004950 298.199524 136.000275
             # station phase YYYY MM DD hh mm ss.sss (picked time!) residual
             # (add this to get synthetic time) azimuth? incidenceangle?
+            # XXX maybe we should avoid reading this absolute time and rather
+            # use our dict['P'] or dict['S'] time and simple subtract the
+            # residual to simplify things!?
             phase = phase.split()
             phStat = phase[0]
             phType = phase[1]
@@ -2509,7 +2512,8 @@ class PickingGUI:
                                     int(phase[4]), int(phase[5]),
                                     int(phase[6]), float(phase[7]))
             phResid = float(phase[8])
-            phUTCTime += phResid
+            # residual is defined as P-Psynth by NLLOC and 3dloc!
+            phUTCTime = phUTCTime - phResid
             for i, dict in enumerate(self.dicts):
                 st = self.streams[i]
                 # check for matching station names
@@ -3066,7 +3070,9 @@ class PickingGUI:
             dict = self.dicts[streamnum]
             if type == "P":
                 dO['used P Count'] += 1
-                dict['Psynth'] = res + dict['P']
+                #dict['Psynth'] = res + dict['P']
+                # residual is defined as P-Psynth by NLLOC and 3dloc!
+                dict['Psynth'] = dict['P'] - res
                 dict['Pres'] = res
                 dict['PAzim'] = azimuth
                 dict['PInci'] = incident
@@ -3078,7 +3084,8 @@ class PickingGUI:
                 dict['PsynthWeight'] = weight
             elif type == "S":
                 dO['used S Count'] += 1
-                dict['Ssynth'] = res + dict['S']
+                # residual is defined as S-Ssynth by NLLOC and 3dloc!
+                dict['Ssynth'] = dict['S'] - res
                 dict['Sres'] = res
                 dict['SAzim'] = azimuth
                 dict['SInci'] = incident
@@ -3233,7 +3240,9 @@ class PickingGUI:
             dict = self.dicts[streamnum]
             if type == "P":
                 dO['used P Count'] += 1
-                dict['Psynth'] = res + dict['P']
+                # residual is defined as P-Psynth by NLLOC and 3dloc!
+                # XXX does this also hold for hyp2000???
+                dict['Psynth'] = dict['P'] - res
                 dict['Pres'] = res
                 dict['PAzim'] = azimuth
                 dict['PInci'] = incident
@@ -3245,7 +3254,9 @@ class PickingGUI:
                 dict['PsynthWeight'] = weight
             elif type == "S":
                 dO['used S Count'] += 1
-                dict['Ssynth'] = res + dict['S']
+                # residual is defined as S-Ssynth by NLLOC and 3dloc!
+                # XXX does this also hold for hyp2000???
+                dict['Ssynth'] = dict['S'] - res
                 dict['Sres'] = res
                 dict['SAzim'] = azimuth
                 dict['SInci'] = incident
@@ -4438,7 +4449,9 @@ class PickingGUI:
                 if weight:
                     dict['PWeight'] = int(weight)
                 if phase_res:
-                    dict['Psynth'] = time + float(phase_res)
+                    # residual is defined as P-Psynth by NLLOC and 3dloc!
+                    # XXX does this also hold for hyp2000???
+                    dict['Psynth'] = time - float(phase_res)
                     dict['Pres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
@@ -4465,7 +4478,9 @@ class PickingGUI:
                 if weight:
                     dict['SWeight'] = int(weight)
                 if phase_res:
-                    dict['Ssynth'] = time + float(phase_res)
+                    # residual is defined as S-Ssynth by NLLOC and 3dloc!
+                    # XXX does this also hold for hyp2000???
+                    dict['Ssynth'] = time - float(phase_res)
                     dict['Sres'] = float(phase_res)
                 # hypo2000 uses this weight internally during the inversion
                 # this is not the same as the weight assigned during picking
