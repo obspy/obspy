@@ -470,7 +470,7 @@ class UTCDateTime(datetime.datetime):
                 return UTCDateTime(dt)
             elif isinstance(arg, float):
                 sec = int(arg)
-                msec = int((arg % 1) * 1000000)
+                msec = int(round((arg - sec) * 1000000))
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__sub__(self, td)
                 return UTCDateTime(dt)

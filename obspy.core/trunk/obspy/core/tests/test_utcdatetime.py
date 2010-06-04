@@ -319,6 +319,16 @@ class UTCDateTimeTestCase(unittest.TestCase):
                           datetime.datetime(1970, 1, 1, 12, 23, 34, 456789))
         self.assertAlmostEquals(dt.timestamp, 44614.456789)
 
+    def test_toPythonDateTimeObjects(self):
+        """
+        Tests subtraction of floats from UTCDateTime
+        """
+        time = UTCDateTime(2010, 05, 31, 19, 54, 24.490)
+        res = -0.045149
+
+        result1 = time + (-res)
+        result2 = time - res
+        self.assertAlmostEquals(result1 - result2, 0.0)
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
