@@ -6,48 +6,10 @@
 #    Email: yannik.behr@vuw.ac.nz
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
-#---------------------------------------------------------------------
+#--------------------------------------------------------------------
+
 """
 An object-oriented version of C. J. Ammon's SAC I/O module.
-Here is C. J. Ammon's his introductory comment:
-
-Version 2.0.3, by C.J. Ammon, Penn State
-This software is free and is distributed with no guarantees.
-For a more complete description, start Python and enter,
-Suspected limitations: I don't used XY files much - I am
-not sure that those access routines are bug free.
-
-Send bug reports (not enhancement/feature requests) to:
-cja12@psu.edu [with PySAC in the subject field]
-I don't support this software so don't wait for an answer.
-I may not have time...
-
-The ReadSac class provides the following functions:
-
-Reading::
-
-    ReadSacFile       - read binary SAC file
-    ReadSacXY         - read XY SAC file
-    ReadSacHeader     - read SAC header
-    GetHvalue         - extract information from header
-
-Writing::
-
-    WriteSacHeader    - write SAC header
-    WriteSacBinary    - write binary SAC file
-    WriteSacXY        - write ASCII SAC file
-    SetHvalue         - set SAC header variable
-
-Convenience::
-
-    IsSACfile         - test if valid binary SAC file
-    IsXYSACfile       - test if valid XY SAC file
-    ListStdValues     - print common header values
-    GetHvalueFromFile - access to specific header item in specified file
-    SetHvalueInFile   - change specific header item in specified file
-    IsValidSacFile    - test for valid binary SAC file (wraps 'IsSACfile')
-    swap_byte_order   - swap byte order of SAC-file in memory.
-
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
@@ -60,10 +22,17 @@ import copy
 
 
 class SacError(Exception):
+    """
+    Raised if the SAC file is corrupt or if necessary information
+    in the SAC file is missing.
+    """
     pass
 
 
 class SacIOError(Exception):
+    """
+    Raised if the given SAC file can't be read.
+    """
     pass
 
 
@@ -71,7 +40,275 @@ class ReadSac(object):
     """
     Class for SAC file IO
 
-    Initialize with: t=ReadSac()
+    header values
+    +------------+---+-----------------------------------------------------------+
+    |npts        |N  |Number of points per data component. [required]            |
+    +------------+---+-----------------------------------------------------------+
+    |nvhdr       |N  |Header version number. Current value is the integer 6.     |
+    |	     |   |Older version data (NVHDR < 6) are automatically updated   |
+    |            |   |when read into sac. [required]                             |
+    +------------+---+-----------------------------------------------------------+
+    |b           |F  |Beginning value of the independent variable. [required]    |
+    +------------+---+-----------------------------------------------------------+
+    |e           |F  |Ending value of the independent variable. [required]       |
+    +------------+---+-----------------------------------------------------------+
+    |iftype      |I  |Type of file [required]:                                   | 
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= ITIME {Time series file}                                 | 
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IRLIM {Spectral file---real and imaginary}               | 
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IAMPH {Spectral file---amplitude and phase}              | 
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IXY {General x versus y data}                            | 
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IXYZ {General XYZ (3-D) file}                            | 
+    +------------+---+-----------------------------------------------------------+
+    |leven       |L  |TRUE if data is evenly spaced. [required]                  | 
+    +------------+---+-----------------------------------------------------------+
+    |delta       |F  |Increment between evenly spaced samples (nominal value).   |
+    |            |   |[required]                                                 | 
+    +------------+---+-----------------------------------------------------------+
+    |odelta      |F  |Observed increment if different from nominal value.        |
+    +------------+---+-----------------------------------------------------------+
+    |idep        |I  |Type of dependent variable:                                |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUNKN (Unknown)                                          |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IDISP (Displacement in nm)                               |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IVEL (Velocity in nm/sec)                                |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IVOLTS (Velocity in volts)                               |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IACC (Acceleration in nm/sec/sec)                        |
+    +------------+---+-----------------------------------------------------------+
+    |scale       |F  |Multiplying scale factor for dependent variable            |
+    |            |   |[not currently used]                                       |
+    +------------+---+-----------------------------------------------------------+
+    |depmin      |F  |Minimum value of dependent variable.                       |
+    +------------+---+-----------------------------------------------------------+
+    |depmax      |F  |Maximum value of dependent variable.                       |
+    +------------+---+-----------------------------------------------------------+
+    |depmen      |F  |Mean value of dependent variable.                          |
+    +------------+---+-----------------------------------------------------------+
+    |nzyear      |N  |GMT year corresponding to reference (zero) time in file.   |
+    +------------+---+-----------------------------------------------------------+
+    |nyjday      |N  |GMT julian day.                                            |
+    +------------+---+-----------------------------------------------------------+
+    |nyhour      |N  |GMT hour.                                                  |
+    +------------+---+-----------------------------------------------------------+
+    |nzmin       |N  |GMT minute.                                                |
+    +------------+---+-----------------------------------------------------------+
+    |nzsec       |N  |GMT second.                                                |
+    +------------+---+-----------------------------------------------------------+
+    |nzmsec      |N  |GMT millisecond.                                           |
+    +------------+---+-----------------------------------------------------------+
+    |iztype      |I  |Reference time equivalence:                                |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUNKN (Unknown)                                          |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IB (Begin time)                                          |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IDAY (Midnight of refernece GMT day)                     |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IO (Event origin time)                                   |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IA (First arrival time)                                  |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= ITn (User defined n=0 time 9) pick n                     |
+    +------------+---+-----------------------------------------------------------+
+    |o           |F  |Event origin time (seconds relative to reference time.)    |
+    +------------+---+-----------------------------------------------------------+
+    |a           |F  |First arrival time (seconds relative to reference time.)   |
+    +------------+---+-----------------------------------------------------------+
+    |ka          |K  |First arrival time identification.                         |
+    +------------+---+-----------------------------------------------------------+
+    |f           |F  |Fini or end of event time (seconds relative to reference   |
+    |            |   |time.)                                                     |
+    +------------+---+-----------------------------------------------------------+
+    |tn          |F  |User defined time {\ai n}=0,9 (seconds picks or markers    |
+    |            |   |relative to reference time).                               |
+    +------------+---+-----------------------------------------------------------+
+    |kt{\ai n}   |K  |A User defined time {\ai n}=0,9.  pick identifications     |
+    +------------+---+-----------------------------------------------------------+
+    |kinst       |K  |Generic name of recording instrument                       |
+    +------------+---+-----------------------------------------------------------+
+    |iinst       |I  |Type of recording instrument. [currently not used]         |
+    +------------+---+-----------------------------------------------------------+
+    |knetwk      |K  |Name of seismic network.                                   |
+    +------------+---+-----------------------------------------------------------+
+    |kstnm       |K  |Station name.                                              |
+    +------------+---+-----------------------------------------------------------+
+    |istreg      |I  |Station geographic region. [not currently used]            |
+    +------------+---+-----------------------------------------------------------+
+    |stla        |F  |Station latitude (degrees, north positive)                 |
+    +------------+---+-----------------------------------------------------------+
+    |stlo        |F  |Station longitude (degrees, east positive).                |
+    +------------+---+-----------------------------------------------------------+
+    |stel        |F  |Station elevation (meters). [not currently used]           |
+    +------------+---+-----------------------------------------------------------+
+    |stdp        |F  |Station depth below surface (meters). [not currently used] |
+    +------------+---+-----------------------------------------------------------+
+    |cmpaz       |F  |Component azimuth (degrees, clockwise from north).         |
+    +------------+---+-----------------------------------------------------------+
+    |cmpinc      |F  |Component incident angle (degrees, from vertical).         |
+    +------------+---+-----------------------------------------------------------+
+    |kcmpnm      |K  |Component name.                                            |
+    +------------+---+-----------------------------------------------------------+
+    |lpspol      |L  |TRUE if station components have a positive polarity        |
+    |            |   |(left-hand rule).                                          |
+    +------------+---+-----------------------------------------------------------+
+    |kevnm       |K  |Event name.                                                |
+    +------------+---+-----------------------------------------------------------+
+    |ievreg      |I  |Event geographic region. [not currently used]              |
+    +------------+---+-----------------------------------------------------------+
+    |evla        |F  |Event latitude (degrees north positive).                   |
+    +------------+---+-----------------------------------------------------------+
+    |evlo        |F  |Event longitude (degrees east positive).                   |
+    +------------+---+-----------------------------------------------------------+
+    |evel        |F  |Event elevation (meters). [not currently used]             |
+    +------------+---+-----------------------------------------------------------+
+    |evdp        |F  |Event depth below surface (meters). [not currently used]   |
+    +------------+---+-----------------------------------------------------------+
+    |mag         |F  |Event magnitude.                                           |
+    +------------+---+-----------------------------------------------------------+
+    |imagtyp     |I  |Magnitude type:                                            |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IMB (Bodywave Magnitude)                                 |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IMS (Surfacewave Magnitude)                              |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IML (Local Magnitude)                                    |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IMW (Moment Magnitude)                                   |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IMD (Duration Magnitude)                                 |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IMX (User Defined Magnitude)                             |
+    +------------+---+-----------------------------------------------------------+
+    |imagsrc     |I  |Source of magnitude information:                           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= INEIC (National Earthquake Information Center)           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IPDE (Preliminary Determination of Epicenter)            |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IISC (Internation Seismological Centre)                  |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IREB (Reviewed Event Bulletin)                           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUSGS (US Geological Survey)                             |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IBRK (UC Berkeley)                                       |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= ICALTECH (California Institute of Technology)            |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= ILLNL (Lawrence Livermore National Laboratory)           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IEVLOC (Event Location (computer program) )              |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IJSOP (Joint Seismic Observation Program)                |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUSER (The individual using SAC2000)                     |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUNKNOWN (unknown)                                       |
+    +------------+---+-----------------------------------------------------------+
+    |ievtyp      |I  |Type of event:                                             |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IUNKN (Unknown)                                          |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= INUCL (Nuclear event)                                    |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IPREN (Nuclear pre-shot event)                           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IPOSTN (Nuclear post-shot event)                         |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IQUAKE (Earthquake)                                      |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IPREQ (Foreshock)                                        |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IPOSTQ (Aftershock)                                      |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= ICHEM (Chemical explosion)                               |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IQB (Quarry or mine blast confirmed by quarry)           |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IQB1 (Quarry/mine blast with designed shot info-ripple   |
+    |            |   |fired)                                                     |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IQB2 (Quarry/mine blast with observed shot info-ripple   |
+    |            |   |fired)                                                     |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IQMT (Quarry/mining-induced events:                      |
+    |            |   |        tremors and rockbursts)                            |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IEQ (Earthquake)                                         |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IEQ1 (Earthquakes in a swarm or aftershock sequence)     |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IEQ2 (Felt earthquake)                                   |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IME (Marine explosion)                                   |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IEX (Other explosion)                                    |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= INU (Nuclear explosion)                                  |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= INC (Nuclear cavity collapse)                            |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IO_ (Other source of known origin)                       |
+    +------------+---+-----------------------------------------------------------+
+    |            |   |= IR (Regional event of unknown origin)                    | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IT (Teleseismic event of unknown origin)                 | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IU (Undetermined or conflicting information)             | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IOTHER (Other)                                           | 
+    +------------+---+-----------------------------------------------------------+ 
+    |nevid       |N  |Event ID (CSS 3.0)                                         | 
+    +------------+---+-----------------------------------------------------------+ 
+    |norid       |N  |Origin ID (CSS 3.0)                                        | 
+    +------------+---+-----------------------------------------------------------+ 
+    |nwfid       |N  |Waveform ID (CSS 3.0)                                      | 
+    +------------+---+-----------------------------------------------------------+ 
+    |khole       |k  |Hole identification if nuclear event.                      | 
+    +------------+---+-----------------------------------------------------------+ 
+    |dist        |F  |Station to event distance (km).                            | 
+    +------------+---+-----------------------------------------------------------+ 
+    |az          |F  |Event to station azimuth (degrees).                        | 
+    +------------+---+-----------------------------------------------------------+ 
+    |baz         |F  |Station to event azimuth (degrees).                        | 
+    +------------+---+-----------------------------------------------------------+ 
+    |gcarc       |F  |Station to event great circle arc length (degrees).        | 
+    +------------+---+-----------------------------------------------------------+ 
+    |lcalda      |L  |TRUE if DIST AZ BAZ and GCARC are to be calculated from st | 
+    |            |   |event coordinates.                                         | 
+    +------------+---+-----------------------------------------------------------+ 
+    |iqual       |I  |Quality of data [not currently used]:                      | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IGOOD (Good data)                                        | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IGLCH (Glitches)                                         | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IDROP (Dropouts)                                         | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= ILOWSN (Low signal to noise ratio)                       | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IOTHER (Other)                                           | 
+    +------------+---+-----------------------------------------------------------+ 
+    |isynth      |I  |Synthetic data flag [not currently used]:                  | 
+    +------------+---+-----------------------------------------------------------+ 
+    |            |   |= IRLDTA (Real data)                                       | 
+    +------------+---+-----------------------------------------------------------+  
+    |            |   |= ????? (Flags for various synthetic seismogram codes)     |  
+    +------------+---+-----------------------------------------------------------+ 
+    |user{\ai n} |F  |User defined variable storage area {\ai n}=0,9.            |
+    +------------+---+-----------------------------------------------------------+
+    |kuser{\ai n}|K  |User defined variable storage area {\ai n}=0,2.            |
+    +------------+---+-----------------------------------------------------------+
+    |lovrok      |L  |TRUE if it is okay to overwrite this file on disk.         |
+    +------------+---+-----------------------------------------------------------+
     """
 
     def __init__(self, filen=False, headonly=False, alpha=False):
@@ -126,6 +363,8 @@ class ReadSac(object):
         function is useful for writing SAC files from artificial data,
         thus the header arrays are not filled by a read method
         beforehand
+
+        :return: Nothing
         """
         # The SAC header has 70 floats, then 40 integers, then 192 bytes
         # in strings. Store them in array (an convert the char to a
@@ -188,9 +427,24 @@ class ReadSac(object):
 
     def GetHvalue(self, item):
         """
-        Get a header value using the header arrays: GetHvalue('npts')
+        Read SAC-header variable.
+        
+        :param item: header variable name (e.g. 'npts' or 'delta')
 
-        Return value is 1 if no problems occurred, zero otherwise.
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac('test.sac')
+        >>> tr.GetHvalue('npts')
+        100
+
+        This is equivalent to:
+        >>> ReadSac().GetHvalueFromFile('test.sac','npts')
+        100
+
+        Or:
+        >>> tr = ReadSac('test.sac')
+        >>> tr.npts
+        100
+
         """
         key = item.lower() # convert the item to lower case
 
@@ -221,12 +475,20 @@ class ReadSac(object):
 
     def SetHvalue(self, item, value):
         """
-        Set a header value using the header arrays: ``SetHvalue('npts', 2048)``
+        Assign new value to SAC-header variable.
 
-        >>> t = ReadSac()
-        >>> t.SetHvalue('kstnm', 'spiff')
-        >>> t.GetHvalue('kstnm')
-        'spiff   '
+        :param item: SAC-header variable name
+        :param value: numeric or string value to be assigned to header-variable.
+
+        >>> from obspy.sac import *
+        >>> tr = ReadSac('test.sac')
+        >>> tr.GetHvalue('kstnm')
+        'STA     '
+        >>> tr.SetHvalue('kstnm','STA_NEW')
+        >>> tr.GetHvalue('kstnm')
+        'STA_NEW '
+
+
         """
         key = item.lower() # convert the item to lower case
         #
@@ -253,9 +515,10 @@ class ReadSac(object):
 
     def IsSACfile(self, name, fsize=True, lenchk=False):
         """
-        Test for a valid SAC file using arrays: IsSACfile(path)
+        Test for a valid SAC file using arrays.
 
-        Return value is a one if valid, zero if not.
+        :param f: filename (Sac binary).
+        
         """
         npts = self.GetHvalue('npts')
         if lenchk:
@@ -279,16 +542,17 @@ class ReadSac(object):
 
     def ReadSacHeader(self, fname):
         """
-        Read a header value into the header arrays
+        Reads only the header portion of a binary SAC-file.
 
-        The header is split into three arrays - floats, integers, and strings
+        :param f: filename (SAC binary).
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> t = ReadSac()
-        >>> t.ReadSacHeader(file)
-        >>> t.GetHvalue('npts')
-        100
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac()
+        >>> tr.ReadSacHeader('test.sac')
+
+        This is equivalent to:
+        >>> tr = ReadSac('test.sac',headonly=True) 
+
         """
         #### check if file exists
         try:
@@ -341,23 +605,19 @@ class ReadSac(object):
 
     def WriteSacHeader(self, fname):
         """
-        Write a header value to the disk ``ok = WriteSacHeader(thePath)``
+        Writes an updated header to an
+        existing binary SAC-file.
 
-        The header is split into three arrays - floats, ints, and strings
-        The "ok" value is one if no problems occurred, zero otherwise.
+        :param f: filename (SAC binary).
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> t = ReadSac(file)
-        >>> t.WriteSacBinary(tmpfile)
-        >>> u = ReadSac()
-        >>> u.ReadSacHeader(tmpfile)
-        >>> u.SetHvalue('kstnm', 'spoff   ')
-        >>> u.WriteSacHeader(tmpfile)
-        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
-        'spoff   '
-        >>> os.remove(tmpfile)
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac('test.sac')
+        >>> tr.WriteSacBinary('test2.sac')
+        >>> u = ReadSac('test2.sac')
+        >>> u.SetHvalue('kevnm','hullahulla')
+        >>> u.WriteSacHeader('test2.sac')
+        >>> u.GetHvalueFromFile('test2.sac',"kevnm")
+        'hullahulla      '
         """
         #--------------------------------------------------------------
         # open the file
@@ -385,12 +645,16 @@ class ReadSac(object):
         The header is split into three arrays - floats, ints, and strings and
         the data points are returned in the array seis
 
-        >>> t=ReadSac()
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> t.ReadSacFile(file)
-        >>> t.GetHvalue('npts')
-        100
+        
+        :param f: filename (SAC binary)
+
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac()
+        >>> tr.ReadSacFile('test.sac')
+
+        This is equivalent to: 
+        >>> tr = ReadSac('test.sac') 
+
         """
         try:
             #### open the file
@@ -457,16 +721,18 @@ class ReadSac(object):
         """
         Read SAC XY files (ascii)
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'testxy.sac')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> t = ReadSac(file, alpha=True)
-        >>> t.GetHvalue('npts')
+        :param f: filename (SAC ascii).
+
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac()
+        >>> tr.ReadSacXY('testxy.sac')
+        >>> tr.GetHvalue('npts')
         100
-        >>> t.WriteSacBinary(tmpfile)
-        >>> os.path.exists(tmpfile)
-        True
-        >>> os.remove(tmpfile)
+
+        This is equivalent to:
+        >>> tr = ReadSac('testxy.sac',alpha=True) 
+
+        Reading only the header portion of alphanumeric SAC-files is currently not supported.
         """
         ###### open the file
         try:
@@ -521,18 +787,15 @@ class ReadSac(object):
         """
         Write SAC XY file (ascii)
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tmpfile1 = NamedTemporaryFile().name
-        >>> tmpfile2 = NamedTemporaryFile().name
-        >>> t = ReadSac(file)
-        >>> t.WriteSacXY(tmpfile1)
-        >>> d = ReadSac(tmpfile1, alpha=True)
-        >>> d.WriteSacBinary(tmpfile2)
-        >>> os.stat(tmpfile2)[6] == os.stat(file)[6]
+        :param f: filename (SAC ascii)
+
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac('test.sac')
+        >>> tr.WriteSacXY('test2.sac')
+        >>> tr.IsValidXYSacFile('test2.sac')
         True
-        >>> os.remove(tmpfile1)
-        >>> os.remove(tmpfile2)
+
+
         """
         try:
             f = open(ofname, 'w')
@@ -561,16 +824,15 @@ class ReadSac(object):
 
     def WriteSacBinary(self, ofname):
         """
-        Write a SAC file using the head arrays and array seis.
+        Write a SAC binary file using the head arrays and array seis.
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> t=ReadSac(file)
-        >>> t.WriteSacBinary(tmpfile)
-        >>> os.stat(tmpfile)[6] == os.stat(file)[6]
+        :param f: filename (SAC binary).
+
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac('test.sac')
+        >>> tr.WriteSacBinary('test2.sac')
+        >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6]
         True
-        >>> os.remove(tmpfile)
         """
         try:
             f = open(ofname, 'wb+')
@@ -612,7 +874,29 @@ class ReadSac(object):
     def ListStdValues(self): # h is a header list, s is a float list
         """
         Convenience function for printing common header values.
-        ListStdValues()
+
+        :param: None
+        :return: None
+
+        >>> from obspy.sac import ReadSac
+        >>> t = ReadSac('test.sac')
+        >>> t.ListStdValues()
+        <BLANKLINE>
+        Reference Time = 07/18/1978 (199) 8:0:0.0
+        Npts  =  100
+        Delta =  1
+        Begin =  10
+        End   =  109
+        Min   =  -1
+        Mean  =  8.7539462e-08
+        Max   =  1
+        Header Version =  6
+        Station =  STA     
+        Channel =  Q       
+        Event       =  FUNCGEN: SINE   
+
+        If no header values are defined (i.e. all are equal 12345) than this function
+        won't do anything.
         """
         #
         # Seismogram Info:
@@ -665,19 +949,19 @@ class ReadSac(object):
 
     def GetHvalueFromFile(self, thePath, theItem):
         """
-        Quick access to a specific header item in a specified file.
-        ``GetHvalueFromFile(thePath,theItem)``
+        Quick access to a specific header item in specified file.
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> t = ReadSac(file)
-        >>> t.WriteSacBinary(tmpfile)
-        >>> u = ReadSac()
-        >>> u.SetHvalueInFile(tmpfile, 'kstnm', 'heinz   ')
-        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
-        'heinz   '
-        >>> os.remove(tmpfile)
+        :param f: filename (SAC binary)
+        :type hn: string
+        :param hn: header variable name
+
+        >>> from obspy.sac import ReadSac
+        >>> t = ReadSac()
+        >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip()
+        'Q'
+
+        String header values have a fixed length of 8 or 16 characters. This can lead to errors
+        for example if you concatenate strings and forget to strip off the trailing whitespace.
         """
         #
         #  Read in the Header
@@ -689,18 +973,21 @@ class ReadSac(object):
     def SetHvalueInFile(self, thePath, theItem, theValue):
         """
         Quick access to change a specific header item in a specified file.
-        ``SetHvalueFromFile(thePath,theItem, theValue)``
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> t = ReadSac(file)
-        >>> t.WriteSacBinary(tmpfile)
-        >>> u = ReadSac()
-        >>> u.SetHvalueInFile(tmpfile, 'kstnm', 'heinz   ')
-        >>> u.GetHvalueFromFile(tmpfile, 'kstnm')
-        'heinz   '
-        >>> os.remove(tmpfile)
+        :param f: filename (SAC binary)
+        :type hn: string
+        :param hn: header variable name
+        :type hv: string, float or integer
+        :param hv: header variable value (numeric or string value to be assigned to hn)
+        :return: None
+
+        >>> from obspy.sac import ReadSac
+        >>> t = ReadSac()
+        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+        'STA'
+        >>> t.SetHvalueInFile('test.sac','kstnm','blub')
+        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+        'blub'
         """
         #
         #  Read in the Header
@@ -712,8 +999,17 @@ class ReadSac(object):
 
     def IsValidSacFile(self, thePath):
         """
-        Quick test for a valid SAC binary file file.
-        ``IsValidSACFile(thePath)``
+        Quick test for a valid SAC binary file (wraps 'IsSACfile').
+
+        :param f: filename (SAC binary)
+        :rtype: boolean (True or False)
+        
+        >>> from obspy.sac import ReadSac
+        >>> ReadSac().IsValidSacFile('test.sac')
+        True
+        >>> ReadSac().IsValidSacFile('testxy.sac')
+        False
+
         """
         #
         #  Read in the Header
@@ -729,8 +1025,17 @@ class ReadSac(object):
 
     def IsValidXYSacFile(self, thePath):
         """
-        Quick test for a valid SAC binary file file.
-        ``IsValidSACFile(thePath)``
+        Quick test for a valid SAC ascii file.
+
+        :param file: filename (SAC ascii)
+        :rtype: boolean (True or False)
+        
+        >>> from obspy.sac import ReadSac
+        >>> ReadSac().IsValidXYSacFile('testxy.sac')
+        True
+        >>> ReadSac().IsValidXYSacFile('test.sac')
+        False
+
         """
         #
         #  Read in the Header
@@ -750,9 +1055,7 @@ class ReadSac(object):
         """
         If date header values are set calculate date in julian seconds
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> t = ReadSac(file)
+        >>> t = ReadSac('test.sac')
         >>> t.starttime.timestamp
         269596800.0
         >>> t.endtime.timestamp - t.starttime.timestamp
@@ -793,13 +1096,11 @@ class ReadSac(object):
         """
         calculate distance from station and event coordinates
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> t = ReadSac(file)
-        >>> t.SetHvalue('evla', 48.15)
-        >>> t.SetHvalue('evlo', 11.58333)
-        >>> t.SetHvalue('stla', -41.2869)
-        >>> t.SetHvalue('stlo', 174.7746)
+        >>> t = ReadSac('test.sac')
+        >>> t.SetHvalue('evla',48.15)
+        >>> t.SetHvalue('evlo',11.58333)
+        >>> t.SetHvalue('stla',-41.2869)
+        >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist_()
         >>> print round(t.GetHvalue('dist'), 2)
         18486.53
@@ -838,20 +1139,16 @@ class ReadSac(object):
 
     def swap_byte_order(self):
         """
-        Swap byte order of SAC-file in memory:
+        Swap byte order of SAC-file in memory.
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> fileswap = os.path.join(os.path.dirname(__file__), 'tests',
-        ...                         'data', 'test.sac.swap')
-        >>> tmpfile = NamedTemporaryFile().name
-        >>> x = ReadSac(fileswap)
-        >>> x.swap_byte_order()
-        >>> x.WriteSacBinary(tmpfile)
-        >>> tr1 = ReadSac(tmpfile)
-        >>> tr2 = ReadSac(file)
-        >>> np.testing.assert_array_equal(tr1.seis, tr2.seis)
-        >>> os.remove(tmpfile)
+        Currently seems to work only for conversion from big-endian to little-endian.
+
+        :param: None
+        :return: None
+        
+        >>> from obspy.sac import ReadSac
+        >>> t = ReadSac('test.sac')
+        >>> t.swap_byte_order()
         """
         if self.byteorder == 'big':
             bs = 'L'
@@ -870,9 +1167,7 @@ class ReadSac(object):
 
         :param hname: header variable name
 
-        >>> file = os.path.join(os.path.dirname(__file__), 'tests', 'data',
-        ...                     'test.sac')
-        >>> tr = ReadSac(file)
+        >>> tr = ReadSac('test.sac')
         >>> tr.npts == tr.GetHvalue('npts')
         True
         """
@@ -881,4 +1176,16 @@ class ReadSac(object):
 
 if __name__ == "__main__":
     import doctest
+    import shutil
+    fn1 = os.path.join(os.path.dirname(__file__), 'tests', 'data','test.sac')
+    fn2 = os.path.join(os.path.dirname(__file__), 'tests', 'data','testxy.sac')
+    shutil.copy(fn1,os.curdir)
+    shutil.copy(fn2,os.curdir)
     doctest.testmod()
+    if os.path.isfile('./test2.sac'):
+        os.remove('./test2.sac')
+    if os.path.isfile('./test.sac'):
+        os.remove('./test.sac')
+    if os.path.isfile('./testxy.sac'):
+        os.remove('./testxy.sac')
+
