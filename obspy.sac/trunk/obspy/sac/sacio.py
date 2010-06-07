@@ -38,12 +38,14 @@ class SacIOError(Exception):
 
 class ReadSac(object):
     """
-    Class for SAC file IO. Functions are given below, header fields (not
-    included in function list) can be directly accessed via the
-    :meth:`~obspy.sac.sacio.ReadSac.__getattr__` method (see the link for
+    Class for SAC file IO.
+
+    Functions are given below, attributes/header
+    fields (described below) can be directly accessed (via the
+    :meth:`~obspy.sac.sacio.ReadSac.__getattr__` method, see the link for
     an example).
 
-    Description of header fields (based on SacIris_).
+    Description of attributes/header fields (based on SacIris_).
 
     .. _SacIris: http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
 
