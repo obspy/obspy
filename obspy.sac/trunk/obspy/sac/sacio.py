@@ -52,7 +52,7 @@ class ReadSac(object):
     ============ === ==========================================================
     npts         N   Number of points per data component. [required]
     nvhdr        N   Header version number. Current value is the integer 6.
-    	             Older version data (NVHDR < 6) are automatically updated
+                     Older version data (NVHDR < 6) are automatically updated
                      when read into sac. [required]
     b            F   Beginning value of the independent variable. [required]
     e            F   Ending value of the independent variable. [required]
