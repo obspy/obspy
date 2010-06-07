@@ -38,277 +38,158 @@ class SacIOError(Exception):
 
 class ReadSac(object):
     """
-    Class for SAC file IO
+    Class for SAC file IO. Functions are given below, header fields (not
+    included in function list) can be directly accessed via the
+    :meth:`~obspy.sac.sacio.ReadSac.__getattr__` method (see the link for
+    an example).
 
-    header values
-    +------------+---+-----------------------------------------------------------+
-    |npts        |N  |Number of points per data component. [required]            |
-    +------------+---+-----------------------------------------------------------+
-    |nvhdr       |N  |Header version number. Current value is the integer 6.     |
-    |	     |   |Older version data (NVHDR < 6) are automatically updated   |
-    |            |   |when read into sac. [required]                             |
-    +------------+---+-----------------------------------------------------------+
-    |b           |F  |Beginning value of the independent variable. [required]    |
-    +------------+---+-----------------------------------------------------------+
-    |e           |F  |Ending value of the independent variable. [required]       |
-    +------------+---+-----------------------------------------------------------+
-    |iftype      |I  |Type of file [required]:                                   | 
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= ITIME {Time series file}                                 | 
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IRLIM {Spectral file---real and imaginary}               | 
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IAMPH {Spectral file---amplitude and phase}              | 
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IXY {General x versus y data}                            | 
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IXYZ {General XYZ (3-D) file}                            | 
-    +------------+---+-----------------------------------------------------------+
-    |leven       |L  |TRUE if data is evenly spaced. [required]                  | 
-    +------------+---+-----------------------------------------------------------+
-    |delta       |F  |Increment between evenly spaced samples (nominal value).   |
-    |            |   |[required]                                                 | 
-    +------------+---+-----------------------------------------------------------+
-    |odelta      |F  |Observed increment if different from nominal value.        |
-    +------------+---+-----------------------------------------------------------+
-    |idep        |I  |Type of dependent variable:                                |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUNKN (Unknown)                                          |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IDISP (Displacement in nm)                               |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IVEL (Velocity in nm/sec)                                |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IVOLTS (Velocity in volts)                               |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IACC (Acceleration in nm/sec/sec)                        |
-    +------------+---+-----------------------------------------------------------+
-    |scale       |F  |Multiplying scale factor for dependent variable            |
-    |            |   |[not currently used]                                       |
-    +------------+---+-----------------------------------------------------------+
-    |depmin      |F  |Minimum value of dependent variable.                       |
-    +------------+---+-----------------------------------------------------------+
-    |depmax      |F  |Maximum value of dependent variable.                       |
-    +------------+---+-----------------------------------------------------------+
-    |depmen      |F  |Mean value of dependent variable.                          |
-    +------------+---+-----------------------------------------------------------+
-    |nzyear      |N  |GMT year corresponding to reference (zero) time in file.   |
-    +------------+---+-----------------------------------------------------------+
-    |nyjday      |N  |GMT julian day.                                            |
-    +------------+---+-----------------------------------------------------------+
-    |nyhour      |N  |GMT hour.                                                  |
-    +------------+---+-----------------------------------------------------------+
-    |nzmin       |N  |GMT minute.                                                |
-    +------------+---+-----------------------------------------------------------+
-    |nzsec       |N  |GMT second.                                                |
-    +------------+---+-----------------------------------------------------------+
-    |nzmsec      |N  |GMT millisecond.                                           |
-    +------------+---+-----------------------------------------------------------+
-    |iztype      |I  |Reference time equivalence:                                |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUNKN (Unknown)                                          |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IB (Begin time)                                          |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IDAY (Midnight of refernece GMT day)                     |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IO (Event origin time)                                   |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IA (First arrival time)                                  |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= ITn (User defined n=0 time 9) pick n                     |
-    +------------+---+-----------------------------------------------------------+
-    |o           |F  |Event origin time (seconds relative to reference time.)    |
-    +------------+---+-----------------------------------------------------------+
-    |a           |F  |First arrival time (seconds relative to reference time.)   |
-    +------------+---+-----------------------------------------------------------+
-    |ka          |K  |First arrival time identification.                         |
-    +------------+---+-----------------------------------------------------------+
-    |f           |F  |Fini or end of event time (seconds relative to reference   |
-    |            |   |time.)                                                     |
-    +------------+---+-----------------------------------------------------------+
-    |tn          |F  |User defined time {\ai n}=0,9 (seconds picks or markers    |
-    |            |   |relative to reference time).                               |
-    +------------+---+-----------------------------------------------------------+
-    |kt{\ai n}   |K  |A User defined time {\ai n}=0,9.  pick identifications     |
-    +------------+---+-----------------------------------------------------------+
-    |kinst       |K  |Generic name of recording instrument                       |
-    +------------+---+-----------------------------------------------------------+
-    |iinst       |I  |Type of recording instrument. [currently not used]         |
-    +------------+---+-----------------------------------------------------------+
-    |knetwk      |K  |Name of seismic network.                                   |
-    +------------+---+-----------------------------------------------------------+
-    |kstnm       |K  |Station name.                                              |
-    +------------+---+-----------------------------------------------------------+
-    |istreg      |I  |Station geographic region. [not currently used]            |
-    +------------+---+-----------------------------------------------------------+
-    |stla        |F  |Station latitude (degrees, north positive)                 |
-    +------------+---+-----------------------------------------------------------+
-    |stlo        |F  |Station longitude (degrees, east positive).                |
-    +------------+---+-----------------------------------------------------------+
-    |stel        |F  |Station elevation (meters). [not currently used]           |
-    +------------+---+-----------------------------------------------------------+
-    |stdp        |F  |Station depth below surface (meters). [not currently used] |
-    +------------+---+-----------------------------------------------------------+
-    |cmpaz       |F  |Component azimuth (degrees, clockwise from north).         |
-    +------------+---+-----------------------------------------------------------+
-    |cmpinc      |F  |Component incident angle (degrees, from vertical).         |
-    +------------+---+-----------------------------------------------------------+
-    |kcmpnm      |K  |Component name.                                            |
-    +------------+---+-----------------------------------------------------------+
-    |lpspol      |L  |TRUE if station components have a positive polarity        |
-    |            |   |(left-hand rule).                                          |
-    +------------+---+-----------------------------------------------------------+
-    |kevnm       |K  |Event name.                                                |
-    +------------+---+-----------------------------------------------------------+
-    |ievreg      |I  |Event geographic region. [not currently used]              |
-    +------------+---+-----------------------------------------------------------+
-    |evla        |F  |Event latitude (degrees north positive).                   |
-    +------------+---+-----------------------------------------------------------+
-    |evlo        |F  |Event longitude (degrees east positive).                   |
-    +------------+---+-----------------------------------------------------------+
-    |evel        |F  |Event elevation (meters). [not currently used]             |
-    +------------+---+-----------------------------------------------------------+
-    |evdp        |F  |Event depth below surface (meters). [not currently used]   |
-    +------------+---+-----------------------------------------------------------+
-    |mag         |F  |Event magnitude.                                           |
-    +------------+---+-----------------------------------------------------------+
-    |imagtyp     |I  |Magnitude type:                                            |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IMB (Bodywave Magnitude)                                 |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IMS (Surfacewave Magnitude)                              |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IML (Local Magnitude)                                    |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IMW (Moment Magnitude)                                   |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IMD (Duration Magnitude)                                 |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IMX (User Defined Magnitude)                             |
-    +------------+---+-----------------------------------------------------------+
-    |imagsrc     |I  |Source of magnitude information:                           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= INEIC (National Earthquake Information Center)           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IPDE (Preliminary Determination of Epicenter)            |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IISC (Internation Seismological Centre)                  |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IREB (Reviewed Event Bulletin)                           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUSGS (US Geological Survey)                             |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IBRK (UC Berkeley)                                       |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= ICALTECH (California Institute of Technology)            |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= ILLNL (Lawrence Livermore National Laboratory)           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IEVLOC (Event Location (computer program) )              |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IJSOP (Joint Seismic Observation Program)                |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUSER (The individual using SAC2000)                     |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUNKNOWN (unknown)                                       |
-    +------------+---+-----------------------------------------------------------+
-    |ievtyp      |I  |Type of event:                                             |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IUNKN (Unknown)                                          |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= INUCL (Nuclear event)                                    |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IPREN (Nuclear pre-shot event)                           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IPOSTN (Nuclear post-shot event)                         |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IQUAKE (Earthquake)                                      |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IPREQ (Foreshock)                                        |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IPOSTQ (Aftershock)                                      |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= ICHEM (Chemical explosion)                               |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IQB (Quarry or mine blast confirmed by quarry)           |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IQB1 (Quarry/mine blast with designed shot info-ripple   |
-    |            |   |fired)                                                     |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IQB2 (Quarry/mine blast with observed shot info-ripple   |
-    |            |   |fired)                                                     |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IQMT (Quarry/mining-induced events:                      |
-    |            |   |        tremors and rockbursts)                            |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IEQ (Earthquake)                                         |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IEQ1 (Earthquakes in a swarm or aftershock sequence)     |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IEQ2 (Felt earthquake)                                   |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IME (Marine explosion)                                   |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IEX (Other explosion)                                    |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= INU (Nuclear explosion)                                  |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= INC (Nuclear cavity collapse)                            |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IO_ (Other source of known origin)                       |
-    +------------+---+-----------------------------------------------------------+
-    |            |   |= IR (Regional event of unknown origin)                    | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IT (Teleseismic event of unknown origin)                 | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IU (Undetermined or conflicting information)             | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IOTHER (Other)                                           | 
-    +------------+---+-----------------------------------------------------------+ 
-    |nevid       |N  |Event ID (CSS 3.0)                                         | 
-    +------------+---+-----------------------------------------------------------+ 
-    |norid       |N  |Origin ID (CSS 3.0)                                        | 
-    +------------+---+-----------------------------------------------------------+ 
-    |nwfid       |N  |Waveform ID (CSS 3.0)                                      | 
-    +------------+---+-----------------------------------------------------------+ 
-    |khole       |k  |Hole identification if nuclear event.                      | 
-    +------------+---+-----------------------------------------------------------+ 
-    |dist        |F  |Station to event distance (km).                            | 
-    +------------+---+-----------------------------------------------------------+ 
-    |az          |F  |Event to station azimuth (degrees).                        | 
-    +------------+---+-----------------------------------------------------------+ 
-    |baz         |F  |Station to event azimuth (degrees).                        | 
-    +------------+---+-----------------------------------------------------------+ 
-    |gcarc       |F  |Station to event great circle arc length (degrees).        | 
-    +------------+---+-----------------------------------------------------------+ 
-    |lcalda      |L  |TRUE if DIST AZ BAZ and GCARC are to be calculated from st | 
-    |            |   |event coordinates.                                         | 
-    +------------+---+-----------------------------------------------------------+ 
-    |iqual       |I  |Quality of data [not currently used]:                      | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IGOOD (Good data)                                        | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IGLCH (Glitches)                                         | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IDROP (Dropouts)                                         | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= ILOWSN (Low signal to noise ratio)                       | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IOTHER (Other)                                           | 
-    +------------+---+-----------------------------------------------------------+ 
-    |isynth      |I  |Synthetic data flag [not currently used]:                  | 
-    +------------+---+-----------------------------------------------------------+ 
-    |            |   |= IRLDTA (Real data)                                       | 
-    +------------+---+-----------------------------------------------------------+  
-    |            |   |= ????? (Flags for various synthetic seismogram codes)     |  
-    +------------+---+-----------------------------------------------------------+ 
-    |user{\ai n} |F  |User defined variable storage area {\ai n}=0,9.            |
-    +------------+---+-----------------------------------------------------------+
-    |kuser{\ai n}|K  |User defined variable storage area {\ai n}=0,2.            |
-    +------------+---+-----------------------------------------------------------+
-    |lovrok      |L  |TRUE if it is okay to overwrite this file on disk.         |
-    +------------+---+-----------------------------------------------------------+
+    Description of header fields (based on SacIris_).
+
+    .. _SacIris: http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
+
+    ============ === ==========================================================
+    Field Name   TP  Description
+    ============ === ==========================================================
+    npts         N   Number of points per data component. [required]
+    nvhdr        N   Header version number. Current value is the integer 6.
+    	             Older version data (NVHDR < 6) are automatically updated
+                     when read into sac. [required]
+    b            F   Beginning value of the independent variable. [required]
+    e            F   Ending value of the independent variable. [required]
+    iftype       I   Type of file [required]:
+                     = ITIME {Time series file}
+                     = IRLIM {Spectral file---real and imaginary}
+                     = IAMPH {Spectral file---amplitude and phase}
+                     = IXY {General x versus y data}
+                     = IXYZ {General XYZ (3-D) file}
+    leven        L   TRUE if data is evenly spaced. [required]
+    delta        F   Increment between evenly spaced samples (nominal value).
+                     [required]
+    odelta       F   Observed increment if different from nominal value.
+    idep         I   Type of dependent variable:
+                     = IUNKN (Unknown)
+                     = IDISP (Displacement in nm)
+                     = IVEL (Velocity in nm/sec)
+                     = IVOLTS (Velocity in volts)
+                     = IACC (Acceleration in nm/sec/sec)
+    scale        F   Multiplying scale factor for dependent variable
+                     [not currently used]
+    depmin       F   Minimum value of dependent variable.
+    depmax       F   Maximum value of dependent variable.
+    depmen       F   Mean value of dependent variable.
+    nzyear       N   GMT year corresponding to reference (zero) time in file.
+    nyjday       N   GMT julian day.
+    nyhour       N   GMT hour.
+    nzmin        N   GMT minute.
+    nzsec        N   GMT second.
+    nzmsec       N   GMT millisecond.
+    iztype       I   Reference time equivalence:
+                     = IUNKN (Unknown)
+                     = IB (Begin time)
+                     = IDAY (Midnight of refernece GMT day)
+                     = IO (Event origin time)
+                     = IA (First arrival time)
+                     = ITn (User defined n=0 time 9) pick n
+    o            F   Event origin time (seconds relative to reference time.)
+    a            F   First arrival time (seconds relative to reference time.)
+    ka           K   First arrival time identification.
+    f            F   Fini or end of event time (seconds relative to reference
+                     time.)
+    tn           F   User defined time {ai n}=0,9 (seconds picks or markers
+                     relative to reference time).
+    kt{ai n}     K   A User defined time {ai n}=0,9.  pick identifications
+    kinst        K   Generic name of recording instrument
+    iinst        I   Type of recording instrument. [currently not used]
+    knetwk       K   Name of seismic network.
+    kstnm        K   Station name.
+    istreg       I   Station geographic region. [not currently used]
+    stla         F   Station latitude (degrees, north positive)
+    stlo         F   Station longitude (degrees, east positive).
+    stel         F   Station elevation (meters). [not currently used]
+    stdp         F   Station depth below surface (meters). [not currently used]
+    cmpaz        F   Component azimuth (degrees, clockwise from north).
+    cmpinc       F   Component incident angle (degrees, from vertical).
+    kcmpnm       K   Component name.
+    lpspol       L   TRUE if station components have a positive polarity
+                     (left-hand rule).
+    kevnm        K   Event name.
+    ievreg       I   Event geographic region. [not currently used]
+    evla         F   Event latitude (degrees north positive).
+    evlo         F   Event longitude (degrees east positive).
+    evel         F   Event elevation (meters). [not currently used]
+    evdp         F   Event depth below surface (meters). [not currently used]
+    mag          F   Event magnitude.
+    imagtyp      I   Magnitude type:
+                     = IMB (Bodywave Magnitude)
+                     = IMS (Surfacewave Magnitude)
+                     = IML (Local Magnitude)
+                     = IMW (Moment Magnitude)
+                     = IMD (Duration Magnitude)
+                     = IMX (User Defined Magnitude)
+    imagsrc      I   Source of magnitude information:
+                     = INEIC (National Earthquake Information Center)
+                     = IPDE (Preliminary Determination of Epicenter)
+                     = IISC (Internation Seismological Centre)
+                     = IREB (Reviewed Event Bulletin)
+                     = IUSGS (US Geological Survey)
+                     = IBRK (UC Berkeley)
+                     = ICALTECH (California Institute of Technology)
+                     = ILLNL (Lawrence Livermore National Laboratory)
+                     = IEVLOC (Event Location (computer program) )
+                     = IJSOP (Joint Seismic Observation Program)
+                     = IUSER (The individual using SAC2000)
+                     = IUNKNOWN (unknown)
+    ievtyp       I   Type of event:
+                     = IUNKN (Unknown)
+                     = INUCL (Nuclear event)
+                     = IPREN (Nuclear pre-shot event)
+                     = IPOSTN (Nuclear post-shot event)
+                     = IQUAKE (Earthquake)
+                     = IPREQ (Foreshock)
+                     = IPOSTQ (Aftershock)
+                     = ICHEM (Chemical explosion)
+                     = IQB (Quarry or mine blast confirmed by quarry)
+                     = IQB1 (Quarry/mine blast with designed shot info-ripple
+                     fired)
+                     = IQB2 (Quarry/mine blast with observed shot info-ripple
+                     fired)
+                     = IQMT (Quarry/mining-induced events:
+                             tremors and rockbursts)
+                     = IEQ (Earthquake)
+                     = IEQ1 (Earthquakes in a swarm or aftershock sequence)
+                     = IEQ2 (Felt earthquake)
+                     = IME (Marine explosion)
+                     = IEX (Other explosion)
+                     = INU (Nuclear explosion)
+                     = INC (Nuclear cavity collapse)
+                     = IO_ (Other source of known origin)
+                     = IR (Regional event of unknown origin)
+                     = IT (Teleseismic event of unknown origin)
+                     = IU (Undetermined or conflicting information)
+                     = IOTHER (Other)
+    nevid        N   Event ID (CSS 3.0)
+    norid        N   Origin ID (CSS 3.0)
+    nwfid        N   Waveform ID (CSS 3.0)
+    khole        k   Hole identification if nuclear event.
+    dist         F   Station to event distance (km).
+    az           F   Event to station azimuth (degrees).
+    baz          F   Station to event azimuth (degrees).
+    gcarc        F   Station to event great circle arc length (degrees).
+    lcalda       L   TRUE if DIST AZ BAZ and GCARC are to be calculated from st
+                     event coordinates.
+    iqual        I   Quality of data [not currently used]:
+                     = IGOOD (Good data)
+                     = IGLCH (Glitches)
+                     = IDROP (Dropouts)
+                     = ILOWSN (Low signal to noise ratio)
+                     = IOTHER (Other)
+    isynth       I   Synthetic data flag [not currently used]:
+                     = IRLDTA (Real data)
+                     = ????? (Flags for various synthetic seismogram codes)
+    user{ai n}   F   User defined variable storage area {ai n}=0,9.
+    kuser{ai n}  K   User defined variable storage area {ai n}=0,2.
+    lovrok       L   TRUE if it is okay to overwrite this file on disk.
+    ============ === ==========================================================
     """
 
     def __init__(self, filen=False, headonly=False, alpha=False):

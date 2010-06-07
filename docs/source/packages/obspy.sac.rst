@@ -10,23 +10,23 @@
       :nosignatures:
 
         ~sacio.ReadSac
-	~sacio.IsSACfile
-	~sacio.IsValidSacFile
-	~sacio.IsValidXYSacFile
-	~sacio.ReadSacFile
-	~sacio.ReadSacXY
-	~sacio.ReadSacHeader
-	~sacio.GetHvalue
-	~sacio.GetHvalueFromFile
-	~sacio.WriteSacBinary
-	~sacio.WriteSacXY
-	~sacio.WriteSacHeader
-	~sacio.SetHvalue
-	~sacio.SetHvalueInFile
-        ~sacio.fromarray
-	~sacio.swap_byte_order
-	~sacio.ListStdValues
-	~sacio.__getattr__
+        sacio.ReadSac.IsSACfile
+        sacio.ReadSac.IsValidSacFile
+        sacio.ReadSac.IsValidXYSacFile
+        sacio.ReadSac.ReadSacFile
+        sacio.ReadSac.ReadSacXY
+        sacio.ReadSac.ReadSacHeader
+        sacio.ReadSac.GetHvalue
+        sacio.ReadSac.GetHvalueFromFile
+        sacio.ReadSac.WriteSacBinary
+        sacio.ReadSac.WriteSacXY
+        sacio.ReadSac.WriteSacHeader
+        sacio.ReadSac.SetHvalue
+        sacio.ReadSac.SetHvalueInFile
+        sacio.ReadSac.fromarray
+        sacio.ReadSac.swap_byte_order
+        sacio.ReadSac.ListStdValues
+        sacio.ReadSac.__getattr__
 
     .. comment to end block
 
