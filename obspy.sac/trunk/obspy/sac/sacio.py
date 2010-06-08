@@ -911,7 +911,7 @@ class ReadSac(object):
         else:
             return True
 
-    def IsValidXYSacFile(self, thePath):
+    def IsValidXYSacFile(self, filename):
         """
         Quick test for a valid SAC ascii file.
 
@@ -929,12 +929,8 @@ class ReadSac(object):
         #  Read in the Header
         #
         try:
-            self.ReadSacXY(thePath)
-        except SacError:
-            return False
-        except SacIOError:
-            return False
-        except MemoryError:
+            self.ReadSacXY(filename)
+        except:
             return False
         else:
             return True
