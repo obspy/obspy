@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core.stream import createDummyStream
 import numpy as np
 import pickle
 import unittest
@@ -886,6 +887,71 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.station = 'MANZ'
         gaps = st.getGaps()
         self.assertEquals(len(gaps), 1)
+
+    def test_createDummyStream(self):
+        """
+        Tests the creation of a dummy Stream from a String.
+        """
+        # Create first trace.
+        samples = 1000
+        sampling_rate = 200.0
+        tr1 = Trace(data=np.arange(samples))
+        tr1.stats.sampling_rate = sampling_rate
+        # Create second trace.
+        samples2 = 2000
+        sampling_rate2 = 50.0
+        starttime2 = UTCDateTime(2010, 1, 1)
+        tr2 = Trace(data=np.arange(samples2))
+        tr2.stats.sampling_rate = sampling_rate2
+        tr2.stats.starttime = starttime2
+        # Create the stream.
+        st1 = Stream(traces=[tr1, tr2])
+        # Get the string.
+        stream_string = st1.__str__()
+        # Read string.
+        st2 = createDummyStream(stream_string)
+        st2.verify()
+        self.assertEqual(len(st1), len(st2))
+        self.assertEqual(st1[0].stats, st2[0].stats)
+        self.assertEqual(st1[1].stats, st2[1].stats)
+        self.assertEqual(len(st1[0].data), len(st2[0].data))
+        self.assertEqual(len(st1[1].data), len(st2[1].data))
+        # Second try with actual string.
+        stream_string = """ 1 Trace(s) in Stream:
+                BW.FURT..EHZ | 2010-01-04T13:59:39.245000Z - 2010-01-04T13:59:48.245000Z | 200.0 Hz, 1801 samples"""
+        st = createDummyStream(stream_string)
+        tr = st[0]
+        self.assertEqual('BW', tr.stats.network)
+        self.assertEqual('FURT', tr.stats.station)
+        self.assertEqual('', tr.stats.location)
+        self.assertEqual('EHZ', tr.stats.channel)
+        self.assertEqual(UTCDateTime('2010-01-04T13:59:39.245000Z'),
+                         tr.stats.starttime)
+        self.assertEqual(UTCDateTime('2010-01-04T13:59:48.245000Z'),
+                         tr.stats.endtime)
+        self.assertEqual(200.0, tr.stats.sampling_rate)
+        self.assertEqual(1801, tr.stats.npts)
+        self.assertEqual(1801, len(tr.data))
+        self.assertEqual(False, hasattr(tr.stats, 'preview'))
+        self.assertEqual(1, len(st))
+        # Test for preview string.
+        stream_string = """ 1 Trace(s) in Stream:
+                BW.FURT..EHZ | 2010-01-04T13:59:39.245000Z - 2010-01-04T13:59:48.245000Z | 200.0 Hz, 1801 samples [preview]"""
+        st = createDummyStream(stream_string)
+        tr = st[0]
+        self.assertEqual('BW', tr.stats.network)
+        self.assertEqual('FURT', tr.stats.station)
+        self.assertEqual('', tr.stats.location)
+        self.assertEqual('EHZ', tr.stats.channel)
+        self.assertEqual(UTCDateTime('2010-01-04T13:59:39.245000Z'),
+                         tr.stats.starttime)
+        self.assertEqual(UTCDateTime('2010-01-04T13:59:48.245000Z'),
+                         tr.stats.endtime)
+        self.assertEqual(200.0, tr.stats.sampling_rate)
+        self.assertEqual(1801, tr.stats.npts)
+        self.assertEqual(1801, len(tr.data))
+        self.assertEqual(True, tr.stats.preview)
+        self.assertEqual(1, len(st))
 
 
 def suite():

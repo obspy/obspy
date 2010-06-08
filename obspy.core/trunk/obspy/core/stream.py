@@ -10,9 +10,11 @@ Module for handling ObsPy Stream objects.
 """
 
 from glob import iglob
+from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile, _getPlugins
 from pkg_resources import load_entry_point
+from StringIO import StringIO
 import copy
 import math
 import numpy as np
@@ -769,6 +771,46 @@ class Stream(object):
                     fill_value=fill_value, sanity_checks=False,
                     interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
+
+
+def createDummyStream(stream_string):
+    """
+    Creates a dummy stream object from the output of the print method of any
+    Stream or Trace object.
+
+    If the __str__ method of the Stream or Trace objects changes, than this
+    method has to be adjusted too.
+    """
+    stream_io = StringIO(stream_string)
+    traces = []
+    for line in stream_io:
+        line = line.strip()
+        # Skip first line.
+        if not line or 'Stream' in line:
+            continue
+        items = line.split(' ')
+        items = [item for item in items if len(item) > 1]
+        # Map them.
+        try:
+            id = items[0]
+            network, station, location, channel = id.split('.')
+            starttime = UTCDateTime(items[1])
+            sampling_rate = float(items[3])
+            npts = int(items[5])
+        except:
+            continue
+        tr = Trace(data=np.random.ranf(npts))
+        tr.stats.network = network
+        tr.stats.station = station
+        tr.stats.location = location
+        tr.stats.channel = channel
+        tr.stats.starttime = starttime
+        tr.stats.sampling_rate = sampling_rate
+        # Set as a preview Trace if it is a preview.
+        if '[preview]' in line:
+            tr.stats.preview = True
+        traces.append(tr)
+    return Stream(traces=traces)
 
 
 if __name__ == '__main__':
