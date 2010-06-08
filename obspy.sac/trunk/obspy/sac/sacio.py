@@ -320,10 +320,12 @@ class ReadSac(object):
         100
 
         This is equivalent to:
+        
         >>> ReadSac().GetHvalueFromFile('test.sac','npts')
         100
 
         Or:
+        
         >>> tr = ReadSac('test.sac')
         >>> tr.npts
         100
@@ -434,6 +436,7 @@ class ReadSac(object):
         >>> tr.ReadSacHeader('test.sac')
 
         This is equivalent to:
+        
         >>> tr = ReadSac('test.sac',headonly=True) 
 
         """
@@ -535,7 +538,8 @@ class ReadSac(object):
         >>> tr = ReadSac()
         >>> tr.ReadSacFile('test.sac')
 
-        This is equivalent to: 
+        This is equivalent to:
+        
         >>> tr = ReadSac('test.sac') 
 
         """
@@ -613,6 +617,7 @@ class ReadSac(object):
         100
 
         This is equivalent to:
+        
         >>> tr = ReadSac('testxy.sac',alpha=True) 
 
         Reading only the header portion of alphanumeric SAC-files is currently not supported.
