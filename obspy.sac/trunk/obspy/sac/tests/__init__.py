@@ -5,19 +5,22 @@ from obspy.sac.tests import test_sacio, test_core
 import unittest, doctest
 import shutil
 import os
+from obspy.core.util import NamedTemporaryFile
+tempdir = os.path.dirname(NamedTemporaryFile().name)
+curdir = os.getcwd()
+fn1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data','test.sac')
+fn2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data','testxy.sac')
 
 def setUp(dummy):
-    fn1 = os.path.join(os.path.dirname(__file__), 'data','test.sac')
-    fn2 = os.path.join(os.path.dirname(__file__), 'data','testxy.sac')
+    os.chdir(tempdir)
     shutil.copy(fn1,os.getcwd())
     shutil.copy(fn2,os.getcwd())
-
+    
 def tearDown(dummy):
-    fn1 = os.path.join(os.path.dirname(__file__), 'data','test.sac')
-    fn2 = os.path.join(os.path.dirname(__file__), 'data','testxy.sac')
-    fn1_loc = os.path.join(os.getcwd(),'test.sac')
-    fn2_loc = os.path.join(os.getcwd(),'testxy.sac')
-    fn3_loc = os.path.join(os.getcwd(),'test2.sac')
+    os.chdir(curdir)
+    fn1_loc = os.path.join(tempdir,'test.sac')
+    fn2_loc = os.path.join(tempdir,'testxy.sac')
+    fn3_loc = os.path.join(tempdir,'test2.sac')
     if os.path.isfile(fn1_loc) and fn1_loc != fn1:
         os.remove(fn1_loc)
     if os.path.isfile(fn2_loc) and fn2_loc != fn2:

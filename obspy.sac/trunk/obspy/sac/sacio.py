@@ -1061,8 +1061,11 @@ class ReadSac(object):
 if __name__ == "__main__":
     import doctest
     import shutil
-    fn1 = os.path.join(os.path.dirname(__file__), 'tests', 'data','test.sac')
-    fn2 = os.path.join(os.path.dirname(__file__), 'tests', 'data','testxy.sac')
+    from obspy.core.util import NamedTemporaryFile
+    tempdir = os.path.dirname(NamedTemporaryFile().name)
+    fn1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests', 'data','test.sac')
+    fn2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests', 'data','testxy.sac')
+    os.chdir(tempdir)
     shutil.copy(fn1,os.curdir)
     shutil.copy(fn2,os.curdir)
     doctest.testmod()
