@@ -912,6 +912,18 @@ class StreamTestCase(unittest.TestCase):
         st2 = createDummyStream(stream_string)
         st2.verify()
         self.assertEqual(len(st1), len(st2))
+        # Floating point rounding issues force it that the sampling rate has to
+        # be compared seperately.
+        self.assertAlmostEqual(st1[0].stats.sampling_rate,
+                               st2[0].stats.sampling_rate)
+        self.assertAlmostEqual(st1[1].stats.sampling_rate,
+                               st2[1].stats.sampling_rate)
+        # Override the old sampling rate to avoid the issues when comparing the
+        # stats dictionary.
+        st1[0].stats.sampling_rate = 1
+        st2[0].stats.sampling_rate = 1
+        st1[1].stats.sampling_rate = 1
+        st2[1].stats.sampling_rate = 1
         self.assertEqual(st1[0].stats, st2[0].stats)
         self.assertEqual(st1[1].stats, st2[1].stats)
         self.assertEqual(len(st1[0].data), len(st2[0].data))

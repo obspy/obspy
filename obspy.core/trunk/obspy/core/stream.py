@@ -362,6 +362,9 @@ class Stream(object):
         :param max_gap: All gaps larger than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
         """
+        # Create shallow copy of the traces to be able to sort them later on.
+        copied_traces = copy.copy(self.traces)
+        self.sort()
         gap_list = []
         for _i in xrange(len(self.traces) - 1):
             # skip traces with different network, station, location or channel
@@ -399,6 +402,8 @@ class Stream(object):
             gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
                              stime, etime, delta, nsamples])
+        # Set the original traces to not alter the stream object.
+        self.traces = copied_traces
         return gap_list
 
     def insert(self, position, object):
@@ -795,7 +800,7 @@ def createDummyStream(stream_string):
             id = items[0]
             network, station, location, channel = id.split('.')
             starttime = UTCDateTime(items[1])
-            sampling_rate = float(items[3])
+            endtime = UTCDateTime(items[2])
             npts = int(items[5])
         except:
             continue
@@ -805,7 +810,8 @@ def createDummyStream(stream_string):
         tr.stats.location = location
         tr.stats.channel = channel
         tr.stats.starttime = starttime
-        tr.stats.sampling_rate = sampling_rate
+        delta = (endtime-starttime)/(npts-1)
+        tr.stats.delta = delta
         # Set as a preview Trace if it is a preview.
         if '[preview]' in line:
             tr.stats.preview = True

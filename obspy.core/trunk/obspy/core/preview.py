@@ -9,6 +9,7 @@ Tools for creating and merging previews.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from copy import copy
 import numpy as np
 from numpy.ma import is_masked
 from obspy.core.trace import Trace
@@ -99,6 +100,8 @@ def mergePreviews(stream):
     :class:`~obspy.core.Stream`
         Merged Stream object.
     """
+    copied_traces = copy(stream.traces)
+    stream.sort()
     # Group traces by id.
     traces = {}
     dtypes = []
@@ -155,6 +158,7 @@ def mergePreviews(stream):
         # set npts again, because data is changed in place
         new_trace.stats.npts = len(data)
         new_stream.append(new_trace)
+    stream.traces = copied_traces
     return new_stream
 
 
