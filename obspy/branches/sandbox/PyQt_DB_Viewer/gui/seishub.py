@@ -45,7 +45,8 @@ class Seishub(object):
         del self.networks['Server']
         # Get the events for the global time span if a connection exists.
         if self.online:
-            self.updateEventListFromSeishub(self.env.starttime, self.env.endtime)
+            self.updateEventListFromSeishub(self.env.event_starttime,
+                                            self.env.event_endtime)
             # Download and cache events.
             self.downloadAndParseEvents()
         # Otherwise read cached events and get those for the given time_span.
@@ -83,7 +84,9 @@ class Seishub(object):
         """
         Connects to the SeisHub server.
         """
-        self.client = Client(base_url=self.server)
+        self.client = Client(base_url=self.server, user=self.env.seishub_user,
+                            password=self.env.seishub_password,
+                            timeout=self.env.seishub_timeout)
         self.ping()
 
     def ping(self):
@@ -196,7 +199,8 @@ class Seishub(object):
             "min_last_pick=%s&max_first_pick=%s" % \
             (str(starttime), str(endtime))
         req = urllib2.Request(url)
-        auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+        auth = base64.encodestring('%s:%s' % (self.env.seishub_user,
+                                              self.env.seishub_password))[:-1]
         req.add_header("Authorization", "Basic %s" % auth)
         f = urllib2.urlopen(req)
         xml = parse(f)
@@ -229,7 +233,8 @@ class Seishub(object):
             if self.env.debug:
                 print 'Requesting %s' % url
             req = urllib2.Request(url)
-            auth = base64.encodestring('%s:%s' % ("admin", "admin"))[:-1]
+            auth = base64.encodestring('%s:%s' % (self.env.seishub_user,
+                                              self.env.seishub_password))[:-1]
             req.add_header("Authorization", "Basic %s" % auth)
             # Big try except for lost connection or other issues.
             try:

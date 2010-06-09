@@ -86,7 +86,12 @@ class EventDB(object):
         results = self.c.fetchall()
         result_dicts = []
         for result in results:
-            event = self.getEvent(result[0])
+            # XXX: Ugly workaround for non existing pick times..need better
+            # error handling.
+            try:
+                event = self.getEvent(result[0])
+            except:
+                pass
             r_dict = {'event_id': result[0],
                       'origin_time': event['time'],
                       'origin_latitude': event['latitude'],
@@ -227,26 +232,35 @@ class EventDB(object):
         try:
             event_dict['puplic'] = root.xpath('event_type/puplic')[0].text
         except: pass
-        event_dict['origin_time'] = \
-                str(UTCDateTime(root.xpath('origin/time/value')[0].text))
+        try:
+            event_dict['origin_time'] = \
+                    str(UTCDateTime(root.xpath('origin/time/value')[0].text))
+        except:
+            pass
         try:
             event_dict['origin_time_uncertainty'] = \
                     UTCDateTime(root.xpath('origin/time/uncertainty')[0].text)
         except: pass
-        event_dict['origin_latitude'] = \
-                float(root.xpath('origin/latitude/value')[0].text)
+        try:
+            event_dict['origin_latitude'] = \
+                    float(root.xpath('origin/latitude/value')[0].text)
+        except: pass
         try:
             event_dict['origin_latitude_uncertainty'] = \
                     float(root.xpath('origin/latitude/uncertainty')[0].text)
         except: pass
-        event_dict['origin_longitude'] = \
-                float(root.xpath('origin/longitude/value')[0].text)
+        try:
+            event_dict['origin_longitude'] = \
+                    float(root.xpath('origin/longitude/value')[0].text)
+        except: pass
         try:
             event_dict['origin_longitude_uncertainty'] = \
                     float(root.xpath('origin/longitude/uncertainty')[0].text)
         except: pass
-        event_dict['origin_depth'] = \
-                float(root.xpath('origin/depth/value')[0].text)
+        try:
+            event_dict['origin_depth'] = \
+                    float(root.xpath('origin/depth/value')[0].text)
+        except: pass
         try:
             event_dict['origin_depth_uncertainty'] = \
                     float(root.xpath('origin/depth/uncertainty')[0].text)

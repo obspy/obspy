@@ -12,6 +12,8 @@ class TreeItem(object):
         self.type = what
         self.childItems = []
         self.createFullPath()
+        # Default value for group. Will only be True if it is a channel group.
+        self.channel_group = False
 
     def appendChild(self, item):
         self.childItems.append(item)
@@ -76,6 +78,8 @@ class TreeItem(object):
             else:
                 path = '%s.%s..%s' % (self.parentItem.parentItem.data(0),
                                      self.parentItem.data(0), data)
+        elif self.type == 'channel_list':
+            path = self.data(0)
         else:
             # Hopefully does not happen.
             path = 'None'
@@ -94,11 +98,12 @@ class TreeModel(QtCore.QAbstractItemModel):
     """
     Implements the Tree Model.
     """
-    def __init__(self, filename, parent=None):
+    def __init__(self, filename, env, parent=None):
         """
         Init Method.
         """
         super(TreeModel, self).__init__(parent)
+        self.env = env
         # Lade Datensatz 
         f = open(filename, 'rb')
         try:
@@ -235,6 +240,16 @@ class TreeModel(QtCore.QAbstractItemModel):
                                                                      st_child))
                         # Connect to signal.
                         ch_signal = st_child.child(st_child.childCount() - 1)
+        # Also fill it with the channel lists.
+        parent.appendChild(TreeItem(('Groups'), 'Plot serveral channels.', parent))
+        chan_lists  = parent.child(parent.childCount() - 1)
+        # Loop over every list.
+        lists = self.env.channel_lists.keys()
+        lists.sort()
+        for item in lists:
+            tree_item = TreeItem((item), 'channel_list', chan_lists)
+            tree_item.channel_group = True
+            chan_lists.appendChild(tree_item)
 
 class TreeSelector(QtGui.QItemSelectionModel):
     def __init__(self, model, *args, **kwargs):
@@ -243,7 +258,6 @@ class TreeSelector(QtGui.QItemSelectionModel):
         super(TreeSelector, self).__init__(model)
 
 class NetworkTree(QtGui.QTreeView):
-    #add_channel = QtCore.pyqtSignal(str, str, str, str)
     def __init__(self, waveforms, env, parent=None, *args, **kwargs):
         super(NetworkTree, self).__init__(parent)
         self.env = env
@@ -254,7 +268,17 @@ class NetworkTree(QtGui.QTreeView):
 
     def startup(self):
         # Init the Network selector.
-        nw_model = TreeModel(self.env.network_index)
+        nw_model = TreeModel(self.env.network_index, self.env)
         self.setModel(nw_model)
         self.nw_select_model = TreeSelector(nw_model)
         self.setSelectionModel(self.nw_select_model)
+        self.setColumnWidth(0, 160)
+
+    def refreshModel(self):
+        """
+        Creates a new tree model that will contain any changes.
+        """
+        # Init the Network selector.
+        nw_model = TreeModel(self.env.network_index, self.env)
+        self.setModel(nw_model)
+        self.resizeColumnToContents(0)

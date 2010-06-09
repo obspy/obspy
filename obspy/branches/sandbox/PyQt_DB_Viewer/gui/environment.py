@@ -3,7 +3,9 @@ from obspy.core import UTCDateTime
 import os
 from seishub import Seishub
 from waveform_handler import WaveformHandler
+from channel_lists import ChannelListParser
 from event_db import EventDB
+from config import DBConfigParser
 
 class Environment(object):
     """
@@ -11,35 +13,42 @@ class Environment(object):
     many parts of the code.
     """
     def __init__(self, *args, **kwargs):
-        # Cache directory.
-        self.cache_dir = kwargs.get('cache_dir', 'cache')
+        self.config_file = 'dbviewer.cfg'
+        # Read the configuration file.
+        DBConfigParser(env=self)
+        
+        # Create the cache directory if it does not exists.
         if not os.path.exists(self.cache_dir):
-            os.mkdir(self.cache_dir)
+            os.makedirs(self.cache_dir)
+
+        # Set the maximum zoom level in seconds. Add +1 just to be sure it
+        # works.
+        # XXX: Not yet dynamically adjusted.
+        self.maximum_zoom_level = self.preview_delta * (self.detail+1)
+        
         # Resources directory.
         self.res_dir = kwargs.get('res_dir', 'resources')
+
         # SQLite event database file.
         self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
                                                 'events.db'))
         self.css = os.path.join(self.res_dir, 'seishub.css')
+        # The xml file with the stored lists.
+        self.channel_lists_xml = os.path.join(self.cache_dir,
+                                             'channel_lists.xml')
+        self.channel_lists = {}
+        # Parse the Waveform List.
+        self.channel_lists_parser = ChannelListParser(env=self)
         # Network index pickled dict.
         self.network_index = os.path.join(self.cache_dir, 'networks_index.pickle')
-        # Handle the times for the plots.
-        self.starttime = UTCDateTime(2009, 1, 1)
-        self.endtime = UTCDateTime(2010, 1, 1) - 1
+
+        # Calculate the time range. This is needed a lot and therefore kept as
+        # a variable.
         self.time_range = self.endtime - self.starttime
-        # Debug.
-        self.debug = kwargs.get('debug', False)
-        # Details of the plots.
-        self.detail = kwargs.get('detail', 400)
-        # How much data is loaded before and after the requested timespan in
-        # minutes.
-        self.buffer = kwargs.get('buffer', 120)
-        self.buffer *= 60
-        # Seishub Server.
-        self.seishub_server = kwargs.get('seishub_server',
-                                         'http://teide:8080')
-        # Scale of the plots.
-        self.log_scale = False
+
+        # Convert buffer to seconds.
+        self.buffer *= 86400
+
         # Start the SeisHub class.
         self.seishub = Seishub(env=self)
         # Init the Database first. Does not need a network connection. Should

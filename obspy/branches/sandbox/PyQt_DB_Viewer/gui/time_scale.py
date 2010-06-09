@@ -69,7 +69,6 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             label.setX((label.start_frac + label.end_frac)/2.0 * self.width - \
                        rect.width()/2.0)
 
-
     def createTimeScale(self):
         """
         Actually creates the time_scale.
@@ -308,7 +307,6 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         Creates the subdivisions of the month scale.
         """
         color = self.color1
-        # Shortcut to window geometry.
         starttime = self.env.starttime
         endtime = self.env.endtime
         time_range = float(endtime - starttime)
@@ -316,13 +314,17 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         start_x = 0
         end_x =  self.width
         x_range = end_x - start_x
-        # Top or bottom year scala.
+        # Top or bottom year scale.
         start_y = 30
         end_y = 45
         y_range = self.subscale_height
-        # Get the number of months.
-        days = int(round((endtime - starttime)/86400))
-        days_count = range(days)
+        # Get the number of days.
+        starttime_day = UTCDateTime(starttime.year, starttime.month,
+                                    starttime.day)
+        endtime_day = UTCDateTime(endtime.year, endtime.month,
+                                    endtime.day)
+        days = int((endtime_day - starttime_day)/86400) + 1
+        days_count = range(days) 
         # Use the middle of the starting date to later calculate the current
         # day and account for leap seconds.
         noon_of_start = UTCDateTime(starttime.year, starttime.month, 

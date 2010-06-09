@@ -57,14 +57,10 @@ class WaveformHandler(object):
         """
         Returns a min_max_list.
         """
-        print 'Stream in minmaxlist'
         pixel = self.env.detail
         stream = deepcopy(stream)
         # Trim to times and pad with masked elements.
-        print stream
         stream.trim(self.env.starttime, self.env.endtime, pad = True)
-        print self.env.endtime
-        print stream
         # Set masked arrays to -1.
         if is_masked(stream[0].data):
             stream[0].data.fill_value = -1.0
@@ -74,10 +70,7 @@ class WaveformHandler(object):
         if len(stream) != 1:
             print stream
             raise
-        print stream
         resamplePreview(stream[0], pixel)
-        print stream
-        print '============'
         return stream
 
     def getWaveform(self, network, station, location, channel, id):
@@ -154,7 +147,6 @@ class WaveformHandler(object):
                     print ' * Cached file found for %s.%s.%s.%s' \
                         % (network, station, location, channel)
             # Merge everything and pickle once again.
-            print stream
             stream = mergePreviews(stream)
             # Pickle the stream object for future reference. Do not pickle it if it
             # is smaller than 200 samples. Just not worth the hassle.
