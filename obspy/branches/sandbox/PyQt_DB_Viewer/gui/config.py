@@ -3,6 +3,7 @@ from __future__ import with_statement
 from ConfigParser import RawConfigParser, DEFAULTSECT
 from obspy.core import UTCDateTime
 import os
+import sys
 
 class DBConfigParser(RawConfigParser):
     """
@@ -28,7 +29,17 @@ class DBConfigParser(RawConfigParser):
         self.root_dir = os.path.split(os.path.abspath(\
                                 os.path.dirname(__file__)))[0]
         self.config_file = self.env.config_file
+        # Check if the config file exists. Otherwise give a message, create the
+        # file and exits.
+        if not os.path.exists(self.config_file):
+            exists = False
+        else:
+            exists = True
         self.getConfiguration()
+        if not exists:
+            msg = "No config file exists. A default one has been created. Please edit it and restart the application."
+            print msg
+            sys.exit()
 
     def write(self, fp):
         """

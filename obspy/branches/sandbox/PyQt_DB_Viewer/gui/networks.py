@@ -278,7 +278,8 @@ class NetworkTree(QtGui.QTreeView):
         """
         Creates a new tree model that will contain any changes.
         """
-        # Init the Network selector.
-        nw_model = TreeModel(self.env.network_index, self.env)
-        self.setModel(nw_model)
-        self.resizeColumnToContents(0)
+        self.startup()
+        # Reconnect the signals.
+        QtCore.QObject.connect(self.nw_select_model,
+            QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
+            self.env.main_window.waveforms.waveform_scene.add_channel)

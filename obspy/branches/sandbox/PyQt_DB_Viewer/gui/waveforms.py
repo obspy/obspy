@@ -285,10 +285,6 @@ class WaveformScene(QtGui.QGraphicsScene):
         # This is the path and the type of the requested waveform.
         # e.g. ('BW', 'network') or ('BW.FURT..EHE', 'channel')
         path = new_sel.indexes()[0].model().getFullPath(new_sel.indexes()[0])
-        # Do not plot already plotted channels.
-        current_items = [waveform.title for waveform in self.waveforms]
-        if path[0] in current_items:
-            return
         # Only plot channels.
         if path[1] != 'channel' and path[1] != 'channel_list':
             return
@@ -306,6 +302,10 @@ class WaveformScene(QtGui.QGraphicsScene):
             self.addPlot(channel)
 
     def addPlot(self, channel_id):
+        # Do not plot already plotted channels.
+        current_items = [waveform.title for waveform in self.waveforms]
+        if channel_id in current_items:
+            return
         # Get the stream item.
         network, station, location, channel = channel_id.split('.')
         stream = self.env.handler.getItem(network, station, location, channel)
