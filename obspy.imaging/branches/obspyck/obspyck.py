@@ -467,7 +467,8 @@ class PickingGUI:
         # iterate event number to fetch
         self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
                                    self.seishubEventCount
-        resource_name = self.seishubEventList[self.seishubEventCurrent].text
+        event = self.seishubEventList[self.seishubEventCurrent]
+        resource_name = event.xpath(u"resource_name")[0].text
         self.delAllItems()
         self.clearDictionaries()
         self.getEventFromSeishub(resource_name)
@@ -493,10 +494,25 @@ class PickingGUI:
         self.textviewStdOutImproved.write(msg)
 
     def on_buttonDeleteEvent_clicked(self, event):
+        event = self.seishubEventList[self.seishubEventCurrent]
+        resource_name = event.xpath(u"resource_name")[0].text
+        account = event.xpath(u"account")
+        user = event.xpath(u"user")
+        if account:
+            account = account[0].text
+        else:
+            account = None
+        if user:
+            user = user[0].text
+        else:
+            user = None
         resource_name = self.seishubEventList[self.seishubEventCurrent].text
         dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                    gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
-        dialog.set_markup("Delete event from database?\n\n<b><tt>%s</tt></b>" % resource_name)
+        msg = "Delete event from database?\n\n"
+        msg += "<tt><b>%s</b> (account: %s, user: %s)</tt>" % (resource_name,
+                                                               account, user)
+        dialog.set_markup(msg)
         dialog.set_title("Delete?")
         response = dialog.run()
         dialog.destroy()
@@ -4690,7 +4706,7 @@ class PickingGUI:
                 pass
         except:
             pass
-        msg = "Fetched event %i of %i (event_id: %s, account: %s, user: %s)"%\
+        msg = "Fetched event %i of %i: %s (account: %s, user: %s)"% \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
                resource_name, account, user)
         self.textviewStdOutImproved.write(msg)
@@ -4736,8 +4752,8 @@ class PickingGUI:
         """
         # get event list from seishub
         xml = self.getEventListFromSeishub(starttime, endtime)
-        # populate list with resource names of all available events
-        self.seishubEventList = xml.xpath(u".//resource_name")
+        # populate list with resource information of all available events
+        self.seishubEventList = xml.xpath(u"Item")
 
         self.seishubEventCount = len(self.seishubEventList)
         # we set the current event-pointer to the last list element, because we
@@ -4745,7 +4761,19 @@ class PickingGUI:
         self.seishubEventCurrent = self.seishubEventCount - 1
         msg = "%i events are available from Seishub" % self.seishubEventCount
         for event in self.seishubEventList:
-            msg += "\n  - %s" % event.text
+            resource_name = event.xpath(u"resource_name")[0].text
+            account = event.xpath(u"account")
+            user = event.xpath(u"user")
+            if account:
+                account = account[0].text
+            else:
+                account = None
+            if user:
+                user = user[0].text
+            else:
+                user = None
+            msg += "\n  - %s (account: %s, user: %s)" % (resource_name,
+                                                         account, user)
         self.textviewStdOutImproved.write(msg)
 
     def checkForSysopEventDuplicates(self, starttime, endtime):
@@ -4760,42 +4788,25 @@ class PickingGUI:
         # get event list from seishub
         xml = self.getEventListFromSeishub(starttime, endtime)
 
-        resourcelist = xml.xpath(u".//resource_name")
+        list_events = xml.xpath("Item")
 
-        sysoplist = []
+        list_sysop_events = []
         
-        for resource in resourcelist:
-            
-            resource_name = resource.text
-
-            resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" +\
-                           resource_name
-            resource_req = urllib2.Request(resource_url)
-            userid = self.server['User']
-            passwd = self.server['Password']
-            auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
-            resource_req.add_header("Authorization", "Basic %s" % auth)
-            fp = urllib2.urlopen(resource_req)
-            resource_xml = parse(fp)
-            fp.close()
-
-            if resource_xml.xpath(u".//event_type/account"):
-                account = resource_xml.xpath(u".//event_type/account")[0].text
-            else:
+        for element in list_events:
+            account = element.xpath(u"account")
+            if not account:
                 continue
+            if account[0].text == "sysop":
+                resource_name = element.xpath(u"resource_name")[0].text
+                list_sysop_events.append(resource_name)
 
-            if account == "sysop":
-                sysoplist.append(resource_name)
-            else:
-                continue
-        
         # if there is a possible duplicate, pop up a warning window and print a
         # warning in the GUI error textview:
-        if len(sysoplist) > 1:
-            err = "ObsPyck found more than one sysop event in the current " + \
-                  "time window! Please check if these are duplicate " + \
-                  "events and delete old resources."
-            errlist = "\n".join(sysoplist)
+        if len(list_sysop_events) > 1:
+            err = "ObsPyck found more than one sysop event with picks in " + \
+                  "the current time window! Please check if these are " + \
+                  "duplicate events and delete old resources."
+            errlist = "\n".join(list_sysop_events)
             self.textviewStdErrImproved.write(err)
             self.textviewStdErrImproved.write(errlist)
 
