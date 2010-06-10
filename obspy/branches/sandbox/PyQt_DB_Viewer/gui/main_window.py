@@ -180,8 +180,9 @@ class MainWindow(QtGui.QWidget):
 			       self.waveforms.waveform_scene.add_channel)
 
         web = Website(env = self.env)
+        web.startup()
         # Add a WebView to later display the map.
-        file = open(os.path.join(self.env.res_dir, 'map.html'))
+        file = open(os.path.join(self.env.temp_res_dir, 'map.html'))
         html = file.read()
         file.close()
         self.env.web.setHtml(html)

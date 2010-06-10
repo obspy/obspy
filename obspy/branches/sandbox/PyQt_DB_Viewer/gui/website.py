@@ -6,6 +6,7 @@ class Website(object):
     """
     def __init__(self, env, *args, **kwargs):
         self.env = env
+        self.map_file = os.path.join(self.env.temp_res_dir, 'map.html')
         # Read in the html template.
         f = open(os.path.join(self.env.res_dir, 'upperPart.html'))
         self.upperPart = f.read()
@@ -34,7 +35,7 @@ class Website(object):
 
     def createHtml(self):
         html = self.upperPart + self.middlePart + self.lowerPart
-        f = open(os.path.join(self.env.res_dir, 'map.html'), 'w')
+        f = open(self.map_file, 'w')
         f.write(html)
         f.close()
 

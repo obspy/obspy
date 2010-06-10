@@ -11,24 +11,46 @@ class Environment(object):
     """
     Simple class that stores all global variables and other stuff important for
     many parts of the code.
+
+    Sets up the environment.
+
+    Setis all variables necessary for many parts of the application.
+    Reads the config file.
+    Inits the SQLite database.
+    Parses the channel groups.
+    Inits the Seishub Connection.
+    Starts the waveform handler.
     """
     def __init__(self, *args, **kwargs):
-        self.config_file = 'dbviewer.cfg'
-        # Read the configuration file.
+        self._getApplicationHomeDir()
+
+        # Specify where the config file is supposed to be.
+        self.config_file = os.path.join(self.home_dir, 'config.cfg')
+
+        # Get the root directory of the application.
+        self.root_dir = os.path.split(os.path.abspath(\
+                             os.path.dirname(__file__)))[0]
+
+        # Resources directory.
+        self.res_dir = os.path.join(self.root_dir, 'resources')
+
+        # Read/write the configuration file.
         DBConfigParser(env=self)
-        
+
         # Create the cache directory if it does not exists.
         if not os.path.exists(self.cache_dir):
             os.makedirs(self.cache_dir)
+
+        # Temporary resources directory.
+        self.temp_res_dir = os.path.join(self.cache_dir, 'temporary_resources')
+        if not os.path.exists(self.temp_res_dir):
+            os.makedirs(self.temp_res_dir)
 
         # Set the maximum zoom level in seconds. Add +1 just to be sure it
         # works.
         # XXX: Not yet dynamically adjusted.
         self.maximum_zoom_level = self.preview_delta * (self.detail+1)
         
-        # Resources directory.
-        self.res_dir = kwargs.get('res_dir', 'resources')
-
         # SQLite event database file.
         self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
                                                 'events.db'))
@@ -56,6 +78,17 @@ class Environment(object):
         self.db = EventDB(env=self)
         # Start the waveform handler.
         self.handler = WaveformHandler(env=self)
+
+    def _getApplicationHomeDir(self):
+        """
+        Creates a .seishub_explorer in the users home dir for all cached files
+        and sets self.home_dir to it.
+        If the folder already exists it will not create one.
+        """
+        self.home_dir = os.path.abspath(os.path.expanduser('~'))
+        self.home_dir = os.path.join(self.home_dir, '.seishub_explorer')
+        if not os.path.exists(self.home_dir):
+            os.makedirs(self.home_dir)
 
     def setSplash(self, text):
         """

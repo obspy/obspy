@@ -1025,8 +1025,10 @@ class PickingGUI:
         self.stNum = len(self.streams)
         self.stPt = 0
     
-        #XXX gtk gui
-        self.gla = gtk.glade.XML('obspyck.glade', 'windowObspyck')
+        # Get the absolute path to the glade file.
+        self.root_dir = os.path.split(os.path.abspath(__file__))[0]
+        self.glade_file = os.path.join(self.root_dir, 'obspyck.glade')
+        self.gla = gtk.glade.XML(self.glade_file, 'windowObspyck')
         # commodity dictionary to connect event handles
         # example:
         # d = {'on_buttonQuit_clicked': gtk.main_quit}

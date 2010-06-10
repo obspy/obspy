@@ -25,9 +25,6 @@ class DBConfigParser(RawConfigParser):
         RawConfigParser.__init__(self)
         # Dictionary to contain the optional comments.
         self.comments = {}
-        # Get the root directory.
-        self.root_dir = os.path.split(os.path.abspath(\
-                                os.path.dirname(__file__)))[0]
         self.config_file = self.env.config_file
         # Check if the config file exists. Otherwise give a message, create the
         # file and exits.
@@ -37,7 +34,8 @@ class DBConfigParser(RawConfigParser):
             exists = True
         self.getConfiguration()
         if not exists:
-            msg = "No config file exists. A default one has been created. Please edit it and restart the application."
+            msg = "No config file exists. A default one has been created at %s. Please edit it and restart the application." \
+                  % self.config_file
             print msg
             sys.exit()
 
@@ -105,7 +103,7 @@ class DBConfigParser(RawConfigParser):
                              10, value_type = 'int',
                              comment='The timeout in seconds for the SeisHub server.')
         self.getOrSetDefault('Files and Directories', 'Cache Directory', 'cache_dir',
-                 os.path.join(self.root_dir, 'cache'),
+                 os.path.join(self.env.home_dir, 'cache'),
                  comment='All cached files and databases will be stored in this directory.')
         # Default set it for a span of one week ending one week ago.
         self.getOrSetDefault('General Settings', 'Default Starttime', 'starttime',
