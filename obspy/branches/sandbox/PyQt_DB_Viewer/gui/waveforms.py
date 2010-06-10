@@ -224,6 +224,7 @@ class WaveformScene(QtGui.QGraphicsScene):
                                 (starttime.strftime('%Y-%m-%dT%H:%M'),
                                  endtime.strftime('%Y-%m-%dT%H:%M'),
                                  (endtime-starttime)/60.0))
+        self.env.main_window.waveforms.refreshOpenGL()
 
     def mouseReleaseEvent(self, event):
         """
@@ -406,7 +407,9 @@ class TimescaleView(QtGui.QGraphicsView):
         # Force OpenGL rendering! Super smooth scrolling for 50 plots with 1000
         # bars each. Any kind of anti aliasing is useless because only
         # right angles exist.
-        self.setViewport(QtOpenGL.QGLWidget())
+        if not self.env.software_rendering:
+            self.opengl_widget = QtOpenGL.QGLWidget()
+            self.setViewport(self.opengl_widget)
         # This is manually adjusted.
         self.setMinimumHeight(62)
         self.setMaximumHeight(64)
@@ -430,7 +433,9 @@ class WaveformView(QtGui.QGraphicsView):
         # Force OpenGL rendering! Super smooth scrolling for 50 plots with 1000
         # bars each. Any kind of anti aliasing is useless because only
         # right angles exist.
-        self.setViewport(QtOpenGL.QGLWidget())
+        if not self.env.software_rendering:
+            self.opengl_widget = QtOpenGL.QGLWidget()
+            self.setViewport(self.opengl_widget)
 
     def resizeEvent(self, event):
         """
@@ -479,6 +484,15 @@ class Waveforms(QtGui.QFrame):
         # Connect scenes and views.
         self.timescale_view.setScene(self.timescale_scene)
         self.waveform_view.setScene(self.waveform_scene)
+
+    def refreshOpenGL(self):
+        """
+        Redraws the OpenGL scenes for more fluid updating. Will only be
+        executed of software rendering is off.
+        """
+        if not self.env.software_rendering:
+            self.timescale_view.opengl_widget.paintGL()
+            self.waveform_view.opengl_widget.paintGL()
 
     def redraw(self):
         self.timescale_scene.redraw()

@@ -120,6 +120,11 @@ class DBConfigParser(RawConfigParser):
         self.getOrSetDefault('General Settings', 'Debug', 'debug', False,
                  value_type = 'boolean',
                  comment='Debugging messages True/False')
+        # Force software rendering.
+        comment = 'OpenGL is not supported on all machines and the program might crash right after the initial splash screen. Set this to True to enforce software rendering which is slower but works in any case.'
+        self.getOrSetDefault('General Settings', 'Force Software Rendering',
+                 'software_rendering', False, value_type='boolean',
+                 comment=comment)
         # Details.
         self.getOrSetDefault('Appearance', 'Detail', 'detail',
                 250, value_type='int',
