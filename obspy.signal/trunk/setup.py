@@ -1,13 +1,27 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.signal installer
+obspy.gse2 installer
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Stefan Stange
 :license:
-    GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    GNU General Public License (GPL)
+    
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
 """
 
 from setuptools import find_packages, setup
@@ -16,8 +30,7 @@ import os
 import platform
 
 
-VERSION = open(os.path.join("obspy", "signal", "VERSION.txt")).read()
-
+VERSION = open(os.path.join("obspy", "gse2", "VERSION.txt")).read()
 
 
 # hack to prevent build_ext from trying to append "init" to the export symbols
@@ -35,63 +48,70 @@ if platform.system() == "Windows":
     # disable some warnings for MSVC
     macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
-src = os.path.join('obspy', 'signal', 'src') + os.sep
-symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
+src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
+symbols = [s.strip()
+           for s in open(src + 'gse_functions.def', 'r').readlines()[2:]
            if s.strip() != '']
-lib = MyExtension('libsignal',
+lib = MyExtension('gse_functions',
                   define_macros=macros,
                   libraries=[],
-                  sources=[src + 'recstalta.c', src + 'xcorr.c',
-                           src + 'coordtrans.c', src + 'pk_mbaer.c',
-                           src + 'filt_util.c', src + 'arpicker.c'],
+                  sources=[src + 'buf.c', src + 'gse_functions.c'],
                   export_symbols=symbols,
                   extra_link_args=[])
 
 
-# setup
 setup(
-    name='obspy.signal',
+    name='obspy.gse2',
     version=VERSION,
-    description="Python signal processing routines for seismology.",
+    description="Read & write seismograms, Format GSE2.",
     long_description="""
-    obspy.signal - Python signal processing routines for seismology.
+    obspy.gse2 - Read & write seismograms, Format GSE2.
 
-    Capabilities include filtering, triggering, rotation, instrument
-    correction and coordinate transformations.
+    This module contains Python wrappers for gse_functions - The GSE2 library
+    of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
+    Currently CM6 compressed GSE2 files are supported, this should be 
+    sufficient for most cases. Gse_functions are written in C and interfaced 
+    via Python ctypes.
 
     For more information visit http://www.obspy.org.
     """,
     url='http://www.obspy.org',
-    author='The ObsPy Development Team',
+    author='The ObsPy Development Team & Stefan Stange',
     author_email='devs@obspy.org',
-    license='GNU Lesser General Public License, Version 3 (LGPLv3)',
+    license='GNU General Public License (GPL)',
     platforms='OS Independent',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: ' + \
-        'GNU Library or Lesser General Public License (LGPL)',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Physics',
     ],
-    keywords=['ObsPy', 'seismology', 'signal', 'filter', 'triggers',
-              'instrument correction', ],
+    keywords=['ObsPy', 'seismology', 'GSE2', 'waveform', 'seismograms'],
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=False,
     install_requires=[
         'setuptools',
         'obspy.core',
-        'scipy',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.signal/trunk#egg=obspy.signal-dev",
-    ext_package='obspy.signal.lib',
+        "/svn/obspy/obspy.gse2/trunk#egg=obspy.gse2-dev",
+    ext_package='obspy.gse2.lib',
     ext_modules=[lib],
-    test_suite="obspy.signal.tests.suite",
     include_package_data=True,
+    test_suite="obspy.gse2.tests.suite",
+    entry_points="""
+        [obspy.plugin.waveform]
+        GSE2 = obspy.gse2.core
+
+        [obspy.plugin.waveform.GSE2]
+        isFormat = obspy.gse2.core:isGSE2
+        readFormat = obspy.gse2.core:readGSE2
+        writeFormat = obspy.gse2.core:writeGSE2
+    """,
 )
