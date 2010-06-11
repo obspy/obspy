@@ -273,7 +273,7 @@ class ReadSac(object):
         """
         Create a SAC file from an array.array instance
 
-        >>> t=ReadSac()
+        >>> t = ReadSac()
         >>> b = np.arange(10)
         >>> t.fromarray(b)
         >>> t.GetHvalue('npts')
@@ -282,8 +282,8 @@ class ReadSac(object):
         if not isinstance(trace, np.ndarray):
             raise SacError("input needs to be of instance numpy.ndarray")
         else:
-            self.seis = copy.copy(trace)
-            self.seis = np.require(self.seis, '<f4')
+            # Only copy the data if they are not of the required type
+            self.seis = np.require(trace, '<f4')
         ### set a few values that are required to create a valid SAC-file
         self.SetHvalue('int1', 2)
         self.SetHvalue('cmpaz', 0)
