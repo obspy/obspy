@@ -245,7 +245,7 @@ def zdetect(a, Nsta):
     return Z
 
 
-def triggerOnset(charfct, thres1, thres2, max_len=9e99):
+def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     """
     Calculate trigger on and off times.
 
@@ -268,6 +268,9 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
     :param max_len: Maximum length of triggered event in samples. A new
                     event will be triggered as soon as the signal reaches
                     again above thres1.
+    :type max_len_delete: Bool
+    :param max_len_delete: Do not write events longer than max_len into
+                           report file.
     :rtype: List
     :return: Nested List of trigger on and of times in samples
     """
@@ -303,6 +306,11 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99):
             of.pop(0)
         if of[0] - on[0] > max_len:
             of.insert(0, on[0] + max_len)
+            if max_len_delete:
+                continue
+        #if of[0] - on[0] > max_len:
+        #    on.pop(0)
+        #    continue
         pick.append([on[0], of[0]])
     return np.array(pick)
 
