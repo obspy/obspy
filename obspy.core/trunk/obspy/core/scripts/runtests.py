@@ -59,13 +59,10 @@ import os
 import sys
 import time
 import unittest
+from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
 
 
-DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
-                   'xseed', 'seisan', 'sh']
-ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
-
 
 def _getSuites(verbosity=1, names=[]):
     """

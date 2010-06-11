@@ -362,7 +362,10 @@ class Trace(object):
                 contains data with a more correct time value. The parameter
                 ``interpolation_samples`` specifies the number of samples used
                 to linearly interpolate between the two traces in order to
-                prevent steps.
+                prevent steps. Note that if there are gaps inside, the
+                returned array is still a masked array, only if fill_value
+                is set, the returned array is a normal array and gaps are
+                filled with fill value.
                 
                 No interpolation (``interpolation_samples=0``)::
                 
@@ -387,6 +390,18 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
+                
+                Traces with gaps::
+                
+                    Trace 1: AAAA        
+                    Trace 2:         FFFF
+                    1 + 2  : AAAA----FFFF
+                
+                Traces with gaps and given fill value: ``fill_value=0``::
+                
+                    Trace 1: AAAA        
+                    Trace 2:         FFFF
+                    1 + 2  : AAAA0000FFFF
         ======  ===============================================================
         """
         if sanity_checks:

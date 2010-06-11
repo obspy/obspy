@@ -14,6 +14,13 @@ import numpy as np
 import os
 import sys
 import tempfile
+import inspect
+
+# defining obspy modules
+# currently used by runtests and the path function
+DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
+                   'xseed', 'seisan', 'sh']
+ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
 
 
 _sys_is_le = sys.byteorder == 'little'
@@ -268,6 +275,34 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
         temp = np.ones(delta, dtype=np.dtype(dtype))
         temp *= fill_value
     return temp
+
+
+def path(testfile):
+    """
+    Function to find path of test data files:
+
+    Usually the tests are installed to the custom installation directory.
+    That is the path usually cannot be predicted. The functions search for
+    all installed obspy modules and sees if the testfile is in any of the
+    modules tests/data directory.
+
+    :param testfile: The testfile to which the Path should be returned.
+
+    >>> path('slist.ascii') # doctest: +SKIP
+    /custom/path/to/obspy/core/tests/data/slist.ascii
+    """
+    for module in ALL_MODULES:
+        try:
+            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+            dir = os.path.dirname(inspect.getsourcefile(mod))
+            file = os.path.join(dir, "data", testfile)
+            if os.path.isfile(file):
+                return file
+        except ImportError:
+            pass
+    msg = "Could not find file %s in tests/data directory " % testfile + \
+          "of obspy modules"
+    raise IOError(msg)
 
 
 def _getVersionString(module="obspy.core"):
