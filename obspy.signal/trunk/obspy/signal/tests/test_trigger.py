@@ -100,20 +100,33 @@ class TriggerTestCase(unittest.TestCase):
         Test trigger onset function
         """
         on_of = np.array([[6.0, 31], [69, 94], [131, 181], [215, 265],
-                          [278, 315]])
+                          [278, 315], [480, 505], [543, 568], [605, 631]])
         cft = np.concatenate((np.sin(np.arange(0, 5 * np.pi, 0.1)) + 1,
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 2.1,
-                              np.sin(np.arange(0, 5 * np.pi, 0.1)) + 0.4))
+                              np.sin(np.arange(0, 5 * np.pi, 0.1)) + 0.4,
+                              np.sin(np.arange(0, 5 * np.pi, 0.1)) + 1))
         picks = triggerOnset(cft, 1.5, 1.0, max_len=50)
         np.testing.assert_array_equal(picks, on_of)
-#       # set True for visual understanding the test
-#            import pylab as P
-#            P.plot(cft)
-#            P.hlines([1.5, 1.0], 0, len(cft))
-#            on_of = np.array(on_of)
-#            P.vlines(on_of[:, 0], 1.0, 2.0, color='g', linewidth=2)
-#            P.vlines(on_of[:, 1], 0.5, 1.5, color='r', linewidth=2)
-#            P.show()
+        # check that max_len_delete drops the picks
+        picks_del = triggerOnset(cft, 1.5, 1.0, max_len=50, max_len_delete=True)
+        np.testing.assert_array_equal(picks_del, on_of[np.array([0,1,5,6])])
+        #
+        # set True for visual understanding the tests
+        if False:
+             import matplotlib.pyplot as plt
+             plt.plot(cft)
+             plt.hlines([1.5, 1.0], 0, len(cft))
+             on_of = np.array(on_of)
+             plt.vlines(picks[:, 0], 1.0, 2.0, color='g', linewidth=2,
+                        label="ON max_len")
+             plt.vlines(picks[:, 1], 0.5, 1.5, color='r', linewidth=2,
+                        label="OF max_len")
+             plt.vlines(picks_del[:, 0]+2, 1.0, 2.0, color='y', linewidth=2,
+                        label="ON max_len_delete")
+             plt.vlines(picks_del[:, 1]+2, 0.5, 1.5, color='b', linewidth=2,
+                        label="OF max_len_delete")
+             plt.legend()
+             plt.show()
 
 
 def suite():

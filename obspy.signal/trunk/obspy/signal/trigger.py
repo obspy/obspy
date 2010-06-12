@@ -292,11 +292,18 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
         return []
     ind2 = np.where(charfct > thres2)[0]
     #
+    on = [ind1[0]]
     of = [-1]
     of.extend(ind2[np.diff(ind2) > 1].tolist())
-    of.extend([ind2[-1]])
-    on = [ind1[0]]
     on.extend(ind1[np.where(np.diff(ind1) > 1)[0] + 1].tolist())
+    # include last pick if trigger is on or drop it
+    if max_len_delete:
+        # drop it
+        of.extend([1e99])
+        on.extend([on[-1]])
+    else:
+        # include it
+        of.extend([ind2[-1]])
     #
     pick = []
     while on[-1] > of[0]:
@@ -305,12 +312,10 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
         while of[0] < on[0]:
             of.pop(0)
         if of[0] - on[0] > max_len:
-            of.insert(0, on[0] + max_len)
             if max_len_delete:
+                on.pop(0)
                 continue
-        #if of[0] - on[0] > max_len:
-        #    on.pop(0)
-        #    continue
+            of.insert(0, on[0] + max_len)
         pick.append([on[0], of[0]])
     return np.array(pick)
 
