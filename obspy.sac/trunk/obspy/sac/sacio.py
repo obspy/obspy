@@ -254,12 +254,10 @@ class ReadSac(object):
         # list). That's a total of 632 bytes.
         #
         # allocate the array for header floats
-        #self.hf = array.array('f',[-12345.0])*70
         self.hf = np.ndarray(70, dtype='<f4')
         self.hf[:] = -12345.0
         #
         # allocate the array for header integers
-        #self.hi = array.array('i',[-12345])*40
         self.hi = np.ndarray(40, dtype='<i4')
         self.hi[:] = -12345
         #
@@ -269,9 +267,10 @@ class ReadSac(object):
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
-    def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0):
+    def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0, 
+                  starttime=UTCDateTime("1970-01-01T00:00:00.000000")):
         """
-        Create a SAC file from an array.array instance
+        Create a SAC file from an numpy.ndarray instance
 
         >>> t = ReadSac()
         >>> b = np.arange(10)
@@ -292,11 +291,12 @@ class ReadSac(object):
         self.SetHvalue('leven', 1)
         self.SetHvalue('lpspol', 1)
         self.SetHvalue('lcalda', 0)
-        self.SetHvalue('nzyear', 1970)
-        self.SetHvalue('nzjday', 1)
-        self.SetHvalue('nzhour', 0)
-        self.SetHvalue('nzmin', 0)
-        self.SetHvalue('nzsec', 0)
+        self.SetHvalue('nzyear', starttime.year)
+        self.SetHvalue('nzjday', starttime.strftime("%j"))
+        self.SetHvalue('nzhour', starttime.hour)
+        self.SetHvalue('nzmin', starttime.minute)
+        self.SetHvalue('nzsec', starttime.second)
+        self.SetHvalue('nzmsec', starttime.microsecond / 1e3)
         self.SetHvalue('kcmpnm', 'Z')
         self.SetHvalue('evla', 0)
         self.SetHvalue('evlo', 0)
@@ -341,19 +341,12 @@ class ReadSac(object):
             return(self.hi[index])
         elif key in self.sdict:
             index = self.sdict[key]
-            #length = 8
             if index == 0:
-                #myarray = self.hs[0:8]
                 myarray = self.hs[0]
             elif index == 1:
-                #myarray = self.hs[8:24]
                 myarray = self.hs[1] + self.hs[2]
             else:
-                #start = 8 + index*8  # the extra 8 is from item #2
-                #end   = start + 8
-                #myarray = self.hs[start:end]
                 myarray = self.hs[index + 1] # extra 1 is from item #2
-            #return(myarray.tostring())
             return myarray
         else:
             raise SacError("Cannot find header entry for: ", item)

@@ -14,6 +14,7 @@
         ~trace.Stats
         ~stream.Stream
         ~utcdatetime.UTCDateTime
+        ~util.path
 
     .. comment to end block
 

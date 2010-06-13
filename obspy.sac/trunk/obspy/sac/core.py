@@ -25,8 +25,7 @@ convert_dict = {
     'khole': 'location'
 }
 
-#XXX NOTE not all values from the read in dictionary are converted
-# this is definetly a problem when reading an writing a read SAC file.
+# all the sac specific extras
 sac_extra = [
     'depmin', 'depmax', 'odelta', 'b', 'e', 'o', 'a', 't0', 't1',
     't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo',
@@ -104,6 +103,7 @@ def readSAC(filename, headonly=False, **kwargs):
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = {}
 
+    # convert common header types of the obspy trace object
     for i, j in convert_dict.iteritems():
         value = t.GetHvalue(i)
         if isinstance(value, str):
@@ -113,6 +113,7 @@ def readSAC(filename, headonly=False, **kwargs):
         header[j] = value
     if header['calib'] == -12345.0:
         header['calib'] = 1.0
+    # assign extra header types of sac
     header['sac'] = {}
     for i in sac_extra:
         header['sac'][i] = t.GetHvalue(i)
@@ -152,40 +153,34 @@ def writeSAC(stream, filename, **kwargs):
     base, ext = os.path.splitext(filename)
     for trace in stream:
         t = ReadSac()
-        t.InitArrays()
-        # building array of floats, require correct type
+        # setting start time depending on iztype, if no sac extra header is
+        # defined iztype (9 == Begin Time) will be set by t.fromarray
+        nz = trace.stats.starttime
+        b = 0.0
+        try:
+            if trace.stats['sac']['iztype'] == 11:
+                nz -= float(trace.stats['sac']['b'])
+                b = float(trace.stats['sac']['b'])
+            elif trace.stats['sac']['iztype'] in (9, -12345):
+                pass
+            else:
+                msg = "This iztype is not implemented, please write a bug report"
+                raise NotImplementedError(msg)
+        except KeyError:
+            pass
         # filling in SAC/sacio specific defaults
-        t.fromarray(trace.data, begin=0.0, delta=trace.stats.delta)
+        t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
+                    starttime=nz)
         # overwriting with ObsPy defaults
         for _j, _k in convert_dict.iteritems():
-            try:
-                t.SetHvalue(_j, trace.stats[_k])
-            except:
-                pass
+            t.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
         for _i in sac_extra:
             try:
                 t.SetHvalue(_i, trace.stats.sac[_i])
-            except:
+            except KeyError:
                 pass
-        # setting start time depending on iztype, if no sac extra header is
-        # defined iztype (9 == Begin Time)
-        start = trace.stats.starttime
-        try:
-            if trace.stats['sac']['iztype'] == 11:
-                start -= float(trace.stats['sac']['b'])
-            elif trace.stats['sac']['iztype'] in (9, -12345):
-                pass
-        except KeyError:
-            pass
-        # overwriting date and time
-        t.SetHvalue('nzyear', start.year)
-        t.SetHvalue('nzjday', start.strftime("%j"))
-        t.SetHvalue('nzhour', start.hour)
-        t.SetHvalue('nzmin', start.minute)
-        t.SetHvalue('nzsec', start.second)
-        t.SetHvalue('nzmsec', start.microsecond / 1e3)
-        if i != 0:
-            filename = "%s%02d%s" % (base, i, ext)
+        if len(stream) != 1:
+            filename = "%s%02d%s" % (base, i+1, ext)
         t.WriteSacBinary(filename)
         i += 1
