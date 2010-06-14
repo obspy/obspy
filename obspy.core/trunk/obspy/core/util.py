@@ -279,14 +279,15 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
 def path(testfile):
     """
-    Function to find path of test data files:
+    Function to find the absolute path of a test data file
 
-    Usually the tests are installed to the custom installation directory.
-    That is the path usually cannot be predicted. The functions search for
-    all installed obspy modules and sees if the testfile is in any of the
-    modules tests/data directory.
+    The obspy modules are installed to a custom installation directory.
+    That is the path cannot be predicted. This functions searches for all
+    installed obspy modules and checks weather the testfile is in any of
+    the "tests/data" subdirectories.
 
-    :param testfile: The testfile to which the Path should be returned.
+    :param testfile: The testfile to which the path should be returned.
+    :return: Full path to testfile.
 
     >>> path('slist.ascii') # doctest: +SKIP
     /custom/path/to/obspy/core/tests/data/slist.ascii
