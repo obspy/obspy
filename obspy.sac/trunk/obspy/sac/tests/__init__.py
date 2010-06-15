@@ -3,8 +3,6 @@
 from obspy.sac import sacio
 from obspy.sac.tests import test_sacio, test_core
 import unittest, doctest
-import shutil
-import os
     
 def suite():
     suite = unittest.TestSuite()
