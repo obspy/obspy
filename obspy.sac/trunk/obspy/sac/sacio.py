@@ -358,12 +358,12 @@ class ReadSac(object):
         :param item: SAC-header variable name
         :param value: numeric or string value to be assigned to header-variable.
 
-        >>> from obspy.sac import * # doctest: +SKIP
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
-        >>> tr.GetHvalue('kstnm') # doctest: +SKIP
-        'STA     '
-        >>> tr.SetHvalue('kstnm','STA_NEW') # doctest: +SKIP
-        >>> tr.GetHvalue('kstnm') # doctest: +SKIP
+        >>> from obspy.sac import ReadSac
+        >>> tr = ReadSac()
+        >>> tr.GetHvalue('kstnm')
+        '-12345  '
+        >>> tr.SetHvalue('kstnm','STA_NEW')
+        >>> tr.GetHvalue('kstnm')
         'STA_NEW '
 
 
@@ -430,7 +430,7 @@ class ReadSac(object):
 
         This is equivalent to:
         
-        >>> tr = ReadSac('test.sac',headonly=True)  # doctest: +SKIP
+        >>> tr = ReadSac('test.sac', headonly=True)  # doctest: +SKIP
 
         """
         #### check if file exists
@@ -932,10 +932,13 @@ class ReadSac(object):
         """
         If date header values are set calculate date in julian seconds
 
-        >>> t = ReadSac('test.sac') # doctest: +SKIP
-        >>> t.starttime.timestamp # doctest: +SKIP
-        269596800.0
-        >>> t.endtime.timestamp - t.starttime.timestamp # doctest: +SKIP
+        >>> t = ReadSac()
+        >>> t.fromarray(np.random.randn(100), delta=1.0, \
+                        starttime=UTCDateTime(1970,01,01))
+        >>> t._get_date_()
+        >>> t.starttime.timestamp
+        0.0
+        >>> t.endtime.timestamp - t.starttime.timestamp
         100.0
         """
         ### if any of the time-header values are still set to
@@ -973,17 +976,17 @@ class ReadSac(object):
         """
         calculate distance from station and event coordinates
 
-        >>> t = ReadSac('test.sac') # doctest: +SKIP
-        >>> t.SetHvalue('evla',48.15) # doctest: +SKIP
-        >>> t.SetHvalue('evlo',11.58333) # doctest: +SKIP
-        >>> t.SetHvalue('stla',-41.2869) # doctest: +SKIP
-        >>> t.SetHvalue('stlo',174.7746) # doctest: +SKIP
-        >>> t._get_dist_() # doctest: +SKIP
-        >>> print round(t.GetHvalue('dist'), 2) # doctest: +SKIP
+        >>> t = ReadSac()
+        >>> t.SetHvalue('evla',48.15)
+        >>> t.SetHvalue('evlo',11.58333)
+        >>> t.SetHvalue('stla',-41.2869)
+        >>> t.SetHvalue('stlo',174.7746)
+        >>> t._get_dist_()
+        >>> print round(t.GetHvalue('dist'), 2)
         18486.53
-        >>> print round(t.GetHvalue('az'), 5) # doctest: +SKIP
+        >>> print round(t.GetHvalue('az'), 5)
         65.65415
-        >>> print round(t.GetHvalue('baz'), 4) # doctest: +SKIP
+        >>> print round(t.GetHvalue('baz'), 4)
         305.9755
 
         The original SAC-program calculates the distance assuming a
@@ -1044,7 +1047,8 @@ class ReadSac(object):
 
         :param hname: header variable name
 
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr = ReadSac()
+        >>> tr.fromarray(np.random.randn(100))
         >>> tr.npts == tr.GetHvalue('npts') # doctest: +SKIP
         True
         """
