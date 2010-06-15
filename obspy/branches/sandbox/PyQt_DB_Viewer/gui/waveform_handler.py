@@ -178,7 +178,6 @@ class WaveformHandler(object):
                                     start.day, start.hour, start.minute, start.second)
             # Convert to float32
             if len(temp):
-                temp[0].data = np.require(temp[0].data, 'float32')
                 streams.append(temp)
         if len(streams):
             stream = streams[0]
@@ -215,7 +214,6 @@ class WaveformHandler(object):
             return None
         # It will always return exactly one Trace. Make sure the data is in
         # float32.
-        stream[0].data = np.require(stream[0].data, 'float32')
         # XXX: Not necessary in the future once SeisHub updates itsself.
         stream[0].stats.preview = True
         start = stream[0].stats.starttime
