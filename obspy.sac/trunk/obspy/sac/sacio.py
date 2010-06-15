@@ -14,7 +14,7 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
 """
 
 from obspy.core import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, path
+from obspy.core.util import NamedTemporaryFile
 import numpy as np
 import os
 import time
