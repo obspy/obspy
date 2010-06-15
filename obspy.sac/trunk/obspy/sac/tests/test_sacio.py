@@ -80,6 +80,7 @@ class SacioTestCase(unittest.TestCase):
         t.SetHvalue("kstnm", "spiff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
         t.WriteSacBinary(tempfile)
+        self.assertEqual(os.stat(sacfile)[6],os.stat(tempfile)[6])
         self.assertEqual(os.path.exists(tempfile), True)
         t.ReadSacHeader(tempfile)
         self.assertEqual((t.hf != None), True)
@@ -88,7 +89,11 @@ class SacioTestCase(unittest.TestCase):
         t.WriteSacHeader(tempfile)
         t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
         self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"), 'Z       ')
-        t.IsValidSacFile(tempfile)
+        self.assertEqual(sacio.ReadSac(tempfile,headonly=True).GetHvalue('kcmpnm'),'Z       ')
+        self.assertEqual(t.IsValidSacFile(tempfile),True)
+        self.assertEqual(t.IsValidXYSacFile(tempfile),False)
+        self.assertEqual(sacio.ReadSac().GetHvalueFromFile(sacfile,'npts'),100)
+        self.assertEqual(sacio.ReadSac(sacfile).GetHvalue('npts'),100)
         os.remove(tempfile)
 
     def test_readWriteXY(self):
@@ -101,6 +106,11 @@ class SacioTestCase(unittest.TestCase):
         t = sacio.ReadSac(tfile)
         t.WriteSacXY(tempfile)
         d = sacio.ReadSac(tempfile, alpha=True)
+        e = sacio.ReadSac()
+        e.ReadSacXY(tempfile)
+        self.assertEqual(e.GetHvalue('npts'),d.GetHvalue('npts'))
+        self.assertEqual(e.IsValidXYSacFile(tempfile),True)
+        self.assertEqual(e.IsValidSacFile(tempfile),False)
         d.WriteSacBinary(tempfile2)
         size1 = os.stat(tempfile2)[6]
         size2 = os.stat(tfile)[6]

@@ -314,20 +314,20 @@ class ReadSac(object):
         
         :param item: header variable name (e.g. 'npts' or 'delta')
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac('test.sac')
-        >>> tr.GetHvalue('npts')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.GetHvalue('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
         
-        >>> ReadSac().GetHvalueFromFile('test.sac','npts')
+        >>> ReadSac().GetHvalueFromFile('test.sac','npts') # doctest: +SKIP
         100
 
         Or:
         
-        >>> tr = ReadSac('test.sac')
-        >>> tr.npts
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.npts # doctest: +SKIP
         100
 
         """
@@ -358,12 +358,12 @@ class ReadSac(object):
         :param item: SAC-header variable name
         :param value: numeric or string value to be assigned to header-variable.
 
-        >>> from obspy.sac import *
-        >>> tr = ReadSac('test.sac')
-        >>> tr.GetHvalue('kstnm')
+        >>> from obspy.sac import * # doctest: +SKIP
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.GetHvalue('kstnm') # doctest: +SKIP
         'STA     '
-        >>> tr.SetHvalue('kstnm','STA_NEW')
-        >>> tr.GetHvalue('kstnm')
+        >>> tr.SetHvalue('kstnm','STA_NEW') # doctest: +SKIP
+        >>> tr.GetHvalue('kstnm') # doctest: +SKIP
         'STA_NEW '
 
 
@@ -424,13 +424,13 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac()
-        >>> tr.ReadSacHeader('test.sac')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac() # doctest: +SKIP
+        >>> tr.ReadSacHeader('test.sac') # doctest: +SKIP
 
         This is equivalent to:
         
-        >>> tr = ReadSac('test.sac',headonly=True) 
+        >>> tr = ReadSac('test.sac',headonly=True)  # doctest: +SKIP
 
         """
         #### check if file exists
@@ -489,13 +489,13 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac('test.sac')
-        >>> tr.WriteSacBinary('test2.sac')
-        >>> u = ReadSac('test2.sac')
-        >>> u.SetHvalue('kevnm','hullahulla')
-        >>> u.WriteSacHeader('test2.sac')
-        >>> u.GetHvalueFromFile('test2.sac',"kevnm")
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        >>> u = ReadSac('test2.sac') # doctest: +SKIP
+        >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
+        >>> u.WriteSacHeader('test2.sac') # doctest: +SKIP
+        >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
         #--------------------------------------------------------------
@@ -527,13 +527,13 @@ class ReadSac(object):
         
         :param f: filename (SAC binary)
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac()
-        >>> tr.ReadSacFile('test.sac')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac() # doctest: +SKIP
+        >>> tr.ReadSacFile('test.sac') # doctest: +SKIP
 
         This is equivalent to:
         
-        >>> tr = ReadSac('test.sac') 
+        >>> tr = ReadSac('test.sac')  # doctest: +SKIP
 
         """
         try:
@@ -603,15 +603,15 @@ class ReadSac(object):
 
         :param f: filename (SAC ascii).
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac()
-        >>> tr.ReadSacXY('testxy.sac')
-        >>> tr.GetHvalue('npts')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac() # doctest: +SKIP
+        >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
+        >>> tr.GetHvalue('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
         
-        >>> tr = ReadSac('testxy.sac',alpha=True) 
+        >>> tr = ReadSac('testxy.sac',alpha=True) # doctest: +SKIP 
 
         Reading only the header portion of alphanumeric SAC-files is currently not supported.
         """
@@ -670,10 +670,10 @@ class ReadSac(object):
 
         :param f: filename (SAC ascii)
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac('test.sac')
-        >>> tr.WriteSacXY('test2.sac')
-        >>> tr.IsValidXYSacFile('test2.sac')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.WriteSacXY('test2.sac') # doctest: +SKIP
+        >>> tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
         True
 
 
@@ -709,10 +709,10 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac('test.sac')
-        >>> tr.WriteSacBinary('test2.sac')
-        >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6]
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
+        >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
         """
         try:
@@ -759,9 +759,9 @@ class ReadSac(object):
         :param: None
         :return: None
 
-        >>> from obspy.sac import ReadSac
-        >>> t = ReadSac('test.sac')
-        >>> t.ListStdValues()
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> t.ListStdValues() # doctest: +SKIP
         <BLANKLINE>
         Reference Time = 07/18/1978 (199) 8:0:0.0
         Npts  =  100
@@ -836,9 +836,9 @@ class ReadSac(object):
         :type hn: string
         :param hn: header variable name
 
-        >>> from obspy.sac import ReadSac
-        >>> t = ReadSac()
-        >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip()
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> t = ReadSac() # doctest: +SKIP
+        >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip() # doctest: +SKIP
         'Q'
 
         String header values have a fixed length of 8 or 16 characters. This can lead to errors
@@ -862,12 +862,12 @@ class ReadSac(object):
         :param hv: header variable value (numeric or string value to be assigned to hn)
         :return: None
 
-        >>> from obspy.sac import ReadSac
-        >>> t = ReadSac()
-        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> t = ReadSac() # doctest: +SKIP
+        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'STA'
-        >>> t.SetHvalueInFile('test.sac','kstnm','blub')
-        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip()
+        >>> t.SetHvalueInFile('test.sac','kstnm','blub') # doctest: +SKIP
+        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'blub'
         """
         #
@@ -885,10 +885,10 @@ class ReadSac(object):
         :param f: filename (SAC binary)
         :rtype: boolean (True or False)
         
-        >>> from obspy.sac import ReadSac
-        >>> ReadSac().IsValidSacFile('test.sac')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> ReadSac().IsValidSacFile('test.sac') # doctest: +SKIP
         True
-        >>> ReadSac().IsValidSacFile('testxy.sac')
+        >>> ReadSac().IsValidSacFile('testxy.sac') # doctest: +SKIP
         False
 
         """
@@ -911,10 +911,10 @@ class ReadSac(object):
         :param file: filename (SAC ascii)
         :rtype: boolean (True or False)
         
-        >>> from obspy.sac import ReadSac
-        >>> ReadSac().IsValidXYSacFile('testxy.sac')
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> ReadSac().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
         True
-        >>> ReadSac().IsValidXYSacFile('test.sac')
+        >>> ReadSac().IsValidXYSacFile('test.sac') # doctest: +SKIP
         False
 
         """
@@ -932,10 +932,10 @@ class ReadSac(object):
         """
         If date header values are set calculate date in julian seconds
 
-        >>> t = ReadSac('test.sac')
-        >>> t.starttime.timestamp
+        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> t.starttime.timestamp # doctest: +SKIP
         269596800.0
-        >>> t.endtime.timestamp - t.starttime.timestamp
+        >>> t.endtime.timestamp - t.starttime.timestamp # doctest: +SKIP
         100.0
         """
         ### if any of the time-header values are still set to
@@ -973,17 +973,17 @@ class ReadSac(object):
         """
         calculate distance from station and event coordinates
 
-        >>> t = ReadSac('test.sac')
-        >>> t.SetHvalue('evla',48.15)
-        >>> t.SetHvalue('evlo',11.58333)
-        >>> t.SetHvalue('stla',-41.2869)
-        >>> t.SetHvalue('stlo',174.7746)
-        >>> t._get_dist_()
-        >>> print round(t.GetHvalue('dist'), 2)
+        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> t.SetHvalue('evla',48.15) # doctest: +SKIP
+        >>> t.SetHvalue('evlo',11.58333) # doctest: +SKIP
+        >>> t.SetHvalue('stla',-41.2869) # doctest: +SKIP
+        >>> t.SetHvalue('stlo',174.7746) # doctest: +SKIP
+        >>> t._get_dist_() # doctest: +SKIP
+        >>> print round(t.GetHvalue('dist'), 2) # doctest: +SKIP
         18486.53
-        >>> print round(t.GetHvalue('az'), 5)
+        >>> print round(t.GetHvalue('az'), 5) # doctest: +SKIP
         65.65415
-        >>> print round(t.GetHvalue('baz'), 4)
+        >>> print round(t.GetHvalue('baz'), 4) # doctest: +SKIP
         305.9755
 
         The original SAC-program calculates the distance assuming a
@@ -1023,9 +1023,9 @@ class ReadSac(object):
         :param: None
         :return: None
         
-        >>> from obspy.sac import ReadSac
-        >>> t = ReadSac('test.sac')
-        >>> t.swap_byte_order()
+        >>> from obspy.sac import ReadSac # doctest: +SKIP
+        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> t.swap_byte_order() # doctest: +SKIP
         """
         if self.byteorder == 'big':
             bs = 'L'
@@ -1044,8 +1044,8 @@ class ReadSac(object):
 
         :param hname: header variable name
 
-        >>> tr = ReadSac('test.sac')
-        >>> tr.npts == tr.GetHvalue('npts')
+        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr.npts == tr.GetHvalue('npts') # doctest: +SKIP
         True
         """
         return self.GetHvalue(hname)
@@ -1053,19 +1053,5 @@ class ReadSac(object):
 
 if __name__ == "__main__":
     import doctest
-    import shutil
-    from obspy.core.util import NamedTemporaryFile
-    tempdir = os.path.dirname(NamedTemporaryFile().name)
-    fn1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests', 'data','test.sac')
-    fn2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests', 'data','testxy.sac')
-    os.chdir(tempdir)
-    shutil.copy(fn1,os.curdir)
-    shutil.copy(fn2,os.curdir)
     doctest.testmod()
-    if os.path.isfile('./test2.sac'):
-        os.remove('./test2.sac')
-    if os.path.isfile('./test.sac'):
-        os.remove('./test.sac')
-    if os.path.isfile('./testxy.sac'):
-        os.remove('./testxy.sac')
 
