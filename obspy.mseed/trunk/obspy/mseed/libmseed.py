@@ -442,7 +442,7 @@ class LibMSEED(object):
         header = [[self._convertMSTToDict(cur), None]]
         for _ in xrange(mstg.contents.numtraces - 1):
             next = cur.next.contents
-            header.append([self._convertMSTToDict(cur), None])
+            header.append([self._convertMSTToDict(next), None])
             cur = next
         clibmseed.mst_freegroup(C.pointer(mstg))
         del mstg

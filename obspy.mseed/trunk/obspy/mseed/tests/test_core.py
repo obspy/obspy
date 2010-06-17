@@ -86,10 +86,16 @@ class CoreTestCase(unittest.TestCase):
         gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
         stream = read(gapfile, headonly=True)
+        st = read(gapfile)
+        starttime = ['2007-12-31T23:59:59.915000Z', 
+                     '2008-01-01T00:00:04.035000Z',
+                     '2008-01-01T00:00:10.215000Z',
+                     '2008-01-01T00:00:18.455000Z']
         self.assertEqual(4, len(stream.traces))
-        for _i in stream.traces:
+        for _k, _i in enumerate(stream.traces):
             self.assertEqual(True, isinstance(_i, Trace))
             self.assertEqual(str(_i.data), '[]')
+            self.assertEqual(str(_i.stats.starttime), starttime[_k])
 
     def test_writeIntegersViaObsPy(self):
         """
