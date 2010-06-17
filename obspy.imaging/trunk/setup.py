@@ -64,7 +64,7 @@ setup(
     install_requires=[
         'setuptools',
         'obspy.core',
-        'matplotlib',
+        #'matplotlib',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.imaging/trunk#egg=obspy.imaging-dev",
