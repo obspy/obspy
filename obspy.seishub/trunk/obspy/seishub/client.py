@@ -282,9 +282,10 @@ class _StationMapperClient(_BaseRESTClient):
         return [node.__dict__ for node in root.getchildren()]
 
     def getPAZ(self, network_id, station_id, datetime, location_id='',
-               channel_id=''):
+               channel_id='', seismometer_gain=False):
         """
-        Get PAZ for a station at given time span.
+        Get PAZ for a station at given time span. Gain is the A0 normalization
+        constant for the poles and zeros.
         
         >>> c = Client()
         >>> a = c.station.getPAZ('BW', 'MANZ', '20090707', channel_id='EHZ')
@@ -307,6 +308,8 @@ class _StationMapperClient(_BaseRESTClient):
         :param channel_id: Channel id, e.g. 'EHE'.
         :param datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
             time string.
+        :param seismometer_gain: If True add also seismometer gain to
+            dictionary
         :return: Dictionary containing zeros, poles, gain and sensitivity.
         """
         # request station information
@@ -341,31 +344,42 @@ class _StationMapperClient(_BaseRESTClient):
                 "']/following-sibling::channel_sensitivity_" + \
                 "gain[stage_sequence_number='0']"
             sensitivity_node = base_node.xpath(xpath_expr)[0]
+            # fetch seismometer gain following channel_sensitivity_node with 
+            # stage_sequence_number == 1
+            xpath_expr = "channel_identifier[channel_identifier='" + \
+                channel_id + "' and location_identifier='" + location_id + \
+                "']/following-sibling::channel_sensitivity_" + \
+                "gain[stage_sequence_number='1']"
+            seismometer_gain_node = base_node.xpath(xpath_expr)[0]
         else:
             # just take first existing nodes
             paz_node = base_node.response_poles_and_zeros[0]
             sensitivity_node = base_node.channel_sensitivity_gain[-1]
+            seismometer_gain_node = base_node.channel_sensitivity_gain[0]
         # instrument name
         # XXX: this probably changes with a newer XSEED format
         #xpath_expr = "generic_abbreviation[abbreviation_lookup_code='" + \
         #    str(channel_node.instrument_identifier) + "']"
         #name = dict_node.xpath(xpath_expr)[0].abbreviation_description
+        paz = {}
         # poles
         poles_real = paz_node.complex_pole.real_pole[:]
         poles_imag = paz_node.complex_pole.imaginary_pole[:]
         poles = zip(poles_real, poles_imag)
-        poles = [p[0] + p[1] * 1j for p in poles]
+        paz['poles'] = [p[0] + p[1] * 1j for p in poles]
         # zeros
         zeros_real = paz_node.complex_zero.real_zero[:][:]
         zeros_imag = paz_node.complex_zero.imaginary_zero[:][:]
         zeros = zip(zeros_real, zeros_imag)
-        zeros = [p[0] + p[1] * 1j for p in zeros]
+        paz['zeros'] = [p[0] + p[1] * 1j for p in zeros]
         # gain
-        gain = paz_node.A0_normalization_factor
+        paz['gain'] = paz_node.A0_normalization_factor
         # sensitivity
-        sensitivity = sensitivity_node.sensitivity_gain
-        return {'poles': poles, 'zeros': zeros, 'gain': gain,
-                'sensitivity': sensitivity}# 'name': name}
+        paz['sensitivity'] = sensitivity_node.sensitivity_gain
+        # paz['name'] = name
+        if seismometer_gain:
+            paz['seismometer_gain'] = seismometer_gain_node.sensitivity_gain
+        return paz
 
 
 class _EventMapperClient(_BaseRESTClient):

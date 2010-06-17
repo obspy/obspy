@@ -352,7 +352,7 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def getPAZ(self, channel_id):
+    def getPAZ(self, channel_id, seismometer_gain=False):
         """
         Return PAZ, currently only the Laplace transform is supported, that
         is blockettes 43 and 53.
@@ -360,7 +360,11 @@ class Parser(object):
         allowed.
         
         :param channel_id: Channel/Component to extract
-        :return: Dictionary containing PAZ as well as the overall sensitivity
+        :param seismometer_gain: If True add also seismometer gain to
+            dictionary
+        :return: Dictionary containing PAZ as well as the overall
+            sensitivity, the gain in the dictionary is the A0 normalization
+            constant
         """
         paz = {}
         # Find index of correct channel
@@ -371,15 +375,25 @@ class Parser(object):
                 index = _i
                 break
         if index == -1:
-            raise Exception('Channel %s not in SEED volume' % channel_id)
+            msg = 'Channel %s not in SEED volume'
+            raise SEEDParserException(msg)
         bl58stag0 = []
+        bl58stag1 = []
         for bl58 in self.blockettes[58]:
             if bl58.stage_sequence_number == 0:
                 bl58stag0.append(bl58)
+            elif bl58.stage_sequence_number == 1:
+                bl58stag1.append(bl58)
         if len(bl58stag0) != nchannels:
-            raise Exception('Not enough stag_seqence in SEED volume' % channel_id)
+            msg = 'Not enough stag_seqence in SEED volume'
+            raise SEEDParserException(msg)
         # Use this index to get the correct sensitivity
         paz['sensitivity'] = bl58stag0[index].sensitivity_gain
+        if seismometer_gain:
+            if len(bl58stag1) != nchannels:
+                msg = 'Cannot retrieve seismometer gain, try without it'
+                raise SEEDParserException(msg)
+            paz['seismometer_gain'] = bl58stag1[index].sensitivity_gain
         # poles, zeros and gain blockettes 43 and 53 are currently supported
         #XXX only single station with single location code allowed
         resp_type = {43: 'response_type', 53: 'transfer_function_types'}
@@ -394,14 +408,16 @@ class Parser(object):
             elif len(blocks) == nchannels:
                 resp = blocks[index]
             else:
-                raise Exception('Inconsistent blockettes 52 and 53, \
-                    possible multiple stations in SEED file')
+                msg = 'Inconsistent blockettes 52 and 53, possible multiple \
+                       stations in SEED file'
+                raise SEEDParserException(msg)
         else:
-            raise Exception('Only supporting Laplace transform, i.e. \
-                blockettes 43 and 53')
+            msg = 'Only supporting Laplace transform i.e. blockettes 43 and 53'
+            raise SEEDParserException(msg)
         # Currently only support Laplace Transform
         if getattr(resp, resp_type[blk]) != "A":
-            raise Exception('Only supporting Laplace transform response type')
+            msg = 'Only supporting Laplace transform response type'
+            raise SEEDParserException(msg)
         # A0_normalization_factor
         paz['gain'] = resp.A0_normalization_factor
         # Poles

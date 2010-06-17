@@ -291,13 +291,14 @@ class ParserTestCase(unittest.TestCase):
         #
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp = Parser(filename)
-        paz = sp.getPAZ('EHE')
+        paz = sp.getPAZ('EHE', seismometer_gain=True)
         self.assertEqual(paz['gain'], +1.00000e+00)
         self.assertEqual(paz['zeros'], [0j, 0j, 0j])
         self.assertEqual(paz['poles'], [(-4.44400e+00 + 4.44400e+00j),
                                         (-4.44400e+00 - 4.44400e+00j),
                                         (-1.08300e+00 + 0.00000e+00j)])
         self.assertEqual(paz['sensitivity'], +6.71140E+08)
+        self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefinded channels
         self.assertRaises(Exception, sp.getPAZ, 'BHE')
         #
@@ -318,12 +319,14 @@ class ParserTestCase(unittest.TestCase):
                  [-1.23413E-02 +1.23413E-02j, -1.23413E-02 -1.23413E-02j,
                   -3.91757E+01 +4.91234E+01j, -3.91757E+01 -4.91234E+01j]]
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
+        seismometer_gain = [+2.29145E+03 ,+1.02583E+01 , +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
-            paz = sp.getPAZ(channel)
+            paz = sp.getPAZ(channel, seismometer_gain=True)
             self.assertEqual(paz['gain'], gain[i])
             self.assertEqual(paz['zeros'], zeros[i])
             self.assertEqual(paz['poles'], poles[i])
             self.assertEqual(paz['sensitivity'], sensitivity[i])
+            self.assertEqual(paz['seismometer_gain'], seismometer_gain[i])
 
     def test_createRESPFromXSEED(self):
         """
