@@ -277,15 +277,16 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser(filename)
-        paz = sp.getPAZ('BHE')
+        paz = sp.getPAZ('BHE', seismometer_gain=True)
         self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
         self.assertEqual(paz['poles'], [(-3.70040e-02 + 3.70160e-02j),
             (-3.70040e-02 - 3.70160e-02j), (-2.51330e+02 + 0.00000e+00j),
             (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
         self.assertEqual(paz['sensitivity'], +7.86576e+08)
+        self.assertEqual(paz['seismometer_gain'], +1.50000E+03)
         # Raise exception for undefinded channels
-        self.assertRaises(Exception, sp.getPAZ, 'EHE')
+        self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
         #
         # Do the same for another dataless file
         #

@@ -390,10 +390,16 @@ class Parser(object):
         # Use this index to get the correct sensitivity
         paz['sensitivity'] = bl58stag0[index].sensitivity_gain
         if seismometer_gain:
-            if len(bl58stag1) != nchannels:
+            if len(bl58stag1) == nchannels:
+                paz['seismometer_gain'] = bl58stag1[index].sensitivity_gain
+            elif len(self.blockettes[60]) == 1:
+                text = "//stage[stage_sequence_number='1']/response_lookup_key"
+                xml = self.blockettes[60][0].getXML(xseed_version=self.version)
+                paz['seismometer_gain'] = float(self.getAbbrevation(\
+                        xml.xpath(text)[1].text, 'sensitivity_gain'))
+            else:
                 msg = 'Cannot retrieve seismometer gain, try without it'
                 raise SEEDParserException(msg)
-            paz['seismometer_gain'] = bl58stag1[index].sensitivity_gain
         # poles, zeros and gain blockettes 43 and 53 are currently supported
         #XXX only single station with single location code allowed
         resp_type = {43: 'response_type', 53: 'transfer_function_types'}
@@ -427,6 +433,19 @@ class Parser(object):
         paz['zeros'] = [complex(x, y) for x, y in \
                         zip(resp.real_zero, resp.imaginary_zero)]
         return paz
+
+    def getAbbrevation(self, xpath, tag):
+        """
+        Return tag of query from xpath query to abbrevation dictionary
+        """
+        # strip everything until the blocket i.e. /xseed/abbr./*/block./
+        query = "/".join(xpath.split('/')[4:])
+        el = (i.getXML(xseed_version=self.version).xpath(query) 
+                for i in self.abbreviations)
+        # find the only non empty element
+        el = [i[0] for i in el if i != []][0]
+        # return the only matching element
+        return el.xpath('//' + tag)[0].text
 
     def writeRESP(self, folder, zipped=False):
         """
