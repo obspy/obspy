@@ -1001,7 +1001,7 @@ class ReadSac(object):
         except ImportError, e:
             print "ERROR: obspy.signal is needed for this function " + \
                   "and is not installed"
-            raise e
+            raise SacError(e)
         eqlat = self.GetHvalue('evla')
         eqlon = self.GetHvalue('evlo')
         stlat = self.GetHvalue('stla')
