@@ -425,19 +425,6 @@ class Parser(object):
             raise SEEDParserException(msg)
         return channels[channel[0]]
 
-    def getAbbrevation(self, xpath, tag):
-        """
-        Return tag of query from xpath query to abbrevation dictionary
-        """
-        # strip everything until the blocket i.e. /xseed/abbr./*/block./
-        query = "/".join(xpath.split('/')[4:])
-        el = (i.getXML(xseed_version=self.version).xpath(query) 
-                for i in self.abbreviations)
-        # find the only non empty element
-        el = [i[0] for i in el if i != []][0]
-        # return the only matching element
-        return el.xpath('//' + tag)[0].text
-
     def writeRESP(self, folder, zipped=False):
         """
         Stores channel responses into files within a given folder.
