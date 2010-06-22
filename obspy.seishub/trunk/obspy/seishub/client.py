@@ -398,7 +398,7 @@ class _EventMapperClient(_BaseRESTClient):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getKml(self, *args, **kwargs):
+    def getKml(self, nolabels=False, *args, **kwargs):
         """
         Posts an event.getList() and returns the results as a kml file.
 
@@ -470,7 +470,10 @@ class _EventMapperClient(_BaseRESTClient):
             else:
                 label = date
                 icon_size = 0.5
-            SubElement(placemark, "name").text = label
+            if nolabels:
+                SubElement(placemark, "name").text = ""
+            else:
+                SubElement(placemark, "name").text = label
             SubElement(placemark, "styleUrl").text = "#earthquake"
             style = SubElement(placemark, "Style")
             icon_style = SubElement(style, "IconStyle")
