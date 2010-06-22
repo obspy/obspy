@@ -277,7 +277,7 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser(filename)
-        paz = sp.getPAZ('BHE', seismometer_gain=True)
+        paz = sp.getPAZ('BHE')
         self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
         self.assertEqual(paz['poles'], [(-3.70040e-02 + 3.70160e-02j),
@@ -292,7 +292,7 @@ class ParserTestCase(unittest.TestCase):
         #
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp = Parser(filename)
-        paz = sp.getPAZ('EHE', seismometer_gain=True)
+        paz = sp.getPAZ('EHE')
         self.assertEqual(paz['gain'], +1.00000e+00)
         self.assertEqual(paz['zeros'], [0j, 0j, 0j])
         self.assertEqual(paz['poles'], [(-4.44400e+00 + 4.44400e+00j),
@@ -301,7 +301,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['sensitivity'], +6.71140E+08)
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefinded channels
-        self.assertRaises(Exception, sp.getPAZ, 'BHE')
+        self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
         #
         # And the same for yet another dataless file
         #
@@ -322,7 +322,7 @@ class ParserTestCase(unittest.TestCase):
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
         seismometer_gain = [+2.29145E+03 ,+1.02583E+01 , +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
-            paz = sp.getPAZ(channel, seismometer_gain=True)
+            paz = sp.getPAZ(channel)
             self.assertEqual(paz['gain'], gain[i])
             self.assertEqual(paz['zeros'], zeros[i])
             self.assertEqual(paz['poles'], poles[i])

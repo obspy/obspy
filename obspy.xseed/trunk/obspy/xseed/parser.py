@@ -13,6 +13,7 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
+from obspy.core import UTCDateTime
 import math
 import os
 import warnings
@@ -352,87 +353,77 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def getPAZ(self, channel_id, seismometer_gain=False):
+    def getPAZ(self, channel_id, datetime=None):
         """
         Return PAZ, currently only the Laplace transform is supported, that
         is blockettes 43 and 53.
         No multiple stations or locations codes in the same XSEED volume are
         allowed.
         
-        :param channel_id: Channel/Component to extract
-        :param seismometer_gain: If True add also seismometer gain to
-            dictionary
+        :param channel_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
+        :param datetime: UTCDateTime of requested PAZ values
         :return: Dictionary containing PAZ as well as the overall
             sensitivity, the gain in the dictionary is the A0 normalization
             constant
         """
-        paz = {}
-        # Find index of correct channel
-        index = -1
-        nchannels = len(self.blockettes[52])
-        for _i, bl52 in enumerate(self.blockettes[52]):
-            if bl52.channel_identifier == channel_id:
-                index = _i
-                break
-        if index == -1:
-            msg = 'Channel %s not in SEED volume'
-            raise SEEDParserException(msg)
-        bl58stag0 = []
-        bl58stag1 = []
-        for bl58 in self.blockettes[58]:
-            if bl58.stage_sequence_number == 0:
-                bl58stag0.append(bl58)
-            elif bl58.stage_sequence_number == 1:
-                bl58stag1.append(bl58)
-        if len(bl58stag0) != nchannels:
-            msg = 'Not enough stag_seqence in SEED volume'
-            raise SEEDParserException(msg)
-        # Use this index to get the correct sensitivity
-        paz['sensitivity'] = bl58stag0[index].sensitivity_gain
-        if seismometer_gain:
-            if len(bl58stag1) == nchannels:
-                paz['seismometer_gain'] = bl58stag1[index].sensitivity_gain
-            elif len(self.blockettes[60]) == 1:
-                text = "//stage[stage_sequence_number='1']/response_lookup_key"
-                xml = self.blockettes[60][0].getXML(xseed_version=self.version)
-                paz['seismometer_gain'] = float(self.getAbbrevation(\
-                        xml.xpath(text)[1].text, 'sensitivity_gain'))
-            else:
-                msg = 'Cannot retrieve seismometer gain, try without it'
-                raise SEEDParserException(msg)
-        # poles, zeros and gain blockettes 43 and 53 are currently supported
-        #XXX only single station with single location code allowed
-        resp_type = {43: 'response_type', 53: 'transfer_function_types'}
-        if self.blockettes.has_key(43):
-            blk = 43
-            resp = self.blockettes[43][0]
-        elif self.blockettes.has_key(53):
-            blk = 53
-            blocks = self.blockettes[53]
-            if len(blocks) == 1:
-                resp = blocks[0]
-            elif len(blocks) == nchannels:
-                resp = blocks[index]
-            else:
-                msg = 'Inconsistent blockettes 52 and 53, possible multiple \
-                       stations in SEED file'
-                raise SEEDParserException(msg)
-        else:
-            msg = 'Only supporting Laplace transform i.e. blockettes 43 and 53'
-            raise SEEDParserException(msg)
-        # Currently only support Laplace Transform
-        if getattr(resp, resp_type[blk]) != "A":
-            msg = 'Only supporting Laplace transform response type'
-            raise SEEDParserException(msg)
-        # A0_normalization_factor
-        paz['gain'] = resp.A0_normalization_factor
-        # Poles
-        paz['poles'] = [complex(x, y) for x, y in \
+        channels = {}
+        for station in self.stations:
+            for blockette in station:
+                if blockette.id == 50:
+                    station_id = "%s.%s" % (blockette.network_code,
+                                    blockette.station_call_letters)
+                    start = blockette.start_effective_date
+                    end = blockette.end_effective_date or UTCDateTime()
+                elif blockette.id == 52:
+                    id = "%s.%s.%s/%e/%e" % (station_id, blockette.location_identifier,
+                            blockette.channel_identifier, start.timestamp, end.timestamp)
+                    channels[id] = {}
+                elif blockette.id == 58:
+                    if blockette.stage_sequence_number == 0:
+                        channels[id]['sensitivity'] = \
+                                blockette.sensitivity_gain
+                    elif blockette.stage_sequence_number == 1:
+                        channels[id]['seismometer_gain'] = \
+                                blockette.sensitivity_gain
+                elif blockette.id == 53:
+                    # A0_normalization_factor
+                    channels[id]['gain'] = blockette.A0_normalization_factor
+                    # Poles
+                    channels[id]['poles'] = [complex(x, y) for x, y in \
+                        zip(blockette.real_pole, blockette.imaginary_pole)]
+                    # Zeros
+                    channels[id]['zeros'] = [complex(x, y) for x, y in \
+                        zip(blockette.real_zero, blockette.imaginary_zero)]
+                elif blockette.id == 60:
+                    abbreviation = blockette.stages[0][1]
+                    channels[id]['seismometer_gain'] = [blk.sensitivity_gain \
+                            for blk in self.abbreviations if hasattr(blk, \
+                            'response_lookup_key') and  \
+                            blk.response_lookup_key == abbreviation][0]
+                    abbreviation = blockette.stages[0][0]
+                    resp = [blk \
+                            for blk in self.abbreviations if hasattr(blk, \
+                            'response_lookup_key') and  \
+                            blk.response_lookup_key == abbreviation][0]
+                    # A0_normalization_factor
+                    channels[id]['gain'] = resp.A0_normalization_factor
+                    # Poles
+                    channels[id]['poles'] = [complex(x, y) for x, y in \
                         zip(resp.real_pole, resp.imaginary_pole)]
-        # Zeros
-        paz['zeros'] = [complex(x, y) for x, y in \
+                    # Zeros
+                    channels[id]['zeros'] = [complex(x, y) for x, y in \
                         zip(resp.real_zero, resp.imaginary_zero)]
-        return paz
+        # Returns only the keys.
+        channel = [cha for cha in channels if channel_id in cha]
+        if datetime:
+            start, end = [float(g) for g  in cha.split('/')[1:]]
+            channel = [cha for cha in channels if start < datetime.timestamp \
+                    and end > datetime.timestamp]
+        if len(channel) != 1:
+            msg = 'None or more than one channel with the given description:' \
+                + ', '.join(channel)
+            raise SEEDParserException(msg)
+        return channels[channel[0]]
 
     def getAbbrevation(self, xpath, tag):
         """
