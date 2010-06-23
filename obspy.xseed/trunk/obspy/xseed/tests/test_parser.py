@@ -26,6 +26,10 @@ class ParserTestCase(unittest.TestCase):
         # directory where the test files are located
         self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.path = os.path.join(self.dir, 'data')
+        self.BW_SEED_files = (os.path.join(self.path, file) for file in
+                ('dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
+                 'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS'))
+
 
     def tearDown(self):
         pass
@@ -189,10 +193,8 @@ class ParserTestCase(unittest.TestCase):
         be changed but 'evened'. Both are valid ways to do it - see SEED-Manual
         chapter 3 for more informations.
         """
-        # Get all filenames.
-        BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
         # Loop over all files.
-        for file in BW_SEED_files:
+        for file in self.BW_SEED_files:
             parser = Parser()
             f = open(file, 'r')
             # Original SEED file.
@@ -224,8 +226,6 @@ class ParserTestCase(unittest.TestCase):
         
         This tests also checks for XML validity using a XML schema.
         """
-        # Get all filenames.
-        BW_SEED_files = glob(os.path.join(self.path, u'dataless.seed.BW*'))
         # Loop over all files and versions.
         for version in ['1.0', '1.1']:
             # Path to xsd-file.
@@ -235,7 +235,7 @@ class ParserTestCase(unittest.TestCase):
             xmlschema_doc = etree.parse(f)
             f.close()
             xmlschema = etree.XMLSchema(xmlschema_doc)
-            for file in BW_SEED_files:
+            for file in self.BW_SEED_files:
                 # Parse the file.
                 parser1 = Parser(file)
                 # Convert to SEED once to avoid any issues seen in

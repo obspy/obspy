@@ -385,26 +385,26 @@ class Parser(object):
                     elif blockette.stage_sequence_number == 1:
                         channels[id]['seismometer_gain'] = \
                                 blockette.sensitivity_gain
-                elif blockette.id == 53:
-                    # A0_normalization_factor
-                    channels[id]['gain'] = blockette.A0_normalization_factor
-                    # Poles
-                    channels[id]['poles'] = [complex(x, y) for x, y in \
-                        zip(blockette.real_pole, blockette.imaginary_pole)]
-                    # Zeros
-                    channels[id]['zeros'] = [complex(x, y) for x, y in \
-                        zip(blockette.real_zero, blockette.imaginary_zero)]
-                elif blockette.id == 60:
-                    abbreviation = blockette.stages[0][1]
-                    channels[id]['seismometer_gain'] = [blk.sensitivity_gain \
-                            for blk in self.abbreviations if hasattr(blk, \
-                            'response_lookup_key') and  \
-                            blk.response_lookup_key == abbreviation][0]
-                    abbreviation = blockette.stages[0][0]
-                    resp = [blk \
-                            for blk in self.abbreviations if hasattr(blk, \
-                            'response_lookup_key') and  \
-                            blk.response_lookup_key == abbreviation][0]
+                elif blockette.id == 53 or blockette.id == 60:
+                    if blockette.id == 60:
+                        abbreviation = blockette.stages[0][1]
+                        channels[id]['seismometer_gain'] = [blk.sensitivity_gain \
+                                for blk in self.abbreviations if hasattr(blk, \
+                                'response_lookup_key') and  \
+                                blk.response_lookup_key == abbreviation][0]
+                        abbreviation = blockette.stages[0][0]
+                        resp = [blk \
+                                for blk in self.abbreviations if hasattr(blk, \
+                                'response_lookup_key') and  \
+                                blk.response_lookup_key == abbreviation][0]
+                        label = 'response_type'
+                    else:
+                        resp = blockette
+                        label = 'transfer_function_types'
+                    # Check if laplace transform
+                    if getattr(resp, label) != "A": 
+                        msg = 'Only supporting Laplace transform response type'
+                        raise SEEDParserException(msg) 
                     # A0_normalization_factor
                     channels[id]['gain'] = resp.A0_normalization_factor
                     # Poles
