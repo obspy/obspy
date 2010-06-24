@@ -456,7 +456,8 @@ class _EventMapperClient(_BaseRESTClient):
         # add one marker per event
         interesting_keys = ['resource_name', 'localisation_method', 'account',
                             'user', 'public', 'datetime', 'longitude',
-                            'latitude', 'depth', 'magnitude']
+                            'latitude', 'depth', 'magnitude', 'used_p',
+                            'used_s']
         for event_dict in events:
             placemark = SubElement(folder, "Placemark")
             date = str(event_dict['datetime']).split(" ")[0]
