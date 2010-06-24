@@ -49,13 +49,15 @@ cpxtrace analysis, ...), please also check the tutorial.**
 """
 
 from obspy.core.util import _getVersionString
-from filter import *
-from rotate import *
-from trigger import *
-from seismometer import *
+from filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH, lowpass, \
+        lowpassZPHSH, highpass, highpassZPHSH, envelope, remezFIR, lowpassFIR
+from rotate import rotate_NE_RT, gps2DistAzimuth
+from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
+        delayedStaLta, zdetect, triggerOnset, pkBaer, arPick
+from seismometer import PAZ_WOOD_ANDERSON
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
-from cpxtrace import *
+from cpxtrace import envelope, normEnvelope, centroid, instFreq, instBwith
 
 
 __version__ = _getVersionString("obspy.signal")

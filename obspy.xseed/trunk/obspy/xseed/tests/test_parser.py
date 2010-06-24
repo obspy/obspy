@@ -302,6 +302,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefinded channels
         self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
+        # Raise exception if not a Laplacian transfer function ('A'). 
+        # Modify transfer_fuction_type on the fly
+        for blk in sp.blockettes[53]:
+            blk.transfer_function_types = 'X'
+        self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
         #
         # And the same for yet another dataless file
         #

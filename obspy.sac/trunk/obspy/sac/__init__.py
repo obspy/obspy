@@ -66,6 +66,6 @@ accessed as an instance of the ReadSac class.
 """
 
 from obspy.core.util import _getVersionString
-from sacio import *
+from sacio import ReadSac, SacError
 
 __version__ = _getVersionString("obspy.sac")
