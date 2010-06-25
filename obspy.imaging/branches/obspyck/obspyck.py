@@ -325,6 +325,7 @@ class PickingGUI:
                               self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
                               self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
@@ -359,6 +360,52 @@ class PickingGUI:
             self.updateStreamLabels()
             self.canv.draw()
 
+    def on_togglebuttonOverview_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
+                              self.buttonDoFocmec, self.togglebuttonShowMap,
+                              self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec,
+                              self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
+                              self.buttonDeleteEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.comboboxStreamName, self.labelStreamNumber,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
+        state = self.togglebuttonOverview.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawStreamOverview()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delAxes()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawSavedPicks()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
     def on_togglebuttonShowFocMec_clicked(self, event):
         buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
                               self.buttonClearFocMec, self.buttonDoHyp2000,
@@ -372,6 +419,7 @@ class PickingGUI:
                               self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
                               self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
@@ -425,6 +473,7 @@ class PickingGUI:
                               self.checkbuttonSysop, self.entrySysopPassword,
                               self.buttonDeleteEvent,
                               self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
                               self.comboboxStreamName, self.labelStreamNumber,
                               self.comboboxPhaseType, self.togglebuttonFilter,
                               self.comboboxFilterType,
@@ -641,6 +690,7 @@ class PickingGUI:
 
     def on_togglebuttonSpectrogram_toggled(self, event):
         buttons_deactivate = [self.togglebuttonFilter,
+                              self.togglebuttonOverview,
                               self.comboboxFilterType,
                               self.checkbuttonZeroPhase,
                               self.labelHighpass, self.labelLowpass,
@@ -1092,6 +1142,7 @@ class PickingGUI:
         self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
         self.comboboxStreamName = self.gla.get_widget("comboboxStreamName")
         self.buttonNextStream = self.gla.get_widget("buttonNextStream")
+        self.togglebuttonOverview = self.gla.get_widget("togglebuttonOverview")
         self.buttonPhaseType = self.gla.get_widget("buttonPhaseType")
         self.comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
         self.togglebuttonFilter = self.gla.get_widget("togglebuttonFilter")
@@ -1819,7 +1870,7 @@ class PickingGUI:
         self.canv.draw()
     
     def updatePlot(self):
-        filt=[]
+        filt = []
         #filter data
         if self.togglebuttonFilter.get_active():
             zerophase = self.checkbuttonZeroPhase.get_active()
@@ -3517,6 +3568,70 @@ class PickingGUI:
         if hasattr(self, "axWadati"):
             self.fig.delaxes(self.axWadati)
             del self.axWadati
+
+    def drawStreamOverview(self):
+        stNum = len(self.streams)
+        self.axs = []
+        self.plts = []
+        self.trans = []
+        self.t = []
+        #we start all our x-axes at 0 with the starttime of the first (Z) trace
+        starttime_global = self.streams[0][0].stats.starttime
+        for i, st in enumerate(self.streams):
+            tr = st[0]
+            npts = tr.stats.npts
+            smprt = tr.stats.sampling_rate
+            #make sure that the relative times of the x-axes get mapped to our
+            #global stream (absolute) starttime (starttime of first (Z) trace)
+            starttime_local = tr.stats.starttime - starttime_global
+            dt = 1. / smprt
+            sampletimes = np.arange(starttime_local,
+                    starttime_local + (dt * npts), dt)
+            # sometimes our arange is one item too long (why??), so we just cut
+            # off the last item if this is the case
+            if len(sampletimes) == npts + 1:
+                sampletimes = sampletimes[:-1]
+            self.t.append(sampletimes)
+            if i == 0:
+                self.axs.append(self.fig.add_subplot(stNum,1,i+1))
+            else:
+                self.axs.append(self.fig.add_subplot(stNum, 1, i+1, 
+                        sharex=self.axs[0], sharey=self.axs[0]))
+                self.axs[i].xaxis.set_ticks_position("top")
+            self.trans.append(matplotlib.transforms.blended_transform_factory(
+                    self.axs[i].transData, self.axs[i].transAxes))
+            self.axs[i].xaxis.set_major_formatter(FuncFormatter(
+                                                  formatXTicklabels))
+            if self.togglebuttonFilter.get_active():
+                zerophase = self.checkbuttonZeroPhase.get_active()
+                freq_highpass = self.spinbuttonHighpass.get_value()
+                freq_lowpass = self.spinbuttonLowpass.get_value()
+                filter_name = self.comboboxFilterType.get_active_text()
+                if filter_name == "Bandpass":
+                    filt_data = bandpass(tr.data, freq_highpass, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
+                elif filter_name == "Bandstop":
+                    filt_data = bandstop(tr.data, freq_highpass, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
+                elif filter_name == "Lowpass":
+                    filt_data = lowpass(tr.data, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
+                elif filter_name == "Highpass":
+                    filt_data = highpass(tr.data, freq_highpass, df=tr.stats.sampling_rate, zerophase=zerophase)
+                self.plts.append(self.axs[i].plot(self.t[i], filt_data, color='k',zorder=1000)[0])
+            else:
+                self.plts.append(self.axs[i].plot(self.t[i], tr.data, color='k',zorder=1000)[0])
+            self.axs[i].text(0.01, 0.95, st[0].stats.station, va="top",
+                             ha="left", fontsize=18, color="b", zorder=10000,
+                             transform=self.axs[i].transAxes)
+        self.axs[-1].xaxis.set_ticks_position("both")
+        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                                                         tr.stats.starttime.microsecond / 1e3 + 0.5,
+                                                         tr.stats.endtime.strftime("%H:%M:%S"),
+                                                         tr.stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
+        self.xMin, self.xMax=self.axs[0].get_xlim()
+        self.yMin, self.yMax=self.axs[0].get_ylim()
+        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
+        self.toolbar.update()
+        self.toolbar.pan(False)
+        self.toolbar.zoom(True)
 
     def drawEventMap(self):
         dM = self.dictMagnitude
