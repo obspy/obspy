@@ -1,0 +1,20 @@
+Source: obspy.core
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 0.3.5
+Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.core/trunk
+Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.core/trunk
+Homepage: http://www.obspy.org
+
+Package: obspy.core
+Architecture: all
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6)
+Description: obspy.core - Core classes of ObsPy: Python for Seismological Observatories
+ This class contains common methods and classes for ObsPy. It includes
+ UTCDateTime, Stats, Stream and Trace classes and methods for reading 
+ seismograms.
+ .
+ For more information visit http://www.obspy.org.
