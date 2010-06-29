@@ -467,7 +467,10 @@ class _EventMapperClient(_BaseRESTClient):
             if mag:
                 mag = float(mag)
                 label = "%s: %.1f" % (date, mag)
-                icon_size = 1.2 * log(1.5 + mag)
+                try:
+                    icon_size = 1.2 * log(1.5 + mag)
+                except ValueError:
+                    icon_size = 0.1
             else:
                 label = date
                 icon_size = 0.5
