@@ -156,7 +156,8 @@ def specInv(spec, wlev):
     return found
 
 
-def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
+def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
+            no_inverse_filtering=False):
     """
     Simulate seismometer.
 
@@ -213,7 +214,8 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0):
     specInv(freq_response, water_level)
     # transform trace in fourier domain
     tr = np.fft.rfft(tr, n=nfft)
-    tr *= np.conj(freq_response)
+    if not no_inverse_filtering:
+        tr *= np.conj(freq_response)
     del freq_response
     #
     # now depending on inst_sim, simulate the seismometer
