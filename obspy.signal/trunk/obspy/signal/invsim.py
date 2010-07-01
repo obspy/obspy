@@ -184,6 +184,10 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
                      'gain'. Poles and zeros must be a list of complex
                      floating point numbers, gain must be of type float. Or
                      None for no simulation.
+    :type no_inverse_filtering: Boolean
+    :param no_inverse_filtering: Specifies if the removal of the prior
+            frequency response should be skipped, i.e. only applying the
+            given new frequency response.
     
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
