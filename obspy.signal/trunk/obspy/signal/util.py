@@ -104,7 +104,7 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     return lon.value, lat.value
 
 
-def xcorr(tr1, tr2, window_len):
+def xcorr(tr1, tr2, shift_len):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
     
@@ -113,13 +113,22 @@ def xcorr(tr1, tr2, window_len):
     >>> a, b = xcorr(tr1, tr2, 1000)
     >>> print a, round(b, 7)
     0 1.0
+
+    ::
+
+                                    Mid Sample
+                                        |                           
+        |AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|
+        |BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|
+        |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
+
     
     :type tr1: numpy ndarray float32
     :param tr1: Trace 1
     :type tr2: numpy ndarray float32
     :param tr2: Trace 2 to correlate with trace 1
-    :type window_len: Int
-    :param window_len: Window length of cross correlation in samples
+    :type shift_len: Int
+    :param shift_len: Total length of samples to shift for cross correlation.
     :return: (index, value) index of maximum xcorr value and the value itself
     """
     # 2009-10-11 Moritz
@@ -137,7 +146,7 @@ def xcorr(tr1, tr2, window_len):
     shift = C.c_int()
     coe_p = C.c_double()
 
-    lib.X_corr(tr1, tr2, window_len, len(tr1), len(tr2),
+    lib.X_corr(tr1, tr2, shift_len, len(tr1), len(tr2),
                C.byref(shift), C.byref(coe_p))
     return shift.value, coe_p.value
 

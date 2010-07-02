@@ -159,14 +159,15 @@ def specInv(spec, wlev):
 def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
             no_inverse_filtering=False):
     """
-    Simulate seismometer.
+    Simulate/Correct seismometer.
 
     This function works in the frequency domain, where nfft is the next power 
     of len(data) to avoid warp around effects during convolution. The inverse 
     of the frequency response of the seismometer is convolved with the spectrum 
     of the data and with the frequency response of the seismometer to
     simulate. A 5% cosine taper is taken before simulation. The data must
-    be detrended (e.g.) zero mean before hand.
+    be detrended (e.g.) zero mean before hand. If inst_sim=None only the
+    instrument correction is done.
 
     :type data: Numpy Ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
@@ -174,9 +175,10 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     :param samp_rate: Sample Rate of Seismogram
     :type paz: Dictionary
     :param paz: Dictionary containing keys 'poles', 'zeros',
-                'gain'. poles and zeros must be a list of complex floating
-                point numbers, gain must be of type float. Poles and Zeros
-                are assumed to correct to m/s, SEED convention.
+                'gain' (A0 normalization factor). poles and zeros must be a
+                list of complex floating point numbers, gain must be of
+                type float. Poles and Zeros are assumed to correct to m/s,
+                SEED convention.
     :type water_level: Float
     :param water_level: Water_Level for spectrum to simulate
     :type inst_sim: Dictionary, None
