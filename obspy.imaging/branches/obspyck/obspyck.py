@@ -923,12 +923,12 @@ class PickingGUI:
             if self.options.merge.lower() == "safe":
                 for st in self.streams:
                     st.merge(method=0)
-            elif self.options.merge.lower() == "progressive":
+            elif self.options.merge.lower() == "overwrite":
                 for st in self.streams:
                     st.merge(method=1)
             else:
                 err = "Unrecognized option for merging traces. Try " + \
-                      "\"safe\" or \"progressive\"."
+                      "\"safe\" or \"overwrite\"."
                 raise Exception(err)
 
         # Sort streams again, if there was a merge this could be necessary 
@@ -992,7 +992,7 @@ class PickingGUI:
                     warn_msg += msg + "\n"
                     self.streams.pop(i)
                     merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
-                            'option merge (-m safe or -m progressive) to ' + \
+                            'option merge (-m safe or -m overwrite) to ' + \
                             'avoid losing streams due gaps/overlaps.'
                     continue
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
@@ -5024,8 +5024,8 @@ def main():
                       "docs/packages/auto/obspy.core.trace.Trace.__add__" + \
                       ".html for details)\n" + \
                       "  \"safe\": overlaps are discarded completely\n" + \
-                      "  \"progressive\": the second trace is used for " + \
-                      "overlaps",
+                      "  \"overwrite\": the second trace is used for " + \
+                      "overlapping parts of the trace",
                       default="")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
