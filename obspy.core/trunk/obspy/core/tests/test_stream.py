@@ -318,6 +318,8 @@ class StreamTestCase(unittest.TestCase):
     def test_slice(self):
         """
         Tests the slice of Stream object.
+        This is not the test for the Stream objects slice method which is
+        passed through to Trace object.
         """
         stream = self.mseed_stream
         self.assertEqual(stream[0:], stream[0:])
@@ -380,6 +382,58 @@ class StreamTestCase(unittest.TestCase):
         for _i in xrange(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
+
+    def test_select(self):
+        """
+        Tests the select method of the Stream object.
+        """
+        # Create a list of header dictionaries.
+        headers = [
+            {'starttime': UTCDateTime(1990, 1, 1), 'network': 'AA',
+             'station': 'ZZZZ', 'channel': 'EHZ', 'sampling_rate': 200.0,
+             'npts': 100},
+            {'starttime' : UTCDateTime(1990, 1, 1), 'network': 'BB',
+             'station': 'YYYY', 'channel': 'EHN', 'sampling_rate': 200.0,
+             'npts': 100},
+            {'starttime': UTCDateTime(2000, 1, 1), 'network': 'AA',
+             'station': 'ZZZZ', 'channel': 'BHZ', 'sampling_rate': 20.0,
+             'npts': 100},
+            {'starttime': UTCDateTime(1989, 1, 1), 'network': 'BB',
+             'station': 'XXXX', 'channel': 'BHN', 'sampling_rate': 20.0,
+             'npts': 100},
+            {'starttime': UTCDateTime(2010, 1, 1), 'network': 'AA',
+             'station': 'XXXX', 'channel': 'EHZ', 'sampling_rate': 200.0,
+             'npts': 100}]
+        # Make stream object for test case
+        traces = []
+        for header in headers:
+            traces.append(Trace(data=np.random.randint(0, 1000, 100), header=header))
+        stream = Stream(traces=traces)
+        # Test cases:
+        stream2 = stream.select()
+        self.assertEquals(stream, stream2)
+        stream2 = stream.select(channel='EHE')
+        self.assertEquals(len(stream2), 0)
+        stream2 = stream.select(channel='EHZ')
+        self.assertEquals(len(stream2), 2)
+        self.assertTrue(stream[0] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(channel='BHZ', sampling_rate='20.0',
+                network='AA', station='ZZZZ', npts=100)
+        self.assertEquals(len(stream2), 1)
+        self.assertTrue(stream[2] in stream2)
+        stream2 = stream.select(channel='EHZ', station="XXXX")
+        self.assertEquals(len(stream2), 1)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(network='AA')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[0] in stream2)
+        self.assertTrue(stream[2] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(sampling_rate=20.0)
+        self.assertEquals(len(stream2), 2)
+        self.assertTrue(stream[2] in stream2)
+        self.assertTrue(stream[3] in stream2)
 
     def test_sort(self):
         """

@@ -678,7 +678,7 @@ class Stream(object):
         return Stream(traces=traces)
 
     def select(self, network=None, station=None, location=None, channel=None,
-               sampling_rate=None, delta=None, npts=None):
+               sampling_rate=None, npts=None):
         """
         Returns new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with channel="EHZ").
@@ -696,11 +696,9 @@ class Stream(object):
                 continue
             if channel and channel != trace.stats.channel:
                 continue
-            if sampling_rate and sampling_rate != trace.stats.sampling_rate:
+            if sampling_rate and float(sampling_rate) != trace.stats.sampling_rate:
                 continue
-            if delta and delta != trace.stats.delta:
-                continue
-            if npts and npts != trace.stats.npts:
+            if npts and int(npts) != trace.stats.npts:
                 continue
             traces.append(trace)
         return Stream(traces=traces)
