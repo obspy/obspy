@@ -1,0 +1,1 @@
+include obspy/core/tests/data/*

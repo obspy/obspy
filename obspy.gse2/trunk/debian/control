@@ -1,0 +1,23 @@
+Source: python-obspy-gse2
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5), gcc
+Standards-Version: 0.3.4
+Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.gse2/trunk
+Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.gse2/trunk
+Homepage: http://www.obspy.org
+
+Package: python-obspy-gse2
+Architecture: any
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6), ${shlibs:Depends}, python-obspy-core
+Description: Read & write seismograms, Format GSE2
+ .
+ This module contains Python wrappers for gse_functions - The GSE2 library
+ of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
+ Currently CM6 compressed GSE2 files are supported, this should be 
+ sufficient for most cases. Gse_functions are written in C and interfaced 
+ via Python ctypes.
+ .
+ For more information visit http://www.obspy.org.

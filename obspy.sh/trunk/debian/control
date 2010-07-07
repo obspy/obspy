@@ -1,0 +1,21 @@
+Source: python-obspy-sh
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 0.3.3
+Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.sh/trunk
+Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.sh/trunk
+Homepage: http://www.obspy.org
+
+Package: python-obspy-sh
+Architecture: all
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6), python-obspy-core
+Description: Support plug-in for Seismic Handler
+ .
+ This modules provides facilities to:
+ - Import and export seismogram files in the Q format.
+ - Import and export seismogram files in the ASC format.
+ .
+ For more information visit http://www.obspy.org.

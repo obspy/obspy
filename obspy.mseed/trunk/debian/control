@@ -1,0 +1,21 @@
+Source: python-obspy-mseed
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5), gcc
+Standards-Version: 0.3.4
+Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.mseed/trunk
+Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.mseed/trunk
+Homepage: http://www.obspy.org
+
+Package: python-obspy-mseed
+Architecture: any
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6), ${shlibs:Depends}, python-obspy-core
+Description: Read & write seismograms, Format MiniSeed
+ .
+ This module contains Python wrappers for libmseed - The MiniSeed
+ library of Chad Trabant. Libmseed is written in C and interfaced via
+ Python ctypes.
+ .
+ For more information visit http://www.obspy.org.

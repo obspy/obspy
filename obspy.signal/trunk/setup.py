@@ -54,7 +54,7 @@ setup(
     version=VERSION,
     description="Python signal processing routines for seismology.",
     long_description="""
-    obspy.signal - Python signal processing routines for seismology.
+    obspy.signal - Python signal processing routines for seismology
 
     Capabilities include filtering, triggering, rotation, instrument
     correction and coordinate transformations.

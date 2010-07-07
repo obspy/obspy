@@ -23,7 +23,7 @@ setup(
     version=VERSION,
     description="Read & write seismograms, Format WAV.",
     long_description="""
-    obspy.wav - Read & write seismograms, Format WAV.
+    obspy.wav - Read & write seismograms, Format WAV
     
     Python methods in order to read and write seismograms to WAV audio
     files. The data are squeezed to audible frequencies.

@@ -1,1 +1,2 @@
 prune docs
+include obspy/gse2/tests/data/*

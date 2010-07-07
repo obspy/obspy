@@ -65,7 +65,7 @@ setup(
     version=VERSION,
     description="Read & write seismograms, Format GSE2.",
     long_description="""
-    obspy.gse2 - Read & write seismograms, Format GSE2.
+    obspy.gse2 - Read & write seismograms, Format GSE2
 
     This module contains Python wrappers for gse_functions - The GSE2 library
     of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).

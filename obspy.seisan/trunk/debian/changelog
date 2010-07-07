@@ -1,0 +1,5 @@
+python-obspy-seisan (0.3.3-1) unstable; urgency=low
+
+  * Initial version
+
+ -- Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>  Mon, 02 Jul 2010 16:17:58 +0200

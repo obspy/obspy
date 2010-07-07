@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="ArcLink/WebDC request client for of ObsPy.",
     long_description="""
-    obspy.arclink - ArcLink/WebDC request client for of ObsPy.
+    obspy.arclink - ArcLink/WebDC request client for of ObsPy
 
     For more information visit http://www.obspy.org.
     """,

@@ -36,7 +36,7 @@ setup(
     version=VERSION,
     description="Provides tools for displaying features used in seismology.",
     long_description="""
-    obspy.imaging - Provides tools for displaying features used in seismology.
+    obspy.imaging - Provides tools for displaying features used in seismology
 
     For more information visit http://www.obspy.org.
     """,

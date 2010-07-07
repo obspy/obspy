@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="SeisHub database client for ObsPy.",
     long_description="""
-    obspy.seishub - SeisHub database client for ObsPy.
+    obspy.seishub - SeisHub database client for ObsPy
 
     For more information visit http://www.obspy.org.
     """,

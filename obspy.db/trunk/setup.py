@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="A waveform database for ObsPy.",
     long_description="""
-    obspy.db - A waveform database for ObsPy.
+    obspy.db - A waveform database for ObsPy
     
     For more information visit http://www.obspy.org.
     """,

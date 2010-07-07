@@ -1,0 +1,1 @@
+include obspy/wav/tests/data/*

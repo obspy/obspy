@@ -8,7 +8,9 @@ GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
 See: http://www.orfeus-eu.org/Software/softwarelib.html#gse.
 
 :copyright: The ObsPy Development Team (devs@obspy.org) & Stefan Stange
-:license: GNU General Public License (GPLv2)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

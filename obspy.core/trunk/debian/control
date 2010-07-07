@@ -1,4 +1,4 @@
-Source: obspy-core
+Source: python-obspy-core
 Section: python
 Priority: extra
 Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
@@ -8,7 +8,7 @@ Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.core/trunk
 Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.core/trunk
 Homepage: http://www.obspy.org
 
-Package: obspy-core
+Package: python-obspy-core
 Architecture: all
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
  python-setuptools (> 0.6)

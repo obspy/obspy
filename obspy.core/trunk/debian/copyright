@@ -1,12 +1,12 @@
 This is the Debian GNU prepackaged version of obspy.core, which was
-written by Robert Barsch, Moritz Beyreuther and Lion Krischer.
+written by Robert Barsch, Moritz Beyreuther, Lion Krischer and Tobias
+Megies.
 
 This package was debianized by Moritz Beyreuther. The source for
 this release was taken from:
 https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.core/trunk
 
-Program Copyright (C) 2009,2010 The ObsPy Development Team
-Modifications for Debian Copyright (C) 1994,1995,1996 Moritz Beyreuther.
+Program Copyright (C) 2009,2010 The ObsPy Development Team <devs@obspy.org>.
 
 Copyright:
 

@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="Read & Write Seismograms, Format SAC.",
     long_description="""
-    obspy.sac - Read & Write Seismograms, Format SAC.
+    obspy.sac - Read & Write Seismograms, Format SAC
     
     Python methods for reading and writing seismograms to SAC.
 

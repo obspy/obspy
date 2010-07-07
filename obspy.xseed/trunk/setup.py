@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="Tool to convert between Dataless SEED and XML-SEED files.",
     long_description="""
-    obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files.
+    obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files
 
     For more information visit http://www.obspy.org.
     """,

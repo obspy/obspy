@@ -22,7 +22,7 @@ setup(
     version=VERSION,
     description="Support plug-in for Seismic Handler.",
     long_description="""
-    obspy.sh - Support plug-in for Seismic Handler.
+    obspy.sh - Support plug-in for Seismic Handler
     
     This modules provides facilities to:
     - Import and export seismogram files in the Q format.

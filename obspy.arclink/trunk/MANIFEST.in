@@ -1,1 +1,2 @@
 prune docs
+include obspy/arclink/tests/data/*

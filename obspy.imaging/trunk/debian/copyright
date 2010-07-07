@@ -1,0 +1,19 @@
+This is the Debian GNU prepackaged version of obspy.imaging, which was
+written by Robert Barsch, Moritz Beyreuther, Lion Krischer and Tobias
+Megies.
+
+This package was debianized by Moritz Beyreuther. The source for
+this release was taken from:
+https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.imaging/trunk
+
+Program Copyright (C) 2009, 2010 The ObsPy Development Team <devs@obspy.org>.
+
+Copyright:
+
+This program is free software.  You may redistribute it and/or
+modify it under the terms of:
+
+The GNU General Public License, as published by the Free
+Software Foundation; either version 3, or (at your option) any
+later version.  A copy of this license is in the file
+/usr/share/common-licenses/GPL-3
