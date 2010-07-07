@@ -678,13 +678,25 @@ class Stream(object):
         return Stream(traces=traces)
 
     def select(self, network=None, station=None, location=None, channel=None,
-               sampling_rate=None, npts=None):
+               sampling_rate=None, npts=None, component=None):
         """
         Returns new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with channel="EHZ").
+        All kwargs except for component are tested directly against the
+        respective entry in the trace.stats dictionary.
+        If a string for component is given (should be a single letter) it is
+        tested (case insensitive) against the last letter of the
+        trace.stats.channel entry.
 
         Does not copy the data but only passes a reference.
         """
+        # make given component letter uppercase (if e.g. "z" is given)
+        if component:
+            component = component.upper()
+            if channel and component != channel[-1]:
+                msg = "Selection criteria for channel and component are " + \
+                      "mutually exclusive!"
+                raise Exception(msg)
         traces = []
         for trace in self:
             # skip trace if any given criterion is not matched
@@ -699,6 +711,8 @@ class Stream(object):
             if sampling_rate and float(sampling_rate) != trace.stats.sampling_rate:
                 continue
             if npts and int(npts) != trace.stats.npts:
+                continue
+            if component and component != trace.stats.channel[-1]:
                 continue
             traces.append(trace)
         return Stream(traces=traces)

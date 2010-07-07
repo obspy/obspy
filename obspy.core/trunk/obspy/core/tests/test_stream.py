@@ -412,14 +412,25 @@ class StreamTestCase(unittest.TestCase):
         # Test cases:
         stream2 = stream.select()
         self.assertEquals(stream, stream2)
+        self.assertRaises(Exception, stream.select, channel="EHZ",
+                          component="N")
         stream2 = stream.select(channel='EHE')
         self.assertEquals(len(stream2), 0)
         stream2 = stream.select(channel='EHZ')
         self.assertEquals(len(stream2), 2)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[4] in stream2)
-        stream2 = stream.select(channel='BHZ', sampling_rate='20.0',
-                network='AA', station='ZZZZ', npts=100)
+        stream2 = stream.select(component='Z')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[0] in stream2)
+        self.assertTrue(stream[2] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(component='n')
+        self.assertEquals(len(stream2), 2)
+        self.assertTrue(stream[1] in stream2)
+        self.assertTrue(stream[3] in stream2)
+        stream2 = stream.select(channel='BHZ', component='Z',
+                sampling_rate='20.0', network='AA', station='ZZZZ', npts=100)
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='EHZ', station="XXXX")
