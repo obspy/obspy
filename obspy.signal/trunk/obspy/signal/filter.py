@@ -22,7 +22,7 @@ from scipy.fftpack import hilbert
 from scipy.signal import iirfilter, lfilter, remez, convolve, get_window
 
 
-def bandpass(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
+def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
@@ -32,7 +32,7 @@ def bandpass(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
+    :param df: Sampling rate in Hz.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
@@ -50,14 +50,14 @@ def bandpass(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
-def bandpassZPHSH(data, freqmin, freqmax, df=200, corners=2):
+def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
-def bandstop(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
+def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandstop Filter.
 
@@ -67,7 +67,7 @@ def bandstop(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
+    :param df: Sampling rate in Hz.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
@@ -85,14 +85,14 @@ def bandstop(data, freqmin, freqmax, df=200, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
-def bandstopZPHSH(data, freqmin, freqmax, df=200, corners=2):
+def bandstopZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
-def lowpass(data, freq, df=200, corners=4, zerophase=False):
+def lowpass(data, freq, df, corners=4, zerophase=False):
     """
     Butterworth-Lowpass Filter.
 
@@ -101,7 +101,7 @@ def lowpass(data, freq, df=200, corners=4, zerophase=False):
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
+    :param df: Sampling rate in Hz.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
@@ -119,14 +119,14 @@ def lowpass(data, freq, df=200, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
-def lowpassZPHSH(data, freq, df=200, corners=2):
+def lowpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
     return lowpass(data, freq, df, corners, zerophase=True)
 
 
-def highpass(data, freq, df=200, corners=4, zerophase=False):
+def highpass(data, freq, df, corners=4, zerophase=False):
     """
     Butterworth-Highpass Filter.
 
@@ -134,7 +134,7 @@ def highpass(data, freq, df=200, corners=4, zerophase=False):
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
-    :param df: Sampling rate in Hz; Default 200.
+    :param df: Sampling rate in Hz.
     :param corners: Filter corners. Note: This is twice the value of PITSA's 
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
@@ -152,7 +152,7 @@ def highpass(data, freq, df=200, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
-def highpassZPHSH(data, freq, df=200, corners=2):
+def highpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
@@ -177,7 +177,7 @@ def envelope(data):
     return data
 
 
-def remezFIR(data, freqmin, freqmax, samp_rate=200):
+def remezFIR(data, freqmin, freqmax, samp_rate):
     """
     The minimax optimal bandpass using Remez algorithm. Zerophase bandpass?
 
@@ -240,7 +240,7 @@ def remezFIR(data, freqmin, freqmax, samp_rate=200):
     return convolve(filt, data)
 
 
-def lowpassFIR(data, freq, samp_rate=200, winlen=2048):
+def lowpassFIR(data, freq, samp_rate, winlen=2048):
     """
     FIR-Lowpass Filter
 
@@ -248,7 +248,7 @@ def lowpassFIR(data, freq, samp_rate=200, winlen=2048):
   
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Data below this frequency pass.
-    :param samprate: Sampling rate in Hz; Default 200.
+    :param samprate: Sampling rate in Hz.
     :param winlen: Window length for filter in samples, must be power of 2; 
         Default 2048
     :return: Filtered data.
