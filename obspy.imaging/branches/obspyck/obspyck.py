@@ -752,7 +752,7 @@ class PickingGUI:
             pass
         gtk.main_quit()
 
-    def __init__(self, client = None, streams = None, options = None):
+    def __init__(self, client=None, streams=None, options=None):
         self.client = client
         self.streams = streams
         self.options = options
@@ -918,6 +918,24 @@ class PickingGUI:
         if not streams:
             return
 
+        # Merge on every stream if this option is passed on command line:
+        if self.options.merge:
+            if self.options.merge.lower() == "safe":
+                for st in self.streams:
+                    st.merge(method=0)
+            elif self.options.merge.lower() == "progressive":
+                for st in self.streams:
+                    st.merge(method=1)
+            else:
+                err = "Unrecognized option for merging traces. Try " + \
+                      "\"safe\" or \"progressive\"."
+                raise Exception(err)
+
+        # Sort streams again, if there was a merge this could be necessary 
+        for st in self.streams:
+            st.sort()
+            st.reverse()
+
         # Define some forbidden scenarios.
         # We assume there are:
         # - either one Z or three ZNE traces
@@ -926,6 +944,7 @@ class PickingGUI:
         # we need to go through streams/dicts backwards in order not to get
         # problems because of the pop() statement
         warn_msg = ""
+        merge_msg = ""
         for i in range(len(self.streams))[::-1]:
             st = self.streams[i]
             net_sta = "%s:%s" % (st[0].stats.network.strip(),
@@ -950,10 +969,10 @@ class PickingGUI:
                 # remove all unknown channels ending with something other than
                 # Z/N/E and try again...
                 removed_channels = ""
-                for i in range(len(st))[::-1]:
-                    if not st[i].stats.channel[-1] in ["Z", "N", "E"]:
+                for tr in st:
+                    if not tr.stats.channel[-1] in ["Z", "N", "E"]:
                         removed_channels += " " + st[i].stats.channel
-                        st.remove(i)
+                        st.remove(tr)
                 if len(st.traces) in [1, 3]:
                     msg = 'Warning: deleted some unknown channels in ' + \
                           'stream %s:%s' % (net_sta, removed_channels)
@@ -961,16 +980,20 @@ class PickingGUI:
                     warn_msg += msg + "\n"
                     continue
                 else:
-                    msg = 'Stream %s discarded.' % net_sta + \
+                    msg = 'Stream %s discarded.\n' % net_sta + \
                           'Reason: Number of traces != (1 or 3)'
                     print msg
                     warn_msg += msg + "\n"
-                    for j, tr in enumerate(st.traces):
-                        msg = 'Trace no. %i in Stream: %s\n%s' % \
-                                (j + 1, tr.stats.channel, tr.stats)
-                        print msg
-                        warn_msg += msg + "\n"
+                    #for j, tr in enumerate(st.traces):
+                    #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                    #            (j + 1, tr.stats.channel, tr.stats)
+                    msg = str(st)
+                    print msg
+                    warn_msg += msg + "\n"
                     self.streams.pop(i)
+                    merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
+                            'option merge (-m safe or -m progressive) to ' + \
+                            'avoid losing streams due gaps/overlaps.'
                     continue
             if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
                 msg = 'Warning: All streams must have either one Z trace ' + \
@@ -979,11 +1002,12 @@ class PickingGUI:
                        'Exactly one trace present but this is no Z trace'
                 print msg
                 warn_msg += msg + "\n"
-                for j, tr in enumerate(st.traces):
-                    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                            (j + 1, tr.stats.channel, tr.stats)
-                    print msg
-                    warn_msg += msg + "\n"
+                #for j, tr in enumerate(st.traces):
+                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                #            (j + 1, tr.stats.channel, tr.stats)
+                msg = str(st)
+                print msg
+                warn_msg += msg + "\n"
                 self.streams.pop(i)
                 continue
             if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
@@ -999,14 +1023,25 @@ class PickingGUI:
                        'Exactly three traces present but they are not ZNE'
                 print msg
                 warn_msg += msg + "\n"
-                for j, tr in enumerate(st.traces):
-                    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                            (j + 1, tr.stats.channel, tr.stats)
-                    print msg
-                    warn_msg += msg + "\n"
+                #for j, tr in enumerate(st.traces):
+                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                #            (j + 1, tr.stats.channel, tr.stats)
+                msg = str(st)
+                print msg
+                warn_msg += msg + "\n"
                 self.streams.pop(i)
                 continue
             sta_list.add(net_sta)
+        
+        # if it was assigned at some point show the merge info message now
+        if merge_msg:
+            print merge_msg
+
+        # exit if no streams are left after removing everthing with missing
+        # information:
+        if self.streams == []:
+            print "Error: No streams."
+            return
 
         #set up a list of dictionaries to store all picking data
         # set all station magnitude use-flags False
@@ -1059,12 +1094,6 @@ class PickingGUI:
             print 'done.'
         print "=" * 70
         
-        # exit if no streams are left after removing everthing with missing
-        # information:
-        if self.streams == []:
-            print "Error: No streams."
-            return
-
         # demean traces if not explicitly deactivated on command line
         if not self.options.nozeromean:
             for st in self.streams:
@@ -4986,6 +5015,18 @@ def main():
                       "can be used with a specified offset for the " + \
                       "starttime. E.g. to request a waveform starting 30 " + \
                       "seconds earlier than the specified time use -30.")
+    parser.add_option("-m", "--merge", type="string", dest="merge",
+                      help="After fetching the streams from seishub run a " + \
+                      "merge operation on every stream. If not done, " + \
+                      "streams with gaps and therefore more traces per " + \
+                      "channel get discarded.\nTwo methods are supported " + \
+                      "(see http://svn.geophysik.uni-muenchen.de/obspy/" + \
+                      "docs/packages/auto/obspy.core.trace.Trace.__add__" + \
+                      ".html for details)\n" + \
+                      "  \"safe\": overlaps are discarded completely\n" + \
+                      "  \"progressive\": the second trace is used for " + \
+                      "overlaps",
+                      default="")
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
