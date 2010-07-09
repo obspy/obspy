@@ -750,6 +750,72 @@ class Trace(object):
             print self.data.dtype.byteorder
             raise Exception(msg)
 
+    def filter(self, type, filter_options, in_place=True):
+        """
+        Filters the data of the current trace. This is performed in place on
+        the actual data array. The raw data is not accessible anymore
+        afterwards.
+        This also makes an entry with information on the applied processing
+        in self.stats.processing.
+
+        Basic Usage
+        -----------
+        >>> tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})
+         or:
+        >>> new_tr = tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0},
+                    in_place=False)
+
+        :param type: String that specifies which filter is applied (e.g.
+                "bandpass").
+        :param filter_options: Dictionary that contains arguments that will
+                be passed to the respective filter function as kwargs.
+                (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
+        :param in_place: Determines if the filter is applied in place or if
+                a new Trace object is returned.
+        :return: None if in_place=True, new Trace with filtered data otherwise.
+        """
+        try:
+            from obspy.signal import bandpass, bandstop, lowpass, highpass
+        except ImportError:
+            msg = "Error during import from obspy.signal. Please make " + \
+                  "sure obspy.signal is installed properly."
+            raise ImportError(msg)
+
+        # dictionary to map given type-strings to filter functions
+        filter_functions = {"bandpass": bandpass, "bandstop": bandstop,
+                            "lowpass": lowpass, "highpass": highpass}
+        
+        #make type string comparison case insensitive
+        type = type.lower()
+
+        if type not in filter_functions:
+            msg = "Filter type \"%s\" not recognized. " % type + \
+                  "Filter type must be one of: %s." % filter_functions
+            raise Exception(msg)
+        
+        # if in_place is set to False create a new Trace object
+        if in_place:
+            tr = self
+        else:
+            tr = deepcopy(self)
+
+        # do the actual filtering. the filter_options dictionary is passed as
+        # kwargs to the function that is mapped according to the
+        # filter_functions dictionary.
+        tr.data = filter_functions[type](tr.data,
+                df=tr.stats.sampling_rate, **filter_options)
+        
+        # add processing information to the stats dictionary
+        if not 'processing' in tr.stats:
+            tr.stats['processing'] = []
+        proc_info = "filter:%s:%s" % (type, filter_options)
+        tr.stats['processing'].append(proc_info)
+        
+        if in_place:
+            return
+        else:
+            return tr
+
 
 if __name__ == '__main__':
     import doctest

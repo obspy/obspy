@@ -383,6 +383,97 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
+    def test_filter(self):
+        """
+        Tests the filter method of the Stream object.
+
+        Basically three scenarios are tested (with differing filter options):
+        - filtering with in_place=False:
+            - is original stream unchanged?
+            - is data of filtered stream's traces the same as if done by hand
+            - is processing information present in filtered stream's traces
+        - filtering with in_place=True:
+            - is data of filtered stream's traces the same as if done by hand
+            - is processing information present in filtered stream's traces
+        - filtering with bad arguments passed to stream.filter():
+            - is a TypeError properly raised?
+            - after all bad filter calls, is the stream still unchanged?
+        """
+        from obspy.signal import bandpass, bandstop, lowpass, highpass
+        # streams to run tests on:
+        streams = [self.mseed_stream, self.gse2_stream]
+        # drop the longest trace of the first stream to save a second
+        streams[0].pop()
+        streams_bkp = deepcopy(streams)
+        # different sets of filters to run test on:
+        filters = [['bandpass', {'freqmin': 1., 'freqmax': 20.}],
+                   ['bandstop', {'freqmin': 5, 'freqmax': 15., 'corners': 6}],
+                   ['lowpass', {'freq': 30.5, 'zerophase': True}],
+                   ['highpass', {'freq': 2, 'corners': 2}]]
+        filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
+                      'lowpass': lowpass, 'highpass': highpass}
+        
+        # tests for in_place=False
+        for j, st in enumerate(streams):
+            for filt_type, filt_ops in filters:
+                st_bkp = streams_bkp[j]
+                st2 = st.filter(filt_type, filt_ops, in_place=False)
+                # test if original stream is unchanged
+                for i, tr in enumerate(st):
+                    np.testing.assert_array_equal(tr.data, st_bkp[i].data)
+                    self.assertEqual(tr.stats, st_bkp[i].stats)
+                # test if all traces were filtered as expected
+                for i, tr in enumerate(st2):
+                    data_filt = filter_map[filt_type](st[i].data,
+                            df=tr.stats.sampling_rate, **filt_ops)
+                    np.testing.assert_array_equal(tr.data, data_filt)
+                    self.assertTrue('processing' in tr.stats)
+                    self.assertEqual(len(tr.stats.processing), 1)
+                    self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
+                            (filt_type, filt_ops))
+        # tests for in_place=True
+        for j, st in enumerate(streams):
+            st_bkp = streams_bkp[j]
+            for filt_type, filt_ops in filters:
+                st = deepcopy(streams_bkp[j])
+                st.filter(filt_type, filt_ops, in_place=True)
+                # test if all traces were filtered as expected
+                for i, tr in enumerate(st):
+                    data_filt = filter_map[filt_type](st_bkp[i].data,
+                            df=st_bkp[i].stats.sampling_rate, **filt_ops)
+                    np.testing.assert_array_equal(tr.data, data_filt)
+                    self.assertTrue('processing' in tr.stats)
+                    self.assertEqual(len(tr.stats.processing), 1)
+                    self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
+                            (filt_type, filt_ops))
+                st.filter(filt_type, filt_ops, in_place=True)
+                for i, tr in enumerate(st):
+                    self.assertTrue('processing' in tr.stats)
+                    self.assertEqual(len(tr.stats.processing), 2)
+                    for proc_info in tr.stats.processing:
+                        self.assertEqual(proc_info, "filter:%s:%s" % \
+                                (filt_type, filt_ops))
+
+        # some tests that should raise an Exception
+        st = streams[0]
+        st_bkp = streams_bkp[0]
+        bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
+                ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
+                ['bandstop', {}],
+                ['bandstop', [1, 2, 3, 4, 5]],
+                ['bandstop', None],
+                ['bandstop', 3],
+                ['bandstop', 'XXX'],
+                ['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}],
+                ['bandpass', {'freqmin': 5, 'corners': 6}],
+                ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
+        for filt_type, filt_ops in bad_filters:
+            self.assertRaises(TypeError, st.filter, filt_ops, in_place=True)
+        # test if stream is unchanged after all these bad tests
+        for i, tr in enumerate(st):
+            np.testing.assert_array_equal(tr.data, st_bkp[i].data)
+            self.assertEqual(tr.stats, st_bkp[i].stats)
+
     def test_select(self):
         """
         Tests the select method of the Stream object.

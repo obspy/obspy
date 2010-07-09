@@ -817,6 +817,42 @@ class Stream(object):
                     interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
 
+    def filter(self, type, filter_options, in_place=True):
+        """
+        Filters the data of all traces in the Stream. This is performed in
+        place on the actual data arrays. The raw data is not accessible anymore
+        afterwards.
+        This also makes an entry with information on the applied processing
+        in self[:].stats.processing.
+
+        Basic Usage
+        -----------
+        >>> st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})
+         or:
+        >>> new_st = st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0},
+                    in_place=False)
+
+        :param type: String that specifies which filter is applied (e.g.
+                "bandpass").
+        :param filter_options: Dictionary that contains arguments that will
+                be passed to the respective filter function as kwargs.
+                (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
+        :param in_place: Determines if the filter is applied in place or if
+                a new Stream object is returned.
+        :return: None if in_place=True, new Stream with filtered traces
+                otherwise.
+        """
+        new_traces = []
+        for trace in self:
+            new_tr = trace.filter(type=type, filter_options=filter_options,
+                                  in_place=in_place)
+            new_traces.append(new_tr)
+
+        if in_place:
+            return
+        else:
+            return Stream(traces=new_traces)
+
 
 def createDummyStream(stream_string):
     """
