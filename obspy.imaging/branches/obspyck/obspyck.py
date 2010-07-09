@@ -969,10 +969,11 @@ class PickingGUI:
                 # remove all unknown channels ending with something other than
                 # Z/N/E and try again...
                 removed_channels = ""
-                for tr in st:
+                for i in range(len(st))[::-1]:
+                    tr = st[i]
                     if not tr.stats.channel[-1] in ["Z", "N", "E"]:
                         removed_channels += " " + st[i].stats.channel
-                        st.remove(tr)
+                        st.remove(i)
                 if len(st.traces) in [1, 3]:
                     msg = 'Warning: deleted some unknown channels in ' + \
                           'stream %s:%s' % (net_sta, removed_channels)
