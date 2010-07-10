@@ -5,7 +5,7 @@ The sacio test suite.
 """
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import ReadSac, SacError
+from obspy.sac import SacIO, SacError, ReadSac
 import numpy as np
 import inspect
 import os

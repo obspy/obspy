@@ -6,7 +6,7 @@ The sac.core test suite.
 from obspy.core import Stream, Trace, read, AttribDict
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import ReadSac
+from obspy.sac import SacIO
 import copy
 import inspect
 import numpy as np
@@ -157,14 +157,14 @@ class CoreTestCase(unittest.TestCase):
         # test that iztype 11 is read correctly
         sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
         tr = read(sod_file)[0]
-        sac = ReadSac(sod_file)
+        sac = SacIO(sod_file)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.starttime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
         # see that iztype is written corretly
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile, format="SAC")
-        sac2 = ReadSac(tempfile)
+        sac2 = SacIO(tempfile)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.starttime.timestamp, 5)

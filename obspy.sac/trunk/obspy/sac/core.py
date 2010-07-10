@@ -7,7 +7,7 @@ SAC bindings to ObsPy core module.
 """
 
 from obspy.core import Trace, Stream
-from obspy.sac.sacio import ReadSac
+from obspy.sac.sacio import SacIO
 import struct
 import os
 
@@ -95,7 +95,7 @@ def readSAC(filename, headonly=False, **kwargs):
     >>> st = read("sac_file") # doctest: +SKIP
     """
     # read SAC file
-    t = ReadSac()
+    t = SacIO()
     if headonly:
         t.ReadSacHeader(filename)
     else:
@@ -152,7 +152,7 @@ def writeSAC(stream, filename, **kwargs):
     i = 0
     base, ext = os.path.splitext(filename)
     for trace in stream:
-        t = ReadSac()
+        t = SacIO()
         # setting start time depending on iztype, if no sac extra header is
         # defined iztype (9 == Begin Time) will be set by t.fromarray
         nz = trace.stats.starttime

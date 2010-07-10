@@ -36,13 +36,13 @@ class SacIOError(Exception):
     pass
 
 
-class ReadSac(object):
+class SacIO(object):
     """
     Class for SAC file IO.
 
     Functions are given below, attributes/header
     fields (described below) can be directly accessed (via the
-    :meth:`~obspy.sac.sacio.ReadSac.__getattr__` method, see the link for
+    :meth:`~obspy.sac.sacio.SacIO.__getattr__` method, see the link for
     an example).
 
     Description of attributes/header fields (based on SacIris_).
@@ -272,7 +272,7 @@ class ReadSac(object):
         """
         Create a SAC file from an numpy.ndarray instance
 
-        >>> t = ReadSac()
+        >>> t = SacIO()
         >>> b = np.arange(10)
         >>> t.fromarray(b)
         >>> t.GetHvalue('npts')
@@ -314,19 +314,19 @@ class ReadSac(object):
         
         :param item: header variable name (e.g. 'npts' or 'delta')
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.GetHvalue('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
         
-        >>> ReadSac().GetHvalueFromFile('test.sac','npts') # doctest: +SKIP
+        >>> SacIO().GetHvalueFromFile('test.sac','npts') # doctest: +SKIP
         100
 
         Or:
         
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.npts # doctest: +SKIP
         100
 
@@ -358,8 +358,8 @@ class ReadSac(object):
         :param item: SAC-header variable name
         :param value: numeric or string value to be assigned to header-variable.
 
-        >>> from obspy.sac import ReadSac
-        >>> tr = ReadSac()
+        >>> from obspy.sac import SacIO
+        >>> tr = SacIO()
         >>> tr.GetHvalue('kstnm')
         '-12345  '
         >>> tr.SetHvalue('kstnm','STA_NEW')
@@ -424,13 +424,13 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac() # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO() # doctest: +SKIP
         >>> tr.ReadSacHeader('test.sac') # doctest: +SKIP
 
         This is equivalent to:
         
-        >>> tr = ReadSac('test.sac', headonly=True)  # doctest: +SKIP
+        >>> tr = SacIO('test.sac', headonly=True)  # doctest: +SKIP
 
         """
         #### check if file exists
@@ -489,10 +489,10 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
-        >>> u = ReadSac('test2.sac') # doctest: +SKIP
+        >>> u = SacIO('test2.sac') # doctest: +SKIP
         >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
         >>> u.WriteSacHeader('test2.sac') # doctest: +SKIP
         >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
@@ -527,13 +527,13 @@ class ReadSac(object):
         
         :param f: filename (SAC binary)
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac() # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO() # doctest: +SKIP
         >>> tr.ReadSacFile('test.sac') # doctest: +SKIP
 
         This is equivalent to:
         
-        >>> tr = ReadSac('test.sac')  # doctest: +SKIP
+        >>> tr = SacIO('test.sac')  # doctest: +SKIP
 
         """
         try:
@@ -603,15 +603,15 @@ class ReadSac(object):
 
         :param f: filename (SAC ascii).
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac() # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO() # doctest: +SKIP
         >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
         >>> tr.GetHvalue('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
         
-        >>> tr = ReadSac('testxy.sac',alpha=True) # doctest: +SKIP 
+        >>> tr = SacIO('testxy.sac',alpha=True) # doctest: +SKIP 
 
         Reading only the header portion of alphanumeric SAC-files is currently not supported.
         """
@@ -670,8 +670,8 @@ class ReadSac(object):
 
         :param f: filename (SAC ascii)
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.WriteSacXY('test2.sac') # doctest: +SKIP
         >>> tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
         True
@@ -709,8 +709,8 @@ class ReadSac(object):
 
         :param f: filename (SAC binary).
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> tr = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.WriteSacBinary('test2.sac') # doctest: +SKIP
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
@@ -759,8 +759,8 @@ class ReadSac(object):
         :param: None
         :return: None
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> t = SacIO('test.sac') # doctest: +SKIP
         >>> t.ListStdValues() # doctest: +SKIP
         <BLANKLINE>
         Reference Time = 07/18/1978 (199) 8:0:0.0
@@ -836,8 +836,8 @@ class ReadSac(object):
         :type hn: string
         :param hn: header variable name
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> t = ReadSac() # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> t = SacIO() # doctest: +SKIP
         >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip() # doctest: +SKIP
         'Q'
 
@@ -862,8 +862,8 @@ class ReadSac(object):
         :param hv: header variable value (numeric or string value to be assigned to hn)
         :return: None
 
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> t = ReadSac() # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> t = SacIO() # doctest: +SKIP
         >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'STA'
         >>> t.SetHvalueInFile('test.sac','kstnm','blub') # doctest: +SKIP
@@ -885,10 +885,10 @@ class ReadSac(object):
         :param f: filename (SAC binary)
         :rtype: boolean (True or False)
         
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> ReadSac().IsValidSacFile('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> SacIO().IsValidSacFile('test.sac') # doctest: +SKIP
         True
-        >>> ReadSac().IsValidSacFile('testxy.sac') # doctest: +SKIP
+        >>> SacIO().IsValidSacFile('testxy.sac') # doctest: +SKIP
         False
 
         """
@@ -911,10 +911,10 @@ class ReadSac(object):
         :param file: filename (SAC ascii)
         :rtype: boolean (True or False)
         
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> ReadSac().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> SacIO().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
         True
-        >>> ReadSac().IsValidXYSacFile('test.sac') # doctest: +SKIP
+        >>> SacIO().IsValidXYSacFile('test.sac') # doctest: +SKIP
         False
 
         """
@@ -932,7 +932,7 @@ class ReadSac(object):
         """
         If date header values are set calculate date in julian seconds
 
-        >>> t = ReadSac()
+        >>> t = SacIO()
         >>> t.fromarray(np.random.randn(100), delta=1.0, \
                         starttime=UTCDateTime(1970,01,01))
         >>> t._get_date_()
@@ -976,7 +976,7 @@ class ReadSac(object):
         """
         calculate distance from station and event coordinates
 
-        >>> t = ReadSac()
+        >>> t = SacIO()
         >>> t.SetHvalue('evla',48.15)
         >>> t.SetHvalue('evlo',11.58333)
         >>> t.SetHvalue('stla',-41.2869)
@@ -1026,8 +1026,8 @@ class ReadSac(object):
         :param: None
         :return: None
         
-        >>> from obspy.sac import ReadSac # doctest: +SKIP
-        >>> t = ReadSac('test.sac') # doctest: +SKIP
+        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> t = SacIO('test.sac') # doctest: +SKIP
         >>> t.swap_byte_order() # doctest: +SKIP
         """
         if self.byteorder == 'big':
@@ -1047,12 +1047,18 @@ class ReadSac(object):
 
         :param hname: header variable name
 
-        >>> tr = ReadSac()
+        >>> tr = SacIO()
         >>> tr.fromarray(np.random.randn(100))
         >>> tr.npts == tr.GetHvalue('npts') # doctest: +SKIP
         True
         """
         return self.GetHvalue(hname)
+
+class ReadSac(SacIO):
+    """
+    DEPRECATED. Use :func:`~obspy.sac.SacIO` instead.
+    """
+    pass
 
 
 if __name__ == "__main__":

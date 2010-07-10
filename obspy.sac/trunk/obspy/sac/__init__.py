@@ -60,9 +60,9 @@ stats and stats['sac'] are written with the following command to a file:
 
 Additonal methods of obspy.sac
 ------------------------------
-More SAC-specific functionality is available if you import the ReadSac
+More SAC-specific functionality is available if you import the SacIO
 class from the obspy.sac module. All of the following methods can only be
-accessed as an instance of the ReadSac class.
+accessed as an instance of the SacIO class.
 """
 
 from obspy.core.util import _getVersionString
