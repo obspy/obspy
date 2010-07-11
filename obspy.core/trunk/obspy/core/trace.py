@@ -760,9 +760,9 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})
+        > tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})
          or:
-        >>> new_tr = tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0},
+        > new_tr = tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0},
                     in_place=False)
 
         :param type: String that specifies which filter is applied (e.g.
