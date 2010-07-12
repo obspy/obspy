@@ -827,10 +827,9 @@ class Stream(object):
 
         Basic Usage
         -----------
-        > st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})
-         or:
-        > new_st = st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0},
-                    in_place=False)
+        >>> st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0}) # doctest: +SKIP
+        >>> new_st = st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0}, # doctest: +SKIP
+                               in_place=False) # doctest: +SKIP
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").

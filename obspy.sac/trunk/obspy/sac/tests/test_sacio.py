@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The sacio test suite.
+The ReadSac test suite.
 """
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, ReadSac
+from obspy.sac import SacIO, SacError
 import numpy as np
 import inspect
 import os
@@ -13,9 +13,9 @@ import unittest
 import sys
 
 
-class SacioTestCase(unittest.TestCase):
+class ReadSacTestCase(unittest.TestCase):
     """
-    Test cases for sacio.
+    Test cases for ReadSac.
     """
     def setUp(self):
         # directory where the test files are located
@@ -27,15 +27,15 @@ class SacioTestCase(unittest.TestCase):
 
     def test_Write(self):
         """
-        Tests for sacio, writing artificial seismograms
+        Tests for ReadSac, writing artificial seismograms
         """
         data = np.array([1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
                            1.9, -2.0], dtype='<f4')
-        t = ReadSac()
+        t = SacIO()
         t.fromarray(data)
         tempfile = NamedTemporaryFile().name
         t.WriteSacBinary(tempfile)
-        u = ReadSac(tempfile)
+        u = SacIO(tempfile)
         for _k in ["kstnm", "npts", "nvhdr", "delta"]:
             self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
         self.assertEqual(t.GetHvalue("kstnm"), "-12345  ")
@@ -44,17 +44,17 @@ class SacioTestCase(unittest.TestCase):
 
     def test_Date(self):
         """
-        Test for sacio '_get_date_'-function to calculate timestamp
+        Test for ReadSac '_get_date_'-function to calculate timestamp
         """
         fn = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        t = ReadSac(fn)
+        t = SacIO(fn)
         self.assertEqual(t.starttime.timestamp, 269596800.0)
         diff = t.GetHvalue('npts')
         self.assertEqual(int(t.endtime - t.starttime), diff)
 
     def test_read(self):
         """
-        Tests for sacio read and write
+        Tests for ReadSac read and write
         """
         data = np.array([-8.7422776573475858e-08, -0.30901697278022766,
                          - 0.58778536319732666, -0.8090171217918396,
@@ -63,7 +63,7 @@ class SacioTestCase(unittest.TestCase):
                          - 0.30901604890823364, 1.1285198979749111e-06],
                          dtype='<f4')
         sacfile = os.path.join(self.path, 'test.sac')
-        t = ReadSac()
+        t = SacIO()
         t.ReadSacFile(sacfile)
         np.testing.assert_array_equal(t.seis[0:11], data)
         self.assertEqual(t.GetHvalue('npts'), 100)
@@ -71,11 +71,11 @@ class SacioTestCase(unittest.TestCase):
 
     def test_readWrite(self):
         """
-        Tests for sacio read and write
+        Tests for ReadSac read and write
         """
         sacfile = os.path.join(self.path, 'test.sac')
         tempfile = NamedTemporaryFile().name
-        t = ReadSac()
+        t = SacIO()
         t.ReadSacFile(sacfile)
         self.assertEqual(t.GetHvalue('npts'), 100)
         self.assertEqual(t.GetHvalue("kcmpnm"), "Q       ")
@@ -92,11 +92,11 @@ class SacioTestCase(unittest.TestCase):
         t.WriteSacHeader(tempfile)
         t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
         self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"), 'Z       ')
-        self.assertEqual(ReadSac(tempfile,headonly=True).GetHvalue('kcmpnm'),'Z       ')
+        self.assertEqual(SacIO(tempfile,headonly=True).GetHvalue('kcmpnm'),'Z       ')
         self.assertEqual(t.IsValidSacFile(tempfile),True)
         self.assertEqual(t.IsValidXYSacFile(tempfile),False)
-        self.assertEqual(ReadSac().GetHvalueFromFile(sacfile,'npts'),100)
-        self.assertEqual(ReadSac(sacfile).GetHvalue('npts'),100)
+        self.assertEqual(SacIO().GetHvalueFromFile(sacfile,'npts'),100)
+        self.assertEqual(SacIO(sacfile).GetHvalue('npts'),100)
         os.remove(tempfile)
 
     def test_readWriteXY(self):
@@ -106,10 +106,10 @@ class SacioTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         tempfile2 = NamedTemporaryFile().name
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        t = ReadSac(tfile)
+        t = SacIO(tfile)
         t.WriteSacXY(tempfile)
-        d = ReadSac(tempfile, alpha=True)
-        e = ReadSac()
+        d = SacIO(tempfile, alpha=True)
+        e = SacIO()
         e.ReadSacXY(tempfile)
         self.assertEqual(e.GetHvalue('npts'),d.GetHvalue('npts'))
         self.assertEqual(e.IsValidXYSacFile(tempfile),True)
@@ -129,8 +129,8 @@ class SacioTestCase(unittest.TestCase):
         tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         tfileb = os.path.join(os.path.dirname(__file__), 'data',
                               'test.sac.swap')
-        tl = ReadSac(tfilel)
-        tb = ReadSac(tfileb)
+        tl = SacIO(tfilel)
+        tb = SacIO(tfileb)
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
         self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
@@ -142,11 +142,11 @@ class SacioTestCase(unittest.TestCase):
         tfileb = os.path.join(os.path.dirname(__file__), 'data',
                               'test.sac.swap')
         tempfile = NamedTemporaryFile().name
-        tb = ReadSac(tfileb)
+        tb = SacIO(tfileb)
         tb.swap_byte_order()
         tb.WriteSacBinary(tempfile)
-        tr1 = ReadSac(tempfile)
-        tl = ReadSac(tfilel)
+        tr1 = SacIO(tempfile)
+        tl = SacIO(tfilel)
         np.testing.assert_array_equal(tl.seis, tr1.seis)
         self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
@@ -157,14 +157,14 @@ class SacioTestCase(unittest.TestCase):
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         tempfile = NamedTemporaryFile().name
-        t = ReadSac(tfile)
+        t = SacIO(tfile)
         t.SetHvalue('evla', 48.15)
         t.SetHvalue('evlo', 11.58333)
         t.SetHvalue('stla', -41.2869)
         t.SetHvalue('stlo', 174.7746)
         t.SetHvalue('lcalda', 1)
         t.WriteSacBinary(tempfile)
-        t2 = ReadSac(tempfile)
+        t2 = SacIO(tempfile)
         b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
                      dtype='>f4')
         self.assertEqual(t2.GetHvalue('dist'), b[0])
@@ -176,12 +176,12 @@ class SacioTestCase(unittest.TestCase):
         """
         Assertion is raised if file is not a SAC file
         """
-        t = ReadSac()
+        t = SacIO()
         self.assertRaises(SacError, t.ReadSacFile, __file__)
 
     def test_getattr(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        tr = ReadSac(tfile)
+        tr = SacIO(tfile)
         self.assertEqual(tr.npts, tr.GetHvalue('npts'))
         self.assertEqual(tr.kstnm, tr.GetHvalue('kstnm'))
 
@@ -193,7 +193,7 @@ class SacioTestCase(unittest.TestCase):
     ###     findall, which recursively searches directories for pth files.
     ###     Could not get obspy.signal out of the path so far...
     ###     """
-    ###     t = ReadSac()
+    ###     t = SacIO()
     ###     t.SetHvalue('evla',48.15)
     ###     t.SetHvalue('evlo',11.58333)
     ###     t.SetHvalue('stla',-41.2869)
@@ -209,7 +209,7 @@ class SacioTestCase(unittest.TestCase):
     ###     sys.path.extend(signal_path)
 
 def suite():
-    return unittest.makeSuite(SacioTestCase, 'test')
+    return unittest.makeSuite(ReadSacTestCase, 'test')
 
 
 if __name__ == '__main__':

@@ -399,7 +399,10 @@ class StreamTestCase(unittest.TestCase):
             - is a TypeError properly raised?
             - after all bad filter calls, is the stream still unchanged?
         """
-        from obspy.signal import bandpass, bandstop, lowpass, highpass
+        try:
+            from obspy.signal import bandpass, bandstop, lowpass, highpass
+        except ImportError:
+            return
         # streams to run tests on:
         streams = [self.mseed_stream, self.gse2_stream]
         # drop the longest trace of the first stream to save a second

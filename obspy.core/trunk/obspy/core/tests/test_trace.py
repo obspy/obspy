@@ -725,7 +725,10 @@ class TraceTestCase(unittest.TestCase):
             - is a TypeError properly raised?
             - after all bad filter calls, is the trace still unchanged?
         """
-        from obspy.signal import bandpass, bandstop, lowpass, highpass
+        try:
+            from obspy.signal import bandpass, bandstop, lowpass, highpass
+        except ImportError:
+            return
         # create two test Traces
         traces = []
         np.random.seed(815)

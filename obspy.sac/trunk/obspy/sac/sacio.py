@@ -19,6 +19,7 @@ import numpy as np
 import os
 import time
 import copy
+import warnings
 
 
 class SacError(Exception):
@@ -1056,9 +1057,11 @@ class SacIO(object):
 
 class ReadSac(SacIO):
     """
-    DEPRECATED. Use :func:`~obspy.sac.SacIO` instead.
+    DEPRECATED. Use :class:`~obspy.sac.SacIO` instead.
     """
-    pass
+    def __init__(self, *args, **kwargs):
+        warnings.warn("DEPRECATED. Use class obspy.sac.SacIO instead.")
+        SacIO.__init__(self, *args, **kwargs)
 
 
 if __name__ == "__main__":
