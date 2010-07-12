@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The ReadSac test suite.
+The SacIO test suite.
 """
 
 from obspy.core.util import NamedTemporaryFile
@@ -13,9 +13,9 @@ import unittest
 import sys
 
 
-class ReadSacTestCase(unittest.TestCase):
+class SacIOTestCase(unittest.TestCase):
     """
-    Test cases for ReadSac.
+    Test cases for SacIO.
     """
     def setUp(self):
         # directory where the test files are located
@@ -27,7 +27,7 @@ class ReadSacTestCase(unittest.TestCase):
 
     def test_Write(self):
         """
-        Tests for ReadSac, writing artificial seismograms
+        Tests for SacIO, writing artificial seismograms
         """
         data = np.array([1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
                            1.9, -2.0], dtype='<f4')
@@ -44,7 +44,7 @@ class ReadSacTestCase(unittest.TestCase):
 
     def test_Date(self):
         """
-        Test for ReadSac '_get_date_'-function to calculate timestamp
+        Test for SacIO '_get_date_'-function to calculate timestamp
         """
         fn = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         t = SacIO(fn)
@@ -54,7 +54,7 @@ class ReadSacTestCase(unittest.TestCase):
 
     def test_read(self):
         """
-        Tests for ReadSac read and write
+        Tests for SacIO read and write
         """
         data = np.array([-8.7422776573475858e-08, -0.30901697278022766,
                          - 0.58778536319732666, -0.8090171217918396,
@@ -71,7 +71,7 @@ class ReadSacTestCase(unittest.TestCase):
 
     def test_readWrite(self):
         """
-        Tests for ReadSac read and write
+        Tests for SacIO read and write
         """
         sacfile = os.path.join(self.path, 'test.sac')
         tempfile = NamedTemporaryFile().name
@@ -209,7 +209,7 @@ class ReadSacTestCase(unittest.TestCase):
     ###     sys.path.extend(signal_path)
 
 def suite():
-    return unittest.makeSuite(ReadSacTestCase, 'test')
+    return unittest.makeSuite(SacIOTestCase, 'test')
 
 
 if __name__ == '__main__':
