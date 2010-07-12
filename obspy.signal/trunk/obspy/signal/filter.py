@@ -55,7 +55,7 @@ def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
-    warnings.warn("DEPRECATED. Use bandpass(..., zerophase=True) instead.")
+    warnings.warn("Use bandpass(..., zerophase=True) instead.", DeprecationWarning)
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -91,7 +91,7 @@ def bandstopZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
-    warnings.warn("DEPRECATED. Use bandstop(..., zerophase=True) instead.")
+    warnings.warn("Use bandstop(..., zerophase=True) instead.", DeprecationWarning)
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -126,7 +126,7 @@ def lowpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
-    warnings.warn("DEPRECATED. Use lowpass(..., zerophase=True) instead.")
+    warnings.warn("Use lowpass(..., zerophase=True) instead.", DeprecationWarning)
     return lowpass(data, freq, df, corners, zerophase=True)
 
 
@@ -160,7 +160,7 @@ def highpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
-    warnings.warn("DEPRECATED. Use highpass(..., zerophase=True) instead.")
+    warnings.warn("Use highpass(..., zerophase=True) instead.", DeprecationWarning)
     return highpass(data, freq, df, corners, zerophase=True)
 
 
