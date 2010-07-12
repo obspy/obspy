@@ -16,6 +16,7 @@ Various Seismogram Filtering Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import warnings
 
 from numpy import array, where, fft
 from scipy.fftpack import hilbert
@@ -54,6 +55,7 @@ def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
+    warnings.warn("DEPRECATED. Use bandpass(..., zerophase=True) instead.")
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -89,6 +91,7 @@ def bandstopZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
+    warnings.warn("DEPRECATED. Use bandstop(..., zerophase=True) instead.")
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -123,6 +126,7 @@ def lowpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
+    warnings.warn("DEPRECATED. Use lowpass(..., zerophase=True) instead.")
     return lowpass(data, freq, df, corners, zerophase=True)
 
 
@@ -156,6 +160,7 @@ def highpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
+    warnings.warn("DEPRECATED. Use highpass(..., zerophase=True) instead.")
     return highpass(data, freq, df, corners, zerophase=True)
 
 
@@ -274,3 +279,33 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     #beta implies Kaiser
     myh = fft.fftshift(h) * get_window(beta, winlen)
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
+
+def integerDecimation(data, decimation_factor):
+    """
+    Downsampling by applying a simple integer decimation.
+
+    Make sure that no signal is present in frequency bands above the new
+    Nyquist frequency (samp_rate/2/decimation_factor), e.g. by applying a
+    lowpass filter beforehand!
+    New sampling rate is old sampling rate divided by decimation_factor.
+
+    :param data: Data to filter.
+    :param decimation_factor: Integer decimation factor
+    :return: Downsampled data (array length: old length / decimation_factor)
+    """
+    if not isinstance(decimation_factor, int):
+        msg = "Decimation_factor must be an integer!"
+        raise TypeError(msg)
+    
+    data = array(data)
+    
+    # for reshaping the length must be a multiple of decimation factor
+    while len(data) % decimation_factor:
+        data = data[:-1]
+
+    length = len(data)
+    df = decimation_factor
+    
+    # reshape and only use every decimation_factor-th sample
+    data = data.reshape((length/df, df)).swapaxes(0, 1)[0]
+    return data

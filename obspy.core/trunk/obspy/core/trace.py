@@ -771,7 +771,7 @@ class Trace(object):
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
         :param in_place: Determines if the filter is applied in place or if
                 a new Trace object is returned.
-        :return: None if in_place=True, new Trace with filtered data otherwise.
+        :return: None if in_place=True, new Trace with filtered data otherwise
         """
         try:
             from obspy.signal import bandpass, bandstop, lowpass, highpass
@@ -789,7 +789,7 @@ class Trace(object):
 
         if type not in filter_functions:
             msg = "Filter type \"%s\" not recognized. " % type + \
-                  "Filter type must be one of: %s." % filter_functions
+                  "Filter type must be one of: %s." % filter_functions.keys()
             raise Exception(msg)
         
         # if in_place is set to False create a new Trace object
@@ -801,13 +801,87 @@ class Trace(object):
         # do the actual filtering. the filter_options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # filter_functions dictionary.
-        tr.data = filter_functions[type](tr.data,
-                df=tr.stats.sampling_rate, **filter_options)
+        try:
+            tr.data = filter_functions[type](tr.data,
+                    df=tr.stats.sampling_rate, **filter_options)
+        except TypeError, e:
+            print filter_functions[type].__doc__
+            print "(Data and sampling rate are passed on internally)"
+            raise e
         
         # add processing information to the stats dictionary
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
         proc_info = "filter:%s:%s" % (type, filter_options)
+        tr.stats['processing'].append(proc_info)
+        
+        if in_place:
+            return
+        else:
+            return tr
+
+    def downsample(self, decimation_factor, no_filter=False,
+                   strict_length=True, in_place=True):
+        """
+        Downsample trace data.
+
+        Currently a simple integer decimation is implemented.
+        Only every decimation_factor-th sample remains in the trace, all other
+        samples are thrown away. Prior to decimation a lowpass filter is
+        applied to ensure no aliasing artifacts are introduced. The automatic
+        filtering can be deactivated with no_filter=True.
+        If the length of the data array modulo decimation_factor is not zero
+        then the endtime of the trace is changing on sub-sample scale. The
+        downsampling is aborted in this case but can be forced by setting
+        strict_length=False.
+        Per default downsampling is done in place. By setting in_place=False a
+        new Trace object is returned.
+
+        Basic Usage
+        -----------
+        >>> tr.downsample(7, strict_length=False) # doctest: +SKIP
+        >>> new_tr = tr.downsample(2, in_place=False) # doctest: +SKIP
+
+        :param decimation_factor: integer factor by which the sampling rate is
+            lowered by decimation.
+        :param no_filter: deactivate automatic filtering
+        :param strict_length: abort, if endtime of trace would change
+        :param in_place: perform operation in place or return new Trace object.
+        :return: None if in_place=True, new Trace with downsampled data
+            otherwise.
+        """
+        try:
+            from obspy.signal.filter import integerDecimation, lowpass
+        except ImportError:
+            msg = "Error during import from obspy.signal. Please make " + \
+                  "sure obspy.signal is installed properly."
+            raise ImportError(msg)
+        
+        # check if endtime changes and this is not explicitly allowed
+        if strict_length and len(self.data) % decimation_factor:
+            msg = "Endtime of trace would change and strict_length=True."
+            raise ValueError(msg)
+
+        # if in_place is set to False create a new Trace object
+        if in_place:
+            tr = self
+        else:
+            tr = deepcopy(self)
+
+        # do automatic lowpass filtering
+        if not no_filter:
+            low_corner = 0.4 * tr.stats.sampling_rate / decimation_factor
+            tr.filter('lowpass', {'freq': low_corner}, in_place=True)
+
+        # actual downsampling
+        tr.data = integerDecimation(tr.data, decimation_factor)
+        tr.stats.sampling_rate = tr.stats.sampling_rate / \
+                float(decimation_factor)
+        
+        # add processing information to the stats dictionary
+        if not 'processing' in tr.stats:
+            tr.stats['processing'] = []
+        proc_info = "downsample:integerDecimation:%s" % (decimation_factor)
         tr.stats['processing'].append(proc_info)
         
         if in_place:
