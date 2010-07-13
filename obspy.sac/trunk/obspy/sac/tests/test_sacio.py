@@ -5,7 +5,7 @@ The SacIO test suite.
 """
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError
+from obspy.sac import SacIO, SacError, ReadSac
 import numpy as np
 import inspect
 import os
@@ -27,15 +27,19 @@ class SacIOTestCase(unittest.TestCase):
 
     def test_Write(self):
         """
-        Tests for SacIO, writing artificial seismograms
+        Tests for writing artificial seismograms
+
+        Here we use the explicitly the Deprecated ReadSac class to test
+        backwards compatibility. Note that this could be dropped in a major
+        future release.
         """
         data = np.array([1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
                            1.9, -2.0], dtype='<f4')
-        t = SacIO()
+        t = ReadSac()
         t.fromarray(data)
         tempfile = NamedTemporaryFile().name
         t.WriteSacBinary(tempfile)
-        u = SacIO(tempfile)
+        u = ReadSac(tempfile)
         for _k in ["kstnm", "npts", "nvhdr", "delta"]:
             self.assertEqual(t.GetHvalue(_k), u.GetHvalue(_k))
         self.assertEqual(t.GetHvalue("kstnm"), "-12345  ")
