@@ -477,6 +477,34 @@ class StreamTestCase(unittest.TestCase):
             np.testing.assert_array_equal(tr.data, st_bkp[i].data)
             self.assertEqual(tr.stats, st_bkp[i].stats)
 
+    def test_downsample(self):
+        """
+        Tests if all traces in the stream object are handled as expected
+        by the downsample method on the trace object.
+        """
+        st = self.mseed_stream
+        st_bkp = deepcopy(st)
+
+        st2 = st.downsample(4, no_filter=True, strict_length=False,
+                            in_place=False)
+        # test if original stream is unchanged
+        for i, tr in enumerate(st):
+            np.testing.assert_array_equal(tr.data, st_bkp[i].data)
+            self.assertEqual(tr.stats, st_bkp[i].stats)
+        # test if all traces are downsampled as expected
+        for i, tr in enumerate(st2):
+            tr_temp = st_bkp[i].downsample(4, no_filter=True,
+                    strict_length=False, in_place=False)
+            np.testing.assert_array_equal(tr.data, tr_temp.data)
+            self.assertEqual(tr.stats, tr_temp.stats)
+        # test if all traces are downsampled as expected (in_place=True)
+        st.downsample(10, strict_length=False)
+        for i, tr in enumerate(st):
+            tr_temp = st_bkp[i].downsample(10, strict_length=False,
+                                           in_place=False)
+            np.testing.assert_array_equal(tr.data, tr_temp.data)
+            self.assertEqual(tr.stats, tr_temp.stats)
+
     def test_select(self):
         """
         Tests the select method of the Stream object.

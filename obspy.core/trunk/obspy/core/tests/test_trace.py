@@ -807,6 +807,80 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, traces_bkp[0].data)
         self.assertEqual(tr.stats, traces_bkp[0].stats)
 
+    def test_downsample(self):
+        """
+        Tests the downsample method of the Trace object.
+        """
+        try:
+            from obspy.signal.filter import integerDecimation
+        except ImportError:
+            return
+        # create test Trace
+        tr = Trace(data=np.arange(20))
+        tr_bkp = deepcopy(tr)
+        # some tests with in_place=False
+        tr2 = tr.downsample(2, no_filter=True, in_place=False)
+        tr3 = tr.downsample(4, no_filter=True, in_place=False)
+        tr4 = tr.downsample(10, no_filter=True, in_place=False)
+        tr5 = tr.downsample(7, no_filter=True, in_place=False,
+                            strict_length=False)
+        np.testing.assert_array_equal(tr2.data, np.arange(0, 20, 2))
+        np.testing.assert_array_equal(tr3.data, np.arange(0, 20, 4))
+        np.testing.assert_array_equal(tr4.data, np.arange(0, 20, 10))
+        np.testing.assert_array_equal(tr5.data, np.array([0, 7]))
+        # check that changing header information is correct
+        self.assertEqual(tr2.stats.npts, 10)
+        self.assertEqual(tr3.stats.npts, 5)
+        self.assertEqual(tr4.stats.npts, 2)
+        self.assertEqual(tr5.stats.npts, 2)
+        self.assertEqual(tr2.stats.sampling_rate, 0.5)
+        self.assertEqual(tr3.stats.sampling_rate, 0.25)
+        self.assertEqual(tr4.stats.sampling_rate, 0.1)
+        self.assertEqual(tr5.stats.sampling_rate, 1/7.)
+        self.assertEqual(tr2.stats.processing,
+                         ["downsample:integerDecimation:2"])
+        self.assertEqual(tr3.stats.processing,
+                         ["downsample:integerDecimation:4"])
+        self.assertEqual(tr4.stats.processing,
+                         ["downsample:integerDecimation:10"])
+        self.assertEqual(tr5.stats.processing,
+                         ["downsample:integerDecimation:7"])
+        # check that unchanging header information is correct
+        for tr_t in [tr2, tr3, tr4, tr5]:
+            for key in ['npts', 'sampling_rate']:
+                tr_t.stats[key] = tr.stats[key]
+            tr_t.stats.pop('processing')
+            self.assertEqual(tr.stats, tr_t.stats)
+        # some test that should fail and leave the original trace alone
+        self.assertRaises(ValueError, tr.downsample, 7, in_place=False)
+        self.assertRaises(ValueError, tr.downsample, 9, in_place=True)
+        # check if original trace is unchanged after all of above tests
+        np.testing.assert_array_equal(tr.data, tr_bkp.data)
+        self.assertEqual(tr.stats, tr_bkp.stats)
+        # some tests with in_place=True
+        tr.downsample(4, no_filter=True)
+        np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
+        self.assertEqual(tr.stats.npts, 5)
+        self.assertEqual(tr.stats.sampling_rate, 0.25)
+        self.assertEqual(tr.stats.processing,
+                         ["downsample:integerDecimation:4"])
+        tr = deepcopy(tr_bkp)
+        tr.downsample(10, no_filter=True)
+        np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
+        self.assertEqual(tr.stats.npts, 2)
+        self.assertEqual(tr.stats.sampling_rate, 0.1)
+        self.assertEqual(tr.stats.processing,
+                         ["downsample:integerDecimation:10"])
+        # some tests with automatic prefiltering
+        tr = deepcopy(tr_bkp)
+        tr2 = deepcopy(tr_bkp)
+        tr.downsample(4)
+        tr2.filter('lowpass', {'freq': tr2.stats.sampling_rate*0.4/4})
+        tr2.downsample(4, no_filter=True)
+        np.testing.assert_array_equal(tr.data, tr2.data)
+        self.assertEqual(tr.stats, tr2.stats)
+
+
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

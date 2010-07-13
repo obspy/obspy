@@ -852,6 +852,50 @@ class Stream(object):
         else:
             return Stream(traces=new_traces)
 
+    def downsample(self, decimation_factor, no_filter=False,
+                   strict_length=True, in_place=True):
+        """
+        Downsample data in all traces of stream.
+
+        Currently a simple integer decimation is implemented.
+        Only every decimation_factor-th sample remains in the trace, all other
+        samples are thrown away. Prior to decimation a lowpass filter is
+        applied to ensure no aliasing artifacts are introduced. The automatic
+        filtering can be deactivated with no_filter=True.
+        If the length of the data array modulo decimation_factor is not zero
+        then the endtime of the trace is changing on sub-sample scale. The
+        downsampling is aborted in this case but can be forced by setting
+        strict_length=False.
+        Per default downsampling is done in place. By setting in_place=False a
+        new Stream object is returned.
+
+        Basic Usage
+        -----------
+        >>> st.downsample(7, strict_length=False) # doctest: +SKIP
+        >>> new_st = st.downsample(2, in_place=False) # doctest: +SKIP
+
+        :param decimation_factor: integer factor by which the sampling rate is
+            lowered by decimation.
+        :param no_filter: deactivate automatic filtering
+        :param strict_length: leave traces unchanged for which endtime of trace
+            would change
+        :param in_place: perform operation in place or return new Stream
+            object.
+        :return: None if in_place=True, new Stream with downsampled data
+            otherwise.
+        """
+        new_traces = []
+        for trace in self:
+            new_tr = trace.downsample(decimation_factor=decimation_factor,
+                    no_filter=no_filter, strict_length=strict_length,
+                    in_place=in_place)
+            new_traces.append(new_tr)
+
+        if in_place:
+            return
+        else:
+            return Stream(traces=new_traces)
+
 
 def createDummyStream(stream_string):
     """
