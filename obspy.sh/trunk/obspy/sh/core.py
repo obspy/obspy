@@ -314,6 +314,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
             value = item.strip()[5:].strip()
             if key == 'L001':
                 npts = header['npts'] = int(value)
+            elif key == 'L000':
+                continue
             elif key == 'R000':
                 header['delta'] = float(value)
             elif key == 'R026':
@@ -388,10 +390,13 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
     # build up header strings
     headers = []
     maxnol = 0
+    cur_npts = 0
     for trace in stream:
-        temp = "L001:%d~ R000:%f~ R026:%f~ " % (trace.stats.npts,
-                                                trace.stats.delta,
-                                                trace.stats.calib)
+        temp = "L000:%d~ " % cur_npts
+        cur_npts += trace.stats.npts
+        temp += "L001:%d~ R000:%f~ R026:%f~ " % (trace.stats.npts,
+                                                 trace.stats.delta,
+                                                 trace.stats.calib)
         if trace.stats.station:
             temp += "S001:%s~ " % trace.stats.station
         # component must be split
@@ -433,6 +438,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
     fh.close()
     fh_data.close()
 
+
 def toUTCDateTime(value):
     date, time = value.split('_')
     day, month, year = date.split('-')
@@ -443,12 +449,11 @@ def toUTCDateTime(value):
     hour = int(hour)
     mins = int(mins)
     secs = float(secs)
-
     return UTCDateTime(year, month, day, hour, mins) + secs
+
 
 def fromUTCDateTime(dt):
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                         dt.minute, dt.second, dt.microsecond / 1000)
-
