@@ -237,6 +237,56 @@ class Trace(object):
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
 
+    def __eq__(self, other):
+        """
+        Implements rich comparison of Trace objects for "==" operator.
+
+        Traces are the same, if both their data and stats are the same.
+        """
+        #check if other object is a Trace
+        if not isinstance(other, Trace):
+            return False
+        # comparison of Stats objects is supported by underlying AttribDict
+        if not self.stats == other.stats:
+            return False
+        # comparison of ndarrays is supported by numpy
+        if not np.array_equal(self, other):
+            return False
+
+        return True
+
+    def __ne__(self, other):
+        """
+        Implements rich comparison of Trace objects for "!=" operator.
+
+        Calls __eq__() and returns the opposite.
+        """
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __le__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __gt__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __ge__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
     def __str__(self):
         """
         Returns short summary string of the current trace.
