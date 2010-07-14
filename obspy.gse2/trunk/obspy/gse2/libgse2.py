@@ -125,21 +125,21 @@ lib.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
 lib.decomp_6b.argtypes = [c_file_p, C.c_int,
-                          np.ctypeslib.ndpointer(dtype='int', ndim=1,
+                          np.ctypeslib.ndpointer(dtype='int32', ndim=1,
                                                  flags='C_CONTIGUOUS'), ]
 lib.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
-lib.rem_2nd_diff.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+lib.rem_2nd_diff.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
                                                     flags='C_CONTIGUOUS'),
                              C.c_int]
 lib.rem_2nd_diff.restype = C.c_int
 
 # gse_functions check_sum
-lib.check_sum.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+lib.check_sum.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
                                                  flags='C_CONTIGUOUS'),
-                          C.c_int, C.c_longlong]
-lib.check_sum.restype = C.c_int # do not know why not C.c_longlong
+                          C.c_int, C.c_int32]
+lib.check_sum.restype = C.c_int # do not know why not C.c_int32
 
 # gse_functions buf_init
 lib.buf_init.argtypes = [C.c_void_p]
@@ -247,7 +247,7 @@ def read(f, verify_chksum=True):
     # test checksum only if enabled
     if verify_chksum:
         # calculate checksum from data, as in gse_driver.c line 60
-        chksum_data = abs(lib.check_sum(data, head.n_samps, C.c_longlong()))
+        chksum_data = abs(lib.check_sum(data, head.n_samps, C.c_int32()))
         # find checksum within file
         buf = f.readline()
         chksum_file = -1
@@ -317,7 +317,7 @@ def write(headdict, data, f, inplace=False):
     n = len(data)
     lib.buf_init(None)
     #
-    chksum = C.c_longlong()
+    chksum = C.c_int32()
     chksum = abs(lib.check_sum(data, n, chksum))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array

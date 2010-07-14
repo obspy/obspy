@@ -26,14 +26,14 @@
 *	        start value for checksum at subsequent invocations of check_sum!
 *********************************************************************/
 
-long check_sum (signal_int, number_of_samples, checksum)
-        long     *signal_int;
+int32_t check_sum (signal_int, number_of_samples, checksum)
+        int32_t     *signal_int;
         int     number_of_samples;
-        long     checksum;
+        int32_t     checksum;
 {
         int     i_sample;
-        long     sample_value;
-        long     modulo;
+        int32_t     sample_value;
+        int32_t     modulo;
  
         modulo = MODULO_VALUE;
         for (i_sample=0; i_sample < number_of_samples; i_sample++)
@@ -84,17 +84,17 @@ long check_sum (signal_int, number_of_samples, checksum)
     St. Stange, 28.4.1998
 *********************************************************************/
 
-int compress_6b (long *data, int n_of_samples)
+int compress_6b (int32_t *data, int n_of_samples)
 {
   static char achar[] =
        " +-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 /*                    2**5 2**10 2**15  2**20    2**25     2**27     */ 
-  static long expo_2[] = { 0, 32, 1024, 32768, 1048576, 33554432, 134217728 };
+  static int32_t expo_2[] = { 0, 32, 1024, 32768, 1048576, 33554432, 134217728 };
 /*              -1 +       2**5  2**10  2**15   2**20     2**25     */ 
-  static long expo_2m1_o[] = { 01, 037, 01777, 077777, 03777777, 0177777777 };
+  static int32_t expo_2m1_o[] = { 01, 037, 01777, 077777, 03777777, 0177777777 };
   int nflag;
   int mflag = 32;
-  long jc, value, si;
+  int32_t jc, value, si;
   int case_expo;
 
   for (si = 0; si < n_of_samples; si++)
@@ -133,7 +133,7 @@ int compress_6b (long *data, int n_of_samples)
   Function: diff_2nd
     This routine computes the second differences of a data stream
     according to the format GSE2.0, based on dif1.f by Urs Kradolfer.
-    The data stream is an long vector, the 2nd differences are
+    The data stream is an int32_t vector, the 2nd differences are
     returned in the same vector.
     The cont_flag and the static variables enable a continuation of
     the computation of the 2nd differences if the data comes in chunks.
@@ -142,9 +142,9 @@ int compress_6b (long *data, int n_of_samples)
     St. Stange, 21.4.1998
 *********************************************************************/
 
-void diff_2nd (long *data, int n_of_samples, int cont_flag)
+void diff_2nd (int32_t *data, int n_of_samples, int cont_flag)
 {
-  static long t1, t2, t3;	/* internal temporary variables */
+  static int32_t t1, t2, t3;	/* internal temporary variables */
   int si = 0;			/* index set to 0 for continuation*/
 
   if (cont_flag == 0) 		/* initialize for new data set */
@@ -195,7 +195,7 @@ void write_header(FILE *fp, struct header *head)
 #include <stdio.h>
 #include <math.h>
 
-int decomp_6b (FILE *fop, int n_of_samples, long *dta)
+int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
 {
   static int ichar[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
              0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,3,4,5,6,7,
@@ -206,7 +206,7 @@ int decomp_6b (FILE *fop, int n_of_samples, long *dta)
              isign=020, ioflow=040, mask1=017, mask2=037, m127=0177;
 
   int i, ibuf=-1, k, inn, jsign=0, joflow=0;
-  long itemp;
+  int32_t itemp;
   char cbuf[82]=" ";
   
   if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
@@ -238,7 +238,7 @@ int decomp_6b (FILE *fop, int n_of_samples, long *dta)
   	
   	jsign = (inn & isign);			/* get sign bit */
   	joflow = (inn & ioflow); 	/* get continuation bit if any */
-  	itemp = (long)(inn & mask1);	/* remove dispensable bits and store */
+  	itemp = (int32_t)(inn & mask1);	/* remove dispensable bits and store */
   	
   	while (joflow != 0) 		/* loop over other bytes in sample */
   	{
@@ -252,7 +252,7 @@ int decomp_6b (FILE *fop, int n_of_samples, long *dta)
   					/* now the same procedure as above */
   	  k = (int)((int)cbuf[ibuf] & m127); inn = ichar[k];
 	  joflow = (inn & ioflow); 	/* get continuation bit if any */
-	  itemp = itemp + (long)(inn & mask2);	/* remove bits and store */
+	  itemp = itemp + (int32_t)(inn & mask2);	/* remove bits and store */
 	  
 	} /* finish up sample if there is no further continuation bit */
 	
@@ -269,13 +269,13 @@ int decomp_6b (FILE *fop, int n_of_samples, long *dta)
   Function: rem_2nd_diff
     This routine removes the second differences of a data stream
     according to the format GSE2.0, based on remdif1.f by Urs Kradolfer.
-    The data stream is a long vector, the 2nd differences are
+    The data stream is a int32_t vector, the 2nd differences are
     returned in the same vector.
 	
     St. Stange, 2.10.1998
 *********************************************************************/
 
-void rem_2nd_diff (long *data, int n_of_samples)
+void rem_2nd_diff (int32_t *data, int n_of_samples)
 {
 
  int idx;

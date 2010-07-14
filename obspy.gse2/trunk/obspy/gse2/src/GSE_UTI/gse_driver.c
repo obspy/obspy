@@ -13,9 +13,9 @@
 main()
 {
     int i=0,ierr,ii=-1,i3=1;
-    long data[20],*data2;
+    int32_t data[20],*data2;
     int n,n2=0;
-    long chksum=0,chksum2=0;       /* initialize checksum to zero! */
+    int32_t chksum=0,chksum2=0;       /* initialize checksum to zero! */
     FILE *fp, *fp2;
     struct header head, head2;
     char hline[121],tline[82]="";
@@ -78,7 +78,7 @@ main()
             head2.datatype, head2.n_samps, head2.samp_rate, head2.calib,
             head2.calper, head2.instype, head2.hang, head2.vang);
 
-    data2 = (long *) calloc (head2.n_samps,sizeof(long));   /* allocate data vector */
+    data2 = (int32_t *) calloc (head2.n_samps,sizeof(int32_t));   /* allocate data vector */
     n2 = decomp_6b (fp2, head2.n_samps, data2);   /* read and decode the data */
     printf("actual number of data read: %d\n",n2);
     rem_2nd_diff (data2, n2);      /* remove second differences */
@@ -98,7 +98,7 @@ main()
                     printf("checksum read    : %ld \nchecksum computed: %ld\n",chksum,chksum2);
                     for (i=0;i<n2;i++)             /* print out data. We got velocity data */
                     {                              /* hence, we multiply by 2pi*calib/calper */
-                        data2[i] = (long) data2[i] * 6.283 * head2.calib / head2.calper;
+                        data2[i] = (int32_t) data2[i] * 6.283 * head2.calib / head2.calper;
                         printf("%d %ld \n",i,data2[i]);
                     }
                     close(fp2);
