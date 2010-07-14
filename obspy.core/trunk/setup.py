@@ -64,5 +64,17 @@ setup(
         'console_scripts': [
             'obspy-runtests = obspy.core.scripts.runtests:main',
         ],
+        'obspy.plugin.waveform': [
+            'TSPAIR = obspy.core.ascii',
+            'SLIST = obspy.core.ascii',
+        ],
+        'obspy.plugin.waveform.TSPAIR': [
+            'isFormat = obspy.core.ascii:isTSPAIR',
+            'readFormat = obspy.core.ascii:readTSPAIR',
+        ],
+        'obspy.plugin.waveform.SLIST': [
+            'isFormat = obspy.core.ascii:isSLIST',
+            'readFormat = obspy.core.ascii:readSLIST',
+        ],
     },
 )

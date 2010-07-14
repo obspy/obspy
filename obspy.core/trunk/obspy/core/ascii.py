@@ -71,6 +71,7 @@ TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPA
 
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
+from obspy.core.util import AttribDict
 import numpy as np
 
 
@@ -84,7 +85,7 @@ def isSLIST(filename):
     filename : string
         Name of the ASCII SLIST file to be checked.
     """
-    # first six chars should contain 'DELTA:'
+    # first six chars should contain 'TIMESERIES'
     try:
         temp = open(filename, 'rt').readline()
     except:
@@ -92,6 +93,28 @@ def isSLIST(filename):
     if not temp.startswith('TIMESERIES'):
         return False
     if not 'SLIST' in temp:
+        return False
+    return True
+
+
+def isTSPAIR(filename):
+    """
+    Checks whether a file is ASCII TSPAIR format. Returns True or False.
+
+    Parameters
+    ----------
+
+    filename : string
+        Name of the ASCII TSPAIR file to be checked.
+    """
+    # first six chars should contain 'TIMESERIES'
+    try:
+        temp = open(filename, 'rt').readline()
+    except:
+        return False
+    if not temp.startswith('TIMESERIES'):
+        return False
+    if not 'TSPAIR' in temp:
         return False
     return True
 
@@ -106,7 +129,7 @@ def readSLIST(filename, headonly=False):
     Parameters
     ----------
     filename : string
-        ASC file to be read.
+        ASCII file to be read.
     headonly : bool, optional
         If set to True, read only the head. This is most useful for
         scanning available data in huge (temporary) data sets.
@@ -152,7 +175,84 @@ def readSLIST(filename, headonly=False):
         stats.location = temp[2]
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
-        # XXX: quality missing yet
+        # quality only used in MSEED
+        stats.mseed = AttribDict({'dataquality' : temp[4]})
+        stats.starttime = UTCDateTime(parts[6])
+        stats.npts = parts[2]
+        if headonly:
+            # skip data
+            stream.append(Trace(header=stats))
+        else:
+            # parse data
+            data.seek(0)
+            if parts[8] == 'INTEGER':
+                data = np.loadtxt(data, dtype='int')
+            elif parts[8] == 'FLOAT':
+                data = np.loadtxt(data, dtype='float32')
+            else:
+                raise NotImplementedError
+            stream.append(Trace(data=data, header=stats))
+    return stream
+
+
+def readTSPAIR(filename, headonly=False):
+    """
+    Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
+
+    This function should NOT be called directly, it registers via the
+    obspy :func:`~obspy.core.stream.read` function, call this instead.
+
+    Parameters
+    ----------
+    filename : string
+        ASCII file to be read.
+    headonly : bool, optional
+        If set to True, read only the head. This is most useful for
+        scanning available data in huge (temporary) data sets.
+
+    Returns
+    -------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("tspair.ascii") # doctest: +SKIP
+    """
+    fh = open(filename, 'rt')
+    # read file and split text into channels
+    headers = {}
+    key = None
+    for line in fh.xreadlines():
+        if line.isspace():
+            # blank line
+            continue
+        elif line.startswith('TIMESERIES'):
+            # new header line
+            key = line
+            headers[key] = StringIO()
+        elif headonly:
+            # skip data for option headonly
+            continue
+        elif key:
+            # data entry - may be written in multiple columns
+            headers[key].write(line.strip().split()[-1] + ' ')
+    fh.close()
+    # create ObsPy stream object
+    stream = Stream()
+    for header, data in headers.iteritems():
+        # create Stats
+        stats = Stats()
+        parts = header.replace(',', '').split()
+        temp = parts[1].split('_')
+        stats.network = temp[0]
+        stats.station = temp[1]
+        stats.location = temp[2]
+        stats.channel = temp[3]
+        stats.sampling_rate = parts[4]
+        # quality only used in MSEED
+        stats.mseed = AttribDict({'dataquality' : temp[4]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
         if headonly:
