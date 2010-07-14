@@ -281,13 +281,54 @@ class Stream(object):
 
     def __eq__(self, other):
         """
-        Compares two ObsPy Stream objects.
+        Implements rich comparison of Stream objects for "==" operator.
+
+        Streams are the same, if both contain the the same traces, i.e. after a
+        sort operation going through both streams every trace should be equal
+        according to Trace's __eq__ operator.
         """
         if not isinstance(other, Stream):
             return False
-        if self.traces != other.traces:
+        # this is maybe still not 100% satisfactory, the question here is if
+        # two streams should be the same in comparison if one of the streams
+        # has a duplicate trace. Using sets at the moment, two equal traces
+        # in one of the Streams could lead to two non-equal Streams...
+        if not set(self.traces) == set(other.traces):
             return False
+
         return True
+
+    def __ne__(self, other):
+        """
+        Implements rich comparison of Stream objects for "!=" operator.
+
+        Calls __eq__() and returns the opposite.
+        """
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __le__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __gt__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
+
+    def __ge__(self, other):
+        """
+        Too ambiguous, throw an Error.
+        """
+        raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
     def __setitem__(self, index, trace):
         """
