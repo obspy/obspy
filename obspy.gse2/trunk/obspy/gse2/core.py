@@ -156,7 +156,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):
             header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         except:
             raise
-        dtype = np.dtype('int')
+        dtype = np.dtype('int32')
         if trace.data.dtype.name == dtype.name:
             trace.data = np.require(trace.data, dtype, ['C_CONTIGUOUS'])
         else:

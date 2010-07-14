@@ -146,13 +146,13 @@ lib.buf_init.argtypes = [C.c_void_p]
 lib.buf_init.restype = C.c_void_p
 
 # gse_functions diff_2nd
-lib.diff_2nd.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+lib.diff_2nd.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
                                                 flags='C_CONTIGUOUS'),
                          C.c_int, C.c_int]
 lib.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-lib.compress_6b.argtypes = [np.ctypeslib.ndpointer(dtype='int', ndim=1,
+lib.compress_6b.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
                                                    flags='C_CONTIGUOUS'),
                             C.c_int]
 lib.compress_6b.restype = C.c_int
@@ -238,7 +238,7 @@ def read(f, verify_chksum=True):
     errcode = lib.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
-    data = np.empty(head.n_samps, dtype='int')
+    data = np.empty(head.n_samps, dtype='int32')
     #import ipdb; ipdb.set_trace()
     n = lib.decomp_6b(fp, head.n_samps, data)
     if n != head.n_samps:

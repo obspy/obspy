@@ -138,7 +138,7 @@ class LibGSE2TestCase(unittest.TestCase):
         of 2^26
         """
         testfile = NamedTemporaryFile().name
-        data = np.array([2 ** 26 + 1])
+        data = np.array([2 ** 26 + 1], dtype='int32')
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1

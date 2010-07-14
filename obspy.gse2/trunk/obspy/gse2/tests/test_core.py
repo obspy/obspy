@@ -153,7 +153,7 @@ class CoreTestCase(unittest.TestCase):
         npts = 1000
         # data cloud of integers - float won't work!
         np.random.seed(815) # make test reproducable
-        data = np.random.randint(-1000, 1000, npts)
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'',
                  'channel': 'EHE', 'npts': npts, 'sampling_rate': 200.0}
         start = UTCDateTime(2000, 1, 1)
