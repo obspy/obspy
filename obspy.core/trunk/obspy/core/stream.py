@@ -283,17 +283,24 @@ class Stream(object):
         """
         Implements rich comparison of Stream objects for "==" operator.
 
-        Streams are the same, if both contain the the same traces, i.e. after a
+        Streams are the same, if both contain the same traces, i.e. after a
         sort operation going through both streams every trace should be equal
         according to Trace's __eq__ operator.
         """
         if not isinstance(other, Stream):
             return False
+
         # this is maybe still not 100% satisfactory, the question here is if
         # two streams should be the same in comparison if one of the streams
         # has a duplicate trace. Using sets at the moment, two equal traces
-        # in one of the Streams could lead to two non-equal Streams...
-        if not set(self.traces) == set(other.traces):
+        # in one of the Streams would lead to two non-equal Streams.
+        # This is a bit more conservative and most likely the expected behavior
+        # in most cases.
+        self_sorted = self.select()
+        self_sorted.sort()
+        other_sorted = other.select()
+        other_sorted.sort()
+        if not self_sorted.traces == other_sorted.traces:
             return False
 
         return True

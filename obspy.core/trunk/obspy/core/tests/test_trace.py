@@ -886,6 +886,7 @@ class TraceTestCase(unittest.TestCase):
         The latter four are not implemented due to ambiguous meaning and bounce
         an error.
         """
+        from obspy.core import Stream
         # create test traces
         tr0 = Trace(np.arange(3))
         tr1 = Trace(np.arange(3))
@@ -937,39 +938,10 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr5 != tr6, True)
         self.assertEqual(tr3 != tr6, True)
         # some weirder tests against non-Trace objects
-        self.assertEqual(tr0 == 0, False)
-        self.assertEqual(tr0 == 1, False)
-        self.assertEqual(tr0 == 0.0, False)
-        self.assertEqual(tr0 == 1.0, False)
-        self.assertEqual(tr0 == "", False)
-        self.assertEqual(tr0 == "test", False)
-        self.assertEqual(tr0 == True, False)
-        self.assertEqual(tr0 == False, False)
-        self.assertEqual(tr0 == [], False)
-        self.assertEqual(tr0 == [tr0], False)
-        self.assertEqual(tr0 == set(), False)
-        self.assertEqual(tr0 == set(tr0), False)
-        self.assertEqual(tr0 == {}, False)
-        self.assertEqual(tr0 == {"test": "test"}, False)
-        self.assertEqual(tr0 == Trace(), False)
-        self.assertEqual(tr0 == None, False)
-        # and the same tests with !=
-        self.assertEqual(tr0 != 0, True)
-        self.assertEqual(tr0 != 1, True)
-        self.assertEqual(tr0 != 0.0, True)
-        self.assertEqual(tr0 != 1.0, True)
-        self.assertEqual(tr0 != "", True)
-        self.assertEqual(tr0 != "test", True)
-        self.assertEqual(tr0 != True, True)
-        self.assertEqual(tr0 != False, True)
-        self.assertEqual(tr0 != [], True)
-        self.assertEqual(tr0 != [tr0], True)
-        self.assertEqual(tr0 != set(), True)
-        self.assertEqual(tr0 != set(tr0), True)
-        self.assertEqual(tr0 != {}, True)
-        self.assertEqual(tr0 != {"test": "test"}, True)
-        self.assertEqual(tr0 != Trace(), True)
-        self.assertEqual(tr0 != None, True)
+        for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
+                       set(), set(tr0), {}, {"test": "test"}, Stream(), None,]:
+            self.assertEqual(tr0 == object, False)
+            self.assertEqual(tr0 != object, True)
 
 
 def suite():

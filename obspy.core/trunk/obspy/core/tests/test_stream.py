@@ -76,7 +76,11 @@ class StreamTestCase(unittest.TestCase):
         # This will create a copy of all Traces and thus the objects should not
         # be identical but the Traces attributes should be identical.
         for _i in xrange(4):
-            self.assertNotEqual(stream[_i], stream[_i + 4])
+            self.assertEqual(stream[_i], stream[_i + 4])
+            self.assertEqual(stream[_i] == stream[_i + 4], True)
+            self.assertEqual(stream[_i] != stream[_i + 4], False)
+            self.assertEqual(stream[_i] is stream[_i + 4], False)
+            self.assertEqual(stream[_i] is not stream[_i + 4], True)
             self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
             np.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
         # Now add another stream to it.
@@ -86,7 +90,8 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(9, len(new_stream))
         # The traces of all streams are copied.
         for _i in xrange(8):
-            self.assertNotEqual(new_stream[_i], stream[_i])
+            self.assertEqual(new_stream[_i], stream[_i])
+            self.assertEqual(new_stream[_i] is stream[_i], False)
             np.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
         # Also test for the newly added stream.
         self.assertEqual(new_stream[8], other_stream[0])
@@ -1151,6 +1156,106 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(1801, len(tr.data))
         self.assertEqual(True, tr.stats.preview)
         self.assertEqual(1, len(st))
+
+    def test_comparisons(self):
+        """
+        Tests all rich comparison operators (==, !=, <, <=, >, >=)
+        The latter four are not implemented due to ambiguous meaning and bounce
+        an error.
+        """
+        # create test streams
+        tr0 = Trace(np.arange(3))
+        tr1 = Trace(np.arange(3))
+        tr2 = Trace(np.arange(3), {'station': 'X'})
+        tr3 = Trace(np.arange(3), {'processing': \
+                                   ["filter:lowpass:{'freq': 10}"]})
+        tr4 = Trace(np.arange(5))
+        tr5 = Trace(np.arange(5), {'station': 'X'})
+        tr6 = Trace(np.arange(5), {'processing': \
+                                   ["filter:lowpass:{'freq': 10}"]})
+        tr7 = Trace(np.arange(5), {'processing': \
+                                   ["filter:lowpass:{'freq': 10}"]})
+        st0 = Stream([tr0])
+        st1 = Stream([tr1])
+        st2 = Stream([tr0, tr1])
+        st3 = Stream([tr2, tr3])
+        st4 = Stream([tr1, tr2, tr3])
+        st5 = Stream([tr4, tr5, tr6])
+        st6 = Stream([tr0, tr6])
+        st7 = Stream([tr1, tr7])
+        st8 = Stream([tr7, tr1])
+        st9 = Stream()
+        stA = Stream()
+        stB = Stream([tr0])
+        # tests that should raise a NotImplementedError (i.e. <=, <, >=, >)
+        self.assertRaises(NotImplementedError, st1.__lt__, st1)
+        self.assertRaises(NotImplementedError, st1.__le__, st1)
+        self.assertRaises(NotImplementedError, st1.__gt__, st1)
+        self.assertRaises(NotImplementedError, st1.__ge__, st1)
+        self.assertRaises(NotImplementedError, st1.__lt__, st2)
+        self.assertRaises(NotImplementedError, st1.__le__, st2)
+        self.assertRaises(NotImplementedError, st1.__gt__, st2)
+        self.assertRaises(NotImplementedError, st1.__ge__, st2)
+        # normal tests
+        for st in [st1]:
+            self.assertEqual(st0 == st, True)
+            self.assertEqual(st0 != st, False)
+        for st in [st2, st3, st4, st5, st6, st7, st8, st9, stA]:
+            self.assertEqual(st0 == st, False)
+            self.assertEqual(st0 != st, True)
+        for st in [st0]:
+            self.assertEqual(st1 == st, True)
+            self.assertEqual(st1 != st, False)
+        for st in [st2, st3, st4, st5, st6, st7, st8, st9, stA]:
+            self.assertEqual(st1 == st, False)
+            self.assertEqual(st1 != st, True)
+        for st in [st0, st1, st3, st4, st5, st6, st7, st8, st9, stA]:
+            self.assertEqual(st2 == st, False)
+            self.assertEqual(st2 != st, True)
+        for st in [st0, st1, st2, st4, st5, st6, st7, st8, st9, stA]:
+            self.assertEqual(st3 == st, False)
+            self.assertEqual(st3 != st, True)
+        for st in [st0, st1, st2, st3, st5, st6, st7, st8, st9, stA]:
+            self.assertEqual(st4 == st, False)
+            self.assertEqual(st4 != st, True)
+        for st in [st0, st1, st2, st3, st4, st6, st7, st8, st9, stA]:
+            self.assertEqual(st5 == st, False)
+            self.assertEqual(st5 != st, True)
+        for st in [st7, st8]:
+            self.assertEqual(st6 == st, True)
+            self.assertEqual(st6 != st, False)
+        for st in [st0, st1, st2, st3, st4, st5, st9, stA]:
+            self.assertEqual(st6 == st, False)
+            self.assertEqual(st6 != st, True)
+        for st in [st6, st8]:
+            self.assertEqual(st7 == st, True)
+            self.assertEqual(st7 != st, False)
+        for st in [st0, st1, st2, st3, st4, st5, st9, stA]:
+            self.assertEqual(st7 == st, False)
+            self.assertEqual(st7 != st, True)
+        for st in [st6, st7]:
+            self.assertEqual(st8 == st, True)
+            self.assertEqual(st8 != st, False)
+        for st in [st0, st1, st2, st3, st4, st5, st9, stA]:
+            self.assertEqual(st8 == st, False)
+            self.assertEqual(st8 != st, True)
+        for st in [stA]:
+            self.assertEqual(st9 == st, True)
+            self.assertEqual(st9 != st, False)
+        for st in [st0, st1, st2, st3, st4, st5, st6, st7, st8]:
+            self.assertEqual(st9 == st, False)
+            self.assertEqual(st9 != st, True)
+        for st in [st9]:
+            self.assertEqual(stA == st, True)
+            self.assertEqual(stA != st, False)
+        for st in [st0, st1, st2, st3, st4, st5, st6, st7, st8]:
+            self.assertEqual(stA == st, False)
+            self.assertEqual(stA != st, True)
+        # some weirder tests against non-Stream objects
+        for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
+                       set(), set(tr0), {}, {"test": "test"}, Trace(), None,]:
+            self.assertEqual(st0 == object, False)
+            self.assertEqual(st0 != object, True)
 
 
 def suite():
