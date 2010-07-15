@@ -353,6 +353,12 @@ class Stream(object):
         """
         return self.traces[index]
 
+    def __delitem__(self, index):
+        """
+        Passes on the __delitem__ method to the underlying list of traces.
+        """
+        return self.traces.__delitem__(index)
+
     def __getslice__(self, i, j):
         """
         __getslice__ method of obspy.Stream objects.
@@ -543,16 +549,16 @@ class Stream(object):
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform()
 
-    def pop(self, index= -1):
+    def pop(self, index=-1):
         """
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
+        Passes on the pop() to self.traces.
 
         :param index: Index of the Trace object to be returned and removed.
+        :returns: Removed Trace.
         """
-        temp_trace = self.traces[index]
-        del(self.traces)[index]
-        return temp_trace
+        return self.traces.pop(index)
 
     def printGaps(self, **kwargs):
         """
@@ -573,13 +579,16 @@ class Stream(object):
                                                       r[4], r[5], r[6], r[7])
         print "Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)
 
-    def remove(self, index):
+    def remove(self, trace):
         """
-        Removes the Trace object specified by index from the Stream object.
+        Removes the first occurence of the specified Trace object in the Stream
+        object.
+        Passes on the remove() call to self.traces.
 
-        :param index: Index of the Trace object to be removed
+        :param trace: Trace object to be removed from Stream.
+        :returns: None
         """
-        del(self.traces)[index]
+        return self.traces.remove(trace)
 
     def reverse(self):
         """

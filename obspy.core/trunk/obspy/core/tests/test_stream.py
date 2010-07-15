@@ -358,18 +358,14 @@ class StreamTestCase(unittest.TestCase):
         """
         stream = self.mseed_stream
         # Make a copy of the Traces.
-        stream2 = deepcopy(stream[:])
+        stream2 = deepcopy(stream)
         # Use the remove method of the Stream object and of the list of Traces.
-        stream.remove(1)
-        del(stream2.traces[1])
-        stream.remove(-1)
-        del(stream2.traces[-1])
-        # Compare all remaining Traces.
-        self.assertEqual(2, len(stream))
-        self.assertEqual(2, len(stream2))
-        for _i in xrange(len(stream2)):
-            self.assertEqual(stream2[_i].stats, stream[_i].stats)
-            np.testing.assert_array_equal(stream2[_i].data, stream[_i].data)
+        stream.remove(stream[1])
+        del(stream2[1])
+        stream.remove(stream[-1])
+        del(stream2[-1])
+        # Compare remaining Streams.
+        self.assertTrue(stream == stream2)
 
     def test_reverse(self):
         """
