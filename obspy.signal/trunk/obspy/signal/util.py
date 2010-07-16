@@ -173,10 +173,11 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
     :param trC: E component data of Stream 2
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
+
     :return: (index, value) index of maximum xcorr value and the value itself
     """
     # 2010-07-16 Tobi
-    lib.X_corr.argtypes = [
+    lib.X_corr_3C.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
@@ -185,7 +186,7 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
         C.POINTER(C.c_int), C.POINTER(C.c_double)]
-    lib.X_corr.restype = C.c_void_p
+    lib.X_corr_3C.restype = C.c_void_p
 
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
@@ -197,10 +198,10 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
 
     shift = C.c_int()
     coe_p = C.c_double()
-
-    lib.X_corr(tr1, tr2, tr3, trA, trB, trC, shift_len, len(tr1), len(tr2),
-               len(tr3), len(trA), len(trB), len(trC),
-               C.byref(shift), C.byref(coe_p))
+    
+    lib.X_corr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, len(tr1),
+            len(tr2), len(tr3), len(trA), len(trB), len(trC),
+            C.byref(shift), C.byref(coe_p))
     return shift.value, coe_p.value
 
 
