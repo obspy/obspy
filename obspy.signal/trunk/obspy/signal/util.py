@@ -150,6 +150,59 @@ def xcorr(tr1, tr2, shift_len):
                C.byref(shift), C.byref(coe_p))
     return shift.value, coe_p.value
 
+def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
+    """
+    Calculates the cross correlation on each component separately, stacks them
+    together and estimates the maximum and shift of maximum on the stack.
+    Basically the same as :func:`~obspy.signal.util.xcorr` but for three
+    components, please also take a look at the documentation of that function.
+    Useful e.g. for estimation of waveform similarity on a three component
+    seismogram.
+    
+    :type tr1: numpy ndarray float32
+    :param tr1: Z component data of Stream 1
+    :type tr2: numpy ndarray float32
+    :param tr2: N component data of Stream 1
+    :type tr3: numpy ndarray float32
+    :param tr3: E component data of Stream 1
+    :type trA: numpy ndarray float32
+    :param trA: Z component data of Stream 2
+    :type trB: numpy ndarray float32
+    :param trB: N component data of Stream 2
+    :type trC: numpy ndarray float32
+    :param trC: E component data of Stream 2
+    :type shift_len: Int
+    :param shift_len: Total length of samples to shift for cross correlation.
+    :return: (index, value) index of maximum xcorr value and the value itself
+    """
+    # 2010-07-16 Tobi
+    lib.X_corr.argtypes = [
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+        C.POINTER(C.c_int), C.POINTER(C.c_double)]
+    lib.X_corr.restype = C.c_void_p
+
+    # be nice and adapt type if necessary
+    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
+    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
+    tr3 = np.require(tr3, 'float32', ['C_CONTIGUOUS'])
+    trA = np.require(trA, 'float32', ['C_CONTIGUOUS'])
+    trB = np.require(trB, 'float32', ['C_CONTIGUOUS'])
+    trC = np.require(trC, 'float32', ['C_CONTIGUOUS'])
+
+    shift = C.c_int()
+    coe_p = C.c_double()
+
+    lib.X_corr(tr1, tr2, tr3, trA, trB, trC, shift_len, len(tr1), len(tr2),
+               len(tr3), len(trA), len(trB), len(trC),
+               C.byref(shift), C.byref(coe_p))
+    return shift.value, coe_p.value
+
 
 def nextpow2(i):
     """
