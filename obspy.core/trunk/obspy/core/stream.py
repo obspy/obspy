@@ -549,6 +549,44 @@ class Stream(object):
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform()
 
+    def spectrogram(self, *args, **kwargs):
+        """
+        Creates a spectrogram plot for each trace in the stream.
+
+        Basic Usage
+        -----------
+        >>> from obspy.core import read
+        >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+        >>> st += read("http://examples.obspy.org/RJOB20090824.ehz")
+        >>> st.spectrogram() # doctest: +SKIP
+
+        .. plot::
+
+            from obspy.core import read
+            st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+            st += read("http://examples.obspy.org/RJOB20090824.ehz")
+            st.spectrogram()
+
+        Advanced Options
+        ----------------
+        For details on spectrogram options see
+        `~obspy.imaging.spectrogram.spectrogram.__doc__`.
+        """
+        try:
+            from obspy.imaging.spectrogram import spectrogram
+        except ImportError:
+            msg = "Please install module obspy.imaging to be able to " + \
+                  "use the spectrogram plotting routine."
+            raise ImportError(msg)
+        
+        spec_list = []
+
+        for tr in self:
+            spec = tr.spectrogram(*args, **kwargs)
+            spec_list.append(spec)
+
+        return spec_list
+
     def pop(self, index=-1):
         """
         Removes the Trace object specified by index from the Stream object and

@@ -587,12 +587,57 @@ class Trace(object):
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
-        except:
+        except ImportError:
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Trace objects."
-            raise Exception(msg)
+            raise ImportError(msg)
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform()
+
+    def spectrogram(self, *args, **kwargs):
+        """
+        Creates a spectrogram plot of the trace.
+
+        Basic Usage
+        -----------
+        >>> from obspy.core import read
+        >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+        >>> tr = st[0]
+        >>> tr.spectrogram() # doctest: +SKIP
+
+        .. plot::
+
+            from obspy.core import read
+            st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+            tr = st[0]
+            tr.spectrogram()
+
+        Advanced Options
+        ----------------
+        For details on spectrogram options see
+        `~obspy.imaging.spectrogram.spectrogram.__doc__`.
+        """
+        try:
+            from obspy.imaging.spectrogram import spectrogram
+        except ImportError:
+            msg = "Please install module obspy.imaging to be able to " + \
+                  "use the spectrogram plotting routine."
+            raise ImportError(msg)
+        
+        s = self.stats
+        title = '%s.%s.%s.%s %s' % (s.network, s.station, s.location,
+                                    s.channel, s.starttime)
+        
+        try:
+            spec = spectrogram(data=self.data, samp_rate=s.sampling_rate,
+                               title=title, *args, **kwargs)
+        except TypeError, e:
+            print spectrogram.__doc__
+            print "(Data and sampling rate are passed on internally)"
+            raise e
+
+        return spec
+
 
     def write(self, filename, format, **kwargs):
         """

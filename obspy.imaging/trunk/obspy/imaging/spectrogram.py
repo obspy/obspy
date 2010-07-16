@@ -58,9 +58,9 @@ def nearestPow2(x):
         return b
 
 
-def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False, 
+def spectrogram(data, samp_rate, per_lap=.9, wlen=5, log=False, 
                 outfile=None, format=None, axis=None, dbscale=False,
-                mult=8.0, cmap=None, zorder=None):
+                mult=8.0, cmap=None, zorder=None, title=None):
     """
     Computes and plots logarithmic spectrogram of the input trace.
     
@@ -154,6 +154,8 @@ def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False,
 
     ax.set_xlabel('Time [s]')
     ax.set_ylabel('Frequency [Hz]')
+    if title:
+        ax.set_title(title)
     fig.canvas.draw()
 
     if outfile:
@@ -163,3 +165,4 @@ def spectrogram(data, samp_rate=100.0, per_lap=.9, wlen=5, log=False,
             fig.savefig(outfile)
     else:
         plt.show()
+    return fig
