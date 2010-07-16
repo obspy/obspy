@@ -615,7 +615,7 @@ class Trace(object):
         Advanced Options
         ----------------
         For details on spectrogram options see
-        `~obspy.imaging.spectrogram.spectrogram.__doc__`.
+        :func:`~obspy.imaging.spectrogram.spectrogram`.
         """
         try:
             from obspy.imaging.spectrogram import spectrogram
