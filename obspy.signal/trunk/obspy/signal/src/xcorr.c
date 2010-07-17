@@ -173,8 +173,18 @@ void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift,
     free((char *)tra2);
 }
 
-void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float *trC, int param, int ndat1, int ndat2, int ndat3, int ndatA, int ndatB, int ndatC, int *shift, double* coe_p)
+void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB,
+               float *trC, int param, int ndat1, int ndat2, int ndat3,
+               int ndatA, int ndatB, int ndatC, int *shift, double* coe_p)
 {
+    /* Correlation is done in the following way:
+     * tr1 is cc-ed with trA, tr2 with trB and tr3 with trC.
+     * The normal scenario would be a three component dataset e.g. seismogram
+     * on Z, N, E components. The three separately computed correlations are
+     * then stacked at the end such that a cc value of 1.0 means perfect
+     * correlation on all three components simultaneously.
+     * At the moment all 6 traces have to be of the same length. */
+
     int a, b;
     int len;
     float *tra1;
@@ -191,7 +201,8 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
     int eff_lag;
 
     /* Forbid differing trace lengths */
-    if ((ndat1 != ndat2) || (ndat1 != ndat3) || (ndat1 != ndatA) || (ndat1 != ndatB) || (ndat1 != ndatC))
+    if ((ndat1 != ndat2) || (ndat1 != ndat3) || (ndat1 != ndatA) ||
+        (ndat1 != ndatB) || (ndat1 != ndatC))
     {
         fprintf(stderr,"Error: All traces have to be the same length!\n");
         exit(0);
@@ -252,9 +263,12 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         for (a=0;a<ndat1;a++)
         {
             sum += tr1[a];
-            tra1[a] = tr1[a] - sum;
         }
         sum /= ndat1; /*---- here I have made a doubtfull change */
+        for (a=0;a<ndat1;a++)
+        {
+            tra1[a] = tr1[a] - sum;
+        }
         for (a=0;a<ndat1;a++)
         {
             if (fabs(tra1[a]) > cmax)
@@ -335,9 +349,12 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         for (a=0;a<ndat2;a++)
         {
             sum += tr2[a];
-            tra1[a] = tr2[a] - sum;
         }
         sum /= ndat2; /*---- here I have made a doubtfull change */
+        for (a=0;a<ndat2;a++)
+        {
+            tra1[a] = tr2[a] - sum;
+        }
         for (a=0;a<ndat2;a++)
         {
             if (fabs(tra1[a]) > cmax)
@@ -409,7 +426,7 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         for (a=0;a<(2*eff_lag+1);a++)
         {
             corp_tmp[a] *= cmax;
-            corp[a] += corp_tmp[a]; // stack cc of component 2 on top of component 1
+            corp[a] += corp_tmp[a]; // stack cc of component 2 on top of 1
         }
 
         /* WORK ON COMPONENT 3 */
@@ -419,9 +436,12 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         for (a=0;a<ndat3;a++)
         {
             sum += tr3[a];
-            tra1[a] = tr3[a] - sum;
         }
         sum /= ndat3; /*---- here I have made a doubtfull change */
+        for (a=0;a<ndat3;a++)
+        {
+            tra1[a] = tr3[a] - sum;
+        }
         for (a=0;a<ndat3;a++)
         {
             if (fabs(tra1[a]) > cmax)
@@ -493,7 +513,7 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         for (a=0;a<(2*eff_lag+1);a++)
         {
             corp_tmp[a] *= cmax;
-            corp[a] += corp_tmp[a]; // stack cc of component 3 on top of components 1+2
+            corp[a] += corp_tmp[a]; // stack cc of component 3 on top of 1+2
         }
 
 
@@ -502,7 +522,9 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB, float
         cmax = 0.0;
         for (a=0;a<(2*eff_lag+1);a++)
         {
-            corp[a] /= 3.0; // in the last step also divide by three to get the scaling back to 0-1
+            /* in the last step also divide by three to get the scaling back
+             * to 0-1 */
+            corp[a] /= 3.0;
             if (fabs(corp[a]) > cmax)
             {
                 cmax = fabs(corp[a]);
