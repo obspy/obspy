@@ -761,15 +761,20 @@ class Stream(object):
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def slice(self, starttime, endtime):
+    def slice(self, starttime, endtime, keep_empty_traces=False):
         """
         Returns new Stream object cut to the given start- and endtime.
 
-        Does not copy the data but only passes a reference.
+        Does not copy the data but only passes a reference. Will by default
+        discard any empty traces. Change the keep_empty_traces parameter to
+        True to change this behaviour.
         """
         traces = []
         for trace in self:
-            traces.append(trace.slice(starttime, endtime))
+            sliced_trace = trace.slice(starttime, endtime)
+            if keep_empty_traces is False and not sliced_trace.stats.npts:
+                continue
+            traces.append(sliced_trace)
         return Stream(traces=traces)
 
     def select(self, network=None, station=None, location=None, channel=None,
