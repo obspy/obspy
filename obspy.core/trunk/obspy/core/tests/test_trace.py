@@ -470,11 +470,9 @@ class TraceTestCase(unittest.TestCase):
         # Should again be identical. XXX NOT!
         temp2 = deepcopy(tr)
         temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
-        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
-        #self.assertEqual(temp.stats, temp2.stats)
+        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
-        #self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
         temp = deepcopy(tr)
@@ -540,10 +538,9 @@ class TraceTestCase(unittest.TestCase):
         # Should again be identical.#XXX not
         temp2 = deepcopy(tr)
         temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
-        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
-        #self.assertEqual(temp.stats, temp2.stats)
+        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
         #self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
@@ -942,6 +939,25 @@ class TraceTestCase(unittest.TestCase):
                        set(), set(tr0), {}, {"test": "test"}, Stream(), None,]:
             self.assertEqual(tr0 == object, False)
             self.assertEqual(tr0 != object, True)
+
+    def test_nearestSample(self):
+        """
+        This test case shows that the libmseed is actually flooring the
+        starttime to the next sample value, regardless if it is the nearest
+        sample. The flag nearest_sample=True tries to avoids this and
+        rounds it to the next actual possible sample point.
+        """
+        # set up
+        trace = Trace(data=np.empty(10000))
+        trace.stats.starttime = UTCDateTime("2010-06-20T20:19:40.000000Z")
+        trace.stats.sampling_rate = 200.0
+        # trim
+        t = UTCDateTime("2010-06-20T20:19:51.494999Z")
+        trace.trim(t-3, t+7)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(trace.stats.starttime,
+                         UTCDateTime("2010-06-20T20:19:48.495000Z"))
+
 
 
 def suite():

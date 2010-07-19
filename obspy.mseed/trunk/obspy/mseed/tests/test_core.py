@@ -578,22 +578,6 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.npts, 11947)
             self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
 
-    def test_nearestSample(self):
-        """
-        This test case shows that the libmseed is actually flooring the
-        starttime to the next sample value, regardless if it is the nearest
-        sample. The flag nearest_sample=True tries to avoids this and
-        rounds it to the next actual possible sample point.
-        """
-        file = os.path.join(self.path, "data", "nearest_sample.mseed")
-        t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        st1 = read(file, starttime=t-3, endtime=t+7)
-        st2 = read(file, starttime=t-3, endtime=t+7, nearest_sample=True)
-        self.assertEqual(st1[0].stats.starttime,
-                         UTCDateTime("2010-06-20T20:19:48.490000Z"))
-        self.assertEqual(st2[0].stats.starttime,
-                         UTCDateTime("2010-06-20T20:19:48.495000Z"))
-
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 

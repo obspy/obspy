@@ -25,7 +25,7 @@ def isMSEED(filename):
 
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
-              reclen= -1, quality=False, nearest_sample=False, **kwargs):
+              reclen= -1, quality=False, **kwargs):
     """
     Reads a given Mini-SEED file and returns an Stream object.
     
@@ -57,10 +57,6 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         `numpy.array` which contains all timing qualities found in Blockette
         1001 in the order of appearance. If no Blockette 1001 is found it will
         be an empty array.
-    nearest_sample : bool, optional
-        Try to find nearest sample value with respect to starttime or endtime.
-        This should avoid more than one sample difference in starttime between
-        traces. Experimental!
 
     Example
     -------
@@ -68,7 +64,6 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     >>> st = read("test.mseed") # doctest: +SKIP
     """
     __libmseed__ = LibMSEED()
-    add_time = 0.0
     # read MiniSEED file
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename, reclen=reclen)
@@ -79,23 +74,9 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
                          starttime=starttime, endtime=endtime, reclen=reclen,
                          quality=quality)
         else:
-            kwargs = dict(filename=filename, reclen=reclen, starttime=starttime,
-                          endtime=endtime)
-            # libmseed seems to cut the starttime and endtimes arbitrary in
-            # between the sampling points. Thus to avoid these we cut out a
-            # larger window and trim the trace to the correct size from python.
-            # We avoid that there is a sample nearer to our requested starttime
-            # and not returned
-            if nearest_sample and (starttime or endtime):
-                # get the samplingrate of the first record
-                trace_list = __libmseed__.readMSHeader(filename, reclen=reclen)
-                add_time = 2.0 / float(trace_list[0][0]['samprate'])
-                if starttime:
-                    kwargs['starttime'] = kwargs['starttime'] - add_time
-                if endtime:
-                    kwargs['endtime'] = kwargs['endtime'] + add_time
             # problem on windows with big files (>=20 MB)
-            trace_list = __libmseed__.readMSTraces(**kwargs)
+            trace_list = __libmseed__.readMSTraces(filename, reclen,
+                starttime=starttime, endtime=endtime)
     # Create a list containing all the traces.
     traces = []
     # Loop over all traces found in the file.
@@ -129,29 +110,9 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         if headonly:
             header['npts'] = int((header['endtime'] - header['starttime']) *
                                    header['sampling_rate'] + 1 + 0.5)
-            tr = Trace(header=header)
+            traces.append(Trace(header=header))
         else:
-            tr = Trace(header=header, data=_i[1])
-        # search for nearest sample at requested time if starttime or endtime
-        # is given. This part of the code has a alpha status...
-        if nearest_sample and add_time:
-            delta = tr.stats.delta
-            start = tr.stats.starttime
-            end = tr.stats.endtime
-            if starttime and start < starttime < end:
-                while xrange(20): # avoid while infinite loop, 20 is arbitrary
-                    if abs(start - starttime) < 0.5 * delta:
-                        starttime = start
-                        break
-                    start += delta
-            if endtime and start < endtime < end:
-                while xrange(20):
-                    if abs(end - endtime) < 0.5 * delta:
-                        endtime = end
-                        break
-                    end -= delta
-            tr.trim(starttime, endtime)
-        traces.append(tr)
+            traces.append(Trace(header=header, data=_i[1]))
     return Stream(traces=traces)
 
 

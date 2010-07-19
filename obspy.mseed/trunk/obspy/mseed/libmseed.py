@@ -378,8 +378,8 @@ class LibMSEED(object):
         # Creates MSTraceGroup Structure
         mstg = clibmseed.mst_initgroup(None)
         if starttime and endtime:
-            starttime = long(starttime.timestamp * HPTMODULUS)
-            endtime = long(endtime.timestamp * HPTMODULUS)
+            starttime = long(starttime.timestamp * HPTMODULUS + 0.5)
+            endtime = long(endtime.timestamp * HPTMODULUS + 0.5)
             # Uses libmseed to read the file and populate the MSTraceGroup
             errcode = clibmseed.ms_readtraces_window(
                 C.pointer(mstg), filename, reclen, timetol, sampratetol,
