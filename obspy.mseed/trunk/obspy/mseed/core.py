@@ -150,7 +150,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
                         endtime = end
                         break
                     end -= delta
-            tr.trim(starttime, endttime)
+            tr.trim(starttime, endtime)
         traces.append(tr)
     return Stream(traces=traces)
 
