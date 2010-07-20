@@ -560,17 +560,17 @@ class Stream(object):
         >>> st += read("http://examples.obspy.org/RJOB20090824.ehz")
         >>> st.spectrogram() # doctest: +SKIP
 
+        Advanced Options
+        ----------------
+        For details on spectrogram options see
+        :func:`~obspy.imaging.spectrogram.spectrogram`.
+
         .. plot::
 
             from obspy.core import read
             st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
             st += read("http://examples.obspy.org/RJOB20090824.ehz")
             st.spectrogram()
-
-        Advanced Options
-        ----------------
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
         """
         try:
             from obspy.imaging.spectrogram import spectrogram
@@ -945,6 +945,45 @@ class Stream(object):
         for trace in self:
             new_tr = trace.filter(type=type, filter_options=filter_options,
                                   in_place=in_place)
+            new_traces.append(new_tr)
+
+        if in_place:
+            return
+        else:
+            return Stream(traces=new_traces)
+
+    def trigger(self, type, trigger_options, in_place=True):
+        """
+        Runs a triggering algorithm on all traces in the Stream. This is
+        performed in place on the actual data arrays by default. The raw data
+        is not accessible anymore afterwards. This can be avoided by specifying
+        ``in_place=False``.
+        This also makes an entry with information on the applied processing
+        in self[:].stats.processing.
+
+        Basic Usage
+        -----------
+        >>> st.trigger('recStalta', {'sta': 3, 'lta': 10})  # doctest: +SKIP
+        >>> new_st = st.trigger('recStalta', {'sta': 3, 'lta': 10}, # doctest: +SKIP
+                                in_place=False)  # doctest: +SKIP
+
+        :param type: String that specifies which trigger is applied (e.g.
+                'recStalta').
+        :param trigger_options: Dictionary that contains arguments that will
+                be passed to the respective trigger function as kwargs.
+                Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
+                ``nlta`` by multiplying with sampling rate of each trace.
+                (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
+                10 seconds average, respectively)
+        :param in_place: Determines if the filter is applied in place or if
+                a new Stream object is returned.
+        :return: None if in_place=True, new Stream with triggered traces
+                otherwise.
+        """
+        new_traces = []
+        for trace in self:
+            new_tr = trace.trigger(type=type, trigger_options=trigger_options,
+                                   in_place=in_place)
             new_traces.append(new_tr)
 
         if in_place:

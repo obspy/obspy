@@ -605,17 +605,17 @@ class Trace(object):
         >>> tr = st[0]
         >>> tr.spectrogram() # doctest: +SKIP
 
+        Advanced Options
+        ----------------
+        For details on spectrogram options see
+        :func:`~obspy.imaging.spectrogram.spectrogram`.
+
         .. plot::
 
             from obspy.core import read
             st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
             tr = st[0]
             tr.spectrogram()
-
-        Advanced Options
-        ----------------
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
         """
         try:
             from obspy.imaging.spectrogram import spectrogram
@@ -912,6 +912,93 @@ class Trace(object):
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
         proc_info = "filter:%s:%s" % (type, filter_options)
+        tr.stats['processing'].append(proc_info)
+        
+        if in_place:
+            return
+        else:
+            return tr
+
+    def trigger(self, type, trigger_options, in_place=True):
+        """
+        Runs a triggering algorithm on the data of the current trace. This is
+        performed in place on the actual data array. The raw data is not
+        accessible anymore afterwards. This can be avoided by specifying
+        ``in_place=False``.
+        This also makes an entry with information on the applied processing
+        in self.stats.processing.
+
+        Basic Usage
+        -----------
+        >>> tr.trigger('recStalta', {'sta': 3, 'lta': 10})  # doctest: +SKIP
+        >>> new_tr = tr.trigger('recStalta', {'sta': 3, 'lta': 10}, # doctest: +SKIP
+                                in_place=False)  # doctest: +SKIP
+
+        :param type: String that specifies which trigger is applied (e.g.
+                'recStalta').
+        :param trigger_options: Dictionary that contains arguments that will
+                be passed to the respective trigger function as kwargs.
+                Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
+                ``nlta`` by multiplying with sampling rate of trace.
+                (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
+                10 seconds average, respectively)
+        :param in_place: Determines if the filter is applied in place or if
+                a new Trace object is returned.
+        :return: None if in_place=True, new Trace with filtered data otherwise.
+        """
+        try:
+            from obspy.signal.trigger import recStalta, carlStaTrig, \
+                    classicStaLta, delayedStaLta, zdetect
+        except ImportError:
+            msg = "Error during import from obspy.signal. Please make " + \
+                  "sure obspy.signal is installed properly."
+            raise ImportError(msg)
+
+        # dictionary to map given type-strings to trigger functions
+        # (keys all lower case!!)
+        trigger_functions = {'recstalta': recStalta,
+                'carlstatrig': classicStaLta, 'delayedstalta': delayedStaLta,
+                'zdetect': zdetect}
+        
+        #make type string comparison case insensitive
+        type = type.lower()
+
+        if type not in trigger_functions:
+            msg = "Trigger type \"%s\" not recognized. " % type + \
+                  "Trigger type must be one of: %s." % trigger_functions.keys()
+            raise Exception(msg)
+        
+        # if in_place is set to False create a new Trace object
+        if in_place:
+            tr = self
+        else:
+            tr = deepcopy(self)
+
+        # convert the two arguments sta and lta to nsta and nlta as used by
+        # actual triggering routines (needs conversion to int, as samples are
+        # used in length of trigger averages)...
+        for key in ['sta', 'lta']:
+            if key in trigger_options:
+                spr = self.stats.sampling_rate
+                trigger_options['n'+key] = int(trigger_options[key] * spr)
+                del trigger_options[key]
+
+        # do the actual triggering. the trigger_options dictionary is passed as
+        # kwargs to the function that is mapped according to the
+        # trigger_functions dictionary.
+        try:
+            tr.data = trigger_functions[type](tr.data, **trigger_options)
+        except TypeError, e:
+            print trigger_functions[type].__doc__
+            print "(Data are passed on internally, average lengths are " + \
+                  "converted from seconds to samples (e.g. sta=2 gets " + \
+                  "mapped to nsta=400 for a sampling rate of 200 Hz)"
+            raise e
+        
+        # add processing information to the stats dictionary
+        if not 'processing' in tr.stats:
+            tr.stats['processing'] = []
+        proc_info = "trigger:%s:%s" % (type, trigger_options)
         tr.stats['processing'].append(proc_info)
         
         if in_place:
