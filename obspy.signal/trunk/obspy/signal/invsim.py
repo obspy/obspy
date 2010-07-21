@@ -157,7 +157,8 @@ def specInv(spec, wlev):
 
 
 def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
-            no_inverse_filtering=False):
+            no_inverse_filtering=False, zero_mean=True,
+            taper_fraction=0.05):
     """
     Simulate/Correct seismometer.
 
@@ -190,6 +191,10 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     :param no_inverse_filtering: Specifies if the removal of the prior
             frequency response should be skipped, i.e. only applying the
             given new frequency response.
+    :type zero_mean: Boolean
+    :param zero_mean: If true the mean of the data is subtracted
+    :type taper_fraction: Float
+    :param taper_fraction: Typer fraction of cosinus taper to use
     
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
@@ -214,8 +219,12 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     # least 2 *ndat cf. Numerical Recipes p. 429 calculate next power
     # of 2
     nfft = util.nextpow2(2 * ndat)
-    # explicitly copy, else input data will be modified
-    tr = data * cosTaper(ndat, 0.05)
+    # explicitly copy, else input data will be modified (astype copies the
+    # data). Avoid numerical problems by using float64
+    tr = data.astype("float64")
+    if zero_mean:
+        tr -= tr.mean()
+    tr *= cosTaper(ndat, taper_fraction)
     freq_response = pazToFreqResp(poles, zeros, gain, samp_int, nfft)
     specInv(freq_response, water_level)
     # transform trace in fourier domain

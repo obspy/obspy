@@ -22,7 +22,8 @@ import os
 import urllib2
 
 
-def read(pathname_or_url, format=None, headonly=False, **kwargs):
+def read(pathname_or_url, format=None, headonly=False, nearest_sample=True,
+         **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -59,6 +60,10 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
         Specify the start time to read.
     endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Specify the end time to read.
+    nearest_sample bool, optional
+        Only applied if starttime or endtime is given. Select nearest
+        sample or the one containing the specified time. For more info, see
+        :meth:`~obspy.core.trace.Trace.trim.`
 
     Notes
     -----
@@ -135,9 +140,9 @@ def read(pathname_or_url, format=None, headonly=False, **kwargs):
     starttime = kwargs.get('starttime')
     endtime = kwargs.get('endtime')
     if starttime:
-        st.ltrim(starttime)
+        st.ltrim(starttime, nearest_sample=nearest_sample)
     if endtime:
-        st.rtrim(endtime)
+        st.rtrim(endtime, nearest_sample=nearest_sample)
     return st
 
 
@@ -734,30 +739,35 @@ class Stream(object):
             raise TypeError(msg + ', '.join(formats_ep.keys()))
         writeFormat(self, filename, **kwargs)
 
-    def trim(self, starttime, endtime, pad=False):
+    def trim(self, starttime, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start and end time.
+        For more info see :meth:`~obspy.core.trace.Trace.trim.`
+
         """
         for trace in self.traces:
-            trace.trim(starttime, endtime, pad)
+            trace.trim(starttime, endtime, pad,
+                       nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def ltrim(self, starttime, pad=False):
+    def ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
+        For more info see :meth:`~obspy.core.trace.Trace.ltrim.`
         """
         for trace in self.traces:
-            trace.ltrim(starttime, pad)
+            trace.ltrim(starttime, pad, nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def rtrim(self, endtime, pad=False):
+    def rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
+        For more info see :meth:`~obspy.core.trace.Trace.rtrim.`
         """
         for trace in self.traces:
-            trace.rtrim(endtime, pad)
+            trace.rtrim(endtime, pad, nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 

@@ -661,9 +661,10 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
-    def ltrim(self, starttime, pad=False):
+    def ltrim(self, starttime, pad=False, nearest_sample=True):
         """
-        Cuts current trace to given start time.
+        Cuts current trace to given start time. For more info see
+        :meth:`~obspy.core.trace.Trace.trim`.
 
         Basic Usage
         -----------
@@ -681,10 +682,12 @@ class Trace(object):
         elif not isinstance(starttime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        #delta = int(math.floor(round((starttime - self.stats.starttime) * \
-        #                              self.stats.sampling_rate, 7)))
-        delta = round((starttime - self.stats.starttime) * \
-                                      self.stats.sampling_rate)
+        if nearest_sample:
+            delta = round((starttime - self.stats.starttime) * \
+                                          self.stats.sampling_rate)
+        else:
+            delta = int(math.floor(round((starttime - self.stats.starttime) * \
+                                          self.stats.sampling_rate, 7)))
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -707,9 +710,10 @@ class Trace(object):
         elif delta > 0:
             self.data = self.data[delta:]
 
-    def rtrim(self, endtime, pad=False):
+    def rtrim(self, endtime, pad=False, nearest_sample=True):
         """
-        Cuts current trace to given end time.
+        Cuts current trace to given end time. For more info see
+        :meth:`~obspy.core.trace.Trace.trim`.
 
         Basic Usage
         -----------
@@ -727,10 +731,12 @@ class Trace(object):
         elif not isinstance(endtime, UTCDateTime):
             raise TypeError
         # check if in boundary
-        #delta = int(math.floor(round((endtime - self.stats.endtime) * \
-        #                       self.stats.sampling_rate, 7)))
-        delta = round((endtime - self.stats.endtime) * \
-                       self.stats.sampling_rate)
+        if nearest_sample:
+            delta = round((endtime - self.stats.endtime) * \
+                           self.stats.sampling_rate)
+        else:
+            delta = int(math.floor(round((endtime - self.stats.endtime) * \
+                                   self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
             return
         if delta > 0 and pad:
@@ -762,9 +768,19 @@ class Trace(object):
                 total = 1
             self.data = self.data[:total]
 
-    def trim(self, starttime, endtime, pad=False):
+    def trim(self, starttime, endtime, pad=False, nearest_sample=True):
         """
-        Cuts current trace to given start and end time.
+        Cuts current trace to given start and end time. If nearest_sample is
+        True, the closest sample is selected, if nearest_sample is False, the
+        next sample containing the time is selected. Given the following
+        trace containing 4 samples, "|" are the sample points, "A" the
+        starttime::
+
+            |        A|         |         |
+
+        nearest_sample=True will select the second sample point,
+        nearest_sample=False will select the first sample point .
+
 
         Basic Usage
         -----------
@@ -779,8 +795,8 @@ class Trace(object):
         if starttime > endtime:
             raise Exception("startime is larger than endtime")
         # cut it
-        self.ltrim(starttime, pad)
-        self.rtrim(endtime, pad)
+        self.ltrim(starttime, pad, nearest_sample=nearest_sample)
+        self.rtrim(endtime, pad, nearest_sample=nearest_sample)
 
     cut = trim
     lcut = ltrim

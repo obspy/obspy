@@ -94,7 +94,7 @@ class InvSimTestCase(unittest.TestCase):
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, PAZ_LE3D, inst_sim=paz,
-                              water_level=600.0)
+                              water_level=600.0, zero_mean=False)
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             f = gzip.open(file)
@@ -102,7 +102,7 @@ class InvSimTestCase(unittest.TestCase):
             f.close()
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
-                         np.sum(data_pitsa ** 2))
+                          np.sum(data_pitsa ** 2))
             #print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1.1e-05)
 
@@ -129,7 +129,7 @@ class InvSimTestCase(unittest.TestCase):
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, PAZ_STS2, inst_sim=paz,
-                              water_level=600.0)
+                              water_level=600.0, zero_mean=False)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             f = gzip.open(file)
@@ -174,7 +174,7 @@ class InvSimTestCase(unittest.TestCase):
         #2 Correct for frequency response of the instrument
         res = seisSim(st[0].data.astype("float32"),
                       st[0].stats.sampling_rate,
-                      paz, inst_sim=one_hertz)
+                      paz, inst_sim=one_hertz, zero_mean=False)
         # correct for overall sensitivity, nm/s
         res *= 1e9 / paz["sensitivity"]
         #3 Apply lowpass at 10Hz

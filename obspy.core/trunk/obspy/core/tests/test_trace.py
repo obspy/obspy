@@ -466,13 +466,15 @@ class TraceTestCase(unittest.TestCase):
         mem_pos = tr.data.ctypes.data
         # Create temp trace object used for testing.
         temp = deepcopy(tr)
-        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999))
+        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999),
+                  nearest_sample=False)
         # Should again be identical. XXX NOT!
         temp2 = deepcopy(tr)
-        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
-        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
+        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111),
+                   nearest_sample=False)
+        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
         temp = deepcopy(tr)
@@ -534,14 +536,15 @@ class TraceTestCase(unittest.TestCase):
         mem_pos = tr.data.ctypes.data
         # Create temp trace object used for testing.
         temp = deepcopy(tr)
-        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999))
+        temp.trim(UTCDateTime(111.22222), UTCDateTime(112.99999),
+                  nearest_sample=False)
         # Should again be identical.#XXX not
         temp2 = deepcopy(tr)
-        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111))
-        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
+        temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111),
+                   nearest_sample=False)
+        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
-        #self.assertEqual(temp.stats.endtime, UTCDateTime(113.01111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
         temp = deepcopy(tr)
@@ -953,7 +956,7 @@ class TraceTestCase(unittest.TestCase):
         trace.stats.sampling_rate = 200.0
         # trim
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        trace.trim(t-3, t+7)
+        trace.trim(t-3, t+7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(trace.stats.starttime,
                          UTCDateTime("2010-06-20T20:19:48.495000Z"))
