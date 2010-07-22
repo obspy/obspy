@@ -342,6 +342,20 @@ class Stream(object):
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
+    # Explicitely setting Stream object unhashable (mutable object).
+    # See also Python Language Reference (3.0 Data Model):
+    # http://docs.python.org/reference/datamodel.html
+    #
+    # Classes which inherit a __hash__() method from a parent class but change
+    # the meaning of __cmp__() or __eq__() such that [...] can explicitly flag
+    # themselves as being unhashable by setting __hash__ = None in the class
+    # definition. Doing so means that not only will instances of the classraise
+    # an appropriate TypeError when a program attempts to retrieve their hash
+    # value, but they will also be correctly identified as unhashable when
+    # checking isinstance(obj, collections.Hashable) (unlike classes which
+    # define their own __hash__() to explicitly raise TypeError).
+    __hash__ = None
+
     def __setitem__(self, index, trace):
         """
         __setitem__ method of obspy.Stream objects.
