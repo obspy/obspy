@@ -185,7 +185,6 @@ void X_corr_3C(float *tr1, float *tr2, float *tr3, float *trA, float *trB,
     double *corp_tmp;
     double sum1;
     double sum2;
-    int lmax=0;
     int imax=0;
     double cmax;
     double sum;

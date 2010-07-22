@@ -55,7 +55,8 @@ def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
-    warnings.warn("Use bandpass(..., zerophase=True) instead.", DeprecationWarning)
+    warnings.warn("Use bandpass(..., zerophase=True) instead.",
+                  DeprecationWarning)
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -91,7 +92,8 @@ def bandstopZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
-    warnings.warn("Use bandstop(..., zerophase=True) instead.", DeprecationWarning)
+    warnings.warn("Use bandstop(..., zerophase=True) instead.",
+                  DeprecationWarning)
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -126,7 +128,8 @@ def lowpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
-    warnings.warn("Use lowpass(..., zerophase=True) instead.", DeprecationWarning)
+    warnings.warn("Use lowpass(..., zerophase=True) instead.",
+                  DeprecationWarning)
     return lowpass(data, freq, df, corners, zerophase=True)
 
 
@@ -160,7 +163,8 @@ def highpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
-    warnings.warn("Use highpass(..., zerophase=True) instead.", DeprecationWarning)
+    warnings.warn("Use highpass(..., zerophase=True) instead.",
+                  DeprecationWarning)
     return highpass(data, freq, df, corners, zerophase=True)
 
 
@@ -296,16 +300,16 @@ def integerDecimation(data, decimation_factor):
     if not isinstance(decimation_factor, int):
         msg = "Decimation_factor must be an integer!"
         raise TypeError(msg)
-    
+
     data = array(data)
-    
+
     # for reshaping the length must be a multiple of decimation factor
     while len(data) % decimation_factor:
         data = data[:-1]
 
     length = len(data)
     df = decimation_factor
-    
+
     # reshape and only use every decimation_factor-th sample
-    data = data.reshape((length/df, df)).swapaxes(0, 1)[0]
+    data = data.reshape((length / df, df)).swapaxes(0, 1)[0]
     return data

@@ -14,11 +14,9 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
 """
 
 from obspy.core import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 import numpy as np
 import os
 import time
-import copy
 import warnings
 
 
@@ -268,7 +266,7 @@ class SacIO(object):
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
-    def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0, 
+    def fromarray(self, trace, begin=0.0, delta=1.0, distkm=0,
                   starttime=UTCDateTime("1970-01-01T00:00:00.000000")):
         """
         Create a SAC file from an numpy.ndarray instance
@@ -305,7 +303,7 @@ class SacIO(object):
         self.SetHvalue('npts', len(trace))
         self.SetHvalue('delta', delta)
         self.SetHvalue('b', begin)
-        self.SetHvalue('e', begin + len(trace)*delta)
+        self.SetHvalue('e', begin + len(trace) * delta)
         self.SetHvalue('iztype', 9)
         self.SetHvalue('dist', distkm)
 
