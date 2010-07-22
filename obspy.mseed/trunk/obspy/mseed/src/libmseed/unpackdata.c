@@ -302,7 +302,7 @@ int msr_unpack_steim1
    */
   if ( nd != num_samples )
     {
-      ms_log (2, "msr_unpack_steim1(%s): number of samples indicated in header (%d) does not equal data (%d)\n",
+      ms_log (1, "Warning: msr_unpack_steim1(%s): number of samples indicated in header (%d) does not equal data (%d)\n",
 	      UNPACK_SRCNAME, num_samples, nd);
     }
   
@@ -342,7 +342,7 @@ int msr_unpack_steim1
   /* Verify that the last value is identical to xn = rev. int. constant */
   if (last_data != *pxn)
     {
-      ms_log (2, "%s: Data integrity check for Steim-1 failed, last_data=%d, xn=%d\n",
+      ms_log (1, "%s: Warning: Data integrity check for Steim-1 failed, last_data=%d, xn=%d\n",
 	      UNPACK_SRCNAME, last_data, *pxn);
     }
   
@@ -495,7 +495,7 @@ int msr_unpack_steim2
    */
   if ( nd != num_samples )
     {
-      ms_log (2, "msr_unpack_steim2(%s): number of samples indicated in header (%d) does not equal data (%d)\n",
+      ms_log (1, "Warning: msr_unpack_steim2(%s): number of samples indicated in header (%d) does not equal data (%d)\n",
 	      UNPACK_SRCNAME, num_samples, nd);
     }
 
@@ -535,7 +535,7 @@ int msr_unpack_steim2
   /* Verify that the last value is identical to xn = rev. int. constant */
   if (last_data != *pxn)
     {
-      ms_log (2, "%s: Data integrity check for Steim-2 failed, last_data=%d, xn=%d\n",
+      ms_log (1, "%s: Warning: Data integrity check for Steim-2 failed, last_data=%d, xn=%d\n",
 	      UNPACK_SRCNAME, last_data, *pxn);
     }
   

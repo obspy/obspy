@@ -15,13 +15,13 @@ Header lines have the general form:
 
 Header field descriptions:
 
-SourceName:    "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
-# samples:    Number of samples following header
-# sps:        Sampling rate in samples per second
-Time:        Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
-Format:        'SLIST' (sample list) or 'TSPAIR' (time-sample pair)
-Type:        Sample type 'INTEGER', 'FLOAT' or 'ASCII'
-Units:        Units of time-series, e.g. Counts, M/S, etc., should not contain spaces
+SourceName:  "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
+# samples: Number of samples following header
+# sps:     Sampling rate in samples per second
+Time:      Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
+Format:    'SLIST' (sample list) or 'TSPAIR' (time-sample pair)
+Type:      Sample type 'INTEGER', 'FLOAT' or 'ASCII'
+Units:     Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
 
 Example header (no line wrapping):
 

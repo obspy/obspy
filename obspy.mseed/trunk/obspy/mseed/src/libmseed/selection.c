@@ -6,7 +6,7 @@
  * Written by Chad Trabant unless otherwise noted
  *   IRIS Data Management Center
  *
- * modified: 2010.015
+ * modified: 2010.068
  ***************************************************************************/
 
 #include <stdio.h>
@@ -286,6 +286,9 @@ ms_addselect_comp (Selections **ppselections, char *net, char* sta, char *loc,
  * allocated memory unreachable (leaked), it is expected that this is
  * a program failing condition.
  *
+ * As a special case if the filename is "-", selection lines will be
+ * read from stdin.
+ *
  * Returns count of selections added on success and -1 on error.
  ***************************************************************************/
 int
@@ -310,10 +313,18 @@ ms_readselectionsfile (Selections **ppselections, char *filename)
   if ( ! ppselections || ! filename )
     return -1;
   
-  if ( ! (fp = fopen(filename, "rb")) )
+  if ( strcmp (filename, "-" ) )
     {
-      ms_log (2, "Cannot open file %s: %s\n", filename, strerror(errno));
-      return -1;
+      if ( ! (fp = fopen(filename, "rb")) )
+	{
+	  ms_log (2, "Cannot open file %s: %s\n", filename, strerror(errno));
+	  return -1;
+	}
+    }
+  else
+    {
+      /* Use stdin as special case */
+      fp = stdin;
     }
   
   while ( fgets (selectline, sizeof(selectline)-1, fp) )
@@ -406,7 +417,8 @@ ms_readselectionsfile (Selections **ppselections, char *filename)
       selectcount++;
     }
   
-  fclose (fp);
+  if ( fp != stdin )
+    fclose (fp);
   
   return selectcount;
 } /* End of ms_readselectionsfile() */
@@ -521,40 +533,6 @@ ms_printselections ( Selections *selections )
  *	a?c		acc abc aXc ...
  *	a[a-z]c		aac abc acc ...
  *	a[-a-z]c	a-c aac abc ...
- *
- * $Log: selection.c,v $
- * Revision 1.10  2010/01/15 18:15:49  chad
- * *** empty log message ***
- *
- * Revision 1.9  2010/01/15 18:12:35  chad
- * *** empty log message ***
- *
- * Revision 1.8  2010/01/15 17:44:10  chad
- * *** empty log message ***
- *
- * Revision 1.7  2010/01/15 17:42:54  chad
- * *** empty log message ***
- *
- * Revision 1.6  2010/01/09 00:37:53  chad
- * *** empty log message ***
- *
- * Revision 1.5  2010/01/07 23:55:18  chad
- * *** empty log message ***
- *
- * Revision 1.4  2010/01/07 06:01:30  chad
- * *** empty log message ***
- *
- * Revision 1.3  2010/01/07 01:15:35  chad
- * *** empty log message ***
- *
- * Revision 1.2  2010/01/05 01:36:55  chad
- * *** empty log message ***
- *
- * Revision 1.1  2010/01/04 07:41:23  chad
- * *** empty log message ***
- *
- * Revision 1.1  2009/03/20 03:55:16  chad
- * *** empty log message ***
  *
  * Revision 1.4  2004/12/26  12:38:00  ct
  * Changed function name (amatch -> globmatch), variables and

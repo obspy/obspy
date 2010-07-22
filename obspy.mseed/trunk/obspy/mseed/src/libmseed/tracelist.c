@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2009.176
+ * modified: 2010.047
  ***************************************************************************/
 
 #include <stdio.h>
@@ -564,7 +564,10 @@ mstl_addmsr ( MSTraceList *mstl, MSRecord *msr, flag dataquality,
       seg->next = segafter->next;
       segafter->next = seg;
       
-      /* Reset last segment pointer if replaced */
+      /* Reset first and last segment pointers if replaced */
+      if ( id->first == seg )
+	id->first = segafter;
+      
       if ( id->last == segafter )
 	id->last = seg;
     }
@@ -585,9 +588,12 @@ mstl_addmsr ( MSTraceList *mstl, MSRecord *msr, flag dataquality,
       seg->prev = segbefore->prev;
       segbefore->prev = seg;
       
-      /* Reset first segment pointer if replaced */
+      /* Reset first and last segment pointers if replaced */
       if ( id->first == segbefore )
 	id->first = seg;
+      
+      if ( id->last == seg )
+	id->last = segbefore;
     }
   
   /* Set MSTraceID as last accessed */
