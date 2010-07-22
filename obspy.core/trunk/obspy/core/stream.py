@@ -572,17 +572,15 @@ class Stream(object):
         """
         Creates a spectrogram plot for each trace in the stream.
 
+        For details on spectrogram options see
+        :func:`~obspy.imaging.spectrogram.spectrogram`.
+
         Basic Usage
         -----------
         >>> from obspy.core import read
         >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
         >>> st += read("http://examples.obspy.org/RJOB20090824.ehz")
         >>> st.spectrogram() # doctest: +SKIP
-
-        Advanced Options
-        ----------------
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
 
         .. plot::
 

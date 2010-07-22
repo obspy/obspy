@@ -612,17 +612,15 @@ class Trace(object):
         """
         Creates a spectrogram plot of the trace.
 
+        For details on spectrogram options see
+        :func:`~obspy.imaging.spectrogram.spectrogram`.
+
         Basic Usage
         -----------
         >>> from obspy.core import read
         >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
         >>> tr = st[0]
         >>> tr.spectrogram() # doctest: +SKIP
-
-        Advanced Options
-        ----------------
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
 
         .. plot::
 
