@@ -194,6 +194,7 @@ void write_header(FILE *fp, struct header *head)
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <ctype.h>
 
 int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
 {
