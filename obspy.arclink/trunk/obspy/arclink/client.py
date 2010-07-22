@@ -52,7 +52,7 @@ class Client(Telnet):
     The following ArcLink servers may be accessed via ObsPy:
 
     Public servers:
-      * WebDC server: webdc.eu:18001
+      * WebDC servers: webdc.eu:18001, webdc:18002
 
     Further mirrors listed at webdc.eu (restricted access only):
       * ODC Server:  bhlsa03.knmi.nl:18001
@@ -161,19 +161,17 @@ class Client(Telnet):
             self._bye()
             raise ArcLinkException('No content')
         self._writeln('DOWNLOAD %d' % req_id)
-        length = int(self._readln())
+        fd = self.get_socket().makefile('rb+')
+        length = int(fd.readline(100).strip())
         data = ''
-        i = 0
-        while 1:
-            data += self.rawq_getchar()
-            i += 1
-            if i > length and 'END' in data:
-                break
-        data = data[:-3]
-        if len(data) != length:
+        while len(data) < length:
+            buf = fd.read(min(4096, length - len(data)))
+            data += buf
+        buf = fd.readline(100).strip()
+        if buf != "END" or len(data) != length:
             raise Exception('Wrong length!')
         if self.debug:
-            print data
+            print "%d bytes of data read" % len(data)
         self._writeln('PURGE %d' % req_id)
         self._bye()
         return data
