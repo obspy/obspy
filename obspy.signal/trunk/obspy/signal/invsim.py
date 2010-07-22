@@ -126,18 +126,28 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     return h
 
 
+def waterlevel(spec, wlev):
+    """
+    Return the absolute spectral value corresponding
+    to dB wlev in spectrum spec.
+
+    :param spec: The spectrum
+    :param wlev: The water level
+    """
+    return np.abs(spec).max() * 10.0 ** (-wlev / 20.0)
+
+
 def specInv(spec, wlev):
     """
     Invert Spectrum and shrink values under water-level of max spec
     amplitude. The water-level is given in db scale.
 
     :note: In place operations on spec, translated from PITSA spr_sinv.c
-    :param spec: Real spectrum as returned by numpy.fft.rfft
+    :param spec: Spectrum as returned by numpy.fft.rfft
     :param wlev: Water level to use 
     """
-    # Swamp is the amplitude spectral value corresponding
-    # to wlev dB below the maximum spectral value
-    swamp = np.abs(spec).max() * 10.0 ** (-wlev / 20.0)
+    # Calculated waterlevel in the scale of spec
+    swamp = waterlevel(spec, wlev)
 
     # Find length in real fft frequency domain, spec is complex
     sqrt_len = np.abs(spec)

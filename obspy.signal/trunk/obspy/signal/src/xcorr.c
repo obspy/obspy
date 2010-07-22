@@ -4,13 +4,12 @@
 #include <math.h>
 #include <memory.h>
 
-void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift, double* coe_p)
+void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat2, int *shift, double* coe_p)
 {
     int a, b;
     int len;
     float *tra1;
     float *tra2;
-    double *corp;
     double sum1;
     double sum2;
     int lmax=0;
@@ -21,12 +20,6 @@ void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift,
     int max=0;
     int eff_lag;
 
-    corp = (double *)calloc((2*param+1), sizeof(double));
-    if (corp == NULL) 
-    {
-        fprintf(stderr,"\nMemory allocation error!\n");
-        exit(0);
-    }
     tra1 = (float *)calloc(ndat1, sizeof(float));
     if (tra1 == NULL) 
     {
@@ -168,7 +161,6 @@ void X_corr(float *tr1, float *tr2, int param, int ndat1, int ndat2, int *shift,
             *coe_p = 0.0;
         }
     }  /* else */
-    free((char *)corp);
     free((char *)tra1);
     free((char *)tra2);
 }

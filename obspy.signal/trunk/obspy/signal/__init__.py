@@ -58,6 +58,7 @@ from seismometer import PAZ_WOOD_ANDERSON
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import envelope, normEnvelope, centroid, instFreq, instBwith
+from util import xcorr, xcorr_3C
 
 
 __version__ = _getVersionString("obspy.signal")

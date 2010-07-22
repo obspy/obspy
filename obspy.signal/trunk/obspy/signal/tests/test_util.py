@@ -59,7 +59,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEquals(shift, 10)
         self.assertAlmostEquals(corr, 1, 2)
 
-    def test_SRL(self):
+    def test_SRLXcorr(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
         Seismologist section of SRL is still working. The test shouldn't be
@@ -68,7 +68,9 @@ class UtilTestCase(unittest.TestCase):
         np.random.seed(815)
         data1 = np.random.randn(1000).astype('float32')
         data2 = data1.copy()
+
         window_len = 100
+        corp = np.empty(2*window_len+1, dtype='float64')
 
         path = os.path.dirname(inspect.getsourcefile(self.__class__))
         name = os.path.join(path, os.pardir, 'lib', lib_name)
@@ -78,6 +80,7 @@ class UtilTestCase(unittest.TestCase):
         coe_p = C.c_double()
         lib.X_corr(data1.ctypes.data_as(C.c_void_p),
                    data2.ctypes.data_as(C.c_void_p),
+                   corp.ctypes.data_as(C.c_void_p),
                    window_len, len(data1), len(data2),
                    C.byref(shift), C.byref(coe_p))
 

@@ -142,7 +142,7 @@ class InvSimTestCase(unittest.TestCase):
             self.assertTrue(rms < 1e-04)
 
 
-    def test_SRL(self):
+    def test_SRLSeisSim(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
         Seismologist section of SRL is still working. The test shouldn't be

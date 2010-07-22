@@ -104,7 +104,7 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     return lon.value, lat.value
 
 
-def xcorr(tr1, tr2, shift_len):
+def xcorr(tr1, tr2, shift_len, out=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
     
@@ -129,12 +129,16 @@ def xcorr(tr1, tr2, shift_len):
     :param tr2: Trace 2 to correlate with trace 1
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
+    :type out: Bool
+    :param true: If True, the xcorr function will be returned as
+        numpy.ndarray as third argument
     :return: (index, value) index of maximum xcorr value and the value itself
     """
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int, C.c_int, C.c_int,
         C.POINTER(C.c_int), C.POINTER(C.c_double)]
     lib.X_corr.restype = C.c_void_p
@@ -142,12 +146,15 @@ def xcorr(tr1, tr2, shift_len):
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
     tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
+    corp = np.empty(2*shift_len+1, dtype='float64', order='C')
 
     shift = C.c_int()
     coe_p = C.c_double()
 
-    lib.X_corr(tr1, tr2, shift_len, len(tr1), len(tr2),
+    lib.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
                C.byref(shift), C.byref(coe_p))
+    if out:
+        return shift.value, coe_p.value, corp
     return shift.value, coe_p.value
 
 def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
