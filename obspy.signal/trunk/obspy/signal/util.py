@@ -130,9 +130,10 @@ def xcorr(tr1, tr2, shift_len, out=False):
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
     :type out: Bool
-    :param true: If True, the xcorr function will be returned as
-        numpy.ndarray as third argument
-    :return: (index, value) index of maximum xcorr value and the value itself
+    :param out: If True, the xcorr function fct will be returned as
+        numpy.ndarray
+    :return: (index, value, fct) index of maximum xcorr value and the value itself
+        fct is returned only if out is set to True
     """
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
