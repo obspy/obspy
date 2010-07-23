@@ -812,7 +812,7 @@ class TraceTestCase(unittest.TestCase):
         Tests the downsample method of the Trace object.
         """
         try:
-            from obspy.signal.filter import integerDecimation
+            from obspy.signal.filter import integerDecimation, lowpass
         except ImportError:
             return
         # create test Trace

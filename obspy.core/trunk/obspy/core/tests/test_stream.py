@@ -483,6 +483,11 @@ class StreamTestCase(unittest.TestCase):
         Tests if all traces in the stream object are handled as expected
         by the downsample method on the trace object.
         """
+        try:
+            from obspy.signal.filter import integerDecimation, lowpass
+        except ImportError:
+            return
+
         st = self.mseed_stream
         st_bkp = deepcopy(st)
 
