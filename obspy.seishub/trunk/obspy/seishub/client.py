@@ -18,6 +18,8 @@ import sys
 import time
 import urllib2
 import urllib
+from obspy.core.util import BAND_CODE
+from obspy.core import UTCDateTime
 
 
 class Client(object):
@@ -169,6 +171,23 @@ class _WaveformMapperClient(object):
                'start_datetime', 'end_datetime', 'apply_filter']
         for i in range(len(args)):
             kwargs[map[i]] = args[i]
+
+        if 'channel_id' not in kwargs:
+            raise TypeError("Channel not specified.")
+        band_code = kwargs['channel_id'][0]
+        
+        if 'start_datetime' in kwargs:
+            start = kwargs['start_datetime']
+            if isinstance(start, str):
+                start = UTCDateTime(start)
+            kwargs['start_datetime'] = start - 2.0 / BAND_CODE[band_code]
+
+        if 'end_datetime' in kwargs:
+            end = kwargs['end_datetime']
+            if isinstance(end, str):
+                end = UTCDateTime(end)
+            kwargs['end_datetime'] = end + 2.0 / BAND_CODE[band_code]
+
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
         if data == '':
@@ -177,6 +196,8 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
+
+        stream.trim(start, end)
         return stream
 
     def getPreview(self, *args, **kwargs):

@@ -954,12 +954,65 @@ class TraceTestCase(unittest.TestCase):
         trace = Trace(data=np.empty(10000))
         trace.stats.starttime = UTCDateTime("2010-06-20T20:19:40.000000Z")
         trace.stats.sampling_rate = 200.0
-        # trim
+        # ltrim
+        tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        trace.trim(t-3, t+7, nearest_sample=True)
+        tr.ltrim(t-3, nearest_sample=True)
         # see that it is actually rounded to the next sample point
-        self.assertEqual(trace.stats.starttime,
+        self.assertEqual(tr.stats.starttime,
                          UTCDateTime("2010-06-20T20:19:48.495000Z"))
+        # Lots of tests follow that thoroughly check the cutting behavior
+        # using nearest_sample=True/False
+        # rtrim
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.494999Z")
+        tr.rtrim(t+7, nearest_sample=True)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.495000Z")
+        tr.rtrim(t+7, nearest_sample=True)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.495111Z")
+        tr.rtrim(t+7, nearest_sample=True)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.497501Z")
+        tr.rtrim(t+7, nearest_sample=True)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.500000Z"))
+        # rtrim
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.494999Z")
+        tr.rtrim(t+7, nearest_sample=False)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.490000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.495000Z")
+        tr.rtrim(t+7, nearest_sample=False)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.495111Z")
+        tr.rtrim(t+7, nearest_sample=False)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
+        tr = deepcopy(trace)
+        t = UTCDateTime("2010-06-20T20:19:51.497500Z")
+        tr.rtrim(t+7, nearest_sample=False)
+        # see that it is actually rounded to the next sample point
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2010-06-20T20:19:58.495000Z"))
 
 
 
