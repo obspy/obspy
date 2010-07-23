@@ -161,7 +161,8 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     else:
         return shift.value, coe_p.value
 
-def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
+def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False,
+             absmax=True):
     """
     Calculates the cross correlation on each component separately, stacks them
     together and estimates the maximum and shift of maximum on the stack.
@@ -202,12 +203,54 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
 
     corp /= 3
 
-    shift, value = xcorr_max(corp)
+    shift, value = xcorr_max(corp, absmax=absmax)
 
     if full_xcorr:
         return shift, value, corp
     else:
         return shift, value
+
+def xcorr_max(fct, absmax=False):
+    """
+    Return shift and value of maximum xcorr function
+    
+    >>> fct = np.zeros(101)
+    >>> fct[50] = 1.0
+    >>> xcorr_max(fct)
+    (0, 1.0)
+    >>> fct[50], fct[60] = 0.0, 1.0
+    >>> xcorr_max(fct)
+    (10, 1.0)
+    >>> fct[60], fct[40] = 0.0, 1.0
+    >>> xcorr_max(fct)
+    (-10, 1.0)
+
+    >>> fct = np.zeros(101)
+    >>> fct[50] = -1.0
+    >>> xcorr_max(fct, absmax=True)
+    (0, -1.0)
+    >>> fct[50], fct[60] = 0.0, 1.0
+    >>> xcorr_max(fct, absmax=True)
+    (10, 1.0)
+    >>> fct[60], fct[40] = 0.0, -1.0
+    >>> xcorr_max(fct, absmax=True)
+    (-10, -1.0)
+    
+    :param fct: numpy.ndarray
+        xcorr function e.g. returned bei xcorr
+    :param absmax: search for absolute maximum of xcorr?
+    :return: (shift, value) Shift and value of maximum xcorr
+    """
+    value = fct.max()
+    mid = (len(fct) - 1)/2
+
+    if absmax:
+        value_neg = fct.min()
+        if abs(value_neg) > value:
+            value = value_neg
+
+    shift = np.where(fct == value)[0][0] - mid
+    return shift, value
 
 
 def nextpow2(i):
@@ -222,31 +265,6 @@ def nextpow2(i):
     # do not use numpy here, math is much faster for single values
     buf = M.ceil(M.log(i) / M.log(2))
     return int(M.pow(2, buf))
-
-
-def xcorr_max(fct):
-    """
-    Return shift and value of maximum xcorr function
-    
-    >>> fct = np.zeros(101)
-    >>> fct[50] = 1.0
-    >>> xcorr_max(fct)
-    (0, 1.0)
-    >>> fct[50], fct[60] = 0.0, 1.0
-    >>> xcorr_max(fct)
-    (10, 1.0)
-    >>> fct[60], fct[40] = 0.0, 1.0
-    >>> xcorr_max(fct)
-    (-10, 1.0)
-    
-    :param fct: numpy.ndarray
-        xcorr function e.g. returned bei xcorr
-    :return: (shift, value) Shift and value of maximum xcorr
-    """
-    value = fct.max()
-    mid = (len(fct) - 1)/2
-    shift = np.where(fct == value)[0][0] - mid
-    return shift, value
 
 
 def enframe(x, win, inc):
