@@ -572,8 +572,8 @@ class Stream(object):
         """
         Creates a spectrogram plot for each trace in the stream.
 
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
+        For details on kwargs that can be used to customize the spectrogram
+        plot see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
         Basic Usage
         -----------

@@ -612,8 +612,8 @@ class Trace(object):
         """
         Creates a spectrogram plot of the trace.
 
-        For details on spectrogram options see
-        :func:`~obspy.imaging.spectrogram.spectrogram`.
+        For details on kwargs that can be used to customize the spectrogram
+        plot see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
         Basic Usage
         -----------

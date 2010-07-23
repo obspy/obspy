@@ -104,7 +104,7 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     return lon.value, lat.value
 
 
-def xcorr(tr1, tr2, shift_len, out=False):
+def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
     
@@ -129,11 +129,12 @@ def xcorr(tr1, tr2, shift_len, out=False):
     :param tr2: Trace 2 to correlate with trace 1
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type out: Bool
-    :param out: If True, the xcorr function fct will be returned as
-        numpy.ndarray
-    :return: (index, value, fct) index of maximum xcorr value and the value itself
-        fct is returned only if out is set to True
+    :type full_xcorr: Bool
+    :param full_xcorr: If True, the complete xcorr function will be
+        returned as numpy.ndarray
+    :return: (index, value, fct) index of maximum xcorr value and the value
+        itself. The complete xcorr function is returned only if
+        ``full_xcorr=True``.
     """
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
@@ -154,11 +155,13 @@ def xcorr(tr1, tr2, shift_len, out=False):
 
     lib.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
                C.byref(shift), C.byref(coe_p))
-    if out:
-        return shift.value, coe_p.value, corp
-    return shift.value, coe_p.value
 
-def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
+    if full_xcorr:
+        return shift.value, coe_p.value, corp
+    else:
+        return shift.value, coe_p.value
+
+def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
     """
     Calculates the cross correlation on each component separately, stacks them
     together and estimates the maximum and shift of maximum on the stack.
@@ -181,36 +184,30 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len):
     :param trC: E component data of Stream 2
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
-
-    :return: (index, value) index of maximum xcorr value and the value itself
+    :type full_xcorr: Bool
+    :param full_xcorr: If True, the complete xcorr function will be
+        returned as numpy.ndarray
+    :return: (index, value, fct) index of maximum xcorr value and the value
+        itself. The complete xcorr function is returned only if
+        ``full_xcorr=True``.
     """
-    # 2010-07-16 Tobi
-    lib.X_corr_3C.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
-        C.POINTER(C.c_int), C.POINTER(C.c_double)]
-    lib.X_corr_3C.restype = C.c_void_p
+    if False in [len(tr1) == len(tr) for tr in [tr2, tr3, trA, trB, trC]]:
+            raise ValueError("All traces have to be the same length.")
 
-    # be nice and adapt type if necessary
-    tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
-    tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
-    tr3 = np.require(tr3, 'float32', ['C_CONTIGUOUS'])
-    trA = np.require(trA, 'float32', ['C_CONTIGUOUS'])
-    trB = np.require(trB, 'float32', ['C_CONTIGUOUS'])
-    trC = np.require(trC, 'float32', ['C_CONTIGUOUS'])
-
-    shift = C.c_int()
-    coe_p = C.c_double()
+    corp = np.zeros(2*shift_len+1, dtype='float64', order='C')
     
-    lib.X_corr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, len(tr1),
-            len(tr2), len(tr3), len(trA), len(trB), len(trC),
-            C.byref(shift), C.byref(coe_p))
-    return shift.value, coe_p.value
+    for tr1, tr2 in [[tr1, trA], [tr2, trB], [tr3, trC]]:
+        xx = xcorr(tr1, tr2, shift_len, full_xcorr=True)
+        corp += xx[2]
+
+    corp /= 3
+
+    shift, value = xcorr_max(corp)
+
+    if full_xcorr:
+        return shift, value, corp
+    else:
+        return shift, value
 
 
 def nextpow2(i):
@@ -238,6 +235,9 @@ def xcorr_max(fct):
     >>> fct[50], fct[60] = 0.0, 1.0
     >>> xcorr_max(fct)
     (10, 1.0)
+    >>> fct[60], fct[40] = 0.0, 1.0
+    >>> xcorr_max(fct)
+    (-10, 1.0)
     
     :param fct: numpy.ndarray
         xcorr function e.g. returned bei xcorr
