@@ -161,8 +161,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     else:
         return shift.value, coe_p.value
 
-def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False,
-             absmax=True):
+def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
     """
     Calculates the cross correlation on each component separately, stacks them
     together and estimates the maximum and shift of maximum on the stack.
@@ -203,52 +202,38 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False,
 
     corp /= 3
 
-    shift, value = xcorr_max(corp, absmax=absmax)
+    shift, value = xcorr_max(corp)
 
     if full_xcorr:
         return shift, value, corp
     else:
         return shift, value
 
-def xcorr_max(fct, absmax=False):
+def xcorr_max(fct):
     """
     Return shift and value of maximum xcorr function
     
     >>> fct = np.zeros(101)
-    >>> fct[50] = 1.0
-    >>> xcorr_max(fct)
-    (0, 1.0)
-    >>> fct[50], fct[60] = 0.0, 1.0
-    >>> xcorr_max(fct)
-    (10, 1.0)
-    >>> fct[60], fct[40] = 0.0, 1.0
-    >>> xcorr_max(fct)
-    (-10, 1.0)
-
-    >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
-    >>> xcorr_max(fct, absmax=True)
+    >>> xcorr_max(fct)
     (0, -1.0)
     >>> fct[50], fct[60] = 0.0, 1.0
-    >>> xcorr_max(fct, absmax=True)
+    >>> xcorr_max(fct)
     (10, 1.0)
     >>> fct[60], fct[40] = 0.0, -1.0
-    >>> xcorr_max(fct, absmax=True)
+    >>> xcorr_max(fct)
     (-10, -1.0)
     
     :param fct: numpy.ndarray
         xcorr function e.g. returned bei xcorr
-    :param absmax: search for absolute maximum of xcorr?
     :return: (shift, value) Shift and value of maximum xcorr
     """
     value = fct.max()
-    mid = (len(fct) - 1)/2
+    _min = fct.min()
+    if abs(_min) > abs(value):
+        value = _min
 
-    if absmax:
-        value_neg = fct.min()
-        if abs(value_neg) > value:
-            value = value_neg
-
+    mid = (len(fct) - 1) / 2
     shift = np.where(fct == value)[0][0] - mid
     return shift, value
 
