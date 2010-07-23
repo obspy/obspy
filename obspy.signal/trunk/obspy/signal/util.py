@@ -227,6 +227,28 @@ def nextpow2(i):
     return int(M.pow(2, buf))
 
 
+def xcorr_max(fct):
+    """
+    Return shift and value of maximum xcorr function
+    
+    >>> fct = np.zeros(101)
+    >>> fct[50] = 1.0
+    >>> xcorr_max(fct)
+    (0, 1.0)
+    >>> fct[50], fct[60] = 0.0, 1.0
+    >>> xcorr_max(fct)
+    (10, 1.0)
+    
+    :param fct: numpy.ndarray
+        xcorr function e.g. returned bei xcorr
+    :return: (shift, value) Shift and value of maximum xcorr
+    """
+    value = fct.max()
+    mid = (len(fct) - 1)/2
+    shift = np.where(fct == value)[0][0] - mid
+    return shift, value
+
+
 def enframe(x, win, inc):
     nx = len(x)
     nwin = len(win)
