@@ -182,7 +182,7 @@ def envelope(data):
     :return: Envelope of input data.
     """
     hilb = hilbert(data)
-    data = pow(pow(data, 2) + pow(hilb, 2), 0.5)
+    data = (data**2 + hilb**2)**0.5
     return data
 
 

@@ -50,7 +50,7 @@ cpxtrace analysis, ...), please also check the tutorial.**
 
 from obspy.core.util import _getVersionString
 from filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH, lowpass, \
-        lowpassZPHSH, highpass, highpassZPHSH, envelope, remezFIR, lowpassFIR
+        lowpassZPHSH, highpass, highpassZPHSH, remezFIR, lowpassFIR
 from rotate import rotate_NE_RT, gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
         delayedStaLta, zdetect, triggerOnset, pkBaer, arPick

@@ -35,21 +35,21 @@ def envelope(data):
 
     :param data: Data to make envelope of, type numpy.ndarray.
     :return A_cpx: Analytic signal of input data.
-    :return A_real: Envelope of input data.
+    :return A_abs: Envelope of input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape) - 1])
     A_cpx = np.zeros((data.shape), dtype='complex64')
-    A_real = np.zeros((data.shape), dtype='float64')
+    A_abs = np.zeros((data.shape), dtype='float64')
     if (np.size(data.shape) > 1):
         i = 0
         for row in data:
             A_cpx[i, :] = signal.hilbert(row, nfft)
-            A_real[i, :] = abs(signal.hilbert(row, nfft))
+            A_abs[i, :] = abs(signal.hilbert(row, nfft))
             i = i + 1
     else:
         A_cpx = signal.hilbert(data, nfft)
-        A_real = abs(signal.hilbert(data, nfft))
-    return A_cpx, A_real
+        A_abs = abs(signal.hilbert(data, nfft))
+    return A_cpx, A_abs
 
 
 def normEnvelope(data, fs, smoothie, fk):
