@@ -1211,6 +1211,14 @@ class Trace(object):
         else:
             return tr
 
+    def copy(self):
+        """
+        Returns a deepcopy of the trace.
+
+        :return: Copy of trace.
+        """
+        return deepcopy(self)
+
 
 if __name__ == '__main__':
     import doctest

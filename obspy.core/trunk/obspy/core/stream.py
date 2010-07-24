@@ -1163,6 +1163,14 @@ class Stream(object):
         else:
             return Stream(traces=new_traces)
 
+    def copy(self):
+        """
+        Returns a deepcopy of the stream.
+
+        :return: Copy of stream.
+        """
+        return copy.deepcopy(self)
+
 
 def createDummyStream(stream_string):
     """
