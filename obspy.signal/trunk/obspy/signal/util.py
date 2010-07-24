@@ -16,6 +16,8 @@ import numpy as np
 import os
 import platform
 
+from obspy.core import Trace, Stream
+
 
 # Import shared libsignal library depending on the platform.
 # XXX: trying multiple names for now - should be removed
@@ -107,6 +109,7 @@ def utlLonLat(orig_lon, orig_lat, x, y):
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
+    Supports ndarrays (float32) and Trace objects.
     
     >>> tr1 = np.random.randn(10000).astype('float32')
     >>> tr2 = tr1.copy()
@@ -123,9 +126,9 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
 
     
-    :type tr1: numpy ndarray float32
+    :type tr1: numpy ndarray float32 or obspy.core.Trace
     :param tr1: Trace 1
-    :type tr2: numpy ndarray float32
+    :type tr2: numpy ndarray float32 or obspy.core.Trace
     :param tr2: Trace 2 to correlate with trace 1
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
@@ -136,6 +139,11 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
     """
+    # if we get Trace objects, use their data arrays
+    for tr in [tr1, tr2]:
+        if isinstance(tr, Trace):
+            tr = tr.data
+
     # 2009-10-11 Moritz
     lib.X_corr.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
@@ -161,29 +169,28 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     else:
         return shift.value, coe_p.value
 
-def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
+def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
+             full_xcorr=False):
     """
-    Calculates the cross correlation on each component separately, stacks them
-    together and estimates the maximum and shift of maximum on the stack.
-    Basically the same as :func:`~obspy.signal.util.xcorr` but for three
-    components, please also take a look at the documentation of that function.
-    Useful e.g. for estimation of waveform similarity on a three component
-    seismogram.
+    Calculates the cross correlation on each of the specified components
+    separately, stacks them together and estimates the maximum and shift of
+    maximum on the stack.
+    Basically the same as :func:`~obspy.signal.util.xcorr` but for (normally)
+    three components, please also take a look at the documentation of that
+    function. Useful e.g. for estimation of waveform similarity on a three
+    component seismogram.
     
-    :type tr1: numpy ndarray float32
-    :param tr1: Z component data of Stream 1
-    :type tr2: numpy ndarray float32
-    :param tr2: N component data of Stream 1
-    :type tr3: numpy ndarray float32
-    :param tr3: E component data of Stream 1
-    :type trA: numpy ndarray float32
-    :param trA: Z component data of Stream 2
-    :type trB: numpy ndarray float32
-    :param trB: N component data of Stream 2
-    :type trC: numpy ndarray float32
-    :param trC: E component data of Stream 2
+    :type st1: obspy.core.Stream
+    :param st1: Stream 1, containing one trace for Z, N, E component (other
+            component_id codes are ignored)
+    :type st2: obspy.core.Stream
+    :param st2: Stream 2, containing one trace for Z, N, E component (other
+            component_id codes are ignored)
     :type shift_len: Int
     :param shift_len: Total length of samples to shift for cross correlation.
+    :type components: List of Strings
+    :param components: List of components to use in cross-correlation, defaults
+            to ["Z", "N", "E"].
     :type full_xcorr: Bool
     :param full_xcorr: If True, the complete xcorr function will be
         returned as numpy.ndarray
@@ -191,16 +198,31 @@ def xcorr_3C(tr1, tr2, tr3, trA, trB, trC, shift_len, full_xcorr=False):
         itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
     """
-    if False in [len(tr1) == len(tr) for tr in [tr2, tr3, trA, trB, trC]]:
+    streams = [st1, st2]
+    # check if we can actually use the provided streams safely
+    for st in streams:
+        if not isinstance(st, Stream):
+            raise TypeError("Expected Stream object but got %s." % type(st))
+        for component in components:
+            if not len(st.select(component=component)) == 1:
+                msg = "Expected exactly one %s trace in stream" % component + \
+                      " but got %s." % len(st.select(component=component))
+                raise ValueError(msg)
+    ndat = len(streams[0].select(component=components[0])[0])
+    if False in [len(st.select(component=component)[0]) == ndat \
+                 for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
+    # everything should be ok with the input data...
 
     corp = np.zeros(2*shift_len+1, dtype='float64', order='C')
     
-    for tr1, tr2 in [[tr1, trA], [tr2, trB], [tr3, trC]]:
-        xx = xcorr(tr1, tr2, shift_len, full_xcorr=True)
+    for component in components:
+        xx = xcorr(streams[0].select(component=component)[0],
+                   streams[1].select(component=component)[0],
+                   shift_len, full_xcorr=True)
         corp += xx[2]
 
-    corp /= 3
+    corp /= len(components)
 
     shift, value = xcorr_max(corp)
 

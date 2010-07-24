@@ -100,7 +100,7 @@ def recStaltaPy(a, nsta, nlta):
     return np.array(charfct)
 
 
-def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
+def carlStaTrig(a, nsta, nlta, ratio, quiet):
     """
     Computes the carlStaTrig characteristic function
 
@@ -108,10 +108,10 @@ def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
 
     :type a: Numpy ndarray
     :param a: Seismic Trace
-    :type Nsta: Int
-    :param Nsta: Length of short time average window in samples
-    :type Nlta: Int
-    :param Nlta: Length of long time average window in samples
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
     :type ration: Float
     :param ratio: as ratio gets smaller, carlstatrig gets more sensitive
     :type quiet: Float
@@ -125,48 +125,48 @@ def carlStaTrig(a, Nsta, Nlta, ratio, quiet):
     lta = np.zeros(len(a), dtype='float64')
     star = np.zeros(len(a), dtype='float64')
     ltar = np.zeros(len(a), dtype='float64')
-    pad_sta = np.zeros(Nsta)
-    pad_lta = np.zeros(Nlta) # avoid for 0 division 0/1=0
+    pad_sta = np.zeros(nsta)
+    pad_lta = np.zeros(nlta) # avoid for 0 division 0/1=0
     #
     # compute the short time average (STA)
-    for i in xrange(Nsta): # window size to smooth over
-        sta += np.concatenate((pad_sta, a[i:m - Nsta + i]))
-    sta /= Nsta
+    for i in xrange(nsta): # window size to smooth over
+        sta += np.concatenate((pad_sta, a[i:m - nsta + i]))
+    sta /= nsta
     #
     # compute the long time average (LTA), 8 sec average over sta
-    for i in xrange(Nlta): # window size to smooth over
-        lta += np.concatenate((pad_lta, sta[i:m - Nlta + i]))
-    lta /= Nlta
+    for i in xrange(nlta): # window size to smooth over
+        lta += np.concatenate((pad_lta, sta[i:m - nlta + i]))
+    lta /= nlta
     lta = np.concatenate((np.zeros(1), lta))[:m] #XXX ???
     #
     # compute star, average of abs diff between trace and lta
-    for i in xrange(Nsta): # window size to smooth over
+    for i in xrange(nsta): # window size to smooth over
         star += np.concatenate((pad_sta,
-                               abs(a[i:m - Nsta + i] - lta[i:m - Nsta + i])))
-    star /= Nsta
+                               abs(a[i:m - nsta + i] - lta[i:m - nsta + i])))
+    star /= nsta
     #
     # compute ltar, 8 sec average over star
-    for i in xrange(Nlta): # window size to smooth over
-        ltar += np.concatenate((pad_lta, star[i:m - Nlta + i]))
-    ltar /= Nlta
+    for i in xrange(nlta): # window size to smooth over
+        ltar += np.concatenate((pad_lta, star[i:m - nlta + i]))
+    ltar /= nlta
     #
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
-    eta[:Nlta] = -1.0
+    eta[:nlta] = -1.0
     return eta
 
 
-def classicStaLta(a, Nsta, Nlta):
+def classicStaLta(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
-    the STA is given by Nsta in samples, respectively is the length of the
-    LTA given by Nlta in samples.
+    the STA is given by nsta in samples, respectively is the length of the
+    LTA given by nlta in samples.
 
     :type a: Numpy ndarray
     :param a: Seismic Trace
-    :type Nsta: Int
-    :param Nsta: Length of short time average window in samples
-    :type Nlta: Int
-    :param Nlta: Length of long time average window in samples
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
     :rtype: Numpy ndarray
     :return: Charactristic function of classic STA/LTA
     """
@@ -177,68 +177,68 @@ def classicStaLta(a, Nsta, Nlta):
     #
     # compute the short time average (STA)
     sta = np.zeros(len(a), dtype='float64')
-    pad_sta = np.zeros(Nsta)
-    # Tricky: Construct a big window of length len(a)-Nsta. Now move this
-    # window Nsta points, i.e. the window "sees" every point in a at least
+    pad_sta = np.zeros(nsta)
+    # Tricky: Construct a big window of length len(a)-nsta. Now move this
+    # window nsta points, i.e. the window "sees" every point in a at least
     # once.
-    for i in xrange(Nsta): # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
-    sta = sta / Nsta
+    for i in xrange(nsta): # window size to smooth over
+        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
+    sta = sta / nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
-    pad_lta = np.ones(Nlta) # avoid for 0 division 0/1=0
-    for i in xrange(Nlta): # window size to smooth over
-        lta = lta + np.concatenate((pad_lta, a[i:m - Nlta + i] ** 2))
-    lta = lta / Nlta
+    pad_lta = np.ones(nlta) # avoid for 0 division 0/1=0
+    for i in xrange(nlta): # window size to smooth over
+        lta = lta + np.concatenate((pad_lta, a[i:m - nlta + i] ** 2))
+    lta = lta / nlta
     #
-    # pad zeros of length Nlta to avoid overfit and
+    # pad zeros of length nlta to avoid overfit and
     # return STA/LTA ratio
-    sta[0:Nlta] = 0
+    sta[0:nlta] = 0
     return sta / lta
 
 
-def delayedStaLta(a, Nsta, Nlta):
+def delayedStaLta(a, nsta, nlta):
     """
     Delayed STA/LTA, (see Withers et al. 1998 p. 97)
 
     :type a: Numpy ndarray
     :param a: Seismic Trace
-    :type Nsta: Int
-    :param Nsta: Length of short time average window in samples
-    :type Nlta: Int
-    :param Nlta: Length of long time average window in samples
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
     :rtype: Numpy ndarray
     :return: Charactristic function of delayed STA/LTA
     """
     m = len(a)
     #
     # compute the short time average (STA) and long time average (LTA)
-    # don't start for STA at Nsta because it's muted later anyway
+    # don't start for STA at nsta because it's muted later anyway
     sta = np.zeros(m, dtype='float64')
     lta = np.zeros(m, dtype='float64')
     for i in xrange(m):
-        sta[i] = (a[i] ** 2 + a[i - Nsta] ** 2) / Nsta + sta[i - 1]
-        lta[i] = (a[i - Nsta - 1] ** 2 + a[i - Nsta - Nlta - 1] ** 2) / \
-                 Nlta + lta[i - 1]
-    sta[0:Nlta + Nsta + 50] = 0
+        sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
+        lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
+                 nlta + lta[i - 1]
+    sta[0:nlta + nsta + 50] = 0
     return sta / lta
 
 
-def zdetect(a, Nsta):
+def zdetect(a, nsta):
     """
     Z-detector, (see Withers et al. 1998 p. 99)
 
-    :param Nsta: Window length in Samples.
+    :param nsta: Window length in Samples.
     """
     m = len(a)
     #
     # Z-detector given by Swindell and Snell (1977)
     sta = np.zeros(len(a), dtype='float64')
     # Standard Sta
-    pad_sta = np.zeros(Nsta)
-    for i in xrange(Nsta): # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - Nsta + i] ** 2))
+    pad_sta = np.zeros(nsta)
+    for i in xrange(nsta): # window size to smooth over
+        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
     Z = (sta - a_mean) / a_std
