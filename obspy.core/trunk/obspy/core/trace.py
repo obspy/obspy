@@ -885,9 +885,9 @@ class Trace(object):
         """
         Filters the data of the current trace. This is performed in place on
         the actual data array. The raw data is not accessible anymore
-        afterwards.
+        afterwards (can be avoided by setting ``in_place=False``).
         This also makes an entry with information on the applied processing
-        in self.stats.processing.
+        in ``trace.stats.processing``.
 
         Basic Usage
         -----------
@@ -901,8 +901,8 @@ class Trace(object):
                 be passed to the respective filter function as kwargs.
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
         :param in_place: Determines if the filter is applied in place or if
-                a new Trace object is returned.
-        :return: None if in_place=True, new Trace with filtered data otherwise
+                a new ``Trace`` object is returned.
+        :return: ``None`` if ``in_place=True``, new ``Trace`` with filtered data otherwise
         """
         try:
             from obspy.signal import bandpass, bandstop, lowpass, highpass
@@ -958,7 +958,7 @@ class Trace(object):
         accessible anymore afterwards. This can be avoided by specifying
         ``in_place=False``.
         This also makes an entry with information on the applied processing
-        in self.stats.processing.
+        in ``trace.stats.processing``.
 
         Basic Usage
         -----------
@@ -975,8 +975,9 @@ class Trace(object):
                 (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
                 10 seconds average, respectively)
         :param in_place: Determines if the filter is applied in place or if
-                a new Trace object is returned.
-        :return: None if in_place=True, new Trace with filtered data otherwise.
+                a new ``Trace`` object is returned.
+        :return: ``None`` if ``in_place=True``, new ``Trace`` with filtered
+                data otherwise.
         """
         try:
             from obspy.signal.trigger import recStalta, carlStaTrig, \
@@ -1044,16 +1045,16 @@ class Trace(object):
         Downsample trace data.
 
         Currently a simple integer decimation is implemented.
-        Only every decimation_factor-th sample remains in the trace, all other
-        samples are thrown away. Prior to decimation a lowpass filter is
+        Only every ``decimation_factor``-th sample remains in the trace, all
+        other samples are thrown away. Prior to decimation a lowpass filter is
         applied to ensure no aliasing artifacts are introduced. The automatic
-        filtering can be deactivated with no_filter=True.
-        If the length of the data array modulo decimation_factor is not zero
-        then the endtime of the trace is changing on sub-sample scale. The
+        filtering can be deactivated with ``no_filter=True``.
+        If the length of the data array modulo ``decimation_factor`` is not
+        zero then the endtime of the trace is changing on sub-sample scale. The
         downsampling is aborted in this case but can be forced by setting
-        strict_length=False.
-        Per default downsampling is done in place. By setting in_place=False a
-        new Trace object is returned.
+        ``strict_length=False``.
+        By default downsampling is done in place. By setting ``in_place=False``
+        a new ``Trace`` object is returned.
 
         Basic Usage
         -----------
@@ -1064,9 +1065,10 @@ class Trace(object):
             lowered by decimation.
         :param no_filter: deactivate automatic filtering
         :param strict_length: abort, if endtime of trace would change
-        :param in_place: perform operation in place or return new Trace object.
-        :return: None if in_place=True, new Trace with downsampled data
-            otherwise.
+        :param in_place: perform operation in place or return new ``Trace``
+            object.
+        :return: ``None`` if ``in_place=True``, new ``Trace`` with downsampled
+            data otherwise.
         """
         try:
             from obspy.signal.filter import integerDecimation, lowpass
@@ -1099,7 +1101,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
-        proc_info = "downsample:integerDecimation:%s" % (decimation_factor)
+        proc_info = "downsample:integerDecimation:%s" % decimation_factor
         tr.stats['processing'].append(proc_info)
         
         if in_place:
@@ -1111,6 +1113,8 @@ class Trace(object):
         """
         Method to get the value of the absolute maximum amplitude in the trace.
 
+        Basic Usage
+        -----------
         >>> tr = Trace(data=[0, -3, 9, 6, 4])
         >>> tr.max()
         9
@@ -1121,7 +1125,7 @@ class Trace(object):
         >>> tr.max()
         9.0
 
-        :return: Value of absolute maximum of trace.data
+        :return: Value of absolute maximum of ``trace.data``.
         """
         value = self.data.max()
         _min = self.data.min()
@@ -1134,8 +1138,10 @@ class Trace(object):
     def std(self):
         """
         Method to get the standard deviation of amplitudes in the trace.
-        Standard deviation is calculated by numpy method on trace.data.
+        Standard deviation is calculated by numpy method on ``trace.data``.
         
+        Basic Usage
+        -----------
         >>> tr = Trace(data=[0, -3, 9, 6, 4])
         >>> tr.std()
         4.2614551505325036
@@ -1143,9 +1149,67 @@ class Trace(object):
         >>> tr.std()
         4.4348618918744247
 
-        :return: Standard deviation of trace.data
+        :return: Standard deviation of ``trace.data``.
         """
         return self.data.std()
+
+    def normalize(self, norm=None, in_place=True):
+        """
+        Method to normalize the trace to its absolute maximum
+        Per default normalization is done in place. By setting
+        ``in_place=False`` a new ``Trace`` object is returned.
+        Note: If ``trace.data.dtype`` was integer it is changing to float.
+
+        Basic Usage
+        -----------
+        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr.normalize()
+        >>> tr.data
+        array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
+        >>> tr.stats.processing
+        ['normalize:9']
+        >>> tr = Trace(data=[0.3, -3.5, -9.2, 6.4, 4.3])
+        >>> tr.normalize()
+        >>> tr.data
+        array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217,  0.4673913 ])
+        >>> tr.stats.processing
+        ['normalize:-9.2']
+        
+        :param norm: If not ``None``, trace is normalized by dividing by specified
+                value ``norm`` instead of dividing by its absolute maximum. If a
+                negative value is specified then its absolute value is used.
+        :param in_place: perform operation in place or return new ``Trace``
+                object.
+        :return: ``None`` if ``in_place=True``, new ``Trace`` with normalized
+                data otherwise.
+        """
+        # if in_place is set to False create a new Trace object
+        if in_place:
+            tr = self
+        else:
+            tr = deepcopy(self)
+
+        # normalize
+        if norm:
+            norm = norm
+            if norm < 0:
+                msg = "Normalizing with negative values is forbidden. " + \
+                      "Using absolute value."
+                warnings.warn(msg)
+        else:
+            norm = self.max()
+        tr.data = tr.data / float(abs(norm))
+
+        # add processing information to the stats dictionary
+        if not 'processing' in tr.stats:
+            tr.stats['processing'] = []
+        proc_info = "normalize:%s" % norm
+        tr.stats['processing'].append(proc_info)
+        
+        if in_place:
+            return
+        else:
+            return tr
 
 
 if __name__ == '__main__':

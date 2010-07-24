@@ -941,11 +941,11 @@ class Stream(object):
 
     def filter(self, type, filter_options, in_place=True):
         """
-        Filters the data of all traces in the Stream. This is performed in
+        Filters the data of all traces in the ``Stream``. This is performed in
         place on the actual data arrays. The raw data is not accessible anymore
         afterwards.
         This also makes an entry with information on the applied processing
-        in self[:].stats.processing.
+        in ``stats.processing`` of every trace.
 
         Basic Usage
         -----------
@@ -959,9 +959,9 @@ class Stream(object):
                 be passed to the respective filter function as kwargs.
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
         :param in_place: Determines if the filter is applied in place or if
-                a new Stream object is returned.
-        :return: None if in_place=True, new Stream with filtered traces
-                otherwise.
+                a new ``Stream`` object is returned.
+        :return: ``None`` if ``in_place=True``, new ``Stream`` with filtered
+                traces otherwise.
         """
         new_traces = []
         for trace in self:
@@ -976,12 +976,12 @@ class Stream(object):
 
     def trigger(self, type, trigger_options, in_place=True):
         """
-        Runs a triggering algorithm on all traces in the Stream. This is
+        Runs a triggering algorithm on all traces in the stream. This is
         performed in place on the actual data arrays by default. The raw data
         is not accessible anymore afterwards. This can be avoided by specifying
         ``in_place=False``.
         This also makes an entry with information on the applied processing
-        in self[:].stats.processing.
+        in ``stats.processing`` of every trace.
 
         Basic Usage
         -----------
@@ -998,9 +998,9 @@ class Stream(object):
                 (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
                 10 seconds average, respectively)
         :param in_place: Determines if the filter is applied in place or if
-                a new Stream object is returned.
-        :return: None if in_place=True, new Stream with triggered traces
-                otherwise.
+                a new ``Stream`` object is returned.
+        :return: ``None`` if ``in_place=True``, new ``Stream`` with triggered
+                traces otherwise.
         """
         new_traces = []
         for trace in self:
@@ -1022,13 +1022,13 @@ class Stream(object):
         Only every decimation_factor-th sample remains in the trace, all other
         samples are thrown away. Prior to decimation a lowpass filter is
         applied to ensure no aliasing artifacts are introduced. The automatic
-        filtering can be deactivated with no_filter=True.
-        If the length of the data array modulo decimation_factor is not zero
-        then the endtime of the trace is changing on sub-sample scale. The
+        filtering can be deactivated with ``no_filter=True``.
+        If the length of the data array modulo ``decimation_factor`` is not
+        zero then the endtime of the trace is changing on sub-sample scale. The
         downsampling is aborted in this case but can be forced by setting
-        strict_length=False.
-        Per default downsampling is done in place. By setting in_place=False a
-        new Stream object is returned.
+        ``strict_length=False``.
+        Per default downsampling is done in place. By setting ``in_place=False`` a
+        new ``Stream`` object is returned.
 
         Basic Usage
         -----------
@@ -1040,10 +1040,10 @@ class Stream(object):
         :param no_filter: deactivate automatic filtering
         :param strict_length: leave traces unchanged for which endtime of trace
             would change
-        :param in_place: perform operation in place or return new Stream
+        :param in_place: perform operation in place or return new ``Stream``
             object.
-        :return: None if in_place=True, new Stream with downsampled data
-            otherwise.
+        :return: ``None`` if ``in_place=True``, new ``Stream`` with downsampled
+            data otherwise.
         """
         new_traces = []
         for trace in self:
@@ -1082,7 +1082,8 @@ class Stream(object):
         """
         Method to get the standard deviations of amplitudes in all trace in the
         stream.
-        Standard deviations are calculated by numpy method on self[:].data.
+        Standard deviations are calculated by numpy method on every
+        ``trace.data`` in the stream.
         
         >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
         >>> tr2 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
@@ -1098,6 +1099,69 @@ class Stream(object):
             values.append(tr.std())
 
         return values
+
+    def normalize(self, global_max=False, in_place=True):
+        """
+        Normalizes all trace in the stream. By default all traces are
+        normalized separately to their respective absolute maximum. By setting
+        ``global_max=True`` all traces get normalized to the global maximum of
+        all traces.
+        By default normalization is done in place. By setting
+        ``in_place=False`` a new Trace object is returned.
+        Note: If self.data.dtype was integer it is changing to float.
+        This also makes an entry with information on the applied processing
+        in ``stats.processing`` of every trace.
+        Note: If ``data.dtype`` of a trace was integer it is changing to float.
+
+        Basic Usage
+        -----------
+        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
+        >>> st = Stream(traces=[tr1, tr2])
+        >>> st2 = st.normalize(in_place=False)
+        >>> st2[0].data
+        array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
+        >>> st2[0].stats.processing
+        ['normalize:9']
+        >>> st2[1].data
+        array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
+        >>> st2[1].stats.processing
+        ['normalize:-0.8']
+        >>> st.normalize(global_max=True)
+        >>> st[0].data
+        array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
+        >>> st[0].stats.processing
+        ['normalize:9']
+        >>> st[1].data
+        array([ 0.03333333, -0.05555556, -0.08888889,  0.04444444,  0.03333333])
+        >>> st[1].stats.processing
+        ['normalize:9']
+
+        :param global_max: If set to ``True``, all traces are normalized with
+                respect to the global maximum of all traces in the stream
+                instead of normalizing every trace separately.
+        :param in_place: perform operation in place or return new ``Stream``
+                object.
+        :return: ``None`` if ``in_place=True``, new ``Trace`` with normalized
+                data otherwise.
+        """
+        new_traces = []
+
+        # use the same value for normalization on all traces?
+        if global_max:
+            norm = max([abs(value) for value in self.max()])
+        else:
+            norm = None
+        
+        # normalize all traces
+        for trace in self:
+            new_tr = trace.normalize(norm=norm, in_place=in_place)
+            new_traces.append(new_tr)
+
+        if in_place:
+            return
+        else:
+            return Stream(traces=new_traces)
 
 
 def createDummyStream(stream_string):
