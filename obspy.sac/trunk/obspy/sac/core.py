@@ -28,7 +28,7 @@ convert_dict = {
 # all the sac specific extras, the SAC reference time specific headers are
 # handled separately and are directly controlled by trace.stats.starttime.
 sac_extra = [
-    'depmin', 'depmax', 'odelta', 'b', 'e', 'o', 'a', 't0', 't1',
+    'depmin', 'depmax', 'odelta', 'o', 'a', 't0', 't1',
     't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo',
     'stel', 'stdp', 'evla', 'evlo', 'evdp', 'mag', 'user0', 'user1', 'user2',
     'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'dist',
@@ -122,9 +122,14 @@ def readSAC(filename, headonly=False, **kwargs):
     header['starttime'] = t.starttime
     # always add the begin time (if it's defined) to get the given
     # SAC reference time, no matter which iztype is given
-    b = float(header['sac']['b'])
+    b = float(t.GetHvalue('b'))
     if b != -12345.0:
         header['starttime'] += b
+    # note that the B and E times should not be in the sac_extra
+    # dictionary, as they would overwrite the t.fromarray which sets them
+    # according to the starttime, npts and delta.
+    header['sac']['b'] = b
+    header['sac']['e'] = float(t.GetHvalue('e'))
     if headonly:
         tr = Trace(header=header)
     else:
@@ -159,7 +164,7 @@ def writeSAC(stream, filename, **kwargs):
             b = float(trace.stats['sac']['b'])
             if b == -12345:
                 raise KeyError
-            nz = nz - b
+            nz -= b
         except KeyError:
             pass
         # filling in SAC/sacio specific defaults
@@ -169,9 +174,9 @@ def writeSAC(stream, filename, **kwargs):
         for _j, _k in convert_dict.iteritems():
             t.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
-        # note that the SAC reference time values are not used in here any
-        # more, they are already set by t.fromarray and directly deduce
-        # from tr.starttime
+        # note that the SAC reference time values (including B and E) are
+        # not used in here any more, they are already set by t.fromarray
+        # and directly deduce from tr.starttime
         for _i in sac_extra:
             try:
                 t.SetHvalue(_i, trace.stats.sac[_i])
