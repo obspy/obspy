@@ -25,14 +25,15 @@ convert_dict = {
     'khole': 'location'
 }
 
-# all the sac specific extras
+# all the sac specific extras, the SAC reference time specific headers are
+# handled separately and are directly controlled by trace.stats.starttime.
 sac_extra = [
     'depmin', 'depmax', 'odelta', 'b', 'e', 'o', 'a', 't0', 't1',
     't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo',
     'stel', 'stdp', 'evla', 'evlo', 'evdp', 'mag', 'user0', 'user1', 'user2',
     'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'dist',
-    'az', 'baz', 'gcarc', 'depmen', 'cmpaz', 'cmpinc', 'nzyear', 'nzjday',
-    'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'nvhdr', 'norid', 'nevid', 'nwfid',
+    'az', 'baz', 'gcarc', 'depmen', 'cmpaz', 'cmpinc',
+    'nvhdr', 'norid', 'nevid', 'nwfid',
     'iftype', 'idep', 'iztype', 'iinst', 'istreg', 'ievreg', 'ievtype',
     'iqual', 'isynth', 'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok',
     'lcalda', 'kevnm', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
@@ -119,13 +120,11 @@ def readSAC(filename, headonly=False, **kwargs):
         header['sac'][i] = t.GetHvalue(i)
     # convert time to UTCDateTime
     header['starttime'] = t.starttime
-    if header['sac']['iztype'] == 11:
-        header['starttime'] += float(header['sac']['b'])
-    elif header['sac']['iztype'] in (9, -12345):
-        pass
-    else:
-        msg = "This iztype is not implemented, please write a bug report"
-        raise NotImplementedError(msg)
+    # always add the begin time (if it's defined) to get the given
+    # SAC reference time, no matter which iztype is given
+    b = float(header['sac']['b'])
+    if b != -12345.0:
+        header['starttime'] += b
     if headonly:
         tr = Trace(header=header)
     else:
@@ -153,19 +152,14 @@ def writeSAC(stream, filename, **kwargs):
     base, ext = os.path.splitext(filename)
     for trace in stream:
         t = SacIO()
-        # setting start time depending on iztype, if no sac extra header is
-        # defined iztype (9 == Begin Time) will be set by t.fromarray
+        # setting relative SAC time as specified with b
         nz = trace.stats.starttime
         b = 0.0
         try:
-            if trace.stats['sac']['iztype'] == 11:
-                nz -= float(trace.stats['sac']['b'])
-                b = float(trace.stats['sac']['b'])
-            elif trace.stats['sac']['iztype'] in (9, -12345):
-                pass
-            else:
-                msg = "This iztype is not implemented, please write a bug report"
-                raise NotImplementedError(msg)
+            b = float(trace.stats['sac']['b'])
+            if b == -12345:
+                raise KeyError
+            nz = nz - b
         except KeyError:
             pass
         # filling in SAC/sacio specific defaults
@@ -175,6 +169,9 @@ def writeSAC(stream, filename, **kwargs):
         for _j, _k in convert_dict.iteritems():
             t.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
+        # note that the SAC reference time values are not used in here any
+        # more, they are already set by t.fromarray and directly deduce
+        # from tr.starttime
         for _i in sac_extra:
             try:
                 t.SetHvalue(_i, trace.stats.sac[_i])

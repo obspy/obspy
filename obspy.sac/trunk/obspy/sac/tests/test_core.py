@@ -3,8 +3,7 @@
 The sac.core test suite.
 """
 
-from obspy.core import Stream, Trace, read, AttribDict
-from obspy.core import UTCDateTime
+from obspy.core import Stream, Trace, read, AttribDict, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO
 import copy
@@ -12,6 +11,7 @@ import inspect
 import numpy as np
 import os
 import unittest
+import filecmp
 
 
 class CoreTestCase(unittest.TestCase):
@@ -37,8 +37,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
         self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
+        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
+        self.assertEqual(tr.stats.sac.b, 10.0)
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
@@ -51,8 +52,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
         self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
+        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
+        self.assertEqual(tr.stats.sac.b, 10.0)
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
@@ -65,8 +67,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 100)
         self.assertEqual(tr.stats['sampling_rate'], 1.0)
         self.assertEqual(tr.stats.get('channel'), 'Q')
-        self.assertEqual(tr.stats.starttime.timestamp, 269596800.0)
+        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.get('nvhdr'), 6)
+        self.assertEqual(tr.stats.sac.b, 10.0)
         self.assertEqual(str(tr.data), '[]')
 
     def test_writeViaObspy(self):
@@ -171,12 +174,63 @@ class CoreTestCase(unittest.TestCase):
         os.remove(tempfile)
 
 
-    def test_defaultvalues(self):
+    def test_defaultValues(self):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.calib,1.0)
         self.assertEqual(tr.stats.location,'')
         self.assertEqual(tr.stats.network,'')
         
+
+    def test_referenceTime(self):
+        """
+        Test case for bug #107. The SAC reference time is specified by the
+        iztype. However is seems no matter what iztype is given, the
+        starttime of the seismogram is calculated by adding the B header
+        (in seconds) to the SAC reference time.
+        """
+        file = os.path.join(self.path, "data", "seism.sac")
+        tr = read(file)[0]
+        # see that starttime is set correctly (#107)
+        self.assertAlmostEqual(tr.stats.sac.iztype, 9)
+        self.assertAlmostEqual(tr.stats.sac.b, 9.4599991)
+        self.assertEqual(tr.stats.starttime, 
+                         UTCDateTime("1981-03-29 10:38:23.459999"))
+        # check that if we rewrite the file, nothing changed
+        tmpfile = NamedTemporaryFile().name
+        tr.write(tmpfile, format="SAC")
+        filecmp.cmp(file, tmpfile, shallow=False)
+        os.remove(tmpfile)
+        # test some more entries, I can see from the plot
+        self.assertEqual(tr.stats.station, "CDV")
+        self.assertEqual(tr.stats.channel, "Q")
+
+
+    def test_undefinedB(self):
+        """
+        Test that an undefined B value (-12345.0) is not messing up the
+        starttime
+        """
+        # read in the test file an see that sac reference time and
+        # starttime of seismogram are correct
+        tr = read(self.file)[0]
+        self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
+        self.assertEqual(tr.stats.sac.b, 10.0)
+        sac_ref_time = SacIO(self.file).starttime
+        self.assertEqual(sac_ref_time.timestamp, 269596800.0)
+        # change b to undefined and write (same case as if b == 0.0)
+        # now sac reference time and starttime of seismogram must be the
+        # same
+        tr.stats.sac.b = -12345.0
+        tmpfile = NamedTemporaryFile().name
+        tr.write(tmpfile, format="SAC")
+        tr2 = read(tmpfile)[0]
+        self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
+        self.assertEqual(tr2.stats.sac.b, -12345.0)
+        sac_ref_time2 = SacIO(tmpfile).starttime
+        self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
+        os.remove(tmpfile)
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
