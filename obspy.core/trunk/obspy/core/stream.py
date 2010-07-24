@@ -1057,6 +1057,48 @@ class Stream(object):
         else:
             return Stream(traces=new_traces)
 
+    def max(self):
+        """
+        Method to get the values of the absolute maximum amplitudes of all
+        traces in the stream.
+
+        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr2 = Trace(data=[0, -3, -9, 6, 4])
+        >>> tr3 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> st = Stream(traces=[tr1, tr2, tr3])
+        >>> st.max()
+        [9, -9, 9.0]
+
+        :return: List of values of absolute maxima of all traces
+        """
+        values = []
+
+        for tr in self:
+            values.append(tr.max())
+
+        return values
+
+    def std(self):
+        """
+        Method to get the standard deviations of amplitudes in all trace in the
+        stream.
+        Standard deviations are calculated by numpy method on self[:].data.
+        
+        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr2 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> st = Stream(traces=[tr1, tr2])
+        >>> st.std()
+        [4.2614551505325036, 4.4348618918744247]
+
+        :return: List of standard deviations of all traces.
+        """
+        values = []
+
+        for tr in self:
+            values.append(tr.std())
+
+        return values
+
 
 def createDummyStream(stream_string):
     """

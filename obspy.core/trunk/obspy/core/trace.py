@@ -226,6 +226,10 @@ class Trace(object):
     """
 
     def __init__(self, data=np.array([]), header=None):
+        # make sure Trace gets initialized with an ndarray as self.data
+        # otherwise we could end up with e.g. a list object in self.data
+        if not isinstance(data, np.ndarray):
+            data = np.array(data)
         # set some defaults if not set yet
         if header == None:
             # Default values: For detail see
@@ -1102,6 +1106,46 @@ class Trace(object):
             return
         else:
             return tr
+
+    def max(self):
+        """
+        Method to get the value of the absolute maximum amplitude in the trace.
+
+        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr.max()
+        9
+        >>> tr = Trace(data=[0, -3, -9, 6, 4])
+        >>> tr.max()
+        -9
+        >>> tr = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr.max()
+        9.0
+
+        :return: Value of absolute maximum of trace.data
+        """
+        value = self.data.max()
+        _min = self.data.min()
+
+        if abs(_min) > abs(value):
+            value = _min
+        
+        return value
+
+    def std(self):
+        """
+        Method to get the standard deviation of amplitudes in the trace.
+        Standard deviation is calculated by numpy method on trace.data.
+        
+        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr.std()
+        4.2614551505325036
+        >>> tr = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr.std()
+        4.4348618918744247
+
+        :return: Standard deviation of trace.data
+        """
+        return self.data.std()
 
 
 if __name__ == '__main__':
