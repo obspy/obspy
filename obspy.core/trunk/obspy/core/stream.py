@@ -20,10 +20,11 @@ import math
 import numpy as np
 import os
 import urllib2
+import pickle
 
 
-def read(pathname_or_url, format=None, headonly=False, nearest_sample=True,
-         **kwargs):
+def read(pathname_or_url=None, format=None, headonly=False,
+         nearest_sample=True, **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -31,17 +32,25 @@ def read(pathname_or_url, format=None, headonly=False, nearest_sample=True,
     or a URL of a waveform file given in the *pathname_or_url* attribute. This
     function returns a ObsPy :class:`~obspy.core.stream.Stream` object.
 
+    If no file location or URL is specified, a Stream object with an example
+    seismogram is returned.
+
     The format of the waveform file will be automatically detected if not
     given. Allowed formats depend on ObsPy packages installed. See the notes
     section below.
 
     Basic Usage
     -----------
-    Examples files may be retrieved via http://examples.obspy.org.
+    An example can be created by omitting all arguments.
+    Other example files may be read directly from http://examples.obspy.org.
 
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> read("loc_RJOB20050831023349.z") # doctest: +SKIP
-    <obspy.core.stream.Stream object at 0x101700150>
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> print st
+    3 Trace(s) in Stream:
+    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
+    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
 
     Parameters
     ----------
@@ -120,6 +129,15 @@ def read(pathname_or_url, format=None, headonly=False, nearest_sample=True,
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
+    # if no pathname or URL, retrieve pickled example
+    if not pathname_or_url:
+        #msg = "No pathname or URL specified. Ignoring other arguments and " + \
+        #      "loading example data."
+        #warnings.warn(msg)
+        path = os.path.dirname(__file__)
+        path = os.path.join(path, "data", "example.pkl")
+        return pickle.load(open(path, "rt"))
+
     st = Stream()
     if "://" in pathname_or_url:
         # some URL
