@@ -282,6 +282,11 @@ class SacIO(object):
         else:
             # Only copy the data if they are not of the required type
             self.seis = np.require(trace, '<f4')
+        # convert stattime to sac reference time, if it is not default
+        if begin == -12345:
+            reftime = starttime
+        else:
+            reftime = starttime - begin
         ### set a few values that are required to create a valid SAC-file
         self.SetHvalue('int1', 2)
         self.SetHvalue('cmpaz', 0)
@@ -290,12 +295,12 @@ class SacIO(object):
         self.SetHvalue('leven', 1)
         self.SetHvalue('lpspol', 1)
         self.SetHvalue('lcalda', 0)
-        self.SetHvalue('nzyear', starttime.year)
-        self.SetHvalue('nzjday', starttime.strftime("%j"))
-        self.SetHvalue('nzhour', starttime.hour)
-        self.SetHvalue('nzmin', starttime.minute)
-        self.SetHvalue('nzsec', starttime.second)
-        self.SetHvalue('nzmsec', starttime.microsecond / 1e3)
+        self.SetHvalue('nzyear', reftime.year)
+        self.SetHvalue('nzjday', reftime.strftime("%j"))
+        self.SetHvalue('nzhour', reftime.hour)
+        self.SetHvalue('nzmin', reftime.minute)
+        self.SetHvalue('nzsec', reftime.second)
+        self.SetHvalue('nzmsec', reftime.microsecond / 1e3)
         self.SetHvalue('kcmpnm', 'Z')
         self.SetHvalue('evla', 0)
         self.SetHvalue('evlo', 0)

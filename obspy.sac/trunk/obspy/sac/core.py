@@ -122,13 +122,10 @@ def readSAC(filename, headonly=False, **kwargs):
     header['starttime'] = t.starttime
     # always add the begin time (if it's defined) to get the given
     # SAC reference time, no matter which iztype is given
-    b = float(t.GetHvalue('b'))
-    #if b != -12345.0:
-    #    header['starttime'] += b
     # note that the B and E times should not be in the sac_extra
     # dictionary, as they would overwrite the t.fromarray which sets them
     # according to the starttime, npts and delta.
-    header['sac']['b'] = b
+    header['sac']['b'] = float(t.GetHvalue('b'))
     header['sac']['e'] = float(t.GetHvalue('e'))
     if headonly:
         tr = Trace(header=header)
@@ -157,19 +154,14 @@ def writeSAC(stream, filename, **kwargs):
     base, ext = os.path.splitext(filename)
     for trace in stream:
         t = SacIO()
-        # setting relative SAC time as specified with b
-        nz = trace.stats.starttime
-        b = 0.0
+        # extracting relative SAC time as specified with b
         try:
             b = float(trace.stats['sac']['b'])
-            if b == -12345:
-                raise KeyError
-            nz -= b
         except KeyError:
-            pass
+            b = 0.0
         # filling in SAC/sacio specific defaults
         t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
-                    starttime=nz)
+                    starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
         for _j, _k in convert_dict.iteritems():
             t.SetHvalue(_j, trace.stats[_k])
