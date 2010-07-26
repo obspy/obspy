@@ -296,7 +296,7 @@ def main():
                       help="verbose mode")
     parser.add_option("-w", "--warn", default=False,
                       action="store_true", dest="warn",
-                      help="show DeprecationWarnings")
+                      help="show Warnings")
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
@@ -319,6 +319,7 @@ def main():
         verbosity = 1
     if not options.warn:
         warnings.simplefilter("ignore", DeprecationWarning)
+        warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
     if options.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True

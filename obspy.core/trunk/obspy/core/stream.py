@@ -20,6 +20,7 @@ import math
 import numpy as np
 import os
 import urllib2
+import warnings
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
@@ -801,7 +802,16 @@ class Stream(object):
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def ltrim(self, starttime, pad=False, nearest_sample=True):
+    def ltrim(self, *args, **kwargs):
+        """
+        Deprecated. Please use :meth:`~obspy.core.stream.Stream.trim` instead.
+        This method will be removed in the next major release.
+        """
+        msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
+        warnings.warn(msg, DeprecationWarning)
+        self._ltrim(*args, **kwargs)
+
+    def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
         For more info see :meth:`~obspy.core.trace.Trace.ltrim.`
@@ -811,7 +821,16 @@ class Stream(object):
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def rtrim(self, endtime, pad=False, nearest_sample=True):
+    def rtrim(self, *args, **kwargs):
+        """
+        Deprecated. Please use :meth:`~obspy.core.stream.Stream.trim` instead.
+        This method will be removed in the next major release.
+        """
+        msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
+        warnings.warn(msg, DeprecationWarning)
+        self._rtrim(*args, **kwargs)
+
+    def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
         For more info see :meth:`~obspy.core.trace.Trace.rtrim.`

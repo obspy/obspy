@@ -14,6 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 import numpy as np
 import math
+import warnings
 
 
 class Stats(AttribDict):
@@ -677,7 +678,16 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
-    def ltrim(self, starttime, pad=False, nearest_sample=True):
+    def ltrim(self, *args, **kwargs):
+        """
+        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        This method will be removed in the next major release.
+        """
+        msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
+        warnings.warn(msg, DeprecationWarning)
+        self._ltrim(*args, **kwargs)
+
+    def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -726,7 +736,16 @@ class Trace(object):
         elif delta > 0:
             self.data = self.data[delta:]
 
-    def rtrim(self, endtime, pad=False, nearest_sample=True):
+    def rtrim(self, *args, **kwargs):
+        """
+        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        This method will be removed in the next major release.
+        """
+        msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
+        warnings.warn(msg, DeprecationWarning)
+        self._rtrim(*args, **kwargs)
+
+    def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -784,7 +803,8 @@ class Trace(object):
                 total = 1
             self.data = self.data[:total]
 
-    def trim(self, starttime, endtime, pad=False, nearest_sample=True):
+    def trim(self, starttime=None, endtime=None, pad=False,
+             nearest_sample=True):
         """
         Cuts current trace to given start and end time. If nearest_sample is
         True, the closest sample is selected, if nearest_sample is False, the
@@ -811,10 +831,20 @@ class Trace(object):
         if starttime > endtime:
             raise Exception("startime is larger than endtime")
         # cut it
-        self.ltrim(starttime, pad, nearest_sample=nearest_sample)
-        self.rtrim(endtime, pad, nearest_sample=nearest_sample)
+        if starttime:
+            self._ltrim(starttime, pad, nearest_sample=nearest_sample)
+        if endtime:
+            self._rtrim(endtime, pad, nearest_sample=nearest_sample)
 
-    cut = trim
+    def cut(self, *args, **kwargs):
+        """
+        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        This method will be removed in the next major release.
+        """
+        msg = "Use trim(starttime=starttime, endtime=endtime, ...) instead"
+        warnings.warn(msg, DeprecationWarning)
+        self.trim(*args, **kwargs)
+
     lcut = ltrim
     rcut = rtrim
 
