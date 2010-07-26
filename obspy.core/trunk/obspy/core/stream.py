@@ -231,15 +231,7 @@ def _read_example():
               'sampling_rate': 100.0,
               'processing': ["filter:lowpass:{'freq': 40.0}",
                              "downsample:integerDecimation:2"],
-              'calib': 1.0,
-              'paz': {'gain': 60077000.0,
-                      'poles': [(-0.037004000000000002+0.037016j),
-                                (-0.037004000000000002-0.037016j),
-                                (-251.33000000000001+0j),
-                                (-131.03999999999999-467.29000000000002j),
-                                (-131.03999999999999+467.29000000000002j)],
-                      'sensitivity': 2516778400.0,
-                      'zeros': [0j, 0j]}}
+              'calib': 1.0}
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
         header['channel'] = channel
