@@ -60,6 +60,7 @@ import sys
 import time
 import unittest
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
+import warnings
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
@@ -293,6 +294,9 @@ def main():
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
                       help="verbose mode")
+    parser.add_option("-w", "--warn", default=False,
+                      action="store_true", dest="warn",
+                      help="show DeprecationWarnings")
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
@@ -313,6 +317,8 @@ def main():
         verbosity = 0
     else:
         verbosity = 1
+    if not options.warn:
+        warnings.simplefilter("ignore", DeprecationWarning)
     # check for send report option or environmental settings
     if options.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
