@@ -13,10 +13,5 @@ for NAME in $PACKAGES; do
     cd ../..
 done
 
-# Link also ObsPy namespace package
-cd obspy/trunk
-python setup.py develop -N -U
-cd ../..
-
 # Go back to scripts directory
 cd obspy/branches/scripts
