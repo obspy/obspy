@@ -123,8 +123,8 @@ def readSAC(filename, headonly=False, **kwargs):
     # always add the begin time (if it's defined) to get the given
     # SAC reference time, no matter which iztype is given
     b = float(t.GetHvalue('b'))
-    if b != -12345.0:
-        header['starttime'] += b
+    #if b != -12345.0:
+    #    header['starttime'] += b
     # note that the B and E times should not be in the sac_extra
     # dictionary, as they would overwrite the t.fromarray which sets them
     # according to the starttime, npts and delta.

@@ -52,7 +52,7 @@ class SacIOTestCase(unittest.TestCase):
         """
         fn = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         t = SacIO(fn)
-        self.assertEqual(t.starttime.timestamp, 269596800.0)
+        self.assertEqual(t.reftime.timestamp, 269596800.0)
         diff = t.GetHvalue('npts')
         self.assertEqual(int(t.endtime - t.starttime), diff)
 

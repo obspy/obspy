@@ -162,7 +162,7 @@ class CoreTestCase(unittest.TestCase):
         tr = read(sod_file)[0]
         sac = SacIO(sod_file)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
-        t2 = sac.starttime
+        t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
         # see that iztype is written corretly
         tempfile = NamedTemporaryFile().name
@@ -170,7 +170,7 @@ class CoreTestCase(unittest.TestCase):
         sac2 = SacIO(tempfile)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
-        self.assertAlmostEqual(t2.timestamp, sac2.starttime.timestamp, 5)
+        self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
         os.remove(tempfile)
 
 
@@ -215,10 +215,10 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.b, 10.0)
-        sac_ref_time = SacIO(self.file).starttime
+        sac_ref_time = SacIO(self.file).reftime
         self.assertEqual(sac_ref_time.timestamp, 269596800.0)
         # change b to undefined and write (same case as if b == 0.0)
-        # now sac reference time and starttime of seismogram must be the
+        # now sac reference time and reftime of seismogram must be the
         # same
         tr.stats.sac.b = -12345.0
         tmpfile = NamedTemporaryFile().name
@@ -226,7 +226,7 @@ class CoreTestCase(unittest.TestCase):
         tr2 = read(tmpfile)[0]
         self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr2.stats.sac.b, -12345.0)
-        sac_ref_time2 = SacIO(tmpfile).starttime
+        sac_ref_time2 = SacIO(tmpfile).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
         os.remove(tmpfile)
 

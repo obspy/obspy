@@ -935,28 +935,33 @@ class SacIO(object):
         >>> t.fromarray(np.random.randn(100), delta=1.0, \
                         starttime=UTCDateTime(1970,01,01))
         >>> t._get_date_()
-        >>> t.starttime.timestamp
+        >>> t.reftime.timestamp
         0.0
-        >>> t.endtime.timestamp - t.starttime.timestamp
+        >>> t.endtime.timestamp - t.reftime.timestamp
         100.0
         """
         ### if any of the time-header values are still set to
         ### -12345 then UTCDateTime raises an exception and
-        ### starttime is set to 0.0
+        ### reftime is set to 0.0
         try:
             ms = self.GetHvalue('nzmsec') * 1000
-            self.starttime = UTCDateTime(year=self.GetHvalue('nzyear'),
+            self.reftime = UTCDateTime(year=self.GetHvalue('nzyear'),
                                          julday=self.GetHvalue('nzjday'),
                                          hour=self.GetHvalue('nzhour'),
                                          minute=self.GetHvalue('nzmin'),
                                          second=self.GetHvalue('nzsec'),
                                          microsecond=ms)
+            b = float(self.GetHvalue('b'))
+            if b != -12345.0:
+                self.starttime = self.reftime + b
+            else:
+                self.starttime = self.reftime
             self.endtime = self.starttime + \
                 self.GetHvalue('npts') * float(self.GetHvalue('delta'))
         except:
             try:
-                self.starttime = UTCDateTime(0.0)
-                self.endtime = self.starttime + \
+                self.reftime = UTCDateTime(0.0)
+                self.endtime = self.reftime + \
                     self.GetHvalue('npts') * float(self.GetHvalue('delta'))
             except:
                 raise SacError("Cannot calculate date")
