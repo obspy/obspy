@@ -20,7 +20,6 @@ import math
 import numpy as np
 import os
 import urllib2
-import pickle
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
@@ -48,9 +47,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
     >>> st = read()
     >>> print st
     3 Trace(s) in Stream:
-    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
-    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:33.000000Z | 200.0 Hz, 6001 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
     Parameters
     ----------
@@ -129,14 +128,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
-    # if no pathname or URL, retrieve pickled example
+    # if no pathname or URL specified, make example stream
     if not pathname_or_url:
-        #msg = "No pathname or URL specified. Ignoring other arguments and " + \
-        #      "loading example data."
-        #warnings.warn(msg)
-        path = os.path.dirname(__file__)
-        path = os.path.join(path, "data", "example.pkl")
-        return pickle.load(open(path, "rt"))
+        return _read_example()
 
     st = Stream()
     if "://" in pathname_or_url:
@@ -217,6 +211,32 @@ def _read(filename, format=None, headonly=False, **kwargs):
         trace.stats._format = format_ep.name
     return stream
 
+def _read_example():
+    """
+    Robust method to create example stream.
+    Data arrays are stored in numpy's npz format. The stats information we
+    fill in here directly.
+    """
+    #msg = "No pathname or URL specified. Ignoring other arguments and " + \
+    #      "loading example data."
+    #warnings.warn(msg)
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, "data", "example.npz")
+    data = np.load(path)
+    header = {'network': "BW",
+              'station': "RJOB",
+              'location': "",
+              'npts': 3000,
+              'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3),
+              'sampling_rate': 100.0,
+              'processing': ["filter:lowpass:{'freq': 40.0}",
+                             "downsample:integerDecimation:2"],
+              'calib': 1.0}
+    st = Stream()
+    for channel in ["EHZ", "EHN", "EHE"]:
+        header['channel'] = channel
+        st.append(Trace(data=data[channel], header=header))
+    return st
 
 class Stream(object):
     """
