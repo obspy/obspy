@@ -685,9 +685,9 @@ class Trace(object):
         """
         msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self._ltrim(*args, **kwargs)
+        self.__ltrim(*args, **kwargs)
 
-    def _ltrim(self, starttime, pad=False, nearest_sample=True):
+    def __ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -743,9 +743,9 @@ class Trace(object):
         """
         msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self._rtrim(*args, **kwargs)
+        self.__rtrim(*args, **kwargs)
 
-    def _rtrim(self, endtime, pad=False, nearest_sample=True):
+    def __rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -832,9 +832,9 @@ class Trace(object):
             raise Exception("startime is larger than endtime")
         # cut it
         if starttime:
-            self._ltrim(starttime, pad, nearest_sample=nearest_sample)
+            self.__ltrim(starttime, pad, nearest_sample=nearest_sample)
         if endtime:
-            self._rtrim(endtime, pad, nearest_sample=nearest_sample)
+            self.__rtrim(endtime, pad, nearest_sample=nearest_sample)
 
     def cut(self, *args, **kwargs):
         """

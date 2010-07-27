@@ -809,9 +809,9 @@ class Stream(object):
         """
         msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self._ltrim(*args, **kwargs)
+        self.__ltrim(*args, **kwargs)
 
-    def _ltrim(self, starttime, pad=False, nearest_sample=True):
+    def __ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
         For more info see :meth:`~obspy.core.trace.Trace.ltrim.`
@@ -828,9 +828,9 @@ class Stream(object):
         """
         msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self._rtrim(*args, **kwargs)
+        self.__rtrim(*args, **kwargs)
 
-    def _rtrim(self, endtime, pad=False, nearest_sample=True):
+    def __rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
         For more info see :meth:`~obspy.core.trace.Trace.rtrim.`
