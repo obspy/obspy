@@ -1258,6 +1258,31 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(st0 == object, False)
             self.assertEqual(st0 != object, True)
 
+    def test_trimNearestSample(self):
+        """
+        Tests to trim at nearest sample
+        """
+        head = {'sampling_rate': 1.0, 'starttime': UTCDateTime(0.0)}
+        tr1 = Trace(data=np.random.randint(0, 1000, 120), header=head)
+        tr2 = Trace(data=np.random.randint(0, 1000, 120), header=head)
+        tr2.stats.starttime += 0.4
+        st = Stream(traces=[tr1, tr2])
+        # STARTTIME
+        # check that trimming first selects the next best sample, and only
+        # then selects the following ones
+        #    |  S |    |    |
+        #      |    |    |    |
+        st.trim(UTCDateTime(0.6), endtime=None)
+        self.assertEqual(st[0].stats.starttime.timestamp, 1.0)
+        self.assertEqual(st[1].stats.starttime.timestamp, 1.4)
+        # ENDTIME
+        # check that trimming first selects the next best sample, and only
+        # then selects the following ones
+        #    |    |    |  E |
+        #      |    |    |    |
+        st.trim(starttime=None, endtime=UTCDateTime(2.6))
+        self.assertEqual(st[0].stats.endtime.timestamp, 3.0)
+        self.assertEqual(st[1].stats.endtime.timestamp, 3.4)
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

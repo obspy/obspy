@@ -828,7 +828,7 @@ class Trace(object):
         array([2, 3, 4, 5, 6, 7, 8])
         """
         # check time order and swap eventually
-        if starttime > endtime:
+        if starttime and endtime and starttime > endtime:
             raise Exception("startime is larger than endtime")
         # cut it
         if starttime:

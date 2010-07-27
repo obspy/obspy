@@ -790,12 +790,25 @@ class Stream(object):
             raise TypeError(msg + ', '.join(formats_ep.keys()))
         writeFormat(self, filename, **kwargs)
 
-    def trim(self, starttime, endtime, pad=False, nearest_sample=True):
+    def trim(self, starttime=None, endtime=None, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start and end time.
+        If nearest_sample=True the closest sample point of the first trace
+        is the select, the remaining traces are trimmed according to that
+        sample point.
         For more info see :meth:`~obspy.core.trace.Trace.trim.`
 
         """
+        # select sample nearest to a sample point of the first trace
+        tr = self.traces[0]
+        if starttime:
+            delta = round((starttime - tr.stats.starttime) * \
+                           tr.stats.sampling_rate)
+            starttime = tr.stats.starttime + delta * tr.stats.delta
+        if endtime:
+            delta = round((endtime - tr.stats.endtime) * \
+                           tr.stats.sampling_rate)
+            endtime = tr.stats.endtime + delta * tr.stats.delta #delta is negativ!
         for trace in self.traces:
             trace.trim(starttime, endtime, pad,
                        nearest_sample=nearest_sample)
