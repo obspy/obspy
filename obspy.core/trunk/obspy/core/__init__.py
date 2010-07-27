@@ -39,37 +39,28 @@ attributes ``starttime`` and ``endtime`` of the Stats object are
 
 Example
 -------
-Examples files may be retrieved via http://examples.obspy.org.
+A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
+by calling :func:`~obspy.core.stream.read()` without any arguments.
+Local files can be read by specifying the filename, files stored on http
+servers (e.g. at http://examples.obspy.org) can be read by specifying their
+URL. For details see the documentation of :func:`~obspy.core.stream.read`.
 
 >>> from obspy.core import read
->>> st = read('gaps.mseed')
+>>> st = read()
 >>> print st
-4 Trace(s) in Stream:
-BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - ... | 200.0 Hz, 412 samples
-BW.BGLD..EHE | 2008-01-01T00:00:04.035000Z - ... | 200.0 Hz, 824 samples
-BW.BGLD..EHE | 2008-01-01T00:00:10.215000Z - ... | 200.0 Hz, 824 samples
-BW.BGLD..EHE | 2008-01-01T00:00:18.455000Z - ... | 200.0 Hz, 50668 samples
+3 Trace(s) in Stream:
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 >>> tr = st[0]
 >>> print tr
-BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z - ... | 200.0 Hz, 412 samples
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 >>> tr.data
-array([-363 -382 -388 -420 -417 ... -409 -393 -353 -360 -389])
+array([ 13, 201, 337, ..., 432, 408, 430])
 >>> tr.stats
-Stats({
-    'network': 'BW', 
-    'mseed': AttribDict({'dataquality': 'D'}), 
-    'delta': 0.0050000000000000001, 
-    'station': 'BGLD', 
-    'location': '', 
-    'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), 
-    'npts': 412, 
-    'calib': 1.0, 
-    'sampling_rate': 200.0, 
-    'endtime': UTCDateTime(2008, 1, 1, 0, 0, 1, 970000), 
-    'channel': 'EHE'
-})
+Stats({'network': 'BW', 'processing': ["filter:lowpass:{'freq': 40.0}", 'downsample:integerDecimation:2'], 'delta': 0.01, 'station': 'RJOB', 'location': '', 'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3), 'npts': 3000, 'calib': 1.0, 'sampling_rate': 100.0, 'channel': 'EHZ'})
 >>> tr.stats.starttime
-UTCDateTime(2007, 12, 31, 23, 59, 59, 915000)
+UTCDateTime(2009, 8, 24, 0, 20, 3)
 
 .. _NumPy: http://docs.scipy.org
 """
@@ -83,3 +74,7 @@ from obspy.core.scripts.runtests import runTests
 
 
 __version__ = _getVersionString("obspy.core")
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

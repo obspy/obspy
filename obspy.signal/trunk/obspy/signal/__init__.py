@@ -10,14 +10,20 @@ correction and coordinate transformations.
 
 Filter
 ------
-Available filters are bandpass, lowpass, highpass, bandstop. Zerophase
-correspondence are also included (bandpassZPHSH, lowpassZPHSH, highpassZPHSH,
-bandstopZPHSH). The following example shows how to lowpass a seismogram
-at 1.5Hz.
+Available filters are :func:`~obspy.signal.filter.bandpass()`,
+:func:`~obspy.signal.filter.lowpass()`,
+:func:`~obspy.signal.filter.highpass()`,
+:func:`~obspy.signal.filter.bandstop()`. Zero-phase filtering can be done by
+specifying ``zerophase=True``.
+The following example shows how to lowpass a seismogram at 1.5Hz.
 
 :Note: The filter takes the data explicitly as argument (i.e. a
-       numpy.ndarray) and therefore the sampling_rate needs to be also specified.
-       It returns the filtered data.
+       numpy.ndarray) and therefore the sampling_rate needs to be also
+       specified. It returns the filtered data.
+       For :class:`~obspy.core.stream.Stream` and
+       :class:`~obspy.core.trace.Trace` objects simply use their respective
+       filtering methods :meth:`~obspy.core.stream.Stream.filter()` and
+       :meth:`~obspy.core.trace.Trace.filter`.
 
 >>> from obspy.core import read
 >>> import obspy.signal
@@ -49,8 +55,7 @@ cpxtrace analysis, ...), please also check the tutorial.**
 """
 
 from obspy.core.util import _getVersionString
-from filter import bandpass, bandpassZPHSH, bandstop, bandstopZPHSH, lowpass, \
-        lowpassZPHSH, highpass, highpassZPHSH, remezFIR, lowpassFIR
+from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from rotate import rotate_NE_RT, gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
         delayedStaLta, zdetect, triggerOnset, pkBaer, arPick

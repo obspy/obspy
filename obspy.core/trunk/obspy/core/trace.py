@@ -173,6 +173,25 @@ class Stats(AttribDict):
         else:
             super(Stats, self).__setitem__(key, value)
 
+    #def __str__(self):
+    #    """
+    #    Return better readable string representation of Stats object.
+    #    """
+    #    dict_copy = copy(self.__dict__)
+    #    priorized_keys = ['network', 'station', 'location', 'channel',
+    #                      'starttime', 'endtime', 'sampling_rate', 'delta',
+    #                      'npts', 'calib']
+    #    # determine longest key name for alignment of all items
+    #    align_len = max([len(key) for key in dict_copy.keys()]) + 2
+    #    string = ""
+    #    for key in priorized_keys:
+    #        string += ("%s: " % key).ljust(align_len)
+    #        string += "%s\n" % dict_copy.pop(key)
+    #    for key in dict_copy.keys():
+    #        string += ("%s: " % key).ljust(align_len)
+    #        string += "%s\n" % dict_copy.pop(key)
+    #    return string.rstrip("\n")
+
     __setattr__ = __setitem__
 
     def _calculateDerivedValues(self):
@@ -320,8 +339,8 @@ class Trace(object):
         Example
         -------
         >>> tr = Trace(header={'station':'FUR', 'network':'GR'})
-        >>> str(tr) #doctest: +ELLIPSIS
-        'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.00000...'
+        >>> str(tr)
+        'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples'
         """
         if self.stats.sampling_rate < 0.1:
             if hasattr(self.stats, 'preview')  and self.stats.preview:
@@ -574,11 +593,11 @@ class Trace(object):
 
         Example
         -------
-        >>> meta = {'station':'MANZ', 'network':'BW', 'channel':'EHZ'}
-        >>> trace = Trace(header=meta)
-        >>> trace.getId()
+        >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
+        >>> tr = Trace(header=meta)
+        >>> tr.getId()
         'BW.MANZ..EHZ'
-        >>> trace.id
+        >>> tr.id
         'BW.MANZ..EHZ'
         """
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
@@ -592,16 +611,16 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> data = np.sin(np.linspace(0,2*np.pi,1000))
-        >>> tr = Trace(data=data)
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> tr = st[0]
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
 
-            import numpy as np
-            from obspy.core import Trace
-            data = np.sin(np.linspace(0,2*np.pi,1000))
-            tr = Trace(data=data)
+            from obspy.core import read
+            st = read()
+            tr = st[0]
             tr.plot()
         """
         try:
@@ -623,16 +642,16 @@ class Trace(object):
         Basic Usage
         -----------
         >>> from obspy.core import read
-        >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+        >>> st = read()
         >>> tr = st[0]
-        >>> tr.spectrogram() # doctest: +SKIP
+        >>> tr.spectrogram(log=True) # doctest: +SKIP
 
         .. plot::
 
             from obspy.core import read
-            st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
+            st = read()
             tr = st[0]
-            tr.spectrogram()
+            tr.spectrogram(log=True)
         """
         try:
             from obspy.imaging.spectrogram import spectrogram
@@ -641,13 +660,10 @@ class Trace(object):
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
         
-        s = self.stats
-        title = '%s.%s.%s.%s %s' % (s.network, s.station, s.location,
-                                    s.channel, s.starttime)
-        
         try:
-            spec = spectrogram(data=self.data, samp_rate=s.sampling_rate,
-                               title=title, *args, **kwargs)
+            spec = spectrogram(data=self.data,
+                               samp_rate=self.stats.sampling_rate,
+                               title=str(self), *args, **kwargs)
         except TypeError, e:
             print spectrogram.__doc__
             print "(Data and sampling rate are passed on internally)"
@@ -918,12 +934,24 @@ class Trace(object):
         afterwards (can be avoided by setting ``in_place=False``).
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
+        For details see :mod:`obspy.signal`.
 
-        Basic Usage
-        -----------
-        >>> tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0})  # doctest: +SKIP
-        >>> new_tr = tr.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0}, # doctest: +SKIP
-                               in_place=False)  # doctest: +SKIP
+        Example
+        -------
+        
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> tr = st[0]
+        >>> tr.filter("highpass", {'freq': 1.0})
+        >>> tr.plot() # doctest: +SKIP
+
+        .. plot::
+            
+            from obspy.core import read
+            st = read()
+            tr = st[0]
+            tr.filter("highpass", {'freq': 1.0})
+            tr.plot()
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
@@ -989,12 +1017,26 @@ class Trace(object):
         ``in_place=False``.
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
+        For details see :mod:`obspy.signal`.
 
-        Basic Usage
-        -----------
-        >>> tr.trigger('recStalta', {'sta': 3, 'lta': 10})  # doctest: +SKIP
-        >>> new_tr = tr.trigger('recStalta', {'sta': 3, 'lta': 10}, # doctest: +SKIP
-                                in_place=False)  # doctest: +SKIP
+        Example
+        -------
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> tr = st[0]
+        >>> tr.filter("highpass", {'freq': 1.0})
+        >>> tr.trigger('recStalta', {'sta': 3, 'lta': 10})
+        >>> tr.plot() # doctest: +SKIP
+
+        .. plot::
+            
+            from obspy.core import read
+            st = read()
+            tr = st[0]
+            tr.filter("highpass", {'freq': 1.0})
+            tr.trigger('recStalta', {'sta': 3, 'lta': 10})
+            tr.plot()
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
@@ -1088,8 +1130,39 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr.downsample(7, strict_length=False) # doctest: +SKIP
-        >>> new_tr = tr.downsample(2, in_place=False) # doctest: +SKIP
+
+        By default all processing is done in place to avoid unintentional
+        excessive memory consumption. For the example we switch off the
+        automatic pre-filtering:
+
+        >>> tr = Trace(data=np.arange(10))
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> tr.downsample(4, strict_length=False, no_filter=True)
+        >>> tr.stats.sampling_rate
+        0.25
+        >>> tr.data
+        array([0, 4])
+        
+        If the original trace is needed for further work the ``in_place``
+        option can be set to ``False`` to return a new trace:
+        
+        >>> tr = Trace(data=np.arange(10))
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> tr2 = tr.downsample(2, no_filter=True, in_place=False)
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> tr2.stats.sampling_rate
+        0.5
+        >>> tr2.data
+        array([0, 2, 4, 6, 8])
 
         :param decimation_factor: integer factor by which the sampling rate is
             lowered by decimation.
@@ -1244,6 +1317,35 @@ class Trace(object):
     def copy(self):
         """
         Returns a deepcopy of the trace.
+        This actually copies all data in the trace and does not only provide
+        another pointer to the same data.
+        
+        Example
+        -------
+
+        Make a Trace and copy it:
+
+        >>> tr = Trace(data=np.random.rand(10))
+        >>> tr2 = tr.copy()
+
+        The two objects are not the same:
+
+        >>> tr2 is tr
+        False
+
+        But they have equal data (before applying further processing):
+
+        >>> tr2 == tr
+        True
+
+        The following example shows how to make an alias but not copy the data.
+        Any changes on ``tr3`` would also change the contents of ``tr``.
+
+        >>> tr3 = tr
+        >>> tr3 is tr
+        True
+        >>> tr3 == tr
+        True
 
         :return: Copy of trace.
         """

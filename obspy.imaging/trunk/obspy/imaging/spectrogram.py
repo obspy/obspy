@@ -58,11 +58,11 @@ def nearestPow2(x):
         return b
 
 
-def spectrogram(data, samp_rate, per_lap=.9, wlen=5, log=False, 
+def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
                 outfile=None, format=None, axis=None, dbscale=False,
                 mult=8.0, cmap=None, zorder=None, title=None):
     """
-    Computes and plots logarithmic spectrogram of the input trace.
+    Computes and plots logarithmic spectrogram of the input data.
     
     :param data: Input data
     :param sample_rate: Samplerate in Hz
@@ -82,6 +82,10 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=5, log=False,
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
+
+    # set wlen from samp_rate if not specified otherwise
+    if not wlen:
+        wlen = samp_rate / 100.
 
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
