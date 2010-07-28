@@ -18,7 +18,7 @@ import numpy as np
 import os
 import time
 import warnings
-
+import string
 
 class SacError(Exception):
     """
@@ -908,6 +908,30 @@ class SacIO(object):
         else:
             return True
 
+    def _istext_(self,filename, blocksize = 512):
+        ### Find out if it is a text or a binary file. This should
+        ### always be true if a file is a text-file and only true for a
+        ### binary file in rare occasions (Recipe 173220 found on
+        ### http://code.activestate.com/
+        text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
+        _null_trans = string.maketrans("", "")
+        s = open(filename).read(blocksize)
+        if "\0" in s:
+            return 0
+        
+        if not s:  # Empty files are considered text
+            return 1
+
+        # Get the non-text characters (maps a character to itself then
+        # use the 'remove' option to get rid of the text characters.)
+        t = s.translate(_null_trans, text_characters)
+
+        # If more than 30% non-text characters, then
+        # this is considered a binary file
+        if len(t)/len(s) > 0.30:
+            return 0
+        return 1
+
     def IsValidXYSacFile(self, filename):
         """
         Quick test for a valid SAC ascii file.
@@ -925,12 +949,14 @@ class SacIO(object):
         #
         #  Read in the Header
         #
-        try:
-            self.ReadSacXY(filename)
-        except:
-            return False
-        else:
+        if self._istext_(filename):
+            try:
+                self.ReadSacXY(filename)
+            except:
+                return False
             return True
+        else:
+            return False
 
     def _get_date_(self):
         """
