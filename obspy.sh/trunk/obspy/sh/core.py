@@ -335,6 +335,12 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
                 header['starttime'] = toUTCDateTime(value)
+            elif key == 'S022':
+                header['sh']['P-ONSET'] = toUTCDateTime(value)
+            elif key == 'S023':
+                header['sh']['S-ONSET'] = toUTCDateTime(value)
+            elif key == 'S024':
+                header['sh']['ORIGIN'] = toUTCDateTime(value)
             elif key:
                 key = INVERTED_SH_IDX.get(key, key)
                 header['sh'][key] = value
@@ -408,11 +414,14 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        temp += "S021: %s~ " % fromUTCDateTime(dt)
+        temp += "S021:%s~ " % fromUTCDateTime(dt)
         for key, value in trace.stats.get('sh', {}).iteritems():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
+            # convert UTCDateTimes into strings
+            if isinstance(value, UTCDateTime):
+                value = fromUTCDateTime(value)
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
