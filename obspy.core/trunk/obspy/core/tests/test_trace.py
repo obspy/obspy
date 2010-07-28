@@ -40,7 +40,7 @@ class TraceTestCase(unittest.TestCase):
         trace.verify()
         # ltrim 100 samples
         tr = deepcopy(trace)
-        tr.ltrim(0.5)
+        tr._ltrim(0.5)
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
                                       np.array([100, 101, 102, 103, 104]))
@@ -51,7 +51,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, end)
         # ltrim 202 samples
         tr = deepcopy(trace)
-        tr.ltrim(1.010)
+        tr._ltrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
                                       np.array([202, 203, 204, 205, 206]))
@@ -62,7 +62,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, end)
         # ltrim to UTCDateTime
         tr = deepcopy(trace)
-        tr.ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
+        tr._ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5], \
                                       np.array([202, 203, 204, 205, 206]))
@@ -74,14 +74,14 @@ class TraceTestCase(unittest.TestCase):
         # some sanity checks
         # negative start time as datetime
         tr = deepcopy(trace)
-        tr.ltrim(start - 1, pad=True)
+        tr._ltrim(start - 1, pad=True)
         tr.verify()
         self.assertEquals(tr.stats.starttime, start - 1)
         np.testing.assert_array_equal(trace.data, tr.data[200:])
         self.assertEquals(tr.stats.endtime, trace.stats.endtime)
         # negative start time as integer
         tr = deepcopy(trace)
-        tr.ltrim(-100, pad=True)
+        tr._ltrim(-100, pad=True)
         tr.verify()
         self.assertEquals(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
@@ -89,7 +89,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
-        tr.ltrim(trace.stats.endtime + 100)
+        tr._ltrim(trace.stats.endtime + 100)
         tr.verify()
         self.assertEquals(tr.stats.starttime,
                           trace.stats.endtime + 100)
@@ -97,7 +97,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
-        tr.ltrim(5)
+        tr._ltrim(5)
         tr.verify()
         self.assertEquals(tr.stats.starttime,
                           trace.stats.starttime + 5)
@@ -105,7 +105,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
-        tr.ltrim(5.1)
+        tr._ltrim(5.1)
         tr.verify()
         self.assertEquals(tr.stats.starttime,
                           trace.stats.starttime + 5.1)
@@ -125,7 +125,7 @@ class TraceTestCase(unittest.TestCase):
         trace.verify()
         # rtrim 100 samples
         tr = deepcopy(trace)
-        tr.rtrim(0.5)
+        tr._rtrim(0.5)
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
                                       np.array([895, 896, 897, 898, 899]))
@@ -136,7 +136,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, end - 0.5)
         # rtrim 202 samples
         tr = deepcopy(trace)
-        tr.rtrim(1.010)
+        tr._rtrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
                                       np.array([793, 794, 795, 796, 797]))
@@ -147,7 +147,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.endtime, end - 1.010)
         # rtrim 1 minute via UTCDateTime
         tr = deepcopy(trace)
-        tr.rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
+        tr._rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:], \
                                       np.array([793, 794, 795, 796, 797]))
@@ -160,13 +160,13 @@ class TraceTestCase(unittest.TestCase):
         # negative end time
         tr = deepcopy(trace)
         t = UTCDateTime(1999, 12, 31)
-        tr.rtrim(t)
+        tr._rtrim(t)
         tr.verify()
         self.assertEquals(tr.stats.endtime, t)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         # negative end time with given seconds
         tr = deepcopy(trace)
-        tr.rtrim(100)
+        tr._rtrim(100)
         tr.verify()
         self.assertEquals(tr.stats.endtime, trace.stats.endtime - 100)
         np.testing.assert_array_equal(tr.data, np.empty(0))
@@ -174,14 +174,14 @@ class TraceTestCase(unittest.TestCase):
         # end time > start time
         tr = deepcopy(trace)
         t = UTCDateTime(2001)
-        tr.rtrim(t)
+        tr._rtrim(t)
         tr.verify()
         self.assertEquals(tr.stats.endtime, t)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEquals(tr.stats.endtime, tr.stats.starttime)
         # end time > start time given seconds
         tr = deepcopy(trace)
-        tr.rtrim(5.1)
+        tr._rtrim(5.1)
         tr.verify()
         delta = int(math.floor(round(5.1 * trace.stats.sampling_rate, 7)))
         endtime = trace.stats.starttime + trace.stats.delta * \
@@ -191,7 +191,7 @@ class TraceTestCase(unittest.TestCase):
         # end time == start time
         # returns one sample!
         tr = deepcopy(trace)
-        tr.rtrim(4.995)
+        tr._rtrim(4.995)
         #XXX I do not understand why this fails!!!
         #tr.verify()
         np.testing.assert_array_equal(tr.data, np.array([0]))
@@ -811,6 +811,11 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the downsample method of the Trace object.
         """
+        # skip test if obspy.signal is not installed
+        try:
+            import obspy.signal #@UnusedImport
+        except ImportError:
+            return
         # create test Trace
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
@@ -953,7 +958,7 @@ class TraceTestCase(unittest.TestCase):
         # ltrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.ltrim(t - 3, nearest_sample=True)
+        tr._ltrim(t - 3, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.starttime,
                          UTCDateTime("2010-06-20T20:19:48.495000Z"))
@@ -962,50 +967,50 @@ class TraceTestCase(unittest.TestCase):
         # rtrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.rtrim(t + 7, nearest_sample=True)
+        tr._rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495000Z")
-        tr.rtrim(t + 7, nearest_sample=True)
+        tr._rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495111Z")
-        tr.rtrim(t + 7, nearest_sample=True)
+        tr._rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.497501Z")
-        tr.rtrim(t + 7, nearest_sample=True)
+        tr._rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.500000Z"))
         # rtrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.rtrim(t + 7, nearest_sample=False)
+        tr._rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.490000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495000Z")
-        tr.rtrim(t + 7, nearest_sample=False)
+        tr._rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495111Z")
-        tr.rtrim(t + 7, nearest_sample=False)
+        tr._rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.497500Z")
-        tr.rtrim(t + 7, nearest_sample=False)
+        tr._rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))

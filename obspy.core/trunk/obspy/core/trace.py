@@ -659,7 +659,6 @@ class Trace(object):
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
-
         try:
             spec = spectrogram(data=self.data,
                                samp_rate=self.stats.sampling_rate,
@@ -670,7 +669,6 @@ class Trace(object):
             raise e
 
         return spec
-
 
     def write(self, filename, format, **kwargs):
         """
@@ -701,9 +699,9 @@ class Trace(object):
         """
         msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self.__ltrim(*args, **kwargs)
+        self._ltrim(*args, **kwargs)
 
-    def __ltrim(self, starttime, pad=False, nearest_sample=True):
+    def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -712,7 +710,7 @@ class Trace(object):
         -----------
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr.ltrim(tr.stats.starttime + 8)
+        >>> tr._ltrim(tr.stats.starttime + 8)
         >>> tr.data
         array([8, 9])
         >>> tr.stats.starttime
@@ -759,9 +757,9 @@ class Trace(object):
         """
         msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self.__rtrim(*args, **kwargs)
+        self._rtrim(*args, **kwargs)
 
-    def __rtrim(self, endtime, pad=False, nearest_sample=True):
+    def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -770,7 +768,7 @@ class Trace(object):
         -----------
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr.rtrim(tr.stats.starttime + 2)
+        >>> tr._rtrim(tr.stats.starttime + 2)
         >>> tr.data
         array([0, 1, 2])
         >>> tr.stats.endtime
@@ -833,7 +831,6 @@ class Trace(object):
         nearest_sample=True will select the second sample point,
         nearest_sample=False will select the first sample point .
 
-
         Basic Usage
         -----------
         >>> tr = Trace(data=np.arange(0, 10))
@@ -848,9 +845,9 @@ class Trace(object):
             raise Exception("startime is larger than endtime")
         # cut it
         if starttime:
-            self.__ltrim(starttime, pad, nearest_sample=nearest_sample)
+            self._ltrim(starttime, pad, nearest_sample=nearest_sample)
         if endtime:
-            self.__rtrim(endtime, pad, nearest_sample=nearest_sample)
+            self._rtrim(endtime, pad, nearest_sample=nearest_sample)
 
     def cut(self, *args, **kwargs):
         """

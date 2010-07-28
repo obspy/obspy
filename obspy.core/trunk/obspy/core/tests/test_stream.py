@@ -416,7 +416,7 @@ class StreamTestCase(unittest.TestCase):
                    ['highpass', {'freq': 2, 'corners': 2}]]
         filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
                       'lowpass': lowpass, 'highpass': highpass}
-        
+
         # tests for in_place=False
         for j, st in enumerate(streams):
             for filt_type, filt_ops in filters:
@@ -483,14 +483,14 @@ class StreamTestCase(unittest.TestCase):
         Tests if all traces in the stream object are handled as expected
         by the downsample method on the trace object.
         """
+        # skip test if obspy.signal is not installed
         try:
-            from obspy.signal.filter import integerDecimation, lowpass
+            import obspy.signal #@UnusedImport
         except ImportError:
             return
-
+        # create test Stream
         st = self.mseed_stream
         st_bkp = deepcopy(st)
-
         st2 = st.downsample(4, no_filter=True, strict_length=False,
                             in_place=False)
         # test if original stream is unchanged
@@ -1187,7 +1187,6 @@ class StreamTestCase(unittest.TestCase):
         st8 = Stream([tr7, tr1])
         st9 = Stream()
         stA = Stream()
-        stB = Stream([tr0])
         # tests that should raise a NotImplementedError (i.e. <=, <, >=, >)
         self.assertRaises(NotImplementedError, st1.__lt__, st1)
         self.assertRaises(NotImplementedError, st1.__le__, st1)
@@ -1254,7 +1253,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(stA != st, True)
         # some weirder tests against non-Stream objects
         for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
-                       set(), set(tr0), {}, {"test": "test"}, Trace(), None,]:
+                       set(), set(tr0), {}, {"test": "test"}, Trace(), None, ]:
             self.assertEqual(st0 == object, False)
             self.assertEqual(st0 != object, True)
 

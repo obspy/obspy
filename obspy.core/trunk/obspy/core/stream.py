@@ -629,12 +629,12 @@ class Stream(object):
             st.spectrogram()
         """
         try:
-            from obspy.imaging.spectrogram import spectrogram
+            from obspy.imaging.spectrogram import spectrogram #@UnusedImport
         except ImportError:
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
-        
+
         spec_list = []
 
         for tr in self:
@@ -643,7 +643,7 @@ class Stream(object):
 
         return spec_list
 
-    def pop(self, index=-1):
+    def pop(self, index= -1):
         """
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
@@ -1222,7 +1222,7 @@ class Stream(object):
             norm = max([abs(value) for value in self.max()])
         else:
             norm = None
-        
+
         # normalize all traces
         for trace in self:
             new_tr = trace.normalize(norm=norm, in_place=in_place)
@@ -1274,7 +1274,7 @@ def createDummyStream(stream_string):
         tr.stats.location = location
         tr.stats.channel = channel
         tr.stats.starttime = starttime
-        delta = (endtime-starttime)/(npts-1)
+        delta = (endtime - starttime) / (npts - 1)
         tr.stats.delta = delta
         # Set as a preview Trace if it is a preview.
         if '[preview]' in line:
