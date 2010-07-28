@@ -297,17 +297,22 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
         comments += [fh.readline()]
     # trace lines
     traces = {}
+    i = -1
+    id = ''
     for line in fh.xreadlines():
-        id = int(line[0:2])
-        traces.setdefault(id, '')
-        traces[id] += line[3:].strip()
+        cid = int(line[0:2])
+        if cid != id:
+            id = cid
+            i += 1
+        traces.setdefault(i, '')
+        traces[i] += line[3:].strip()
     # create stream object
     stream = Stream()
     for id in sorted(traces.keys()):
         # fetch headers
         header = {}
         header['sh'] = {}
-        channel = [' ', ' ', ' ']
+        channel = ['', '', '']
         npts = 0
         for item in traces[id].split('~'):
             key = item.strip()[0:4]
@@ -395,7 +400,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
 
     # build up header strings
     headers = []
-    maxnol = 0
+    minnol = 4
     cur_npts = 0
     for trace in stream:
         temp = "L000:%d~ " % cur_npts
@@ -426,20 +431,20 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
         headers.append(temp)
         # get maximal number of trclines
         nol = len(temp) / 74 + 1
-        if nol > maxnol:
-            maxnol = nol
+        if nol > minnol:
+            minnol = nol
     # first line: magic number, cmtlines, trclines
     # XXX: comment lines are ignored
-    fh.write("43981 1 %d\n" % maxnol)
+    fh.write("43981 1 %d\n" % minnol)
 
     for i, trace in enumerate(stream):
         # write headers
         temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
-        for j in xrange(0, maxnol):
+        for j in xrange(0, minnol):
             try:
-                fh.write("%02d|%s\n" % (i + 1, temp[j]))
+                fh.write("%02d|%s\n" % ((i + 1) % 100, temp[j]))
             except:
-                fh.write("%02d|\n" % (i + 1))
+                fh.write("%02d|\n" % ((i + 1) % 100))
         # write data in given byte order
         dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)

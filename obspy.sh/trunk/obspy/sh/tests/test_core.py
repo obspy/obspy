@@ -19,6 +19,17 @@ class CoreTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_read101Traces(self):
+        """
+        Testing reading Q file with more than 100 traces. 
+        """
+        testfile = os.path.join(self.path, 'data', '101.QHD')
+        # read
+        stream = readQ(testfile)
+        stream.verify()
+        self.assertEqual(len(stream), 101)
+        stream.write("test", "Q")
+
     def test_isASCFile(self):
         """
         Testing ASC file format. 
