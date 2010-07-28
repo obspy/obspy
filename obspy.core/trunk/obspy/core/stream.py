@@ -107,7 +107,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
         :class:`~obspy.core.stream.Stream` object.
 
         >>> from obspy.core import read  # doctest: +SKIP
-        >>> st = read(("loc_R*.z"))  # doctest: +SKIP
+        >>> st = read("loc_R*.z")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         2 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
@@ -318,14 +318,22 @@ class Stream(object):
         It will contain the number of Traces in the Stream and the return value
         of each Trace's __str__ method.
         """
-        return_string = str(len(self.traces)) + ' Trace(s) in Stream:'
-        for _i in self.traces:
-            return_string = return_string + '\n' + str(_i)
-        return return_string
+        return_string = str(len(self.traces)) + ' Trace(s) in Stream:\n'
+        return return_string + "\n".join([str(tr) for tr in self])
 
     def __eq__(self, other):
         """
         Implements rich comparison of Stream objects for "==" operator.
+
+        Example
+        -------
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st2 = st.copy()
+        >>> st is st2
+        False
+        >>> st == st2
+        True
 
         Streams are the same, if both contain the same traces, i.e. after a
         sort operation going through both streams every trace should be equal
@@ -352,6 +360,16 @@ class Stream(object):
     def __ne__(self, other):
         """
         Implements rich comparison of Stream objects for "!=" operator.
+
+        Example
+        -------
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st2 = st.copy()
+        >>> st is st2
+        False
+        >>> st != st2
+        False
 
         Calls __eq__() and returns the opposite.
         """
@@ -469,6 +487,34 @@ class Stream(object):
         is done. This method only compares the start- and endtimes of the
         Traces.
 
+        Example
+        -------
+        
+        Our example stream has no gaps:
+        
+        >>> from obspy.core import read, UTCDateTime
+        >>> st = read()
+        >>> st.getGaps()
+        []
+        >>> st.printGaps()
+        Source            Last Sample                 Next Sample                 Delta           Samples 
+        Total: 0 gap(s) and 0 overlap(s)
+        
+        So let's make a copy of the first trace and cut both so that we end up with
+        a gappy stream:
+
+        >>> tr = st[0].copy()
+        >>> t = UTCDateTime("2009-08-24T00:20:13.0")
+        >>> st[0].trim(endtime=t)
+        >>> tr.trim(starttime=t+1)
+        >>> st.append(tr)
+        >>> st.getGaps()
+        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), UTCDateTime(2009, 8, 24, 0, 20, 14), 1.0, 99]]
+        >>> st.printGaps()
+        Source            Last Sample                 Next Sample                 Delta           Samples 
+        BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z 2009-08-24T00:20:14.000000Z 1.000000        99      
+        Total: 1 gap(s) and 0 overlap(s)
+
         :param min_gap: All gaps smaller than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
         :param max_gap: All gaps larger than this value will be omitted. The
@@ -546,6 +592,17 @@ class Stream(object):
         """
         Creates a graph of the current ObsPy Stream object.
 
+        Example
+        -------
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st.plot() #doctest: +SKIP
+
+        .. plot:
+            from obspy.core import read
+            st = read()
+            st.plot()
+
         It either saves the image directly to the file system or returns a
         binary image string.
 
@@ -617,26 +674,16 @@ class Stream(object):
         Basic Usage
         -----------
         >>> from obspy.core import read
-        >>> st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
-        >>> st += read("http://examples.obspy.org/RJOB20090824.ehz")
-        >>> st.spectrogram() # doctest: +SKIP
+        >>> st = read()
+        >>> st.spectrogram() #doctest: +SKIP
 
         .. plot::
 
             from obspy.core import read
-            st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
-            st += read("http://examples.obspy.org/RJOB20090824.ehz")
+            st = read()
             st.spectrogram()
         """
-        try:
-            from obspy.imaging.spectrogram import spectrogram #@UnusedImport
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "use the spectrogram plotting routine."
-            raise ImportError(msg)
-
         spec_list = []
-
         for tr in self:
             spec = tr.spectrogram(*args, **kwargs)
             spec_list.append(spec)
@@ -657,6 +704,34 @@ class Stream(object):
     def printGaps(self, **kwargs):
         """
         Print gap/overlap list summary information of the Stream object.
+
+        Example
+        -------
+        
+        Our example stream has no gaps:
+        
+        >>> from obspy.core import read, UTCDateTime
+        >>> st = read()
+        >>> st.getGaps()
+        []
+        >>> st.printGaps()
+        Source            Last Sample                 Next Sample                 Delta           Samples 
+        Total: 0 gap(s) and 0 overlap(s)
+        
+        So let's make a copy of the first trace and cut both so that we end up with
+        a gappy stream:
+
+        >>> tr = st[0].copy()
+        >>> t = UTCDateTime("2009-08-24T00:20:13.0")
+        >>> st[0].trim(endtime=t)
+        >>> tr.trim(starttime=t+1)
+        >>> st.append(tr)
+        >>> st.getGaps()
+        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), UTCDateTime(2009, 8, 24, 0, 20, 14), 1.0, 99]]
+        >>> st.printGaps()
+        Source            Last Sample                 Next Sample                 Delta           Samples 
+        BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z 2009-08-24T00:20:14.000000Z 1.000000        99      
+        Total: 1 gap(s) and 0 overlap(s)
         """
         result = self.getGaps(**kwargs)
         print "%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
@@ -678,6 +753,25 @@ class Stream(object):
         Removes the first occurence of the specified Trace object in the Stream
         object.
         Passes on the remove() call to self.traces.
+
+        Example
+        -------
+
+        This example shows how to delete all "E" component traces in a stream:
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> print st
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        >>> for tr in st.select(component="E"):
+        ...     st.remove(tr)
+        >>> print st
+        2 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
         :param trace: Trace object to be removed from Stream.
         :returns: None
@@ -731,9 +825,14 @@ class Stream(object):
         Basic Usage
         -----------
 
-        >>> from obspy.core import read # doctest: +SKIP
-        >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
-        >>> st.write("loc.ms", format="MSEED") # doctest: +SKIP
+        >>> from obspy.core import read
+        >>> st = read() # doctest: +SKIP
+        >>> st.write("example.mseed", format="MSEED") # doctest: +SKIP
+
+        Writing files with meaningful filenames can be done e.g. using trace.id
+
+        >>> for tr in st: #doctest: +SKIP
+        ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
 
         Parameters
         ----------
@@ -828,7 +927,7 @@ class Stream(object):
     def __ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
-        For more info see :meth:`~obspy.core.trace.Trace.ltrim.`
+        For more info see :meth:`~obspy.core.trace.Trace._ltrim.`
         """
         for trace in self.traces:
             trace.ltrim(starttime, pad, nearest_sample=nearest_sample)
@@ -847,7 +946,7 @@ class Stream(object):
     def __rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
-        For more info see :meth:`~obspy.core.trace.Trace.rtrim.`
+        For more info see :meth:`~obspy.core.trace.Trace._rtrim.`
         """
         for trace in self.traces:
             trace.rtrim(endtime, pad, nearest_sample=nearest_sample)
@@ -1018,11 +1117,33 @@ class Stream(object):
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Basic Usage
-        -----------
-        >>> st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0}) # doctest: +SKIP
-        >>> new_st = st.filter("bandpass", {"freqmin": 1.0, "freqmax": 20.0}, # doctest: +SKIP
-                               in_place=False) # doctest: +SKIP
+        Example
+        -------
+
+        The default is in place filtering to avoid unintentional excessive
+        memory consumption.
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st.filter("highpass", {'freq': 1.0})
+        >>> st.plot() # doctest: +SKIP
+
+        If the original stream is needed for further work, too, set
+        ``ìn_place=False`` to return a new trace object:
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st2 = st.filter("highpass", {'freq': 1.0}, in_place=False)
+        >>> st.plot() # doctest: +SKIP
+        >>> st2.plot() # doctest: +SKIP
+
+        .. plot::
+            
+            from obspy.core import read
+            st = read()
+            st2 = st.filter("highpass", {'freq': 1.0}, in_place=False)
+            st.plot()
+            st2.plot()
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
@@ -1054,11 +1175,24 @@ class Stream(object):
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Basic Usage
-        -----------
-        >>> st.trigger('recStalta', {'sta': 3, 'lta': 10})  # doctest: +SKIP
-        >>> new_st = st.trigger('recStalta', {'sta': 3, 'lta': 10}, # doctest: +SKIP
-                                in_place=False)  # doctest: +SKIP
+        Example
+        -------
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st.filter("highpass", {'freq': 1.0})
+        >>> st.plot() # doctest: +SKIP
+        >>> st.trigger('recStalta', {'sta': 3, 'lta': 10})
+        >>> st.plot() # doctest: +SKIP
+
+        .. plot::
+            
+            from obspy.core import read
+            st = read()
+            st.filter("highpass", {'freq': 1.0})
+            st.plot()
+            st.trigger('recStalta', {'sta': 3, 'lta': 10})
+            st.plot()
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
@@ -1103,8 +1237,42 @@ class Stream(object):
 
         Basic Usage
         -----------
-        >>> st.downsample(7, strict_length=False) # doctest: +SKIP
-        >>> new_st = st.downsample(2, in_place=False) # doctest: +SKIP
+
+        By default all processing is done in place to avoid unintentional
+        excessive memory consumption. For the example we switch off the
+        automatic pre-filtering:
+
+        >>> tr = Trace(data=np.arange(10))
+        >>> st = Stream(traces=[tr])
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> st.downsample(4, strict_length=False, no_filter=True)
+        >>> tr.stats.sampling_rate
+        0.25
+        >>> tr.data
+        array([0, 4])
+        
+        If the original trace is needed for further work the ``in_place``
+        option can be set to ``False`` to return a new trace:
+        
+        >>> tr = Trace(data=np.arange(10))
+        >>> st = Stream(traces=[tr])
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> st2 = st.downsample(2, no_filter=True, in_place=False)
+        >>> tr2 = st2[0]
+        >>> tr.stats.sampling_rate
+        1.0
+        >>> tr.data
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> tr2.stats.sampling_rate
+        0.5
+        >>> tr2.data
+        array([0, 2, 4, 6, 8])
 
         :param decimation_factor: integer factor by which the sampling rate is
             lowered by decimation.
@@ -1184,12 +1352,22 @@ class Stream(object):
         in ``stats.processing`` of every trace.
         Note: If ``data.dtype`` of a trace was integer it is changing to float.
 
-        Basic Usage
-        -----------
+        Example
+        -------
+        
+        Make a Stream with two Traces:
+
         >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
         >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
         >>> st = Stream(traces=[tr1, tr2])
+
+        Normalize and return a new stream:
+
         >>> st2 = st.normalize(in_place=False)
+
+        All traces are normalized to their absolute maximum and processing
+        information is added:
+
         >>> st2[0].data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
         >>> st2[0].stats.processing
@@ -1198,6 +1376,10 @@ class Stream(object):
         array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
         >>> st2[1].stats.processing
         ['normalize:-0.8']
+
+        Now do the operation on the original file in place and normalize all
+        traces to the stream's global maximum:
+
         >>> st.normalize(global_max=True)
         >>> st[0].data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
@@ -1237,6 +1419,34 @@ class Stream(object):
     def copy(self):
         """
         Returns a deepcopy of the stream.
+
+        Example
+        -------
+
+        Make a Trace and copy it:
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st2 = st.copy()
+
+        The two objects are not the same:
+
+        >>> st2 is st
+        False
+
+        But they have equal data (before applying further processing):
+
+        >>> st2 == st
+        True
+
+        The following example shows how to make an alias but not copy the data.
+        Any changes on ``st3`` would also change the contents of ``st``.
+
+        >>> st3 = st
+        >>> st3 is st
+        True
+        >>> st3 == st
+        True
 
         :return: Copy of stream.
         """

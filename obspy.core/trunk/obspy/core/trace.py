@@ -1020,6 +1020,7 @@ class Trace(object):
         >>> st = read()
         >>> tr = st[0]
         >>> tr.filter("highpass", {'freq': 1.0})
+        >>> tr.plot() # doctest: +SKIP
         >>> tr.trigger('recStalta', {'sta': 3, 'lta': 10})
         >>> tr.plot() # doctest: +SKIP
 
@@ -1029,6 +1030,7 @@ class Trace(object):
             st = read()
             tr = st[0]
             tr.filter("highpass", {'freq': 1.0})
+            tr.plot()
             tr.trigger('recStalta', {'sta': 3, 'lta': 10})
             tr.plot()
 

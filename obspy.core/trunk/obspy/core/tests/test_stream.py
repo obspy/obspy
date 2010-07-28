@@ -485,7 +485,8 @@ class StreamTestCase(unittest.TestCase):
         """
         # skip test if obspy.signal is not installed
         try:
-            import obspy.signal #@UnusedImport
+            import obspy.signal # @UnusedImport downsample() raises if
+                                # integerDecimation cannot be imported!
         except ImportError:
             return
         # create test Stream
