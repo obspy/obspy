@@ -799,16 +799,17 @@ class Stream(object):
         For more info see :meth:`~obspy.core.trace.Trace.trim.`
 
         """
-        # select sample nearest to a sample point of the first trace
-        tr = self.traces[0]
-        if starttime:
-            delta = round((starttime - tr.stats.starttime) * \
-                           tr.stats.sampling_rate)
-            starttime = tr.stats.starttime + delta * tr.stats.delta
-        if endtime:
-            delta = round((endtime - tr.stats.endtime) * \
-                           tr.stats.sampling_rate)
-            endtime = tr.stats.endtime + delta * tr.stats.delta #delta is negativ!
+        # select starttime/endtime fitting to a sample point of the first trace
+        if nearest_sample:
+            tr = self.traces[0]
+            if starttime:
+                delta = round((starttime - tr.stats.starttime) * \
+                               tr.stats.sampling_rate)
+                starttime = tr.stats.starttime + delta * tr.stats.delta
+            if endtime:
+                delta = round((endtime - tr.stats.endtime) * \
+                               tr.stats.sampling_rate)
+                endtime = tr.stats.endtime + delta * tr.stats.delta #delta is negativ!
         for trace in self.traces:
             trace.trim(starttime, endtime, pad,
                        nearest_sample=nearest_sample)
