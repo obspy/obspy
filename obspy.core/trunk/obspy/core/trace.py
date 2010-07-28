@@ -659,7 +659,7 @@ class Trace(object):
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
-        
+
         try:
             spec = spectrogram(data=self.data,
                                samp_rate=self.stats.sampling_rate,
@@ -972,7 +972,7 @@ class Trace(object):
         # dictionary to map given type-strings to filter functions
         filter_functions = {"bandpass": bandpass, "bandstop": bandstop,
                             "lowpass": lowpass, "highpass": highpass}
-        
+
         #make type string comparison case insensitive
         type = type.lower()
 
@@ -980,7 +980,7 @@ class Trace(object):
             msg = "Filter type \"%s\" not recognized. " % type + \
                   "Filter type must be one of: %s." % filter_functions.keys()
             raise Exception(msg)
-        
+
         # if in_place is set to False create a new Trace object
         if in_place:
             tr = self
@@ -997,13 +997,13 @@ class Trace(object):
             print filter_functions[type].__doc__
             print "(Data and sampling rate are passed on internally)"
             raise e
-        
+
         # add processing information to the stats dictionary
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
         proc_info = "filter:%s:%s" % (type, filter_options)
         tr.stats['processing'].append(proc_info)
-        
+
         if in_place:
             return
         else:
@@ -1052,8 +1052,8 @@ class Trace(object):
                 data otherwise.
         """
         try:
-            from obspy.signal.trigger import recStalta, carlStaTrig, \
-                    classicStaLta, delayedStaLta, zdetect
+            from obspy.signal.trigger import recStalta, classicStaLta, \
+                                             delayedStaLta, zdetect
         except ImportError:
             msg = "Error during import from obspy.signal. Please make " + \
                   "sure obspy.signal is installed properly."
@@ -1064,7 +1064,7 @@ class Trace(object):
         trigger_functions = {'recstalta': recStalta,
                 'carlstatrig': classicStaLta, 'delayedstalta': delayedStaLta,
                 'zdetect': zdetect}
-        
+
         #make type string comparison case insensitive
         type = type.lower()
 
@@ -1072,7 +1072,7 @@ class Trace(object):
             msg = "Trigger type \"%s\" not recognized. " % type + \
                   "Trigger type must be one of: %s." % trigger_functions.keys()
             raise Exception(msg)
-        
+
         # if in_place is set to False create a new Trace object
         if in_place:
             tr = self
@@ -1085,7 +1085,7 @@ class Trace(object):
         for key in ['sta', 'lta']:
             if key in trigger_options:
                 spr = self.stats.sampling_rate
-                trigger_options['n'+key] = int(trigger_options[key] * spr)
+                trigger_options['n' + key] = int(trigger_options[key] * spr)
                 del trigger_options[key]
 
         # do the actual triggering. the trigger_options dictionary is passed as
@@ -1099,13 +1099,13 @@ class Trace(object):
                   "converted from seconds to samples (e.g. sta=2 gets " + \
                   "mapped to nsta=400 for a sampling rate of 200 Hz)"
             raise e
-        
+
         # add processing information to the stats dictionary
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
         proc_info = "trigger:%s:%s" % (type, trigger_options)
         tr.stats['processing'].append(proc_info)
-        
+
         if in_place:
             return
         else:
@@ -1174,12 +1174,12 @@ class Trace(object):
             data otherwise.
         """
         try:
-            from obspy.signal.filter import integerDecimation, lowpass
+            from obspy.signal.filter import integerDecimation
         except ImportError:
             msg = "Error during import from obspy.signal. Please make " + \
                   "sure obspy.signal is installed properly."
             raise ImportError(msg)
-        
+
         # check if endtime changes and this is not explicitly allowed
         if strict_length and len(self.data) % decimation_factor:
             msg = "Endtime of trace would change and strict_length=True."
@@ -1200,13 +1200,13 @@ class Trace(object):
         tr.data = integerDecimation(tr.data, decimation_factor)
         tr.stats.sampling_rate = tr.stats.sampling_rate / \
                 float(decimation_factor)
-        
+
         # add processing information to the stats dictionary
         if not 'processing' in tr.stats:
             tr.stats['processing'] = []
         proc_info = "downsample:integerDecimation:%s" % decimation_factor
         tr.stats['processing'].append(proc_info)
-        
+
         if in_place:
             return
         else:
@@ -1235,7 +1235,7 @@ class Trace(object):
 
         if abs(_min) > abs(value):
             value = _min
-        
+
         return value
 
     def std(self):
@@ -1308,7 +1308,7 @@ class Trace(object):
             tr.stats['processing'] = []
         proc_info = "normalize:%s" % norm
         tr.stats['processing'].append(proc_info)
-        
+
         if in_place:
             return
         else:

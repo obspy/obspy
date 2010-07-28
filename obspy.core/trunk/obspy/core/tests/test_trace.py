@@ -234,7 +234,7 @@ class TraceTestCase(unittest.TestCase):
         should not be changed anyways.
         """
         # Choose non native dtype.
-        tr = Trace(np.arange(100, dtype = 'int16'))
+        tr = Trace(np.arange(100, dtype='int16'))
         tr.trim(UTCDateTime(10000), UTCDateTime(20000))
         # Assert the result.
         self.assertEqual(len(tr.data), 0)
@@ -750,7 +750,7 @@ class TraceTestCase(unittest.TestCase):
                    ['highpass', {'freq': 2, 'corners': 2}]]
         filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
                       'lowpass': lowpass, 'highpass': highpass}
-        
+
         # tests for in_place=False
         for i, tr in enumerate(traces):
             for filt_type, filt_ops in filters:
@@ -811,10 +811,6 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the downsample method of the Trace object.
         """
-        try:
-            from obspy.signal.filter import integerDecimation, lowpass
-        except ImportError:
-            return
         # create test Trace
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
@@ -836,7 +832,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.sampling_rate, 0.5)
         self.assertEqual(tr3.stats.sampling_rate, 0.25)
         self.assertEqual(tr4.stats.sampling_rate, 0.1)
-        self.assertEqual(tr5.stats.sampling_rate, 1/7.)
+        self.assertEqual(tr5.stats.sampling_rate, 1 / 7.)
         self.assertEqual(tr2.stats.processing,
                          ["downsample:integerDecimation:2"])
         self.assertEqual(tr3.stats.processing,
@@ -875,7 +871,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(tr_bkp)
         tr2 = deepcopy(tr_bkp)
         tr.downsample(4)
-        tr2.filter('lowpass', {'freq': tr2.stats.sampling_rate*0.4/4})
+        tr2.filter('lowpass', {'freq': tr2.stats.sampling_rate * 0.4 / 4})
         tr2.downsample(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr.stats, tr2.stats)
@@ -939,7 +935,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr3 != tr6, True)
         # some weirder tests against non-Trace objects
         for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
-                       set(), set(tr0), {}, {"test": "test"}, Stream(), None,]:
+                       set(), set(tr0), {}, {"test": "test"}, Stream(), None, ]:
             self.assertEqual(tr0 == object, False)
             self.assertEqual(tr0 != object, True)
 
@@ -957,7 +953,7 @@ class TraceTestCase(unittest.TestCase):
         # ltrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.ltrim(t-3, nearest_sample=True)
+        tr.ltrim(t - 3, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.starttime,
                          UTCDateTime("2010-06-20T20:19:48.495000Z"))
@@ -966,50 +962,50 @@ class TraceTestCase(unittest.TestCase):
         # rtrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.rtrim(t+7, nearest_sample=True)
+        tr.rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495000Z")
-        tr.rtrim(t+7, nearest_sample=True)
+        tr.rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495111Z")
-        tr.rtrim(t+7, nearest_sample=True)
+        tr.rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.497501Z")
-        tr.rtrim(t+7, nearest_sample=True)
+        tr.rtrim(t + 7, nearest_sample=True)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.500000Z"))
         # rtrim
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.494999Z")
-        tr.rtrim(t+7, nearest_sample=False)
+        tr.rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.490000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495000Z")
-        tr.rtrim(t+7, nearest_sample=False)
+        tr.rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.495111Z")
-        tr.rtrim(t+7, nearest_sample=False)
+        tr.rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
         tr = deepcopy(trace)
         t = UTCDateTime("2010-06-20T20:19:51.497500Z")
-        tr.rtrim(t+7, nearest_sample=False)
+        tr.rtrim(t + 7, nearest_sample=False)
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
