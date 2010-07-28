@@ -183,14 +183,11 @@ class Stats(AttribDict):
     #                      'npts', 'calib']
     #    # determine longest key name for alignment of all items
     #    align_len = max([len(key) for key in dict_copy.keys()]) + 2
-    #    string = ""
-    #    for key in priorized_keys:
-    #        string += ("%s: " % key).ljust(align_len)
-    #        string += "%s\n" % dict_copy.pop(key)
-    #    for key in dict_copy.keys():
-    #        string += ("%s: " % key).ljust(align_len)
-    #        string += "%s\n" % dict_copy.pop(key)
-    #    return string.rstrip("\n")
+    #    head = [("%s: %s" % (key, dict_copy.pop(key)).ljust(align_len) \
+    #           for key in priorized_keys]
+    #    head.extend([("%s: %s" % (key, dict_copy.pop(key)).ljust(align_len) \
+    #           for key in dict_copy.keys()]
+    #    return "\n".join(head)
 
     __setattr__ = __setitem__
 
