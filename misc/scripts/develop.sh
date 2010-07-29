@@ -4,7 +4,7 @@ PACKAGES="core gse2 mseed sac seisan sh wav xseed signal imaging arclink \
 seishub fissures"
 
 # Go from here to ObsPy root directory
-cd ../../..
+cd ../..
 
 # Link all packages to python2.x/lib/site-packages/
 for NAME in $PACKAGES; do
@@ -14,4 +14,4 @@ for NAME in $PACKAGES; do
 done
 
 # Go back to scripts directory
-cd obspy/branches/scripts
+cd misc/scripts

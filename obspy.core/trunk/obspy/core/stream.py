@@ -1101,10 +1101,12 @@ class Stream(object):
 
         Gaps and overlaps are usually separated in distinct traces. This method
         tries to merge them and to create distinct traces within this 
-        :class:`~Stream` object. Merged trace data will be converted into a
-        NumPy masked array data type if any gaps are present. This behavior may
-        be prevented by setting the ``fill_value`` parameter. The ``method``
-        argument controls the handling of overlapping data values.
+        :class:`~Stream` object. The method is working on the stream object
+        itself (inplace), thus returns nothing. Merged trace data will be
+        converted into a NumPy masked array data type if any gaps are
+        present. This behavior may be prevented by setting the
+        ``fill_value`` parameter. The ``method`` argument controls the
+        handling of overlapping data values.
 
         Parameters
         ----------

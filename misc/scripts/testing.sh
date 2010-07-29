@@ -3,8 +3,6 @@
 PACKAGES="core arclink fissures gse2 imaging mseed sac seisan seishub \
 signal wav xseed"
 
-cd ../
-
 for NAME in $PACKAGES; do
     cd ../..
     cd obspy.$NAME/trunk
@@ -18,4 +16,4 @@ for NAME in $PACKAGES; do
 done
 
 cd ../..
-cd obspy/branches/scripts
+cd misc/scripts
