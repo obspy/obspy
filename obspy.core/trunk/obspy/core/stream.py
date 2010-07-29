@@ -303,6 +303,48 @@ class Stream(object):
         self.extend(stream.traces)
         return self
 
+    def __iter__(self):
+        """
+        Return a robust iterator for stream.traces.
+
+        Doing this it is safe to remove traces from streams inside of
+        for-loops using stream's remove() method. Actually this creates a new
+        iterator every time a trace is removed inside the for-loop.
+
+        >>> from obspy.core import read
+        >>> st = Stream()
+        >>> for component in ["1", "Z", "2", "3", "Z", "N", "E", "4", "5"]:
+        ...     channel = "EH" + component
+        ...     tr = Trace(header={'channel': channel})
+        ...     st.append(tr)
+        >>> print st
+        9 Trace(s) in Stream:
+        ...EH1 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EH2 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EH3 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHN | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHE | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EH4 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EH5 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        
+        >>> for tr in st:
+        ...     if tr.stats.channel[-1] not in ["Z", "N", "E"]:
+        ...         st.remove(tr)
+        >>> print st
+        4 Trace(s) in Stream:
+        ...EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHN | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        ...EHE | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
+        
+        """
+        # Uncomment next line to see the default behavior and run doctest to
+        # see how it can go wrong...
+        # XXX return self.traces.__iter__()
+        return list(self.traces).__iter__()
+
     def __len__(self):
         """
         Returns the number of Traces in the Stream object.
