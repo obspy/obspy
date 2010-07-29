@@ -973,7 +973,7 @@ class PickingGUI:
                     tr = st[i]
                     if not tr.stats.channel[-1] in ["Z", "N", "E"]:
                         removed_channels += " " + st[i].stats.channel
-                        st.remove(i)
+                        st.remove(tr)
                 if len(st.traces) in [1, 3]:
                     msg = 'Warning: deleted some unknown channels in ' + \
                           'stream %s:%s' % (net_sta, removed_channels)
