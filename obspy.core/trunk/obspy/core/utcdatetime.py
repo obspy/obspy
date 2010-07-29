@@ -425,21 +425,21 @@ class UTCDateTime(datetime.datetime):
             if isinstance(arg, int):
                 td = datetime.timedelta(seconds=arg)
                 dt = datetime.datetime.__add__(self, td)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
             elif isinstance(arg, float):
                 sec = int(arg)
                 msec = int(round((arg - sec) * 1000000))
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__add__(self, td)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
             elif isinstance(arg, UTCDateTime):
                 return round(self.timestamp + arg.timestamp, 6)
             else:
                 dt = datetime.datetime.__add__(self, arg)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
         else:
             dt = datetime.datetime.__add__(self, *args, **kwargs)
-            return UTCDateTime(dt)
+            return self.__class__(dt)
 
     def __sub__(self, *args, **kwargs):
         """
@@ -467,21 +467,21 @@ class UTCDateTime(datetime.datetime):
             if isinstance(arg, int):
                 td = datetime.timedelta(seconds=arg)
                 dt = datetime.datetime.__sub__(self, td)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
             elif isinstance(arg, float):
                 sec = int(arg)
                 msec = int(round((arg - sec) * 1000000))
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__sub__(self, td)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
             elif isinstance(arg, UTCDateTime):
                 return round(self.timestamp - arg.timestamp, 6)
             else:
                 dt = datetime.datetime.__sub__(self, arg)
-                return UTCDateTime(dt)
+                return self.__class__(dt)
         else:
             dt = datetime.datetime.__sub__(self, *args, **kwargs)
-            return UTCDateTime(dt)
+            return self.__class__(dt)
 
     def __str__(self):
         """

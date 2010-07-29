@@ -290,7 +290,7 @@ class Stream(object):
             raise TypeError
         traces = copy.deepcopy(self.traces)
         traces.extend(stream.traces)
-        return Stream(traces=traces)
+        return self.__class__(traces=traces)
 
     def __iadd__(self, stream):
         """
@@ -483,7 +483,7 @@ class Stream(object):
 
         :return: Stream object
         """
-        return Stream(traces=self.traces[i:j])
+        return self.__class__(traces=self.traces[i:j])
 
     def append(self, trace):
         """
@@ -1009,7 +1009,7 @@ class Stream(object):
             if keep_empty_traces is False and not sliced_trace.stats.npts:
                 continue
             traces.append(sliced_trace)
-        return Stream(traces=traces)
+        return self.__class__(traces=traces)
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None):
@@ -1049,7 +1049,7 @@ class Stream(object):
             if component and component != trace.stats.channel[-1]:
                 continue
             traces.append(trace)
-        return Stream(traces=traces)
+        return self.__class__(traces=traces)
 
     def verify(self):
         """
@@ -1208,7 +1208,7 @@ class Stream(object):
         if in_place:
             return
         else:
-            return Stream(traces=new_traces)
+            return self.__class__(traces=new_traces)
 
     def trigger(self, type, trigger_options, in_place=True):
         """
@@ -1260,7 +1260,7 @@ class Stream(object):
         if in_place:
             return
         else:
-            return Stream(traces=new_traces)
+            return self.__class__(traces=new_traces)
 
     def downsample(self, decimation_factor, no_filter=False,
                    strict_length=True, in_place=True):
@@ -1338,7 +1338,7 @@ class Stream(object):
         if in_place:
             return
         else:
-            return Stream(traces=new_traces)
+            return self.__class__(traces=new_traces)
 
     def max(self):
         """
@@ -1458,7 +1458,7 @@ class Stream(object):
         if in_place:
             return
         else:
-            return Stream(traces=new_traces)
+            return self.__class__(traces=new_traces)
 
     def copy(self):
         """
