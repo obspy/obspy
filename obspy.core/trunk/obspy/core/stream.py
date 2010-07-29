@@ -152,6 +152,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
     # Trim if times are given.
     starttime = kwargs.get('starttime')
     endtime = kwargs.get('endtime')
+    if headonly and (starttime or endtime):
+        msg = "headonly cannot be combined with starttime or endtime"
+        raise Exception(msg)
     if starttime:
         st.ltrim(starttime, nearest_sample=nearest_sample)
     if endtime:
