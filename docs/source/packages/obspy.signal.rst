@@ -11,9 +11,7 @@
 
         ~trigger.arPick
         ~filter.bandpass
-        ~filter.bandpassZPHSH
         ~filter.bandstop
-        ~filter.bandstopZPHSH
         ~trigger.carlStaTrig
         ~trigger.classicStaLta
         ~invsim.cornFreq2Paz
@@ -23,9 +21,7 @@
         ~invsim.estimateMagnitude
         ~rotate.gps2DistAzimuth
         ~filter.highpass
-        ~filter.highpassZPHSH
         ~filter.lowpass
-        ~filter.lowpassZPHSH
         ~invsim.pazToFreqResp
         ~trigger.pkBaer
         ~trigger.recStalta
