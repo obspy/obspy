@@ -653,7 +653,7 @@ class Stream(object):
         >>> st = read()
         >>> st.plot() #doctest: +SKIP
 
-        .. plot:
+        .. plot::
             from obspy.core import read
             st = read()
             st.plot()

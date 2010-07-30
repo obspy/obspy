@@ -43,7 +43,7 @@ Working with stream's implemented method works similar:
 >>> tr.filter('highpass', {'freq': 1.0, 'corners': 1, 'zerophase': True})
 >>> st.plot() #doctest: +SKIP
 
-.. plot:
+.. plot::
 
     from obspy.core import read
     import obspy.signal
@@ -51,7 +51,7 @@ Working with stream's implemented method works similar:
     tr = st[0]
     tr.data = obspy.signal.highpass(tr.data, 1.0,
             df=tr.stats.sampling_rate, corners=1, zerophase=True)
-    st.plot() #doctest: +SKIP
+    st.plot()
 
 Instrument Correction
 ---------------------
@@ -79,7 +79,7 @@ comparison with the other traces in the plot.
 >>> tr.data = seisSim(tr.data, df, sts2, inst_sim=inst2hz, water_level=60.0)
 >>> st.plot() #doctest: +SKIP
 
-.. plot:
+.. plot::
 
     from obspy.core import read
     from obspy.signal import seisSim, cornFreq2Paz
