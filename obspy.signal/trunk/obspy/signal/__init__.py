@@ -15,7 +15,9 @@ Available filters are :func:`~obspy.signal.filter.bandpass()`,
 :func:`~obspy.signal.filter.highpass()`,
 :func:`~obspy.signal.filter.bandstop()`. Zero-phase filtering can be done by
 specifying ``zerophase=True``.
-The following example shows how to lowpass a seismogram at 1.5Hz.
+The following example shows how to highpass a seismogram at 1.0Hz.
+In the example only the first trace is processed to see the changes in
+comparison with the other traces in the plot.
 
 :Note: The filter takes the data explicitly as argument (i.e. a
        numpy.ndarray) and therefore the sampling_rate needs to be also
@@ -27,28 +29,75 @@ The following example shows how to lowpass a seismogram at 1.5Hz.
 
 >>> from obspy.core import read
 >>> import obspy.signal
->>> st = read("RJOB_061005_072159.ehz.new")
->>> data = obspy.signal.lowpassZPHSH(st[0].data, 1.5, 
-                                     df=st[0].stats.sampling_rate, corners=2)
+>>> st = read()
+>>> tr = st[0]
+>>> tr.data = obspy.signal.highpass(tr.data, 1.0,
+...         df=tr.stats.sampling_rate, corners=1, zerophase=True)
+>>> st.plot() #doctest: +SKIP
+
+Working with stream's implemented method works similar:
+
+>>> from obspy.core import read
+>>> st = read()
+>>> tr = st[0]
+>>> tr.filter('highpass', {'freq': 1.0, 'corners': 1, 'zerophase': True})
+>>> st.plot() #doctest: +SKIP
+
+.. plot:
+
+    from obspy.core import read
+    import obspy.signal
+    st = read()
+    tr = st[0]
+    tr.data = obspy.signal.highpass(tr.data, 1.0,
+            df=tr.stats.sampling_rate, corners=1, zerophase=True)
+    st.plot() #doctest: +SKIP
 
 Instrument Correction
 ---------------------
 The response of the instrument can be removed by the invsim module. The
 following example shows how to remove the the instrument response of a
-le3d and simulate an instrument with 2Hz corner frequency.
+STS2 and simulate an instrument with 2Hz corner frequency.
+In the example only the first trace is processed to see the changes in
+comparison with the other traces in the plot.
 
 >>> from obspy.core import read
 >>> from obspy.signal import seisSim, cornFreq2Paz
 >>> inst2hz = cornFreq2Paz(2.0)
->>> st = read("RJOB_061005_072159.ehz.new")
->>> data = st[0].data - st[0].data.mean()
->>> le3d = {'poles' :  [-4.21000 +4.66000j, -4.21000 -4.66000j,
-                        -2.105000+0.00000j],
-            'zeros' : [0.0 +0.0j, 0.0 +0.0j, 0.0 +0.0j],
-            'gain' : 0.4}
->>> npts, df = (st[0].stats.npts, st[0].stats.sampling_rate)
->>> data2 = seisSim(data, df, le3d,
-                    inst_sim=inst2hz, water_level=60.0)
+>>> st = read()
+>>> tr = st[0]
+>>> tr.data = tr.data - tr.data.mean()
+>>> sts2 = {'gain': 60077000.0,
+...         'poles': [(-0.037004000000000002+0.037016j),
+...                   (-0.037004000000000002-0.037016j),
+...                   (-251.33000000000001+0j),
+...                   (-131.03999999999999-467.29000000000002j),
+...                   (-131.03999999999999+467.29000000000002j)],
+...         'sensitivity': 2516778400.0,
+...         'zeros': [0j, 0j]}
+>>> df = tr.stats.sampling_rate
+>>> tr.data = seisSim(tr.data, df, sts2, inst_sim=inst2hz, water_level=60.0)
+>>> st.plot() #doctest: +SKIP
+
+.. plot:
+
+    from obspy.core import read
+    from obspy.signal import seisSim, cornFreq2Paz
+    inst2hz = cornFreq2Paz(2.0)
+    st = read()
+    tr = st[0]
+    tr.data = tr.data - tr.data.mean()
+    sts2 = {'gain': 60077000.0,
+            'poles': [(-0.037004000000000002+0.037016j),
+                      (-0.037004000000000002-0.037016j),
+                      (-251.33000000000001+0j),
+                      (-131.03999999999999-467.29000000000002j),
+                      (-131.03999999999999+467.29000000000002j)],
+            'sensitivity': 2516778400.0,
+            'zeros': [0j, 0j]}
+    df = tr.stats.sampling_rate
+    tr.data = seisSim(data, df, sts2, inst_sim=inst2hz, water_level=60.0)
+    st.plot()
 
 **There are many more functions available (rotation, pazToFreqResp, triggers,
 cpxtrace analysis, ...), please also check the tutorial.**
@@ -70,3 +119,7 @@ from util import xcorr, xcorr_3C, utlGeoKm, utlLonLat
 
 
 __version__ = _getVersionString("obspy.signal")
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
