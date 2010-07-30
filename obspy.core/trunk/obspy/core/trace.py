@@ -921,11 +921,13 @@ class Trace(object):
             print self.data.dtype.byteorder
             raise Exception(msg)
 
-    def filter(self, type, filter_options, in_place=True):
+    def filter(self, type, options):
         """
         Filters the data of the current trace. This is performed in place on
-        the actual data array. The raw data is not accessible anymore
-        afterwards (can be avoided by setting ``in_place=False``).
+        the actual data array. The original data is not accessible anymore
+        afterwards.
+        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
+        to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
         For details see :mod:`obspy.signal`.
@@ -949,12 +951,10 @@ class Trace(object):
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
-        :param filter_options: Dictionary that contains arguments that will
+        :param options: Dictionary that contains arguments that will
                 be passed to the respective filter function as kwargs.
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
-        :param in_place: Determines if the filter is applied in place or if
-                a new ``Trace`` object is returned.
-        :return: ``None`` if ``in_place=True``, new ``Trace`` with filtered data otherwise
+        :return: ``None``
         """
         try:
             from obspy.signal import bandpass, bandstop, lowpass, highpass
@@ -975,40 +975,32 @@ class Trace(object):
                   "Filter type must be one of: %s." % filter_functions.keys()
             raise Exception(msg)
 
-        # if in_place is set to False create a new Trace object
-        if in_place:
-            tr = self
-        else:
-            tr = deepcopy(self)
-
-        # do the actual filtering. the filter_options dictionary is passed as
+        # do the actual filtering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # filter_functions dictionary.
         try:
-            tr.data = filter_functions[type](tr.data,
-                    df=tr.stats.sampling_rate, **filter_options)
+            self.data = filter_functions[type](self.data,
+                    df=self.stats.sampling_rate, **options)
         except TypeError, e:
             print filter_functions[type].__doc__
             print "(Data and sampling rate are passed on internally)"
             raise e
 
         # add processing information to the stats dictionary
-        if not 'processing' in tr.stats:
-            tr.stats['processing'] = []
-        proc_info = "filter:%s:%s" % (type, filter_options)
-        tr.stats['processing'].append(proc_info)
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        proc_info = "filter:%s:%s" % (type, options)
+        self.stats['processing'].append(proc_info)
+        
+        return
 
-        if in_place:
-            return
-        else:
-            return tr
-
-    def trigger(self, type, trigger_options, in_place=True):
+    def trigger(self, type, options):
         """
         Runs a triggering algorithm on the data of the current trace. This is
-        performed in place on the actual data array. The raw data is not
-        accessible anymore afterwards. This can be avoided by specifying
-        ``in_place=False``.
+        performed in place on the actual data array. The original data is not
+        accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
+        to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
         For details see :mod:`obspy.signal`.
@@ -1036,16 +1028,13 @@ class Trace(object):
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
-        :param trigger_options: Dictionary that contains arguments that will
+        :param options: Dictionary that contains arguments that will
                 be passed to the respective trigger function as kwargs.
                 Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
                 ``nlta`` by multiplying with sampling rate of trace.
                 (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
                 10 seconds average, respectively)
-        :param in_place: Determines if the filter is applied in place or if
-                a new ``Trace`` object is returned.
-        :return: ``None`` if ``in_place=True``, new ``Trace`` with filtered
-                data otherwise.
+        :return: ``None``
         """
         try:
             from obspy.signal.trigger import recStalta, classicStaLta, \
@@ -1069,26 +1058,20 @@ class Trace(object):
                   "Trigger type must be one of: %s." % trigger_functions.keys()
             raise Exception(msg)
 
-        # if in_place is set to False create a new Trace object
-        if in_place:
-            tr = self
-        else:
-            tr = deepcopy(self)
-
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
         # used in length of trigger averages)...
+        spr = self.stats.sampling_rate
         for key in ['sta', 'lta']:
-            if key in trigger_options:
-                spr = self.stats.sampling_rate
-                trigger_options['n' + key] = int(trigger_options[key] * spr)
-                del trigger_options[key]
+            if key in options:
+                options['n' + key] = int(options[key] * spr)
+                del options[key]
 
-        # do the actual triggering. the trigger_options dictionary is passed as
+        # do the actual triggering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # trigger_functions dictionary.
         try:
-            tr.data = trigger_functions[type](tr.data, **trigger_options)
+            self.data = trigger_functions[type](self.data, **options)
         except TypeError, e:
             print trigger_functions[type].__doc__
             print "(Data are passed on internally, average lengths are " + \
@@ -1097,18 +1080,15 @@ class Trace(object):
             raise e
 
         # add processing information to the stats dictionary
-        if not 'processing' in tr.stats:
-            tr.stats['processing'] = []
-        proc_info = "trigger:%s:%s" % (type, trigger_options)
-        tr.stats['processing'].append(proc_info)
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        proc_info = "trigger:%s:%s" % (type, options)
+        self.stats['processing'].append(proc_info)
 
-        if in_place:
-            return
-        else:
-            return tr
+        return
 
     def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=True, in_place=True):
+                   strict_length=True):
         """
         Downsample trace data.
 
@@ -1121,15 +1101,17 @@ class Trace(object):
         zero then the endtime of the trace is changing on sub-sample scale. The
         downsampling is aborted in this case but can be forced by setting
         ``strict_length=False``.
-        By default downsampling is done in place. By setting ``in_place=False``
-        a new ``Trace`` object is returned.
+        The original data is not accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
+        to make a copy of your trace.
+        This also makes an entry with information on the applied processing
+        in ``stats.processing`` of every trace.
 
-        Basic Usage
-        -----------
+        Example
+        -------
 
-        By default all processing is done in place to avoid unintentional
-        excessive memory consumption. For the example we switch off the
-        automatic pre-filtering:
+        For the example we switch off the automatic pre-filtering so that
+        the effect of the downsampling routine becomes clearer:
 
         >>> tr = Trace(data=np.arange(10))
         >>> tr.stats.sampling_rate
@@ -1141,33 +1123,12 @@ class Trace(object):
         0.25
         >>> tr.data
         array([0, 4])
-        
-        If the original trace is needed for further work the ``in_place``
-        option can be set to ``False`` to return a new trace:
-        
-        >>> tr = Trace(data=np.arange(10))
-        >>> tr.stats.sampling_rate
-        1.0
-        >>> tr.data
-        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr2 = tr.downsample(2, no_filter=True, in_place=False)
-        >>> tr.stats.sampling_rate
-        1.0
-        >>> tr.data
-        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr2.stats.sampling_rate
-        0.5
-        >>> tr2.data
-        array([0, 2, 4, 6, 8])
 
         :param decimation_factor: integer factor by which the sampling rate is
             lowered by decimation.
         :param no_filter: deactivate automatic filtering
         :param strict_length: abort, if endtime of trace would change
-        :param in_place: perform operation in place or return new ``Trace``
-            object.
-        :return: ``None`` if ``in_place=True``, new ``Trace`` with downsampled
-            data otherwise.
+        :return: ``None``
         """
         try:
             from obspy.signal.filter import integerDecimation
@@ -1181,32 +1142,24 @@ class Trace(object):
             msg = "Endtime of trace would change and strict_length=True."
             raise ValueError(msg)
 
-        # if in_place is set to False create a new Trace object
-        if in_place:
-            tr = self
-        else:
-            tr = deepcopy(self)
-
         # do automatic lowpass filtering
         if not no_filter:
-            low_corner = 0.4 * tr.stats.sampling_rate / decimation_factor
-            tr.filter('lowpass', {'freq': low_corner}, in_place=True)
+            low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
+            self.filter('lowpass', {'freq': low_corner})
 
-        # actual downsampling
-        tr.data = integerDecimation(tr.data, decimation_factor)
-        tr.stats.sampling_rate = tr.stats.sampling_rate / \
+        # actual downsampling, as long as sampling_rate is a float we would not
+        # need to convert to float, but let's do it as a safety measure
+        self.data = integerDecimation(self.data, decimation_factor)
+        self.stats.sampling_rate = self.stats.sampling_rate / \
                 float(decimation_factor)
 
         # add processing information to the stats dictionary
-        if not 'processing' in tr.stats:
-            tr.stats['processing'] = []
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
         proc_info = "downsample:integerDecimation:%s" % decimation_factor
-        tr.stats['processing'].append(proc_info)
+        self.stats['processing'].append(proc_info)
 
-        if in_place:
-            return
-        else:
-            return tr
+        return
 
     def max(self):
         """
@@ -1237,7 +1190,8 @@ class Trace(object):
     def std(self):
         """
         Method to get the standard deviation of amplitudes in the trace.
-        Standard deviation is calculated by numpy method on ``trace.data``.
+        Standard deviation is calculated by numpy method
+        :meth:`~numpy.ndarray.std` on ``trace.data``.
         
         Basic Usage
         -----------
@@ -1252,11 +1206,16 @@ class Trace(object):
         """
         return self.data.std()
 
-    def normalize(self, norm=None, in_place=True):
+    def normalize(self, norm=None):
         """
-        Method to normalize the trace to its absolute maximum
-        Per default normalization is done in place. By setting
-        ``in_place=False`` a new ``Trace`` object is returned.
+        Method to normalize the trace to its absolute maximum.
+
+        The original data is not accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
+        to make a copy of your trace.
+        This also makes an entry with information on the applied processing
+        in ``trace.stats.processing``.
+
         Note: If ``trace.data.dtype`` was integer it is changing to float.
 
         Basic Usage
@@ -1277,18 +1236,9 @@ class Trace(object):
         :param norm: If not ``None``, trace is normalized by dividing by specified
                 value ``norm`` instead of dividing by its absolute maximum. If a
                 negative value is specified then its absolute value is used.
-        :param in_place: perform operation in place or return new ``Trace``
-                object.
-        :return: ``None`` if ``in_place=True``, new ``Trace`` with normalized
-                data otherwise.
+        :return: ``None``
         """
-        # if in_place is set to False create a new Trace object
-        if in_place:
-            tr = self
-        else:
-            tr = deepcopy(self)
-
-        # normalize
+        # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
             norm = norm
             if norm < 0:
@@ -1297,24 +1247,25 @@ class Trace(object):
                 warnings.warn(msg)
         else:
             norm = self.max()
-        tr.data = tr.data / float(abs(norm))
+
+        self.data = self.data.astype("float64")
+        self.data /= abs(norm)
 
         # add processing information to the stats dictionary
-        if not 'processing' in tr.stats:
-            tr.stats['processing'] = []
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
         proc_info = "normalize:%s" % norm
-        tr.stats['processing'].append(proc_info)
+        self.stats['processing'].append(proc_info)
 
-        if in_place:
-            return
-        else:
-            return tr
+        return
 
     def copy(self):
         """
         Returns a deepcopy of the trace.
         This actually copies all data in the trace and does not only provide
         another pointer to the same data.
+        At any processing step if the original data has to be available
+        afterwards, this is the method to use to make a copy of the trace.
         
         Example
         -------

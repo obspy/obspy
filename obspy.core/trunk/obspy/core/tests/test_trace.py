@@ -751,26 +751,11 @@ class TraceTestCase(unittest.TestCase):
         filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
                       'lowpass': lowpass, 'highpass': highpass}
 
-        # tests for in_place=False
-        for i, tr in enumerate(traces):
-            for filt_type, filt_ops in filters:
-                tr_new = tr.filter(filt_type, filt_ops, in_place=False)
-                # test if original trace is unchanged
-                np.testing.assert_array_equal(tr.data, traces_bkp[i].data)
-                self.assertEqual(tr.stats, traces_bkp[i].stats)
-                # test if trace was filtered as expected
-                data_filt = filter_map[filt_type](traces_bkp[i].data,
-                        df=traces_bkp[i].stats.sampling_rate, **filt_ops)
-                np.testing.assert_array_equal(tr_new.data, data_filt)
-                self.assertTrue('processing' in tr_new.stats)
-                self.assertEqual(len(tr_new.stats.processing), 1)
-                self.assertEqual(tr_new.stats.processing[0], "filter:%s:%s" % \
-                        (filt_type, filt_ops))
         # tests for in_place=True
         for i, tr in enumerate(traces):
             for filt_type, filt_ops in filters:
                 tr = deepcopy(traces_bkp[i])
-                tr.filter(filt_type, filt_ops, in_place=True)
+                tr.filter(filt_type, filt_ops)
                 # test if trace was filtered as expected
                 data_filt = filter_map[filt_type](traces_bkp[i].data,
                         df=traces_bkp[i].stats.sampling_rate, **filt_ops)
@@ -780,7 +765,7 @@ class TraceTestCase(unittest.TestCase):
                 self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
                         (filt_type, filt_ops))
                 # another filter run
-                tr.filter(filt_type, filt_ops, in_place=True)
+                tr.filter(filt_type, filt_ops)
                 data_filt = filter_map[filt_type](data_filt,
                         df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
@@ -819,53 +804,17 @@ class TraceTestCase(unittest.TestCase):
         # create test Trace
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
-        # some tests with in_place=False
-        tr2 = tr.downsample(2, no_filter=True, in_place=False)
-        tr3 = tr.downsample(4, no_filter=True, in_place=False)
-        tr4 = tr.downsample(10, no_filter=True, in_place=False)
-        tr5 = tr.downsample(7, no_filter=True, in_place=False,
-                            strict_length=False)
-        np.testing.assert_array_equal(tr2.data, np.arange(0, 20, 2))
-        np.testing.assert_array_equal(tr3.data, np.arange(0, 20, 4))
-        np.testing.assert_array_equal(tr4.data, np.arange(0, 20, 10))
-        np.testing.assert_array_equal(tr5.data, np.array([0, 7]))
-        # check that changing header information is correct
-        self.assertEqual(tr2.stats.npts, 10)
-        self.assertEqual(tr3.stats.npts, 5)
-        self.assertEqual(tr4.stats.npts, 2)
-        self.assertEqual(tr5.stats.npts, 2)
-        self.assertEqual(tr2.stats.sampling_rate, 0.5)
-        self.assertEqual(tr3.stats.sampling_rate, 0.25)
-        self.assertEqual(tr4.stats.sampling_rate, 0.1)
-        self.assertEqual(tr5.stats.sampling_rate, 1 / 7.)
-        self.assertEqual(tr2.stats.processing,
-                         ["downsample:integerDecimation:2"])
-        self.assertEqual(tr3.stats.processing,
-                         ["downsample:integerDecimation:4"])
-        self.assertEqual(tr4.stats.processing,
-                         ["downsample:integerDecimation:10"])
-        self.assertEqual(tr5.stats.processing,
-                         ["downsample:integerDecimation:7"])
-        # check that unchanging header information is correct
-        for tr_t in [tr2, tr3, tr4, tr5]:
-            for key in ['npts', 'sampling_rate']:
-                tr_t.stats[key] = tr.stats[key]
-            tr_t.stats.pop('processing')
-            self.assertEqual(tr.stats, tr_t.stats)
         # some test that should fail and leave the original trace alone
-        self.assertRaises(ValueError, tr.downsample, 7, in_place=False)
-        self.assertRaises(ValueError, tr.downsample, 9, in_place=True)
-        # check if original trace is unchanged after all of above tests
-        np.testing.assert_array_equal(tr.data, tr_bkp.data)
-        self.assertEqual(tr.stats, tr_bkp.stats)
-        # some tests with in_place=True
+        self.assertRaises(ValueError, tr.downsample, 7)
+        self.assertRaises(ValueError, tr.downsample, 9)
+        # some tests in place
         tr.downsample(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.sampling_rate, 0.25)
         self.assertEqual(tr.stats.processing,
                          ["downsample:integerDecimation:4"])
-        tr = deepcopy(tr_bkp)
+        tr = tr_bkp.copy()
         tr.downsample(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
         self.assertEqual(tr.stats.npts, 2)
@@ -873,8 +822,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.processing,
                          ["downsample:integerDecimation:10"])
         # some tests with automatic prefiltering
-        tr = deepcopy(tr_bkp)
-        tr2 = deepcopy(tr_bkp)
+        tr = tr_bkp.copy()
+        tr2 = tr_bkp.copy()
         tr.downsample(4)
         tr2.filter('lowpass', {'freq': tr2.stats.sampling_rate * 0.4 / 4})
         tr2.downsample(4, no_filter=True)

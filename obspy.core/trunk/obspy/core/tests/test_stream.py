@@ -166,13 +166,11 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 6)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
+        self.assertTrue(stream[0] is notstream[-2])
+        self.assertTrue(stream[1] is notstream[-1])
+        # But the attributes and data values should be identical.
         self.assertEqual(stream[0], stream[-2])
         self.assertEqual(stream[1], stream[-1])
-        # But the attributes and data values should be identical.
-        self.assertEqual(stream[0].stats, stream[-2].stats)
-        np.testing.assert_array_equal(stream[0].data, stream[-2].data)
-        self.assertEqual(stream[1].stats, stream[-1].stats)
-        np.testing.assert_array_equal(stream[1].data, stream[-1].data)
         # Extend with the same again
         stream.extend(stream[0:2])
         self.assertEqual(len(stream), 8)
@@ -417,30 +415,12 @@ class StreamTestCase(unittest.TestCase):
         filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
                       'lowpass': lowpass, 'highpass': highpass}
 
-        # tests for in_place=False
-        for j, st in enumerate(streams):
-            for filt_type, filt_ops in filters:
-                st_bkp = streams_bkp[j]
-                st2 = st.filter(filt_type, filt_ops, in_place=False)
-                # test if original stream is unchanged
-                for i, tr in enumerate(st):
-                    np.testing.assert_array_equal(tr.data, st_bkp[i].data)
-                    self.assertEqual(tr.stats, st_bkp[i].stats)
-                # test if all traces were filtered as expected
-                for i, tr in enumerate(st2):
-                    data_filt = filter_map[filt_type](st[i].data,
-                            df=tr.stats.sampling_rate, **filt_ops)
-                    np.testing.assert_array_equal(tr.data, data_filt)
-                    self.assertTrue('processing' in tr.stats)
-                    self.assertEqual(len(tr.stats.processing), 1)
-                    self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
-                            (filt_type, filt_ops))
         # tests for in_place=True
         for j, st in enumerate(streams):
             st_bkp = streams_bkp[j]
             for filt_type, filt_ops in filters:
                 st = deepcopy(streams_bkp[j])
-                st.filter(filt_type, filt_ops, in_place=True)
+                st.filter(filt_type, filt_ops)
                 # test if all traces were filtered as expected
                 for i, tr in enumerate(st):
                     data_filt = filter_map[filt_type](st_bkp[i].data,
@@ -450,7 +430,7 @@ class StreamTestCase(unittest.TestCase):
                     self.assertEqual(len(tr.stats.processing), 1)
                     self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
                             (filt_type, filt_ops))
-                st.filter(filt_type, filt_ops, in_place=True)
+                st.filter(filt_type, filt_ops)
                 for i, tr in enumerate(st):
                     self.assertTrue('processing' in tr.stats)
                     self.assertEqual(len(tr.stats.processing), 2)
@@ -491,26 +471,12 @@ class StreamTestCase(unittest.TestCase):
             return
         # create test Stream
         st = self.mseed_stream
-        st_bkp = deepcopy(st)
-        st2 = st.downsample(4, no_filter=True, strict_length=False,
-                            in_place=False)
-        # test if original stream is unchanged
-        for i, tr in enumerate(st):
-            np.testing.assert_array_equal(tr.data, st_bkp[i].data)
-            self.assertEqual(tr.stats, st_bkp[i].stats)
+        st_bkp = st.copy()
         # test if all traces are downsampled as expected
-        for i, tr in enumerate(st2):
-            tr_temp = st_bkp[i].downsample(4, no_filter=True,
-                    strict_length=False, in_place=False)
-            np.testing.assert_array_equal(tr.data, tr_temp.data)
-            self.assertEqual(tr.stats, tr_temp.stats)
-        # test if all traces are downsampled as expected (in_place=True)
         st.downsample(10, strict_length=False)
         for i, tr in enumerate(st):
-            tr_temp = st_bkp[i].downsample(10, strict_length=False,
-                                           in_place=False)
-            np.testing.assert_array_equal(tr.data, tr_temp.data)
-            self.assertEqual(tr.stats, tr_temp.stats)
+            st_bkp[i].downsample(10, strict_length=False)
+            self.assertEqual(tr, st_bkp[i])
 
     def test_select(self):
         """

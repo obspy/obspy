@@ -41,7 +41,8 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     Basic Usage
     -----------
-    An example can be created by omitting all arguments.
+    In most cases a filename is specified as the only argument to `read()`.
+    For a quick start an example can be created by omitting all arguments.
     Other example files may be read directly from http://examples.obspy.org.
 
     >>> from obspy.core import read
@@ -221,7 +222,7 @@ def _read_example():
     Data arrays are stored in numpy's npz format. The stats information we
     fill in here directly.
 
-    PAZ of the used instrument:
+    PAZ of the used instrument, needed to demonstrate seisSim() etc.:
     paz = {'gain': 60077000.0, 
            'poles': [(-0.037004000000000002+0.037016j), 
                      (-0.037004000000000002-0.037016j), 
@@ -231,9 +232,8 @@ def _read_example():
            'sensitivity': 2516778400.0, 
            'zeros': [0j, 0j]}} 
     """
-    #msg = "No pathname or URL specified. Ignoring other arguments and " + \
-    #      "loading example data."
-    #warnings.warn(msg)
+    # the data arrays we load with numpys builtin routines, the stats dicts
+    # we fill in hardcoded here. this should be unbreakable...
     path = os.path.dirname(__file__)
     path = os.path.join(path, "data", "example.npz")
     data = np.load(path)
@@ -977,15 +977,16 @@ class Stream(object):
         """
         msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self.__ltrim(*args, **kwargs)
+        self._ltrim(*args, **kwargs)
 
-    def __ltrim(self, starttime, pad=False, nearest_sample=True):
+    def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
         For more info see :meth:`~obspy.core.trace.Trace._ltrim.`
         """
         for trace in self.traces:
-            trace.ltrim(starttime, pad, nearest_sample=nearest_sample)
+            trace.trim(starttime=starttime, pad=pad,
+                       nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
@@ -996,15 +997,15 @@ class Stream(object):
         """
         msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
         warnings.warn(msg, DeprecationWarning)
-        self.__rtrim(*args, **kwargs)
+        self._rtrim(*args, **kwargs)
 
-    def __rtrim(self, endtime, pad=False, nearest_sample=True):
+    def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
         For more info see :meth:`~obspy.core.trace.Trace._rtrim.`
         """
         for trace in self.traces:
-            trace.rtrim(endtime, pad, nearest_sample=nearest_sample)
+            trace.trim(endtime=endtime, pad=pad, nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
@@ -1034,6 +1035,9 @@ class Stream(object):
         If a string for component is given (should be a single letter) it is
         tested (case insensitive) against the last letter of the
         trace.stats.channel entry.
+
+        Caution: A new Stream object is returned but the traces it contains are
+        just aliases to the traces of the original stream.
 
         Does not copy the data but only passes a reference.
         """
@@ -1166,69 +1170,49 @@ class Stream(object):
                     interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
 
-    def filter(self, type, filter_options, in_place=True):
+    def filter(self, type, options):
         """
         Filters the data of all traces in the ``Stream``. This is performed in
         place on the actual data arrays. The raw data is not accessible anymore
         afterwards.
+        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
+        to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
         Example
         -------
 
-        The default is in place filtering to avoid unintentional excessive
-        memory consumption.
-
         >>> from obspy.core import read
         >>> st = read()
         >>> st.filter("highpass", {'freq': 1.0})
         >>> st.plot() # doctest: +SKIP
 
-        If the original stream is needed for further work, too, set
-        ``ìn_place=False`` to return a new trace object:
-
-        >>> from obspy.core import read
-        >>> st = read()
-        >>> st2 = st.filter("highpass", {'freq': 1.0}, in_place=False)
-        >>> st.plot() # doctest: +SKIP
-        >>> st2.plot() # doctest: +SKIP
-
         .. plot::
             
             from obspy.core import read
             st = read()
-            st2 = st.filter("highpass", {'freq': 1.0}, in_place=False)
+            st.filter("highpass", {'freq': 1.0})
             st.plot()
-            st2.plot()
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
-        :param filter_options: Dictionary that contains arguments that will
+        :param options: Dictionary that contains arguments that will
                 be passed to the respective filter function as kwargs.
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
-        :param in_place: Determines if the filter is applied in place or if
-                a new ``Stream`` object is returned.
-        :return: ``None`` if ``in_place=True``, new ``Stream`` with filtered
-                traces otherwise.
+        :return: ``None``
         """
-        new_traces = []
-        for trace in self:
-            new_tr = trace.filter(type=type, filter_options=filter_options,
-                                  in_place=in_place)
-            new_traces.append(new_tr)
+        for tr in self:
+            tr.filter(type=type, options=options)
+        return
 
-        if in_place:
-            return
-        else:
-            return self.__class__(traces=new_traces)
-
-    def trigger(self, type, trigger_options, in_place=True):
+    def trigger(self, type, options):
         """
         Runs a triggering algorithm on all traces in the stream. This is
-        performed in place on the actual data arrays by default. The raw data
-        is not accessible anymore afterwards. This can be avoided by specifying
-        ``in_place=False``.
+        performed in place on the actual data arrays. The raw data
+        is not accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
+        to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
@@ -1253,30 +1237,20 @@ class Stream(object):
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
-        :param trigger_options: Dictionary that contains arguments that will
+        :param options: Dictionary that contains arguments that will
                 be passed to the respective trigger function as kwargs.
                 Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
                 ``nlta`` by multiplying with sampling rate of each trace.
                 (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
                 10 seconds average, respectively)
-        :param in_place: Determines if the filter is applied in place or if
-                a new ``Stream`` object is returned.
-        :return: ``None`` if ``in_place=True``, new ``Stream`` with triggered
-                traces otherwise.
+        :return: ``None``
         """
-        new_traces = []
-        for trace in self:
-            new_tr = trace.trigger(type=type, trigger_options=trigger_options,
-                                   in_place=in_place)
-            new_traces.append(new_tr)
-
-        if in_place:
-            return
-        else:
-            return self.__class__(traces=new_traces)
+        for tr in self:
+            tr.trigger(type=type, options=options)
+        return
 
     def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=True, in_place=True):
+                   strict_length=True):
         """
         Downsample data in all traces of stream.
 
@@ -1289,15 +1263,18 @@ class Stream(object):
         zero then the endtime of the trace is changing on sub-sample scale. The
         downsampling is aborted in this case but can be forced by setting
         ``strict_length=False``.
-        Per default downsampling is done in place. By setting ``in_place=False`` a
-        new ``Stream`` object is returned.
+        This operation is performed in place on the actual data arrays. The raw
+        data is not accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
+        to make a copy of your trace.
+        This also makes an entry with information on the applied processing
+        in ``stats.processing`` of every trace.
 
         Basic Usage
         -----------
 
-        By default all processing is done in place to avoid unintentional
-        excessive memory consumption. For the example we switch off the
-        automatic pre-filtering:
+        For the example we switch off the automatic pre-filtering so that
+        the effect of the downsampling routine becomes clearer:
 
         >>> tr = Trace(data=np.arange(10))
         >>> st = Stream(traces=[tr])
@@ -1311,52 +1288,22 @@ class Stream(object):
         >>> tr.data
         array([0, 4])
         
-        If the original trace is needed for further work the ``in_place``
-        option can be set to ``False`` to return a new trace:
-        
-        >>> tr = Trace(data=np.arange(10))
-        >>> st = Stream(traces=[tr])
-        >>> tr.stats.sampling_rate
-        1.0
-        >>> tr.data
-        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> st2 = st.downsample(2, no_filter=True, in_place=False)
-        >>> tr2 = st2[0]
-        >>> tr.stats.sampling_rate
-        1.0
-        >>> tr.data
-        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr2.stats.sampling_rate
-        0.5
-        >>> tr2.data
-        array([0, 2, 4, 6, 8])
-
         :param decimation_factor: integer factor by which the sampling rate is
             lowered by decimation.
         :param no_filter: deactivate automatic filtering
         :param strict_length: leave traces unchanged for which endtime of trace
             would change
-        :param in_place: perform operation in place or return new ``Stream``
-            object.
-        :return: ``None`` if ``in_place=True``, new ``Stream`` with downsampled
-            data otherwise.
+        :return: ``None``
         """
-        new_traces = []
-        for trace in self:
-            new_tr = trace.downsample(decimation_factor=decimation_factor,
-                    no_filter=no_filter, strict_length=strict_length,
-                    in_place=in_place)
-            new_traces.append(new_tr)
-
-        if in_place:
-            return
-        else:
-            return self.__class__(traces=new_traces)
+        for tr in self:
+            tr.downsample(decimation_factor=decimation_factor,
+                    no_filter=no_filter, strict_length=strict_length)
+        return
 
     def max(self):
         """
         Method to get the values of the absolute maximum amplitudes of all
-        traces in the stream.
+        traces in the stream. See :meth:`~obspy.core.trace.Trace.max`.
 
         >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
         >>> tr2 = Trace(data=[0, -3, -9, 6, 4])
@@ -1367,19 +1314,15 @@ class Stream(object):
 
         :return: List of values of absolute maxima of all traces
         """
-        values = []
-
-        for tr in self:
-            values.append(tr.max())
-
-        return values
+        return [tr.max() for tr in self]
 
     def std(self):
         """
         Method to get the standard deviations of amplitudes in all trace in the
         stream.
-        Standard deviations are calculated by numpy method on every
-        ``trace.data`` in the stream.
+        Standard deviations are calculated by numpy method
+        :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
+        stream.
         
         >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
         >>> tr2 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
@@ -1389,24 +1332,21 @@ class Stream(object):
 
         :return: List of standard deviations of all traces.
         """
-        values = []
+        return [tr.std() for tr in self]
 
-        for tr in self:
-            values.append(tr.std())
-
-        return values
-
-    def normalize(self, global_max=False, in_place=True):
+    def normalize(self, global_max=False):
         """
         Normalizes all trace in the stream. By default all traces are
         normalized separately to their respective absolute maximum. By setting
         ``global_max=True`` all traces get normalized to the global maximum of
         all traces.
-        By default normalization is done in place. By setting
-        ``in_place=False`` a new Trace object is returned.
-        Note: If self.data.dtype was integer it is changing to float.
+        This operation is performed in place on the actual data arrays. The raw
+        data is not accessible anymore afterwards.
+        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
+        to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
+
         Note: If ``data.dtype`` of a trace was integer it is changing to float.
 
         Example
@@ -1418,24 +1358,25 @@ class Stream(object):
         >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
         >>> st = Stream(traces=[tr1, tr2])
 
-        Normalize and return a new stream:
-
-        >>> st2 = st.normalize(in_place=False)
-
         All traces are normalized to their absolute maximum and processing
         information is added:
 
-        >>> st2[0].data
+        >>> st.normalize()
+        >>> st[0].data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
-        >>> st2[0].stats.processing
+        >>> st[0].stats.processing
         ['normalize:9']
-        >>> st2[1].data
+        >>> st[1].data
         array([ 0.375, -0.625, -1.   ,  0.5  ,  0.375])
-        >>> st2[1].stats.processing
+        >>> st[1].stats.processing
         ['normalize:-0.8']
 
-        Now do the operation on the original file in place and normalize all
-        traces to the stream's global maximum:
+        Now let's do it again normalize all traces to the stream's global
+        maximum:
+
+        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
+        >>> st = Stream(traces=[tr1, tr2])
 
         >>> st.normalize(global_max=True)
         >>> st[0].data
@@ -1450,28 +1391,17 @@ class Stream(object):
         :param global_max: If set to ``True``, all traces are normalized with
                 respect to the global maximum of all traces in the stream
                 instead of normalizing every trace separately.
-        :param in_place: perform operation in place or return new ``Stream``
-                object.
-        :return: ``None`` if ``in_place=True``, new ``Trace`` with normalized
-                data otherwise.
+        :return: ``None``
         """
-        new_traces = []
-
         # use the same value for normalization on all traces?
         if global_max:
             norm = max([abs(value) for value in self.max()])
         else:
             norm = None
-
         # normalize all traces
-        for trace in self:
-            new_tr = trace.normalize(norm=norm, in_place=in_place)
-            new_traces.append(new_tr)
-
-        if in_place:
-            return
-        else:
-            return self.__class__(traces=new_traces)
+        for tr in self:
+            tr.normalize(norm=norm)
+        return
 
     def copy(self):
         """
