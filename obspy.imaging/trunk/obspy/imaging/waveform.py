@@ -36,6 +36,9 @@ from obspy.core import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 import StringIO
 import matplotlib.pyplot as plt
+from matplotlib.dates import date2num, num2date
+from matplotlib.ticker import FuncFormatter
+from matplotlib.cm import hsv
 import numpy as np
 import warnings
 
@@ -741,3 +744,87 @@ class WaveformPlotting(object):
                               horizontalalignment='left')
         except AttributeError:
             warnings.warn("Available matplotlib version too old. You'll get a simpler plot.")
+
+def _plot_list(streams):
+    
+    def formatXTicklabels(x, pos):
+        """
+        Make a nice formatting for x axis ticklabels
+        """
+        # pos is the ticklabel index, None if hovering with the mouse
+        dt = UTCDateTime(num2date(x))
+        return str(dt).rstrip("0Z").replace("T", " ")
+    
+    st = Stream()
+
+    # go through all streams and collect traces
+    for item in streams:
+        if isinstance(item, Stream):
+            for tr in item:
+                st.append(tr)
+        elif isinstance(item, Trace):
+            st.append(item)
+        else:
+            msg = "Some items in list could not be recognized and were " + \
+                  "ignored. Only Trace and Stream items are recognized " + \
+                  "as list items at the moment."
+            warnings.warn(msg)
+
+    # go through stream and compile unique lists of ids
+    comp_ids = list(set([tr.stats.channel[-1] for tr in st]))
+    sta_ids = list(set(["%s.%s" % (tr.stats.network, tr.stats.station) for tr in st]))
+    num_plots = len(comp_ids)
+    num_lines = len(sta_ids)
+    
+    # assign one color per network-station id
+    colors = {}
+    for i, sta_id in enumerate(sta_ids):
+        colors[sta_id] = hsv(float(i) / num_lines)
+    alpha = 2./len(sta_ids)
+    
+    # assign one subplot per component id
+    # the first one we do by hand to be able to sharex with it
+    fig = plt.figure()
+    axs = {}
+    ax0 = fig.add_subplot(num_plots, 1, 1)
+    axs[comp_ids[0]] = ax0
+    for i, comp_id in enumerate(comp_ids[1:]):
+        axs[comp_id] = fig.add_subplot(num_plots, 1, i+2, sharex=ax0)
+    
+    # plot every trace with respective color in respective subplot
+    for tr in st:
+        comp_id = tr.stats.channel[-1]
+        sta_id = "%s.%s" % (tr.stats.network, tr.stats.station)
+        start = date2num(tr.stats.starttime)
+        end = date2num(tr.stats.endtime)
+        time = np.linspace(start, end, tr.stats.npts)
+        #axs[comp_id].plot_date(time, tr.data, ls="-", marker="", c=colors[sta_id],
+        #                       alpha=alpha, label=sta_id)
+        axs[comp_id].plot(time, tr.data, ls="-", marker="", c=colors[sta_id],
+                          alpha=alpha, label=sta_id)
+    
+    # we have to group our axes for sharing x after the plotting commands,
+    # plot_date has problems otherwise.
+    # as we don't use plot_date anymore, we can do the sharex right at the
+    # initialization of the subplots above and dont need to work on the axes
+    # grouping low-level.
+    ax1 = fig.axes[-1]
+    #grouper = ax0._shared_x_axes
+    for comp_id, ax in axs.items():
+        #grouper.join(ax0, ax)
+        ax.text(0.02, 0.95, comp_id, color="b", fontsize=16, ha="left", va="top",
+                transform=ax.transAxes)
+        ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+        plt.setp(ax.get_xticklabels(), rotation=20, horizontalalignment="right")
+        plt.setp(ax.xaxis.get_ticklabels(), visible=False)
+    plt.setp(ax1.xaxis.get_ticklabels(), visible=True)
+    ax0.legend()
+    
+    #locator = AutoDateLocator()#minticks=3, maxticks=6)
+    #locator = ax1.xaxis.set_major_locator(locator)
+    #ax1.xaxis.set_major_formatter(DateFormatter('%a %d\n%b %Y'))
+    # XXX ax1.xaxis.set_major_formatter(AutoDateFormatter(ax1.xaxis.get_major_locator()))
+    
+    #fig.autofmt_xdate()
+    fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
+    plt.show()
