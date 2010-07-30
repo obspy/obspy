@@ -93,8 +93,9 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, PAZ_LE3D, inst_sim=paz,
-                              water_level=600.0, zero_mean=False)
+            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_LE3D,
+                              paz_simulate=paz, water_level=600.0,
+                              zero_mean=False)
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             f = gzip.open(file)
@@ -128,8 +129,9 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, PAZ_STS2, inst_sim=paz,
-                              water_level=600.0, zero_mean=False)
+            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_STS2,
+                              paz_simulate=paz, water_level=600.0,
+                              zero_mean=False)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             f = gzip.open(file)
@@ -174,7 +176,7 @@ class InvSimTestCase(unittest.TestCase):
         #2 Correct for frequency response of the instrument
         res = seisSim(st[0].data.astype("float32"),
                       st[0].stats.sampling_rate,
-                      paz, inst_sim=one_hertz, zero_mean=False)
+                      paz_remove=paz, paz_simulate=one_hertz, zero_mean=False)
         # correct for overall sensitivity, nm/s
         res *= 1e9 / paz["sensitivity"]
         #3 Apply lowpass at 10Hz

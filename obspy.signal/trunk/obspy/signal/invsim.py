@@ -166,9 +166,8 @@ def specInv(spec, wlev):
     return found
 
 
-def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
-            no_inverse_filtering=False, zero_mean=True,
-            taper_fraction=0.05):
+def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600.0,
+            zero_mean=True, taper=True, taper_fraction=0.05):
     """
     Simulate/Correct seismometer.
 
@@ -177,32 +176,30 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     of the frequency response of the seismometer is convolved with the spectrum 
     of the data and with the frequency response of the seismometer to
     simulate. A 5% cosine taper is taken before simulation. The data must
-    be detrended (e.g.) zero mean before hand. If inst_sim=None only the
+    be detrended (e.g.) zero mean before hand. If paz_simulate=None only the
     instrument correction is done.
 
     :type data: Numpy Ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
-    :type paz: Dictionary
-    :param paz: Dictionary containing keys 'poles', 'zeros',
+    :type paz_remove: Dictionary
+    :param paz_remove: Dictionary containing keys 'poles', 'zeros',
                 'gain' (A0 normalization factor). poles and zeros must be a
                 list of complex floating point numbers, gain must be of
                 type float. Poles and Zeros are assumed to correct to m/s,
                 SEED convention.
     :type water_level: Float
     :param water_level: Water_Level for spectrum to simulate
-    :type inst_sim: Dictionary, None
-    :param inst_sim: Dictionary containing keys 'poles', 'zeros',
+    :type paz_simulate: Dictionary, None
+    :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
                      'gain'. Poles and zeros must be a list of complex
                      floating point numbers, gain must be of type float. Or
                      None for no simulation.
-    :type no_inverse_filtering: Boolean
-    :param no_inverse_filtering: Specifies if the removal of the prior
-            frequency response should be skipped, i.e. only applying the
-            given new frequency response.
     :type zero_mean: Boolean
     :param zero_mean: If true the mean of the data is subtracted
+    :type taper: Boolean
+    :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
     :param taper_fraction: Typer fraction of cosinus taper to use
     
@@ -210,18 +207,26 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     can be imported from obspy.signal.seismometer
     """
     # Translated from PITSA: spr_resg.c
+    if not paz_remove and not paz_simulate:
+        msg = "Neither inverse nor forward instrument simulation specified."
+        raise TypeError(msg)
+
+    for d in [paz_remove, paz_simulate]:
+        if not d:
+            continue
+        if not isinstance(d, dict):
+            raise TypeError("Expected dictionary, got %s." % type(d))
+        for key in ['poles', 'zeros', 'gain']:
+            if key not in d:
+                raise KeyError("Missing key: %s" % key)
+
     error = """
     %s must be either of type None or of type dictionary. The dictionary
     must contain poles, zeros and gain as keys, values of poles and zeros
     are iterables of complex entries, the value of gain is a float.
     """
-    samp_int = 1 / float(samp_rate)
-    try:
-        poles = paz['poles']
-        zeros = paz['zeros']
-        gain = paz['gain']
-    except:
-        raise TypeError(error % 'paz')
+
+    delta = 1.0 / samp_rate
     #
     ndat = len(data)
     # find next power of 2 in order to prohibit wrap around effects
@@ -231,36 +236,29 @@ def seisSim(data, samp_rate, paz, inst_sim=None, water_level=600.0,
     nfft = util.nextpow2(2 * ndat)
     # explicitly copy, else input data will be modified (astype copies the
     # data). Avoid numerical problems by using float64
-    tr = data.astype("float64")
+    data = data.astype("float64")
     if zero_mean:
-        tr -= tr.mean()
-    tr *= cosTaper(ndat, taper_fraction)
-    freq_response = pazToFreqResp(poles, zeros, gain, samp_int, nfft)
-    specInv(freq_response, water_level)
-    # transform trace in fourier domain
-    tr = np.fft.rfft(tr, n=nfft)
-    if not no_inverse_filtering:
-        tr *= np.conj(freq_response)
-    del freq_response
-    #
-    # now depending on inst_sim, simulate the seismometer
-    if inst_sim is None:
-        pass
-    elif isinstance(inst_sim, dict):
-        try:
-            poles = inst_sim['poles']
-            zeros = inst_sim['zeros']
-            gain = inst_sim['gain']
-        except:
-            raise KeyError(error % 'inst_sim')
-        tr *= np.conj(pazToFreqResp(poles, zeros, gain, samp_int, nfft))
-    else:
-        raise TypeError(error % 'inst_sim')
-    # transfrom trace back into the time domain
-    tr = np.fft.irfft(tr)[0:ndat]
-    # linear detrend, 
-    detrend(tr)
-    return tr
+        data -= data.mean()
+    if taper:
+        data *= cosTaper(ndat, taper_fraction)
+    # transform data in fourier domain
+    data = np.fft.rfft(data, n=nfft)
+    # Inverse filtering = Instrument correction
+    if paz_remove:
+        freq_response = pazToFreqResp(paz_remove['poles'], paz_remove['zeros'],
+                                      paz_remove['gain'], delta, nfft)
+        specInv(freq_response, water_level)
+        data *= np.conj(freq_response)
+        del freq_response
+    # Forward filtering = Instrument simulation
+    if paz_simulate:
+        data *= np.conj(pazToFreqResp(paz_simulate['poles'],
+                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft))
+    # transfrom data back into the time domain
+    data = np.fft.irfft(data)[0:ndat]
+    # linear detrend
+    detrend(data)
+    return data
 
 
 def paz2AmpValueOfFreqResp(paz, freq):
