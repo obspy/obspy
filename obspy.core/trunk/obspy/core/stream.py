@@ -220,6 +220,16 @@ def _read_example():
     Robust method to create example stream.
     Data arrays are stored in numpy's npz format. The stats information we
     fill in here directly.
+
+    PAZ of the used instrument:
+    paz = {'gain': 60077000.0, 
+           'poles': [(-0.037004000000000002+0.037016j), 
+                     (-0.037004000000000002-0.037016j), 
+                     (-251.33000000000001+0j), 
+                     (-131.03999999999999-467.29000000000002j), 
+                     (-131.03999999999999+467.29000000000002j)], 
+           'sensitivity': 2516778400.0, 
+           'zeros': [0j, 0j]}} 
     """
     #msg = "No pathname or URL specified. Ignoring other arguments and " + \
     #      "loading example data."
