@@ -44,16 +44,24 @@ class Client(object):
 
     * http://www.seis.sc.edu/wily
     * http://www.iris.edu/dhi/servers.htm
+
+    .. note::
+        The IRIS Data Service needs port 6371 to be open.
+        The IRIS Name Service needs port 17508 to be open.
     """
+    # We recommend the port ranges (6371-6382,17505-17508) to be open.
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
                  seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter"),
-                 name_service="dmc.iris.washington.edu:6371/NameService"):
+                 name_service="dmc.iris.washington.edu:6371/NameService",
+                 debug=False):
         """
         Initialize Fissures/DHI client. 
         
-        :param network_dc: Tuple containing dns and NetworkDC name
-        :param seismogram_dc: Tuple containing dns and DataCenter name
-        :param name_service: String containing the name service
+        :param network_dc: Tuple containing dns and NetworkDC name.
+        :param seismogram_dc: Tuple containing dns and DataCenter name.
+        :param name_service: String containing the name service.
+        :param debug:  Enables verbose output of the connection handling
+                (default is False).
         """
         #
         # Some object wide variables
@@ -65,12 +73,13 @@ class Client(object):
         self.mseed = LibMSEED()
         #
         # Initialize CORBA object
-        orb = CORBA.ORB_init([
-            #"-ORBtraceLevel", "40",
-            "-ORBgiopMaxMsgSize", "2097152",
-            "-ORBInitRef",
-            "NameService=corbaloc:iiop:" + name_service,
-        ], CORBA.ORB_ID)
+        args = ["-ORBgiopMaxMsgSize", "2097152",
+                "-ORBInitRef",
+                "NameService=corbaloc:iiop:" + name_service,
+        ]
+        if debug:
+            args = ["-ORBtraceLevel", "40"] + args
+        orb = CORBA.ORB_init(args, CORBA.ORB_ID)
         self.obj = orb.resolve_initial_references("NameService")
         #
         # Resolve naming service
