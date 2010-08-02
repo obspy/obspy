@@ -166,8 +166,12 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 6)
         # This is supposed to make a deepcopy of the Trace and thus the two
         # Traces are not identical.
-        self.assertTrue(stream[0] is not stream[-2])
-        self.assertTrue(stream[1] is not stream[-1])
+        #self.assertTrue(stream[0] is not stream[-2])
+        #self.assertTrue(stream[1] is not stream[-1])
+        # I do not see a reason why it should make a deepcopy, I think it
+        # must be a reference, see also comment on #120
+        self.assertTrue(stream[0] is stream[-2])
+        self.assertTrue(stream[1] is stream[-1])
         # But the attributes and data values should be identical.
         self.assertEqual(stream[0], stream[-2])
         self.assertEqual(stream[1], stream[-1])
