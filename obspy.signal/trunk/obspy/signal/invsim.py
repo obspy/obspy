@@ -173,22 +173,22 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
 
     This function works in the frequency domain, where nfft is the next power 
     of len(data) to avoid warp around effects during convolution. The inverse 
-    of the frequency response of the seismometer is convolved with the spectrum 
-    of the data and with the frequency response of the seismometer to
-    simulate. A 5% cosine taper is taken before simulation. The data must
-    be detrended (e.g.) zero mean before hand. If paz_simulate=None only the
-    instrument correction is done.
+    of the frequency response of the seismometer (``paz_remove``) is
+    convolved with the spectrum of the data and with the frequency response
+    of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
+    taken before simulation. The data must be detrended (e.g.) zero mean
+    before hand. If paz_simulate=None only the instrument correction is done.
 
     :type data: Numpy Ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
-    :type paz_remove: Dictionary
+    :type paz_remove: Dictionary, None
     :param paz_remove: Dictionary containing keys 'poles', 'zeros',
                 'gain' (A0 normalization factor). poles and zeros must be a
                 list of complex floating point numbers, gain must be of
                 type float. Poles and Zeros are assumed to correct to m/s,
-                SEED convention.
+                SEED convention. Use None for no inverse filtering.
     :type water_level: Float
     :param water_level: Water_Level for spectrum to simulate
     :type paz_simulate: Dictionary, None
@@ -212,7 +212,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
         raise TypeError(msg)
 
     for d in [paz_remove, paz_simulate]:
-        if not d:
+        if d is None:
             continue
         if not isinstance(d, dict):
             raise TypeError("Expected dictionary, got %s." % type(d))

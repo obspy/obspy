@@ -76,7 +76,7 @@ comparison with the other traces in the plot.
 ...         'sensitivity': 2516778400.0,
 ...         'zeros': [0j, 0j]}
 >>> df = tr.stats.sampling_rate
->>> tr.data = seisSim(tr.data, df, sts2, inst_sim=inst2hz, water_level=60.0)
+>>> tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
 >>> st.plot() #doctest: +SKIP
 
 .. plot::
@@ -96,7 +96,7 @@ comparison with the other traces in the plot.
             'sensitivity': 2516778400.0,
             'zeros': [0j, 0j]}
     df = tr.stats.sampling_rate
-    tr.data = seisSim(data, df, sts2, inst_sim=inst2hz, water_level=60.0)
+    tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
     st.plot()
 
 **There are many more functions available (rotation, pazToFreqResp, triggers,
