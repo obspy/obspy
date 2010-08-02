@@ -46,8 +46,7 @@ class Client(object):
     * http://www.iris.edu/dhi/servers.htm
 
     .. note::
-        The IRIS Data Service needs port 6371 to be open.
-        The IRIS Name Service needs port 17508 to be open.
+        Ports 6371 and 17508 must be open (IRIS Data and Name Services).
     """
     # We recommend the port ranges (6371-6382,17505-17508) to be open.
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
