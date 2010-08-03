@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspyscanp.py [-f MSEED] file1 file2 file3 ...
+USAGE: obspy-scan.py [-f MSEED] file1 file2 file3 ...
 
 Plot range of available data in files. Gaps are plotted as vertical red
 lines, startimes of available data are plotted as crosses. The sampling
