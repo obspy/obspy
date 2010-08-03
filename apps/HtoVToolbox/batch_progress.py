@@ -64,7 +64,7 @@ class Ui_BatchDialog(object):
         spacerItem6 = QtGui.QSpacerItem(20, 21, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem6)
         self.progressBar = QtGui.QProgressBar(BatchDialog)
-        self.progressBar.setProperty("value", 24)
+        self.progressBar.setProperty("value", QtCore.QVariant(24))
         self.progressBar.setObjectName("progressBar")
         self.verticalLayout.addWidget(self.progressBar)
         spacerItem7 = QtGui.QSpacerItem(20, 22, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)

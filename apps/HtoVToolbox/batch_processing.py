@@ -96,7 +96,7 @@ class Ui_BatchDialog(object):
         self.splitLabel1.setObjectName("splitLabel1")
         self.horizontalLayout_4.addWidget(self.splitLabel1)
         self.splitSpinBox = QtGui.QDoubleSpinBox(BatchDialog)
-        self.splitSpinBox.setProperty("value", 1.0)
+        self.splitSpinBox.setProperty("value", QtCore.QVariant(1.0))
         self.splitSpinBox.setObjectName("splitSpinBox")
         self.horizontalLayout_4.addWidget(self.splitSpinBox)
         self.splitLabel2 = QtGui.QLabel(BatchDialog)

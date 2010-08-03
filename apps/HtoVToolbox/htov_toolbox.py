@@ -258,7 +258,7 @@ class HtoV(HtoVWindow):
             else:
                 bottom, top = ax.get_ylim()
                 ax.hvsr_error_box = Rectangle((left, bottom), right - left, top - bottom,
-                                  color='grey', alpha=0.5)
+                                  facecolor='grey', edgecolor='grey', alpha=0.5)
                 ax.add_patch(ax.hvsr_error_box)
         try:
             ax.freq_text.remove()
@@ -312,7 +312,7 @@ class HtoV(HtoVWindow):
         else:
             bottom, top = ax.get_ylim()
             ax.hvsr_error_box = Rectangle((left, bottom), right - left, top - bottom,
-                              color='grey', alpha=0.5)
+                              edgecolor='grey', facecolor='grey', alpha=0.5)
             ax.add_patch(ax.hvsr_error_box)
         # Redraw the canvas.
         fig.canvas.draw()
@@ -985,7 +985,7 @@ class HtoV(HtoVWindow):
             bottom, top = ax.get_ylim()
             for left, right in areas:
                 patch = Rectangle((left, bottom), right - left, top - bottom,
-                                  color='green', alpha=0.1)
+                                  edgecolor='green', facecolor='green', alpha=0.1)
                 ax.add_patch(patch)
                 ax.quiet_areas.append(patch)
         # Force the redraw of the figure canvas.
@@ -1018,7 +1018,7 @@ class HtoV(HtoVWindow):
                 else:
                     color = 'green'
                 patch = Rectangle((left, bottom), right - left, top - bottom,
-                                  color=color, alpha=0.2)
+                                  edgecolor=color, facecolor=color, alpha=0.2)
                 ax.add_patch(patch)
                 patch_list.append(patch)
         msg = 'Found %i windows' % len(self.intervals)
@@ -1470,11 +1470,11 @@ class BatchHVSRProcessingDialog(BatchProcessingDialog):
         if hasattr(parent, 'original_stream'):
             file_starttime = parent.original_stream[0].stats.starttime
             file_endtime = parent.original_stream[0].stats.endtime
-            if starttime >= file_starttime and startttime <= file_endtime:
+            if starttime >= file_starttime and starttime <= file_endtime:
                 self.new_starttime = int(starttime - file_starttime)
             else:
                 self.new_starttime = 0
-            if endtime >= file_starttime and endttime <= file_endtime:
+            if endtime >= file_starttime and endtime <= file_endtime:
                 self.new_endtime = int(file_endtime - endtime)
             else:
                 self.new_endtime = 0
