@@ -28,7 +28,8 @@ import sys
 
 class Client(object):
     """
-    DHI/Fissures client class. For more informations see the __init__
+    DHI/Fissures client class. For more informations see the
+    :func:`~obspy.fissures.client.Client.__init__`
     method and all public methods of the client class.
 
     The Data Handling Interface (DHI) is a CORBA data access framework
@@ -40,15 +41,23 @@ class Client(object):
     directly into the application for immediate use.
     http://www.iris.edu/dhi/
 
-    Detailed information on network_dc and seismogram_dc servers:
+    Detailed information on network_dc, seismogram_dc servers and CORBA:
 
     * http://www.seis.sc.edu/wily
     * http://www.iris.edu/dhi/servers.htm
+    * http://www.seis.sc.edu/software/fissuresImpl/objectLocation.html
+
+    Check availability of stations via SeismiQuery:
+
+    * http://www.iris.edu/SeismiQuery/timeseries.htm
 
     .. note::
         Ports 6371 and 17508 must be open (IRIS Data and Name Services).
     """
-    # We recommend the port ranges (6371-6382,17505-17508) to be open.
+    #
+    # We recommend the port ranges 6371-6382, 17505-17508 to be open (this
+    # is how it is configured in our institute).
+    #
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
                  seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter"),
                  name_service="dmc.iris.washington.edu:6371/NameService",
@@ -71,7 +80,9 @@ class Client(object):
         #
         self.mseed = LibMSEED()
         #
-        # Initialize CORBA object
+        # Initialize CORBA object, see pdf in obspy.fissures/trunk/doc or
+        # http://omniorb.sourceforge.net/omnipy3/omniORBpy/omniORBpy004.html
+        # for available options
         args = ["-ORBgiopMaxMsgSize", "2097152",
                 "-ORBInitRef",
                 "NameService=corbaloc:iiop:" + name_service,
@@ -93,6 +104,7 @@ class Client(object):
         #
         # seismogram cosnaming
         self.seis_name = self._composeName(seismogram_dc, 'DataCenter')
+
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
             start_datetime, end_datetime):
@@ -170,6 +182,7 @@ class Client(object):
             # XXX: merging?
         return st
 
+
     def getNetworkIds(self):
         """
         Return all available network_ids as list.
@@ -188,6 +201,7 @@ class Client(object):
             attributes = network.get_attributes()
             net_list.append(attributes.id.network_code)
         return net_list
+
 
     def getStationIds(self, network_id=None):
         """
@@ -214,6 +228,7 @@ class Client(object):
                 station_list.append(station.id.station_code)
         return station_list
 
+
     def _composeName(self, dc, interface):
         """
         Compose Fissures name in CosNaming.NameComponent manner. Set the
@@ -235,6 +250,7 @@ class Client(object):
                     NameComponent(id=dc[1], kind='object_FVer1.0')])
         return dns
 
+
     def _dateTime2Fissures(self, utc_datetime):
         """
         Convert datetime instance to fissures time object
@@ -244,6 +260,7 @@ class Client(object):
         """
         t = str(utc_datetime)[:-3] + 'Z'
         return Fissures.Time(t, -1)
+
 
     def _getChannelObj(self, network_id, station_id, location_id, channel_id):
         """
