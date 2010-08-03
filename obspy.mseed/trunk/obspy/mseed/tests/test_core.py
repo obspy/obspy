@@ -4,6 +4,7 @@ from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
 from obspy.mseed.core import readMSEED, isMSEED
+from obspy.mseed.dev import RecordAnalyser
 from obspy.mseed.headers import ENCODINGS
 from obspy.mseed.libmseed import MSStruct
 import inspect
@@ -518,6 +519,26 @@ class CoreTestCase(unittest.TestCase):
             dummy[_i] = 1
             self.assertEqual(q_st[_i + 10].stats.mseed.data_quality_flags_count,
                              dummy)
+
+    def test_writingMicroseconds(self):
+        """
+        Microseconds should be written.
+        """
+        file = os.path.join(self.path, 'data',
+                            'BW.UH3..EHZ.D.2010.171.first_record')
+        # Read and write the record again.
+        st = read(file)
+        tempfile = NamedTemporaryFile().name
+        st.write(tempfile, format='MSEED', reclen=512)
+        st2 = read(tempfile)
+        # Use the record analyser.
+        rec1 = RecordAnalyser(file)
+        rec2 = RecordAnalyser(tempfile)
+        # Both should have the same starttimes.
+        self.assertEqual(rec1.corrected_starttime, rec2.corrected_starttime)
+        os.remove(tempfile)
+        # Should also be true for the stream objects.
+        self.assertEqual(st[0].stats, st2[0].stats)
 
     def test_isInvalidMSEED(self):
         """
