@@ -17,7 +17,7 @@ import time
 import urllib2
 import tempfile
 
-#sys.path.append('/baysoft/obspy/obspy/branches/symlink')
+#sys.path.append('/baysoft/obspy/misc/symlink')
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
