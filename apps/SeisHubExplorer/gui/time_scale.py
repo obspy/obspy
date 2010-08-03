@@ -296,9 +296,10 @@ class TimeScale(QtGui.QGraphicsItemGroup):
                 ev.setBrush(self.event_color_automatic)
                 ev.setPen(self.event_color_automatic_dark)
                 ev.setZValue(40)
-            ev.setToolTip('Event: %s\nMagnitude: %s (%s)\n%s' % \
-                    (event['event_id'], event['magnitude'],
-                     event['event_type'], event['origin_time']))
+                ev.setToolTip('Event: %s\nMagnitude: %s (%s)\n%s\nLat: %s, Lon: %s' \
+                      % (event['event_id'], event['magnitude'], event['event_type'],
+                         event['origin_time'], event['origin_latitude'],
+                         event['origin_longitude']))
             self.addToGroup(ev)
             self.events.append(ev)
 

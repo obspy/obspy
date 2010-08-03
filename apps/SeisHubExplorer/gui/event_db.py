@@ -115,7 +115,8 @@ class EventDB(object):
             endtime = self.env.endtime
         starttime = str(starttime)
         endtime = str(endtime)
-        msg = '''SELECT event_id, event_type, magnitude, origin_time FROM events
+        msg = '''SELECT event_id, event_type, magnitude, origin_time,
+                 origin_latitude, origin_longitude FROM events
                  WHERE origin_time > "%s" and origin_time < "%s"''' % \
                          (starttime, endtime)
         self.c.execute(msg)
@@ -126,7 +127,9 @@ class EventDB(object):
             evs.append({'event_id': event[0],
              'event_type': event[1],
              'magnitude': event[2],
-             'origin_time': UTCDateTime(event[3])})
+             'origin_time': UTCDateTime(event[3]),
+             'origin_latitude': event[4],
+             'origin_longitude': event[5] })
         return evs
 
     def getEvent(self, event_id):
