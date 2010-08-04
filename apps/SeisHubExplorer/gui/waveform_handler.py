@@ -148,7 +148,7 @@ class WaveformHandler(object):
                         % (network, station, location, channel)
             # XXX: Pretty ugly to ensure all data has the same dtype.
             for trace in stream:
-                trace.data = np.require(trace.data, 'float32')
+                trace.data = np.require(trace.data, dtype='float32')
             # Merge everything and pickle once again.
             stream = mergePreviews(stream)
             # Pickle the stream object for future reference. Do not pickle it if it

@@ -134,7 +134,7 @@ def mergePreviews(stream):
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = set([tr.data.dtype for tr in value])
+        dtypes = set([str(tr.data.dtype) for tr in value])
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
