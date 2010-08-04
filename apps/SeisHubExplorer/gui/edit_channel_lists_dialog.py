@@ -12,7 +12,8 @@ class EditChannelListsDialog(QtGui.QDialog):
         """
         Standart edit.
         """
-        super(EditChannelListsDialog, self).__init__()
+        QtGui.QDialog.__init__(self)
+        #super(EditChannelListsDialog, self).__init__()
         self.env = env
         self._initInterface()
         self._connectSignals()
@@ -28,9 +29,12 @@ class EditChannelListsDialog(QtGui.QDialog):
         self.setWindowTitle('Edit Channel Groups')
         self.layout = QtGui.QVBoxLayout()
         self.setLayout(self.layout)
-        desc = 'There must be exactly one list per line with the following syntax: "LIST_NAME: CHANNEL1, CHANNEL2, ..."'
+        desc = 'There must be exactly one list per line with the following syntax: "LIST_NAME: CHANNEL1; CHANNEL2; ..."'
         self.description_label = QtGui.QLabel(desc)
         self.layout.addWidget(self.description_label)
+        desc2 = 'Supports Unix wildcards (?, * and sequences []), e.g. BW.FURT..[E,S]*'
+        self.description_label2 = QtGui.QLabel(desc2)
+        self.layout.addWidget(self.description_label2)
         self.edit_area = QtGui.QTextEdit()
         self.layout.addWidget(self.edit_area)
         # Frame for the buttons.
@@ -58,7 +62,7 @@ class EditChannelListsDialog(QtGui.QDialog):
         lists = self.env.channel_lists.keys()
         lists.sort()
         for item in lists:
-            msg += '%s: %s\n' % (item, ', '.join(self.env.channel_lists[item]))
+            msg += '%s: %s\n' % (item, '; '.join(self.env.channel_lists[item]))
         self.edit_area.setText(msg)
 
     def accept(self):
@@ -101,7 +105,8 @@ class EditChannelListsDialog(QtGui.QDialog):
             return
         self.env.channel_lists_parser.writeFile()
         self.env.main_window.nw_tree.refreshModel()
-        super(EditChannelListsDialog, self).accept()
+        QtGui.QDialog.accept(self)
+        #super(EditChannelListsDialog, self).accept()
 
     def _parseLine(self, line):
         """
@@ -116,7 +121,7 @@ class EditChannelListsDialog(QtGui.QDialog):
         if len(items) != 2:
             return False
         key = items[0]
-        values = items[1].strip().split(',')
+        values = items[1].strip().split(';')
         values = [item.strip() for item in values if len(item.strip())]
         if len(values) < 1:
             return False

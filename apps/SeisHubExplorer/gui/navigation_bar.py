@@ -10,7 +10,8 @@ class NavigationBar(QtGui.QFrame):
     The navigation bar.
     """
     def __init__(self, env, parent = None, *args, **kwargs):
-        super(NavigationBar, self).__init__()
+        QtGui.QFrame.__init__(self)
+        #super(NavigationBar, self).__init__()
         self.env = env
         # Style sheet for the buttons. They take too much space without a style
         # sheet.

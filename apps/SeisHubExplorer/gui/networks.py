@@ -102,7 +102,8 @@ class TreeModel(QtCore.QAbstractItemModel):
         """
         Init Method.
         """
-        super(TreeModel, self).__init__(parent)
+        QtCore.QAbstractItemModel.__init__(self, parent)
+        #super(TreeModel, self).__init__(parent)
         self.env = env
         # Lade Datensatz 
         f = open(filename, 'rb')
@@ -112,6 +113,20 @@ class TreeModel(QtCore.QAbstractItemModel):
             self.query_date = self.networks.pop('Date')
         finally:
             f.close()
+        # Get all possible channels in one large list.
+        self.env.all_channels = []
+        nws = self.networks.keys()
+        for nw in nws:
+            sts = self.networks[nw].keys()
+            for st in sts:
+                locs = self.networks[nw][st].keys()
+                for loc in locs:
+                    if loc == 'info':
+                        continue
+                    chans = self.networks[nw][st][loc][0]
+                    for chan in chans:
+                        self.env.all_channels.append('%s.%s.%s.%s' % \
+                            (nw, st, loc, chan))
         # Set root item.
         self.rootItem = TreeItem(('Networks', 'Details'), 'root')
         self.setupModelData(self.rootItem)
@@ -255,11 +270,13 @@ class TreeSelector(QtGui.QItemSelectionModel):
     def __init__(self, model, *args, **kwargs):
 	# XXX: Kwargs not working.
         # super(TreeSelector, self).__init__(*args, **kwargs)
-        super(TreeSelector, self).__init__(model)
+        # super(TreeSelector, self).__init__(model)
+        QtGui.QItemSelectionModel.__init__(self, model)
 
 class NetworkTree(QtGui.QTreeView):
     def __init__(self, waveforms, env, parent=None, *args, **kwargs):
-        super(NetworkTree, self).__init__(parent)
+        QtGui.QTreeView.__init__(self, parent)
+        #super(NetworkTree, self).__init__(parent)
         self.env = env
         # Animate the Network tree.
         self.setAnimated(True)

@@ -4,9 +4,11 @@
 from PyQt4 import QtCore, QtGui, QtOpenGL
 from PyQt4.QtCore import Qt
 
-from networks import TreeSelector
+from fnmatch import fnmatch
 from random import randint
 from time import time
+
+from networks import TreeSelector
 from time_scale import TimeScale
 from utils import toQDateTime
 
@@ -28,7 +30,8 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         self.stream = stream
         self.scene = scene
         self.count = self.stream[0].stats.npts
-        super(PreviewPlot, self).__init__()
+        QtGui.QGraphicsItemGroup.__init__(self)
+        #super(PreviewPlot, self).__init__()
         self.background_box = QtGui.QGraphicsRectItem(self.x_start,
                                 self.y_start, self.plot_width, self.plot_height)
         # Set the title of the plot.
@@ -38,16 +41,21 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         self.background_box.setZValue(-200)
         self.addToGroup(self.background_box)
         # Create button.
-        self.button = QtGui.QPushButton(self.title)
+        self.button = QtGui.QPushButton('X')
         self.button.move(3, self.y_start + 3)
-        self.menu = QtGui.QMenu(self.button)
-        self.delete_action = self.menu.addAction('Delete Trace')
-        self.button.setMenu(self.menu)
+        #self.menu = QtGui.QMenu(self.button)
+        #self.delete_action = self.menu.addAction('Delete Trace')
+        #self.button.setMenu(self.menu)
         self.button.setStyleSheet("border: 1px solid #000000;")
         self.button_in_scene = scene.addWidget(self.button)
         self.button_in_scene.setZValue(10)
-        # Create a menu for the Button.
         step = self.plot_width/float(self.count)
+
+        self.title_label = QtGui.QLabel(self.title)
+        self.title_label.move(15, self.y_start+3)
+        self.title_in_scene = scene.addWidget(self.title_label)
+        self.title_in_scene.setZValue(10)
+
         # Plot the preview data.
         self.bars = []
         data = self.stream[0].data
@@ -124,11 +132,13 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         """
         Connect the slots of the PreviewPlot.
         """
-        QtCore.QObject.connect(self.delete_action, QtCore.SIGNAL("triggered(bool)"), self.delete)
+        QtCore.QObject.connect(self.button, QtCore.SIGNAL("pressed()"), self.delete)
+        pass
 
     def deleteItems(self):
         self.scene.removeItem(self)
         self.button.deleteLater()
+        self.title_label.deleteLater()
 
     def delete(self, *args):
         self.deleteItems()
@@ -166,7 +176,8 @@ class WaveformScene(QtGui.QGraphicsScene):
     def __init__(self, env, *args, **kwargs):
 	# Some problem with kwargs with Python 2.5.2 and PyQt 4.4
         # super(WaveformScene, self).__init__(*args, **kwargs)
-        super(WaveformScene, self).__init__()
+        #super(WaveformScene, self).__init__()
+        QtGui.QGraphicsScene.__init__(self)
         self.env = env
         self.position = 0
         # List that keeps track of waveform objects.
@@ -186,6 +197,7 @@ class WaveformScene(QtGui.QGraphicsScene):
         Save the mouse position.
         """
         self.start_mouse_pos = event.scenePos()
+        QtGui.QGraphicsScene.mousePressEvent(self, event)
 
     def mouseMoveEvent(self, event):
         """
@@ -300,7 +312,15 @@ class WaveformScene(QtGui.QGraphicsScene):
         """
         channels = self.env.channel_lists[channel_name]
         for channel in channels:
-            self.addPlot(channel)
+            expanded_list = []
+            # Check for wildcards and create channels.
+            for chan in self.env.all_channels:
+                if fnmatch(chan, channel):
+                    expanded_list.append(chan)
+            expanded_list.sort()
+            # Plot them.
+            for chan in expanded_list:
+                self.addPlot(chan)
 
     def addPlot(self, channel_id):
         # Do not plot already plotted channels.
@@ -336,6 +356,7 @@ class WaveformScene(QtGui.QGraphicsScene):
                 continue
             waveform.moveBy(0,-amount)
             waveform.button_in_scene.moveBy(0, -amount)
+            waveform.title_in_scene.moveBy(0, -amount)
 
     def redraw(self):
         """
@@ -375,7 +396,8 @@ class WaveformScene(QtGui.QGraphicsScene):
 
 class TimescaleScene(QtGui.QGraphicsScene):
     def __init__(self, env):
-        super(TimescaleScene, self).__init__()
+        QtGui.QGraphicsScene.__init__(self)
+        #super(TimescaleScene, self).__init__()
         self.env = env
 
     def startup(self):
@@ -402,7 +424,8 @@ class TimescaleView(QtGui.QGraphicsView):
     View for the timescale.
     """
     def __init__(self, env):
-        super(TimescaleView, self).__init__()
+        QtGui.QGraphicsView.__init__(self)
+        #super(TimescaleView, self).__init__()
         self.env = env
         # Force OpenGL rendering! Super smooth scrolling for 50 plots with 1000
         # bars each. Any kind of anti aliasing is useless because only
@@ -428,7 +451,8 @@ class WaveformView(QtGui.QGraphicsView):
     View for the waveform.
     """
     def __init__(self, env):
-        super(WaveformView, self).__init__()
+        QtGui.QGraphicsView.__init__(self)
+        #super(WaveformView, self).__init__()
         self.env = env
         # Force OpenGL rendering! Super smooth scrolling for 50 plots with 1000
         # bars each. Any kind of anti aliasing is useless because only
@@ -452,7 +476,8 @@ class Waveforms(QtGui.QFrame):
     waveforms.
     """
     def __init__(self, env, parent = None, *args, **kwargs):
-        super(Waveforms, self).__init__(parent)
+        QtGui.QFrame.__init__(self, parent)
+        #super(Waveforms, self).__init__(parent)
         self.env = env
         self._setupInterface()
         # Call once to always set the default value.

@@ -2,7 +2,8 @@ from PyQt4 import QtCore, QtGui
 
 class Picks(QtGui.QGroupBox):
     def __init__(self, env, parent = None, *args, **kwargs):
-        super(Picks, self).__init__('Picks')
+        QtGui.QGroupBox.__init__(self, 'Picks')
+        #super(Picks, self).__init__('Picks')
         self.env = env
 
         self.pick_layout = QtGui.QVBoxLayout()

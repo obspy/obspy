@@ -13,7 +13,8 @@ class CallPickerDialog(QtGui.QDialog):
         """
         Standart edit.
         """
-        super(CallPickerDialog, self).__init__()
+        QtGui.QDialog.__init__(self)
+        #super(CallPickerDialog, self).__init__()
         self.env = env
         self.command = command
         self._initInterface()
@@ -61,7 +62,8 @@ class CallPickerDialog(QtGui.QDialog):
         """
         command = str(self.command_edit.text())
         subprocess.Popen(command, shell=True)
-        super(CallPickerDialog, self).accept()
+        QtGui.QDialog.accept(self)
+        #super(CallPickerDialog, self).accept()
 
     def _connectSignals(self):
         """

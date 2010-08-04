@@ -3,7 +3,8 @@ from obspy.core import UTCDateTime
 
 class Timers(QtCore.QThread):
     def __init__(self, env, parent = None, *args, **kwargs):
-        super(Timers, self).__init__(parent)
+        QtCore.QThread.__init__(self, parent)
+        #super(Timers, self).__init__(parent)
         self.env = env
         # Set to lowest priority.
         #self.setPriority(1)

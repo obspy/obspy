@@ -10,7 +10,8 @@ class TabWidget(QtGui.QTabWidget):
     Very basic class that handles the tabs.
     """
     def __init__(self, parent=None):
-       super (TabWidget, self).__init__(parent)
+        QtGui.QTabWidget.__init__(self, parent)
+        #super (TabWidget, self).__init__(parent)
 
 if __name__ == '__main__':
     # Init the environment.

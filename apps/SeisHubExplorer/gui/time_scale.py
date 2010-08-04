@@ -11,7 +11,8 @@ class TimeScale(QtGui.QGraphicsItemGroup):
     Creates and handles the time scale.
     """
     def __init__(self, env, parent, width, *args, **kwargs):
-        super(TimeScale, self).__init__()
+        QtGui.QGraphicsItemGroup.__init__(self)
+        #super(TimeScale, self).__init__()
         # Set the parent.
         self.env = env
         self.width = width
@@ -27,7 +28,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         self.event_color_manual = QtGui.QColor(0, 255, 0, 155)
         self.event_color_automatic_dark = QtGui.QColor(90, 0, 0, 255)
         self.event_color_manual_dark = QtGui.QColor(0, 90, 0, 255)
-        self.min_event_size = 3
+        self.min_event_size = 5
         # Magnitude 5 quakes will have this size. Everythin bigger will be even
         # bigger.
         self.max_event_size = 15
@@ -296,10 +297,10 @@ class TimeScale(QtGui.QGraphicsItemGroup):
                 ev.setBrush(self.event_color_automatic)
                 ev.setPen(self.event_color_automatic_dark)
                 ev.setZValue(40)
-                ev.setToolTip('Event: %s\nMagnitude: %s (%s)\n%s\nLat: %s, Lon: %s' \
-                      % (event['event_id'], event['magnitude'], event['event_type'],
-                         event['origin_time'], event['origin_latitude'],
-                         event['origin_longitude']))
+            ev.setToolTip('Event: %s\nMagnitude: %s (%s)\n%s\nLat: %s, Lon: %s' \
+                  % (event['event_id'], event['magnitude'], event['event_type'],
+                     event['origin_time'], event['origin_latitude'],
+                     event['origin_longitude']))
             self.addToGroup(ev)
             self.events.append(ev)
 
