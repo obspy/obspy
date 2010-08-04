@@ -314,8 +314,8 @@ class CoreTestCase(unittest.TestCase):
 
     def test_allDataTypesAndEndiansInMultipleFiles(self):
         """
-        Tests writing all different types. This is an test which is independent of
-        the read method. Only the data part is verified.
+        Tests writing all different types. This is an test which is independent
+        of the read method. Only the data part is verified.
         """
         file = os.path.join(self.path, "data", \
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
@@ -474,10 +474,6 @@ class CoreTestCase(unittest.TestCase):
         """
         Specifying a wrong record length should raise an error.
         """
-        # XXX: The test does not work under windows because libmseed does not
-        # seem to handle the record length attribute correctly.
-        #if platform.system() == "Windows":
-        #    return
         file = os.path.join(self.path, 'data', 'libmseed',
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
@@ -516,8 +512,8 @@ class CoreTestCase(unittest.TestCase):
                          [0] * 8)
         for _i in xrange(8):
             dummy[_i] = 1
-            self.assertEqual(q_st[_i + 10].stats.mseed.data_quality_flags_count,
-                             dummy)
+            self.assertEqual(
+                q_st[_i + 10].stats.mseed.data_quality_flags_count, dummy)
 
     def test_writingMicroseconds(self):
         """XXX: Failing test case for issue #96
@@ -597,6 +593,7 @@ class CoreTestCase(unittest.TestCase):
                              UTCDateTime("2003-05-29T02:18:20.693400Z"))
             self.assertEqual(st[0].stats.npts, 11947)
             self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
