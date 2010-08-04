@@ -87,8 +87,7 @@ class CoreTestCase(unittest.TestCase):
         gapfile = os.path.join(self.path, 'data', 'gaps.mseed')
         # without given format -> autodetect using extension
         stream = read(gapfile, headonly=True)
-        st = read(gapfile)
-        starttime = ['2007-12-31T23:59:59.915000Z', 
+        starttime = ['2007-12-31T23:59:59.915000Z',
                      '2008-01-01T00:00:04.035000Z',
                      '2008-01-01T00:00:10.215000Z',
                      '2008-01-01T00:00:18.455000Z']
@@ -477,8 +476,8 @@ class CoreTestCase(unittest.TestCase):
         """
         # XXX: The test does not work under windows because libmseed does not
         # seem to handle the record length attribute correctly.
-        if platform.system() == "Windows":
-            return
+        #if platform.system() == "Windows":
+        #    return
         file = os.path.join(self.path, 'data', 'libmseed',
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
@@ -521,7 +520,7 @@ class CoreTestCase(unittest.TestCase):
                              dummy)
 
     def test_writingMicroseconds(self):
-        """
+        """XXX: Failing test case for issue #96
         Microseconds should be written.
         """
         file = os.path.join(self.path, 'data',
