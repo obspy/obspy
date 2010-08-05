@@ -7,6 +7,6 @@ struct BufLine
 	int position;
 	struct BufLine *nextLine;
 };
-struct BufLine *buf_getNewLine();
-int buf_putCharToLine(char,struct BufLine *);
+struct BufLine *buf_getNewLine(void);
+int buf_putCharToLine(char, struct BufLine *);
 void buf_err(int, char *, char *);
