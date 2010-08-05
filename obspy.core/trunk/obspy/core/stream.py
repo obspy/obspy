@@ -157,9 +157,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
         msg = "headonly cannot be combined with starttime or endtime"
         raise Exception(msg)
     if starttime:
-        st.ltrim(starttime, nearest_sample=nearest_sample)
+        st._ltrim(starttime, nearest_sample=nearest_sample)
     if endtime:
-        st.rtrim(endtime, nearest_sample=nearest_sample)
+        st._rtrim(endtime, nearest_sample=nearest_sample)
     return st
 
 
