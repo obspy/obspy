@@ -520,7 +520,7 @@ class CoreTestCase(unittest.TestCase):
         Microseconds should be written.
         """
         file = os.path.join(self.path, 'data',
-                            'BW.UH3..EHZ.D.2010.171.first_record')
+                            'BW.UH3.__.EHZ.D.2010.171.first_record')
         # Read and write the record again.
         st = read(file)
         tempfile = NamedTemporaryFile().name
