@@ -12,6 +12,14 @@ The seismometer is represented as a dictionary containing the fields:
 :ivar zeros: Zeros of the seismometer to simulate
 :type gain: Float
 :ivar gain: Gain factor of seismometer to simulate
+
+Currently contained seismometers::
+
+    PAZ_WOOD_ANDERSON
+
+Note, there is only one zero and two poles. That is when simulating the
+Wood Anderson, the signal is automatically integrated (most probably to
+meter)
 """
 
 # Im Wood-Anderson

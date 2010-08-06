@@ -66,7 +66,6 @@ comparison with the other traces in the plot.
 >>> inst2hz = cornFreq2Paz(2.0)
 >>> st = read()
 >>> tr = st[0]
->>> tr.data = tr.data - tr.data.mean()
 >>> sts2 = {'gain': 60077000.0,
 ...         'poles': [(-0.037004000000000002+0.037016j),
 ...                   (-0.037004000000000002-0.037016j),
@@ -86,7 +85,6 @@ comparison with the other traces in the plot.
     inst2hz = cornFreq2Paz(2.0)
     st = read()
     tr = st[0]
-    tr.data = tr.data - tr.data.mean()
     sts2 = {'gain': 60077000.0,
             'poles': [(-0.037004000000000002+0.037016j),
                       (-0.037004000000000002-0.037016j),

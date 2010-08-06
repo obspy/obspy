@@ -23,6 +23,7 @@ import math as M
 import numpy as np
 import scipy.signal
 import util
+import warnings
 
 
 def cosTaper(npts, p=0.1):
@@ -167,7 +168,7 @@ def specInv(spec, wlev):
 
 
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600.0,
-            zero_mean=True, taper=True, taper_fraction=0.05):
+            zero_mean=True, taper=True, taper_fraction=0.05, **kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -206,7 +207,22 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
-    # Translated from PITSA: spr_resg.c
+    # Stay compatible with the old version
+    if 'paz' in kwargs:
+        paz_remove = kwargs['paz']
+        warnings.warn("Use paz_remove option instead of paz", 
+                      DeprecationWarning)
+    if 'inst_sim' in kwargs:
+        paz_simulate = kwargs['inst_sim']
+        warnings.warn("Use paz_simulate option instead of inst_sim", 
+                      DeprecationWarning)
+    if 'no_inverse_filtering' in kwargs:
+        if kwargs['no_inverse_filtering'] == True:
+            paz_remove = None
+        warnings.warn("Use paz_remove option instead no_inverse_filtering",
+                      DeprecationWarning)
+
+    # Checking the types
     if not paz_remove and not paz_simulate:
         msg = "Neither inverse nor forward instrument simulation specified."
         raise TypeError(msg)
@@ -226,6 +242,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
     are iterables of complex entries, the value of gain is a float.
     """
 
+    # Translated from PITSA: spr_resg.c
     delta = 1.0 / samp_rate
     #
     ndat = len(data)
