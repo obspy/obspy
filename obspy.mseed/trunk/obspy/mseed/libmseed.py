@@ -345,6 +345,22 @@ class LibMSEED(object):
             #                           C.c_int(C.sizeof(blkt_1001_s)),
             #                           C.c_int(1001),
             #                           C.c_int(0))
+
+
+            ### MICROSECONDS ARE WRITTEN WITH THIS METHOD BUT NO OTHER CHARS
+            ### LIKE NETWORK, STATION, ...
+
+            #msr = clibmseed.msr_init(None)
+            #size = C.sizeof(blkt_1001_s)
+            #blkt1001 = C.c_char_p('a')
+            #clibmseed.msr_addblockette(msr,
+            #                           blkt1001,
+            #                           C.c_int(size),
+            #                           C.c_int(1001),
+            #                           C.c_int(0))
+
+            ### END
+
             try:
                 enc = trace[0]['encoding']
             except:
