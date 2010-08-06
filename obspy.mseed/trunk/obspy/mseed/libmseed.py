@@ -346,25 +346,34 @@ class LibMSEED(object):
             #                           C.c_int(1001),
             #                           C.c_int(0))
 
-
-            ### MICROSECONDS ARE WRITTEN WITH THIS METHOD BUT NO OTHER CHARS
-            ### LIKE NETWORK, STATION, ...
-
+            ### BETTER VERSION
             #msr = clibmseed.msr_init(None)
+            #msr.contents.network = trace[0]['network']
+            #msr.contents.station = trace[0]['station']
+            #msr.contents.location = trace[0]['location']
+            #msr.contents.channel = trace[0]['channel']
+            #msr.contents.dataquality = trace[0]['dataquality']
+            #msr.contents.sampletype = trace[0]['sampletype']
+
             #size = C.sizeof(blkt_1001_s)
-            #blkt1001 = C.c_char_p('a')
+            #blkt1001 = C.c_int(0)
+            #C.memset(C.pointer(blkt1001), 0, size)
+
             #clibmseed.msr_addblockette(msr,
-            #                           blkt1001,
+            #                           C.pointer(blkt1001),
             #                           C.c_int(size),
             #                           C.c_int(1001),
             #                           C.c_int(0))
-
-            ### END
 
             try:
                 enc = trace[0]['encoding']
             except:
                 enc = encoding
+
+            #msr.contents.reclan = reclen
+            #msr.contents.encoding = enc
+            #msr.contents.byteorder = byteorder
+
             errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                               enc, byteorder,
                                               C.byref(self.packedsamples),
