@@ -36,7 +36,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-    PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES
+        PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES, \
+        blkt_1001_s
 from struct import unpack
 import ctypes as C
 import math
@@ -334,6 +335,16 @@ class LibMSEED(object):
                                      C.c_void_p)(record_handler)
             # Pack mstg into a MSEED file using record_handler as write method
             msr = C.POINTER(MSRecord)()
+            ### memset (&Blkt1001, 0, sizeof(struct blkt_1001_s));
+            ### msr_addblockette ((MSRecord *) mst->prvtptr, (char *) &Blkt1001,
+            ###                   sizeof(struct blkt_1001_s), 1001, 0);
+            #blkt1001 = C.POINTER(blkt_1001_s)()
+            #clibmseed.msr_addblockette(C.cast(mstg.contents.traces.contents.prvtptr,
+            #                                  C.POINTER(MSRecord)),
+            #                           C.cast(blkt1001, C.c_char_p),
+            #                           C.c_int(C.sizeof(blkt_1001_s)),
+            #                           C.c_int(1001),
+            #                           C.c_int(0))
             try:
                 enc = trace[0]['encoding']
             except:

@@ -529,11 +529,13 @@ class CoreTestCase(unittest.TestCase):
         # Use the record analyser.
         rec1 = RecordAnalyser(file)
         rec2 = RecordAnalyser(tempfile)
+        # Should also be true for the stream objects.
+        self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
+        # Should also be true for the stream objects.
+        self.assertEqual(st[0].stats, st2[0].stats)
         # Both should have the same starttimes.
         self.assertEqual(rec1.corrected_starttime, rec2.corrected_starttime)
         os.remove(tempfile)
-        # Should also be true for the stream objects.
-        self.assertEqual(st[0].stats, st2[0].stats)
 
     def test_isInvalidMSEED(self):
         """
