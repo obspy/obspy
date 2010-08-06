@@ -64,7 +64,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
         sum /= ndat1; /*---- here I have made a doubtfull change */
         for (a=0;a<ndat1;a++)
         {
-            tra1[a] = tr1[a] - sum;
+            tra1[a] = tr1[a] - (float)sum;
         }
         flag = 0;
         if(sum == 0.0)
@@ -78,7 +78,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
         }
         for (a=0;a<ndat1;a++)
         {
-            tra1[a] = tra1[a]/cmax;
+            tra1[a] = tra1[a]/(float)cmax;
         }
         cmax = 0;
         sum = 0;
@@ -89,7 +89,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
         sum /= ndat2;
         for (a=0;a<ndat2;a++)
         {
-            tra2[a] = tr2[a] - sum;
+            tra2[a] = tr2[a] - (float)sum;
         }
         for (a=0;a<ndat2;a++)
         {
@@ -100,7 +100,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
         }
         for (a=0;a<ndat2;a++)
         {
-            tra2[a] = tra2[a]/cmax;
+            tra2[a] = tra2[a]/(float)cmax;
         }
         if(sum == 0.0)
             flag += 1;

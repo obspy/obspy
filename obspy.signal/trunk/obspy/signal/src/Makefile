@@ -11,7 +11,7 @@ DEPENDS = \
 	filt_util.o \
 	arpicker.o
 
-CFLAGS = -g -O3 
+CFLAGS = -g -O3 -Wall
 CC = gcc
 
 signal.so: $(DEPENDS)
