@@ -550,7 +550,7 @@ class CoreTestCase(unittest.TestCase):
         for ms in [111111, 111110, 100000, 111100, 111000, 11111, 11110, 10000,
                    1111, 1110, 1000, 111, 110, 100, 11, 10, 1, 0,
                    999999, 999990, 900000, 999900, 999000, 99999, 99990, 90000,
-                   9999, 9990, 999, 990, 99, 90, 9, 0]:
+                   9999, 9990, 999, 990, 99, 90, 9, 0, 100001, 900009]:
             st[0].stats.starttime = UTCDateTime(2010, 8, 7, 0, 8, 52, ms)
             tempfile = NamedTemporaryFile().name
             st.write(tempfile, format='MSEED', reclen=512)

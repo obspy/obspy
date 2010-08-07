@@ -348,8 +348,7 @@ class LibMSEED(object):
             # write blockette 1001 only if last two digits of microseconds
             # are not zero
             ms = self._convertMSTimeToDatetime(trace[0]['starttime'])
-            ms = '%06d' % ms.microsecond
-            if ms[-2:] != '00':
+            if ms.microsecond % 100:
                 size = C.sizeof(blkt_1001_s)
                 blkt1001 = C.c_int(0)
                 C.memset(C.pointer(blkt1001), 0, size)
