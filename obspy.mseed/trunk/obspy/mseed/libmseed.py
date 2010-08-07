@@ -330,7 +330,7 @@ class LibMSEED(object):
         use_blkt_1001 = 0
         for trace in trace_list:
             if trace[0]['starttime'] % 100 != 0 or \
-               (1.0/trace[0]['samprate'] * 1E6) % 100 != 0:
+               (1.0/trace[0]['samprate'] * HPTMODULUS) % 100 != 0:
                 use_blkt_1001 += 1
         for trace in trace_list:
             # Populate MSTG Structure
