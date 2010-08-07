@@ -322,6 +322,16 @@ class LibMSEED(object):
             f = open(outfile, 'wb')
         except TypeError:
             f = outfile
+        # Figure out whether or not to use Blockette 1001. This check is done
+        # once to ensure that Blockette 1001 is either written for every record
+        # in the file or for none. It checks the starttime as well as the
+        # sampling rate. If either one has a precision of more than 100
+        # microseconds, Blockette 1001 will be written for every record.
+        use_blkt_1001 = 0
+        for trace in trace_list:
+            if trace[0]['starttime'] % 100 != 0 or \
+               (1.0/trace[0]['samprate'] * 1E6) % 100 != 0:
+                use_blkt_1001 += 1
         for trace in trace_list:
             # Populate MSTG Structure
             mstg = self._populateMSTG(trace)
@@ -341,23 +351,23 @@ class LibMSEED(object):
             msr.contents.station = trace[0]['station']
             msr.contents.location = trace[0]['location']
             msr.contents.channel = trace[0]['channel']
-
-            size = C.sizeof(blkt_1001_s)
-            blkt1001 = C.c_char(' ')
-            C.memset(C.pointer(blkt1001), 0, size)
-            blktlink = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
-                                                  size, 1001, 0)
-            # check that return pointer is not a null pointer
-            try:
-                blkt = blktlink.contents
-            except ValueError:
-                raise Exception("Error in msr_addblockette")
-
+            # Only use Blockette 1001 if necessary.
+            if use_blkt_1001:
+                size = C.sizeof(blkt_1001_s)
+                blkt1001 = C.c_char(' ')
+                C.memset(C.pointer(blkt1001), 0, size)
+                ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
+                                           size, 1001, 0)
+                # Usually returns a pointer to the added blockette in the
+                # blockette link chain and a NULL pointer if it fails.
+                # NULL pointers have a false boolean value according to the
+                # ctypes manual.
+                if bool(ret_val) is False:
+                    raise Exception('Error msr_addblockette')
             try:
                 enc = trace[0]['encoding']
             except:
                 enc = encoding
-
             # Pack mstg into a MSEED file using record_handler as write method
             errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                               enc, byteorder,
