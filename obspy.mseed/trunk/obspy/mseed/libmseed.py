@@ -345,9 +345,13 @@ class LibMSEED(object):
             size = C.sizeof(blkt_1001_s)
             blkt1001 = C.c_char(' ')
             C.memset(C.pointer(blkt1001), 0, size)
-            #XXX return type should be checked
-            clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
-                                       size, 1001, 0)
+            blktlink = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
+                                                  size, 1001, 0)
+            # check that return pointer is not a null pointer
+            try:
+                blkt = blktlink.contents
+            except ValueError:
+                raise Exception("Error in msr_addblockette")
 
             try:
                 enc = trace[0]['encoding']
