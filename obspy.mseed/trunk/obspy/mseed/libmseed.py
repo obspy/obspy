@@ -341,27 +341,19 @@ class LibMSEED(object):
             msr.contents.station = trace[0]['station']
             msr.contents.location = trace[0]['location']
             msr.contents.channel = trace[0]['channel']
-            #msr.contents.dataquality = trace[0]['dataquality']
-            #msr.contents.sampletype = trace[0]['sampletype']
 
-            # write blockette 1001 only if last two digits of microseconds
-            # are NOT zero
-            if trace[0]['starttime'] % 100 != 0:
-                size = C.sizeof(blkt_1001_s)
-                blkt1001 = C.c_char(' ')
-                C.memset(C.pointer(blkt1001), 0, size)
-                #XXX return type should be checked
-                clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
-                                           size, 1001, 0)
+            size = C.sizeof(blkt_1001_s)
+            blkt1001 = C.c_char(' ')
+            C.memset(C.pointer(blkt1001), 0, size)
+            #XXX return type should be checked
+            clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
+                                       size, 1001, 0)
 
             try:
                 enc = trace[0]['encoding']
             except:
                 enc = encoding
 
-            #msr.contents.reclen = reclen
-            #msr.contents.encoding = enc
-            #msr.contents.byteorder = byteorder
             # Pack mstg into a MSEED file using record_handler as write method
             errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                               enc, byteorder,

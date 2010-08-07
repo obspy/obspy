@@ -535,7 +535,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         st.write(tempfile, format="MSEED")
         # read temp file directly without libmseed
         bin_data = open(tempfile, "rb").read()
-        bin_data = np.array(struct.unpack(">7f", bin_data[56:84]))
+        bin_data = np.array(struct.unpack(">7f", bin_data[64:92]))
         np.testing.assert_array_equal(data, bin_data)
         # read via libmseed
         mseed = LibMSEED()
