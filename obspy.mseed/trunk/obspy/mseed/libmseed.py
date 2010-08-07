@@ -333,39 +333,35 @@ class LibMSEED(object):
             # Define Python callback function for use in C function
             recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
                                      C.c_void_p)(record_handler)
-            # Pack mstg into a MSEED file using record_handler as write method
-            #msr = C.POINTER(MSRecord)()
 
-            ### BETTER VERSION
+            # Fill up msr record structure, this is already contained in
+            # mstg, however if blk1001 is set we need it anyway 
             msr = clibmseed.msr_init(None)
             msr.contents.network = trace[0]['network']
             msr.contents.station = trace[0]['station']
             msr.contents.location = trace[0]['location']
             msr.contents.channel = trace[0]['channel']
-#            msr.contents.dataquality = trace[0]['dataquality']
-#            msr.contents.sampletype = trace[0]['sampletype']
+            #msr.contents.dataquality = trace[0]['dataquality']
+            #msr.contents.sampletype = trace[0]['sampletype']
 
             # write blockette 1001 only if last two digits of microseconds
-            # are not zero
-            ms = self._convertMSTimeToDatetime(trace[0]['starttime'])
-            if ms.microsecond % 100:
+            # are NOT zero
+            if trace[0]['starttime'] % 100 != 0:
                 size = C.sizeof(blkt_1001_s)
-                blkt1001 = C.c_int(0)
+                blkt1001 = C.c_char(' ')
                 C.memset(C.pointer(blkt1001), 0, size)
-                clibmseed.msr_addblockette(msr,
-                                           C.pointer(blkt1001),
-                                           C.c_int(size),
-                                           C.c_int(1001),
-                                           C.c_int(0))
+                clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
+                                           size, 1001, 0)
 
             try:
                 enc = trace[0]['encoding']
             except:
                 enc = encoding
 
-#            msr.contents.reclen = reclen
-#            msr.contents.encoding = enc
-#            msr.contents.byteorder = byteorder
+            #msr.contents.reclen = reclen
+            #msr.contents.encoding = enc
+            #msr.contents.byteorder = byteorder
+            # Pack mstg into a MSEED file using record_handler as write method
             errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                               enc, byteorder,
                                               C.byref(self.packedsamples),
