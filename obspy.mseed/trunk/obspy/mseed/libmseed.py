@@ -345,8 +345,8 @@ class LibMSEED(object):
 #            msr.contents.dataquality = trace[0]['dataquality']
 #            msr.contents.sampletype = trace[0]['sampletype']
 
-            # write blockette 1001 only if we have >4 digits of microseconds
-            # given and last two digits are not zero
+            # write blockette 1001 only if last two digits of microseconds
+            # are not zero
             ms = self._convertMSTimeToDatetime(trace[0]['starttime'])
             ms = '%06d' % ms.microsecond
             if ms[-2:] != '00':
