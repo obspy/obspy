@@ -334,46 +334,39 @@ class LibMSEED(object):
             recHandler = C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int,
                                      C.c_void_p)(record_handler)
             # Pack mstg into a MSEED file using record_handler as write method
-            msr = C.POINTER(MSRecord)()
-            ### memset (&Blkt1001, 0, sizeof(struct blkt_1001_s));
-            ### msr_addblockette ((MSRecord *) mst->prvtptr, (char *) &Blkt1001,
-            ###                   sizeof(struct blkt_1001_s), 1001, 0);
-            #blkt1001 = C.POINTER(blkt_1001_s)()
-            #clibmseed.msr_addblockette(C.cast(mstg.contents.traces.contents.prvtptr,
-            #                                  C.POINTER(MSRecord)),
-            #                           C.cast(blkt1001, C.c_char_p),
-            #                           C.c_int(C.sizeof(blkt_1001_s)),
-            #                           C.c_int(1001),
-            #                           C.c_int(0))
+            #msr = C.POINTER(MSRecord)()
 
             ### BETTER VERSION
-            #msr = clibmseed.msr_init(None)
-            #msr.contents.network = trace[0]['network']
-            #msr.contents.station = trace[0]['station']
-            #msr.contents.location = trace[0]['location']
-            #msr.contents.channel = trace[0]['channel']
-            #msr.contents.dataquality = trace[0]['dataquality']
-            #msr.contents.sampletype = trace[0]['sampletype']
+            msr = clibmseed.msr_init(None)
+            msr.contents.network = trace[0]['network']
+            msr.contents.station = trace[0]['station']
+            msr.contents.location = trace[0]['location']
+            msr.contents.channel = trace[0]['channel']
+#            msr.contents.dataquality = trace[0]['dataquality']
+#            msr.contents.sampletype = trace[0]['sampletype']
 
-            #size = C.sizeof(blkt_1001_s)
-            #blkt1001 = C.c_int(0)
-            #C.memset(C.pointer(blkt1001), 0, size)
-
-            #clibmseed.msr_addblockette(msr,
-            #                           C.pointer(blkt1001),
-            #                           C.c_int(size),
-            #                           C.c_int(1001),
-            #                           C.c_int(0))
+            # write blockette 1001 only if we have >4 digits of microseconds
+            # given (6 digits) and last two digits are not zero
+            ms = self._convertMSTimeToDatetime(trace[0]['starttime'])
+            ms = str(ms.microsecond)
+            if ms and len(ms) == 6 and ms[4:6] != '00':
+                size = C.sizeof(blkt_1001_s)
+                blkt1001 = C.c_int(0)
+                C.memset(C.pointer(blkt1001), 0, size)
+                clibmseed.msr_addblockette(msr,
+                                           C.pointer(blkt1001),
+                                           C.c_int(size),
+                                           C.c_int(1001),
+                                           C.c_int(0))
 
             try:
                 enc = trace[0]['encoding']
             except:
                 enc = encoding
 
-            #msr.contents.reclan = reclen
-            #msr.contents.encoding = enc
-            #msr.contents.byteorder = byteorder
-
+#            msr.contents.reclen = reclen
+#            msr.contents.encoding = enc
+#            msr.contents.byteorder = byteorder
             errcode = clibmseed.mst_packgroup(mstg, recHandler, None, reclen,
                                               enc, byteorder,
                                               C.byref(self.packedsamples),
@@ -461,7 +454,7 @@ class LibMSEED(object):
         """
         Returns trace header information of a given file.
         
-        :param time_tolerance: Time tolerance while reading the traces, default 
+        :param time_tolerance: Time tolerance while reading the traces, default
             to -1 (1/2 sample period).
         :param samprate_tolerance: Sample rate tolerance while reading the 
             traces, defaults to -1 (rate dependent).
@@ -581,7 +574,8 @@ class LibMSEED(object):
             # have Blockette 1001.
             try:
                 # Append timing quality to list.
-                data.append(float(ms.msr.contents.Blkt1001.contents.timing_qual))
+                tq = ms.msr.contents.Blkt1001.contents.timing_qual
+                data.append(float(tq))
             except:
                 if first_record:
                     break
@@ -936,8 +930,9 @@ class LibMSEED(object):
 class MSStruct(object):
     """
     Class for handling MSRecord and MSFileparam.
- 
-    It consists of a MSRecord and MSFileparam and an attached python file pointer.
+
+    It consists of a MSRecord and MSFileparam and an attached python file
+    pointer.
 
     :ivar msr: MSRecord
     :ivar msf: MSFileparam
@@ -1009,7 +1004,8 @@ class MSStruct(object):
         # Calculate offset of the record to be read.
         if record_number < 0:
             record_number = self.info['number_of_records'] + record_number
-        if record_number < 0 or record_number >= self.info['number_of_records']:
+        if record_number < 0 or \
+           record_number >= self.info['number_of_records']:
             raise ValueError('Please enter a valid record_number')
         return record_number * self.info['record_length']
 

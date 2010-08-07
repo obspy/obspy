@@ -270,7 +270,6 @@ class LibMSEEDTestCase(unittest.TestCase):
                                          new_trace_list[_i][1])
         os.remove(outfile)
 
-
     def test_getStartAndEndTime(self):
         """
         Tests getting the start- and end time of a file.
@@ -367,7 +366,6 @@ class LibMSEEDTestCase(unittest.TestCase):
             filename = os.path.join(self.dir, _i)
             isMSEED = mseed.isMSEED(filename)
             self.assertFalse(isMSEED)
-
 
     def test_getMSFileInfo(self):
         """

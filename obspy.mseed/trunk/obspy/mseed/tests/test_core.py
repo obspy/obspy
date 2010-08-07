@@ -516,7 +516,7 @@ class CoreTestCase(unittest.TestCase):
                 q_st[_i + 10].stats.mseed.data_quality_flags_count, dummy)
 
     def test_writingMicroseconds(self):
-        """XXX: Failing test case for issue #96
+        """
         Microseconds should be written.
         """
         file = os.path.join(self.path, 'data',
@@ -526,14 +526,16 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         st.write(tempfile, format='MSEED', reclen=512)
         st2 = read(tempfile)
-        # Use the record analyser.
-        rec1 = RecordAnalyser(file)
-        rec2 = RecordAnalyser(tempfile)
         # Should also be true for the stream objects.
         self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
         # Should also be true for the stream objects.
         self.assertEqual(st[0].stats, st2[0].stats)
-        # Both should have the same starttimes.
+        # Use the record analyzer.
+        rec1 = RecordAnalyser(file)
+        fp = open(tempfile, "rb")
+        rec2 = RecordAnalyser(fp)
+        fp.close()
+        # Both should have the same start times.
         self.assertEqual(rec1.corrected_starttime, rec2.corrected_starttime)
         os.remove(tempfile)
 
