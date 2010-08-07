@@ -346,10 +346,10 @@ class LibMSEED(object):
 #            msr.contents.sampletype = trace[0]['sampletype']
 
             # write blockette 1001 only if we have >4 digits of microseconds
-            # given (6 digits) and last two digits are not zero
+            # given and last two digits are not zero
             ms = self._convertMSTimeToDatetime(trace[0]['starttime'])
-            ms = str(ms.microsecond)
-            if ms and len(ms) == 6 and ms[4:6] != '00':
+            ms = '%06d' % ms.microsecond
+            if ms[-2:] != '00':
                 size = C.sizeof(blkt_1001_s)
                 blkt1001 = C.c_int(0)
                 C.memset(C.pointer(blkt1001), 0, size)

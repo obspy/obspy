@@ -539,6 +539,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(rec1.corrected_starttime, rec2.corrected_starttime)
         os.remove(tempfile)
 
+    def test_writingMicroseconds2(self):
+        """
+        Microseconds should be written.
+        """
+        file = os.path.join(self.path, 'data',
+                            'BW.UH3.__.EHZ.D.2010.171.first_record')
+        st = read(file)
+        # Read and write the record again with different microsecond times
+        for ms in [111111, 111110, 100000, 111100, 111000, 11111, 11110, 10000,
+                   1111, 1110, 1000, 111, 110, 100, 11, 10, 1, 0,
+                   999999, 999990, 900000, 999900, 999000, 99999, 99990, 90000,
+                   9999, 9990, 999, 990, 99, 90, 9, 0]:
+            st[0].stats.starttime = UTCDateTime(2010, 8, 7, 0, 8, 52, ms)
+            tempfile = NamedTemporaryFile().name
+            st.write(tempfile, format='MSEED', reclen=512)
+            st2 = read(tempfile)
+            os.remove(tempfile)
+            # Should also be true for the stream objects.
+            self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
+            # Should also be true for the stream objects.
+            self.assertEqual(st[0].stats, st2[0].stats)
+
     def test_isInvalidMSEED(self):
         """
         Tests isMSEED functionality.
