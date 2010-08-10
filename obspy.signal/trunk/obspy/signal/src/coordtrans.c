@@ -24,8 +24,8 @@ void utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *l
    float	tmp_x, tmp_y;
 
    /* convert everything to minutes */
-   orig_lat = 60.0 * orig_lat;
-   orig_lon = 60.0 * orig_lon;
+   orig_lat = 60.0f * orig_lat;
+   orig_lon = 60.0f * orig_lon;
    olon = orig_lon;
    olat = orig_lat;
 
@@ -46,18 +46,18 @@ void utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *l
    csr = cos((double)rota * DRAD);
 
 
-   *lat *= 60.0; 
-   *lon *= 60.0;
+   *lat *= 60.0f; 
+   *lon *= 60.0f;
 
    tmp_x = (*lon) - orig_lon;
    tmp_y = (*lat) - orig_lat;
 
-   tmp   = atan(DRLT * tan(DRAD * ((*lat)+orig_lat)/120.0));
-   tmp_x = (double)tmp_x * lon_fac * cos(tmp);    
-   tmp_y = (double)tmp_y * lat_fac;
+   tmp   = atan(DRLT * tan(DRAD * ((*lat)+orig_lat)/120.0f));
+   tmp_x = (float)((double)tmp_x * lon_fac * cos(tmp));
+   tmp_y = (float)((double)tmp_y * lat_fac);
 
-   *lon = csr*tmp_x - snr*tmp_y;
-   *lat = csr*tmp_y + snr*tmp_x;
+   *lon = (float)(csr*tmp_x - snr*tmp_y);
+   *lat = (float)(csr*tmp_y + snr*tmp_x);
 }
 
 void utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *lat) {
@@ -76,8 +76,8 @@ void utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *
    float 	rota=0.0;
 
    /* convert everything to minutes */
-   orig_lat = 60.0 * orig_lat;
-   orig_lon = 60.0 * orig_lon;
+   orig_lat = 60.0f * orig_lat;
+   orig_lon = 60.0f * orig_lon;
    olon = orig_lon;
    olat = orig_lat;
 
@@ -98,17 +98,17 @@ void utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *
    csr = cos((double)rota * DRAD);
 
 
-    tmp_x = snr*y + csr*x;
-    tmp_y = csr*y - snr*x;
+    tmp_x = (float)(snr*y + csr*x);
+    tmp_y = (float)(csr*y - snr*x);
 
-    tmp_y = tmp_y/lat_fac;
+    tmp_y = (float)(tmp_y/lat_fac);
     tmp_y += olat;
 
-    tmp = atan(DRLT * tan(DRAD * (tmp_y+orig_lat)/120.0));
-    tmp_x = tmp_x / (lon_fac * cos(tmp));
+    tmp = atan(DRLT * tan(DRAD * (tmp_y+orig_lat)/120.0f));
+    tmp_x = (float)(tmp_x / (lon_fac * cos(tmp)));
     tmp_x += olon;
 
-    *lon = tmp_x/60.0;
-    *lat = tmp_y/60.0;
+    *lon = tmp_x/60.0f;
+    *lat = tmp_y/60.0f;
 }
 

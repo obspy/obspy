@@ -109,7 +109,7 @@ void spr_bp_fast_bworth(float *tr, int ndat, float tsa, float flo, float fhi, in
                     }
             }
             /* set present data value and continue */
-            *(tr+m-1) =f[ns+1][5];
+            *(tr+m-1) = (float) f[ns+1][5];
     }
     if (zph == TRUE)
     {
@@ -133,7 +133,7 @@ void spr_bp_fast_bworth(float *tr, int ndat, float tsa, float flo, float fhi, in
                         }
                 }
                 /* set present data value and continue */
-                *(tr+m-1)=f[ns+1][5];
+                *(tr+m-1)= (float) f[ns+1][5];
         }
     }
     return;
@@ -198,7 +198,7 @@ void spr_hp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
                     }
             }
             /* set present data value and continue */
-            *(tr+m-1)=f[ns+1][3];
+            *(tr+m-1)= (float) f[ns+1][3];
     }
     if (zph == TRUE)
     {
@@ -221,7 +221,7 @@ void spr_hp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
                     }
             }
             /* set present data value and continue */
-            *(tr+m-1)=f[ns+1][3];
+            *(tr+m-1)= (float) f[ns+1][3];
         }
     }
 }
@@ -286,7 +286,7 @@ void spr_lp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
                     }
             }
             /* set present data value and continue */
-            *(tr+m-1)=f[ns+1][3];
+            *(tr+m-1)= (float) f[ns+1][3];
     }
     if (zph == TRUE)
     {
@@ -310,7 +310,7 @@ void spr_lp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
                     }
             }
             /* set present data value and continue */
-            *(tr+m-1)=f[ns+1][3];
+            *(tr+m-1)= (float) f[ns+1][3];
         }
     }
 }
@@ -348,13 +348,13 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
 
     /* Applying Integer Decimation with decimation ratio dec_ratio */
 
-    max = fabs(tr1[0]);
+    max = (float) fabs(tr1[0]);
     max_pos = 0;
 
     for (j = 0; j < ndat;j++)
     {
         if(fabs(tr1[j]) > max){
-            max = fabs(tr1[j]);
+            max = (float) fabs(tr1[j]);
             max_pos = j;
         }
     }
@@ -420,8 +420,8 @@ int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef)
             num += extra_tr1[j]*extra_tr2[j];
             denom += extra_tr1[j]*extra_tr1[j]+extra_tr2[j]*extra_tr2[j];
         }
-        coef[k]=2.*num/denom;
-        *fp *= (1.-coef[k]*coef[k]);
+        coef[k]=2.0f*num/denom;
+        *fp *= (1.0f-coef[k]*coef[k]);
         if (k != 1) {
             for (i=1;i <= (k-1);i++) {
                 coef[i] = extra_tr3[i]-coef[k]*extra_tr3[k-i];

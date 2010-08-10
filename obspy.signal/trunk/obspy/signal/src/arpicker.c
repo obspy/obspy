@@ -55,11 +55,11 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     buff4_max = 0.0;
     for(i=0;i<ndat;i++){
         if(fabs(buff1_s[i]) > buff4_max){
-            buff4_max = fabs(buff1_s[i]);
+            buff4_max = (float) fabs(buff1_s[i]);
             trace_flag = 1;
         }
         if(fabs(buff4_s[i]) > buff4_max){
-            buff4_max = fabs(buff4_s[i]);
+            buff4_max = (float) fabs(buff4_s[i]);
             trace_flag = 2;
         }
     }
@@ -75,13 +75,13 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     buff4_max = 0.0;
     for(i=0;i<ndat;i++){
         if(fabs(buff4[i]) > buff4_max)
-            buff4_max = fabs(buff4[i]);
+            buff4_max = (float) fabs(buff4[i]);
     }
 
     // next cummulative envelope function
     env_max = 0.0;
     for(i=0;i<ndat;i++){
-        buff2[i] = fabs(buff4[i])/buff4_max - buff4[i]*buff4[i]/(buff4_max*buff4_max);
+        buff2[i] = (float)fabs(buff4[i])/buff4_max - buff4[i]*buff4[i]/(buff4_max*buff4_max);
         if(i == 0){
             buff3[0] = buff2[i];
         }else{
@@ -145,7 +145,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             for(j=0;j<m_p;j++){
                 f -= (buff1[i+k-j]*ar_f[j]); 
             }
-            u = f*f * 1./(float)nl_p;
+            u = f*f * 1.0f/(float)nl_p;
             f_error[i+nl_p] += u;
         }
     }
@@ -156,14 +156,14 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             for(j=0;j<m_p;j++){
                 b -= (buff2[i+k-j]*ar_b[j]); 
             }
-            u = b*b * 1.0/(float)nl_p;
+            u = b*b * 1.0f/(float)nl_p;
             b_error[i+nl_p] += u;
         }
     }
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
     for(i=(m_p+nl_p),j=(i2-1-m_p-nl_p);i<=(i2-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
-        aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
+        aic = (float)(-1.0*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
             i3 = i;
@@ -173,7 +173,8 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     memset(f_error,0,ndat*sizeof(float));
     memset(b_error,0,ndat*sizeof(float));
 
-    n32 = (i2-i3)*2.+m_p+nl_p;
+    // changed to rounding, Moritz
+    n32 = (int)((i2-i3)*2.0+m_p+nl_p + 0.5);
     i3 = i2-n32;
     if(i3 < 0)
         i3 = 0;
@@ -195,7 +196,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         for(k=0;k<nl_p;k++){
             f = buff1[i+k];
             for(j=0;j<m_p;j++){
-                f -= (buff1[i+k-j]*ar_f[j]); 
+                f -= (float)(buff1[i+k-j]*ar_f[j]); 
             }
             u = f*f * 1.0/(float)nl_p;
             f_error[i+nl_p] += u;
@@ -206,7 +207,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         for(k=0;k<nl_p;k++){
             b = buff2[i+k];
             for(j=0;j<m_p;j++){
-                b -= (buff2[i+k-j]*ar_b[j]); 
+                b -= (float)(buff2[i+k-j]*ar_b[j]); 
             }
             u = b*b * 1.0/(float)nl_p;
             b_error[i+nl_p] += u;
@@ -215,7 +216,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
     for(i=(m_p+nl_p),j=(n32-1-m_p-nl_p);i<=(n32-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
-        aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
+        aic = (float)(-1.0*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
             i4 = i+i3;
@@ -239,10 +240,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         stlt = 0.;
         for(i=0;i<(ndat-nlta);i++){
             for(j=(i+nlta-nsta);j<(i+nlta);j++){
-                buf_sta[i+nlta] += fabs(buff4_s[j])/(float)nsta;
+                buf_sta[i+nlta] += (float)fabs(buff4_s[j])/(float)nsta;
             }
             for(j=(i);j<(i+nlta);j++){
-                buf_lta[i+nlta] += fabs(buff4_s[j])/(float)nlta;
+                buf_lta[i+nlta] += (float)fabs(buff4_s[j])/(float)nlta;
             }
         }
 
@@ -265,10 +266,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         memset(buf_lta,0,ndat*sizeof(float));
         for(i=(ndat-nlta-1);i>nlta;i--){
             for(j=(i+nsta-1);j>=(i);j--){
-                buf_sta[i] += fabs(buff4[j])/(float)nsta;
+                buf_sta[i] += (float)fabs(buff4[j])/(float)nsta;
             }
             for(j=(i+nlta-1);j>=(i);j--){
-                buf_lta[i] += fabs(buff4[j])/(float)nlta;
+                buf_lta[i] += (float)fabs(buff4[j])/(float)nlta;
             }
         }
         lta_max = 0.;
@@ -304,7 +305,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                     for(j=0;j<m_s;j++){
                         f -= (buff1_s[i+k-j]*ar_f[j]); 
                     }
-                    u = f*f * 1./(float)nl_s;
+                    u = f*f * 1.0f/(float)nl_s;
                     f_error[i+nl_s] += u;
                 }
             }
@@ -315,7 +316,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                     for(j=0;j<m_s;j++){
                         b -= (buff2[i+k-j]*ar_b[j]); 
                     }
-                    u = b*b * 1./(float)nl_s;
+                    u = b*b * 1.0f/(float)nl_s;
                     b_error[i+nl_s] += u;
                 }
             }
@@ -323,7 +324,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             aic_mini = 0.;
             i7 = 0;
             for(i=(m_s+nl_s),j=(n65-1-m_s-nl_s);i<=(n65-1-m_s-nl_s) && j>=(m_s+nl_s);i++,j--){
-                aic = -1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]);
+                aic = (float)(-1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
                 if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
                     aic_mini = aic;
                     i7 = i+i6;

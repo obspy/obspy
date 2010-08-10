@@ -133,8 +133,8 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
          if (reltrc[ii] < min ) min = reltrc[ii];
       }
 
-      scale = fabs(max);
-      if (fabs(max) < fabs(min)) scale = fabs(min);
+      scale = (float) fabs(max);
+      if (fabs(max) < fabs(min)) scale = (float) fabs(min);
 
       /* scale trace maximum to 10000 */
 
@@ -247,7 +247,7 @@ label160:
       */
       if ( i > picklength)
       {
-        iamp = abs(trace[i]) + 0.5;
+        iamp = (int) (abs(trace[i]) + 0.5);
 
         if(iamp > amp)
         {
@@ -276,7 +276,7 @@ label160:
                                       to S(t)
                                    */
 
-      iamp= abs(trace[i]) + 0.5;
+      iamp = (int) (abs(trace[i]) + 0.5);
       if(iamp > amp)
       {
         amp= iamp;
@@ -423,13 +423,13 @@ label160:
       {
           ssx= ssx+edat;
           ssx2= ssx2+edat*edat;
-          sum= num+1;
+          sum= (float)(num+1);
           if(((sum*ssx2-ssx*ssx)/(sum*sum)) >= 0)
-              sdev = sqrt((sum*ssx2-ssx*ssx)/(sum*sum));
+              sdev = (float) sqrt((sum*ssx2-ssx*ssx)/(sum*sum));
           else
               sdev = 1.;
           mean= ssx/sum;
-          num = sum + 0.5;
+          num = (int)(sum + 0.5);
       }
 
       goto label160;
@@ -470,7 +470,7 @@ void preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, f
       }
 
       if ((n*(*y2)-(*sumx)*(*sumx))/(n*n) > 0)
-          *sdev= sqrt(n*(*y2)-(*sumx)*(*sumx))/(n*n);
+          *sdev= (float)(sqrt(n*(*y2)-(*sumx)*(*sumx))/(n*n));
       else
           *sdev = 1;
       *sumx= 0.0;
