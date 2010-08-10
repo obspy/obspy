@@ -838,8 +838,8 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
         # some test that should fail and leave the original trace alone
-        self.assertRaises(ValueError, tr.downsample, 7)
-        self.assertRaises(ValueError, tr.downsample, 9)
+        self.assertRaises(ValueError, tr.downsample, 7, strict_length=True)
+        self.assertRaises(ValueError, tr.downsample, 9, strict_length=True)
         # some tests in place
         tr.downsample(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))

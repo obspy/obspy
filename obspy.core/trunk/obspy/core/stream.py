@@ -237,17 +237,15 @@ def _read_example():
     path = os.path.dirname(__file__)
     path = os.path.join(path, "data", "example.npz")
     data = np.load(path)
-    header = {'network': "BW",
-              'station': "RJOB",
-              'location': "",
-              'npts': 3000,
-              'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3),
-              'sampling_rate': 100.0,
-              'processing': ["filter:lowpass:{'freq': 40.0}",
-                             "downsample:integerDecimation:2"],
-              'calib': 1.0}
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
+        header = {'network': "BW",
+                  'station': "RJOB",
+                  'location': "",
+                  'npts': 3000,
+                  'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3),
+                  'sampling_rate': 100.0,
+                  'calib': 1.0}
         header['channel'] = channel
         st.append(Trace(data=data[channel], header=header))
     return st
@@ -1339,7 +1337,7 @@ class Stream(object):
         return
 
     def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=True):
+                   strict_length=False):
         """
         Downsample data in all traces of stream.
 
@@ -1349,9 +1347,9 @@ class Stream(object):
         applied to ensure no aliasing artifacts are introduced. The automatic
         filtering can be deactivated with ``no_filter=True``.
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. The
-        downsampling is aborted in this case but can be forced by setting
-        ``strict_length=False``.
+        zero then the endtime of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing endtimes set
+        ``strict_length=True``.
         This operation is performed in place on the actual data arrays. The raw
         data is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`

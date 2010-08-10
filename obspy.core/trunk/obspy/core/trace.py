@@ -1204,7 +1204,7 @@ class Trace(object):
         return
 
     def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=True):
+                   strict_length=False):
         """
         Downsample trace data.
 
@@ -1214,9 +1214,9 @@ class Trace(object):
         applied to ensure no aliasing artifacts are introduced. The automatic
         filtering can be deactivated with ``no_filter=True``.
         If the length of the data array modulo ``decimation_factor`` is not
-        zero then the endtime of the trace is changing on sub-sample scale. The
-        downsampling is aborted in this case but can be forced by setting
-        ``strict_length=False``.
+        zero then the endtime of the trace is changing on sub-sample scale. To
+        abort downsampling in case of changing endtimes set
+        ``strict_length=True``.
         The original data is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
         to make a copy of your trace.
