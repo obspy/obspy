@@ -223,11 +223,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # Stay compatible with the old version
     if 'paz' in kwargs:
         paz_remove = kwargs['paz']
-        warnings.warn("Use paz_remove option instead of paz", 
+        warnings.warn("Use paz_remove option instead of paz",
                       DeprecationWarning)
     if 'inst_sim' in kwargs:
         paz_simulate = kwargs['inst_sim']
-        warnings.warn("Use paz_simulate option instead of inst_sim", 
+        warnings.warn("Use paz_simulate option instead of inst_sim",
                       DeprecationWarning)
     if 'no_inverse_filtering' in kwargs:
         if kwargs['no_inverse_filtering'] == True:
@@ -255,6 +255,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             if key not in d:
                 raise KeyError("Missing key: %s" % key)
 
+    # XXX: error underneath is never used !
     error = """
     %s must be either of type None or of type dictionary. The dictionary
     must contain poles, zeros and gain as keys, values of poles and zeros
