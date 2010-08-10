@@ -945,8 +945,9 @@ class PickingGUI:
         # problems because of the pop() statement
         warn_msg = ""
         merge_msg = ""
-        for i in range(len(self.streams))[::-1]:
-            st = self.streams[i]
+        # XXX we need the list() because otherwise the iterator gets garbled if
+        # XXX removing streams inside the for loop!!
+        for st in list(self.streams):
             net_sta = "%s:%s" % (st[0].stats.network.strip(),
                                  st[0].stats.station.strip())
             # Here we make sure that a station/network combination is not
@@ -959,9 +960,9 @@ class PickingGUI:
                       % net_sta + "in stream list. Discarding stream."
                 print msg
                 warn_msg += msg + "\n"
-                self.streams.pop(i)
+                self.streams.remove(st)
                 continue
-            if not len(st.traces) in [1, 3]:
+            if len(st) not in [1, 3]:
                 msg = 'Warning: All streams must have either one Z trace ' + \
                       'or a set of three ZNE traces.'
                 print msg
@@ -969,10 +970,9 @@ class PickingGUI:
                 # remove all unknown channels ending with something other than
                 # Z/N/E and try again...
                 removed_channels = ""
-                for i in range(len(st))[::-1]:
-                    tr = st[i]
-                    if not tr.stats.channel[-1] in ["Z", "N", "E"]:
-                        removed_channels += " " + st[i].stats.channel
+                for tr in st:
+                    if tr.stats.channel[-1] not in ["Z", "N", "E"]:
+                        removed_channels += " " + tr.stats.channel
                         st.remove(tr)
                 if len(st.traces) in [1, 3]:
                     msg = 'Warning: deleted some unknown channels in ' + \
@@ -991,12 +991,12 @@ class PickingGUI:
                     msg = str(st)
                     print msg
                     warn_msg += msg + "\n"
-                    self.streams.pop(i)
+                    self.streams.remove(st)
                     merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
                             'option merge (-m safe or -m overwrite) to ' + \
                             'avoid losing streams due gaps/overlaps.'
                     continue
-            if len(st.traces) == 1 and st[0].stats.channel[-1] != 'Z':
+            if len(st) == 1 and st[0].stats.channel[-1] != 'Z':
                 msg = 'Warning: All streams must have either one Z trace ' + \
                       'or a set of three ZNE traces.'
                 msg += 'Stream %s discarded. Reason: ' % net_sta + \
@@ -1009,15 +1009,15 @@ class PickingGUI:
                 msg = str(st)
                 print msg
                 warn_msg += msg + "\n"
-                self.streams.pop(i)
+                self.streams.remove(st)
                 continue
-            if len(st.traces) == 3 and (st[0].stats.channel[-1] != 'Z' or
-                                        st[1].stats.channel[-1] != 'N' or
-                                        st[2].stats.channel[-1] != 'E' or
-                                        st[0].stats.station.strip() !=
-                                        st[1].stats.station.strip() or
-                                        st[0].stats.station.strip() !=
-                                        st[2].stats.station.strip()):
+            if len(st) == 3 and (st[0].stats.channel[-1] != 'Z' or
+                                 st[1].stats.channel[-1] != 'N' or
+                                 st[2].stats.channel[-1] != 'E' or
+                                 st[0].stats.station.strip() !=
+                                 st[1].stats.station.strip() or
+                                 st[0].stats.station.strip() !=
+                                 st[2].stats.station.strip()):
                 msg = 'Warning: All streams must have either one Z trace ' + \
                       'or a set of three ZNE traces.'
                 msg += 'Stream %s discarded. Reason: ' % net_sta + \
@@ -1030,7 +1030,7 @@ class PickingGUI:
                 msg = str(st)
                 print msg
                 warn_msg += msg + "\n"
-                self.streams.pop(i)
+                self.streams.remove(st)
                 continue
             sta_list.add(net_sta)
         
