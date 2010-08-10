@@ -167,8 +167,10 @@ def specInv(spec, wlev):
     return found
 
 
-def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600.0,
-            zero_mean=True, taper=True, taper_fraction=0.05, **kwargs):
+def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
+            remove_sensitivity=False, simulate_sensitivity=False,
+            water_level=600.0, zero_mean=True, taper=True,
+            taper_fraction=0.05, **kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -190,13 +192,23 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
                 list of complex floating point numbers, gain must be of
                 type float. Poles and Zeros are assumed to correct to m/s,
                 SEED convention. Use None for no inverse filtering.
-    :type water_level: Float
-    :param water_level: Water_Level for spectrum to simulate
     :type paz_simulate: Dictionary, None
     :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
                      'gain'. Poles and zeros must be a list of complex
                      floating point numbers, gain must be of type float. Or
                      None for no simulation.
+    :type remove_sensitivity: Boolean
+    :param remove_sensitivity: Determines if data is divided by
+            `paz_remove['sensitivity']` to correct for overall sensitivity of
+            recording instrument (seismometer/digitizer) during instrument
+            correction.
+    :type simulate_sensitivity: Boolean
+    :param simulate_sensitivity: Determines if data is multiplied with
+            `paz_simulate['sensitivity']` to simulate overall sensitivity of
+            new instrument (seismometer/digitizer) during instrument
+            simulation.
+    :type water_level: Float
+    :param water_level: Water_Level for spectrum to simulate
     :type zero_mean: Boolean
     :param zero_mean: If true the mean of the data is subtracted
     :type taper: Boolean
@@ -207,6 +219,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
+    ###########################################################################
     # Stay compatible with the old version
     if 'paz' in kwargs:
         paz_remove = kwargs['paz']
@@ -221,6 +234,12 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
             paz_remove = None
         warnings.warn("Use paz_remove option instead no_inverse_filtering",
                       DeprecationWarning)
+    if (paz_remove and not remove_sensitivity) or \
+       (paz_simulate and not simulate_sensitivity):
+        msg = "The default for correction of overall sensitivity will be " + \
+              "set to True in future releases."
+        warnings.warn(msg, DeprecationWarning)
+    ###########################################################################
 
     # Checking the types
     if not paz_remove and not paz_simulate:
@@ -275,6 +294,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None, water_level=600
     data = np.fft.irfft(data)[0:ndat]
     # linear detrend
     detrend(data)
+    # correct for involved overall sensitivities
+    if paz_remove and remove_sensitivity:
+        data = data / paz_remove['sensitivity']
+    if paz_simulate and simulate_sensitivity:
+        data = data * paz_simulate['sensitivity']
     return data
 
 

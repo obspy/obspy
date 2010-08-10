@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import createDummyStream
 import numpy as np
 import pickle
@@ -450,6 +450,33 @@ class StreamTestCase(unittest.TestCase):
         for i, tr in enumerate(st):
             np.testing.assert_array_equal(tr.data, st_bkp[i].data)
             self.assertEqual(tr.stats, st_bkp[i].stats)
+
+    def test_simulate(self):
+        """
+        Tests if calling simulate of stream gives the same result as calling
+        simulate on every trace manually.
+        """
+        # skip test if obspy.signal is not installed
+        try:
+            import obspy.signal # @UnusedImport downsample() raises if
+                                # seisSim cannot be imported!
+        except ImportError:
+            return
+        st1 = read()
+        st2 = read()
+        paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+                              -251.33+0j, -131.04-467.29j, -131.04+467.29j],
+                    'zeros': [0j, 0j],
+                    'gain': 60077000.0,
+                    'sensitivity': 2516778400.0}
+        paz_le3d1s = {'poles': [-4.440+4.440j, -4.440-4.440j, -1.083+0.0j],
+                      'zeros': [0.0+0.0j, 0.0+0.0j, 0.0+0.0j],
+                      'gain': 0.4,
+                      'sensitivity': 1.0}
+        st1.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
+        for tr in st2:
+            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
+        self.assertEqual(st1, st2)
 
     def test_downsample(self):
         """

@@ -921,6 +921,122 @@ class Trace(object):
             print self.data.dtype.byteorder
             raise Exception(msg)
 
+    def simulate(self, paz_remove=None, paz_simulate=None,
+                 remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
+        """
+        Correct for instrument response / Simulate new instrument response.
+
+        This function corrects for the original instrument response given by
+        `paz_remove` and/or simulates a new instrument response given by
+        `paz_simulate`.
+        For additional information and more options to control the instrument
+        correction/simulation (e.g. water level, demeaning, tapering, ...) see
+        :func:`~obspy.signal.invsim.seisSim`.
+        
+        `paz_remove` and `paz_simulate` are expected to be dictionaries
+        containing information on poles, zeros and gain (and usually also
+        sensitivity).
+
+        If both `paz_remove` and `paz_simulate` are specified, both steps are
+        performed in one go in the frequency domain, otherwise only the
+        specified step is performed.
+
+        Processing is performed in place on the actual data array.
+        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
+        to make a copy of your trace.
+        This also makes an entry with information on the applied processing
+        in ``trace.stats.processing``.
+
+        Example
+        -------
+        
+        >>> from obspy.core import read
+        >>> from obspy.signal import cornFreq2Paz
+        >>> st = read()
+        >>> tr = st[0]
+        >>> tr.plot() # doctest: +SKIP
+        >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+        ...                       -251.33+0j,
+        ...                       -131.04-467.29j, -131.04+467.29j],
+        ...             'zeros': [0j, 0j],
+        ...             'gain': 60077000.0,
+        ...             'sensitivity': 2516778400.0}
+        >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+        >>> paz_1hz['sensitivity'] = 1.0
+        >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+        >>> tr.plot() # doctest: +SKIP
+
+        .. plot::
+            
+            from obspy.core import read
+            from obspy.signal import cornFreq2Paz
+            st = read()
+            tr = st[0]
+            tr.plot()
+            paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+                                  -251.33+0j,
+                                  -131.04-467.29j, -131.04+467.29j],
+                        'zeros': [0j, 0j],
+                        'gain': 60077000.0,
+                        'sensitivity': 2516778400.0}
+            paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+            paz_1hz['sensitivity'] = 1.0
+            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+            tr.plot()
+
+        :type paz_remove: Dictionary, None
+        :param paz_remove: Dictionary containing keys 'poles', 'zeros',
+                    'gain' (A0 normalization factor). poles and zeros must be a
+                    list of complex floating point numbers, gain must be of
+                    type float. Poles and Zeros are assumed to correct to m/s,
+                    SEED convention. Use None for no inverse filtering.
+        :type paz_simulate: Dictionary, None
+        :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
+                         'gain'. Poles and zeros must be a list of complex
+                         floating point numbers, gain must be of type float. Or
+                         None for no simulation.
+        :type remove_sensitivity: Boolean
+        :param remove_sensitivity: Determines if data is divided by
+                `paz_remove['sensitivity']` to correct for overall sensitivity
+                of recording instrument (seismometer/digitizer) during
+                instrument correction.
+        :type simulate_sensitivity: Boolean
+        :param simulate_sensitivity: Determines if data is multiplied with
+                `paz_simulate['sensitivity']` to simulate overall sensitivity
+                of new instrument (seismometer/digitizer) during instrument
+                simulation.
+        """
+        try:
+            from obspy.signal import seisSim
+        except ImportError:
+            msg = "Error during import from obspy.signal. Please make " + \
+                  "sure obspy.signal is installed properly."
+            raise ImportError(msg)
+
+        try:
+            self.data = seisSim(self.data, self.stats.sampling_rate,
+                    paz_remove=paz_remove, paz_simulate=paz_simulate,
+                    remove_sensitivity=remove_sensitivity,
+                    simulate_sensitivity=simulate_sensitivity, **kwargs)
+        except TypeError, e:
+            print seisSim.__doc__
+            print "(Data and sampling rate are passed on internally)"
+            raise e
+
+        # add processing information to the stats dictionary
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        if paz_remove:
+            proc_info = "simulate:inverse:%s:sensitivity=%s" % \
+                    (paz_remove, remove_sensitivity)
+            self.stats['processing'].append(proc_info)
+        if paz_simulate:
+            proc_info = "simulate:forward:%s:sensitivity=%s" % \
+                    (paz_simulate, simulate_sensitivity)
+            self.stats['processing'].append(proc_info)
+        
+        return
+
     def filter(self, type, options):
         """
         Filters the data of the current trace. This is performed in place on

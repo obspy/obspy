@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from numpy.ma import is_masked
-from obspy.core import UTCDateTime, Trace
+from obspy.core import UTCDateTime, Trace, read
 import unittest
 import math
 
@@ -708,6 +708,39 @@ class TraceTestCase(unittest.TestCase):
         self.assertRaises(TypeError, tr3.__add__, tr4)
         self.assertRaises(TypeError, tr2.__add__, tr1)
         self.assertRaises(TypeError, tr4.__add__, tr3)
+
+    def test_simulate(self):
+        """
+        Tests if calling simulate of trace gives the same result as using
+        seisSim manually.
+        """
+        # skip test if obspy.signal is not installed
+        try:
+            from obspy.signal import seisSim
+        except ImportError:
+            return
+        tr = read()[0]
+        paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+                              -251.33+0j, -131.04-467.29j, -131.04+467.29j],
+                    'zeros': [0j, 0j],
+                    'gain': 60077000.0,
+                    'sensitivity': 2516778400.0}
+        paz_le3d1s = {'poles': [-4.440+4.440j, -4.440-4.440j, -1.083+0.0j],
+                      'zeros': [0.0+0.0j, 0.0+0.0j, 0.0+0.0j],
+                      'gain': 0.4,
+                      'sensitivity': 1.0}
+        data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=paz_sts2,
+                       paz_simulate=paz_le3d1s,
+                       remove_sensitivity=True, simulate_sensitivity=True)
+        try:
+            proc_info = tr.stats.processing
+        except KeyError:
+            proc_info = []
+        proc_info.append("simulate:inverse:%s:sensitivity=True" % paz_sts2)
+        proc_info.append("simulate:forward:%s:sensitivity=True" % paz_le3d1s)
+        tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
+        np.testing.assert_array_equal(tr.data, data)
+        self.assertEqual(tr.stats.processing, proc_info)
 
     def test_filter(self):
         """
