@@ -15,6 +15,7 @@ import os
 import sys
 import tempfile
 import inspect
+import warnings
 
 # defining obspy modules
 # currently used by runtests and the path function
@@ -47,7 +48,7 @@ BAND_CODE = {'F': 1000.0,
              'R': 0.0001,
              'P': 0.000001,
              'T': 0.0000001,
-             'Q': 0.00000001,}
+             'Q': 0.00000001, }
 
 
 class AttribDict(dict, object):
@@ -381,6 +382,26 @@ def _getPlugins(group, subgroup_name=None):
         else:
             features[ep.name] = ep
     return features
+
+
+def deprecated(func):
+    """
+    This is a decorator which can be used to mark functions as deprecated.
+
+    It will result in a warning being emitted when the function is used.
+    """
+    def new_func(*args, **kwargs):
+        if 'deprecated' in func.__doc__.lower():
+            msg = func.__doc__
+        else:
+            msg = "Call to deprecated function %s." % func.__name__
+        warnings.warn(msg, category=DeprecationWarning)
+        return func(*args, **kwargs)
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
+
 
 if __name__ == '__main__':
     import doctest

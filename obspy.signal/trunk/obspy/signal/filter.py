@@ -16,9 +16,9 @@ Various Seismogram Filtering Functions
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import warnings
 
 from numpy import array, where, fft
+from obspy.core.util import deprecated
 from scipy.fftpack import hilbert
 from scipy.signal import iirfilter, lfilter, remez, convolve, get_window
 
@@ -50,13 +50,11 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     else:
         return lfilter(b, a, data)
 
-
+@deprecated
 def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandpass` instead.
     """
-    warnings.warn("Use bandpass(..., zerophase=True) instead.",
-                  DeprecationWarning)
     return bandpass(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -88,12 +86,11 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
+@deprecated
 def bandstopZPHSH(data, freqmin, freqmax, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.bandstop` instead.
     """
-    warnings.warn("Use bandstop(..., zerophase=True) instead.",
-                  DeprecationWarning)
     return bandstop(data, freqmin, freqmax, df, corners, zerophase=True)
 
 
@@ -124,12 +121,11 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
+@deprecated
 def lowpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.lowpass` instead.
     """
-    warnings.warn("Use lowpass(..., zerophase=True) instead.",
-                  DeprecationWarning)
     return lowpass(data, freq, df, corners, zerophase=True)
 
 
@@ -159,12 +155,11 @@ def highpass(data, freq, df, corners=4, zerophase=False):
         return lfilter(b, a, data)
 
 
+@deprecated
 def highpassZPHSH(data, freq, df, corners=2):
     """
     DEPRECATED. Use :func:`~obspy.signal.filter.highpass` instead.
     """
-    warnings.warn("Use highpass(..., zerophase=True) instead.",
-                  DeprecationWarning)
     return highpass(data, freq, df, corners, zerophase=True)
 
 
@@ -182,7 +177,7 @@ def envelope(data):
     :return: Envelope of input data.
     """
     hilb = hilbert(data)
-    data = (data**2 + hilb**2)**0.5
+    data = (data ** 2 + hilb ** 2) ** 0.5
     return data
 
 

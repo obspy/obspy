@@ -11,7 +11,7 @@ Module for handling ObsPy Trace objects.
 
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk
+from obspy.core.util import AttribDict, createEmptyDataChunk, deprecated
 import numpy as np
 import math
 import warnings
@@ -200,7 +200,7 @@ class Stats(AttribDict):
         super(Stats, self).__setitem__('delta', delta)
         # set endtime
         if self.npts == 0:
-            # XXX: inconsistent
+            # XXX: inconsistent, see issue #58
             delta = 0
         else:
             delta = (self.npts - 1) / float(self.sampling_rate)
@@ -651,20 +651,18 @@ class Trace(object):
             tr.spectrogram(log=True)
         """
         try:
-            from obspy.imaging.spectrogram import spectrogram
+            from obspy.imaging.spectrogram import spectrogram as spec
         except ImportError:
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
         try:
-            spec = spectrogram(data=self.data,
-                               samp_rate=self.stats.sampling_rate,
-                               title=str(self), *args, **kwargs)
+            spec = spec(data=self.data, samp_rate=self.stats.sampling_rate,
+                        title=str(self), *args, **kwargs)
         except TypeError, e:
-            print spectrogram.__doc__
+            print spec.__doc__
             print "(Data and sampling rate are passed on internally)"
             raise e
-
         return spec
 
     def write(self, filename, format, **kwargs):
@@ -689,13 +687,12 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
+    @deprecated
     def ltrim(self, *args, **kwargs):
         """
-        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
         This method will be removed in the next major release.
         """
-        msg = "Use trim(starttime=starttime, endtime=None, ...) instead"
-        warnings.warn(msg, DeprecationWarning)
         self._ltrim(*args, **kwargs)
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
@@ -747,13 +744,12 @@ class Trace(object):
         elif delta > 0:
             self.data = self.data[delta:]
 
+    @deprecated
     def rtrim(self, *args, **kwargs):
         """
-        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
         This method will be removed in the next major release.
         """
-        msg = "Use trim(starttime=None, endtime=endtime, ...) instead"
-        warnings.warn(msg, DeprecationWarning)
         self._rtrim(*args, **kwargs)
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
@@ -846,13 +842,12 @@ class Trace(object):
         if endtime:
             self._rtrim(endtime, pad, nearest_sample=nearest_sample)
 
+    @deprecated
     def cut(self, *args, **kwargs):
         """
-        Deprecated. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
+        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
         This method will be removed in the next major release.
         """
-        msg = "Use trim(starttime=starttime, endtime=endtime, ...) instead"
-        warnings.warn(msg, DeprecationWarning)
         self.trim(*args, **kwargs)
 
     lcut = ltrim
@@ -1034,7 +1029,7 @@ class Trace(object):
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                     (paz_simulate, simulate_sensitivity)
             self.stats['processing'].append(proc_info)
-        
+
         return
 
     def filter(self, type, options):
@@ -1107,7 +1102,7 @@ class Trace(object):
             self.stats['processing'] = []
         proc_info = "filter:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
-        
+
         return
 
     def trigger(self, type, options):

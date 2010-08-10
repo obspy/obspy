@@ -6,19 +6,19 @@
 #    Email: yannik.behr@vuw.ac.nz
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
-#--------------------------------------------------------------------
+#-------------------------------------------------------------------
+from obspy.core import UTCDateTime
+from obspy.core.util import deprecated
+import numpy as np
+import os
+import string
+import time
 
 """
 An object-oriented version of C. J. Ammon's SAC I/O module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-from obspy.core import UTCDateTime
-import numpy as np
-import os
-import time
-import warnings
-import string
 
 class SacError(Exception):
     """
@@ -617,7 +617,8 @@ class SacIO(object):
         
         >>> tr = SacIO('testxy.sac',alpha=True) # doctest: +SKIP 
 
-        Reading only the header portion of alphanumeric SAC-files is currently not supported.
+        Reading only the header portion of alphanumeric SAC-files is currently
+        not supported.
         """
         ###### open the file
         try:
@@ -780,8 +781,8 @@ class SacIO(object):
         Channel =  Q       
         Event       =  FUNCGEN: SINE   
 
-        If no header values are defined (i.e. all are equal 12345) than this function
-        won't do anything.
+        If no header values are defined (i.e. all are equal 12345) than this
+        function won't do anything.
         """
         #
         # Seismogram Info:
@@ -845,8 +846,9 @@ class SacIO(object):
         >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip() # doctest: +SKIP
         'Q'
 
-        String header values have a fixed length of 8 or 16 characters. This can lead to errors
-        for example if you concatenate strings and forget to strip off the trailing whitespace.
+        String header values have a fixed length of 8 or 16 characters. This
+        can lead to errors for example if you concatenate strings and forget to
+        strip off the trailing whitespace.
         """
         #
         #  Read in the Header
@@ -863,7 +865,8 @@ class SacIO(object):
         :type hn: string
         :param hn: header variable name
         :type hv: string, float or integer
-        :param hv: header variable value (numeric or string value to be assigned to hn)
+        :param hv: header variable value (numeric or string value to be
+            assigned to hn)
         :return: None
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -908,7 +911,7 @@ class SacIO(object):
         else:
             return True
 
-    def _istext_(self,filename, blocksize = 512):
+    def _istext_(self, filename, blocksize=512):
         ### Find out if it is a text or a binary file. This should
         ### always be true if a file is a text-file and only true for a
         ### binary file in rare occasions (Recipe 173220 found on
@@ -918,7 +921,7 @@ class SacIO(object):
         s = open(filename).read(blocksize)
         if "\0" in s:
             return 0
-        
+
         if not s:  # Empty files are considered text
             return 1
 
@@ -928,7 +931,7 @@ class SacIO(object):
 
         # If more than 30% non-text characters, then
         # this is considered a binary file
-        if len(t)/len(s) > 0.30:
+        if len(t) / len(s) > 0.30:
             return 0
         return 1
 
@@ -1056,7 +1059,8 @@ class SacIO(object):
         """
         Swap byte order of SAC-file in memory.
 
-        Currently seems to work only for conversion from big-endian to little-endian.
+        Currently seems to work only for conversion from big-endian to
+        little-endian.
 
         :param: None
         :return: None
@@ -1089,13 +1093,12 @@ class SacIO(object):
         """
         return self.GetHvalue(hname)
 
+
+@deprecated
 class ReadSac(SacIO):
     """
     DEPRECATED. Use :class:`~obspy.sac.SacIO` instead.
     """
-    def __init__(self, *args, **kwargs):
-        warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning)
-        SacIO.__init__(self, *args, **kwargs)
 
 
 if __name__ == "__main__":

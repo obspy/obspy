@@ -10,7 +10,6 @@ import numpy as np
 import inspect
 import os
 import unittest
-import sys
 
 
 class SacIOTestCase(unittest.TestCase):
@@ -87,7 +86,7 @@ class SacIOTestCase(unittest.TestCase):
         t.SetHvalue("kstnm", "spiff")
         self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
         t.WriteSacBinary(tempfile)
-        self.assertEqual(os.stat(sacfile)[6],os.stat(tempfile)[6])
+        self.assertEqual(os.stat(sacfile)[6], os.stat(tempfile)[6])
         self.assertEqual(os.path.exists(tempfile), True)
         t.ReadSacHeader(tempfile)
         self.assertEqual((t.hf != None), True)
@@ -96,11 +95,11 @@ class SacIOTestCase(unittest.TestCase):
         t.WriteSacHeader(tempfile)
         t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
         self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"), 'Z       ')
-        self.assertEqual(SacIO(tempfile,headonly=True).GetHvalue('kcmpnm'),'Z       ')
-        self.assertEqual(t.IsValidSacFile(tempfile),True)
-        self.assertEqual(t.IsValidXYSacFile(tempfile),False)
-        self.assertEqual(SacIO().GetHvalueFromFile(sacfile,'npts'),100)
-        self.assertEqual(SacIO(sacfile).GetHvalue('npts'),100)
+        self.assertEqual(SacIO(tempfile, headonly=True).GetHvalue('kcmpnm'), 'Z       ')
+        self.assertEqual(t.IsValidSacFile(tempfile), True)
+        self.assertEqual(t.IsValidXYSacFile(tempfile), False)
+        self.assertEqual(SacIO().GetHvalueFromFile(sacfile, 'npts'), 100)
+        self.assertEqual(SacIO(sacfile).GetHvalue('npts'), 100)
         os.remove(tempfile)
 
     def test_readWriteXY(self):
@@ -115,9 +114,9 @@ class SacIOTestCase(unittest.TestCase):
         d = SacIO(tempfile, alpha=True)
         e = SacIO()
         e.ReadSacXY(tempfile)
-        self.assertEqual(e.GetHvalue('npts'),d.GetHvalue('npts'))
-        self.assertEqual(e.IsValidXYSacFile(tempfile),True)
-        self.assertEqual(e.IsValidSacFile(tempfile),False)
+        self.assertEqual(e.GetHvalue('npts'), d.GetHvalue('npts'))
+        self.assertEqual(e.IsValidXYSacFile(tempfile), True)
+        self.assertEqual(e.IsValidSacFile(tempfile), False)
         d.WriteSacBinary(tempfile2)
         size1 = os.stat(tempfile2)[6]
         size2 = os.stat(tfile)[6]
