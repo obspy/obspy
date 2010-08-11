@@ -9,6 +9,7 @@
 #-------------------------------------------------------------------
 from obspy.core import UTCDateTime
 from obspy.core.util import deprecated
+import warnings
 import numpy as np
 import os
 import string
@@ -1094,11 +1095,13 @@ class SacIO(object):
         return self.GetHvalue(hname)
 
 
-@deprecated
 class ReadSac(SacIO):
     """
     DEPRECATED. Use :class:`~obspy.sac.SacIO` instead.
     """
+    def __init__(self, *args, **kwargs): 
+        warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning) 
+        SacIO.__init__(self, *args, **kwargs)
 
 
 if __name__ == "__main__":
