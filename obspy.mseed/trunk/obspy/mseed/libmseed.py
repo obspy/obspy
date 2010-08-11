@@ -31,6 +31,105 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
+
+Seletected examples of Methods in obspy.mseed.libmseed
+------------------------------------------------------
+All of the following methods can only be accessed with an instance of the
+libmseed class.
+
+>>> from obspy.mseed import libmseed
+>>> mseed = libmseed()
+>>> mseed
+<obspy.mseed.libmseed.libmseed object at 0x10178ef50>
+
+printFileInformation
+^^^^^^^^^^^^^^^^^^^^
+Prints some informations about the file.
+
+Parameters:
+    * filename = MiniSEED file. 
+
+>>> mseed.printFileInformation('COP.BHE.DK.2009.050')
+Source            Start sample               End sample                 Gap  Hz  Samples
+DK_COP__BHE_D     2009-02-19T00:00:00.035100 2009-02-19T23:59:59.985100 ==   20  1728000
+Total: 1 trace segment(s)
+
+isMSEED
+^^^^^^^
+Tests whether a file is a MiniSEED file or not. Returns True on success or
+False otherwise.
+
+This method only reads the first seven bytes of the file and checks whether it
+is a MiniSEED or fullSEED file. It also is true for fullSEED files because
+libmseed can read the data part of fullSEED files. If the method finds a
+fullSEED file it also checks if it has a data part and returns False otherwise.
+Thus it cannot be used to validate a MiniSEED or SEED file.
+
+Parameters:
+    * filename = MiniSEED file. 
+
+>>> mseed.isMSEED('COP.BHE.DK.2009.050')
+True
+
+getDataQualityFlagsCount
+^^^^^^^^^^^^^^^^^^^^^^^^
+Counts all data quality flags of the given MiniSEED file. This method will
+count all set data quality flag bits in the fixed section of the data header in
+a MiniSEED file and returns the total count for each flag type.
+
+Data quality flags:
+
+========  =================================================
+Bit       Description
+========  =================================================
+[Bit 0]   Amplifier saturation detected (station dependent)
+[Bit 1]   Digitizer clipping detected
+[Bit 2]   Spikes detected
+[Bit 3]   Glitches detected
+[Bit 4]   Missing/padded data present
+[Bit 5]   Telemetry synchronization error
+[Bit 6]   A digital filter may be charging
+[Bit 7]   Time tag is questionable
+========  =================================================
+
+This will only work correctly if each record in the file has the same record
+length.
+
+Parameters:
+    * filename = MiniSEED file. 
+
+>>> mseed.getDataQualityFlagsCount('qualityflags.mseed')
+[9, 8, 7, 6, 5, 4, 3, 2]
+
+getTimingQuality
+^^^^^^^^^^^^^^^^
+Reads timing quality and returns a dictionary containing statistics about it.
+This method will read the timing quality in Blockette 1001 for each record in
+the file if available and return the following statistics:
+Minima, maxima, average, median and upper and lower quantile. It is probably
+pretty safe to set the first_record parameter to True because the timing
+quality is a vendor specific value and thus it will probably be set for each
+record or for none.
+
+Parameters:
+* filename = MiniSEED file.
+* first_record: Determines whether all records are assumed to either have a
+  timing quality in Blockette 1001 or not depending on whether the first
+  records has one. If True and the first records does not have a timing quality
+  it will not parse the whole file. If False is will parse the whole file
+  anyway and search for a timing quality in each record. Defaults to True.
+* rl_autodetection: Determines the auto-detection of the record lengths in the
+  file. If 0 only the length of the first record is detected automatically. All
+  subsequent records are then assumed to have the same record length. If -1 the
+  length of each record is automatically detected. Defaults to -1. 
+
+>>> mseed.getTimingQuality('timingquality.mseed')
+{'average': 50.0,
+ 'lower_quantile': 25.0,
+ 'max': 100.0,
+ 'median': 50.0,
+ 'min': 0.0,
+ 'upper_quantile': 75.0}
 """
 
 from obspy.core import UTCDateTime
@@ -145,7 +244,7 @@ class LibMSEED(object):
         if quality:
             trace_list[-1][0]['timing_quality'] = []
             trace_list[-1][0]['data_quality_flags'] = [0] * 8
-        ms = MSStruct(filename)
+        ms = _MSStruct(filename)
         end_byte = 1e99
         if starttime or endtime:
             bytes = self._bytePosFromTime(filename, starttime=starttime,
@@ -443,7 +542,7 @@ class LibMSEED(object):
         :param filename: MiniSEED file string.
         """
         # Get the starttime
-        ms = MSStruct(filename)
+        ms = _MSStruct(filename)
         starttime = ms.getStart()
         # Get the endtime
         ms.f.seek(ms.filePosFromRecNum(record_number= -1))
@@ -565,7 +664,7 @@ class LibMSEED(object):
         """
         # Get some information about the file.
         fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
-        ms = MSStruct(filename, filepointer=False)
+        ms = _MSStruct(filename, filepointer=False)
         # Create Timing Quality list.
         data = []
         # Loop over each record
@@ -625,9 +724,8 @@ class LibMSEED(object):
         :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         """
-        #XXX: Move to MSStruct class?
         # Read the start and end time of the file.
-        ms = MSStruct(filename)
+        ms = _MSStruct(filename)
         info = ms.fileinfo()
         start = ms.getStart()
         pos = (info['number_of_records'] - 1) * info['record_length']
@@ -929,7 +1027,7 @@ class LibMSEED(object):
         return mstg
 
 
-class MSStruct(object):
+class _MSStruct(object):
     """
     Class for handling MSRecord and MSFileparam.
 
@@ -1017,7 +1115,7 @@ class MSStruct(object):
         Read MSRecord using the ms_readmsr_r function. The following
         parameters are directly passed to ms_readmsr_r.
         
-        :param ms: MSStruct (actually consists of a LP_MSRecord,
+        :param ms: _MSStruct (actually consists of a LP_MSRecord,
             LP_MSFileParam and an attached file pointer). 
             Given an existing ms the function is much faster.
         :param reclen: If reclen is 0 the length of the first record is auto-
