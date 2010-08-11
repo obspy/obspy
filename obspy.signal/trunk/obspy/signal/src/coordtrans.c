@@ -52,7 +52,7 @@ void utl_geo_km(float orig_lon, float orig_lat, float rota, float *lon, float *l
    tmp_x = (*lon) - orig_lon;
    tmp_y = (*lat) - orig_lat;
 
-   tmp   = atan(DRLT * tan(DRAD * ((*lat)+orig_lat)/120.0f));
+   tmp   = (float)(atan(DRLT * tan(DRAD * ((*lat)+orig_lat)/120.0)));
    tmp_x = (float)((double)tmp_x * lon_fac * cos(tmp));
    tmp_y = (float)((double)tmp_y * lat_fac);
 
@@ -104,7 +104,7 @@ void utl_lonlat(float orig_lon,float orig_lat,float x,float y,float *lon,float *
     tmp_y = (float)(tmp_y/lat_fac);
     tmp_y += olat;
 
-    tmp = atan(DRLT * tan(DRAD * (tmp_y+orig_lat)/120.0f));
+    tmp = (float)(atan(DRLT * tan(DRAD * (tmp_y+orig_lat)/120.0)));
     tmp_x = (float)(tmp_x / (lon_fac * cos(tmp)));
     tmp_x += olon;
 

@@ -215,6 +215,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
     :param taper_fraction: Typer fraction of cosinus taper to use
+    :return: The corrected data are returned as numpy.ndarray float64
+            array. float64 is chosen to avoid numerical instabilities.
     
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
@@ -297,9 +299,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     detrend(data)
     # correct for involved overall sensitivities
     if paz_remove and remove_sensitivity:
-        data = data / paz_remove['sensitivity']
+        data /= paz_remove['sensitivity']
     if paz_simulate and simulate_sensitivity:
-        data = data * paz_simulate['sensitivity']
+        data *= paz_simulate['sensitivity']
     return data
 
 
@@ -323,9 +325,9 @@ def paz2AmpValueOfFreqResp(paz, freq):
     jw = complex(0, 2 * np.pi * freq) #angular frequency
     fac = complex(1, 0)
     for zero in paz['zeros']: #numerator
-        fac *= (jw - zero)
+        fac *= jw - zero
     for pole in paz['poles']: #denumerator
-        fac /= (jw - pole)
+        fac /= jw - pole
     return abs(fac) * paz['gain']
 
 
@@ -359,7 +361,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                  'gain': 1.0,
                  'sensitivity': 2080} #iaspei, pitsa has 2800
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
-    freq = 1 / (2 * timespan)
+    freq = 1.0 / (2 * timespan)
     wa_ampl = amplitude / 2.0 #half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) * woodander['sensitivity']

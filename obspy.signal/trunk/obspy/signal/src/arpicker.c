@@ -198,7 +198,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             for(j=0;j<m_p;j++){
                 f -= (float)(buff1[i+k-j]*ar_f[j]); 
             }
-            u = f*f * 1.0/(float)nl_p;
+            u = f*f * 1.0f/(float)nl_p;
             f_error[i+nl_p] += u;
         }
     }
@@ -209,7 +209,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             for(j=0;j<m_p;j++){
                 b -= (float)(buff2[i+k-j]*ar_b[j]); 
             }
-            u = b*b * 1.0/(float)nl_p;
+            u = b*b * 1.0f/(float)nl_p;
             b_error[i+nl_p] += u;
         }
     }
