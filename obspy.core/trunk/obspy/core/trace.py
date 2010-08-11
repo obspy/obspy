@@ -16,6 +16,8 @@ import numpy as np
 import math
 import warnings
 
+# avoid significant overhead of reimported signal functions
+signal = None
 
 class Stats(AttribDict):
     """
@@ -1001,15 +1003,17 @@ class Trace(object):
                 of new instrument (seismometer/digitizer) during instrument
                 simulation.
         """
-        try:
-            from obspy.signal import seisSim
-        except ImportError:
-            msg = "Error during import from obspy.signal. Please make " + \
-                  "sure obspy.signal is installed properly."
-            raise ImportError(msg)
+        global signal
+        if not signal:
+            try:
+                import obspy.signal as signal
+            except ImportError:
+                msg = "Error during import from obspy.signal. Please make " + \
+                      "sure obspy.signal is installed properly."
+                raise ImportError(msg)
 
         try:
-            self.data = seisSim(self.data, self.stats.sampling_rate,
+            self.data = signal.seisSim(self.data, self.stats.sampling_rate,
                     paz_remove=paz_remove, paz_simulate=paz_simulate,
                     remove_sensitivity=remove_sensitivity,
                     simulate_sensitivity=simulate_sensitivity, **kwargs)
@@ -1067,16 +1071,21 @@ class Trace(object):
                 (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
         :return: ``None``
         """
-        try:
-            from obspy.signal import bandpass, bandstop, lowpass, highpass
-        except ImportError:
-            msg = "Error during import from obspy.signal. Please make " + \
-                  "sure obspy.signal is installed properly."
-            raise ImportError(msg)
+        global signal
+        if not signal:
+            print "importing signal"
+            try:
+                import obspy.signal as signal
+            except ImportError:
+                msg = "Error during import from obspy.signal. Please make " + \
+                      "sure obspy.signal is installed properly."
+                raise ImportError(msg)
 
         # dictionary to map given type-strings to filter functions
-        filter_functions = {"bandpass": bandpass, "bandstop": bandstop,
-                            "lowpass": lowpass, "highpass": highpass}
+        filter_functions = {"bandpass": signal.bandpass, 
+                            "bandstop": signal.bandstop,
+                            "lowpass": signal.lowpass, 
+                            "highpass": signal.highpass}
 
         #make type string comparison case insensitive
         type = type.lower()
@@ -1147,19 +1156,21 @@ class Trace(object):
                 10 seconds average, respectively)
         :return: ``None``
         """
-        try:
-            from obspy.signal.trigger import recStalta, classicStaLta, \
-                                             delayedStaLta, zdetect
-        except ImportError:
-            msg = "Error during import from obspy.signal. Please make " + \
-                  "sure obspy.signal is installed properly."
-            raise ImportError(msg)
+        global signal
+        if not signal:
+            try:
+                import obspy.signal as signal
+            except ImportError:
+                msg = "Error during import from obspy.signal. Please make " + \
+                      "sure obspy.signal is installed properly."
+                raise ImportError(msg)
 
         # dictionary to map given type-strings to trigger functions
         # (keys all lower case!!)
-        trigger_functions = {'recstalta': recStalta,
-                'carlstatrig': classicStaLta, 'delayedstalta': delayedStaLta,
-                'zdetect': zdetect}
+        trigger_functions = {'recstalta': signal.recStalta,
+                             'carlstatrig': signal.classicStaLta, 
+                             'delayedstalta': signal.delayedStaLta,
+                             'zdetect': signal.zdetect}
 
         #make type string comparison case insensitive
         type = type.lower()
@@ -1241,12 +1252,14 @@ class Trace(object):
         :param strict_length: abort, if endtime of trace would change
         :return: ``None``
         """
-        try:
-            from obspy.signal.filter import integerDecimation
-        except ImportError:
-            msg = "Error during import from obspy.signal. Please make " + \
-                  "sure obspy.signal is installed properly."
-            raise ImportError(msg)
+        global signal
+        if not signal:
+            try:
+                import obspy.signal as signal
+            except ImportError:
+                msg = "Error during import from obspy.signal. Please make " + \
+                      "sure obspy.signal is installed properly."
+                raise ImportError(msg)
 
         # check if endtime changes and this is not explicitly allowed
         if strict_length and len(self.data) % decimation_factor:
@@ -1260,7 +1273,7 @@ class Trace(object):
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure
-        self.data = integerDecimation(self.data, decimation_factor)
+        self.data = signal.integerDecimation(self.data, decimation_factor)
         self.stats.sampling_rate = self.stats.sampling_rate / \
                 float(decimation_factor)
 

@@ -20,6 +20,8 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
+# avoid import statement overhead
+signal = False
 
 class SacError(Exception):
     """
@@ -1035,12 +1037,15 @@ class SacIO(object):
         # Avoid top level dependency on obspy.signal. Thus if obspy.signal
         # is not allow only this function will not work, not the whole
         # module
-        try:
-            from obspy.signal import rotate
-        except ImportError, e:
-            print "ERROR: obspy.signal is needed for this function " + \
-                  "and is not installed"
-            raise SacError(e)
+        global signal
+        if not signal:
+            try:
+                import obspy.signal as signal
+            except ImportError, e:
+                print "ERROR: obspy.signal is needed for this function " + \
+                      "and is not installed"
+                raise SacError(e)
+
         eqlat = self.GetHvalue('evla')
         eqlon = self.GetHvalue('evlo')
         stlat = self.GetHvalue('stla')
@@ -1051,7 +1056,7 @@ class SacIO(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
+        dist, az, baz = signal.rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
         self.SetHvalue('dist', dist / 1000.)
         self.SetHvalue('az', az)
         self.SetHvalue('baz', baz)

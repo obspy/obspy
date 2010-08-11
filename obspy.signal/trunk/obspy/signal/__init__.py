@@ -103,7 +103,7 @@ cpxtrace analysis, ...), please also check the tutorial.**
 
 from obspy.core.util import _getVersionString
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
-from filter import envelope
+from filter import envelope, integerDecimation
 # import the depreciated ones
 from filter import bandpassZPHSH, bandstopZPHSH, lowpassZPHSH, highpassZPHSH
 from rotate import rotate_NE_RT, gps2DistAzimuth

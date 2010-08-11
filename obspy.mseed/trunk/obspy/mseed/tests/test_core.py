@@ -5,7 +5,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
 from obspy.mseed.core import readMSEED, isMSEED
 from obspy.mseed.headers import ENCODINGS
-from obspy.mseed.libmseed import MSStruct
+from obspy.mseed.libmseed import _MSStruct
 import inspect
 import numpy as np
 import os
@@ -255,7 +255,7 @@ class CoreTestCase(unittest.TestCase):
             st2 = read(tempfile)
             np.testing.assert_array_equal(st[0].data, st2[0].data)
             del st2
-            ms = MSStruct(tempfile)
+            ms = _MSStruct(tempfile)
             ms.read(-1, 1, 1, 0)
             self.assertEqual(ms.msr.contents.encoding, encoding)
             del ms # for valgrind
@@ -457,7 +457,7 @@ class CoreTestCase(unittest.TestCase):
                 # Read just the first record to check encoding. The sampletype
                 # should follow from the encoding. But libmseed seems not to
                 # read the sampletype when reading a file.
-                ms = MSStruct(cur_file, filepointer=False)
+                ms = _MSStruct(cur_file, filepointer=False)
                 ms.read(-1, 0, 1, 0)
                 # Check values.
                 self.assertEqual(getattr(ms.msr.contents, 'encoding'),

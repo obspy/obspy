@@ -10,7 +10,7 @@ from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
 from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS
-from obspy.mseed.libmseed import clibmseed, MSStruct
+from obspy.mseed.libmseed import clibmseed, _MSStruct
 import copy
 import ctypes as C
 import inspect
@@ -451,7 +451,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         start, end = [1199145599915000L, 1199145620510000L]
         # start and endtime
-        ms = MSStruct(filename)
+        ms = _MSStruct(filename)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
         ms.f.seek(ms.filePosFromRecNum(-1))
         ms.read(-1, 0, 1, 0)
