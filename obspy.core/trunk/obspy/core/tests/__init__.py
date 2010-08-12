@@ -10,11 +10,14 @@ import unittest
 
 def suite():
     suite = unittest.TestSuite()
-    for module in [util, utcdatetime, trace, stream, __init__]:
-        try:
-            suite.addTest(doctest.DocTestSuite(module))
-        except:
-            pass
+    #for module in [util, utcdatetime, trace, stream, __init__]:
+    for module in [util, utcdatetime, trace, stream]:
+        print type(module)
+        suite.addTest(doctest.DocTestSuite(module))
+        #try:
+        #    suite.addTest(doctest.DocTestSuite(module))
+        #except:
+        #    pass
     suite.addTest(test_utcdatetime.suite())
     suite.addTest(test_stats.suite())
     suite.addTest(test_trace.suite())
