@@ -518,7 +518,7 @@ class Trace(object):
                                       lt.stats.endtime) * sr, 7))) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
-        out = Trace(header=deepcopy(lt.stats))
+        out = self.__class__(header=deepcopy(lt.stats))
         # check if overlap or gap
         if delta < 0 and delta_endtime < 0:
             # overlap
@@ -1018,7 +1018,7 @@ class Trace(object):
                     remove_sensitivity=remove_sensitivity,
                     simulate_sensitivity=simulate_sensitivity, **kwargs)
         except TypeError, e:
-            print seisSim.__doc__
+            print signal.seisSim.__doc__
             print "(Data and sampling rate are passed on internally)"
             raise e
 
@@ -1082,9 +1082,9 @@ class Trace(object):
                 raise ImportError(msg)
 
         # dictionary to map given type-strings to filter functions
-        filter_functions = {"bandpass": signal.bandpass, 
+        filter_functions = {"bandpass": signal.bandpass,
                             "bandstop": signal.bandstop,
-                            "lowpass": signal.lowpass, 
+                            "lowpass": signal.lowpass,
                             "highpass": signal.highpass}
 
         #make type string comparison case insensitive
@@ -1168,7 +1168,7 @@ class Trace(object):
         # dictionary to map given type-strings to trigger functions
         # (keys all lower case!!)
         trigger_functions = {'recstalta': signal.recStalta,
-                             'carlstatrig': signal.classicStaLta, 
+                             'carlstatrig': signal.classicStaLta,
                              'delayedstalta': signal.delayedStaLta,
                              'zdetect': signal.zdetect}
 
