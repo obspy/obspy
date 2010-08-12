@@ -53,6 +53,8 @@ SH_IDX = {
     'ORIGIN':'S024'
 }
 
+SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
+SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('R')]
 INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
 
 
@@ -158,7 +160,12 @@ def readASC(filename, headonly=False):
                 header['starttime'] = toUTCDateTime(value)
             else:
                 # everything else gets stored into sh entry
-                header['sh'][key] = value
+                if key in SH_KEYS_INT:
+                    header['sh'][key] = int(value)
+                elif key in SH_KEYS_FLOAT:
+                    header['sh'][key] = float(value)
+                else:
+                    header['sh'][key] = value
         # set channel code
         header['channel'] = ''.join(channel)
         if headonly:
@@ -348,7 +355,12 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
                 header['sh']['ORIGIN'] = toUTCDateTime(value)
             elif key:
                 key = INVERTED_SH_IDX.get(key, key)
-                header['sh'][key] = value
+                if key in SH_KEYS_INT:
+                    header['sh'][key] = int(value)
+                elif key in SH_KEYS_FLOAT:
+                    header['sh'][key] = float(value)
+                else:
+                    header['sh'][key] = value
         # set channel code
         header['channel'] = ''.join(channel)
         if headonly:
