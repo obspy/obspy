@@ -290,27 +290,30 @@ class Stream(object):
         if traces:
             self.traces.extend(traces)
 
-    def __add__(self, stream):
+    def __add__(self, other):
         """
         Method to add two streams.
 
         It will create a new Stream object.
+        The traces of both streams will not be copied but the new stream will
+        contain references to the original streams' traces.
         """
-        if not isinstance(stream, Stream):
+        if not isinstance(other, Stream):
             raise TypeError
-        traces = copy.deepcopy(self.traces)
-        traces.extend(stream.traces)
+        traces = self.traces + other.traces
         return self.__class__(traces=traces)
 
-    def __iadd__(self, stream):
+    def __iadd__(self, other):
         """
         Method to add two streams with self += other.
 
         It will extend the Stream object with the other one.
+        Traces will not be copied but references to the original traces will be
+        appended.
         """
-        if not isinstance(stream, Stream):
+        if not isinstance(other, Stream):
             raise TypeError
-        self.extend(stream.traces)
+        self.extend(other.traces)
         return self
 
     def __iter__(self):

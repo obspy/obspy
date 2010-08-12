@@ -161,11 +161,15 @@ class StatsTestCase(unittest.TestCase):
         st[0].stats.station = 'AAA'
         st = st + st
         st[3].stats.station = 'BBB'
-        for key, value in {0:'AAA', 1:'BGLD', 2:'AAA', 3:'BBB'}.iteritems():
-            self.assertEquals(st[key].stats.station, value)
-            self.assertEquals(st[key].stats['station'], value)
-            self.assertEquals(st[key].stats.get('station'), value)
-            self.assertTrue(value in st[key].stats.values())
+        # changed in rev. 1625: adding streams doesn't deepcopy
+        # therefore all traces in the test stream are idential
+        # (python list behavior)
+        for tr in st:
+            self.assertTrue(tr == st[0])
+            self.assertEquals(tr.stats.station, 'BBB')
+            self.assertEquals(tr.stats['station'], 'BBB')
+            self.assertEquals(tr.stats.get('station'), 'BBB')
+            self.assertTrue('BBB' in tr.stats.values())
 
     def test_pickleStats(self):
         """

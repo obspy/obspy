@@ -73,16 +73,14 @@ class StreamTestCase(unittest.TestCase):
         # Add the same stream object to itself.
         stream = stream + stream
         self.assertEqual(8, len(stream))
-        # This will create a copy of all Traces and thus the objects should not
-        # be identical but the Traces attributes should be identical.
+        # This will not create copies of Traces and thus the objects should
+        # be identical (and the Traces attributes should be identical).
         for _i in xrange(4):
             self.assertEqual(stream[_i], stream[_i + 4])
             self.assertEqual(stream[_i] == stream[_i + 4], True)
             self.assertEqual(stream[_i] != stream[_i + 4], False)
-            self.assertEqual(stream[_i] is stream[_i + 4], False)
-            self.assertEqual(stream[_i] is not stream[_i + 4], True)
-            self.assertEqual(stream[_i].stats, stream[_i + 4].stats)
-            np.testing.assert_array_equal(stream[_i].data, stream[_i + 4].data)
+            self.assertEqual(stream[_i] is stream[_i + 4], True)
+            self.assertEqual(stream[_i] is not stream[_i + 4], False)
         # Now add another stream to it.
         other_stream = self.gse2_stream
         self.assertEqual(1, len(other_stream))
@@ -91,8 +89,7 @@ class StreamTestCase(unittest.TestCase):
         # The traces of all streams are copied.
         for _i in xrange(8):
             self.assertEqual(new_stream[_i], stream[_i])
-            self.assertEqual(new_stream[_i] is stream[_i], False)
-            np.testing.assert_array_equal(new_stream[_i].data, stream[_i].data)
+            self.assertEqual(new_stream[_i] is stream[_i], True)
         # Also test for the newly added stream.
         self.assertEqual(new_stream[8], other_stream[0])
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
