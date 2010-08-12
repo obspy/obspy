@@ -31,6 +31,7 @@
         ~util.utlLonLat
         ~util.xcorr
         ~trigger.zdetect
+        ~array.array_rotation_strain
 
     .. comment to end block
 
@@ -50,3 +51,4 @@
         polarization
         hoctavbands
         freqattributes
+        array
