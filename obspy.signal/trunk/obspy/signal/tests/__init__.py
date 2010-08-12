@@ -3,7 +3,7 @@
 from obspy.signal import invsim, trigger, util, __init__
 from obspy.signal.tests import test_invsim, test_freqattributes, test_filter, \
     test_rotate, test_trigger, test_util, test_cpxtrace, test_hoctavbands, \
-    test_polarization
+    test_polarization, test_array
 import doctest
 import unittest
 
@@ -25,6 +25,7 @@ def suite():
     suite.addTest(test_hoctavbands.suite())
     suite.addTest(test_polarization.suite())
     suite.addTest(test_invsim.suite())
+    suite.addTest(test_array.suite())
     return suite
 
 
