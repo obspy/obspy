@@ -177,8 +177,9 @@ class LibGSE2TestCase(unittest.TestCase):
         f = open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb')
         header, data = libgse2.read(f, verify_chksum=True)
         self.assertEqual(header['n_samps'], 750)
-        np.testing.assert_array_equal(data[-4:], 
+        np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
+
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')

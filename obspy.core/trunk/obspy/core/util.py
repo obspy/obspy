@@ -19,7 +19,8 @@ import warnings
 import glob
 import doctest
 
-# defining obspy modules
+
+# defining ObsPy modules
 # currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh']
@@ -307,7 +308,7 @@ def path(testfile):
     """
     Function to find the absolute path of a test data file
 
-    The obspy modules are installed to a custom installation directory.
+    The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
     installed obspy modules and checks weather the testfile is in any of
     the "tests/data" subdirectories.
@@ -404,6 +405,7 @@ def deprecated(func):
     new_func.__dict__.update(func.__dict__)
     return new_func
 
+
 def add_doctests(testsuite, module_name):
     """
     Function to add all available doctests of the module with given name
@@ -437,6 +439,7 @@ def add_doctests(testsuite, module_name):
             warnings.warn(str(e))
             pass
 
+
 def add_unittests(testsuite, module_name):
     """
     Function to add all available unittests of the module with given name
@@ -457,7 +460,7 @@ def add_unittests(testsuite, module_name):
     """
     MODULE_NAME = module_name
     MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
-    
+
     filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
@@ -466,6 +469,6 @@ def add_unittests(testsuite, module_name):
         module = __import__(module_name, fromlist="obspy")
         testsuite.addTest(module.suite())
 
+
 if __name__ == '__main__':
-    import doctest
     doctest.testmod(exclude_empty=True)

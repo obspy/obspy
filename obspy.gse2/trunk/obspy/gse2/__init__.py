@@ -61,7 +61,7 @@ Writing
 -------
 Writing is also done in the usual way:
 
->>> st.write('GSE2-filename.gse', format = 'GSE2')
+>>> st.write('GSE2-filename.gse', format = 'GSE2') #doctest: +SKIP
 """
 
 from obspy.core.util import _getVersionString

@@ -14,7 +14,7 @@ This modules provides facilities to:
 
 Reading
 -------
-Importing Q or ASC files is done similiar to reading any other waveform data
+Importing Q or ASC files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Test files for the following examples may be
 found at http://examples.obspy.org.
@@ -54,11 +54,11 @@ Writing
 -------
 Writing is also done in the usual way:
 
->>> st.write('file.q', format = 'Q')
+>>> st.write('file.q', format = 'Q') #doctest: +SKIP
 
 or 
 
->>> st.write('file.asc', format = 'SH_ASC')
+>>> st.write('file.asc', format = 'SH_ASC') #doctest: +SKIP
 
 """
 

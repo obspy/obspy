@@ -81,11 +81,13 @@ class ChksumError(StandardError):
     """
     pass
 
+
 class GSEUtiError(StandardError):
     """
     Exception type for other errors in GSE_UTI
     """
     pass
+
 
 # gse2 header struct
 class HEADER(C.Structure):
@@ -242,7 +244,7 @@ def read(f, verify_chksum=True):
     #import ipdb; ipdb.set_trace()
     n = lib.decomp_6b(fp, head.n_samps, data)
     if n != head.n_samps:
-        raise GSEUtiError("Missmatching length in lib.decomp_6b")
+        raise GSEUtiError("Mismatching length in lib.decomp_6b")
     lib.rem_2nd_diff(data, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
@@ -289,8 +291,8 @@ def write(headdict, data, f, inplace=False):
     :type inplace: Bool
     :param inplace: If True, do compression not on a copy of the data but
                     on the data itself --- note this will change the data
-                    values and make them therefor unusable
-    :type headdict: Dictonary
+                    values and make them therefore unusable
+    :type headdict: Dictionary
     :param headdict: Header containing the following entries::
 
         'd_year': int,
@@ -339,7 +341,7 @@ def write(headdict, data, f, inplace=False):
         if _i in gse2head:
             setattr(head, _i, headdict[_i])
     # This is the actual function where the header is written. It avoids
-    # the different format of 10.4e with fprintf on windows and linux.
+    # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, head)
     lib.buf_dump(fp)
@@ -358,7 +360,7 @@ def readHead(f):
     :type file: File Pointer
     :param file: Open file pointer of GSE2 file to read, opened in binary
                  mode, e.g. f = open('myfile','rb')
-    :rtype: Dictonary
+    :rtype: Dictionary
     :return: Header entries.
     """
     fp = C.pythonapi.PyFile_AsFile(f)
