@@ -25,31 +25,23 @@ Additionally the start- and endtime of the plot can be given as
 Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy.core import read
->>> st = read('http://examples.obspy.org/BW.BGLD.__.EHE.D.2008.001.first_10_percent')
+>>> st = read()
 >>> print st
 3 Trace(s) in Stream:
-BW.BGLD..EHE | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0 Hz, 8640001 samples
-BW.BGLD..EHN | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0 Hz, 8640001 samples
-BW.BGLD..EHZ | 2010-01-01T00:00:00.000000Z - 2010-01-01T12:00:00.000000Z | 200.0 Hz, 8640001 samples
->>> st.plot(color = 'gray', tick_format = '%I:%M %p', starttime =
-... st[0].stats.starttime, endtime = st[0].stats.starttime + 60*60)
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+>>> st.plot(color='gray', tick_format='%I:%M %p',
+...         starttime=st[0].stats.starttime,
+...         endtime=st[0].stats.starttime+20)
 
 .. plot::
 
-    from obspy.core import read, UTCDateTime
-    from copy import deepcopy
-    from numpy.random import ranf
-    st = read('http://examples.obspy.org/BW.BGLD.__.EHE.D.2008.001.first_10_percent')
-    st[0].stats.starttime = UTCDateTime(2010, 1, 1)
-    starttime = st[0].stats.starttime
-    st.trim(starttime, starttime + 60*60)
-    st += deepcopy(st)
-    st += deepcopy(st)
-    st[1].stats.channel = 'EHN'
-    st[2].stats.channel = 'EHZ'
-    st[1].data = st[1].data * (1.0 + ranf(st[0].stats.npts)/8)
-    st[2].data = st[2].data * (0.95 + ranf(st[0].stats.npts)/8)
-    st.plot(color = 'gray', tick_format = '%I:%M %p')
+    from obspy.core import read
+    st = read()
+    st.plot(color='gray', tick_format='%I:%M %p',
+            starttime=st[0].stats.starttime,
+            endtime=st[0].stats.starttime+20)
 
 Spectrograms
 ------------
@@ -58,18 +50,18 @@ This submodule plots spectrograms.
 The spectrogram will on default have 80% overlap and a maximum sliding window
 size of 4096 points.
 
->>> from obspy.imaging import spectrogram
+>>> from obspy.imaging.spectrogram import spectrogram
 >>> from obspy.core import read
->>>
->>> st = read('loc_RNON20040609200559.z')
->>> spectrogram.spectrogram(st[0].data, st[0].stats.sampling_rate)
+>>> st = read()
+>>> spectrogram(st[0].data, st[0].stats.sampling_rate) #doctest: +ELLIPSIS
+<matplotlib.figure.Figure object at 0x...>
 
 .. plot::
 
-    from obspy.imaging import spectrogram
+    from obspy.imaging.spectrogram import spectrogram
     from obspy.core import read
-    st = read('../obspy.gse2/trunk/obspy/gse2/tests/data/loc_RNON20040609200559.z')
-    spectrogram.spectrogram(st[0].data, st[0].stats.sampling_rate)
+    st = read()
+    spectrogram(st[0].data, st[0].stats.sampling_rate)
 
 For more info see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
@@ -87,7 +79,8 @@ and 180 moves it opposite to strike (right-lateral).
 
 >>> from obspy.imaging.beachball import Beachball
 >>> np1 = [150, 87, 1]
->>> Beachball(np1)
+>>> Beachball(np1) #doctest: +ELLIPSIS
+<matplotlib.figure.Figure object at 0x...>
 
 .. plot::
 
@@ -100,7 +93,8 @@ the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
 
 >>> from obspy.imaging.beachball import Beachball
 >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
->>> Beachball(mt)
+>>> Beachball(mt) #doctest: +ELLIPSIS
+<matplotlib.figure.Figure object at 0x...>
 
 .. plot:: 
 
@@ -119,12 +113,15 @@ Plot the beach ball as matplotlib collection into an existing plot.
 >>> np1 = [150, 87, 1]
 >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
 >>>
->>> plt.plot([-100, 100], [0, 100], "rv", ms=10)
+>>> plt.plot([-100, 100], [0, 100], "rv", ms=10) #doctest: +ELLIPSIS
+[<matplotlib.lines.Line2D object at 0x...>]
 >>> ax = plt.gca()
->>> ax.add_collection(Beach(np1, xy=(5,5), width=30))
->>> ax.add_collection(Beach(mt, xy=(5,5), width=50))
+>>> ax.add_collection(Beach(np1, xy=(50,50), width=30))
+>>> ax.add_collection(Beach(mt, xy=(50,50), width=50))
 >>> plt.axis('scaled')
+(-100.0, 100.0, -100.0, 100.0)
 >>> plt.axis([-120, 120, -20, 120])
+[-120, 120, -20, 120]
 
 .. plot::
 
@@ -135,7 +132,7 @@ Plot the beach ball as matplotlib collection into an existing plot.
     plt.plot([-100, 100], [0, 100], "rv", ms=10)
     ax = plt.gca()
     ax.add_collection(Beach(np1, xy=(50,50), width=30))
-    ax.add_collection(Beach(mt, xy=(-50,50), width=50))
+    ax.add_collection(Beach(mt, xy=(50,50), width=50))
     plt.axis('scaled')
     plt.axis([-120, 120, -20, 120])
 
@@ -151,13 +148,13 @@ Available output formats mainly depend on your matplotlib settings. Common
 formats are png, svg, pdf or ps.
 
 >>> from obspy.core import read
->>> st = read('loc_RNON20040609200559.z')
->>> st.plot(outfile = 'graph.png')
+>>> st = read()
+>>> st.plot(outfile='graph.png') #doctest: +SKIP
 
 .. plot::
 
     from obspy.core import read
-    st = read('../obspy.gse2/trunk/obspy/gse2/tests/data/loc_RNON20040609200559.z')
+    st = read()
     st.plot()
 """
 

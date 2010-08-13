@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from obspy.sac import sacio
-from obspy.sac.tests import test_sacio, test_core
-import unittest, doctest
-    
+import unittest
+from obspy.core.util import add_doctests, add_unittests
+
+MODULE_NAME = "obspy.sac"
+
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(doctest.DocTestSuite(sacio))
-    suite.addTest(test_sacio.suite())
-    suite.addTest(test_core.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
 
 

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from obspy.db.tests import test_util
 import unittest
+from obspy.core.util import add_doctests, add_unittests
 
+MODULE_NAME = "obspy.db"
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(test_util.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
 
 

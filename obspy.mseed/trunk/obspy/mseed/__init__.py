@@ -15,10 +15,10 @@ Reading via obspy.core
 Similiar to reading any other waveform data format using obspy.core:
 
 >>> from obspy.core import read
->>> st = read('COP.BHE.DK.2009.050')
->>> st
+>>> st = read('COP.BHE.DK.2009.050') #doctest: +SKIP
+>>> st #doctest: +SKIP
 <obspy.core.stream.Stream object at 0x101700150>
->>> print st
+>>> print st #doctest: +SKIP
 1 Trace(s) in Stream:
 DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
 
@@ -29,7 +29,7 @@ reading a Mini-SEED file it will have one additional attribute: 'mseed'. This
 attribute contains all Mini-SEED specific attributes which actually is just the
 dataquality.
 
->>> print st[0].stats
+>>> print st[0].stats #doctest: +SKIP
 Stats({
     'network': 'DK',
     'mseed': Stats({
@@ -46,7 +46,7 @@ Stats({
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> st[0].data
+>>> st[0].data #doctest: +SKIP
 array([1085, 1167, 1131, ...,  -19,  -46,  -55], dtype=int32)
 
 Writing via obspy.core
@@ -56,7 +56,7 @@ field, the dataquality in the resulting Mini-SEED file will always be 'D'.
 
 Writing is also done in the usual way.
 
->>> st.write('Mini-SEED-filename.mseed', format = 'MSEED')
+>>> st.write('Mini-SEED-filename.mseed', format='MSEED') #doctest: +SKIP
 
 You can also specify several keyword arguments that change the resulting
 Mini-SEED file:
@@ -85,7 +85,8 @@ Mini-SEED file:
 So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 512 byte do the following:
 
->>> st.write('out.mseed', format = 'MSEED', reclen = 512, encoding = 'STEIM1')
+>>> st.write('out.mseed', format='MSEED', reclen=512, encoding='STEIM1') \
+        #doctest: +SKIP
 """
 
 from obspy.core.util import _getVersionString

@@ -11,8 +11,12 @@ Reading using obspy.core
 ------------------------
 Similiar to reading any other waveform data format using obspy.core:
 
+(Lines 2&3 are just to get the absolute path of our test data)
+
 >>> from obspy.core import read
->>> st = read("tests/data/3cssan.near.8.1.RNON.wav")
+>>> from obspy.core import path
+>>> filename = path("3cssan.near.8.1.RNON.wav")
+>>> st = read(filename)
 >>> print st
 1 Trace(s) in Stream:
 ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
@@ -22,19 +26,11 @@ one data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will
 be one. 'st[0]' will have a stats attribute containing the issential meta
 information of the WAVE file.
 
->>> print st[0].stats
-Stats({
-    'network': '',
-    'delta': 0.00014285714285714287,
-    'station': '',
-    'location': '',
-    'starttime': UTCDateTime(1970, 1, 1, 0, 0),
-    'npts': 2599,
-    'calib': 1.0,
-    'sampling_rate': 7000,
-    'endtime': UTCDateTime(1970, 1, 1, 0, 0, 0, 371143),
-    'channel': ''
-})
+>>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+Stats({'network': '', '_format': 'WAV', 'delta': 0.00014285714285714287,
+       'station': '', 'location': '',
+       'starttime': UTCDateTime(1970, 1, 1, 0, 0), 'npts': 2599,
+       'calib': 1.0, 'sampling_rate': 7000.0, 'channel': ''})
 
 The data is stored in the data attribut.
 

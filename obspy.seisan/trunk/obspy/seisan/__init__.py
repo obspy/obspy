@@ -17,9 +17,13 @@ format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Test files for the following examples may be
 found at http://examples.obspy.org.
 
+(Lines 2&3 are just to get the absolute path of our test data)
+
 >>> from obspy.core import read
->>> st = read("2001-01-13-1742-24S.KONO__004")
->>> st
+>>> from obspy.core import path
+>>> filename = path("2001-01-13-1742-24S.KONO__004")
+>>> st = read(filename)
+>>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print st
 4 Trace(s) in Stream:
@@ -32,20 +36,12 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> st[0].stats
-Stats({
-    'network': '',
-    'npts': 6000,
-    'station': 'KONO',
-    'location': '0',
-    'starttime': UTCDateTime(2001, 1, 13, 17, 45, 1, 999000),
-    'delta': 0.050000000000000003,
-    'calib': 1.0, 
-    'sampling_rate': 20.0,
-    'endtime': UTCDateTime(2001, 1, 13, 17, 50, 1, 949000), 
-    'channel': 'B0Z',
-    '_format': 'SEISAN'
-})
+>>> st[0].stats #doctest: +NORMALIZE_WHITESPACE
+Stats({'network': '', '_format': 'SEISAN', 'npts': 6000, 'station': 'KONO',
+       'location': '0',
+       'starttime': UTCDateTime(2001, 1, 13, 17, 45, 1, 999000),
+       'delta': 0.050000000000000003, 'calib': 1.0, 'sampling_rate': 20.0,
+       'channel': 'B0Z'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 

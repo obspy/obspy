@@ -41,9 +41,9 @@ def nearestPow2(x):
     Find power of two nearest to x
 
     >>> nearestPow2(3)
-    2
+    2.0
     >>> nearestPow2(15)
-    4
+    16.0
 
     :type x: Float
     :param x: Number

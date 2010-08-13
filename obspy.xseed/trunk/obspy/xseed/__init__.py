@@ -17,10 +17,15 @@ response requests.
 
 Allocate a Parser object and read/write
 ---------------------------------------
->>> from obspy.xseed import Parser
 
->>> sp = Parser("dataless.seed.BW_RJOB")
->>> sp.writeXSEED("dataless.seed.BW_RJOB.xml")
+(Lines 2&3 are just to get the absolute path of our test data)
+
+>>> from obspy.xseed import Parser
+>>> from obspy.core import path
+>>> filename = path("dataless.seed.BW_FURT")
+
+>>> sp = Parser(filename)
+>>> sp.writeXSEED("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
 
 The lines above will convert Dataless SEED, e.g.::
 
@@ -46,7 +51,7 @@ to the XML-SEED representation, e.g.::
 A response file can be written in a similar manner, just replace writeXSEED
 by writeRESP:
 
->>> sp.writeRESP(folder="BW_RJOB", zipped=False)
+>>> sp.writeRESP(folder="BW_FURT", zipped=False) #doctest: +SKIP
 
 
 

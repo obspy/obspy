@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Class for handling MiniSEED files.
+Module for handling MiniSEED files.
 
 Contains wrappers for libmseed - The MiniSEED library. The C library is
 interfaced via Python ctypes. Currently only supports MiniSEED files with
@@ -37,22 +37,10 @@ Seletected examples of Methods in obspy.mseed.libmseed
 All of the following methods can only be accessed with an instance of the
 libmseed class.
 
->>> from obspy.mseed import libmseed
->>> mseed = libmseed()
->>> mseed
-<obspy.mseed.libmseed.libmseed object at 0x10178ef50>
-
-printFileInformation
-^^^^^^^^^^^^^^^^^^^^
-Prints some informations about the file.
-
-Parameters:
-    * filename = MiniSEED file. 
-
->>> mseed.printFileInformation('COP.BHE.DK.2009.050')
-Source            Start sample               End sample                 Gap  Hz  Samples
-DK_COP__BHE_D     2009-02-19T00:00:00.035100 2009-02-19T23:59:59.985100 ==   20  1728000
-Total: 1 trace segment(s)
+>>> from obspy.mseed.libmseed import LibMSEED
+>>> mseed = LibMSEED()
+>>> mseed #doctest: +ELLIPSIS
+<obspy.mseed.libmseed.LibMSEED object at 0x...>
 
 isMSEED
 ^^^^^^^
@@ -68,7 +56,11 @@ Thus it cannot be used to validate a MiniSEED or SEED file.
 Parameters:
     * filename = MiniSEED file. 
 
->>> mseed.isMSEED('COP.BHE.DK.2009.050')
+(The first lines are just to get the absolute path of the test file)
+
+>>> from obspy.core import path
+>>> filename = path("test.mseed")
+>>> mseed.isMSEED(filename)
 True
 
 getDataQualityFlagsCount
@@ -98,7 +90,10 @@ length.
 Parameters:
     * filename = MiniSEED file. 
 
->>> mseed.getDataQualityFlagsCount('qualityflags.mseed')
+(The first line are just to get the absolute path of the test file)
+
+>>> filename = path("qualityflags.mseed")
+>>> mseed.getDataQualityFlagsCount(filename)
 [9, 8, 7, 6, 5, 4, 3, 2]
 
 getTimingQuality
@@ -123,13 +118,12 @@ Parameters:
   subsequent records are then assumed to have the same record length. If -1 the
   length of each record is automatically detected. Defaults to -1. 
 
->>> mseed.getTimingQuality('timingquality.mseed')
-{'average': 50.0,
- 'lower_quantile': 25.0,
- 'max': 100.0,
- 'median': 50.0,
- 'min': 0.0,
- 'upper_quantile': 75.0}
+(The first line are just to get the absolute path of the test file)
+
+>>> filename = path("timingquality.mseed")
+>>> mseed.getTimingQuality(filename) #doctest: +NORMALIZE_WHITESPACE
+{'min': 0.0, 'max': 100.0, 'average': 50.0, 'median': 50.0,
+ 'upper_quantile': 75.0, 'lower_quantile': 25.0}
 """
 
 from obspy.core import UTCDateTime

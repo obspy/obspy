@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from obspy.gse2.tests import test_libgse2, test_core
 import unittest
+from obspy.core.util import add_doctests, add_unittests
+
+MODULE_NAME = "obspy.gse2"
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(test_core.suite())
-    suite.addTest(test_libgse2.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

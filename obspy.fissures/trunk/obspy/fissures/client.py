@@ -111,9 +111,15 @@ class Client(object):
         """
         Get Waveform in an ObsPy stream object from Fissures / DHI.
 
+        >>> from obspy.core import UTCDateTime
+        >>> from obspy.fissures import Client
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
+        >>> print st
+        1 Trace(s) in Stream:
+        GE.APE..SHZ | 2003-06-20T05:59:09.401000Z - 2003-06-20T06:10:10.581000Z | 50.0 Hz, 33060 samples
+
 
         :param network_id: Network id, 2 char; e.g. "GE"
         :param station_id: Station id, 5 char; e.g. "APE"
@@ -233,9 +239,18 @@ class Client(object):
         """
         Compose Fissures name in CosNaming.NameComponent manner. Set the
         dns, interfaces and objects together.
+        
+        >>> from obspy.fissures import Client
+        >>> client = Client()
+        >>> client._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
+        ...                     "NetworkDC") #doctest: +NORMALIZE_WHITESPACE
+        [CosNaming.NameComponent(id='Fissures', kind='dns'),
+         CosNaming.NameComponent(id='edu', kind='dns'),
+         CosNaming.NameComponent(id='iris', kind='dns'),
+         CosNaming.NameComponent(id='dmc', kind='dns'),
+         CosNaming.NameComponent(id='NetworkDC', kind='interface'),
+         CosNaming.NameComponent(id='IRIS_NetworkDC', kind='object_FVer1.0')]
 
-        >>> self._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
-                              "NetworkDC")
 
         :param dc: Tuple containing dns and service as string
         :param interface: String describing kind of DC, one of EventDC,

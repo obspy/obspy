@@ -44,9 +44,9 @@ class Client(object):
     --------
 
     >>> from obspy.seishub import Client
-    >>> from obpsy.core import UTCDateTime
+    >>> from obspy.core import UTCDateTime
     >>>
-    >>> t = UTCDateTime("2009-09-03 00:00:00") # doctest: +SKIP
+    >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()
     >>>
     >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)

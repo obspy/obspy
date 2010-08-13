@@ -16,6 +16,8 @@ import sys
 import tempfile
 import inspect
 import warnings
+import glob
+import doctest
 
 # defining obspy modules
 # currently used by runtests and the path function
@@ -402,6 +404,67 @@ def deprecated(func):
     new_func.__dict__.update(func.__dict__)
     return new_func
 
+def add_doctests(testsuite, module_name):
+    """
+    Function to add all available doctests of the module with given name
+    (e.g. "obspy.core") to the given unittest TestSuite.
+    All submodules in the module's root directory are added.
+    Occurring errors are shown as warnings.
+
+    Example
+    -------
+    >>> import unittest
+    >>> suite = unittest.TestSuite()
+    >>> add_doctests(suite, "obspy.core")
+
+    :type testsuite: unittest.TestSuite
+    :param testsuite: testsuite to which the tests should be added
+    :type module_name: String
+    :param module_name: name of the module of which the tests should be added
+    """
+    MODULE_NAME = module_name
+    MODULE = __import__(MODULE_NAME, fromlist="obspy")
+
+    filename_pattern = os.path.join(MODULE.__path__[0], "*.py")
+    files = glob.glob(filename_pattern)
+    names = (os.path.basename(file).split(".")[0] for file in files)
+    module_names = (".".join([MODULE_NAME, name]) for name in names)
+    for module_name in module_names:
+        try:
+            module = __import__(module_name, fromlist="obspy")
+            testsuite.addTest(doctest.DocTestSuite(module))
+        except Exception, e:
+            warnings.warn(str(e))
+            pass
+
+def add_unittests(testsuite, module_name):
+    """
+    Function to add all available unittests of the module with given name
+    (e.g. "obspy.core") to the given unittest TestSuite.
+    All submodules in the "tests" directory whose names are starting with
+    "test_" are added.
+
+    Example
+    -------
+    >>> import unittest
+    >>> suite = unittest.TestSuite()
+    >>> add_unittests(suite, "obspy.core")
+
+    :type testsuite: unittest.TestSuite
+    :param testsuite: testsuite to which the tests should be added
+    :type module_name: String
+    :param module_name: name of the module of which the tests should be added
+    """
+    MODULE_NAME = module_name
+    MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
+    
+    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
+    files = glob.glob(filename_pattern)
+    names = (os.path.basename(file).split(".")[0] for file in files)
+    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
+    for module_name in module_names:
+        module = __import__(module_name, fromlist="obspy")
+        testsuite.addTest(module.suite())
 
 if __name__ == '__main__':
     import doctest

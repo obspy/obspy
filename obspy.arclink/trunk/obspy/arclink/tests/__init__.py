@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from obspy.arclink.tests import test_client
 import unittest
+from obspy.core.util import add_doctests, add_unittests
 
+MODULE_NAME = "obspy.arclink"
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(test_client.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
 
 

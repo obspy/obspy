@@ -16,35 +16,34 @@ Basic Example
 >>> from obspy.core import UTCDateTime
 
 >>> client = Client()
->>> t = UTCDateTime('20090808')
+>>> t = UTCDateTime('20090808120000')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+1800)
 >>> print st
 3 Trace(s) in Stream:
-BW.MANZ..EHZ | 2009-08-08T00:00:00.000000Z - 2009-08-08T00:30:00.000000Z | 200.0 Hz, 360001 samples
-BW.MANZ..EHN | 2009-08-08T00:00:00.000000Z - 2009-08-08T00:30:00.000000Z | 200.0 Hz, 360001 samples
-BW.MANZ..EHE | 2009-08-08T00:00:00.000000Z - 2009-08-08T00:30:00.000000Z | 200.0 Hz, 360001 samples
+BW.MANZ..EHZ | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
+BW.MANZ..EHN | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
+BW.MANZ..EHE | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
+
 
 Advanced Examples
 -----------------
 
->>> from obspy.seishub import Client
->>> client = Client()
-
 >>> client.waveform.getNetworkIds()
-['BW', 'CZ', 'GR', 'NZ']
+['BW', 'GR', 'NZ', 'CZ', '']
 
->>> client.waveform.getStationIds(network_id='BW')
-['BGLD', 'BW01', 'DHFO', 'FURT', 'HROE', 'MANZ', 'MASC', 'MGBB', 'MHAI',
- 'MKON', 'MROB', 'MSBB', 'MZEK', 'NORI', 'NZC2', 'NZG0', 'OBER', 'OBHA',
- 'PART', 'RJOB', 'RLAS', 'RMOA', 'RNHA', 'RNON', 'ROTZ', 'RTBE', 'RTBM',
- 'RTSH', 'RTVS', 'RWMO', 'UH1', 'UH2', 'VIEL', 'WETR', 'ZUGS']
->>> client.waveform.getChannelIds(network_id='BW',
-                                  station_id='MANZ')
+>>> sta_ids = client.waveform.getStationIds(network_id='BW')
+>>> sta_ids.sort()
+>>> sta_ids #doctest: +ELLIPSIS
+['ABRI', 'ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
+
+>>> cha_ids = client.waveform.getChannelIds(network_id='BW', station_id='MANZ')
+>>> cha_ids.sort()
+>>> cha_ids
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
 
->>> client.station.getResource('dataless.seed.BW_MANZ.xml', 
-                               format='metadata')
-<?xml version="1.0" encoding="utf-8" ?>
+>>> print client.station.getResource('dataless.seed.BW_MANZ.xml',
+...         format='metadata') #doctest: +NORMALIZE_WHITESPACE
+<?xml version="1.0" encoding="utf-8"?>
 <metadata>
   <item title="Station Name">
     <text text="Manzenberg,Bavaria, BW-Net"/>
@@ -71,15 +70,18 @@ Advanced Examples
   </item>
 </metadata>
 
->>> client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
-{'zeros': [0j, 0j], 
- 'sensitivity': 2516800000.0, 
- 'poles': [(-0.037004000000000002+0.037016j), 
-           (-0.037004000000000002-0.037016j),
-           (-251.33000000000001+0j),
-           (-131.03999999999999-467.29000000000002j),
-           (-131.03999999999999+467.29000000000002j)], 
- 'gain': 60077000.0}
+>>> paz = client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
+>>> paz = paz.items()
+>>> paz.sort()
+>>> paz #doctest: +NORMALIZE_WHITESPACE
+[('gain', 60077000.0),
+ ('poles', [(-0.037004000000000002+0.037016j),
+            (-0.037004000000000002-0.037016j),
+            (-251.33000000000001+0j),
+            (-131.03999999999999-467.29000000000002j),
+            (-131.03999999999999+467.29000000000002j)]),
+ ('sensitivity', 2516800000.0),
+ ('zeros', [0j, 0j])]
 """
 
 from obspy.core.util import _getVersionString

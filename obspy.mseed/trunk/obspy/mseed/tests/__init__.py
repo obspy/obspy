@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import obspy, unittest
-from obspy.mseed.tests import test_libmseed, test_core
+import unittest
+from obspy.core.util import add_doctests, add_unittests
 
+MODULE_NAME = "obspy.mseed"
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(test_core.suite())
-    suite.addTest(test_libmseed.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
 
 

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from obspy.seishub.tests import test_client
-from obspy.seishub import client
 import unittest
-import doctest
+from obspy.core.util import add_doctests, add_unittests
 
+MODULE_NAME = "obspy.seishub"
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(doctest.DocTestSuite(client))
-    suite.addTest(test_client.suite())
+    add_doctests(suite, MODULE_NAME)
+    add_unittests(suite, MODULE_NAME)
     return suite
 
 
