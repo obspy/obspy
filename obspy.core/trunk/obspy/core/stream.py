@@ -131,7 +131,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     """
     # if no pathname or URL specified, make example stream
     if not pathname_or_url:
-        return _read_example()
+        return _readExample()
 
     st = Stream()
     if "://" in pathname_or_url:
@@ -215,11 +215,13 @@ def _read(filename, format=None, headonly=False, **kwargs):
         trace.stats._format = format_ep.name
     return stream
 
-def _read_example():
+
+def _readExample():
     """
-    Robust method to create example stream.
-    Data arrays are stored in numpy's npz format. The stats information we
-    fill in here directly.
+    Create an example stream.
+
+    Data arrays are stored in NumPy's npz format. The header information are
+    fixed values.
 
     PAZ of the used instrument, needed to demonstrate seisSim() etc.:
     paz = {'gain': 60077000.0, 
@@ -231,8 +233,6 @@ def _read_example():
            'sensitivity': 2516778400.0, 
            'zeros': [0j, 0j]}} 
     """
-    # the data arrays we load with numpys builtin routines, the stats dicts
-    # we fill in hardcoded here. this should be unbreakable...
     path = os.path.dirname(__file__)
     path = os.path.join(path, "data", "example.npz")
     data = np.load(path)
@@ -248,6 +248,7 @@ def _read_example():
         header['channel'] = channel
         st.append(Trace(data=data[channel], header=header))
     return st
+
 
 class Stream(object):
     """
@@ -294,9 +295,21 @@ class Stream(object):
         """
         Method to add two streams.
 
-        It will create a new Stream object.
-        The traces of both streams will not be copied but the new stream will
-        contain references to the original streams' traces.
+        Example
+        -------
+        >>> from obspy.core import read
+        >>> st1 = read()
+        >>> len(st1)
+        3
+        >>> st2 = read()
+        >>> len(st2)
+        3
+        >>> stream = st1 + st2
+        >>> len(stream)
+        6
+
+        This method will create a new Stream object containing references to
+        the traces of the original streams.
         """
         if not isinstance(other, Stream):
             raise TypeError
@@ -307,9 +320,9 @@ class Stream(object):
         """
         Method to add two streams with self += other.
 
-        It will extend the Stream object with the other one.
-        Traces will not be copied but references to the original traces will be
-        appended.
+        It will extend the current Stream object with the traces of the given
+        Stream. Traces will not be copied but references to the original traces
+        will be appended.
         """
         if not isinstance(other, Stream):
             raise TypeError
@@ -450,7 +463,7 @@ class Stream(object):
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
-    # Explicitely setting Stream object unhashable (mutable object).
+    # Explicitly setting Stream object unhashable (mutable object).
     # See also Python Language Reference (3.0 Data Model):
     # http://docs.python.org/reference/datamodel.html
     #
