@@ -1073,7 +1073,6 @@ class Trace(object):
         """
         global signal
         if not signal:
-            print "importing signal"
             try:
                 import obspy.signal as signal
             except ImportError:
