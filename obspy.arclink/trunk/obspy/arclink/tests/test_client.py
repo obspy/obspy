@@ -207,7 +207,7 @@ class ClientTestCase(unittest.TestCase):
                  - 1.310400e+02 + 4.672900e+02j]
         gain = 6.0077e+07
         sensitivity = 2.5168e+09
-        # set start and endtime
+        # set start and end time
         start = UTCDateTime(2009, 1, 1)
         end = start + 1
         # initialize client
@@ -225,7 +225,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getPAZ2(self):
         """
-        Test for the Client.getPAZ function for erde.
+        Test for the Client.getPAZ function for erde.geophysik.uni-muenchen.de.
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         t = UTCDateTime(2009, 1, 1)

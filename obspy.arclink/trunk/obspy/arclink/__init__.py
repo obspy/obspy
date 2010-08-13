@@ -44,16 +44,16 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
 >>> client = Client("webdc.eu", 18001)
 >>> start = UTCDateTime("2009-08-20 04:03:12")
 >>> st = client.getWaveform("BW", "RJOB", "", "EH*", start - 3, start + 15)
->>> st.plot()
+>>> st.plot() #doctest: +SKIP 
 
 .. plot::
 
     from obspy.core import UTCDateTime
     from obspy.arclink.client import Client
     client = Client("erde.geophysik.uni-muenchen.de", 18001)
-    start = UTCDateTime("2009-08-20 04:03:12")
-    st = client.getWaveform("BW", "RJOB", "", "EH*", start - 3, start + 15)
-    st.plot()
+    t = UTCDateTime("2009-08-20 04:03:12")
+    st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+    st.plot() #doctest: +SKIP
 
 Waveform data fetched from an ArcLink node is converted into an ObsPy stream
 object. The seismogram is truncated by the ObsPy client to the actual requested
@@ -73,32 +73,32 @@ example above.
 (1) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
     and sensitivity of a single channel for a certain time span.
 
-    >>> start = UTCDateTime(2009, 1, 1)
-    >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, start + 1)
-    >>> paz
-    {'gain': 60077000.0,
-     'poles': [(-0.037004000000000002+0.037016j),
-               (-0.037004000000000002-0.037016j),
-               (-251.33000000000001+0j),
-               (-131.03999999999999-467.29000000000002j),
-               (-131.03999999999999+467.29000000000002j)],
-     'sensitivity': 2516778400.0,
-     'zeros': [0j, 0j]}
+    >>> t = UTCDateTime(2009, 1, 1)
+    >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
+    >>> paz  #doctest: +NORMALIZE_WHITESPACE +SKIP
+    {'STS-2/N/g=1500': {
+        'poles': [(-0.037004000000000002+0.037016j), 
+                  (-0.037004000000000002-0.037016j), 
+                  (-251.33000000000001+0j), 
+                  (-131.03999999999999-467.29000000000002j), 
+                  (-131.03999999999999+467.29000000000002j)], 
+        'sensitivity': 2516778600.0, 
+        'zeros': [0j, 0j], 
+        'gain': 60077000.0}}
 
 (2) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
     information into a file.
 
-    >>> start = UTCDateTime(2009, 1, 1)
-    >>> out = 'BW.MANZ..EHZ.dataless'
-    >>> client.saveResponse(out, 'BW', 'MANZ', '', start, start + 1)
+    >>> t = UTCDateTime(2009, 1, 1)
+    >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
+    ...                     t, t + 1, format="SEED") #doctest: +SKIP
 
-(3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes a seismogramm
+(3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes a seismogram
     into a Full SEED volume.
 
-    >>> t1 = UTCDateTime(2009, 1, 1, 12, 0)
-    >>> t2 = UTCDateTime(2009, 1, 1, 12, 20)
-    >>> out = 'BW.MANZ..EHZ.seed'
-    >>> client.saveWaveform(out, 'BW', 'MANZ', '', '*', t1, t2, format='FSEED')
+    >>> t = UTCDateTime(2009, 1, 1, 12, 0)
+    >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
+    ...                     t, t + 20, format='FSEED') #doctest: +SKIP
 
 Further Resources
 -----------------

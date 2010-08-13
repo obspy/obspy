@@ -300,8 +300,8 @@ class Client(Telnet):
         stream.trim(start_datetime, end_datetime)
         return stream
 
-    def getPAZ(self, network_id, station_id, location_id,
-                    channel_id, start_datetime, end_datetime):
+    def getPAZ(self, network_id, station_id, location_id, channel_id,
+               start_datetime, end_datetime):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
 
@@ -320,7 +320,7 @@ class Client(Telnet):
                              location_id,
                              station_id,
                              channel_id)
-        # fetch plain xml document
+        # fetch plain XML document
         xml_doc = self._fetch(rtype, [rdata])
         # generate object by using XML schema
         xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
@@ -400,7 +400,7 @@ class Client(Telnet):
         rtype = 'REQUEST INVENTORY'
         rdata = "%s %s *" % (start_datetime.formatArcLink(),
                              end_datetime.formatArcLink())
-        # fetch plain xml document
+        # fetch plain XML document
         xml_doc = self._fetch(rtype, [rdata])
         # generate object by using XML schema
         xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)

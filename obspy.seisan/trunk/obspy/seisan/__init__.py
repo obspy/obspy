@@ -12,7 +12,7 @@ This module provides read support for SEISAN waveform files.
 
 Reading
 -------
-Importing SEISAN files is done similiar to reading any other waveform data
+Importing SEISAN files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Test files for the following examples may be
 found at http://examples.obspy.org.
