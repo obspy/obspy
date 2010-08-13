@@ -14,13 +14,17 @@ Reading via obspy.core
 ----------------------
 Similiar to reading any other waveform data format using obspy.core:
 
+(Lines 2&3 are just to get the absolute path of our test data)
+
 >>> from obspy.core import read
->>> st = read('COP.BHE.DK.2009.050') #doctest: +SKIP
->>> st #doctest: +SKIP
-<obspy.core.stream.Stream object at 0x101700150>
->>> print st #doctest: +SKIP
+>>> from obspy.core import path
+>>> filename = path("test.mseed")
+>>> st = read(filename)
+>>> st #doctest: +ELLIPSIS
+<obspy.core.stream.Stream object at 0x...>
+>>> print st
 1 Trace(s) in Stream:
-DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
+NL.HGN.00.BHZ | 2003-05-29T02:13:22.043400Z - 2003-05-29T02:18:20.693400Z | 40.0 Hz, 11947 samples
 
 The format will be determined automatically.
 
@@ -29,25 +33,17 @@ reading a Mini-SEED file it will have one additional attribute: 'mseed'. This
 attribute contains all Mini-SEED specific attributes which actually is just the
 dataquality.
 
->>> print st[0].stats #doctest: +SKIP
-Stats({
-    'network': 'DK',
-    'mseed': Stats({
-        'dataquality': 'D'
-    }),
-    'station': 'COP',
-    'location': '',
-    'starttime': UTCDateTime(2009, 2, 19, 0, 0, 0, 35100), 
-    'npts': 1728000, 
-    'sampling_rate': 20.0,
-    'endtime': UTCDateTime(2009, 2, 19, 23, 59, 59, 985100), 
-    'channel': 'BHE'
-})
+>>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+Stats({'network': 'NL', '_format': 'MSEED',
+       'mseed': AttribDict({'dataquality': 'R'}),
+       'delta': 0.025000000000000001, 'station': 'HGN', 'location': '00',
+       'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 11947,
+       'calib': 1.0, 'sampling_rate': 40.0, 'channel': 'BHZ'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> st[0].data #doctest: +SKIP
-array([1085, 1167, 1131, ...,  -19,  -46,  -55], dtype=int32)
+>>> st[0].data
+array([2787, 2776, 2774, ..., 2850, 2853, 2853])
 
 Writing via obspy.core
 ----------------------
