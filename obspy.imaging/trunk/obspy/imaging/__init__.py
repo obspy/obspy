@@ -88,7 +88,7 @@ and 180 moves it opposite to strike (right-lateral).
     np1 = [150, 87, 1]
     Beachball(np1)
 
-The focal mechanism can also be specified using the 6 independant components of
+The focal mechanism can also be specified using the 6 independent components of
 the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
 
 >>> from obspy.imaging.beachball import Beachball
@@ -116,8 +116,10 @@ Plot the beach ball as matplotlib collection into an existing plot.
 >>> plt.plot([-100, 100], [0, 100], "rv", ms=10) #doctest: +ELLIPSIS
 [<matplotlib.lines.Line2D object at 0x...>]
 >>> ax = plt.gca()
->>> ax.add_collection(Beach(np1, xy=(50,50), width=30))
->>> ax.add_collection(Beach(mt, xy=(50,50), width=50))
+>>> ax.add_collection(Beach(np1, xy=(50,50), width=30)) #doctest: +ELLIPSIS
+<matplotlib.collections.PatchCollection object at 0x...>
+>>> ax.add_collection(Beach(mt, xy=(50,50), width=50)) #doctest: +ELLIPSIS
+<matplotlib.collections.PatchCollection object at 0x...>
 >>> plt.axis('scaled')
 (-100.0, 100.0, -100.0, 100.0)
 >>> plt.axis([-120, 120, -20, 120])

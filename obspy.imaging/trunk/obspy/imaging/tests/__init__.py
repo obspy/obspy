@@ -13,7 +13,9 @@ except TypeError: #needed for matplotlib 0.91.2
 import unittest
 from obspy.core.util import add_doctests, add_unittests
 
+
 MODULE_NAME = "obspy.imaging"
+
 
 def suite():
     suite = unittest.TestSuite()
