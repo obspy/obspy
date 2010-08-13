@@ -102,10 +102,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         |     tensor elements e11, e21, e22, e33 
         | **ts_d:** (array, length nt) - dilatation
         |     (trace of the 3x3 strain tensor) as a function of time
-        | sigmad = scalar, standard deviation of dilatation 
+        | **sigmad:** scalar, standard deviation of dilatation 
         | **ts_dh:** (array, length nt) - horizontal dilatation (also
         |     known as areal strain) (eEE+eNN) as a function of time
-        | sigmadh = scalar, standard deviation of horizontal dilatation
+        | **sigmadh:** scalar, standard deviation of horizontal dilatation
         |     (areal strain) 
         | **ts_s:** (array, length nt) -  maximum strain 
         |     ( .5*(max eigval of e - min eigval of e) as a 
