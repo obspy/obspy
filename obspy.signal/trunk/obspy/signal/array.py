@@ -283,7 +283,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     A = np.zeros((N * 3, 6));
     z3t = np.zeros(3); 
     # fill up A
-    for i in np.arange(N):
+    for i in xrange(N):
         ss = subarraycoords[i+1,:] - subarraycoords[0,:];
         A[3*i:3*i + 3,:] = np.c_[np.r_[ss, z3t], np.r_[z3t, ss], \
             np.array([-eta*ss[2], \
@@ -298,7 +298,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     Cd = np.array([]);
     D = -I3;
 
-    for i in np.arange(N-1):
+    for i in xrange(N-1):
         D = np.c_[D, -I3]
     D = np.r_[D, II].T;     
 
@@ -345,24 +345,24 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     #        str(condition_number)
                 
     # set up storage for vectors that will contain time series
-    ts_wmag = np.NaN * np.ones(nt);
-    ts_w1 = np.NaN * np.ones(nt);
-    ts_w2 = np.NaN * np.ones(nt);
-    ts_w3 = np.NaN * np.ones(nt);
-    ts_tilt = np.NaN * np.ones(nt);
-    ts_dh = np.NaN * np.ones(nt);
-    ts_dd = np.NaN * np.ones(nt); 
-    ts_sh = np.NaN * np.ones(nt);
-    ts_s = np.NaN * np.ones(nt);
-    ts_M = np.NaN * np.ones(nt);
-    ts_pred = np.NaN * np.ones((nt,3*N));
-    ts_misfit = np.NaN * np.ones((nt,3*N));
-    ts_M = np.NaN * np.ones(nt);
-    ts_data = np.NaN * np.ones((nt,3*N));
-    ts_ptilde = np.NaN * np.ones((nt,6));
+    ts_wmag = np.NaN * np.empty(nt);
+    ts_w1 = np.NaN * np.empty(nt);
+    ts_w2 = np.NaN * np.empty(nt);
+    ts_w3 = np.NaN * np.empty(nt);
+    ts_tilt = np.NaN * np.empty(nt);
+    ts_dh = np.NaN * np.empty(nt);
+    ts_dd = np.NaN * np.empty(nt); 
+    ts_sh = np.NaN * np.empty(nt);
+    ts_s = np.NaN * np.empty(nt);
+    ts_M = np.NaN * np.empty(nt);
+    ts_pred = np.NaN * np.empty((nt,3*N));
+    ts_misfit = np.NaN * np.empty((nt,3*N));
+    ts_M = np.NaN * np.empty(nt);
+    ts_data = np.NaN * np.empty((nt,3*N));
+    ts_ptilde = np.NaN * np.empty((nt,6));
 
     # other matrices
-    udif = np.NaN * np.ones((3,N));
+    udif = np.NaN * np.empty((3,N));
 
 
     #---------------------------------------------------------------
@@ -458,12 +458,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     #
     # BEGIN LOOP OVER DATA POINTS IN TIME SERIES==============================
     #
-    for itime in np.arange(nt):
+    for itime in xrange(nt):
         #
         # data vector is differences of stn i displ from stn 1 displ
         # sum the lengths of the displ difference vectors
         sumlen = 0;
-        for i in np.arange(N):
+        for i in xrange(N):
             udif[0,i] = ts1[itime, subarray[i+1]] - ts1[itime, subarray[0]];
             udif[1,i] = ts2[itime, subarray[i+1]] - ts2[itime, subarray[0]];
             udif[2,i] = ts3[itime, subarray[i+1]] - ts3[itime, subarray[0]];
@@ -493,8 +493,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # calculate summed length of misfits (residual displacments)
         misfit_sq = misfit**2;
         misfit_sq = np.reshape(misfit_sq,(N,3)).T;
-        misfit_sumsq = np.NaN * np.ones(N)
-        for i in np.arange(N):
+        misfit_sumsq = np.NaN * np.empty(N)
+        for i in xrange(N):
             misfit_sumsq[i] = misfit_sq[:,i].sum(); 
         misfit_len = np.sum(np.sqrt(misfit_sumsq));
         ts_M[itime] = misfit_len / sumlen;
@@ -515,7 +515,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         e = .5 * (U + U.T);
      
         # Three components of the rotation vector omega (=w here)
-        w = np.NaN * np.ones(3);
+        w = np.NaN * np.empty(3);
         w[0] = -ptilde[5]; 
         w[1] = ptilde[2]; 
         w[2] = .5*(ptilde[3]-ptilde[1]); 
