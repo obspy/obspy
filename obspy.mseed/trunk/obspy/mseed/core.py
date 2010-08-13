@@ -140,7 +140,8 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         Should be set to one of the following supported
         Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3), 
         FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default 
-        data types a marked with an asterisk.
+        data types a marked with an asterisk. Currently INT24 (2) is not
+        supported due to lacking NumPy support.
     byteorder : [ 0 or '<' | '1 or '>' | -1], optional
         Must be either 0 or '<' for LSBF or little-endian, 1 or
         '>' for MBF or big-endian. -1 defaults to big-endian (1)
@@ -149,8 +150,8 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
     verbose : int, optional
-         Controls verbosity, a value of zero will result in no 
-        diagnostic output.
+        Controls verbosity, a value of zero will result in no diagnostic
+        output.
     """
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking numpy support.
@@ -208,7 +209,7 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         if not isinstance(trace.data, np.ndarray):
             msg = "Unsupported data type %s" % type(trace.data)
             raise Exception(msg)
-        # autodetect format if no global encoding is given
+        # automatically detect format if no global encoding is given
         if encoding == -1:
             if trace.data.dtype.type == np.dtype("int32"):
                 enc = 11
