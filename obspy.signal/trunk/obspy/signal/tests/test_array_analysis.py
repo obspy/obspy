@@ -6,7 +6,7 @@ The Array test suite.
 
 import unittest
 import numpy as np
-from obspy.signal.array import array_rotation_strain
+from obspy.signal.array_analysis import array_rotation_strain
 
 class ArrayTestCase(unittest.TestCase):
     """
