@@ -18,6 +18,7 @@ import sys
 import time
 import urllib2
 import urllib
+import inspect
 from obspy.core.util import BAND_CODE
 from obspy.core import UTCDateTime
 
@@ -152,41 +153,50 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getWaveform(self, *args, **kwargs):
+    def getWaveform(self, network_id, station_id, location_id, channel_id,
+                    start_datetime, end_datetime, apply_filter=False,
+                    **kwargs):
         """
         Gets a ObsPy Stream object.
 
+        :type network_id: String
         :param network_id: Network code, e.g. 'BW'.
+        :type station_id: String
         :param station_id: Station code, e.g. 'MANZ'.
+        :type location_id: String
         :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        :param end_datetime: end time as 
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object
+        :type channel_id: String
+        :param channel_id: Channel code, supporting wildcard for component,
+            e.g. 'EHE' or 'EH*'.
+        :type start_datetime: String or
+            :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param start_datetime: start time of requested data
+        :type end_datetime: String or
+            :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_datetime: end time of requested data
+        :type apply_filter: Boolean
         :param apply_filter: apply filter, default False.
-        :return: :class:`~obspy.core.stream.Stream` object.
+        :return: :class:`~obspy.core.stream.Stream`
         """
-        map = ['network_id', 'station_id', 'location_id', 'channel_id',
-               'start_datetime', 'end_datetime', 'apply_filter']
-        for i in range(len(args)):
-            kwargs[map[i]] = args[i]
-
-        if 'channel_id' not in kwargs:
-            raise TypeError("Channel not specified.")
+        # analyze args passed on to method call and put them into
+        # kwargs-dictionary for the _fetch() call later on
+        frame = inspect.currentframe()
+        args, _, _, values = inspect.getargvalues(frame)
+        for arg in args[1:]:
+            kwargs[arg] = values[arg]
+        
+        # we expand the requested timespan on both ends by two samples in
+        # order to be able to make use of the nearest_sample option of
+        # stream.trim(). (see trim() and tickets #95 and #105)
         band_code = kwargs['channel_id'][0]
-
-        if 'start_datetime' in kwargs:
-            start = kwargs['start_datetime']
-            if isinstance(start, str):
-                start = UTCDateTime(start)
-            kwargs['start_datetime'] = start - 2.0 / BAND_CODE[band_code]
-
-        if 'end_datetime' in kwargs:
-            end = kwargs['end_datetime']
-            if isinstance(end, str):
-                end = UTCDateTime(end)
-            kwargs['end_datetime'] = end + 2.0 / BAND_CODE[band_code]
+        start = kwargs['start_datetime']
+        if isinstance(start, str):
+            start = UTCDateTime(start)
+        kwargs['start_datetime'] = start - 2.0 / BAND_CODE[band_code]
+        end = kwargs['end_datetime']
+        if isinstance(end, str):
+            end = UTCDateTime(end)
+        kwargs['end_datetime'] = end + 2.0 / BAND_CODE[band_code]
 
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
