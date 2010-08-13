@@ -49,19 +49,20 @@ INDEX_FIELDS = {30: 'data_format_identifier_code',
 class Parser(object):
     """
     The XML-SEED parser class parses dataless or full SEED volumes.
-    
+
     The SEED file format description can be found at
     @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
-    
+
     The XML-SEED format was proposed in
     @see: http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml,
     @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
-    def __init__(self, filename=None, debug=False, strict=False, compact=False):
+    def __init__(self, filename=None, debug=False, strict=False,
+                 compact=False):
         """
         Initializes the SEED parser.
-        
+
         :type debug: Boolean.
         :param debug: Enables a verbose debug log during parsing of SEED file.
         :type strict: Boolean.
@@ -114,7 +115,7 @@ class Parser(object):
     def read(self, data):
         """
         General parser method for XML-SEED and Dataless SEED files.
-        
+
         :type data: Basestring or StringIO object.
         :param data: Filename or XSEED/SEED string as file pointer or StringIO.
         """
@@ -197,7 +198,7 @@ class Parser(object):
                 SubElement(doc, utils.toTag('Data Records'))
             # Return single XML String.
             return tostring(doc, pretty_print=True, xml_declaration=True,
-                            encoding='utf-8')
+                            encoding='UTF-8')
         else:
             # generate a XML resource for each station
             result = {}
@@ -214,7 +215,7 @@ class Parser(object):
                     SubElement(doc, utils.toTag('Data Records'))
                 id = station[0].end_effective_date
                 result[id] = tostring(cdoc, pretty_print=True,
-                                      xml_declaration=True, encoding='utf-8')
+                                      xml_declaration=True, encoding='UTF-8')
             return result
 
 
@@ -247,8 +248,7 @@ class Parser(object):
         """
         self.compact = compact
         # Nothing to write if not all necessary data is available.
-        if not self.volume or not self.abbreviations or \
-                    len(self.stations) == 0:
+        if not self.volume or not self.abbreviations or not self.stations:
             msg = 'No data to be written available.'
             raise SEEDParserException(msg)
         # Check blockettes:
@@ -287,7 +287,7 @@ class Parser(object):
     def getRESP(self):
         """
         Returns a SEED RESP file from the current obspy.xseed.Parser object.
-        
+
         It aims to produce the same RESP files as when running rdseed with
         the command: "rdseed -f seed.test -R".
         """
@@ -310,7 +310,7 @@ class Parser(object):
                 if station[_i].id == 52:
                     cur_location = station[_i].location_identifier.strip()
                     cur_channel = station[_i].channel_identifier.strip()
-                    # Take old list and send it to the resp parser.
+                    # Take old list and send it to the RESP parser.
                     if resp.len != 0:
                         # Send the blockettes to the parser and append to list.
                         self._getRESPString(resp, blockettes, cur_station)
@@ -359,7 +359,7 @@ class Parser(object):
         is blockettes 43 and 53.
         No multiple stations or locations codes in the same XSEED volume are
         allowed.
-        
+
         :param channel_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
         :param datetime: UTCDateTime of requested PAZ values
         :return: Dictionary containing PAZ as well as the overall
@@ -371,54 +371,59 @@ class Parser(object):
             for blockette in station:
                 if blockette.id == 50:
                     station_id = "%s.%s" % (blockette.network_code,
-                                    blockette.station_call_letters)
+                                            blockette.station_call_letters)
                     start = blockette.start_effective_date
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
-                    id = "%s.%s.%s/%e/%e" % (station_id, blockette.location_identifier,
-                            blockette.channel_identifier, start.timestamp, end.timestamp)
+                    id = "%s.%s.%s/%e/%e" % (station_id,
+                                             blockette.location_identifier,
+                                             blockette.channel_identifier,
+                                             start.timestamp,
+                                             end.timestamp)
                     channels[id] = {}
                 elif blockette.id == 58:
                     if blockette.stage_sequence_number == 0:
                         channels[id]['sensitivity'] = \
-                                blockette.sensitivity_gain
+                            blockette.sensitivity_gain
                     elif blockette.stage_sequence_number == 1:
                         channels[id]['seismometer_gain'] = \
-                                blockette.sensitivity_gain
+                            blockette.sensitivity_gain
                 elif blockette.id == 53 or blockette.id == 60:
                     if blockette.id == 60:
                         abbreviation = blockette.stages[0][1]
-                        channels[id]['seismometer_gain'] = [blk.sensitivity_gain \
-                                for blk in self.abbreviations if hasattr(blk, \
-                                'response_lookup_key') and  \
+                        channels[id]['seismometer_gain'] = \
+                            [blk.sensitivity_gain for blk in self.abbreviations
+                             if hasattr(blk, 'response_lookup_key') and \
                                 blk.response_lookup_key == abbreviation][0]
                         abbreviation = blockette.stages[0][0]
-                        resp = [blk \
-                                for blk in self.abbreviations if hasattr(blk, \
-                                'response_lookup_key') and  \
+                        resp = \
+                            [blk for blk in self.abbreviations
+                             if hasattr(blk, 'response_lookup_key') and \
                                 blk.response_lookup_key == abbreviation][0]
                         label = 'response_type'
                     else:
                         resp = blockette
                         label = 'transfer_function_types'
-                    # Check if laplace transform
-                    if getattr(resp, label) != "A": 
+                    # Check if Laplace transform
+                    if getattr(resp, label) != "A":
                         msg = 'Only supporting Laplace transform response type'
-                        raise SEEDParserException(msg) 
+                        raise SEEDParserException(msg)
                     # A0_normalization_factor
                     channels[id]['gain'] = resp.A0_normalization_factor
                     # Poles
-                    channels[id]['poles'] = [complex(x, y) for x, y in \
-                        zip(resp.real_pole, resp.imaginary_pole)]
+                    channels[id]['poles'] = \
+                        [complex(x, y) for x, y in zip(resp.real_pole,
+                                                       resp.imaginary_pole)]
                     # Zeros
-                    channels[id]['zeros'] = [complex(x, y) for x, y in \
-                        zip(resp.real_zero, resp.imaginary_zero)]
+                    channels[id]['zeros'] = \
+                        [complex(x, y) for x, y in zip(resp.real_zero,
+                                                       resp.imaginary_zero)]
         # Returns only the keys.
         channel = [cha for cha in channels if channel_id in cha]
         if datetime:
             start, end = [float(g) for g  in cha.split('/')[1:]]
             channel = [cha for cha in channels if start < datetime.timestamp \
-                    and end > datetime.timestamp]
+                       and end > datetime.timestamp]
         if len(channel) != 1:
             msg = 'None or more than one channel with the given description:' \
                 + ', '.join(channel)
@@ -428,7 +433,7 @@ class Parser(object):
     def writeRESP(self, folder, zipped=False):
         """
         Stores channel responses into files within a given folder.
-        
+
         :param folder: Folder name.
         :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
@@ -454,9 +459,10 @@ class Parser(object):
 
     def _parseSEED(self, data):
         """
-        Parses through a whole SEED volume. It will always parse the whole
-        file and skip any time span data.
-        
+        Parses through a whole SEED volume.
+
+        It will always parse the whole file and skip any time span data.
+
         :type data: File pointer or StringIO object.
         """
         # Jump to the beginning of the file.
@@ -538,13 +544,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(\
-                    self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
-                                            xseed_version))
+            self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
+                                    xseed_version))
         # Append all abbreviations.
         for blockette in headers[1].getchildren():
             self.temp['abbreviations'].append(\
-                    self._parseXMLBlockette(blockette, 'A',
-                                            xseed_version))
+                self._parseXMLBlockette(blockette, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -552,8 +557,7 @@ class Parser(object):
             self.temp['stations'].append([])
             for blockette in control_header.getchildren():
                 self.temp['stations'][-1].append(\
-                                    self._parseXMLBlockette(blockette, 'S',
-                                                            xseed_version))
+                    self._parseXMLBlockette(blockette, 'S', xseed_version))
         # Update internal values.
         self._updateInternalSEEDStructure()
 
@@ -623,17 +627,16 @@ class Parser(object):
 
     def _createCutAndFlushRecord(self, blockettes, record_type):
         """
-        Takes all blockettes of a record and return a list with finished
-        records.
-        
+        Takes all blockettes of a record and return a list of finished records.
+
         If necessary it will cut the record and return two or more flushed
         records.
-        
+
         The returned records also include the control header type code and the
         record continuation code. Therefore the returned record will have the
-        lenght self.record_length - 6. Other methods are responsible for
+        length self.record_length - 6. Other methods are responsible for
         writing the sequence number.
-        
+
         It will always return a list with records.
         """
         length = self.record_length - 8
@@ -669,7 +672,8 @@ class Parser(object):
                     return_records.append(record)
                     record = ''
                     # It doesn't hurt to index a string more than its length.
-                    record += rest_of_the_record[_i * length: (_i + 1) * length]
+                    record = record + \
+                        rest_of_the_record[_i * length: (_i + 1) * length]
         if len(record) > 0:
             return_records.append(record)
         # Flush last record
@@ -685,23 +689,22 @@ class Parser(object):
         """
         Checks if all blockettes necessary for creating a SEED String are
         available.
-        
+
         Returns True/False.
         """
         if not 10 in [_i.id for _i in self.volume]:
             return False
         abb_blockettes = [_i.id for _i in self.abbreviations]
         if not 30 in abb_blockettes and not 33 in abb_blockettes and \
-                        not 34 in abb_blockettes:
+           not 34 in abb_blockettes:
             return False
         # Check every station:
         for _i in self.stations:
             stat_blockettes = [_j.id for _j in _i]
             if not 50 in stat_blockettes and not 52 in stat_blockettes and \
-                        not 58 in stat_blockettes:
+               not 58 in stat_blockettes:
                 return False
         return True
-
 
     def _compareBlockettes(self, blkt1, blkt2):
         """
@@ -710,7 +713,7 @@ class Parser(object):
         Returns True or False.
         """
         for key in blkt1.__dict__.keys():
-            # Continue if just some metadata.
+            # Continue if just some meta data.
             if key in utils.IGNORE_ATTR:
                 continue
             if blkt1.__dict__[key] != blkt2.__dict__[key]:
@@ -721,13 +724,13 @@ class Parser(object):
         """
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
-        
+
         The self.temp dictionary can only contain one seed volume with a 
         correct structure.
-        
+
         This method will try to merge everything, discard double entries and
         adjust abbreviations.
-        
+
         It will also discard unnecessary blockettes that will be created
         again when writing SEED or XSEED.
         """
@@ -781,13 +784,12 @@ class Parser(object):
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4
 
-
     def _updateTemporaryStations(self, blkt_id, index_nr):
         """
         Loops over all stations, finds the corresponding blockettes and changes
         all abbreviation lookup codes.
         """
-        # Blockette dictionary which maps abbreviation ids and and fields.
+        # Blockette dictionary which maps abbreviation IDs and and fields.
         index = {
             # Abbreviation Blockette : {Station Blockette: (Fields)}
             30: {52: (16,)},
@@ -807,7 +809,6 @@ class Parser(object):
                 for field in fields:
                     setattr(blkt, blkt.getFields()[field - 2].field_name,
                             index_nr)
-
 
     def _parseMergedData(self, data, record_type):
         """
@@ -838,10 +839,10 @@ class Parser(object):
             root_attribute = self.temp['volume']
         else:
             # Just one abbreviations header allowed!
-            #if len(self.temp['abbreviations']):
-            #    msg = 'More than one Abbreviation Dictionary Control Headers' + \
-            #          ' found!'
-            #    raise SEEDParserException(msg)
+            if len(self.temp['abbreviations']):
+                msg = 'More than one Abbreviation Dictionary Control ' + \
+                      'Headers found!'
+                raise SEEDParserException(msg)
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:

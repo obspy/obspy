@@ -189,10 +189,11 @@ class Field(object):
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
-                print('  %s: set to default value %s' % (self, self.default_value))
+                print('  %s: set to default value %s' % (self,
+                                                         self.default_value))
             return
-        # Parse X-Path if necessary. The isdigit test assures legacy support for
-        # XSEED without XPaths.
+        # Parse X-Path if necessary. The isdigit test assures legacy support
+        # for XSEED without XPaths.
         if self.xpath and not text.isdigit():
             text = utils.getXPath(text)
         # check if already exists
@@ -542,4 +543,3 @@ class Loop(Field):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseXML(blockette, root, i)
-

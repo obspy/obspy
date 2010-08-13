@@ -138,7 +138,7 @@ class _WaveformMapperClient(object):
     def getLatency(self, *args, **kwargs):
         """
         Gets a list of network latency values.
-        
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
@@ -154,8 +154,8 @@ class _WaveformMapperClient(object):
 
     def getWaveform(self, *args, **kwargs):
         """
-        Gets a Obspy Stream object.
-        
+        Gets a ObsPy Stream object.
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
@@ -175,7 +175,7 @@ class _WaveformMapperClient(object):
         if 'channel_id' not in kwargs:
             raise TypeError("Channel not specified.")
         band_code = kwargs['channel_id'][0]
-        
+
         if 'start_datetime' in kwargs:
             start = kwargs['start_datetime']
             if isinstance(start, str):
@@ -202,8 +202,8 @@ class _WaveformMapperClient(object):
 
     def getPreview(self, *args, **kwargs):
         """
-        Gets a preview of a Obspy Stream object.
-        
+        Gets a preview of a ObsPy Stream object.
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :param location_id: Location code, e.g. '01'.
@@ -228,9 +228,9 @@ class _WaveformMapperClient(object):
 
     def getPreviewByIds(self, *args, **kwargs):
         """
-        Gets a preview of a Obspy Stream object.
-        
-        :param trace_ids: List of trace ids, e.g. ['BW.MANZ..EHE'].
+        Gets a preview of a ObsPy Stream object.
+
+        :param trace_ids: List of trace IDs, e.g. ['BW.MANZ..EHE'].
         :param start_datetime: start time as
             :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :param end_datetime: end time as 
@@ -240,7 +240,7 @@ class _WaveformMapperClient(object):
         map = ['trace_ids', 'start_datetime', 'end_datetime']
         for i in range(len(args)):
             kwargs[map[i]] = args[i]
-        # concatenate list of ids into string
+        # concatenate list of IDs into string
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
                 kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
@@ -260,7 +260,7 @@ class _BaseRESTClient(object):
     def getResource(self, resource_name, **kwargs):
         """
         Gets a resource.
-        
+
         :param resource_name: Name of the resource.
         :param format: Format string, e.g. 'xml' or 'map'.
         :return: Resource
@@ -272,7 +272,7 @@ class _BaseRESTClient(object):
     def getXMLResource(self, resource_name, **kwargs):
         """
         Gets a XML resource.
-        
+
         :param resource_name: Name of the resource.
         :return: Resource
         """
@@ -290,7 +290,7 @@ class _StationMapperClient(_BaseRESTClient):
     def getList(self, *args, **kwargs):
         """
         Gets a list of station information.
-        
+
         :param network_id: Network code, e.g. 'BW'.
         :param station_id: Station code, e.g. 'MANZ'.
         :return: List of dictionaries containing station information.
@@ -307,7 +307,7 @@ class _StationMapperClient(_BaseRESTClient):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
         constant for the poles and zeros.
-        
+
         >>> c = Client()
         >>> a = c.station.getPAZ('BW', 'MANZ', '20090707', channel_id='EHZ')
         >>> a['zeros']
@@ -319,10 +319,6 @@ class _StationMapperClient(_BaseRESTClient):
         >>> a['sensitivity']
         2516800000.0
 
-        XXX: currently not working
-        a['name']
-        'Streckeisen STS-2/N seismometer'
-        
         :param network_id: Network id, e.g. 'BW'.
         :param station_id: Station id, e.g. 'RJOB'.
         :param location_id: Location id, e.g. ''.
@@ -377,11 +373,6 @@ class _StationMapperClient(_BaseRESTClient):
             paz_node = base_node.response_poles_and_zeros[0]
             sensitivity_node = base_node.channel_sensitivity_gain[-1]
             seismometer_gain_node = base_node.channel_sensitivity_gain[0]
-        # instrument name
-        # XXX: this probably changes with a newer XSEED format
-        #xpath_expr = "generic_abbreviation[abbreviation_lookup_code='" + \
-        #    str(channel_node.instrument_identifier) + "']"
-        #name = dict_node.xpath(xpath_expr)[0].abbreviation_description
         paz = {}
         # poles
         poles_real = paz_node.complex_pole.real_pole[:]
@@ -412,7 +403,7 @@ class _EventMapperClient(_BaseRESTClient):
     def getList(self, *args, **kwargs):
         """
         Gets a list of event information.
-        
+
         :return: List of dictionaries containing event information.
         """
         url = '/seismology/event/getList'
@@ -421,22 +412,22 @@ class _EventMapperClient(_BaseRESTClient):
 
     def getKml(self, nolabels=False, *args, **kwargs):
         """
-        Posts an event.getList() and returns the results as a kml file.
+        Posts an event.getList() and returns the results as a KML file.
 
-        :return: String containing kml information of all matching events. This
+        :return: String containing KML information of all matching events. This
                  string can be written to a file and loaded into e.g. Google
                  Earth.
         """
         events = self.getList(*args, **kwargs)
         timestamp = datetime.now()
 
-        # construct the kml file
+        # construct the KML file
         kml = Element("kml")
         kml.set("xmlns", "http://www.opengis.net/kml/2.2")
-        
+
         document = SubElement(kml, "Document")
         SubElement(document, "name").text = "Seishub Event Locations"
-        
+
         # style definitions for earthquakes
         style = SubElement(document, "Style")
         style.set("id", "earthquake")
@@ -460,7 +451,7 @@ class _EventMapperClient(_BaseRESTClient):
         SubElement(folder, "name").text = "Seishub Events (%s)" % \
                                           timestamp.date()
         SubElement(folder, "open").text = "1"
-        
+
         # additional descriptions for the folder
         descrip_str = "Fetched from: %s" % self.client.base_url
         descrip_str += "\nFetched at: %s" % timestamp
@@ -473,7 +464,7 @@ class _EventMapperClient(_BaseRESTClient):
         SubElement(liststyle, "listItemType").text = "check"
         SubElement(liststyle, "bgColor").text = "00ffffff"
         SubElement(liststyle, "maxSnippetLines").text = "5"
-        
+
         # add one marker per event
         interesting_keys = ['resource_name', 'localisation_method', 'account',
                             'user', 'public', 'datetime', 'longitude',
@@ -483,7 +474,7 @@ class _EventMapperClient(_BaseRESTClient):
             placemark = SubElement(folder, "Placemark")
             date = str(event_dict['datetime']).split(" ")[0]
             mag = str(event_dict['magnitude'])
-            
+
             # scale marker size to magnitude if this information is present
             if mag:
                 mag = float(mag)
@@ -508,7 +499,7 @@ class _EventMapperClient(_BaseRESTClient):
             point = SubElement(placemark, "Point")
             SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
                     (event_dict['longitude'], event_dict['latitude'])
-            
+
             # detailed information on the event for the description
             descrip_str = ""
             for key in interesting_keys:
@@ -516,8 +507,8 @@ class _EventMapperClient(_BaseRESTClient):
                     continue
                 descrip_str += "\n%s: %s" % (key, event_dict[key])
             SubElement(placemark, "description").text = descrip_str
-        
-        # generate and return kml string
+
+        # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
 
 

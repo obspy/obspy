@@ -204,7 +204,6 @@ class ClientTestCase(unittest.TestCase):
         print data
 
 
-
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 

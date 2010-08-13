@@ -14,8 +14,8 @@ class UtilsTestCase(unittest.TestCase):
         pass
 
     def test_toTag(self):
-        name = "Hallo Welt"
-        self.assertEquals("hallo_welt", utils.toTag(name))
+        name = "Hello World"
+        self.assertEquals("hello_world", utils.toTag(name))
 
     def test_DateTime2String(self):
         dt = UTCDateTime(2008, 12, 23, 01, 30, 22, 123456)

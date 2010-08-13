@@ -54,8 +54,8 @@ class BlocketteTestCase(unittest.TestCase):
                     test_examples[-1].append([line[5:].replace('\n', '')])
                     cur_stat = 1
                     continue
-            # Filter out any empty/commentary lines still remaining and also set
-            # cur_stat to None.
+            # Filter out any empty/commentary lines still remaining and also
+            # set cur_stat to None.
             if line.strip() == '':
                 cur_stat = None
                 continue

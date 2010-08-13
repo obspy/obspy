@@ -17,12 +17,12 @@ Basic Example
 
 >>> client = Client()
 >>> t = UTCDateTime('20090808120000')
->>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+1800)
+>>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
 >>> print st
 3 Trace(s) in Stream:
-BW.MANZ..EHZ | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
-BW.MANZ..EHN | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
-BW.MANZ..EHE | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:30:00.000000Z | 200.0 Hz, 360001 samples
+BW.MANZ..EHZ | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
+BW.MANZ..EHN | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
+BW.MANZ..EHE | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
 
 
 Advanced Examples
@@ -41,8 +41,9 @@ Advanced Examples
 >>> cha_ids
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
 
->>> print client.station.getResource('dataless.seed.BW_MANZ.xml',
-...         format='metadata') #doctest: +NORMALIZE_WHITESPACE
+>>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
+...                                  format='metadata')
+>>> print res #doctest: +NORMALIZE_WHITESPACE
 <?xml version="1.0" encoding="utf-8"?>
 <metadata>
   <item title="Station Name">

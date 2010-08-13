@@ -4,7 +4,6 @@
 from __future__ import with_statement
 
 from StringIO import StringIO
-from glob import glob
 from lxml import etree
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
@@ -228,7 +227,7 @@ class ParserTestCase(unittest.TestCase):
         """
         # Loop over all files and versions.
         for version in ['1.0', '1.1']:
-            # Path to xsd-file.
+            # Path to XML schema file.
             xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
             # Prepare validator.
             f = open(xsd_path, 'r')
@@ -285,7 +284,7 @@ class ParserTestCase(unittest.TestCase):
             (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
         self.assertEqual(paz['sensitivity'], +7.86576e+08)
         self.assertEqual(paz['seismometer_gain'], +1.50000E+03)
-        # Raise exception for undefinded channels
+        # Raise exception for undefined channels
         self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
         #
         # Do the same for another dataless file
@@ -300,7 +299,7 @@ class ParserTestCase(unittest.TestCase):
                                         (-1.08300e+00 + 0.00000e+00j)])
         self.assertEqual(paz['sensitivity'], +6.71140E+08)
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
-        # Raise exception for undefinded channels
+        # Raise exception for undefined channels
         self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
         # Raise exception if not a Laplacian transfer function ('A'). 
         # Modify transfer_fuction_type on the fly
@@ -314,18 +313,18 @@ class ParserTestCase(unittest.TestCase):
         f = StringIO(gzip.open(filename).read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
-        zeros = [[+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j],
-                 [+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j,
-                    -6.32511E+02 +0.00000E+00j],
-                 [+0.00000E+00 +0.00000E+00j, +0.00000E+00 +0.00000E+00j]]
-        poles = [[-1.23413E-02 +1.23413E-02j, -1.23413E-02 -1.23413E-02j,
-                  -3.91757E+01 +4.91234E+01j, -3.91757E+01 -4.91234E+01j],
-                 [-3.58123E-02 -4.44766E-02j, -3.58123E-02 +4.44766E-02j,
-                  -5.13245E+02 +0.00000E+00j, -6.14791E+04 +0.00000E+00j],
-                 [-1.23413E-02 +1.23413E-02j, -1.23413E-02 -1.23413E-02j,
-                  -3.91757E+01 +4.91234E+01j, -3.91757E+01 -4.91234E+01j]]
+        zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
+                 [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j,
+                    - 6.32511E+02 + 0.00000E+00j],
+                 [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j]]
+        poles = [[-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
+                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
+                 [-3.58123E-02 - 4.44766E-02j, -3.58123E-02 + 4.44766E-02j,
+                  - 5.13245E+02 + 0.00000E+00j, -6.14791E+04 + 0.00000E+00j],
+                 [-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
+                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j]]
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
-        seismometer_gain = [+2.29145E+03 ,+1.02583E+01 , +2.29145E+03]
+        seismometer_gain = [+2.29145E+03 , +1.02583E+01 , +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
             paz = sp.getPAZ(channel)
             self.assertEqual(paz['gain'], gain[i])
@@ -411,26 +410,26 @@ class ParserTestCase(unittest.TestCase):
                 blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
 
-#    def test_compareBlockettes(self):
-#        """
-#        Tests the comparision of two blockettes.
-#        """
-#        p = Parser()
-#        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
-#        blockette1 = Blockette010(strict=True, compact=True,
-#                                  xseed_version = '1.0')
-#        blockette1.parseSEED(b010_1)
-#        blockette2 = Blockette010()
-#        blockette2.parseSEED(b010_1)
-#        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
-#        blockette3 = Blockette010(strict=True, compact=True)
-#        blockette3.parseSEED(b010_3)
-#        blockette4 = Blockette010(xseed_version = '1.0')
-#        blockette4.parseSEED(b010_3)
-#        self.assertTrue(p._compareBlockettes(blockette1, blockette2))
-#        self.assertFalse(p._compareBlockettes(blockette1, blockette3))
-#        self.assertFalse(p._compareBlockettes(blockette2, blockette3))
-#        self.assertTrue(p._compareBlockettes(blockette3, blockette4))
+    def test_compareBlockettes(self):
+        """
+        Tests the comparison of two blockettes.
+        """
+        p = Parser()
+        b010_1 = "0100042 2.4082008,001~2038,001~2009,001~~~"
+        blockette1 = Blockette010(strict=True, compact=True,
+                                  xseed_version='1.0')
+        blockette1.parseSEED(b010_1)
+        blockette2 = Blockette010()
+        blockette2.parseSEED(b010_1)
+        b010_3 = "0100042 2.4082009,001~2038,001~2009,001~~~"
+        blockette3 = Blockette010(strict=True, compact=True)
+        blockette3.parseSEED(b010_3)
+        blockette4 = Blockette010(xseed_version='1.0')
+        blockette4.parseSEED(b010_3)
+        self.assertTrue(p._compareBlockettes(blockette1, blockette2))
+        self.assertFalse(p._compareBlockettes(blockette1, blockette3))
+        self.assertFalse(p._compareBlockettes(blockette2, blockette3))
+        self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
 
 def suite():
