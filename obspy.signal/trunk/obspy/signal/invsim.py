@@ -256,14 +256,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         for key in ['poles', 'zeros', 'gain']:
             if key not in d:
                 raise KeyError("Missing key: %s" % key)
-
-    # XXX: error underneath is never used !
-    error = """
-    %s must be either of type None or of type dictionary. The dictionary
-    must contain poles, zeros and gain as keys, values of poles and zeros
-    are iterables of complex entries, the value of gain is a float.
-    """
-
     # Translated from PITSA: spr_resg.c
     delta = 1.0 / samp_rate
     #
