@@ -41,12 +41,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     
     :type vp: Float
     :param vp: P wave speed in the soil under the array (km/s)
-    :type vp: Float
+    :type vs: Float
     :param vs: S wave speed in the soil under the array Note - vp and vs may be
         any unit (e.g. miles/week), and this unit need not be related to the
         units of the station coordinates or ground motions, but the units of vp
         and vs must be the SAME because only their ratio is used. 
-    :type vp: numpy.ndarray 
+    :type array_coords: numpy.ndarray 
     :param array_coords: array of dimension Na x 3, where Na is the number of
         stations in the array.  array_coords[i,j], i in arange(Na), j in
         arange(3) is j coordinate of station i.  units of array_coords may be
@@ -54,7 +54,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         The origin of coordinates is arbitrary and does not affect the
         calculated strains and rotations.  Stations may be entered in any
         order. 
-    :type vp: numpy.ndarray 
+    :type ts1: numpy.ndarray 
     :param ts1: array of x1-component seismograms, dimension nt x Na.
         ts1[j,k], j in arange(nt), k in arange(Na) contains the kth time sample
         of the x1 component ground motion at station k. NOTE that the
@@ -63,11 +63,11 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         the seismograms.  Seismograms may be displacement, velocity,
         acceleration, jerk, etc.  See the "Discussion of input and output
         units" below. 
-    :type vp: numpy.ndarray 
+    :type ts2: numpy.ndarray 
     :param ts2: same as ts1, but for the x2 component of motion.
-    :type vp: numpy.ndarray 
+    :type ts3: numpy.ndarray 
     :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion. 
-    :type vp: Float or numpy.ndarray 
+    :type sigmau: Float or numpy.ndarray 
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
@@ -80,7 +80,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
           used as the noise of station i, component j.  
         In all cases, this routine assumes that the noise covariance between
         different stations and/or components is zero.  
-    :type vp: numpy.ndarray 
+    :type subarray: numpy.ndarray 
     :param subarray: numpy array of subarray stations to use. I.e. if subarray
         = array([1, 4, 10]), then only rows 1, 4, and 10 of array_coords will
         be used, and only ground motion time series in the first, fourth, and
