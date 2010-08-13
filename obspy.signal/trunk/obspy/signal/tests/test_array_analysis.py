@@ -13,7 +13,20 @@ class ArrayTestCase(unittest.TestCase):
     Test cases for array_analysis functions.
     """
     def setUp(self):
-        pass
+        self.array_coords = np.array([[   0.0,    0.0,   0.0],
+                                               [  -5.0,    7.0,   0.0],
+                                               [   5.0,    7.0,   0.0],
+                                               [  10.0,    0.0,   0.0],
+                                               [   5.0,   -7.0,   0.0],
+                                               [  -5.0,   -7.0,   0.0],
+                                               [ -10.0,    0.0,   0.0]])
+        self.subarray = np.array([0, 1, 2, 3, 4, 5, 6])
+        self.ts1 = np.empty((1000, 7)) * np.NaN
+        self.ts2 = np.empty((1000, 7)) * np.NaN
+        self.ts3 = np.empty((1000, 7)) * np.NaN
+        self.sigmau = 0.0001
+        self.Vp = 1.93  
+        self.Vs = 0.326 
 
     def tearDown(self):
         pass
@@ -21,17 +34,14 @@ class ArrayTestCase(unittest.TestCase):
     def test_array_rotation(self):
         # tests function array_rotation_strain with synthetic data with pure
         # rotation and no strain
-        array_coords = np.array([[   0.0,    0.0,   0.0],
-                                 [  -5.0,    7.0,   0.0],
-                                 [   5.0,    7.0,   0.0],
-                                 [  10.0,    0.0,   0.0],
-                                 [   5.0,   -7.0,   0.0],
-                                 [  -5.0,   -7.0,   0.0],
-                                 [ -10.0,    0.0,   0.0]])
-        subarray = np.array([0, 1, 2, 3, 4, 5, 6])
-        sigmau = 0.0001
-        Vp = 1.93  
-        Vs = 0.326 
+        array_coords = self.array_coords        
+        subarray = self.subarray
+        ts1 = self.ts1
+        ts2 = self.ts2
+        ts3 = self.ts3
+        sigmau = self.sigmau
+        Vp = self.Vp
+        Vs = self.Vs
 
         rotx = 0.00001 * np.exp(-1*np.square(np.linspace(-2, 2, 1000))) * \
                 np.sin(np.linspace(-30*np.pi, 30*np.pi, 1000))
@@ -39,10 +49,6 @@ class ArrayTestCase(unittest.TestCase):
                 np.sin(np.linspace(-20*np.pi, 20*np.pi, 1000))
         rotz = 0.00001 * np.exp(-1*np.square(np.linspace(-2, 2, 1000))) * \
                 np.sin(np.linspace(-10*np.pi, 10*np.pi, 1000))
-
-        ts1 = np.empty((1000, 7)) * np.NaN
-        ts2 = np.empty((1000, 7)) * np.NaN
-        ts3 = np.empty((1000, 7)) * np.NaN
 
         for stat in xrange(7):
             for t in xrange(1000):
@@ -68,26 +74,19 @@ class ArrayTestCase(unittest.TestCase):
     def test_array_dilation(self):
         # tests function array_rotation_strain with synthetic data with pure
         # dilation and no rotation or shear strain
-        array_coords = np.array([[   0.0,    0.0,   0.0],
-                                 [  -5.0,    7.0,   0.0],
-                                 [   5.0,    7.0,   0.0],
-                                 [  10.0,    0.0,   0.0],
-                                 [   5.0,   -7.0,   0.0],
-                                 [  -5.0,   -7.0,   0.0],
-                                 [ -10.0,    0.0,   0.0]])
-        subarray = np.array([0, 1, 2, 3, 4, 5, 6])
-        sigmau = 0.0001
-        Vp = 1.93  
-        Vs = 0.326 
+        array_coords = self.array_coords        
+        subarray = self.subarray
+        ts1 = self.ts1
+        ts2 = self.ts2
+        ts3 = self.ts3
+        sigmau = self.sigmau
+        Vp = self.Vp
+        Vs = self.Vs
         
         eta = 1 - 2*Vs**2/Vp**2
 
         dilation = .00001 * np.exp(-1*np.square(np.linspace(-2, 2, 1000))) * \
                 np.sin(np.linspace(-40*np.pi, 40*np.pi, 1000))
-
-        ts1 = np.empty((1000, 7)) * np.NaN
-        ts2 = np.empty((1000, 7)) * np.NaN
-        ts3 = np.empty((1000, 7)) * np.NaN
 
         for stat in xrange(7):
             for t in xrange(1000):
@@ -121,23 +120,18 @@ class ArrayTestCase(unittest.TestCase):
     def test_array_horizontal_shear(self):
         # tests function array_rotation_strain with synthetic data with pure
         # horizontal shear strain, no rotation or dilation
-        array_coords = np.array([[   0.0,    0.0,   0.0],
-                                 [  -5.0,    7.0,   0.0],
-                                 [   5.0,    7.0,   0.0],
-                                 [  10.0,    0.0,   0.0],
-                                 [   5.0,   -7.0,   0.0],
-                                 [  -5.0,   -7.0,   0.0],
-                                 [ -10.0,    0.0,   0.0]])
-        subarray = np.array([0, 1, 2, 3, 4, 5, 6])
-        sigmau = 0.0001
-        Vp = 1.93  
-        Vs = 0.326 
+        array_coords = self.array_coords        
+        subarray = self.subarray
+        ts1 = self.ts1
+        ts2 = self.ts2
+        ts3 = self.ts3
+        sigmau = self.sigmau
+        Vp = self.Vp
+        Vs = self.Vs
         
         shear_strainh= .00001 * np.exp(-1*np.square(np.linspace(-2, 2, 1000)))\
                 * np.sin(np.linspace(-10*np.pi, 10*np.pi, 1000))
 
-        ts1 = np.empty((1000, 7)) * np.NaN
-        ts2 = np.empty((1000, 7)) * np.NaN
         ts3 = np.zeros((1000, 7))
 
         for stat in xrange(7):
@@ -147,7 +141,6 @@ class ArrayTestCase(unittest.TestCase):
 
         out = array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
                                     array_coords, sigmau)
-
 
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],
                 decimal=12)
