@@ -12,8 +12,9 @@ import numpy as np
 import os
 import unittest
 
+
 # Seismometers defined as in Pitsa with one zero less. The corrected
-# signals are in velocity, thus must be integraded to offset and take one
+# signals are in velocity, thus must be integrated to offset and take one
 # zero less than pitsa (remove 1/w in frequency domain)
 PAZ_WOOD_ANDERSON = {
     'poles': [-6.2832 - 4.7124j,

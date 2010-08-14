@@ -106,9 +106,9 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2) :
         lon2 += 360
 
     #Data on the WGS84 reference ellipsoid:
-    a = 6378137.0       #semimajor axis in m
+    a = 6378137.0         #semimajor axis in m
     f = 1 / 298.257223563 #flattening
-    b = a * (1 - f)         #semiminor axis
+    b = a * (1 - f)       #semiminor axis
 
     if (abs(lat1 - lat2) < 1e-8) and (abs(lon1 - lon2) < 1e-8):
         return 0.0, 0.0, 0.0
@@ -126,7 +126,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2) :
     U2 = atan(TanU2)
 
     dlon = lon2 - lon1
-    last_dlon = -4000000.0                # an impossibe value
+    last_dlon = -4000000.0                # an impossible value
     omega = dlon
 
     # Iterate until there is no significant change in dlon

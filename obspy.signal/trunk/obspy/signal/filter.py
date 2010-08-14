@@ -50,6 +50,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     else:
         return lfilter(b, a, data)
 
+
 @deprecated
 def bandpassZPHSH(data, freqmin, freqmax, df, corners=2):
     """
@@ -249,7 +250,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     FIR-Lowpass Filter
 
     Filter data by passing data only below a certain frequency.
-  
+
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Data below this frequency pass.
     :param samprate: Sampling rate in Hz.
@@ -278,6 +279,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     #beta implies Kaiser
     myh = fft.fftshift(h) * get_window(beta, winlen)
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
+
 
 def integerDecimation(data, decimation_factor):
     """

@@ -156,7 +156,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
     tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])
-    corp = np.empty(2*shift_len+1, dtype='float64', order='C')
+    corp = np.empty(2 * shift_len + 1, dtype='float64', order='C')
 
     shift = C.c_int()
     coe_p = C.c_double()
@@ -168,6 +168,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         return shift.value, coe_p.value, corp
     else:
         return shift.value, coe_p.value
+
 
 def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
              full_xcorr=False):
@@ -214,8 +215,8 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
 
-    corp = np.zeros(2*shift_len+1, dtype='float64', order='C')
-    
+    corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
+
     for component in components:
         xx = xcorr(streams[0].select(component=component)[0],
                    streams[1].select(component=component)[0],
@@ -230,6 +231,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
         return shift, value, corp
     else:
         return shift, value
+
 
 def xcorr_max(fct):
     """

@@ -24,7 +24,7 @@ import util
 
 def envelope(data):
     """
-    Envelope of a signal:
+    Envelope of a signal.
 
     Computes the envelope of the given data which can be windowed or
     not. The envelope is determined by the absolute value of the analytic
@@ -53,7 +53,8 @@ def envelope(data):
 
 
 def normEnvelope(data, fs, smoothie, fk):
-    """Normalized envelope of a signal:
+    """
+    Normalized envelope of a signal.
 
     Computes the normalized envelope of the given data which can be windowed
     or not. In order to obtain a normalized measure of the signal envelope
@@ -133,7 +134,7 @@ def normEnvelope(data, fs, smoothie, fk):
 
 def centroid(data, fk):
     """
-    Centroid time of a signal:
+    Centroid time of a signal.
 
     Computes the centroid time of the given data which can be windowed or
     not. The centroid time is determined as the time in the processed
@@ -185,7 +186,7 @@ def centroid(data, fk):
 
 def instFreq(data, fs, fk):
     """ 
-    Instantaneous frequency of a signal:
+    Instantaneous frequency of a signal.
 
     Computes the instantaneous frequency of the given data which can be
     windowed or not. The instantaneous frequency is determined by the time
@@ -240,7 +241,7 @@ def instFreq(data, fs, fk):
 
 def instBwith(data, fs, fk):
     """
-    Instantaneous bandwidth of a signal:
+    Instantaneous bandwidth of a signal.
 
     Computes the instantaneous bandwidth of the given data which can be
     windowed or not. The instantaneous bandwidth is determined by the time

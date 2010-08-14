@@ -11,6 +11,7 @@ import numpy as np
 import os
 import unittest
 
+
 # only tests for windowed data are implemented currently
 
 class HoctavbandsTestCase(unittest.TestCase):

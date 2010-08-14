@@ -24,7 +24,7 @@ import util
 
 def mper(data, win, Nfft, n1=0, n2=0):
     """
-    Spectrum of a signal:
+    Spectrum of a signal.
 
     Computes the spectrum of the given data which can be windowed or not. The
     spectrum is estimated using the modified periodogram. If n1 and n2 are not
@@ -51,14 +51,14 @@ def mper(data, win, Nfft, n1=0, n2=0):
 
 def welch(data, win, Nfft, L=0, over=0):
     """
-    Spectrum of a signal:
-    
+    Spectrum of a signal.
+
     Computes the spectrum of the given data which can be windowed or not.
     The spectrum is estimated using Welch's method of averaging modified
     periodograms.
-    
+
     Welch's estimate of the power spectrum is returned using a linear scale.
-    
+
     :param data: Data to make spectrum of, type numpy.ndarray.
     :param win: Window to multiply with given signal.
     :param Nfft: Number of points for FFT.
@@ -82,15 +82,15 @@ def welch(data, win, Nfft, L=0, over=0):
 
 def cfrequency(data, fs, smoothie, fk):
     """
-    Central frequency of a signal:
-    
+    Central frequency of a signal
+
     Computes the central frequency of the given data which can be windowed or
     not. The central frequency is a measure of the frequency where the
     power is concentrated. It corresponds to the second moment of the power
     spectral density function.
-    
+
     The central frequency is returned.
-    
+
     :param data: Data to estimate central frequency from,type numpy.ndarray.
     :param fs: Sampling frequency in Hz.
     :param smoothie: Factor for smoothing the result.
@@ -125,7 +125,7 @@ def cfrequency(data, fs, smoothie, fk):
 
 def bwith(data, fs, smoothie, fk):
     """
-    Bandwith of a signal:
+    Bandwith of a signal.
 
     Computes the bandwidth of the given data which can be windowed or not.
     The bandwidth corresponds to the level where the power of the spectrum is
@@ -171,7 +171,7 @@ def bwith(data, fs, smoothie, fk):
 
 def domperiod(data, fs, smoothie, fk):
     """
-    Predominant period of a signal:
+    Predominant period of a signal.
 
     Computes the predominant period of the given data which can be windowed or
     not. The period is determined as the period of the maximum value of the
@@ -269,7 +269,7 @@ def logbankm(p, n, fs, w):
 
 def logcep(data, fs, nc, p, n, w):
     """
-    Cepstrum of a signal:
+    Cepstrum of a signal.
 
     Computes the cepstral coefficient on a logarithmic scale of the given data
     which can be windowed or not.

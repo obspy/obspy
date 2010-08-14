@@ -45,7 +45,7 @@ def cosTaper(npts, p=0.1):
     :type p: Float
     :param p: Percent of cosine taper. Default is 10% which tapers 5% from
               the beginning and 5% form the end
-    :rtype: float numpy ndarray
+    :rtype: float NumPy ndarray
     :return: Cosine taper array/vector of length npts.
     """
     if p == 0.0 or p == 1.0:
@@ -58,6 +58,7 @@ def cosTaper(npts, p=0.1):
         np.ones(npts - 2 * frac),
         0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))
         ), axis=0)
+
 
 def detrend(trace):
     """
@@ -153,7 +154,7 @@ def specInv(spec, wlev):
     # Find length in real fft frequency domain, spec is complex
     sqrt_len = np.abs(spec)
     # Set/scale length to swamp, but leave phase untouched
-    # 0 sqrt_len will transform in np.nans when deviding by it
+    # 0 sqrt_len will transform in np.nans when dividing by it
     idx = np.where((sqrt_len < swamp) & (sqrt_len > 0.0))
     spec[idx] *= swamp / sqrt_len[idx]
     found = len(idx[0])
@@ -182,7 +183,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     taken before simulation. The data must be detrended (e.g.) zero mean
     before hand. If paz_simulate=None only the instrument correction is done.
 
-    :type data: Numpy Ndarray
+    :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
@@ -214,7 +215,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type taper: Boolean
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
-    :param taper_fraction: Typer fraction of cosinus taper to use
+    :param taper_fraction: Typer fraction of cosine taper to use
     :return: The corrected data are returned as numpy.ndarray float64
             array. float64 is chosen to avoid numerical instabilities.
     
@@ -272,7 +273,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         data -= data.mean()
     if taper:
         data *= cosTaper(ndat, taper_fraction)
-    # transform data in fourier domain
+    # transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
@@ -285,7 +286,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if paz_simulate:
         data *= np.conj(pazToFreqResp(paz_simulate['poles'],
                 paz_simulate['zeros'], paz_simulate['gain'], delta, nfft))
-    # transfrom data back into the time domain
+    # transform data back into the time domain
     data = np.fft.irfft(data)[0:ndat]
     # linear detrend
     detrend(data)
@@ -356,7 +357,8 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     freq = 1.0 / (2 * timespan)
     wa_ampl = amplitude / 2.0 #half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
-    wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) * woodander['sensitivity']
+    wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) * \
+        woodander['sensitivity']
     wa_ampl *= 1000 #convert to mm
     magnitude = np.log10(wa_ampl) + np.log10(h_dist / 100.0) + \
                 0.00301 * (h_dist - 100.0) + 3.0

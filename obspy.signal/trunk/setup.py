@@ -19,7 +19,6 @@ import platform
 VERSION = open(os.path.join("obspy", "signal", "VERSION.txt")).read()
 
 
-
 # hack to prevent build_ext from trying to append "init" to the export symbols
 class finallist(list):
     def append(self, object):
@@ -79,7 +78,7 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'seismology', 'signal', 'processing', 'filter',
-              'trigger', 'instrument correction', 'picker', 
+              'trigger', 'instrument correction', 'picker',
               'instrument simulation', 'features', 'envelope', 'hob'],
     packages=find_packages(),
     namespace_packages=['obspy'],

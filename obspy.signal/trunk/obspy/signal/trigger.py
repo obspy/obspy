@@ -12,7 +12,7 @@ Python trigger routines for seismology.
 
 Module implementing the Recursive STA/LTA (see Withers et al. 1998 p. 98)
 Two versions, a fast ctypes one and a bit slower python one. Further the
-classic and delayed STA/LTA, the carlstatrig and the zdecect are
+classic and delayed STA/LTA, the carlStaTrig and the zdetect are
 implemented. (see Withers et al. 1998 p. 98).
 
 :copyright:
@@ -41,7 +41,7 @@ def recStalta(a, nsta, nlta):
     :type nlta: Int
     :param nlta: Length of long time average window in samples
     :rtype: numpy.ndarray dtype float64
-    :return: Charactristic function of recursive STA/LTA
+    :return: Characteristic function of recursive STA/LTA
     """
     lib.recstalta.argtypes = [np.ctypeslib.ndpointer(dtype='float64',
                                                      ndim=1,
@@ -67,14 +67,14 @@ def recStaltaPy(a, nsta, nlta):
     
     :note: There exists a faster version of this trigger wrapped in C
            called recstalta in this module!
-    :type a: Numpy ndarray
+    :type a: NumPy ndarray
     :param a: Seismic Trace
     :type nsta: Int
     :param nsta: Length of short time average window in samples
     :type nlta: Int
     :param nlta: Length of long time average window in samples
-    :rtype: Numpy ndarray
-    :return: Charactristic function of recursive STA/LTA
+    :rtype: NumPy ndarray
+    :return: Characteristic function of recursive STA/LTA
     """
     try:
         a = a.tolist()
@@ -106,18 +106,18 @@ def carlStaTrig(a, nsta, nlta, ratio, quiet):
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
-    :type a: Numpy ndarray
+    :type a: NumPy ndarray
     :param a: Seismic Trace
     :type nsta: Int
     :param nsta: Length of short time average window in samples
     :type nlta: Int
     :param nlta: Length of long time average window in samples
     :type ration: Float
-    :param ratio: as ratio gets smaller, carlstatrig gets more sensitive
+    :param ratio: as ratio gets smaller, carlStaTrig gets more sensitive
     :type quiet: Float
-    :param quiet: as quiet gets smaller, carlstatrig gets more sensitive
-    :rtype: Numpy ndarray
-    :return: Charactristic function of CarlStaTrig
+    :param quiet: as quiet gets smaller, carlStaTrig gets more sensitive
+    :rtype: NumPy ndarray
+    :return: Characteristic function of CarlStaTrig
     """
     m = len(a)
     #
@@ -161,14 +161,14 @@ def classicStaLta(a, nsta, nlta):
     the STA is given by nsta in samples, respectively is the length of the
     LTA given by nlta in samples.
 
-    :type a: Numpy ndarray
+    :type a: NumPy ndarray
     :param a: Seismic Trace
     :type nsta: Int
     :param nsta: Length of short time average window in samples
     :type nlta: Int
     :param nlta: Length of long time average window in samples
-    :rtype: Numpy ndarray
-    :return: Charactristic function of classic STA/LTA
+    :rtype: NumPy ndarray
+    :return: Characteristic function of classic STA/LTA
     """
     #XXX From numpy 1.3 use numpy.lib.stride_tricks.as_strided
     #    This should be faster then the for loops in this fct
@@ -202,14 +202,14 @@ def delayedStaLta(a, nsta, nlta):
     """
     Delayed STA/LTA, (see Withers et al. 1998 p. 97)
 
-    :type a: Numpy ndarray
+    :type a: NumPy ndarray
     :param a: Seismic Trace
     :type nsta: Int
     :param nsta: Length of short time average window in samples
     :type nlta: Int
     :param nlta: Length of long time average window in samples
-    :rtype: Numpy ndarray
-    :return: Charactristic function of delayed STA/LTA
+    :rtype: NumPy ndarray
+    :return: Characteristic function of delayed STA/LTA
     """
     m = len(a)
     #
@@ -256,7 +256,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     are more then 1e6 triggerings ("on" AND "of") in charfct --- normally
     this does not happen.
 
-    :type charfct: Numpy ndarray
+    :type charfct: NumPy ndarray
     :param charfct: Characteristic function of e.g. STA/LTA trigger
     :type thres1: Float
     :param thres1: Value above which trigger (of characteristic function)
@@ -279,7 +279,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     #    above the threshold i.e. the difference of two following indices
     #    in ind is greater than 1
     # 3) in principle the same as for "of" just add one to the index to get
-    #    start times, this opperation is not supported on the compact
+    #    start times, this operation is not supported on the compact
     #    syntax
     # 4) as long as there is a on time greater than the actual of time find
     #    trigger on states which are greater than last of state an the
@@ -323,7 +323,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
            p_dur):
     """
-    Wrapper for P-picker routine by m. baer, schweizer. erdbebendienst
+    Wrapper for P-picker routine by M. Baer, Schweizer. Erdbebendienst
 
     See paper by m. baer and u. kradolfer: an automatic phase picker for
     local and teleseismic events bssa vol. 77,4 pp1437-1445

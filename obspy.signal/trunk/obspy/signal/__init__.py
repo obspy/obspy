@@ -118,6 +118,7 @@ from util import xcorr, xcorr_3C, utlGeoKm, utlLonLat
 
 __version__ = _getVersionString("obspy.signal")
 
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
