@@ -2,3 +2,10 @@
 
 %:
 	dh $@
+
+binary: binary-stamp
+binary-stamp:
+	dh binary --until dh_shlibdeps
+	find $(CURDIR)/debian -path "*/src" -type d -exec rm {} \;
+	dh binary --after dh_shlibdeps
+	touch binary-stamp
