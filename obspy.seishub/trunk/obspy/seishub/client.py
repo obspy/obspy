@@ -18,7 +18,6 @@ import sys
 import time
 import urllib2
 import urllib
-import inspect
 from obspy.core.util import BAND_CODE
 from obspy.core import UTCDateTime
 
@@ -178,13 +177,11 @@ class _WaveformMapperClient(object):
         :param apply_filter: apply filter, default False.
         :return: :class:`~obspy.core.stream.Stream`
         """
-        # analyze args passed on to method call and put them into
-        # kwargs-dictionary for the _fetch() call later on
-        frame = inspect.currentframe()
-        args, _, _, values = inspect.getargvalues(frame)
-        for arg in args[1:]:
-            kwargs[arg] = values[arg]
-        
+        # append all args to kwargs, thus having everything in one dictionary
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
+
         # we expand the requested timespan on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
