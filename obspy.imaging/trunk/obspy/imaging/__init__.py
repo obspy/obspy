@@ -116,10 +116,8 @@ Plot the beach ball as matplotlib collection into an existing plot.
 >>> plt.plot([-100, 100], [0, 100], "rv", ms=10) #doctest: +ELLIPSIS
 [<matplotlib.lines.Line2D object at 0x...>]
 >>> ax = plt.gca()
->>> ax.add_collection(Beach(np1, xy=(50,50), width=30)) #doctest: +ELLIPSIS
-<matplotlib.collections.PatchCollection object at 0x...>
->>> ax.add_collection(Beach(mt, xy=(50,50), width=50)) #doctest: +ELLIPSIS
-<matplotlib.collections.PatchCollection object at 0x...>
+>>> ax.add_collection(Beach(np1, xy=(50,50), width=30)) #doctest: +SKIP
+>>> ax.add_collection(Beach(mt, xy=(50,50), width=50)) #doctest: +SKIP
 >>> plt.axis('scaled')
 (-100.0, 100.0, -100.0, 100.0)
 >>> plt.axis([-120, 120, -20, 120])

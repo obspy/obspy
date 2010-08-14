@@ -3,7 +3,7 @@
 obspy.mseed - MiniSEED read and write support
 =============================================
 This module provides read and write support for Mini-SEED waveform data and
-some other convinient methods to handle Mini-SEED files. Most methods are based
+some other convenient methods to handle Mini-SEED files. Most methods are based
 on libmseed, a C library framework by Chad Trabant and interfaced via python
 ctypes.
 
@@ -12,7 +12,7 @@ ctypes.
 
 Reading via obspy.core
 ----------------------
-Similiar to reading any other waveform data format using obspy.core:
+Similar to reading any other waveform data format using obspy.core:
 
 (Lines 2&3 are just to get the absolute path of our test data)
 
@@ -42,8 +42,8 @@ Stats({'network': 'NL', '_format': 'MSEED',
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> st[0].data
-array([2787, 2776, 2774, ..., 2850, 2853, 2853])
+>>> print st[0].data
+[2787 2776 2774 ..., 2850 2853 2853]
 
 Writing via obspy.core
 ----------------------
@@ -55,18 +55,16 @@ Writing is also done in the usual way.
 >>> st.write('Mini-SEED-filename.mseed', format='MSEED') #doctest: +SKIP
 
 You can also specify several keyword arguments that change the resulting
-Mini-SEED file:
+Mini-SEED file. Please refer to :
 
 * reclen : Record length in bytes of the resulting Mini-SEED file. The record
   length needs to be expressible as 2 to the power of X where X is in between
   and including 8 and 20. If no reclen is given it will default to 4096 bytes.
 * encoding: Encoding of the Mini-SEED file. You can either give the a string or
-  the corresponding number. If no encoding is given it will default to STEIM2.
-  Available encodings:
-  |   o INT16 or 1
-  |   o INT32 or 3
-  |   o STEIM1 or 10
-  |   o STEIM2 or 11 
+  the corresponding number. Available encodings are ASCII (0)*, INT16 (1),
+  INT32 (3), FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default
+  data types a marked with an asterisk. Currently INT24 (2) is not supported
+  due to lacking NumPy support.
 * byteorder: Byte order of the Mini-SEED file. 0 will result in a little-endian
   file and 1 in a big-endian file. Defaults to big-endian. Do not change this
   if you don't know what you are doing because most other programs can only
@@ -75,7 +73,7 @@ Mini-SEED file:
   otherwise records will only be packed while there are enough data samples to
   completely fill a record. The default value is -1 and thus every data value
   will be packed by default.
-* verbose: Controls verbosity of the underlaying libmseed. A value higher than
+* verbose: Controls verbosity of the underlying libmseed. A value higher than
   0 will give diagnostic output. Defaults to 0. 
 
 So in order to write a STEIM1 encoded Mini-SEED file with a record_length of

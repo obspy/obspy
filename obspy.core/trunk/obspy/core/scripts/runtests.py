@@ -65,6 +65,7 @@ import warnings
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
+
 def _getSuites(verbosity=1, names=[]):
     """
     The ObsPy test suite.

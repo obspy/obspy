@@ -45,8 +45,8 @@ Stats({'network': '', '_format': 'SEISAN', 'npts': 6000, 'station': 'KONO',
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> st[0].data
-array([  492,   519,   542, ..., -6960, -6858, 24000])
+>>> print st[0].data
+[  492   519   542 ..., -6960 -6858 24000]
 """
 
 from obspy.core.util import _getVersionString
