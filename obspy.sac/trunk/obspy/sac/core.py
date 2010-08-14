@@ -104,7 +104,7 @@ def readSAC(filename, headonly=False, **kwargs):
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = {}
 
-    # convert common header types of the obspy trace object
+    # convert common header types of the ObsPy trace object
     for i, j in convert_dict.iteritems():
         value = t.GetHvalue(i)
         if isinstance(value, str):
@@ -114,7 +114,7 @@ def readSAC(filename, headonly=False, **kwargs):
         header[j] = value
     if header['calib'] == -12345.0:
         header['calib'] = 1.0
-    # assign extra header types of sac
+    # assign extra header types of SAC
     header['sac'] = {}
     for i in sac_extra:
         header['sac'][i] = t.GetHvalue(i)
@@ -175,6 +175,6 @@ def writeSAC(stream, filename, **kwargs):
             except KeyError:
                 pass
         if len(stream) != 1:
-            filename = "%s%02d%s" % (base, i+1, ext)
+            filename = "%s%02d%s" % (base, i + 1, ext)
         t.WriteSacBinary(filename)
         i += 1

@@ -3,7 +3,7 @@
 The sac.core test suite.
 """
 
-from obspy.core import Stream, Trace, read, AttribDict, UTCDateTime
+from obspy.core import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO
 import copy
@@ -28,7 +28,7 @@ class CoreTestCase(unittest.TestCase):
             - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
             - 5.87784529e-01, -3.09016049e-01], dtype='float32')
 
-    def test_readViaObspy(self):
+    def test_readViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -43,7 +43,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readBigEndianViaObspy(self):
+    def test_readBigEndianViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -58,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readHeadViaObspy(self):
+    def test_readHeadViaObsPy(self):
         """
         Read files via L{obspy.Stream}
         """
@@ -72,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.b, 10.0)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_writeViaObspy(self):
+    def test_writeViaObsPy(self):
         """
         Writing artificial files via L{obspy.Stream}
         """
@@ -94,7 +94,7 @@ class CoreTestCase(unittest.TestCase):
         st2 = read(tempfile, format="SAC")
         self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
 
-    def test_readAndWriteViaObspy(self):
+    def test_readAndWriteViaObsPy(self):
         """
         Read and Write files via L{obspy.Stream}
         """
@@ -176,10 +176,10 @@ class CoreTestCase(unittest.TestCase):
 
     def test_defaultValues(self):
         tr = read(self.file)[0]
-        self.assertEqual(tr.stats.calib,1.0)
-        self.assertEqual(tr.stats.location,'')
-        self.assertEqual(tr.stats.network,'')
-        
+        self.assertEqual(tr.stats.calib, 1.0)
+        self.assertEqual(tr.stats.location, '')
+        self.assertEqual(tr.stats.network, '')
+
 
     def test_referenceTime(self):
         """
@@ -193,7 +193,7 @@ class CoreTestCase(unittest.TestCase):
         # see that starttime is set correctly (#107)
         self.assertAlmostEqual(tr.stats.sac.iztype, 9)
         self.assertAlmostEqual(tr.stats.sac.b, 9.4599991)
-        self.assertEqual(tr.stats.starttime, 
+        self.assertEqual(tr.stats.starttime,
                          UTCDateTime("1981-03-29 10:38:23.459999"))
         # check that if we rewrite the file, nothing changed
         tmpfile = NamedTemporaryFile().name

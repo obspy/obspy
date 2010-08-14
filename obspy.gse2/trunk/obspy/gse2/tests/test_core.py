@@ -25,7 +25,7 @@ class CoreTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_readViaObspy(self):
+    def test_readViaObsPy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -47,7 +47,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
-    def test_readHeadViaObspy(self):
+    def test_readHeadViaObsPy(self):
         """
         Read header of files via L{obspy.Trace}
         """
@@ -65,7 +65,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_readAndWriteViaObspy(self):
+    def test_readAndWriteViaObsPy(self):
         """
         Read and Write files via L{obspy.Trace}
         """
@@ -104,7 +104,7 @@ class CoreTestCase(unittest.TestCase):
                          tr1.stats.gse2.get('calper'))
         np.testing.assert_equal(tr3.data, tr1.data)
 
-    def test_readAndWriteStreamsViaObspy(self):
+    def test_readAndWriteStreamsViaObsPy(self):
         """
         Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
         """

@@ -83,7 +83,7 @@ def readASC(filename, headonly=False):
     Reads a ASC file and returns an ObsPy Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :func:`~obspy.core.stream.read` function, call this instead.
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     Parameters
     ----------
@@ -183,7 +183,7 @@ def writeASC(stream, filename, **kwargs):
     Writes a ASC file from given ObsPy Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
     Parameters
@@ -257,7 +257,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     if the ``data_directory`` parameter is not set. Otherwise it will search
     in the given ``data_directory`` for a file with the `QBN` file extension.
     This function should NOT be called directly, it registers via the
-    obspy :func:`~obspy.core.stream.read` function, call this instead.
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     Parameters
     ----------
@@ -386,7 +386,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
     Writes a Q file from given ObsPy Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
     Parameters

@@ -133,14 +133,14 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
     """ 
     Calculates the score at the given per percentile of the sequence a.
 
-    For example, the score at ``per=50`` is the median. 
+    For example, the score at ``per=50`` is the median.
 
     If the desired quantile lies between two data points, we interpolate
     between them.
 
     If the parameter ``limit`` is provided, it should be a tuple (lower,
     upper) of two values.  Values of ``a`` outside this (closed) interval
-    will be ignored. 
+    will be ignored.
 
         >>> a = [1, 2, 3, 4]
         >>> scoreatpercentile(a, 25)
@@ -158,7 +158,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
         42.5
 
     This method is taken from scipy.stats.scoreatpercentile 
-    Copyright (c) Gary Strangman 
+    Copyright (c) Gary Strangman
     """
     if issorted:
         values = sorted(a)
@@ -310,7 +310,7 @@ def path(testfile):
 
     The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
-    installed obspy modules and checks weather the testfile is in any of
+    installed ObsPy modules and checks weather the testfile is in any of
     the "tests/data" subdirectories.
 
     :param testfile: The testfile to which the path should be returned.
@@ -329,7 +329,7 @@ def path(testfile):
         except ImportError:
             pass
     msg = "Could not find file %s in tests/data directory " % testfile + \
-          "of obspy modules"
+          "of ObsPy modules"
     raise IOError(msg)
 
 

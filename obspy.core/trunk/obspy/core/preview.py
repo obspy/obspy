@@ -21,7 +21,7 @@ def createPreview(trace, delta=60):
     """
     Creates a preview trace.
 
-    A preview trace consists of maxima minus minima of all samples within
+    A preview trace consists of maximum minus minimum of all samples within
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
@@ -152,7 +152,7 @@ def mergePreviews(stream):
         for trace in value:
             start_index = int((trace.stats.starttime - min_starttime) / delta)
             end_index = start_index + len(trace.data)
-            # Element-by-element comparision.
+            # Element-by-element comparison.
             data[start_index:end_index] = \
                 np.maximum(data[start_index:end_index], trace.data)
         # set npts again, because data is changed in place
@@ -192,7 +192,7 @@ def resamplePreview(trace, samples, method='accurate'):
         The accurate method has no such problems because it will move a window
         over the whole array and take the maximum for each window. It loops
         over each window and is up to 10 times slower than the fast method.
-        This of course is highly depended on the number of whished samples and
+        This of course is highly depended on the number of wished samples and
         the original trace and usually the accurate method is still fast
         enough.
 
@@ -218,10 +218,12 @@ def resamplePreview(trace, samples, method='accurate'):
     # Fast method.
     if method == 'fast':
         trace.data = trace.data[:int(npts / samples) * samples]
-        trace.data = trace.data.reshape(samples, int(len(trace.data) / samples))
+        trace.data = trace.data.reshape(samples,
+                                        int(len(trace.data) / samples))
         trace.data = trace.data.max(axis=1)
         # Set new sampling rate.
-        trace.stats.delta = (endtime - trace.stats.starttime) / float(samples - 1)
+        trace.stats.delta = (endtime - trace.stats.starttime) / \
+            float(samples - 1)
         # Return number of omitted samples.
         return npts - int(npts / samples) * samples
     # Slow but accurate method.
@@ -229,10 +231,12 @@ def resamplePreview(trace, samples, method='accurate'):
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
         for _i in xrange(samples):
-            new_data[_i] = trace.data[int(_i * step): int((_i + 1) * step)].max()
+            new_data[_i] = trace.data[int(_i * step):
+                                      int((_i + 1) * step)].max()
         trace.data = new_data
         # Set new sampling rate.
-        trace.stats.delta = (endtime - trace.stats.starttime) / float(samples - 1)
+        trace.stats.delta = (endtime - trace.stats.starttime) / \
+            float(samples - 1)
         # Return number of omitted samples. Should be 0 for this method.
         return npts - int(samples * step)
     else:

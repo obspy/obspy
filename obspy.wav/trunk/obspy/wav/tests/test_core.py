@@ -24,7 +24,7 @@ class CoreTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_readViaObspy(self):
+    def test_readViaObsPy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -39,7 +39,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats['sampling_rate'], 7000)
         np.testing.assert_array_equal(tr.data[:13], testdata)
 
-    def test_readHeadViaObspy(self):
+    def test_readHeadViaObsPy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -48,7 +48,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats['sampling_rate'], 7000)
         self.assertEqual(str(tr.data), '[]')
 
-    def test_readAndWriteViaObspy(self):
+    def test_readAndWriteViaObsPy(self):
         """
         Read and Write files via L{obspy.Trace}
         """

@@ -28,21 +28,25 @@ def read(pathname_or_url=None, format=None, headonly=False,
     Read waveform files into an ObsPy Stream object.
 
     The `read` function opens either one or multiple files given via wildcards
-    or a URL of a waveform file given in the *pathname_or_url* attribute. This
-    function returns a ObsPy :class:`~obspy.core.stream.Stream` object.
-
-    If no file location or URL is specified, a Stream object with an example
-    seismogram is returned.
+    or URL of a waveform file using the *pathname_or_url* attribute. If no
+    file location or URL is specified, a Stream object with an example data set
+    will be created.
 
     The format of the waveform file will be automatically detected if not
-    given. Allowed formats depend on ObsPy packages installed. See the notes
-    section below.
+    given. Allowed formats mainly depend on ObsPy packages installed. See the
+    notes section below.
+
+    This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
+    list like object of multiple ObsPy :class:`~obspy.core.stream.Trace`
+    objects.
 
     Basic Usage
     -----------
     In most cases a filename is specified as the only argument to `read()`.
-    For a quick start an example can be created by omitting all arguments.
-    Other example files may be read directly from http://examples.obspy.org.
+    For a quick start you may omit all arguments. ObsPy will create and return
+    an example seismogram. Further examples deploying the
+    :func:`~obspy.core.stream.read` function can be seen in the Examples
+    section underneath.
 
     >>> from obspy.core import read
     >>> st = read()
@@ -59,9 +63,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
         file name.
     format : string, optional
         Format of the file to read. Commonly one of "GSE2", "MSEED", "SAC",
-        "SEISAN", "WAV", "Q" or "SH_ASC". If it is None the format will be
-        automatically detected which results in a slightly slower reading.
-        If you specify a format no further format checking is done.
+        "SEISAN", "WAV", "Q" or "SH_ASC". If the format is set to `None` it
+        will be automatically detected which results in a slightly slower
+        reading. If you specify a format no further format checking is done.
     headonly : bool, optional
         If set to True, read only the data header. This is most useful for
         scanning available meta information of huge data sets.
@@ -69,8 +73,8 @@ def read(pathname_or_url=None, format=None, headonly=False,
         Specify the start time to read.
     endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Specify the end time to read.
-    nearest_sample bool, optional
-        Only applied if starttime or endtime is given. Select nearest
+    nearest_sample : bool, optional
+        Only applied if `starttime` or `endtime` is given. Select nearest
         sample or the one containing the specified time. For more info, see
         :meth:`~obspy.core.trace.Trace.trim.`
 
@@ -93,16 +97,21 @@ def read(pathname_or_url=None, format=None, headonly=False,
     WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
     Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
     SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
+    TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
+    SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
     =======  ===================  ====================================
 
-    Next to the `read` function the :meth:`~Stream.write` function is a method
-    of the returned :class:`~obspy.core.stream.Stream` object.
+    Next to the :func:`~obspy.core.stream.read` function the
+    :meth:`~Stream.write` function is a method of the returned
+    :class:`~obspy.core.stream.Stream` object.
 
     Examples
     --------
-    Examples files may be retrieved via http://examples.obspy.org.
+    Example waveform files may be retrieved via http://examples.obspy.org.
 
-    (1) The following code uses wildcards, in this case it matches two files.
+    (1) Reading multiple local files using wildcards.
+
+        The following code uses wildcards, in this case it matches two files.
         Both files are then read into a single
         :class:`~obspy.core.stream.Stream` object.
 
@@ -113,14 +122,16 @@ def read(pathname_or_url=None, format=None, headonly=False,
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
         .RNON..Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.8449...
 
-    (2) Using the ``format`` parameter disables the autodetection and enforces
-        reading a file in a given format.
+    (2) Reading a local file without format detection.
+
+        Using the ``format`` parameter disables the automatic detection and
+        enforces reading a file in a given format.
 
         >>> from obspy.core import read  # doctest: +SKIP
         >>> read("loc_RJOB20050831023349.z", format="GSE2") # doctest: +SKIP
         <obspy.core.stream.Stream object at 0x101700150>
 
-    (3) Reading via HTTP protocol.
+    (3) Reading a remote file via HTTP protocol.
 
         >>> from obspy.core import read
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z") \
@@ -153,7 +164,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     starttime = kwargs.get('starttime')
     endtime = kwargs.get('endtime')
     if headonly and (starttime or endtime):
-        msg = "headonly cannot be combined with starttime or endtime"
+        msg = "Keyword headonly cannot be combined with starttime or endtime."
         raise Exception(msg)
     if starttime:
         st._ltrim(starttime, nearest_sample=nearest_sample)
@@ -220,7 +231,7 @@ def _readExample():
     """
     Create an example stream.
 
-    Data arrays are stored in NumPy's npz format. The header information are
+    Data arrays are stored in NumPy's NPZ format. The header information are
     fixed values.
 
     PAZ of the used instrument, needed to demonstrate seisSim() etc.:

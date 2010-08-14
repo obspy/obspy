@@ -16,8 +16,10 @@ import numpy as np
 import math
 import warnings
 
+
 # avoid significant overhead of reimported signal functions
 signal = None
+
 
 class Stats(AttribDict):
     """
@@ -100,7 +102,7 @@ class Stats(AttribDict):
         UTCDateTime(2009, 1, 1, 12, 0, 29, 500000)
 
         .. note::
-            Endtime is currently calculated as
+            The attribute ``endtime`` is currently calculated as
             ``endtime = starttime + (npts-1) * delta``. This behaviour may
             change in the future to ``endtime = starttime + npts * delta``.
 
@@ -226,7 +228,7 @@ class Trace(object):
     Parameters
     ----------
     data : `numpy.array` or `ma.masked_array`
-        Numpy array of data samples
+        NumPy array of data samples
     header : dict or :class:`~obspy.core.trace.Stats`
         Dictionary containing header fields
 
@@ -245,7 +247,7 @@ class Trace(object):
     """
 
     def __init__(self, data=np.array([]), header=None):
-        # make sure Trace gets initialized with an ndarray as self.data
+        # make sure Trace gets initialized with ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data
         if not isinstance(data, np.ndarray):
             data = np.array(data)
@@ -272,7 +274,7 @@ class Trace(object):
         # comparison of Stats objects is supported by underlying AttribDict
         if not self.stats == other.stats:
             return False
-        # comparison of ndarrays is supported by numpy
+        # comparison of ndarrays is supported by NumPy
         if not np.array_equal(self, other):
             return False
 
@@ -310,7 +312,7 @@ class Trace(object):
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
-    # Explicitely setting Stream object unhashable (mutable object).
+    # Explicitly setting Stream object unhashable (mutable object).
     # See also Python Language Reference (3.0 Data Model):
     # http://docs.python.org/reference/datamodel.html
     #
@@ -929,7 +931,7 @@ class Trace(object):
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
         :func:`~obspy.signal.invsim.seisSim`.
-        
+
         `paz_remove` and `paz_simulate` are expected to be dictionaries
         containing information on poles, zeros and gain (and usually also
         sensitivity).
@@ -1034,13 +1036,12 @@ class Trace(object):
                     (paz_simulate, simulate_sensitivity)
             self.stats['processing'].append(proc_info)
 
-        return
-
     def filter(self, type, options):
         """
-        Filters the data of the current trace. This is performed in place on
-        the actual data array. The original data is not accessible anymore
-        afterwards.
+        Filters the data of the current trace.
+
+        This is performed in place on the actual data array. The original data
+        is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
         to make a copy of your trace.
         This also makes an entry with information on the applied processing
@@ -1111,13 +1112,12 @@ class Trace(object):
         proc_info = "filter:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
 
-        return
-
     def trigger(self, type, options):
         """
-        Runs a triggering algorithm on the data of the current trace. This is
-        performed in place on the actual data array. The original data is not
-        accessible anymore afterwards.
+        Runs a triggering algorithm on the data of the current trace.
+
+        This is performed in place on the actual data array. The original data
+        is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
         to make a copy of your trace.
         This also makes an entry with information on the applied processing
@@ -1282,8 +1282,6 @@ class Trace(object):
         proc_info = "downsample:integerDecimation:%s" % decimation_factor
         self.stats['processing'].append(proc_info)
 
-        return
-
     def max(self):
         """
         Method to get the value of the absolute maximum amplitude in the trace.
@@ -1304,18 +1302,17 @@ class Trace(object):
         """
         value = self.data.max()
         _min = self.data.min()
-
         if abs(_min) > abs(value):
             value = _min
-
         return value
 
     def std(self):
         """
         Method to get the standard deviation of amplitudes in the trace.
+
         Standard deviation is calculated by numpy method
         :meth:`~numpy.ndarray.std` on ``trace.data``.
-        
+
         Basic Usage
         -----------
         >>> tr = Trace(data=[0, -3, 9, 6, 4])
@@ -1356,9 +1353,10 @@ class Trace(object):
         >>> tr.stats.processing
         ['normalize:-9.2']
         
-        :param norm: If not ``None``, trace is normalized by dividing by specified
-                value ``norm`` instead of dividing by its absolute maximum. If a
-                negative value is specified then its absolute value is used.
+        :param norm: If not ``None``, trace is normalized by dividing by
+            specified value ``norm`` instead of dividing by its absolute
+            maximum. If a negative value is specified then its absolute value
+            is used.
         :return: ``None``
         """
         # normalize, use norm-kwarg otherwise normalize to 1
@@ -1380,16 +1378,15 @@ class Trace(object):
         proc_info = "normalize:%s" % norm
         self.stats['processing'].append(proc_info)
 
-        return
-
     def copy(self):
         """
         Returns a deepcopy of the trace.
+
         This actually copies all data in the trace and does not only provide
-        another pointer to the same data.
-        At any processing step if the original data has to be available
-        afterwards, this is the method to use to make a copy of the trace.
-        
+        another pointer to the same data. At any processing step if the
+        original data has to be available afterwards, this is the method to use
+        to make a copy of the trace.
+
         Example
         -------
 

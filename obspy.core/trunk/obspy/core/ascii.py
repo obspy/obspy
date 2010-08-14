@@ -124,7 +124,7 @@ def readSLIST(filename, headonly=False):
     Reads a ASCII SLIST file and returns an ObsPy Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :func:`~obspy.core.stream.read` function, call this instead.
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     Parameters
     ----------
@@ -200,7 +200,7 @@ def readTSPAIR(filename, headonly=False):
     Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :func:`~obspy.core.stream.read` function, call this instead.
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     Parameters
     ----------

@@ -91,7 +91,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
             else:
                 header, data = libgse2.read(f, verify_chksum=verify_chksum)
             # assign all header entries to a new dictionary compatible with an 
-            # Obspy Trace object.
+            # ObsPy Trace object.
             new_header = {}
             for i, j in convert_dict.iteritems():
                 value = header[i]
@@ -119,7 +119,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):
     Write GSE2 file from a Stream object.
 
     This function should NOT be called directly, it registers via the
-    obspy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
     Parameters
