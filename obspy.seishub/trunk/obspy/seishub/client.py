@@ -177,6 +177,7 @@ class _WaveformMapperClient(object):
         :param apply_filter: apply filter, default False.
         :return: :class:`~obspy.core.stream.Stream`
         """
+        # NOTHING goes ABOVE this line!
         # append all args to kwargs, thus having everything in one dictionary
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
