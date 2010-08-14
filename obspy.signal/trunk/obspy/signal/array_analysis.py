@@ -234,9 +234,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
     # check stations in subarray exist
     if min(subarray) < 0:
-        raise ValueError('Subarray requires a station number < 0')
+        raise ValueError('Station number < 0 in subarray')
     if max(subarray) > Na:
-        raise ValueError('Subarray requires a station number > Na')
+        raise ValueError('Station number > Na in subarray')
 
     # extract the stations of the subarray to be used
     subarraycoords = array_coords[subarray , :]
