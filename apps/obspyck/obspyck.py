@@ -1303,60 +1303,6 @@ class PickingGUI:
     #stE.trim(start, end)
     
     
-    def drawAxes(self):
-        st = self.streams[self.stPt]
-        #we start all our x-axes at 0 with the starttime of the first (Z) trace
-        starttime_global = st[0].stats.starttime
-        self.axs = []
-        self.plts = []
-        self.trans = []
-        self.t = []
-        trNum = len(st.traces)
-        for i in range(trNum):
-            npts = st[i].stats.npts
-            smprt = st[i].stats.sampling_rate
-            #make sure that the relative times of the x-axes get mapped to our
-            #global stream (absolute) starttime (starttime of first (Z) trace)
-            starttime_local = st[i].stats.starttime - starttime_global
-            dt = 1. / smprt
-            sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * npts), dt)
-            # sometimes our arange is one item too long (why??), so we just cut
-            # off the last item if this is the case
-            if len(sampletimes) == npts + 1:
-                sampletimes = sampletimes[:-1]
-            self.t.append(sampletimes)
-            if i == 0:
-                self.axs.append(self.fig.add_subplot(trNum,1,i+1))
-                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
-                                                                             self.axs[i].transAxes))
-            else:
-                self.axs.append(self.fig.add_subplot(trNum, 1, i+1, 
-                        sharex=self.axs[0], sharey=self.axs[0]))
-                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
-                                                                             self.axs[i].transAxes))
-                self.axs[i].xaxis.set_ticks_position("top")
-            self.axs[-1].xaxis.set_ticks_position("both")
-            self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-            if self.togglebuttonSpectrogram.get_active():
-                log = self.checkbuttonSpectrogramLog.get_active()
-                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
-                            cmap=self.spectrogramColormap, axis=self.axs[i],
-                            zorder=-10)
-            else:
-                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
-        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
-                                                         st[0].stats.starttime.microsecond / 1e3 + 0.5,
-                                                         st[0].stats.endtime.strftime("%H:%M:%S"),
-                                                         st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
-        self.xMin, self.xMax=self.axs[0].get_xlim()
-        self.yMin, self.yMax=self.axs[0].get_ylim()
-        #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
-        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
-        self.toolbar.update()
-        self.toolbar.pan(False)
-        self.toolbar.zoom(True)
-    
     def drawLine(self, key):
         """
         Draw a line for pick of given key in all axes of the current stream.
@@ -1395,6 +1341,10 @@ class PickingGUI:
         for ax, line in self.lines[key].iteritems():
             ax.lines.remove(line)
         del self.lines[key]
+
+    def updateLine(self, key):
+        self.delLine(key)
+        self.drawLine(key)
     
     def drawLabel(self, key):
         """
@@ -1474,31 +1424,11 @@ class PickingGUI:
         for ax, text in self.texts[key].iteritems():
             ax.texts.remove(text)
         del self.texts[key]
-    
-    def drawPLabel(self):
-        self.drawLabel('P')
-    
-    def delPLabel(self):
-        self.delLabel('P')
-    
-    def drawPsynthLabel(self):
-        self.drawLabel('Psynth')
-    
-    def delPsynthLabel(self):
-        self.delLabel('Psynth')
-    
-    def drawSLabel(self):
-        self.drawLabel('S')
-    
-    def delSLabel(self):
-        self.delLabel('S')
-    
-    def drawSsynthLabel(self):
-        self.drawLabel('Ssynth')
-    
-    def delSsynthLabel(self):
-        self.delLabel('Ssynth')
-    
+
+    def updateLabel(self, key):
+        self.delLabel(key)
+        self.drawLabel(key)
+
     def drawMagMarker(self, key):
         """
         Draw a magnitude marker for pick of given key in the current stream.
@@ -1548,6 +1478,60 @@ class PickingGUI:
         elif key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
             key2 = key + 'T'
             del dict[key2]
+    
+    def drawAxes(self):
+        st = self.streams[self.stPt]
+        #we start all our x-axes at 0 with the starttime of the first (Z) trace
+        starttime_global = st[0].stats.starttime
+        self.axs = []
+        self.plts = []
+        self.trans = []
+        self.t = []
+        trNum = len(st.traces)
+        for i in range(trNum):
+            npts = st[i].stats.npts
+            smprt = st[i].stats.sampling_rate
+            #make sure that the relative times of the x-axes get mapped to our
+            #global stream (absolute) starttime (starttime of first (Z) trace)
+            starttime_local = st[i].stats.starttime - starttime_global
+            dt = 1. / smprt
+            sampletimes = np.arange(starttime_local,
+                    starttime_local + (dt * npts), dt)
+            # sometimes our arange is one item too long (why??), so we just cut
+            # off the last item if this is the case
+            if len(sampletimes) == npts + 1:
+                sampletimes = sampletimes[:-1]
+            self.t.append(sampletimes)
+            if i == 0:
+                self.axs.append(self.fig.add_subplot(trNum,1,i+1))
+                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
+                                                                             self.axs[i].transAxes))
+            else:
+                self.axs.append(self.fig.add_subplot(trNum, 1, i+1, 
+                        sharex=self.axs[0], sharey=self.axs[0]))
+                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
+                                                                             self.axs[i].transAxes))
+                self.axs[i].xaxis.set_ticks_position("top")
+            self.axs[-1].xaxis.set_ticks_position("both")
+            self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+            if self.togglebuttonSpectrogram.get_active():
+                log = self.checkbuttonSpectrogramLog.get_active()
+                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
+                            cmap=self.spectrogramColormap, axis=self.axs[i],
+                            zorder=-10)
+            else:
+                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
+        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                                                         st[0].stats.starttime.microsecond / 1e3 + 0.5,
+                                                         st[0].stats.endtime.strftime("%H:%M:%S"),
+                                                         st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
+        self.xMin, self.xMax=self.axs[0].get_xlim()
+        self.yMin, self.yMax=self.axs[0].get_ylim()
+        #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
+        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
+        self.toolbar.update()
+        self.toolbar.pan(False)
+        self.toolbar.zoom(True)
     
     def delAxes(self):
         for ax in self.axs:
@@ -1646,14 +1630,10 @@ class PickingGUI:
             if not event.inaxes in self.axs:
                 return
             if phase_type == 'P':
-                self.delLine('P')
-                self.delLabel('P')
-                self.delLine('Psynth')
                 dict[phase_type] = pickSample
-                self.drawLine('P')
-                self.drawLabel('P')
-                self.drawLine('Psynth')
-                self.drawLabel('Psynth')
+                for key in ['P', 'Psynth']:
+                    self.updateLine(key)
+                    self.updateLabel(key)
                 #check if the new P pick lies outside of the Error Picks
                 if 'PErr1' in dict and dict['P'] < dict['PErr1']:
                     self.delLine('PErr1')
@@ -1662,19 +1642,16 @@ class PickingGUI:
                     self.delLine('PErr2')
                     self.delKey('PErr2')
                 self.redraw()
-                msg = "P Pick set at %.3f" % dict['P']
+                msg = "%s set at %.3f" % (self.dictKeyFullNames['P'],
+                                          dict['P'])
                 self.textviewStdOutImproved.write(msg)
                 return
             elif phase_type == 'S':
-                self.delLine('S')
-                self.delLabel('S')
-                self.delLine('Ssynth')
                 dict['S'] = pickSample
                 dict['Saxind'] = self.axs.index(event.inaxes)
-                self.drawLine('S')
-                self.drawLabel('S')
-                self.drawLine('Ssynth')
-                self.drawLabel('Ssynth')
+                for key in ['S', 'Ssynth']:
+                    self.updateLine(key)
+                    self.updateLabel(key)
                 #check if the new S pick lies outside of the Error Picks
                 if 'SErr1' in dict and dict['S'] < dict['SErr1']:
                     self.delLine('SErr1')
@@ -1683,7 +1660,8 @@ class PickingGUI:
                     self.delLine('SErr2')
                     self.delKey('SErr2')
                 self.redraw()
-                msg = "S Pick set at %.3f" % dict['S']
+                msg = "%s set at %.3f" % (self.dictKeyFullNames['S'],
+                                          dict['S'])
                 self.textviewStdOutImproved.write(msg)
                 return
 
@@ -1691,9 +1669,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PWeight'] = 0
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P Pick weight set to %i" % dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1701,9 +1678,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SWeight'] = 0
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i" % dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1713,19 +1689,17 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PWeight'] = 1
                 msg = "P Pick weight set to %i" % dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SWeight'] = 1
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i" % dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1735,19 +1709,17 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PWeight']=2
                 msg = "P Pick weight set to %i"%dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SWeight']=2
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i"%dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1757,19 +1729,17 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PWeight']=3
                 msg = "P Pick weight set to %i"%dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SWeight']=3
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i"%dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1779,9 +1749,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PPol']='up'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1789,9 +1758,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SPol']='up'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1801,9 +1769,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PPol']='poorup'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1811,9 +1778,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SPol']='poorup'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1823,9 +1789,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PPol']='down'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1833,9 +1798,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SPol']='down'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1845,9 +1809,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['PPol']='poordown'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1855,9 +1818,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SPol']='poordown'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1867,9 +1829,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['POnset'] = 'impulsive'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P pick onset set to %s" % dict['POnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1877,9 +1838,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SOnset'] = 'impulsive'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S pick onset set to %s" % dict['SOnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1889,9 +1849,8 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delLabel('P')
                 dict['POnset'] = 'emergent'
-                self.drawLabel('P')
+                self.updateLabel('P')
                 self.redraw()
                 msg = "P pick onset set to %s" % dict['POnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1899,9 +1858,8 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delLabel('S')
                 dict['SOnset'] = 'emergent'
-                self.drawLabel('S')
+                self.updateLabel('S')
                 self.redraw()
                 msg = "S pick onset set to %s" % dict['SOnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1937,9 +1895,8 @@ class PickingGUI:
                     key = phase_type + 'Err1'
                 elif pickSample > dict[phase_type]:
                     key = phase_type + 'Err2'
-                self.delLine(key)
                 dict[key] = pickSample
-                self.drawLine(key)
+                self.updateLine(key)
                 self.redraw()
                 msg = "%s pick set at %.3f" % (key, dict[key])
                 self.textviewStdOutImproved.write(msg)
@@ -2217,8 +2174,6 @@ class PickingGUI:
             return
         for key in ['Psynth', 'Ssynth']:
             self.delKey(key)
-            self.delLine(key)
-            self.delLabel(key)
         for phase in phaseList[1:]:
             # example for a synthetic pick line from 3dloc:
             # RJOB P 2009 12 27 10 52 59.425 -0.004950 298.199524 136.000275
@@ -2259,10 +2214,9 @@ class PickingGUI:
                         elif phType == 'S':
                             dict['Ssynth'] = phSeconds
                             dict['Sres'] = phResid
-        self.drawLine('Psynth')
-        self.drawLabel('Psynth')
-        self.drawLine('Ssynth')
-        self.drawLabel('Ssynth')
+        for key in ['Psynth', 'Ssynth']:
+            self.updateLine(key)
+            self.updateLabel(key)
         self.redraw()
 
     def do3dLoc(self):
