@@ -35,8 +35,8 @@ class Client(object):
     ===================  ====================================================
     Entry Point          Linked Class
     ===================  ====================================================
-    ``Client.waveform``   :class:`~obspy.seishub.client._WaveformMapperClient`
-    ``Client.station``  :class:`~obspy.seishub.client._StationMapperClient`
+    ``Client.waveform``  :class:`~obspy.seishub.client._WaveformMapperClient`
+    ``Client.station``   :class:`~obspy.seishub.client._StationMapperClient`
     ``Client.event``     :class:`~obspy.seishub.client._EventMapperClient`
     ===================  ====================================================
 
