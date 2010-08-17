@@ -120,22 +120,36 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
-    def getStationIds(self, **kwargs):
+    def getStationIds(self, network_id=None, **kwargs):
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/waveform/getStationIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
-    def getLocationIds(self, **kwargs):
+    def getLocationIds(self, network_id=None, station_id=None, **kwargs):
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/waveform/getLocationIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
-    def getChannelIds(self, **kwargs):
+    def getChannelIds(self, network_id=None, station_id=None,
+            location_id=None, **kwargs):
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/waveform/getChannelIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    def getLatency(self, *args, **kwargs):
+    def getLatency(self, network_id, station_id, location_id, channel_id,
+            **kwargs):
         """
         Gets a list of network latency values.
 
@@ -145,9 +159,10 @@ class _WaveformMapperClient(object):
         :param channel_id: Channel code, e.g. 'EHE'.
         :return: List of dictionaries containing latency information.
         """
-        map = ['network_id', 'station_id', 'location_id', 'channel_id']
-        for i in range(len(args)):
-            kwargs[map[i]] = args[i]
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/waveform/getLatency'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
@@ -208,7 +223,8 @@ class _WaveformMapperClient(object):
         stream.trim(start, end)
         return stream
 
-    def getPreview(self, *args, **kwargs):
+    def getPreview(self, network_id, station_id, location_id, channel_id,
+            start_datetime, end_datetime, trace_ids=None, **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
@@ -222,10 +238,11 @@ class _WaveformMapperClient(object):
             :class:`~obspy.core.utcdatetime.UTCDateTime` object
         :return: :class:`~obspy.core.stream.Stream` object.
         """
-        map = ['network_id', 'station_id', 'location_id', 'channel_id',
-               'start_datetime', 'end_datetime', 'trace_ids']
-        for i in range(len(args)):
-            kwargs[map[i]] = args[i]
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
+
         url = '/seismology/waveform/getPreview'
         data = self.client._fetch(url, **kwargs)
         if not data:
@@ -234,7 +251,8 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         return stream
 
-    def getPreviewByIds(self, *args, **kwargs):
+    def getPreviewByIds(self, trace_ids, start_datetime, end_datetime,
+            **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
@@ -245,9 +263,10 @@ class _WaveformMapperClient(object):
             :class:`~obspy.core.utcdatetime.UTCDateTime` object
         :return: :class:`~obspy.core.stream.Stream` object.
         """
-        map = ['trace_ids', 'start_datetime', 'end_datetime']
-        for i in range(len(args)):
-            kwargs[map[i]] = args[i]
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         # concatenate list of IDs into string
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
@@ -265,7 +284,7 @@ class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
-    def getResource(self, resource_name, **kwargs):
+    def getResource(self, resource_name, format=None, **kwargs):
         """
         Gets a resource.
 
@@ -273,6 +292,10 @@ class _BaseRESTClient(object):
         :param format: Format string, e.g. 'xml' or 'map'.
         :return: Resource
         """
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
         return self.client._fetch(url, **kwargs)
@@ -295,7 +318,7 @@ class _StationMapperClient(_BaseRESTClient):
     package = 'seismology'
     resourcetype = 'station'
 
-    def getList(self, *args, **kwargs):
+    def getList(self, network_id=None, station_id=None, **kwargs):
         """
         Gets a list of station information.
 
@@ -303,9 +326,10 @@ class _StationMapperClient(_BaseRESTClient):
         :param station_id: Station code, e.g. 'MANZ'.
         :return: List of dictionaries containing station information.
         """
-        map = ['network_id', 'station_id']
-        for i in range(len(args)):
-            kwargs[map[i]] = args[i]
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
@@ -408,25 +432,38 @@ class _EventMapperClient(_BaseRESTClient):
     package = 'seismology'
     resourcetype = 'event'
 
-    def getList(self, *args, **kwargs):
+    def getList(self, limit=None, offset=None, localization_method=None,
+            account=None, user=None, min_datetime=None, max_datetime=None,
+            first_pick=None, last_pick=None, min_latitude=None,
+            max_latitude=None, min_longitude=None, max_longitude=None,
+            min_magnitude=None, max_magnitude=None, min_depth=None,
+            max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
+            used_s=None, min_used_s=None, max_used_s=None,
+            document_id=None, **kwargs):
         """
-        Gets a list of event information.
+        Gets a list of event information. 
 
         :return: List of dictionaries containing event information.
         """
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getKml(self, nolabels=False, *args, **kwargs):
+    def getKml(self, nolabels=False, **kwargs):
         """
-        Posts an event.getList() and returns the results as a KML file.
+        Posts an event.getList() and returns the results as a KML file. For
+        optional arguments, see docstring of
+        :meth:`~obspy.seishub.client._EventMapperClient.getList()`
 
         :return: String containing KML information of all matching events. This
                  string can be written to a file and loaded into e.g. Google
                  Earth.
         """
-        events = self.getList(*args, **kwargs)
+        events = self.getList(**kwargs)
         timestamp = datetime.now()
 
         # construct the KML file
