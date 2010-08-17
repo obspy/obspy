@@ -47,6 +47,7 @@ from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanva
 from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
 
 
+SEISMIC_PHASES = ['P', 'S']
 PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black",
         'Ssynth': "black", 'Mag': "green", 'PErr1': "red",
         'PErr2': "red", 'SErr1': "blue", 'SErr2': "blue"}
@@ -165,26 +166,29 @@ def getCoord(client, network, station):
 
     return coord
 
-def gk2lonlat(x, y):
+def gk2lonlat(x, y, m_to_km=True):
     """
     This function converts X/Y Gauss-Krueger coordinates (zone 4, central
     meridian 12 deg) to Longitude/Latitude in WGS84 reference ellipsoid.
-    We do this using the Linux command line tool cs2cs.
+    We do this using pyproj (python bindings for proj4) which can be installed
+    using 'easy_install pyproj' from pypi.python.org.
+    Input can be single coordinates or coordinate lists/arrays.
+    
+    Useful Links:
+    http://pyproj.googlecode.com/svn/trunk/README.html
+    http://trac.osgeo.org/proj/
+    http://www.epsg-registry.org/
     """
+    import pyproj
+
+    proj_wgs84 = pyproj.Proj(init="epsg:4326")
+    proj_gk4 = pyproj.Proj(init="epsg:31468")
     # convert to meters first
-    x *= 1000.
-    y *= 1000.
-
-    command = "echo \"%.3f %.3f\"" % (x, y)
-    command += " | cs2cs +init=epsg:31468 +to +init=epsg:4326 -f %.4f"
-
-    sub = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
-
-    line = sub.stdout.readline().split()
-    lon = float(line[0])
-    lat = float(line[1])
-    return (lon, lat)
+    if m_to_km:
+        x = x * 1000.
+        y = y * 1000.
+    lon, lat = pyproj.transform(proj_gk4, proj_wgs84, x, y)
+    return [lon, lat]
 
 def readNLLocScatter(scat_filename, textviewStdErrImproved):
     """
@@ -282,17 +286,25 @@ class ObsPyckGUI:
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
         # check for conflicting keybindings. 
-        # we check twice, because keys for setting picks and magnitudes
+        # we have to check twice, because keys for setting picks and magnitudes
         # are allowed to interfere...
-        tmp_keys = KEYS.copy()
-        tmp_keys.pop('setMagMin')
-        tmp_keys.pop('setMagMax')
-        tmp_keys.pop('delMagMinMax')
-        # XXX the duplicate check in keybindings is deactivated because we
-        # XXX changed the structure (nested dicts)... should be reimplemented!
-        # XXX if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
-        # XXX    msg = "Interfering keybindings. Please check variable KEYS"
-        # XXX    raise(msg)
+        for ignored_key_sets in [['setMagMin', 'setMagMax', 'delMagMinMax'],
+                                 ['setPick', 'setPickError', 'delPick']]:
+            tmp_keys = KEYS.copy()
+            tmp_keys2 = {}
+            for ignored_key in ignored_keysets:
+                tmp_keys.pop(ignored_key)
+            while tmp_keys:
+                key, item = tmp_keys.popitem()
+                if isinstance(item, dict):
+                    while item:
+                        k, v = item.popitem()
+                        tmp_keys2["_".join([key, k])] = v
+                else:
+                    tmp_keys2[key] = value
+            if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
+               err = "Interfering keybindings. Please check variable KEYS"
+               raise Exception(err)
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
 
@@ -1609,7 +1621,7 @@ class ObsPyckGUI:
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs:
                 return
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 dict[phase_type] = pickSample
                 depending_keys = (phase_type + k for k in ['', 'synth'])
                 for key in depending_keys:
@@ -1631,7 +1643,7 @@ class ObsPyckGUI:
                 return
 
         if event.key in KEYS['setWeight'].keys():
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Weight"
@@ -1643,7 +1655,7 @@ class ObsPyckGUI:
                 return
 
         if event.key in KEYS['setPol'].keys():
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Pol"
@@ -1655,7 +1667,7 @@ class ObsPyckGUI:
                 return
 
         if event.key in KEYS['setOnset'].keys():
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Onset"
@@ -1667,7 +1679,7 @@ class ObsPyckGUI:
                 return
 
         if event.key == KEYS['delPick']:
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 depending_keys = (phase_type + k for k in ['', 'Err1', 'Err2'])
                 for key in depending_keys:
                     self.delLine(key)
@@ -1682,7 +1694,7 @@ class ObsPyckGUI:
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs:
                 return
-            if phase_type in ['P', 'S']:
+            if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 # Determine if left or right Error Pick
@@ -4403,15 +4415,15 @@ def main():
         client = Client(base_url=baseurl, user=options.user,
                         password=options.password, timeout=options.timeout)
     else:
+        t = UTCDateTime(options.time)
+        t = t + options.starttime_offset
+        baseurl = "http://" + options.servername + ":%i" % options.port
         try:
-            t = UTCDateTime(options.time)
-            t = t + options.starttime_offset
-            baseurl = "http://" + options.servername + ":%i" % options.port
             client = Client(base_url=baseurl, user=options.user,
                             password=options.password, timeout=options.timeout)
         except:
-            print "Error while connecting to server!"
-            raise
+            err = "Error while connecting to server!"
+            raise Exception(err)
         streams = []
         sta_fetched = set()
         for id in options.ids.split(","):
