@@ -148,8 +148,8 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    def getLatency(self, network_id, station_id, location_id, channel_id,
-            **kwargs):
+    def getLatency(self, network_id=None, station_id=None,
+            location_id=None, channel_id=None, **kwargs):
         """
         Gets a list of network latency values.
 
@@ -167,9 +167,9 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getWaveform(self, network_id, station_id, location_id, channel_id,
-                    start_datetime, end_datetime, apply_filter=False,
-                    **kwargs):
+    def getWaveform(self, network_id=None, station_id=None,
+            location_id=None, channel_id=None, start_datetime=None,
+            end_datetime=None, apply_filter=False, **kwargs):
         """
         Gets a ObsPy Stream object.
 
@@ -223,8 +223,9 @@ class _WaveformMapperClient(object):
         stream.trim(start, end)
         return stream
 
-    def getPreview(self, network_id, station_id, location_id, channel_id,
-            start_datetime, end_datetime, trace_ids=None, **kwargs):
+    def getPreview(self, network_id=None, station_id=None,
+            location_id=None, channel_id=None, start_datetime=None,
+            end_datetime=None, trace_ids=None, **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
@@ -251,8 +252,8 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         return stream
 
-    def getPreviewByIds(self, trace_ids, start_datetime, end_datetime,
-            **kwargs):
+    def getPreviewByIds(self, trace_ids=None, start_datetime=None,
+            end_datetime=None, **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
