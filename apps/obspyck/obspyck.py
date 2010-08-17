@@ -273,523 +273,6 @@ def formatXTicklabels(x, pos):
 
 class ObsPyckGUI:
         
-    ###########################################################################
-    # Start of list of event handles that get connected to GUI Elements       #
-    # Note: All fundtions starting with "on_" get connected to GUI Elements   #
-    ###########################################################################
-    def on_windowObspyck_destroy(self, event):
-        self.cleanQuit()
-
-    def on_buttonClearAll_clicked(self, event):
-        self.delAllItems()
-        self.clearDictionaries()
-        self.drawAllItems()
-        self.redraw()
-
-    def on_buttonClearOrigMag_clicked(self, event):
-        self.delAllItems()
-        self.clearOriginMagnitudeDictionaries()
-        self.drawAllItems()
-        self.redraw()
-
-    def on_buttonClearFocMec_clicked(self, event):
-        self.clearFocmecDictionary()
-
-    def on_buttonDoHyp2000_clicked(self, event):
-        self.delAllItems()
-        self.clearOriginMagnitudeDictionaries()
-        self.dictOrigin['Program'] = "hyp2000"
-        self.doHyp2000()
-        self.loadHyp2000Data()
-        self.calculateEpiHypoDists()
-        self.dictMagnitude['Program'] = "obspy"
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-        self.drawAllItems()
-        self.redraw()
-        self.togglebuttonShowMap.set_active(True)
-
-    def on_buttonDo3dloc_clicked(self, event):
-        self.delAllItems()
-        self.clearOriginMagnitudeDictionaries()
-        self.dictOrigin['Program'] = "3dloc"
-        self.do3dLoc()
-        self.load3dlocSyntheticPhases()
-        self.load3dlocData()
-        self.calculateEpiHypoDists()
-        self.dictMagnitude['Program'] = "obspy"
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-        self.drawAllItems()
-        self.redraw()
-        self.togglebuttonShowMap.set_active(True)
-
-    def on_buttonDoNLLoc_clicked(self, event):
-        self.delAllItems()
-        self.clearOriginMagnitudeDictionaries()
-        self.dictOrigin['Program'] = "NLLoc"
-        self.doNLLoc()
-        self.loadNLLocOutput()
-        self.calculateEpiHypoDists()
-        self.dictMagnitude['Program'] = "obspy"
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-        self.drawAllItems()
-        self.redraw()
-        self.togglebuttonShowMap.set_active(True)
-
-    def on_buttonCalcMag_clicked(self, event):
-        self.calculateEpiHypoDists()
-        self.dictMagnitude['Program'] = "obspy"
-        self.calculateStationMagnitudes()
-        self.updateNetworkMag()
-
-    def on_buttonDoFocmec_clicked(self, event):
-        self.clearFocmecDictionary()
-        self.dictFocalMechanism['Program'] = "focmec"
-        self.doFocmec()
-
-    def on_togglebuttonShowMap_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowMap.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
-        if state:
-            self.delAxes()
-            self.fig.clear()
-            self.drawEventMap()
-            self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.update()
-            self.canv.draw()
-            self.textviewStdOutImproved.write("http://maps.google.de/maps" + \
-                    "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
-                    self.dictOrigin['Longitude']))
-        else:
-            self.delEventMap()
-            self.fig.clear()
-            self.drawAxes()
-            self.toolbar.update()
-            self.drawAllItems()
-            self.multicursorReinit()
-            self.updatePlot()
-            self.updateStreamLabels()
-            self.canv.draw()
-
-    def on_togglebuttonOverview_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowMap,
-                              self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonOverview.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
-        if state:
-            self.delAxes()
-            self.fig.clear()
-            self.drawStreamOverview()
-            self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.update()
-            self.canv.draw()
-        else:
-            self.delAxes()
-            self.fig.clear()
-            self.drawAxes()
-            self.toolbar.update()
-            self.drawAllItems()
-            self.multicursorReinit()
-            self.updatePlot()
-            self.updateStreamLabels()
-            self.canv.draw()
-
-    def on_togglebuttonShowFocMec_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowMap,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowFocMec.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
-        if state:
-            self.delAxes()
-            self.fig.clear()
-            self.drawFocMec()
-            self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.zoom()
-            self.toolbar.update()
-            self.canv.draw()
-        else:
-            self.delFocMec()
-            self.fig.clear()
-            self.drawAxes()
-            self.toolbar.update()
-            self.drawAllItems()
-            self.multicursorReinit()
-            self.updatePlot()
-            self.updateStreamLabels()
-            self.canv.draw()
-
-    def on_buttonNextFocMec_clicked(self, event):
-        self.nextFocMec()
-        if self.togglebuttonShowFocMec.get_active():
-            self.delFocMec()
-            self.fig.clear()
-            self.drawFocMec()
-            self.canv.draw()
-
-    def on_togglebuttonShowWadati_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec, self.togglebuttonShowMap,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowWadati.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
-        if state:
-            self.delAxes()
-            self.fig.clear()
-            self.drawWadati()
-            self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.update()
-            self.canv.draw()
-        else:
-            self.delWadati()
-            self.fig.clear()
-            self.drawAxes()
-            self.toolbar.update()
-            self.drawAllItems()
-            self.multicursorReinit()
-            self.updatePlot()
-            self.updateStreamLabels()
-            self.canv.draw()
-
-    def on_buttonGetNextEvent_clicked(self, event):
-        # check if event list is empty and force an update if this is the case
-        if not hasattr(self, "seishubEventList"):
-            self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
-                                            self.streams[0][0].stats.endtime)
-        if not self.seishubEventList:
-            msg = "No events available from seishub."
-            self.textviewStdOutImproved.write(msg)
-            return
-        # iterate event number to fetch
-        self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
-                                   self.seishubEventCount
-        event = self.seishubEventList[self.seishubEventCurrent]
-        resource_name = event.xpath(u"resource_name")[0].text
-        self.delAllItems()
-        self.clearDictionaries()
-        self.getEventFromSeishub(resource_name)
-        #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
-        #                             self.streams[0][0].stats.endtime)
-        self.drawAllItems()
-        self.redraw()
-        
-        #XXX 
-
-    def on_buttonUpdateEventList_clicked(self, event):
-        self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
-                                        self.streams[0][0].stats.endtime)
-
-    def on_buttonSendEvent_clicked(self, event):
-        self.uploadSeishub()
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
-
-    def on_checkbuttonPublishEvent_toggled(self, event):
-        newstate = self.checkbuttonPublishEvent.get_active()
-        msg = "Setting \"public\" flag of event to: %s" % newstate
-        self.textviewStdOutImproved.write(msg)
-
-    def on_buttonDeleteEvent_clicked(self, event):
-        event = self.seishubEventList[self.seishubEventCurrent]
-        resource_name = event.xpath(u"resource_name")[0].text
-        account = event.xpath(u"account")
-        user = event.xpath(u"user")
-        if account:
-            account = account[0].text
-        else:
-            account = None
-        if user:
-            user = user[0].text
-        else:
-            user = None
-        dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
-                                   gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
-        msg = "Delete event from database?\n\n"
-        msg += "<tt><b>%s</b> (account: %s, user: %s)</tt>" % (resource_name,
-                                                               account, user)
-        dialog.set_markup(msg)
-        dialog.set_title("Delete?")
-        response = dialog.run()
-        dialog.destroy()
-        if response == gtk.RESPONSE_YES:
-            self.deleteEventInSeishub(resource_name)
-            self.on_buttonUpdateEventList_clicked(event)
-    
-    def on_checkbuttonSysop_toggled(self, event):
-        newstate = self.checkbuttonSysop.get_active()
-        msg = "Setting usage of \"sysop\"-account to: %s" % newstate
-        self.textviewStdOutImproved.write(msg)
-    
-    # the corresponding signal is emitted when hitting return after entering
-    # the password
-    def on_entrySysopPassword_activate(self, event):
-        # test authentication information:
-        passwd = self.entrySysopPassword.get_text()
-        auth = 'Basic ' + (base64.encodestring('sysop:' + passwd)).strip()
-        webservice = httplib.HTTP(self.server['Server'])
-        webservice.putrequest("HEAD", '/xml/seismology/event/just_a_test')
-        webservice.putheader('Authorization', auth)
-        webservice.endheaders()
-        statuscode = webservice.getreply()[0]
-        # if authentication test fails empty password field and uncheck sysop
-        if statuscode == 401: # 401 means "Unauthorized"
-            self.checkbuttonSysop.set_active(False)
-            self.entrySysopPassword.set_text("")
-            err = "Error: Authentication as sysop failed! (Wrong password!?)"
-            self.textviewStdErrImproved.write(err)
-        else:
-            self.checkbuttonSysop.set_active(True)
-        self.canv.grab_focus()
-
-    def on_buttonSetFocusOnPlot_clicked(self, event):
-        self.setFocusToMatplotlib()
-
-    def on_buttonDebug_clicked(self, event):
-        self.debug()
-
-    def on_buttonQuit_clicked(self, event):
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
-        self.cleanQuit()
-
-    def on_buttonPreviousStream_clicked(self, event):
-        self.stPt = (self.stPt - 1) % self.stNum
-        self.comboboxStreamName.set_active(self.stPt)
-
-    def on_comboboxStreamName_changed(self, event):
-        self.stPt = self.comboboxStreamName.get_active()
-        xmin, xmax = self.axs[0].get_xlim()
-        self.delAllItems()
-        self.delAxes()
-        self.fig.clear()
-        self.drawAxes()
-        self.drawAllItems()
-        self.multicursorReinit()
-        self.axs[0].set_xlim(xmin, xmax)
-        self.updatePlot()
-        msg = "Going to stream: %s" % self.dicts[self.stPt]['Station']
-        self.updateStreamNumberLabel()
-        self.textviewStdOutImproved.write(msg)
-
-    def on_buttonNextStream_clicked(self, event):
-        self.stPt = (self.stPt + 1) % self.stNum
-        self.comboboxStreamName.set_active(self.stPt)
-
-    def on_comboboxPhaseType_changed(self, event):
-        self.updateMulticursorColor()
-        self.updateButtonPhaseTypeColor()
-        self.redraw()
-
-    def on_togglebuttonFilter_toggled(self, event):
-        self.updatePlot()
-
-    def on_comboboxFilterType_changed(self, event):
-        if self.togglebuttonFilter.get_active():
-            self.updatePlot()
-
-    def on_checkbuttonZeroPhase_toggled(self, event):
-        # if the filter flag is not set, we don't have to update the plot
-        if self.togglebuttonFilter.get_active():
-            self.updatePlot()
-
-    def on_spinbuttonHighpass_value_changed(self, event):
-        if not self.togglebuttonFilter.get_active() or \
-           self.comboboxFilterType.get_active_text() == "Lowpass":
-            self.canv.grab_focus()
-            return
-        # if the filter flag is not set, we don't have to update the plot
-        # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
-        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
-            err = "Warning: Lowpass frequency below Highpass frequency!"
-            self.textviewStdErrImproved.write(err)
-        # XXX maybe the following check could be done nicer
-        # XXX check this criterion!
-        minimum  = float(self.streams[self.stPt][0].stats.sampling_rate) / \
-                self.streams[self.stPt][0].stats.npts
-        if self.spinbuttonHighpass.get_value() < minimum:
-            err = "Warning: Lowpass frequency is not supported by length of trace!"
-            self.textviewStdErrImproved.write(err)
-        self.updatePlot()
-        # XXX we could use this for the combobox too!
-        # reset focus to matplotlib figure
-        self.canv.grab_focus()
-
-    def on_spinbuttonLowpass_value_changed(self, event):
-        if not self.togglebuttonFilter.get_active() or \
-           self.comboboxFilterType.get_active_text() == "Highpass":
-            self.canv.grab_focus()
-            return
-        # if the filter flag is not set, we don't have to update the plot
-        # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
-        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
-            err = "Warning: Lowpass frequency below Highpass frequency!"
-            self.textviewStdErrImproved.write(err)
-        # XXX maybe the following check could be done nicer
-        # XXX check this criterion!
-        maximum  = self.streams[self.stPt][0].stats.sampling_rate / 2.0
-        if self.spinbuttonLowpass.get_value() > maximum:
-            err = "Warning: Highpass frequency is lower than Nyquist!"
-            self.textviewStdErrImproved.write(err)
-        self.updatePlot()
-        # XXX we could use this for the combobox too!
-        # reset focus to matplotlib figure
-        self.canv.grab_focus()
-
-    def on_togglebuttonSpectrogram_toggled(self, event):
-        buttons_deactivate = [self.togglebuttonFilter,
-                              self.togglebuttonOverview,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass]
-        state = self.togglebuttonSpectrogram.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
-        if state:
-            msg = "Showing spectrograms (takes a few seconds with log-option)."
-        else:
-            msg = "Showing seismograms."
-        xmin, xmax = self.axs[0].get_xlim()
-        self.delAllItems()
-        self.delAxes()
-        self.fig.clear()
-        self.drawAxes()
-        self.drawAllItems()
-        self.multicursorReinit()
-        self.axs[0].set_xlim(xmin, xmax)
-        self.updatePlot()
-        self.textviewStdOutImproved.write(msg)
-
-    def on_checkbuttonSpectrogramLog_toggled(self, event):
-        if self.togglebuttonSpectrogram.get_active():
-            self.on_togglebuttonSpectrogram_toggled(event)
-    ###########################################################################
-    # End of list of event handles that get connected to GUI Elements         #
-    ###########################################################################
-
-        #>         self.buffer.insert (self.buffer.get_end_iter(), input_data)
-        #>         if self.buffer.get_line_count() > 400:
-        #>             self.buffer.delete(self.buffer.get_start_iter(),
-        #>                                 self.buffer.get_iter_at_line (200))
-        #>         mark = self.buffer.create_mark("end",
-        #>                                 self.buffer.get_end_iter(), False)
-        #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
-
-    def debug(self):
-        sys.stdout = self.stdout_backup
-        sys.stderr = self.stderr_backup
-        try:
-            import ipdb
-            ipdb.set_trace()
-        except ImportError:
-            import pdb
-            pdb.set_trace()
-        self.stdout_backup = sys.stdout
-        self.stderr_backup = sys.stderr
-        sys.stdout = self.textviewStdOutImproved
-        sys.stderr = self.textviewStdErrImproved
-
-    def setFocusToMatplotlib(self):
-        self.canv.grab_focus()
-
-    def cleanQuit(self):
-        try:
-            shutil.rmtree(self.tmp_dir)
-        except:
-            pass
-        gtk.main_quit()
-
     def __init__(self, client=None, streams=None, options=None):
         self.client = client
         self.streams = streams
@@ -1288,6 +771,520 @@ class ObsPyckGUI:
                                           self.streams[0][0].stats.endtime)
 
         gtk.main()
+
+    ###########################################################################
+    # Start of list of event handles that get connected to GUI Elements       #
+    # Note: All fundtions starting with "on_" get connected to GUI Elements   #
+    ###########################################################################
+    def on_windowObspyck_destroy(self, event):
+        self.cleanQuit()
+
+    def on_buttonClearAll_clicked(self, event):
+        self.clearDictionaries()
+        self.updateAllItems()
+        self.redraw()
+
+    def on_buttonClearOrigMag_clicked(self, event):
+        self.clearOriginMagnitudeDictionaries()
+        self.updateAllItems()
+        self.redraw()
+
+    def on_buttonClearFocMec_clicked(self, event):
+        self.clearFocmecDictionary()
+
+    def on_buttonDoHyp2000_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "hyp2000"
+        self.doHyp2000()
+        self.loadHyp2000Data()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.drawAllItems()
+        self.redraw()
+        self.togglebuttonShowMap.set_active(True)
+
+    def on_buttonDo3dloc_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "3dloc"
+        self.do3dLoc()
+        self.load3dlocSyntheticPhases()
+        self.load3dlocData()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.drawAllItems()
+        self.redraw()
+        self.togglebuttonShowMap.set_active(True)
+
+    def on_buttonDoNLLoc_clicked(self, event):
+        self.delAllItems()
+        self.clearOriginMagnitudeDictionaries()
+        self.dictOrigin['Program'] = "NLLoc"
+        self.doNLLoc()
+        self.loadNLLocOutput()
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+        self.drawAllItems()
+        self.redraw()
+        self.togglebuttonShowMap.set_active(True)
+
+    def on_buttonCalcMag_clicked(self, event):
+        self.calculateEpiHypoDists()
+        self.dictMagnitude['Program'] = "obspy"
+        self.calculateStationMagnitudes()
+        self.updateNetworkMag()
+
+    def on_buttonDoFocmec_clicked(self, event):
+        self.clearFocmecDictionary()
+        self.dictFocalMechanism['Program'] = "focmec"
+        self.doFocmec()
+
+    def on_togglebuttonShowMap_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
+                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec,
+                              self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
+                              self.buttonDeleteEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
+                              self.comboboxStreamName, self.labelStreamNumber,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
+        state = self.togglebuttonShowMap.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawEventMap()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.update()
+            self.canv.draw()
+            self.textviewStdOutImproved.write("http://maps.google.de/maps" + \
+                    "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
+                    self.dictOrigin['Longitude']))
+        else:
+            self.delEventMap()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawAllItems()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
+    def on_togglebuttonOverview_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
+                              self.buttonDoFocmec, self.togglebuttonShowMap,
+                              self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec,
+                              self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
+                              self.buttonDeleteEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.comboboxStreamName, self.labelStreamNumber,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
+        state = self.togglebuttonOverview.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawStreamOverview()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delAxes()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawAllItems()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
+    def on_togglebuttonShowFocMec_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
+                              self.buttonDoFocmec, self.togglebuttonShowMap,
+                              self.togglebuttonShowWadati,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
+                              self.buttonDeleteEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
+                              self.comboboxStreamName, self.labelStreamNumber,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
+        state = self.togglebuttonShowFocMec.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawFocMec()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.zoom()
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delFocMec()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawAllItems()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
+    def on_buttonNextFocMec_clicked(self, event):
+        self.nextFocMec()
+        if self.togglebuttonShowFocMec.get_active():
+            self.delFocMec()
+            self.fig.clear()
+            self.drawFocMec()
+            self.canv.draw()
+
+    def on_togglebuttonShowWadati_clicked(self, event):
+        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
+                              self.buttonClearFocMec, self.buttonDoHyp2000,
+                              self.buttonDo3dloc, self.buttonDoNLLoc,
+                              self.buttonCalcMag, self.comboboxNLLocModel,
+                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
+                              self.buttonNextFocMec, self.togglebuttonShowMap,
+                              self.buttonGetNextEvent, self.buttonSendEvent,
+                              self.buttonUpdateEventList,
+                              self.checkbuttonPublishEvent,
+                              self.checkbuttonSysop, self.entrySysopPassword,
+                              self.buttonDeleteEvent,
+                              self.buttonPreviousStream, self.buttonNextStream,
+                              self.togglebuttonOverview,
+                              self.comboboxStreamName, self.labelStreamNumber,
+                              self.comboboxPhaseType, self.togglebuttonFilter,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass,
+                              self.togglebuttonSpectrogram,
+                              self.checkbuttonSpectrogramLog]
+        state = self.togglebuttonShowWadati.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawWadati()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delWadati()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawAllItems()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
+    def on_buttonGetNextEvent_clicked(self, event):
+        # check if event list is empty and force an update if this is the case
+        if not hasattr(self, "seishubEventList"):
+            self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+                                            self.streams[0][0].stats.endtime)
+        if not self.seishubEventList:
+            msg = "No events available from seishub."
+            self.textviewStdOutImproved.write(msg)
+            return
+        # iterate event number to fetch
+        self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
+                                   self.seishubEventCount
+        event = self.seishubEventList[self.seishubEventCurrent]
+        resource_name = event.xpath(u"resource_name")[0].text
+        self.clearDictionaries()
+        self.getEventFromSeishub(resource_name)
+        #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
+        #                             self.streams[0][0].stats.endtime)
+        self.updateAllItems()
+        self.redraw()
+        
+        #XXX 
+
+    def on_buttonUpdateEventList_clicked(self, event):
+        self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+                                        self.streams[0][0].stats.endtime)
+
+    def on_buttonSendEvent_clicked(self, event):
+        self.uploadSeishub()
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
+
+    def on_checkbuttonPublishEvent_toggled(self, event):
+        newstate = self.checkbuttonPublishEvent.get_active()
+        msg = "Setting \"public\" flag of event to: %s" % newstate
+        self.textviewStdOutImproved.write(msg)
+
+    def on_buttonDeleteEvent_clicked(self, event):
+        event = self.seishubEventList[self.seishubEventCurrent]
+        resource_name = event.xpath(u"resource_name")[0].text
+        account = event.xpath(u"account")
+        user = event.xpath(u"user")
+        if account:
+            account = account[0].text
+        else:
+            account = None
+        if user:
+            user = user[0].text
+        else:
+            user = None
+        dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
+                                   gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
+        msg = "Delete event from database?\n\n"
+        msg += "<tt><b>%s</b> (account: %s, user: %s)</tt>" % (resource_name,
+                                                               account, user)
+        dialog.set_markup(msg)
+        dialog.set_title("Delete?")
+        response = dialog.run()
+        dialog.destroy()
+        if response == gtk.RESPONSE_YES:
+            self.deleteEventInSeishub(resource_name)
+            self.on_buttonUpdateEventList_clicked(event)
+    
+    def on_checkbuttonSysop_toggled(self, event):
+        newstate = self.checkbuttonSysop.get_active()
+        msg = "Setting usage of \"sysop\"-account to: %s" % newstate
+        self.textviewStdOutImproved.write(msg)
+    
+    # the corresponding signal is emitted when hitting return after entering
+    # the password
+    def on_entrySysopPassword_activate(self, event):
+        # test authentication information:
+        passwd = self.entrySysopPassword.get_text()
+        auth = 'Basic ' + (base64.encodestring('sysop:' + passwd)).strip()
+        webservice = httplib.HTTP(self.server['Server'])
+        webservice.putrequest("HEAD", '/xml/seismology/event/just_a_test')
+        webservice.putheader('Authorization', auth)
+        webservice.endheaders()
+        statuscode = webservice.getreply()[0]
+        # if authentication test fails empty password field and uncheck sysop
+        if statuscode == 401: # 401 means "Unauthorized"
+            self.checkbuttonSysop.set_active(False)
+            self.entrySysopPassword.set_text("")
+            err = "Error: Authentication as sysop failed! (Wrong password!?)"
+            self.textviewStdErrImproved.write(err)
+        else:
+            self.checkbuttonSysop.set_active(True)
+        self.canv.grab_focus()
+
+    def on_buttonSetFocusOnPlot_clicked(self, event):
+        self.setFocusToMatplotlib()
+
+    def on_buttonDebug_clicked(self, event):
+        self.debug()
+
+    def on_buttonQuit_clicked(self, event):
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
+        self.cleanQuit()
+
+    def on_buttonPreviousStream_clicked(self, event):
+        self.stPt = (self.stPt - 1) % self.stNum
+        self.comboboxStreamName.set_active(self.stPt)
+
+    def on_comboboxStreamName_changed(self, event):
+        self.stPt = self.comboboxStreamName.get_active()
+        xmin, xmax = self.axs[0].get_xlim()
+        self.delAllItems()
+        self.delAxes()
+        self.fig.clear()
+        self.drawAxes()
+        self.drawAllItems()
+        self.multicursorReinit()
+        self.axs[0].set_xlim(xmin, xmax)
+        self.updatePlot()
+        msg = "Going to stream: %s" % self.dicts[self.stPt]['Station']
+        self.updateStreamNumberLabel()
+        self.textviewStdOutImproved.write(msg)
+
+    def on_buttonNextStream_clicked(self, event):
+        self.stPt = (self.stPt + 1) % self.stNum
+        self.comboboxStreamName.set_active(self.stPt)
+
+    def on_comboboxPhaseType_changed(self, event):
+        self.updateMulticursorColor()
+        self.updateButtonPhaseTypeColor()
+        self.redraw()
+
+    def on_togglebuttonFilter_toggled(self, event):
+        self.updatePlot()
+
+    def on_comboboxFilterType_changed(self, event):
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
+
+    def on_checkbuttonZeroPhase_toggled(self, event):
+        # if the filter flag is not set, we don't have to update the plot
+        if self.togglebuttonFilter.get_active():
+            self.updatePlot()
+
+    def on_spinbuttonHighpass_value_changed(self, event):
+        if not self.togglebuttonFilter.get_active() or \
+           self.comboboxFilterType.get_active_text() == "Lowpass":
+            self.canv.grab_focus()
+            return
+        # if the filter flag is not set, we don't have to update the plot
+        # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
+        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+            err = "Warning: Lowpass frequency below Highpass frequency!"
+            self.textviewStdErrImproved.write(err)
+        # XXX maybe the following check could be done nicer
+        # XXX check this criterion!
+        minimum  = float(self.streams[self.stPt][0].stats.sampling_rate) / \
+                self.streams[self.stPt][0].stats.npts
+        if self.spinbuttonHighpass.get_value() < minimum:
+            err = "Warning: Lowpass frequency is not supported by length of trace!"
+            self.textviewStdErrImproved.write(err)
+        self.updatePlot()
+        # XXX we could use this for the combobox too!
+        # reset focus to matplotlib figure
+        self.canv.grab_focus()
+
+    def on_spinbuttonLowpass_value_changed(self, event):
+        if not self.togglebuttonFilter.get_active() or \
+           self.comboboxFilterType.get_active_text() == "Highpass":
+            self.canv.grab_focus()
+            return
+        # if the filter flag is not set, we don't have to update the plot
+        # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
+        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+            err = "Warning: Lowpass frequency below Highpass frequency!"
+            self.textviewStdErrImproved.write(err)
+        # XXX maybe the following check could be done nicer
+        # XXX check this criterion!
+        maximum  = self.streams[self.stPt][0].stats.sampling_rate / 2.0
+        if self.spinbuttonLowpass.get_value() > maximum:
+            err = "Warning: Highpass frequency is lower than Nyquist!"
+            self.textviewStdErrImproved.write(err)
+        self.updatePlot()
+        # XXX we could use this for the combobox too!
+        # reset focus to matplotlib figure
+        self.canv.grab_focus()
+
+    def on_togglebuttonSpectrogram_toggled(self, event):
+        buttons_deactivate = [self.togglebuttonFilter,
+                              self.togglebuttonOverview,
+                              self.comboboxFilterType,
+                              self.checkbuttonZeroPhase,
+                              self.labelHighpass, self.labelLowpass,
+                              self.spinbuttonHighpass, self.spinbuttonLowpass]
+        state = self.togglebuttonSpectrogram.get_active()
+        for button in buttons_deactivate:
+            button.set_sensitive(not state)
+        if state:
+            msg = "Showing spectrograms (takes a few seconds with log-option)."
+        else:
+            msg = "Showing seismograms."
+        xmin, xmax = self.axs[0].get_xlim()
+        self.delAllItems()
+        self.delAxes()
+        self.fig.clear()
+        self.drawAxes()
+        self.drawAllItems()
+        self.multicursorReinit()
+        self.axs[0].set_xlim(xmin, xmax)
+        self.updatePlot()
+        self.textviewStdOutImproved.write(msg)
+
+    def on_checkbuttonSpectrogramLog_toggled(self, event):
+        if self.togglebuttonSpectrogram.get_active():
+            self.on_togglebuttonSpectrogram_toggled(event)
+    ###########################################################################
+    # End of list of event handles that get connected to GUI Elements         #
+    ###########################################################################
+
+        #>         self.buffer.insert (self.buffer.get_end_iter(), input_data)
+        #>         if self.buffer.get_line_count() > 400:
+        #>             self.buffer.delete(self.buffer.get_start_iter(),
+        #>                                 self.buffer.get_iter_at_line (200))
+        #>         mark = self.buffer.create_mark("end",
+        #>                                 self.buffer.get_end_iter(), False)
+        #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
+
+    def debug(self):
+        sys.stdout = self.stdout_backup
+        sys.stderr = self.stderr_backup
+        try:
+            import ipdb
+            ipdb.set_trace()
+        except ImportError:
+            import pdb
+            pdb.set_trace()
+        self.stdout_backup = sys.stdout
+        self.stderr_backup = sys.stderr
+        sys.stdout = self.textviewStdOutImproved
+        sys.stderr = self.textviewStdErrImproved
+
+    def setFocusToMatplotlib(self):
+        self.canv.grab_focus()
+
+    def cleanQuit(self):
+        try:
+            shutil.rmtree(self.tmp_dir)
+        except:
+            pass
+        gtk.main_quit()
 
     
     ## Trim all to same length, us Z as reference
