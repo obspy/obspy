@@ -354,7 +354,7 @@ class PickingGUI:
             self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
-            self.drawSavedPicks()
+            self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
             self.updateStreamLabels()
@@ -400,7 +400,7 @@ class PickingGUI:
             self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
-            self.drawSavedPicks()
+            self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
             self.updateStreamLabels()
@@ -446,7 +446,7 @@ class PickingGUI:
             self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
-            self.drawSavedPicks()
+            self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
             self.updateStreamLabels()
@@ -498,7 +498,7 @@ class PickingGUI:
             self.fig.clear()
             self.drawAxes()
             self.toolbar.update()
-            self.drawSavedPicks()
+            self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
             self.updateStreamLabels()
@@ -616,7 +616,7 @@ class PickingGUI:
         self.delAxes()
         self.fig.clear()
         self.drawAxes()
-        self.drawSavedPicks()
+        self.drawAllItems()
         self.multicursorReinit()
         self.axs[0].set_xlim(xmin, xmax)
         self.updatePlot()
@@ -707,7 +707,7 @@ class PickingGUI:
         self.delAxes()
         self.fig.clear()
         self.drawAxes()
-        self.drawSavedPicks()
+        self.drawAllItems()
         self.multicursorReinit()
         self.axs[0].set_xlim(xmin, xmax)
         self.updatePlot()
@@ -781,8 +781,7 @@ class PickingGUI:
                 'MagMax2': "Magnitude maximum estimation pick"}
         #Estimating the maximum/minimum in a sample-window around click
         self.magPickWindow = 10
-        self.magMinMarker = 'x'
-        self.magMaxMarker = 'x'
+        self.magMarker = 'x'
         self.magMarkerEdgeWidth = 1.8
         self.magMarkerSize = 20
         self.axvlinewidths = 1.2
@@ -1068,6 +1067,7 @@ class PickingGUI:
         self.eventMapColors = []
         # set up dictionaries to store phase_type/axes/line informations
         self.lines = {}
+        self.texts = {}
         # we need to go through streams/dicts backwards in order not to get
         # problems because of the pop() statement
         for i in range(len(self.streams))[::-1]:
@@ -1357,9 +1357,6 @@ class PickingGUI:
         self.toolbar.pan(False)
         self.toolbar.zoom(True)
     
-    def drawSavedPicks(self):
-        self.drawAllItems()
-    
     def drawLine(self, key):
         """
         Draw a line for pick of given key in all axes of the current stream.
@@ -1378,6 +1375,7 @@ class PickingGUI:
         self.lines[key] = {}
         ymin = 1.0 - self.dictPhaseLineheightPerc[key]
         ymax = self.dictPhaseLineheightPerc[key]
+        # draw lines and store references in dictionary
         for ax in self.axs:
             line = ax.axvline(d[key], color=self.dictPhaseColors[key],
                     linewidth=self.axvlinewidths,
@@ -1394,221 +1392,148 @@ class PickingGUI:
         """
         if key not in self.lines:
             return
-        for ax in self.axs:
-            if ax in self.lines[key]:
-                ax.lines.remove(self.lines[key][ax])
+        for ax, line in self.lines[key].iteritems():
+            ax.lines.remove(line)
         del self.lines[key]
     
-    def drawPLabel(self):
+    def drawLabel(self, key):
+        """
+        Draws Labels at pick axvlines.
+        Currently expects as keys either "P" or "S".
+        """
+        # delegate drawing of synthetic picks, this is different...
+        if key in ['Psynth', 'Ssynth']:
+            return self.drawSynthLabel(key)
         dict = self.dicts[self.stPt]
-        if not 'P' in dict:
+        if key not in dict:
             return
-        label = 'P:'
-        if 'POnset' in dict:
-            if dict['POnset'] == 'impulsive':
+        label = key + ':'
+        key_onset = key + 'Onset'
+        if key_onset in dict:
+            if dict[key_onset] == 'impulsive':
                 label += 'I'
-            elif dict['POnset'] == 'emergent':
+            elif dict[key_onset] == 'emergent':
                 label += 'E'
             else:
                 label += '?'
         else:
             label += '_'
-        if 'PPol' in dict:
-            if dict['PPol'] == 'up':
+        key_pol = key + 'Pol'
+        if key_pol in dict:
+            if dict[key_pol] == 'up':
                 label += 'U'
-            elif dict['PPol'] == 'poorup':
+            elif dict[key_pol] == 'poorup':
                 label += '+'
-            elif dict['PPol'] == 'down':
+            elif dict[key_pol] == 'down':
                 label += 'D'
-            elif dict['PPol'] == 'poordown':
+            elif dict[key_pol] == 'poordown':
                 label += '-'
             else:
                 label += '?'
         else:
             label += '_'
-        if 'PWeight' in dict:
-            label += str(dict['PWeight'])
+        key_weight = key + 'Weight'
+        if key_weight in dict:
+            label += str(dict[key_weight])
         else:
             label += '_'
-        self.PLabel = self.axs[0].text(dict['P'], 1 - 0.01 * len(self.axs),
-                                       '  ' + label, transform = self.trans[0],
-                                       color = self.dictPhaseColors['P'],
-                                       family = 'monospace', va="top")
+        ax = self.axs[0]
+        # draw text and store references in dictionary
+        self.texts[key] = {}
+        text = ax.text(dict[key], 1 - 0.01 * len(self.axs), '  ' + label,
+                transform=self.trans[0], color=self.dictPhaseColors[key],
+                family='monospace', va="top")
+        self.texts[key][ax] = text
+
+    def drawSynthLabel(self, key):
+        """
+        Draw the label for a synthetic pick. This is a bit different from
+        the other labels.
+        """
+        dict = self.dicts[self.stPt]
+        if key not in dict:
+            return
+        key_res = key[0] + "res"
+        label = '%s: %+.3fs' % (key, dict[key_res])
+        ax = self.axs[0]
+        # draw text and store references in dictionary
+        self.texts[key] = {}
+        text = ax.text(dict[key], 1 - 0.03 * len(self.axs), '  ' + label,
+                transform=self.trans[0], color=self.dictPhaseColors[key],
+                family='monospace', va="top")
+        self.texts[key][ax] = text
+    
+    def delLabel(self, key):
+        """
+        Delete label for pick of given key in the current stream.
+        
+        See drawLabel().
+        """
+        if key not in self.texts:
+            return
+        for ax, text in self.texts[key].iteritems():
+            ax.texts.remove(text)
+        del self.texts[key]
+    
+    def drawPLabel(self):
+        self.drawLabel('P')
     
     def delPLabel(self):
-        if not hasattr(self, "PLabel"):
-            return
-        if self.PLabel in self.axs[0].texts:
-            self.axs[0].texts.remove(self.PLabel)
-        del self.PLabel
+        self.delLabel('P')
     
     def drawPsynthLabel(self):
-        dict = self.dicts[self.stPt]
-        if not 'Psynth' in dict:
-            return
-        label = 'Psynth: %+.3fs' % dict['Pres']
-        self.PsynthLabel = self.axs[0].text(dict['Psynth'],
-                1 - 0.03 * len(self.axs), '  ' + label, va="top",
-                transform=self.trans[0], color=self.dictPhaseColors['Psynth'])
+        self.drawLabel('Psynth')
     
     def delPsynthLabel(self):
-        if not hasattr(self, "PsynthLabel"):
-            return
-        if self.PsynthLabel in self.axs[0].texts:
-            self.axs[0].texts.remove(self.PsynthLabel)
-        del self.PsynthLabel
+        self.delLabel('Psynth')
     
     def drawSLabel(self):
-        dict = self.dicts[self.stPt]
-        if not 'S' in dict:
-            return
-        label = 'S:'
-        if 'SOnset' in dict:
-            if dict['SOnset'] == 'impulsive':
-                label += 'I'
-            elif dict['SOnset'] == 'emergent':
-                label += 'E'
-            else:
-                label += '?'
-        else:
-            label += '_'
-        if 'SPol' in dict:
-            if dict['SPol'] == 'up':
-                label += 'U'
-            elif dict['SPol'] == 'poorup':
-                label += '+'
-            elif dict['SPol'] == 'down':
-                label += 'D'
-            elif dict['SPol'] == 'poordown':
-                label += '-'
-            else:
-                label += '?'
-        else:
-            label += '_'
-        if 'SWeight' in dict:
-            label += str(dict['SWeight'])
-        else:
-            label += '_'
-        self.SLabel = self.axs[0].text(dict['S'], 1 - 0.01 * len(self.axs),
-                                       '  ' + label, transform = self.trans[0],
-                                       color = self.dictPhaseColors['S'],
-                                       family = 'monospace', va="top")
+        self.drawLabel('S')
     
     def delSLabel(self):
-        if not hasattr(self, "SLabel"):
-            return
-        if self.SLabel in self.axs[0].texts:
-            self.axs[0].texts.remove(self.SLabel)
-        del self.SLabel
+        self.delLabel('S')
     
     def drawSsynthLabel(self):
-        dict = self.dicts[self.stPt]
-        if not 'Ssynth' in dict:
-            return
-        label = 'Ssynth: %+.3fs' % dict['Sres']
-        self.SsynthLabel = self.axs[0].text(dict['Ssynth'],
-                1 - 0.03 * len(self.axs), '  ' + label, va="top",
-                transform=self.trans[0], color=self.dictPhaseColors['Ssynth'])
+        self.drawLabel('Ssynth')
     
     def delSsynthLabel(self):
-        if not hasattr(self, "SsynthLabel"):
-            return
-        if self.SsynthLabel in self.axs[0].texts:
-            self.axs[0].texts.remove(self.SsynthLabel)
-        del self.SsynthLabel
+        self.delLabel('Ssynth')
     
-    def drawMagMinCross1(self):
-        dict = self.dicts[self.stPt]
-        if not 'MagMin1' in dict or len(self.axs) < 2:
-            return
-        # we have to force the graph to the old axes limits because of the
-        # completely new line object creation
-        xlims = list(self.axs[0].get_xlim())
-        ylims = list(self.axs[0].get_ylim())
-        self.MagMinCross1 = self.axs[1].plot([dict['MagMin1T']],
-                [dict['MagMin1']], markersize=self.magMarkerSize,
-                markeredgewidth=self.magMarkerEdgeWidth,
-                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
-                zorder=2000)[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delMagMinCross1(self):
-        if not hasattr(self, "MagMinCross1"):
-            return
-        ax = self.axs[1]
-        if self.MagMinCross1 in ax.lines:
-            ax.lines.remove(self.MagMinCross1)
-    
-    def drawMagMaxCross1(self):
-        dict = self.dicts[self.stPt]
-        if not 'MagMax1' in dict or len(self.axs) < 2:
-            return
-        # we have to force the graph to the old axes limits because of the
-        # completely new line object creation
-        xlims = list(self.axs[0].get_xlim())
-        ylims = list(self.axs[0].get_ylim())
-        self.MagMaxCross1 = self.axs[1].plot([dict['MagMax1T']],
-                [dict['MagMax1']], markersize=self.magMarkerSize,
-                markeredgewidth=self.magMarkerEdgeWidth,
-                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
-                zorder=2000)[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delMagMaxCross1(self):
-        if not hasattr(self, "MagMaxCross1"):
-            return
-        ax = self.axs[1]
-        if self.MagMaxCross1 in ax.lines:
-            ax.lines.remove(self.MagMaxCross1)
-    
-    def drawMagMinCross2(self):
-        dict = self.dicts[self.stPt]
-        if not 'MagMin2' in dict or len(self.axs) < 3:
-            return
-        # we have to force the graph to the old axes limits because of the
-        # completely new line object creation
-        xlims = list(self.axs[0].get_xlim())
-        ylims = list(self.axs[0].get_ylim())
-        self.MagMinCross2 = self.axs[2].plot([dict['MagMin2T']],
-                [dict['MagMin2']], markersize=self.magMarkerSize,
-                markeredgewidth=self.magMarkerEdgeWidth,
-                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
-                zorder=2000)[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delMagMinCross2(self):
-        if not hasattr(self, "MagMinCross2"):
-            return
-        ax = self.axs[2]
-        if self.MagMinCross2 in ax.lines:
-            ax.lines.remove(self.MagMinCross2)
-    
-    def drawMagMaxCross2(self):
-        dict = self.dicts[self.stPt]
-        if not 'MagMax2' in dict or len(self.axs) < 3:
-            return
-        # we have to force the graph to the old axes limits because of the
-        # completely new line object creation
-        xlims = list(self.axs[0].get_xlim())
-        ylims = list(self.axs[0].get_ylim())
-        self.MagMaxCross2 = self.axs[2].plot([dict['MagMax2T']],
-                [dict['MagMax2']], markersize=self.magMarkerSize,
-                markeredgewidth=self.magMarkerEdgeWidth,
-                color=self.dictPhaseColors['Mag'], marker=self.magMinMarker,
-                zorder=2000)[0]
-        self.axs[0].set_xlim(xlims)
-        self.axs[0].set_ylim(ylims)
-    
-    def delMagMaxCross2(self):
-        if not hasattr(self, "MagMaxCross2"):
-            return
-        ax = self.axs[2]
-        if self.MagMaxCross2 in ax.lines:
-            ax.lines.remove(self.MagMaxCross2)
+    def drawMagMarker(self, key):
+        """
+        Draw a magnitude marker for pick of given key in the current stream.
+        Stores the line in a dict to be able to remove the line later on.
+        See drawLine() for details.
 
+        Currently we expect either MagMin1, MagMax1, MagMin2 or MagMax2 so
+        we estimate the axes we plot into by the last character of the key.
+        Furthermore, we expect another key to exist that is key+"T" (e.g.
+        MagMin1T for MagMin1) with the time information.
+        """
+        if key in self.lines:
+            self.delLine(key)
+        d = self.dicts[self.stPt]
+        if key not in d: # or len(self.axs) < 2
+            return
+        ax_num = int(key[-1])
+        ax = self.axs[ax_num]
+        # we have to force the graph to the old axes limits because of the
+        # completely new line object creation
+        xlims = list(ax.get_xlim())
+        ylims = list(ax.get_ylim())
+        keyT = key + "T"
+        self.lines[key] = {}
+        line = ax.plot([d[keyT]], [d[key]], markersize=self.magMarkerSize,
+                markeredgewidth=self.magMarkerEdgeWidth,
+                color=self.dictPhaseColors['Mag'], marker=self.magMarker,
+                zorder=2000)[0]
+        self.lines[key][ax] = line
+        ax.set_xlim(xlims)
+        ax.set_ylim(ylims)
+
+    def delMagMarker(self, key):
+        self.delLine(key)
+    
     def delKey(self, key):
         dict = self.dicts[self.stPt]
         if key not in dict:
@@ -1722,13 +1647,13 @@ class PickingGUI:
                 return
             if phase_type == 'P':
                 self.delLine('P')
-                self.delPLabel()
+                self.delLabel('P')
                 self.delLine('Psynth')
                 dict[phase_type] = pickSample
                 self.drawLine('P')
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.drawLine('Psynth')
-                self.drawPsynthLabel()
+                self.drawLabel('Psynth')
                 #check if the new P pick lies outside of the Error Picks
                 if 'PErr1' in dict and dict['P'] < dict['PErr1']:
                     self.delLine('PErr1')
@@ -1742,14 +1667,14 @@ class PickingGUI:
                 return
             elif phase_type == 'S':
                 self.delLine('S')
-                self.delSLabel()
+                self.delLabel('S')
                 self.delLine('Ssynth')
                 dict['S'] = pickSample
                 dict['Saxind'] = self.axs.index(event.inaxes)
                 self.drawLine('S')
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.drawLine('Ssynth')
-                self.drawSsynthLabel()
+                self.drawLabel('Ssynth')
                 #check if the new S pick lies outside of the Error Picks
                 if 'SErr1' in dict and dict['S'] < dict['SErr1']:
                     self.delLine('SErr1')
@@ -1766,9 +1691,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PWeight'] = 0
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P Pick weight set to %i" % dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1776,9 +1701,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SWeight'] = 0
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i" % dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1788,19 +1713,19 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PWeight'] = 1
                 msg = "P Pick weight set to %i" % dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
-                dict['SWeight']=1
-                self.drawSLabel()
+                self.delLabel('S')
+                dict['SWeight'] = 1
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i" % dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1810,19 +1735,19 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PWeight']=2
                 msg = "P Pick weight set to %i"%dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SWeight']=2
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i"%dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1832,19 +1757,19 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PWeight']=3
                 msg = "P Pick weight set to %i"%dict['PWeight']
                 self.textviewStdOutImproved.write(msg)
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SWeight']=3
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick weight set to %i"%dict['SWeight']
                 self.textviewStdOutImproved.write(msg)
@@ -1854,9 +1779,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PPol']='up'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1864,9 +1789,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SPol']='up'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1876,9 +1801,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PPol']='poorup'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1886,9 +1811,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SPol']='poorup'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1898,9 +1823,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PPol']='down'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1908,9 +1833,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SPol']='down'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1920,9 +1845,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['PPol']='poordown'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P Pick polarity set to %s"%dict['PPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1930,9 +1855,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SPol']='poordown'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S Pick polarity set to %s"%dict['SPol']
                 self.textviewStdOutImproved.write(msg)
@@ -1942,9 +1867,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['POnset'] = 'impulsive'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P pick onset set to %s" % dict['POnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1952,9 +1877,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SOnset'] = 'impulsive'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S pick onset set to %s" % dict['SOnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1964,9 +1889,9 @@ class PickingGUI:
             if phase_type == 'P':
                 if not 'P' in dict:
                     return
-                self.delPLabel()
+                self.delLabel('P')
                 dict['POnset'] = 'emergent'
-                self.drawPLabel()
+                self.drawLabel('P')
                 self.redraw()
                 msg = "P pick onset set to %s" % dict['POnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1974,9 +1899,9 @@ class PickingGUI:
             elif phase_type == 'S':
                 if not 'S' in dict:
                     return
-                self.delSLabel()
+                self.delLabel('S')
                 dict['SOnset'] = 'emergent'
-                self.drawSLabel()
+                self.drawLabel('S')
                 self.redraw()
                 msg = "S pick onset set to %s" % dict['SOnset']
                 self.textviewStdOutImproved.write(msg)
@@ -1988,7 +1913,7 @@ class PickingGUI:
                     self.delLine(key)
                 for key in ['P', 'PWeight', 'PPol', 'POnset', 'PErr1', 'PErr2']:
                     self.delKey(key)
-                self.delPLabel()
+                self.delLabel('P')
                 self.redraw()
                 return
             elif phase_type == 'S':
@@ -1996,7 +1921,7 @@ class PickingGUI:
                     self.delLine(key)
                 for key in ['S', 'SWeight', 'SPol', 'SOnset', 'SErr1', 'SErr2']:
                     self.delKey(key)
-                self.delSLabel()
+                self.delLabel('S')
                 self.redraw()
                 return
 
@@ -2031,7 +1956,7 @@ class PickingGUI:
                     self.textviewStdErrImproved.write(err)
                     return
                 if event.inaxes is self.axs[1]:
-                    self.delMagMinCross1()
+                    self.delMagMarker('MagMin1')
                     ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                     cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                     dict['MagMin1'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
@@ -2041,15 +1966,15 @@ class PickingGUI:
                     dict['MagMin1T'] = tmp_magtime
                     #delete old MagMax Pick, if new MagMin Pick is higher
                     if 'MagMax1' in dict and dict['MagMin1'] > dict['MagMax1']:
-                        self.delMagMaxCross1()
+                        self.delMagMarker('MagMax1')
                         self.delKey('MagMax1')
-                    self.drawMagMinCross1()
+                    self.drawMagMarker('MagMin1')
                     self.redraw()
                     msg = "Minimum for magnitude estimation set: %s at %.3f" \
                             % (dict['MagMin1'], dict['MagMin1T'])
                     self.textviewStdOutImproved.write(msg)
                 elif event.inaxes is self.axs[2]:
-                    self.delMagMinCross2()
+                    self.delMagMarker('MagMin2')
                     ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                     cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                     dict['MagMin2'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
@@ -2059,9 +1984,9 @@ class PickingGUI:
                     dict['MagMin2T'] = tmp_magtime
                     #delete old MagMax Pick, if new MagMin Pick is higher
                     if 'MagMax2' in dict and dict['MagMin2'] > dict['MagMax2']:
-                        self.delMagMaxCross2()
+                        self.delMagMarker('MagMax2')
                         self.delKey('MagMax2')
-                    self.drawMagMinCross2()
+                    self.drawMagMarker('MagMin2')
                     self.redraw()
                     msg = "Minimum for magnitude estimation set: %s at %.3f" \
                             % (dict['MagMin2'], dict['MagMin2T'])
@@ -2079,7 +2004,7 @@ class PickingGUI:
                     self.textviewStdErrImproved.write(err)
                     return
                 if event.inaxes is self.axs[1]:
-                    self.delMagMaxCross1()
+                    self.delMagMarker('MagMax1')
                     ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                     cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                     dict['MagMax1'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
@@ -2089,15 +2014,15 @@ class PickingGUI:
                     dict['MagMax1T'] = tmp_magtime
                     #delete old MagMax Pick, if new MagMax Pick is higher
                     if 'MagMin1' in dict and dict['MagMin1'] > dict['MagMax1']:
-                        self.delMagMinCross1()
+                        self.delMagMarker('MagMin1')
                         self.delKey('MagMin1')
-                    self.drawMagMaxCross1()
+                    self.drawMagMarker('MagMax1')
                     self.redraw()
                     msg = "Maximum for magnitude estimation set: %s at %.3f" \
                             % (dict['MagMax1'], dict['MagMax1T'])
                     self.textviewStdOutImproved.write(msg)
                 elif event.inaxes is self.axs[2]:
-                    self.delMagMaxCross2()
+                    self.delMagMarker('MagMax2')
                     ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                     cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                     dict['MagMax2'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
@@ -2107,9 +2032,9 @@ class PickingGUI:
                     dict['MagMax2T'] = tmp_magtime
                     #delete old MagMax Pick, if new MagMax Pick is higher
                     if 'MagMin2' in dict and dict['MagMin2'] > dict['MagMax2']:
-                        self.delMagMinCross2()
+                        self.delMagMarker('MagMin2')
                         self.delKey('MagMin2')
-                    self.drawMagMaxCross2()
+                    self.drawMagMarker('MagMax2')
                     self.redraw()
                     msg = "Maximum for magnitude estimation set: %s at %.3f" \
                             % (dict['MagMax2'], dict['MagMax2T'])
@@ -2119,15 +2044,13 @@ class PickingGUI:
         if event.key == keys['delMagMinMax']:
             if phase_type == 'Mag':
                 if event.inaxes is self.axs[1]:
-                    self.delMagMaxCross1()
-                    self.delMagMinCross1()
-                    self.delKey('MagMin1')
-                    self.delKey('MagMax1')
+                    for key in ['MagMin1', 'MagMax1']:
+                        self.delMagMarker(key)
+                        self.delKey(key)
                 elif event.inaxes is self.axs[2]:
-                    self.delMagMaxCross2()
-                    self.delMagMinCross2()
-                    self.delKey('MagMin2')
-                    self.delKey('MagMax2')
+                    for key in ['MagMin2', 'MagMax2']:
+                        self.delMagMarker(key)
+                        self.delKey(key)
                 else:
                     return
                 self.redraw()
@@ -2292,12 +2215,10 @@ class PickingGUI:
             fhandle.close()
         except:
             return
-        self.delKey('Psynth')
-        self.delKey('Ssynth')
-        self.delLine('Psynth')
-        self.delLine('Ssynth')
-        self.delPsynthLabel()
-        self.delSsynthLabel()
+        for key in ['Psynth', 'Ssynth']:
+            self.delKey(key)
+            self.delLine(key)
+            self.delLabel(key)
         for phase in phaseList[1:]:
             # example for a synthetic pick line from 3dloc:
             # RJOB P 2009 12 27 10 52 59.425 -0.004950 298.199524 136.000275
@@ -2339,9 +2260,9 @@ class PickingGUI:
                             dict['Ssynth'] = phSeconds
                             dict['Sres'] = phResid
         self.drawLine('Psynth')
-        self.drawPsynthLabel()
+        self.drawLabel('Psynth')
         self.drawLine('Ssynth')
-        self.drawSsynthLabel()
+        self.drawLabel('Ssynth')
         self.redraw()
 
     def do3dLoc(self):
@@ -4178,27 +4099,19 @@ class PickingGUI:
         for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
                     'Ssynth']:
             self.delLine(key)
-        self.delPLabel()
-        self.delPsynthLabel()
-        self.delSLabel()
-        self.delSsynthLabel()
-        self.delMagMaxCross1()
-        self.delMagMinCross1()
-        self.delMagMaxCross2()
-        self.delMagMinCross2()
+        for key in ['P', 'Psynth', 'S', 'Ssynth']:
+            self.delLabel(key)
+        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
+            self.delMagMarker(key)
 
     def drawAllItems(self):
         for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
                     'Ssynth']:
             self.drawLine(key)
-        self.drawPLabel()
-        self.drawPsynthLabel()
-        self.drawSLabel()
-        self.drawSsynthLabel()
-        self.drawMagMaxCross1()
-        self.drawMagMinCross1()
-        self.drawMagMaxCross2()
-        self.drawMagMinCross2()
+        for key in ['P', 'Psynth', 'S', 'Ssynth']:
+            self.drawLabel(key)
+        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
+            self.drawMagMarker(key)
     
     def getEventFromSeishub(self, resource_name):
         #document = xml.xpath(".//document_id")
