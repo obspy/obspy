@@ -48,12 +48,11 @@ from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolb
 
 
 SEISMIC_PHASES = ['P', 'S']
-PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black",
-        'Ssynth': "black", 'Mag': "green", 'PErr1': "red",
-        'PErr2': "red", 'SErr1': "blue", 'SErr2': "blue"}
-PHASE_LINESTYLES = {'P': "-", 'S': "-", 'Psynth': "--",
-        'Ssynth': "--", 'PErr1': "-", 'PErr2': "-", 'SErr1': "-",
-        'SErr2': "-"}
+PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
+        'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
+        'SErr2': "blue"}
+PHASE_LINESTYLES = {'P': "-", 'S': "-", 'Psynth': "--", 'Ssynth': "--",
+        'PErr1': "-", 'PErr2': "-", 'SErr1': "-", 'SErr2': "-"}
 PHASE_LINEHEIGHT_PERC = {'P': 1, 'S': 1, 'Psynth': 1, 'Ssynth': 1,
         'PErr1': 0.75, 'PErr2': 0.75, 'SErr1': 0.75, 'SErr2': 0.75}
 KEY_FULLNAMES = {'P': "P pick", 'Psynth': "synthetic P pick",
@@ -74,7 +73,7 @@ AXVLINEWIDTH = 1.2
 #dictionary for key-bindings
 KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
         'setMagMin': 'alt', 'setMagMax': ' ', 'switchPhase': 'control',
-        'delMagMinMax': 'escape', 'switchWheelZoom': 'z', 'switchPan': 'p',
+        'delMagMinMax': 'alt', 'switchWheelZoom': 'z', 'switchPan': 'p',
         'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
@@ -84,6 +83,30 @@ POLARITY_CHARS = {'up': "U", 'down': "D", 'poorup': "+", 'poordown': "-"}
 ONSET_CHARS = {'impulsive': "I", 'emergent': "E",
                'implusive': "I"} # XXX some old events have a typo there... =)
 
+
+def check_keybinding_conflicts(keys):
+    """
+    check for conflicting keybindings. 
+    we have to check twice, because keys for setting picks and magnitudes
+    are allowed to interfere...
+    """
+    for ignored_key_list in [['setMagMin', 'setMagMax', 'delMagMinMax'],
+                             ['setPick', 'setPickError', 'delPick']]:
+        tmp_keys = keys.copy()
+        tmp_keys2 = {}
+        for ignored_key in ignored_key_list:
+            tmp_keys.pop(ignored_key)
+        while tmp_keys:
+            key, item = tmp_keys.popitem()
+            if isinstance(item, dict):
+                while item:
+                    k, v = item.popitem()
+                    tmp_keys2["_".join([key, k])] = v
+            else:
+                tmp_keys2[key] = item
+        if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
+            err = "Interfering keybindings. Please check variable KEYS"
+            raise Exception(err)
 
 #XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
 # we have to do this, so the focus always remains with our matplotlib
@@ -285,26 +308,8 @@ class ObsPyckGUI:
         self.flagWheelZoom = True #Switch use of mousewheel for zooming
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
-        # check for conflicting keybindings. 
-        # we have to check twice, because keys for setting picks and magnitudes
-        # are allowed to interfere...
-        for ignored_key_sets in [['setMagMin', 'setMagMax', 'delMagMinMax'],
-                                 ['setPick', 'setPickError', 'delPick']]:
-            tmp_keys = KEYS.copy()
-            tmp_keys2 = {}
-            for ignored_key in ignored_keysets:
-                tmp_keys.pop(ignored_key)
-            while tmp_keys:
-                key, item = tmp_keys.popitem()
-                if isinstance(item, dict):
-                    while item:
-                        k, v = item.popitem()
-                        tmp_keys2["_".join([key, k])] = v
-                else:
-                    tmp_keys2[key] = value
-            if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
-               err = "Interfering keybindings. Please check variable KEYS"
-               raise Exception(err)
+
+        check_keybinding_conflicts(KEYS)
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
 
@@ -322,7 +327,7 @@ class ObsPyckGUI:
             self.nllocBinaryName = 'NLLoc_64bit'
         else:
             msg = "Warning: Could not determine architecture (32/64bit). " + \
-                  "Using 32bit 3dloc binary."
+                  "Using 32bit binaries."
             warnings.warn(msg)
             self.threeDlocBinaryName = '3dloc_pitsa_32bit'
             self.hyp2000BinaryName = 'hyp2000_32bit'
@@ -339,6 +344,10 @@ class ObsPyckGUI:
         # copy 3dloc files to temp directory
         subprocess.call('cp -P %s/* %s &> /dev/null' % \
                 (self.threeDlocPath, self.tmp_dir), shell=True)
+        # XXX using shutil. problem: dst dir must not exist, need to change
+        # XXX tmp_dir structure to subfolders for each program...
+        # shutil.copytree(self.threeDlocPath, os.path.join(self.tmp_dir, "3dloc"),
+        #                 symlinks=True)
         self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
                 % (self.threeDlocOutfile, self.threeDlocInfile)
         self.threeDlocCall = 'export D3_VELOCITY=%s/;' % \
@@ -4388,6 +4397,8 @@ def main():
         for key, value in KEYS.iteritems():
             print "%s: \"%s\"" % (key, value)
         return
+
+    check_keybinding_conflicts(KEYS)
 
     # If local option is set we read the locally stored traces.
     # Just for testing purposes, sent event xmls always overwrite the same xml.
