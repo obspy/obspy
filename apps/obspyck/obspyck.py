@@ -46,6 +46,44 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
 from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
 
+
+PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black",
+        'Ssynth': "black", 'Mag': "green", 'PErr1': "red",
+        'PErr2': "red", 'SErr1': "blue", 'SErr2': "blue"}
+PHASE_LINESTYLES = {'P': "-", 'S': "-", 'Psynth': "--",
+        'Ssynth': "--", 'PErr1': "-", 'PErr2': "-", 'SErr1': "-",
+        'SErr2': "-"}
+PHASE_LINEHEIGHT_PERC = {'P': 1, 'S': 1, 'Psynth': 1, 'Ssynth': 1,
+        'PErr1': 0.75, 'PErr2': 0.75, 'SErr1': 0.75, 'SErr2': 0.75}
+KEY_FULLNAMES = {'P': "P pick", 'Psynth': "synthetic P pick",
+        'PWeight': "P pick weight", 'PPol': "P pick polarity",
+        'POnset': "P pick onset", 'PErr1': "left P error pick",
+        'PErr2': "right P error pick", 'S': "S pick",
+        'Ssynth': "synthetic S pick", 'SWeight': "S pick weight",
+        'SPol': "S pick polarity", 'SOnset': "S pick onset",
+        'SErr1': "left S error pick", 'SErr2': "right S error pick",
+        'MagMin1': "Magnitude minimum estimation pick",
+        'MagMax1': "Magnitude maximum estimation pick",
+        'MagMin2': "Magnitude minimum estimation pick",
+        'MagMax2': "Magnitude maximum estimation pick"}
+#Estimating the maximum/minimum in a sample-window around click
+MAG_PICKWINDOW = 10
+MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
+AXVLINEWIDTH = 1.2
+#dictionary for key-bindings
+KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
+        'setMagMin': 'alt', 'setMagMax': ' ', 'switchPhase': 'control',
+        'delMagMinMax': 'escape', 'switchWheelZoom': 'z', 'switchPan': 'p',
+        'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
+        'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
+        'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
+        'setOnset': {'i': "impulsive", 'e': "emergent"}}
+# the following dicts' keys should be all lower case, we use "".lower() later
+POLARITY_CHARS = {'up': "U", 'down': "D", 'poorup': "+", 'poordown': "-"}
+ONSET_CHARS = {'impulsive': "I", 'emergent': "E",
+               'implusive': "I"} # XXX some old events have a typo there... =)
+
+
 #XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
 # we have to do this, so the focus always remains with our matplotlib
 # inset and all events are directed to the matplotlib canvas...
@@ -233,7 +271,7 @@ def formatXTicklabels(x, pos):
     else:
         return "%.3f" % x
 
-class PickingGUI:
+class ObsPyckGUI:
         
     ###########################################################################
     # Start of list of event handles that get connected to GUI Elements       #
@@ -760,57 +798,18 @@ class PickingGUI:
         self.flagWheelZoom = True #Switch use of mousewheel for zooming
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
-        self.dictPhaseColors = {'P': "red", 'S': "blue", 'Psynth': "black",
-                'Ssynth': "black", 'Mag': "green", 'PErr1': "red",
-                'PErr2': "red", 'SErr1': "blue", 'SErr2': "blue"}
-        self.dictPhaseLinestyles = {'P': "-", 'S': "-", 'Psynth': "--",
-                'Ssynth': "--", 'PErr1': "-", 'PErr2': "-", 'SErr1': "-",
-                'SErr2': "-"}
-        self.dictPhaseLineheightPerc = {'P': 1, 'S': 1, 'Psynth': 1, 'Ssynth': 1,
-                'PErr1': 0.75, 'PErr2': 0.75, 'SErr1': 0.75, 'SErr2': 0.75}
-        self.dictKeyFullNames = {'P': "P pick", 'Psynth': "synthetic P pick",
-                'PWeight': "P pick weight", 'PPol': "P pick polarity",
-                'POnset': "P pick onset", 'PErr1': "left P error pick",
-                'PErr2': "right P error pick", 'S': "S pick",
-                'Ssynth': "synthetic S pick", 'SWeight': "S pick weight",
-                'SPol': "S pick polarity", 'SOnset': "S pick onset",
-                'SErr1': "left S error pick", 'SErr2': "right S error pick",
-                'MagMin1': "Magnitude minimum estimation pick",
-                'MagMax1': "Magnitude maximum estimation pick",
-                'MagMin2': "Magnitude minimum estimation pick",
-                'MagMax2': "Magnitude maximum estimation pick"}
-        #Estimating the maximum/minimum in a sample-window around click
-        self.magPickWindow = 10
-        self.magMarker = 'x'
-        self.magMarkerEdgeWidth = 1.8
-        self.magMarkerSize = 20
-        self.axvlinewidths = 1.2
-        #dictionary for key-bindings
-        self.dictKeybindings = {'setPick': 'alt', 'setPickError': ' ',
-                'delPick': 'escape', 'setMagMin': 'alt', 'setMagMax': ' ',
-                'switchPhase': 'control', 'delMagMinMax': 'escape',
-                'switchWheelZoom': 'z', 'switchPan': 'p', 'prevStream': 'y',
-                'nextStream': 'x', 'setWeight0': '0', 'setWeight1': '1',
-                'setWeight2': '2', 'setWeight3': '3',
-                #'setWeight4': '4', 'setWeight5': '5',
-                'setPolUp': 'u', 'setPolPoorUp': '+', 'setPolDown': 'd',
-                'setPolPoorDown': '-', 'setOnsetImpulsive': 'i',
-                'setOnsetEmergent': 'e', 'switchWheelZoomAxis': 'shift'}
         # check for conflicting keybindings. 
         # we check twice, because keys for setting picks and magnitudes
         # are allowed to interfere...
-        tmp_keys = self.dictKeybindings.copy()
+        tmp_keys = KEYS.copy()
         tmp_keys.pop('setMagMin')
         tmp_keys.pop('setMagMax')
         tmp_keys.pop('delMagMinMax')
-        if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
-            msg = "Interfering keybindings. Please check variable " + \
-                  "self.dictKeybindings"
-            raise(msg)
-        if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
-            msg = "Interfering keybindings. Please check variable " + \
-                  "self.dictKeybindings"
-            raise(msg)
+        # XXX the duplicate check in keybindings is deactivated because we
+        # XXX changed the structure (nested dicts)... should be reimplemented!
+        # XXX if len(set(tmp_keys.keys())) != len(set(tmp_keys.values())):
+        # XXX    msg = "Interfering keybindings. Please check variable KEYS"
+        # XXX    raise(msg)
 
         self.tmp_dir = tempfile.mkdtemp() + '/'
 
@@ -922,12 +921,6 @@ class PickingGUI:
         self.server['User'] = self.options.user # "obspyck"
         self.server['Password'] = self.options.password # "obspyck"
         
-        # If keybindings option is set only show keybindings and exit
-        if self.options.keybindings:
-            for key, value in self.dictKeybindings.iteritems():
-                print "%s: \"%s\"" % (key, value)
-            return
-
         # Return, if no streams are given
         if not streams:
             return
@@ -1319,13 +1312,12 @@ class PickingGUI:
         if key not in d:
             return
         self.lines[key] = {}
-        ymin = 1.0 - self.dictPhaseLineheightPerc[key]
-        ymax = self.dictPhaseLineheightPerc[key]
+        ymin = 1.0 - PHASE_LINEHEIGHT_PERC[key]
+        ymax = PHASE_LINEHEIGHT_PERC[key]
         # draw lines and store references in dictionary
         for ax in self.axs:
-            line = ax.axvline(d[key], color=self.dictPhaseColors[key],
-                    linewidth=self.axvlinewidths,
-                    linestyle=self.dictPhaseLinestyles[key],
+            line = ax.axvline(d[key], color=PHASE_COLORS[key],
+                    linewidth=AXVLINEWIDTH, linestyle=PHASE_LINESTYLES[key],
                     ymin=ymin, ymax=ymax)
             self.lines[key][ax] = line
     
@@ -1352,34 +1344,22 @@ class PickingGUI:
         Currently expects as keys either "P" or "S".
         """
         # delegate drawing of synthetic picks, this is different...
-        if key in ['Psynth', 'Ssynth']:
+        if 'synth' in key:
             return self.drawSynthLabel(key)
         dict = self.dicts[self.stPt]
         if key not in dict:
             return
         label = key + ':'
+        # try to recognize and map the onset string to a character
         key_onset = key + 'Onset'
         if key_onset in dict:
-            if dict[key_onset] == 'impulsive':
-                label += 'I'
-            elif dict[key_onset] == 'emergent':
-                label += 'E'
-            else:
-                label += '?'
+            label += ONSET_CHARS.get(dict[key_onset].lower(), "?")
         else:
             label += '_'
+        # try to recognize and map the polarity string to a character
         key_pol = key + 'Pol'
         if key_pol in dict:
-            if dict[key_pol] == 'up':
-                label += 'U'
-            elif dict[key_pol] == 'poorup':
-                label += '+'
-            elif dict[key_pol] == 'down':
-                label += 'D'
-            elif dict[key_pol] == 'poordown':
-                label += '-'
-            else:
-                label += '?'
+            label += POLARITY_CHARS.get(dict[key_pol].lower(), "?")
         else:
             label += '_'
         key_weight = key + 'Weight'
@@ -1391,7 +1371,7 @@ class PickingGUI:
         # draw text and store references in dictionary
         self.texts[key] = {}
         text = ax.text(dict[key], 1 - 0.01 * len(self.axs), '  ' + label,
-                transform=self.trans[0], color=self.dictPhaseColors[key],
+                transform=self.trans[0], color=PHASE_COLORS[key],
                 family='monospace', va="top")
         self.texts[key][ax] = text
 
@@ -1409,7 +1389,7 @@ class PickingGUI:
         # draw text and store references in dictionary
         self.texts[key] = {}
         text = ax.text(dict[key], 1 - 0.03 * len(self.axs), '  ' + label,
-                transform=self.trans[0], color=self.dictPhaseColors[key],
+                transform=self.trans[0], color=PHASE_COLORS[key],
                 family='monospace', va="top")
         self.texts[key][ax] = text
     
@@ -1453,9 +1433,9 @@ class PickingGUI:
         ylims = list(ax.get_ylim())
         keyT = key + "T"
         self.lines[key] = {}
-        line = ax.plot([d[keyT]], [d[key]], markersize=self.magMarkerSize,
-                markeredgewidth=self.magMarkerEdgeWidth,
-                color=self.dictPhaseColors['Mag'], marker=self.magMarker,
+        line = ax.plot([d[keyT]], [d[key]], markersize=MAG_MARKER['size'],
+                markeredgewidth=MAG_MARKER['edgewidth'],
+                color=PHASE_COLORS['Mag'], marker=MAG_MARKER['marker'],
                 zorder=2000)[0]
         self.lines[key][ax] = line
         ax.set_xlim(xlims)
@@ -1464,12 +1444,16 @@ class PickingGUI:
     def delMagMarker(self, key):
         self.delLine(key)
     
+    def updateMagMarker(self, key):
+        self.delMagMarker(key)
+        self.drawMagMarker(key)
+    
     def delKey(self, key):
         dict = self.dicts[self.stPt]
         if key not in dict:
             return
         del dict[key]
-        msg = "%s deleted." % self.dictKeyFullNames[key]
+        msg = "%s deleted." % KEY_FULLNAMES[key]
         self.textviewStdOutImproved.write(msg)
         # we have to take care of some special cases:
         if key == 'S':
@@ -1602,7 +1586,6 @@ class PickingGUI:
         if self.togglebuttonShowMap.get_active():
             return
         phase_type = self.comboboxPhaseType.get_active_text()
-        keys = self.dictKeybindings
         dict = self.dicts[self.stPt]
         
         #######################################################################
@@ -1610,10 +1593,10 @@ class PickingGUI:
         #######################################################################
         # For some key events (picking events) we need information on the x/y
         # position of the cursor:
-        if event.key in (keys['setPick'], keys['setPickError'],
-                         keys['setMagMin'], keys['setMagMax']):
+        if event.key in (KEYS['setPick'], KEYS['setPickError'],
+                         KEYS['setMagMin'], KEYS['setMagMax']):
             # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs:
+            if event.inaxes not in self.axs:
                 return
             #We want to round from the picking location to
             #the time value of the nearest time sample:
@@ -1625,265 +1608,80 @@ class PickingGUI:
             # in the seismogram array:
             xpos = pickSample * samp_rate
 
-        if event.key == keys['setPick']:
+        if event.key == KEYS['setPick']:
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs:
                 return
-            if phase_type == 'P':
+            if phase_type in ['P', 'S']:
                 dict[phase_type] = pickSample
-                for key in ['P', 'Psynth']:
+                depending_keys = (phase_type + k for k in ['', 'synth'])
+                for key in depending_keys:
                     self.updateLine(key)
                     self.updateLabel(key)
                 #check if the new P pick lies outside of the Error Picks
-                if 'PErr1' in dict and dict['P'] < dict['PErr1']:
-                    self.delLine('PErr1')
-                    self.delKey('PErr1')
-                if 'PErr2' in dict and dict['P'] > dict['PErr2']:
-                    self.delLine('PErr2')
-                    self.delKey('PErr2')
+                key1 = phase_type + "Err1"
+                key2 = phase_type + "Err2"
+                if key1 in dict and dict[phase_type] < dict[key1]:
+                    self.delLine(key1)
+                    self.delKey(key1)
+                if key2 in dict and dict[phase_type] > dict[key2]:
+                    self.delLine(key2)
+                    self.delKey(key2)
                 self.redraw()
-                msg = "%s set at %.3f" % (self.dictKeyFullNames['P'],
-                                          dict['P'])
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                dict['S'] = pickSample
-                dict['Saxind'] = self.axs.index(event.inaxes)
-                for key in ['S', 'Ssynth']:
-                    self.updateLine(key)
-                    self.updateLabel(key)
-                #check if the new S pick lies outside of the Error Picks
-                if 'SErr1' in dict and dict['S'] < dict['SErr1']:
-                    self.delLine('SErr1')
-                    self.delKey('SErr1')
-                if 'SErr2' in dict and dict['S'] > dict['SErr2']:
-                    self.delLine('SErr2')
-                    self.delKey('SErr2')
-                self.redraw()
-                msg = "%s set at %.3f" % (self.dictKeyFullNames['S'],
-                                          dict['S'])
+                msg = "%s set at %.3f" % (KEY_FULLNAMES[phase_type],
+                                          dict[phase_type])
                 self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setWeight0']:
-            if phase_type == 'P':
-                if not 'P' in dict:
+        if event.key in KEYS['setWeight'].keys():
+            if phase_type in ['P', 'S']:
+                if phase_type not in dict:
                     return
-                dict['PWeight'] = 0
-                self.updateLabel('P')
+                key = phase_type + "Weight"
+                dict[key] = KEYS['setWeight'][event.key]
+                self.updateLabel(phase_type)
                 self.redraw()
-                msg = "P Pick weight set to %i" % dict['PWeight']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SWeight'] = 0
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick weight set to %i" % dict['SWeight']
+                msg = "%s set to %i" % (KEY_FULLNAMES[key], dict[key])
                 self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setWeight1']:
-            if phase_type == 'P':
-                if not 'P' in dict:
+        if event.key in KEYS['setPol'].keys():
+            if phase_type in ['P', 'S']:
+                if phase_type not in dict:
                     return
-                dict['PWeight'] = 1
-                msg = "P Pick weight set to %i" % dict['PWeight']
-                self.textviewStdOutImproved.write(msg)
-                self.updateLabel('P')
+                key = phase_type + "Pol"
+                dict[key] = KEYS['setPol'][event.key]
+                self.updateLabel(phase_type)
                 self.redraw()
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SWeight'] = 1
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick weight set to %i" % dict['SWeight']
+                msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
                 self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setWeight2']:
-            if phase_type == 'P':
-                if not 'P' in dict:
+        if event.key in KEYS['setOnset'].keys():
+            if phase_type in ['P', 'S']:
+                if phase_type not in dict:
                     return
-                dict['PWeight']=2
-                msg = "P Pick weight set to %i"%dict['PWeight']
-                self.textviewStdOutImproved.write(msg)
-                self.updateLabel('P')
+                key = phase_type + "Onset"
+                dict[key] = KEYS['setOnset'][event.key]
+                self.updateLabel(phase_type)
                 self.redraw()
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SWeight']=2
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick weight set to %i"%dict['SWeight']
+                msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
                 self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setWeight3']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['PWeight']=3
-                msg = "P Pick weight set to %i"%dict['PWeight']
-                self.textviewStdOutImproved.write(msg)
-                self.updateLabel('P')
-                self.redraw()
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SWeight']=3
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick weight set to %i"%dict['SWeight']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setPolUp']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['PPol']='up'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P Pick polarity set to %s"%dict['PPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SPol']='up'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick polarity set to %s"%dict['SPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setPolPoorUp']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['PPol']='poorup'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P Pick polarity set to %s"%dict['PPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SPol']='poorup'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick polarity set to %s"%dict['SPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setPolDown']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['PPol']='down'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P Pick polarity set to %s"%dict['PPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SPol']='down'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick polarity set to %s"%dict['SPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setPolPoorDown']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['PPol']='poordown'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P Pick polarity set to %s"%dict['PPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SPol']='poordown'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S Pick polarity set to %s"%dict['SPol']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setOnsetImpulsive']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['POnset'] = 'impulsive'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P pick onset set to %s" % dict['POnset']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SOnset'] = 'impulsive'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S pick onset set to %s" % dict['SOnset']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['setOnsetEmergent']:
-            if phase_type == 'P':
-                if not 'P' in dict:
-                    return
-                dict['POnset'] = 'emergent'
-                self.updateLabel('P')
-                self.redraw()
-                msg = "P pick onset set to %s" % dict['POnset']
-                self.textviewStdOutImproved.write(msg)
-                return
-            elif phase_type == 'S':
-                if not 'S' in dict:
-                    return
-                dict['SOnset'] = 'emergent'
-                self.updateLabel('S')
-                self.redraw()
-                msg = "S pick onset set to %s" % dict['SOnset']
-                self.textviewStdOutImproved.write(msg)
-                return
-
-        if event.key == keys['delPick']:
-            if phase_type == 'P':
-                for key in ['P', 'PErr1', 'PErr2']:
+        if event.key == KEYS['delPick']:
+            if phase_type in ['P', 'S']:
+                depending_keys = (phase_type + k for k in ['', 'Err1', 'Err2'])
+                for key in depending_keys:
                     self.delLine(key)
-                for key in ['P', 'PWeight', 'PPol', 'POnset', 'PErr1', 'PErr2']:
+                depending_keys = (phase_type + k for k in ['', 'Weight', 'Pol', 'Onset', 'Err1', 'Err2'])
+                for key in depending_keys:
                     self.delKey(key)
-                self.delLabel('P')
-                self.redraw()
-                return
-            elif phase_type == 'S':
-                for key in ['S', 'SErr1', 'SErr2']:
-                    self.delLine(key)
-                for key in ['S', 'SWeight', 'SPol', 'SOnset', 'SErr1', 'SErr2']:
-                    self.delKey(key)
-                self.delLabel('S')
+                self.delLabel(phase_type)
                 self.redraw()
                 return
 
-        if event.key == keys['setPickError']:
+        if event.key == KEYS['setPickError']:
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs:
                 return
@@ -1898,13 +1696,13 @@ class PickingGUI:
                 dict[key] = pickSample
                 self.updateLine(key)
                 self.redraw()
-                msg = "%s pick set at %.3f" % (key, dict[key])
+                msg = "%s set at %.3f" % (KEY_FULLNAMES[key], dict[key])
                 self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setMagMin']:
+        if event.key == KEYS['setMagMin']:
             # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs:
+            if not event.inaxes in self.axs[1:3]:
                 return
             if phase_type == 'Mag':
                 if len(self.axs) < 2:
@@ -1912,47 +1710,40 @@ class PickingGUI:
                           "minimum of 2 axes."
                     self.textviewStdErrImproved.write(err)
                     return
+                # determine which dict keys to work with
+                key = 'MagMin'
+                key_other = 'MagMax'
                 if event.inaxes is self.axs[1]:
-                    self.delMagMarker('MagMin1')
-                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                    dict['MagMin1'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    # save time of magnitude minimum in seconds
-                    tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    tmp_magtime = tmp_magtime / samp_rate
-                    dict['MagMin1T'] = tmp_magtime
-                    #delete old MagMax Pick, if new MagMin Pick is higher
-                    if 'MagMax1' in dict and dict['MagMin1'] > dict['MagMax1']:
-                        self.delMagMarker('MagMax1')
-                        self.delKey('MagMax1')
-                    self.drawMagMarker('MagMin1')
-                    self.redraw()
-                    msg = "Minimum for magnitude estimation set: %s at %.3f" \
-                            % (dict['MagMin1'], dict['MagMin1T'])
-                    self.textviewStdOutImproved.write(msg)
+                    key += '1'
+                    key_other += '1'
                 elif event.inaxes is self.axs[2]:
-                    self.delMagMarker('MagMin2')
-                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                    dict['MagMin2'] = np.min(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    # save time of magnitude minimum in seconds
-                    tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    tmp_magtime = tmp_magtime / samp_rate
-                    dict['MagMin2T'] = tmp_magtime
-                    #delete old MagMax Pick, if new MagMin Pick is higher
-                    if 'MagMax2' in dict and dict['MagMin2'] > dict['MagMax2']:
-                        self.delMagMarker('MagMax2')
-                        self.delKey('MagMax2')
-                    self.drawMagMarker('MagMin2')
-                    self.redraw()
-                    msg = "Minimum for magnitude estimation set: %s at %.3f" \
-                            % (dict['MagMin2'], dict['MagMin2T'])
-                    self.textviewStdOutImproved.write(msg)
+                    key += '2'
+                    key_other += '2'
+                keyT = key + 'T'
+                keyT_other = key_other + 'T'
+                # do the actual work
+                ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
+                dict[key] = np.min(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                # save time of magnitude minimum in seconds
+                tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                tmp_magtime = tmp_magtime / samp_rate
+                dict[keyT] = tmp_magtime
+                #delete old MagMax Pick, if new MagMin Pick is higher
+                if key_other in dict and dict[key] > dict[key_other]:
+                    self.delMagMarker(key_other)
+                    self.delKey(key_other)
+                    self.delKey(keyT_other)
+                self.updateMagMarker(key)
+                self.redraw()
+                msg = "%s set: %s at %.3f" % (KEY_FULLNAMES[key], dict[key],
+                                              dict[keyT])
+                self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['setMagMax']:
+        if event.key == KEYS['setMagMax']:
             # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs:
+            if not event.inaxes in self.axs[1:3]:
                 return
             if phase_type == 'Mag':
                 if len(self.axs) < 2:
@@ -1960,45 +1751,38 @@ class PickingGUI:
                           "minimum of 2 axes."
                     self.textviewStdErrImproved.write(err)
                     return
+                # determine which dict keys to work with
+                key = 'MagMax'
+                key_other = 'MagMin'
                 if event.inaxes is self.axs[1]:
-                    self.delMagMarker('MagMax1')
-                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                    dict['MagMax1'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    # save time of magnitude maximum in seconds
-                    tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    tmp_magtime = tmp_magtime / samp_rate
-                    dict['MagMax1T'] = tmp_magtime
-                    #delete old MagMax Pick, if new MagMax Pick is higher
-                    if 'MagMin1' in dict and dict['MagMin1'] > dict['MagMax1']:
-                        self.delMagMarker('MagMin1')
-                        self.delKey('MagMin1')
-                    self.drawMagMarker('MagMax1')
-                    self.redraw()
-                    msg = "Maximum for magnitude estimation set: %s at %.3f" \
-                            % (dict['MagMax1'], dict['MagMax1T'])
-                    self.textviewStdOutImproved.write(msg)
+                    key += '1'
+                    key_other += '1'
                 elif event.inaxes is self.axs[2]:
-                    self.delMagMarker('MagMax2')
-                    ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
-                    cutoffSamples = xpos - self.magPickWindow #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
-                    dict['MagMax2'] = np.max(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    # save time of magnitude maximum in seconds
-                    tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-self.magPickWindow:xpos+self.magPickWindow])
-                    tmp_magtime = tmp_magtime / samp_rate
-                    dict['MagMax2T'] = tmp_magtime
-                    #delete old MagMax Pick, if new MagMax Pick is higher
-                    if 'MagMin2' in dict and dict['MagMin2'] > dict['MagMax2']:
-                        self.delMagMarker('MagMin2')
-                        self.delKey('MagMin2')
-                    self.drawMagMarker('MagMax2')
-                    self.redraw()
-                    msg = "Maximum for magnitude estimation set: %s at %.3f" \
-                            % (dict['MagMax2'], dict['MagMax2T'])
-                    self.textviewStdOutImproved.write(msg)
+                    key += '2'
+                    key_other += '2'
+                keyT = key + 'T'
+                keyT_other = key_other + 'T'
+                # do the actual work
+                ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMaxT estimation!
+                dict[key] = np.max(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                # save time of magnitude maximum in seconds
+                tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                tmp_magtime = tmp_magtime / samp_rate
+                dict[keyT] = tmp_magtime
+                #delete old MagMin Pick, if new MagMax Pick is lower
+                if key_other in dict and dict[key] < dict[key_other]:
+                    self.delMagMarker(key_other)
+                    self.delKey(key_other)
+                    self.delKey(keyT_other)
+                self.updateMagMarker(key)
+                self.redraw()
+                msg = "%s set: %s at %.3f" % (KEY_FULLNAMES[key], dict[key],
+                                              dict[keyT])
+                self.textviewStdOutImproved.write(msg)
                 return
 
-        if event.key == keys['delMagMinMax']:
+        if event.key == KEYS['delMagMinMax']:
             if phase_type == 'Mag':
                 if event.inaxes is self.axs[1]:
                     for key in ['MagMin1', 'MagMax1']:
@@ -2016,7 +1800,7 @@ class PickingGUI:
         # End of key events related to picking                                #
         #######################################################################
         
-        if event.key == keys['switchWheelZoom']:
+        if event.key == KEYS['switchWheelZoom']:
             self.flagWheelZoom = not self.flagWheelZoom
             if self.flagWheelZoom:
                 msg = "Mouse wheel zooming activated"
@@ -2026,10 +1810,10 @@ class PickingGUI:
                 self.textviewStdOutImproved.write(msg)
             return
 
-        if event.key == keys['switchWheelZoomAxis']:
+        if event.key == KEYS['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = True
 
-        if event.key == keys['switchPan']:
+        if event.key == KEYS['switchPan']:
             self.toolbar.pan()
             self.canv.widgetlock.release(self.toolbar)
             self.redraw()
@@ -2038,7 +1822,7 @@ class PickingGUI:
             return
         
         # iterate the phase type combobox
-        if event.key == keys['switchPhase']:
+        if event.key == KEYS['switchPhase']:
             combobox = self.comboboxPhaseType
             phase_count = len(combobox.get_model())
             phase_next = (combobox.get_active() + 1) % phase_count
@@ -2047,25 +1831,16 @@ class PickingGUI:
             self.textviewStdOutImproved.write(msg)
             return
             
-        if event.key == keys['prevStream']:
-            #would be nice if the button would show the click, but it is
-            #too brief to be seen
-            #self.buttonPreviousStream.set_state(True)
+        if event.key == KEYS['prevStream']:
             self.buttonPreviousStream.clicked()
-            #self.buttonPreviousStream.set_state(False)
             return
 
-        if event.key == keys['nextStream']:
-            #would be nice if the button would show the click, but it is
-            #too brief to be seen
-            #self.buttonNextStream.set_state(True)
+        if event.key == KEYS['nextStream']:
             self.buttonNextStream.clicked()
-            #self.buttonNextStream.set_state(False)
             return
     
     def keyrelease(self, event):
-        keys = self.dictKeybindings
-        if event.key == keys['switchWheelZoomAxis']:
+        if event.key == KEYS['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = False
 
     # Define zooming for the mouse scroll wheel
@@ -2137,21 +1912,21 @@ class PickingGUI:
 
     def updateMulticursorColor(self):
         phase_name = self.comboboxPhaseType.get_active_text()
-        color = self.dictPhaseColors[phase_name]
+        color = PHASE_COLORS[phase_name]
         for l in self.multicursor.lines:
             l.set_color(color)
 
     def updateButtonPhaseTypeColor(self):
         phase_name = self.comboboxPhaseType.get_active_text()
         style = self.buttonPhaseType.get_style().copy()
-        color = gtk.gdk.color_parse(self.dictPhaseColors[phase_name])
+        color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
         style.bg[gtk.STATE_INSENSITIVE] = color
         self.buttonPhaseType.set_style(style)
 
     #def updateComboboxPhaseTypeColor(self):
     #    phase_name = self.comboboxPhaseType.get_active_text()
     #    props = self.comboboxPhaseType.get_cells()[0].props
-    #    color = gtk.gdk.color_parse(self.dictPhaseColors[phase_name])
+    #    color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
     #    props.cell_background_gdk = color
 
     def updateStreamNumberLabel(self):
@@ -3273,7 +3048,7 @@ class PickingGUI:
         if 'Standarderror' in dO:
             self.axEventMap.text(xpos, ypos, "\n\n\n\n Residual: %.3f s" % \
                     dO['Standarderror'], va='top', ha='left',
-                    color=self.dictPhaseColors['P'],
+                    color=PHASE_COLORS['P'],
                     transform=self.axEventMap.transAxes,
                     family='monospace')
         if 'Magnitude' in dM and 'Uncertainty' in dM:
@@ -3282,7 +3057,7 @@ class PickingGUI:
             self.netMagText = self.axEventMap.text(xpos, ypos,
                     self.netMagLabel, va='top', ha='left',
                     transform=self.axEventMap.transAxes,
-                    color=self.dictPhaseColors['Mag'], family='monospace')
+                    color=PHASE_COLORS['Mag'], family='monospace')
         errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
                 width=errLon, height=errLat, angle=0, fill=False)
         self.axEventMap.add_artist(errorell)
@@ -3309,14 +3084,14 @@ class PickingGUI:
                     presinfo += '  %s' % dict['PPol']
                 self.axEventMap.text(dict['StaLon'], dict['StaLat'], presinfo,
                                      va='top', family='monospace',
-                                     color=self.dictPhaseColors['P'])
+                                     color=PHASE_COLORS['P'])
             if 'Sres' in dict:
                 sresinfo = '\n\n\n %+0.3fs' % dict['Sres']
                 if 'SPol' in dict:
                     sresinfo += '  %s' % dict['SPol']
                 self.axEventMap.text(dict['StaLon'], dict['StaLat'], sresinfo,
                                      va='top', family='monospace',
-                                     color=self.dictPhaseColors['S'])
+                                     color=PHASE_COLORS['S'])
             if 'Mag' in dict:
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(dict['StaLon'])
@@ -3328,7 +3103,7 @@ class PickingGUI:
                                      '\n\n\n\n  %0.2f (%s)' % \
                                      (dict['Mag'], dict['MagChannel']),
                                      va='top', family='monospace',
-                                     color=self.dictPhaseColors['Mag'])
+                                     color=PHASE_COLORS['Mag'])
             if len(self.scatterMagLon) > 0 :
                 self.scatterMag = self.axEventMap.scatter(self.scatterMagLon,
                         self.scatterMagLat, s=150, marker='v', color='',
@@ -3535,7 +3310,7 @@ class PickingGUI:
 
         for i, dict in enumerate(self.dicts):
             sta = dict['Station']
-            if not 'P' in dict and not 'S' in dict:
+            if 'P' not in dict and 'S' not in dict:
                 continue
             if 'P' in dict:
                 t = self.streams[i][0].stats.starttime
@@ -4033,7 +3808,7 @@ class PickingGUI:
         # we need to delete all station magnitude information from all dicts
         for dict in self.dicts:
             for key in dict.keys():
-                if not key in dont_delete:
+                if key not in dont_delete:
                     del dict[key]
             dict['MagUse'] = True
         self.dictOrigin = {}
@@ -4049,15 +3824,6 @@ class PickingGUI:
         self.focMechCurrent = None
         self.focMechCount = None
 
-    def delAllItems(self):
-        for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
-                    'Ssynth']:
-            self.delLine(key)
-        for key in ['P', 'Psynth', 'S', 'Ssynth']:
-            self.delLabel(key)
-        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
-            self.delMagMarker(key)
-
     def drawAllItems(self):
         for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
                     'Ssynth']:
@@ -4067,6 +3833,19 @@ class PickingGUI:
         for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
             self.drawMagMarker(key)
     
+    def delAllItems(self):
+        for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
+                    'Ssynth']:
+            self.delLine(key)
+        for key in ['P', 'Psynth', 'S', 'Ssynth']:
+            self.delLabel(key)
+        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
+            self.delMagMarker(key)
+
+    def updateAllItems(self):
+        self.delAllItems()
+        self.drawAllItems()
+
     def getEventFromSeishub(self, resource_name):
         #document = xml.xpath(".//document_id")
         #document_id = document[self.seishubEventCurrent].text
@@ -4597,11 +4376,13 @@ def main():
     # If keybindings option is set, don't prepare streams.
     # We then only print the keybindings and exit.
     if options.keybindings:
-        streams = None
-        client = None
+        for key, value in KEYS.iteritems():
+            print "%s: \"%s\"" % (key, value)
+        return
+
     # If local option is set we read the locally stored traces.
     # Just for testing purposes, sent event xmls always overwrite the same xml.
-    elif options.local:
+    if options.local:
         streams=[]
         streams.append(read('20091227_105240_Z.RJOB'))
         streams[0].append(read('20091227_105240_N.RJOB')[0])
@@ -4662,7 +4443,7 @@ def main():
         # sort streams by station name
         streams = sorted(streams, key=lambda st: st[0].stats['station'])
 
-    PickingGUI(client, streams, options)
+    ObsPyckGUI(client, streams, options)
 
 if __name__ == "__main__":
     main()
