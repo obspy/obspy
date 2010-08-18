@@ -6,7 +6,7 @@ The obspy.seishub.client test suite.
 
 from obspy.seishub import Client
 import unittest
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, AttribDict
 
 
 class ClientTestCase(unittest.TestCase):
@@ -183,6 +183,31 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(data['poles'][4],
                          (-131.03999999999999 + 467.29000000000002j))
         self.assertEqual(data['gain'], 60077000.0)
+
+    def test_getCoordinates(self):
+        t = UTCDateTime("2010-05-03T23:59:30")
+        data = self.client.station.getCoordinates(network_id="BW",
+                station_id="UH1", datetime=t, location_id="")
+        result = {'elevation': 500.0, 'latitude': 48.081493000000002,
+                  'longitude': 11.636093000000001}
+        self.assertEqual(data, result)
+
+    def test_getWaveform_with_metadata(self):
+        # metadata change during t1 -> t2 !
+        t1 = UTCDateTime("2010-05-03T23:59:30")
+        t2 = UTCDateTime("2010-05-04T00:00:30")
+        client = self.client
+        self.assertRaises(Exception, client.waveform.getWaveform, "BW",
+                "UH1", "", "EH*", t1, t2, getPAZ=True, getCoordinates=True)
+        st = client.waveform.getWaveform("BW", "UH1", "", "EH*", t1, t2,
+                getPAZ=True, getCoordinates=True, metadata_timecheck=False)
+        result = AttribDict({'zeros': [0j, 0j, 0j], 'sensitivity': 251650000.0,
+                'poles': [(-0.88+0.88j), (-0.88-0.88j), (-0.22+0j)],
+                'gain': 1.0})
+        self.assertEqual(st[0].stats.paz, result)
+        result = AttribDict({'latitude': 48.081493000000002,
+                'elevation': 500.0, 'longitude': 11.636093000000001})
+        self.assertEqual(st[0].stats.coordinates, result)
 
     def untested(self):
         """

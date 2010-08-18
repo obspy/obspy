@@ -18,7 +18,9 @@ import sys
 import time
 import urllib2
 import urllib
-from obspy.core.util import BAND_CODE
+import os
+import warnings
+from obspy.core.util import BAND_CODE, deprecated
 from obspy.core import UTCDateTime
 
 
@@ -169,7 +171,8 @@ class _WaveformMapperClient(object):
 
     def getWaveform(self, network_id=None, station_id=None,
             location_id=None, channel_id=None, start_datetime=None,
-            end_datetime=None, apply_filter=False, **kwargs):
+            end_datetime=None, apply_filter=False, getPAZ=False,
+            getCoordinates=False, metadata_timecheck=True, **kwargs):
         """
         Gets a ObsPy Stream object.
 
@@ -190,6 +193,19 @@ class _WaveformMapperClient(object):
         :param end_datetime: end time of requested data
         :type apply_filter: Boolean
         :param apply_filter: apply filter, default False.
+        :type getPAZ: Boolean
+        :param getPAZ: Fetch PAZ information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type getCoordinates: Boolean
+        :param getCoordinates: Fetch coordinate information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type metadata_timecheck: Boolean
+        :param metadata_timecheck: For ``getPAZ`` and ``getCoordinates`` check
+            if metadata information is changing from start to end time. Raises
+            an Exception if this is the case. This can be deactivated to save
+            time.
         :return: :class:`~obspy.core.stream.Stream`
         """
         # NOTHING goes ABOVE this line!
@@ -221,6 +237,34 @@ class _WaveformMapperClient(object):
             raise Exception("No waveform data available")
 
         stream.trim(start, end)
+        if getPAZ:
+            paz = self.client.station.getPAZ(network_id=network_id,
+                    station_id=station_id, location_id=location_id,
+                    channel_id=channel_id, datetime=start_datetime)
+            if metadata_timecheck:
+                paz_check = self.client.station.getPAZ(network_id=network_id,
+                        station_id=station_id, location_id=location_id,
+                        channel_id=channel_id, datetime=end_datetime)
+                if paz != paz_check:
+                    msg = "PAZ information changing from start time to " + \
+                          "end time."
+                    raise Exception(msg)
+            for tr in stream:
+                tr.stats['paz'] = paz.copy()
+        if getCoordinates:
+            coords = self.client.station.getCoordinates(network_id=network_id,
+                    station_id=station_id, location_id=location_id,
+                    datetime=start_datetime)
+            if metadata_timecheck:
+                coords_check = self.client.station.getCoordinates(
+                        network_id=network_id, station_id=station_id,
+                        location_id=location_id, datetime=end_datetime)
+                if coords != coords_check:
+                    msg = "Coordinate information changing from start " + \
+                          "time to end time."
+                    raise Exception(msg)
+            for tr in stream:
+                tr.stats['coordinates'] = coords.copy()
         return stream
 
     def getPreview(self, network_id=None, station_id=None,
@@ -335,6 +379,41 @@ class _StationMapperClient(_BaseRESTClient):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
+    def getCoordinates(self, network_id, station_id, datetime, location_id=''):
+        """
+        Get coordinate information.
+
+        Returns a dictionary with coordinate information for specified station
+        at the specified time.
+
+        :type network_id: String
+        :param network_id: Network code, e.g. 'BW'.
+        :type station_id: String
+        :param station_id: Station code, e.g. 'MANZ'.
+        :type location_id: String
+        :param location_id: Location id, e.g. ''.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+                time :class:`~obspy.core.utcdatetime.UTCDateTime`
+                compatible string.
+        :param datetime: Time for which the PAZ information is requested, e.g.
+                '2010-01-01 12:00:00'.
+        :return: Dictionary containing station coordinate information.
+        """
+        # NOTHING goes ABOVE this line!
+        kwargs = {} #no **kwargs so use empty dict
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
+
+        metadata = self.getList(**kwargs)
+        if len(metadata) > 1:
+            warnings.warn("Received more than one metadata set. Using first.")
+        metadata = metadata[0]
+        coords = {}
+        for key in ['latitude', 'longitude', 'elevation']:
+            coords[key] = metadata[key]
+        return coords
+
     def getPAZ(self, network_id, station_id, datetime, location_id='',
                channel_id='', seismometer_gain=False):
         """
@@ -356,8 +435,10 @@ class _StationMapperClient(_BaseRESTClient):
         :param station_id: Station id, e.g. 'RJOB'.
         :param location_id: Location id, e.g. ''.
         :param channel_id: Channel id, e.g. 'EHE'.
-        :param datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
-            time string.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+                time :class:`~obspy.core.utcdatetime.UTCDateTime`
+                compatible string.
+        :param datetime: Time for which the PAZ information is requested.
         :param seismometer_gain: If True add also seismometer gain to
             dictionary
         :return: Dictionary containing zeros, poles, gain and sensitivity.
@@ -374,6 +455,8 @@ class _StationMapperClient(_BaseRESTClient):
             if t in location_id:
                 location_id = ''
 
+        if len(station_list) > 1:
+            warnings.warn("Received more than one PAZ file. Using first.")
         xml_doc = station_list[0]
         # request station resource
         res = self.client.station.getXMLResource(xml_doc['resource_name'])
@@ -453,13 +536,24 @@ class _EventMapperClient(_BaseRESTClient):
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
-
+    
+    @deprecated
     def getKml(self, nolabels=False, **kwargs):
+        """
+        Deprecated. Please use
+        :meth:`~obspy.seishub.client._EventMapperClient.getKML()` instead.
+        """
+        return self.getKML(nolabels=nolabels, **kwargs)
+
+    def getKML(self, nolabels=False, **kwargs):
         """
         Posts an event.getList() and returns the results as a KML file. For
         optional arguments, see docstring of
         :meth:`~obspy.seishub.client._EventMapperClient.getList()`
-
+        
+        :type nolabels: Boolean
+        :param nolabels: Hide labels of events in KML. Can be useful with large
+                data sets.
         :return: String containing KML information of all matching events. This
                  string can be written to a file and loaded into e.g. Google
                  Earth.
@@ -557,6 +651,30 @@ class _EventMapperClient(_BaseRESTClient):
         # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
 
+    def saveKML(self, filename, overwrite=False, nolabels=False, **kwargs):
+        """
+        Posts an event.getList() and writes the results as a KML file. For
+        optional arguments, see docstring of
+        :meth:`~obspy.seishub.client._EventMapperClient.getList()`
+        
+        :type filename: String
+        :param filename: Filename (complete path) to save KML to.
+        :type overwrite: Boolean
+        :param overwrite: Overwrite existing file, otherwise if file exists an
+                Exception is raised.
+        :type nolabels: Boolean
+        :param nolabels: Hide labels of events in KML. Can be useful with large
+                data sets.
+        :return: String containing KML information of all matching events. This
+                 string can be written to a file and loaded into e.g. Google
+                 Earth.
+        """
+        if not overwrite and os.path.lexists(filename):
+            raise OSError("File %s exists and overwrite=False." % filename)
+        kml_string = self.getKML(nolabels=False, **kwargs)
+        open(filename, "wt").write(kml_string)
+        return
+        
 
 if __name__ == '__main__':
     import doctest
