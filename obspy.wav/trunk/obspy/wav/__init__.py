@@ -7,8 +7,8 @@ data are squeezed to audible frequencies.
 :copyright: The ObsPy Development Team (devs@obspy.org)
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Reading using obspy.core
-------------------------
+Reading
+-------
 Similar to reading any other waveform data format using obspy.core:
 
 (Lines 2&3 are just to get the absolute path of our test data)
@@ -37,8 +37,8 @@ The data is stored in the data attribute.
 >>> st[0].data
 array([ 64,  78,  99, ..., 106, 103, 102], dtype=uint8)
 
-Writing using obspy.core
-------------------------
+Writing
+-------
 is also straight forward.
 
 >>> st.write('myfile.wave', format='WAV', framerate=7000) #doctest: +SKIP

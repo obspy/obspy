@@ -10,8 +10,8 @@ ctypes.
 :copyright: The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license: GNU General Public License (GPLv2)
 
-Reading via obspy.core
-----------------------
+Reading
+-------
 Similar to reading any other waveform data format using obspy.core:
 
 (Lines 2&3 are just to get the absolute path of our test data)
@@ -45,8 +45,8 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 >>> print st[0].data
 [2787 2776 2774 ..., 2850 2853 2853]
 
-Writing via obspy.core
-----------------------
+Writing
+-------
 WARNING: No matter what is written in the Stream[i].stats.mseed['dataquality']
 field, the dataquality in the resulting Mini-SEED file will always be 'D'.
 

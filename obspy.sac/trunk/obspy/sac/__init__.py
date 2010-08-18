@@ -9,8 +9,8 @@ numpy and obspy.core.
 :copyright: The ObsPy Development Team (devs@obspy.org) & C. J. Annon
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Reading using obspy.core
-------------------------
+Reading
+-------
 Similiar to reading any other waveform data format using obspy.core:
 (Lines 2&3 are just to get the path to our test data)
 
@@ -76,20 +76,12 @@ The data is stored in the data attribut.
 >>> st[0].data #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 array([ -8.74227766e-08,  -3.09016973e-01,..., 3.09007347e-01], dtype=float32)
 
-Writing using obspy.core
-------------------------
+Writing
+-------
 Writing is also straight forward. All changes on the data as well as in
 stats and stats['sac'] are written with the following command to a file:
 
 >>> st.write('tmp.sac', format='SAC') #doctest: +SKIP
-
-
-
-
-Additonal methods of obspy.sac
-------------------------------
-More SAC-specific functionality is available if you import the SacIO
-class from the obspy.sac module.
 """
 
 from obspy.core.util import _getVersionString

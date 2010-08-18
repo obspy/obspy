@@ -59,7 +59,6 @@ Writing is also done in the usual way:
 or 
 
 >>> st.write('file.asc', format = 'SH_ASC') #doctest: +SKIP
-
 """
 
 from obspy.core.util import _getVersionString
