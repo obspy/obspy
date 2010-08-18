@@ -113,6 +113,9 @@ class Client(object):
 
 class _WaveformMapperClient(object):
     """
+    Waveform class to access the seishub waveform-mapper_
+
+    .. _waveform-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
     """
     def __init__(self, client):
         self.client = client
@@ -169,7 +172,7 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [node.__dict__ for node in root.getchildren()]
 
-    def getWaveform(self, network_id=None, station_id=None,
+    def getWaveform(self, network_id, station_id,
             location_id=None, channel_id=None, start_datetime=None,
             end_datetime=None, apply_filter=False, getPAZ=False,
             getCoordinates=False, metadata_timecheck=True, **kwargs):
@@ -359,6 +362,9 @@ class _BaseRESTClient(object):
 
 class _StationMapperClient(_BaseRESTClient):
     """
+    Station class to access the seishub station-mapper_
+
+    .. _station-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/station.py
     """
     package = 'seismology'
     resourcetype = 'station'
@@ -512,6 +518,9 @@ class _StationMapperClient(_BaseRESTClient):
 
 class _EventMapperClient(_BaseRESTClient):
     """
+    Event class to access the seishub event-mapper_
+
+    .. _event-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'

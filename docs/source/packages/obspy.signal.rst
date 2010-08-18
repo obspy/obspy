@@ -9,6 +9,7 @@
       :toctree: .
       :nosignatures:
 
+        ~array_analysis.array_rotation_strain
         ~trigger.arPick
         ~filter.bandpass
         ~filter.bandstop
@@ -31,7 +32,6 @@
         ~util.utlLonLat
         ~util.xcorr
         ~trigger.zdetect
-        ~array_analysis.array_rotation_strain
 
     .. comment to end block
 
