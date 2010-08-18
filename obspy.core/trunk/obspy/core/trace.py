@@ -778,9 +778,14 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.endtime) * \
-                           self.stats.sampling_rate)
+            # use starttime here to avoid rounding up in _ltrim and _rtrim
+            # see also #127
+            delta = round((endtime - self.stats.starttime) *\
+                           self.stats.sampling_rate) + 1 - self.stats.npts
         else:
+            # solution for #127, however some tests need to be changed
+            #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
+            #                       self.stats.sampling_rate, 7)))
             delta = int(math.floor(round((endtime - self.stats.endtime) * \
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):

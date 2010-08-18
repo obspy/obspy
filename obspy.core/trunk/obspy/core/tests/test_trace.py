@@ -998,7 +998,6 @@ class TraceTestCase(unittest.TestCase):
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
 
 
-
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

@@ -1267,6 +1267,29 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.endtime.timestamp, 3.0)
         self.assertEqual(st[1].stats.endtime.timestamp, 3.4)
 
+
+    def test_trimNearestSampleConsistentSize(self):
+        """
+        Test case for #127. It ensures that the sample sizes stay
+        consistent after trimming. That is that _ltrim and _rtrim 
+        round in the same direction.
+        """
+        data=np.zeros(10)
+        t=UTCDateTime(0)
+        traces = []
+        for delta in (0, 0.25, 0.5, 0.75, 1):
+            traces.append(Trace(data.copy()))
+            traces[-1].stats.starttime = t + delta
+        st=Stream(traces)
+        st.trim(t+3.5, t+6.5)
+        start = [4.0, 4.25, 4.5, 3.75, 4.0]
+        end = [6.0, 6.25, 6.50, 5.75, 6.0]
+        for i in xrange(len(st)):
+            self.assertEquals(3, st[i].stats.npts)
+            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
+            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+
+
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
 
