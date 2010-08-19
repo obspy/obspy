@@ -9,8 +9,9 @@ rate must stay the same of each station, but can vary between the stations.
 
 Supported formats: MSEED, GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN. If the
 format option (-f) is specified, the reading is significantly faster,
-otherwise the format is autodetected
+otherwise the format is autodetected.
 """
+# supported must be in the last three line, line (28)
 
 import sys
 from obspy.core import read
@@ -23,7 +24,8 @@ def main():
     parser = OptionParser(__doc__.strip())
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
-                      help="Format log file to test report")
+                      help="Optional, the file format.\n" + \
+                      " ".join(__doc__.split('\n')[-4:]))
     (_, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given

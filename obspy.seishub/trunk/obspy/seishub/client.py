@@ -121,11 +121,22 @@ class _WaveformMapperClient(object):
         self.client = client
 
     def getNetworkIds(self, **kwargs):
+        """
+        Gets a list of network ids
+
+        :return: List of containing network ids
+        """
         url = '/seismology/waveform/getNetworkIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
     def getStationIds(self, network_id=None, **kwargs):
+        """
+        Gets a list of station ids
+
+        :param network_id: Network code, e.g. 'BW'.
+        :return: List of containing station ids
+        """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
@@ -135,6 +146,13 @@ class _WaveformMapperClient(object):
         return [str(node['station']) for node in root.getchildren()]
 
     def getLocationIds(self, network_id=None, station_id=None, **kwargs):
+        """
+        Gets a list of location ids
+
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :return: List of containing location ids
+        """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
@@ -144,6 +162,13 @@ class _WaveformMapperClient(object):
         return [str(node['location']) for node in root.getchildren()]
 
     def getChannelIds(self, network_id=None, station_id=None,
+        """
+        Gets a list of channel ids
+
+        :param network_id: Network code, e.g. 'BW'.
+        :param station_id: Station code, e.g. 'MANZ'.
+        :return: List of containing channel ids
+        """
             location_id=None, **kwargs):
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -270,7 +295,7 @@ class _WaveformMapperClient(object):
                 tr.stats['coordinates'] = coords.copy()
         return stream
 
-    def getPreview(self, network_id=None, station_id=None,
+    def getPreview(self, network_id, station_id,
             location_id=None, channel_id=None, start_datetime=None,
             end_datetime=None, trace_ids=None, **kwargs):
         """
