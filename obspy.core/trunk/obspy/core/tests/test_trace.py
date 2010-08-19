@@ -472,9 +472,9 @@ class TraceTestCase(unittest.TestCase):
         temp2 = deepcopy(tr)
         temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111),
                    nearest_sample=False)
-        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
+        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
         temp = deepcopy(tr)
@@ -542,9 +542,9 @@ class TraceTestCase(unittest.TestCase):
         temp2 = deepcopy(tr)
         temp2.trim(UTCDateTime(111.21111), UTCDateTime(113.01111),
                    nearest_sample=False)
-        np.testing.assert_array_equal(temp.data, temp2.data[:-1])
+        np.testing.assert_array_equal(temp.data, temp2.data[1:-1])
         # Check stuff.
-        self.assertEqual(temp.stats.starttime, UTCDateTime(111.21111))
+        self.assertEqual(temp.stats.starttime, UTCDateTime(111.23111))
         self.assertEqual(temp.stats.endtime, UTCDateTime(112.991110))
         # Check if the data is the same.
         temp = deepcopy(tr)

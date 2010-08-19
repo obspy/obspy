@@ -724,7 +724,7 @@ class Trace(object):
             delta = round((starttime - self.stats.starttime) * \
                                           self.stats.sampling_rate)
         else:
-            delta = int(math.floor(round((starttime - self.stats.starttime) * \
+            delta = -1 * int(math.floor(round((self.stats.starttime - starttime) * \
                                           self.stats.sampling_rate, 7)))
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
