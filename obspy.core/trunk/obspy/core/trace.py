@@ -778,10 +778,8 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            # use starttime here to avoid rounding up in _ltrim and _rtrim
-            # see also #127
             delta = round((endtime - self.stats.starttime) *\
-                           self.stats.sampling_rate) + 1 - self.stats.npts
+                           self.stats.sampling_rate) - self.stats.npts + 1
         else:
             # solution for #127, however some tests need to be changed
             #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \

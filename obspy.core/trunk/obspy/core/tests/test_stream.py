@@ -1268,7 +1268,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[1].stats.endtime.timestamp, 3.4)
 
 
-    def test_trimNearestSampleConsistentSize(self):
+    def test_trimConsistentStartEndtimeNearestSample(self):
         """
         Test case for #127. It ensures that the sample sizes stay
         consistent after trimming. That is that _ltrim and _rtrim 
@@ -1289,6 +1289,72 @@ class StreamTestCase(unittest.TestCase):
             self.assertEquals(st[i].stats.starttime.timestamp, start[i])
             self.assertEquals(st[i].stats.endtime.timestamp, end[i])
 
+
+    def test_trimConsistentStartEndtimeNearestSamplePadded(self):
+        """
+        XXX: Known Bug, currently fails
+
+        Test case for #127. It ensures that the sample sizes stay
+        consistent after trimming. That is that _ltrim and _rtrim 
+        round in the same direction. Padded version.
+        """
+        data=np.zeros(10)
+        t=UTCDateTime(0)
+        traces = []
+        for delta in (0, 0.25, 0.5, 0.75, 1):
+            traces.append(Trace(data.copy()))
+            traces[-1].stats.starttime = t + delta
+        st=Stream(traces)
+        st.trim(t-3.5, t+16.5, pad=True)
+        start = [-4.0, -3.75, -4.5, -4.25, -4.0]
+        end = [17.0, 17.25, 16.50, 16.75, 17.0]
+        for i in xrange(len(st)):
+            self.assertEquals(23, st[i].stats.npts)
+            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
+            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+
+
+    def test_trimConsistentStartEndtime(self):
+        """
+        Test case for #127. It ensures that the sample start and entimes
+        stay consistent after trimming.
+        """
+        data=np.zeros(10)
+        t=UTCDateTime(0)
+        traces = []
+        for delta in (0, 0.25, 0.5, 0.75, 1):
+            traces.append(Trace(data.copy()))
+            traces[-1].stats.starttime = t + delta
+        st=Stream(traces)
+        st.trim(t+3.5, t+6.5, nearest_sample=False)
+        start = [4.00, 4.25, 3.50, 3.75, 4.00]
+        end = [6.00, 6.25, 6.50, 5.75, 6.00]
+        npts = [3, 3, 4, 3, 3]
+        for i in xrange(len(st)):
+            self.assertEquals(st[i].stats.npts, npts[i])
+            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
+            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+
+    def test_trimConsistentStartEndtimePad(self):
+        """
+        Test case for #127. It ensures that the sample start and entimes
+        stay consistent after trimming. Padded version.
+        """
+        data=np.zeros(10)
+        t=UTCDateTime(0)
+        traces = []
+        for delta in (0, 0.25, 0.5, 0.75, 1):
+            traces.append(Trace(data.copy()))
+            traces[-1].stats.starttime = t + delta
+        st=Stream(traces)
+        st.trim(t-3.5, t+16.5, nearest_sample=False, pad=True)
+        start = [-3.00, -2.75, -3.50, -3.25, -3.00]
+        end = [16.00, 16.25, 16.50, 15.75, 16.00]
+        npts = [20, 20, 21, 20, 20]
+        for i in xrange(len(st)):
+            self.assertEquals(st[i].stats.npts, npts[i])
+            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
+            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
