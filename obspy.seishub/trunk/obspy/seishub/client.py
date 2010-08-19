@@ -162,6 +162,7 @@ class _WaveformMapperClient(object):
         return [str(node['location']) for node in root.getchildren()]
 
     def getChannelIds(self, network_id=None, station_id=None,
+                      location_id=None, **kwargs):
         """
         Gets a list of channel ids
 
@@ -169,7 +170,6 @@ class _WaveformMapperClient(object):
         :param station_id: Station code, e.g. 'MANZ'.
         :return: List of containing channel ids
         """
-            location_id=None, **kwargs):
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
@@ -179,7 +179,7 @@ class _WaveformMapperClient(object):
         return [str(node['channel']) for node in root.getchildren()]
 
     def getLatency(self, network_id=None, station_id=None,
-            location_id=None, channel_id=None, **kwargs):
+                   location_id=None, channel_id=None, **kwargs):
         """
         Gets a list of network latency values.
 
