@@ -12,7 +12,7 @@ obspy.signal installer
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-import os
+import os, numpy as np
 import platform
 
 
@@ -39,10 +39,12 @@ symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
            if s.strip() != '']
 lib = MyExtension('libsignal',
                   define_macros=macros,
-                  libraries=[],
+                  library_dirs = [os.path.dirname(np.fft.__file__)],
+                  libraries = [':fftpack_lite.so'],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
                            src + 'coordtrans.c', src + 'pk_mbaer.c',
-                           src + 'filt_util.c', src + 'arpicker.c'],
+                           src + 'filt_util.c', src + 'arpicker.c',
+                           src + 'bbfk.c'],
                   export_symbols=symbols,
                   extra_link_args=[])
 

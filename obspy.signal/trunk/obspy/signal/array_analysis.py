@@ -2,10 +2,10 @@
 #-------------------------------------------------------------------
 # Filename: array.py
 #  Purpose: Functions for Array Analysis
-#   Author: Martin van Driel
+#   Author: Martin van Driel, Moritz Beyreuther
 #    Email: driel@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2010 Martin van Driel
+# Copyright (C) 2010 Martin van Driel, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
 Functions for Array Analysis
@@ -17,8 +17,11 @@ Functions for Array Analysis
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import math
 import warnings
+import ctypes as C
 import numpy as np
+from obspy.signal.util import utlGeoKm, lib
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -588,3 +591,263 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     out['ts_M'] = ts_M
 
     return out
+
+
+def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thres,
+          vel_thres, frqlow, frqhigh, stime, etime, prewhiten):
+    """
+    Returns list of newstart, time, power, abspow, azimut, slow
+
+    :param sll_x: slowness x min (lower)
+    :param slm_x: slowness x max
+    :param sll_y: slowness y min (lower)
+    :param slm_y: slowness y max
+    :param sl_s: slowness step
+    :param win_len: Sliding window length in seconds
+    :param win_frac: Fraction of sliding window to use for step
+    :param freqlow: lower frequency for fk
+    :param freqhigh: higher frequency for fk
+    :param vel_thres: Threshold for velocity
+    :param stime: Starttime of interest
+    :param etime: Endtime of interest
+    :param prewhiten: Do prewhitening
+    """
+    counter = 0
+    newstart = 0
+    res = []
+    eotr = True
+    #XXX data must be zero mean, corrected and bandpass filtered
+    #XXX check that sampling rates do not vary more than 1e-3
+
+    grdpts_x = int(((slm_x - sll_x)/sl_s + 0.5) + 1)
+    grdpts_y = int(((slm_y - sll_y)/sl_s + 0.5) + 1)
+
+    geometry, counter = get_geometry(stream)
+    time_shift_table_numpy, counter = get_timeshift(geometry, sll_x, sll_y,
+                                                    sl_s, grdpts_x, grdpts_y)
+    time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
+
+    # fillup the double trace pointer
+    nstat = len(stream)
+    trace = (C.c_void_p * nstat)()
+    ntrace = np.empty(nstat, dtype="int32", order="C")
+    for i, tr in enumerate(stream):
+        # assure data are of correct type
+        tr.data = np.require(tr.data, 'float64', ['C_CONTIGUOUS'])
+        trace[i] = tr.data.ctypes.data_as(C.c_void_p)
+        ntrace[i] = len(tr.data)
+
+    # offset of arrays
+    spoint, epoint = get_spoint(stream, stime, etime)
+    #
+    # loop with a sliding window over the data trace array and apply bbfk
+    #
+    df = stream[0].stats.sampling_rate
+    nsamp = int(win_len * df)
+    nstep = int(nsamp * win_frac)
+    newstart = stime
+    offset = 0
+    while eotr:
+        buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
+                   frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
+        abspow, power, ix, iy, ifkq = buf
+
+        # here we compute baz, slow
+        slow_x = sll_x + ix * sl_s
+        slow_y = sll_y + iy * sl_s
+
+        slow = np.sqrt(slow_x**2 + slow_y**2)
+        if slow < 1e-8:
+            slow = 1e-8
+        azimut = 180*math.atan2(slow_x,slow_y)/math.pi
+        if power > semb_thres and 1./slow > vel_thres:
+            res.append([newstart, power, abspow, azimut, slow])
+        if (spoint[0] + offset + nstep + nsamp) >= ntrace[0] or \
+                (newstart + nsamp / df) > etime:
+            eotr = False
+        offset += nstep
+        counter += 1
+
+        newstart += nstep/df
+    return res
+
+
+def bbfk(spoint, offset, trace, stat_tshift_table, flow, fhigh, digfreq,
+         nsamp, nstat, prewhiten, grdpts_x, grdpts_y):
+    """
+    :int *spoint: Start sample point, probably in julian seconds
+    :int offset: The Offset which is counted upwards nwin for shifting array
+    :float **trace: The trace matrix, containing the time serious for various stations
+    :float ***stat_tshift_table: The time shift table for each station for the slowness grid
+    :float flow: Lower frequency for fk
+    :float fhigh: Higher frequency for fk
+    :float digfreq: The common sampling rate in group
+    :int nsamp: Number of samples
+    :int nstat: Number of stations
+    :int prewhiten: Integer regulating prewhitening
+    :int grdpts_x: Number of grid points in x direction to loop over
+    :int grdpts_y: Number of grid points in y direction to loop over
+
+    :Returns:
+    :float *abs: The absolut power, output variable printed to file
+    :float *rel: The relative power, output variable printed to file
+    :int *ix: ix output for backazimuth calculation
+    :int *iy: iy output for backazimuth calculation
+    :int *qual: Output variable for qualitiy, not further used
+    """
+    lib.bbfk.argtypes = [ \
+        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+        C.c_int,
+        C.POINTER(C.c_void_p),
+        C.c_void_p,
+        C.POINTER(C.c_float), 
+        C.POINTER(C.c_float),
+        C.POINTER(C.c_int),
+        C.POINTER(C.c_int),
+        C.POINTER(C.c_int),
+        C.c_float, C.c_float, C.c_float,
+        C.c_int, C.c_int, C.c_int, C.c_int, C.c_int
+    ]
+    lib.bbfk.restype = C.c_int
+
+    # allocate output variables
+    abspow = C.c_float()
+    power = C.c_float()
+    ix = C.c_int()
+    iy = C.c_int()
+    ifkq = C.c_int()
+
+    lib.bbfk(spoint, offset, C.cast(trace, C.POINTER(C.c_void_p)),
+             C.byref(stat_tshift_table), C.byref(abspow), C.byref(power),
+             C.byref(ix), C.byref(iy), C.byref(ifkq), flow, fhigh, digfreq,
+             nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
+
+    return abspow.value, power.value, ix.value, iy.value, ifkq.value
+
+
+def get_geometry(stream):
+    """
+    Method to calculate the array geometry and the center coordinates in km
+
+    :param stream: Stream object, the trace.stats dict like class must
+            contain the 'lat', 'lon' and 'elev' items/attributes
+    :return: Returns the geometry of the stations as 2d numpy.ndarray
+            The first dimension are the station indexes with the same order
+            as the traces in the stream object. The second index are the
+            values of [lat, lon, elev]
+    """
+    counter = 0
+    center_lat = 0.
+    center_lon = 0.
+    center_h = 0.
+    nstat = len(stream)
+
+    for tr in stream:
+        center_lat += tr.stats.lat
+        center_lon += tr.stats.lon
+        center_h   += tr.stats.elev
+
+    center_lat /= nstat
+    center_lon /= nstat
+    center_h   /= nstat
+
+    geometry = np.empty((nstat+1,3))
+    for i, tr in enumerate(stream):
+        x, y = utlGeoKm(center_lon, center_lat, 
+                        tr.stats.lon, tr.stats.lat)
+        geometry[i][0] = x
+        geometry[i][1] = y
+        geometry[i][2] = tr.stats.elev - center_h
+        counter += 1
+
+    geometry[nstat][0] = center_lon
+    geometry[nstat][1] = center_lat
+    geometry[nstat][2] = center_h
+
+    return geometry, counter
+
+
+def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
+    """
+    Returns timeshift table for given array geometry
+
+    :param geometry: Nested list containing the arrays geometry, as returned by
+            get_group_geometry
+    :param sll_x: slowness x min (lower)
+    :param sll_y: slowness y min (lower)
+    :param sl_s: slowness step
+    :param grdpts_x: number of grid points in x direction
+    :param grdpts_x: number of grid points in y direction
+    """
+    counter = 0
+
+    nstat = len(geometry) - 1 #last index are center coordinates
+
+    time_shift_table = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    for i in xrange(nstat):
+        for k in xrange(grdpts_x):
+            sx = sll_x + k * sl_s
+            for l in xrange(grdpts_y):
+                sy = sll_y + l * sl_s
+                time_shift_table[i][k][l] = sx*geometry[i][0] + sy*geometry[i][1]
+                counter += 1
+
+    return time_shift_table, counter
+
+
+def get_spoint(stream, stime, etime):
+    """
+    :param stime: UTCDateTime to start
+    :param etime: UTCDateTime to end
+    """
+    slatest = stream[0].stats.starttime
+    eearliest = stream[0].stats.endtime
+    for tr in stream:
+        if tr.stats.starttime >= slatest:
+            slatest = tr.stats['starttime']
+        if tr.stats.endtime <= eearliest:
+            eearliest = tr.stats.endtime
+
+    nostat = len(stream)
+    spoint = np.empty(nostat, dtype="int32", order="C")
+    epoint = np.empty(nostat, dtype="int32", order="C")
+    # now we have to adjust to the beginning of real start time
+    for i in xrange(nostat):
+        if slatest <= stime:
+            offset = int(((stime-slatest)/stream[i].stats.delta + 1.))
+        if eearliest >= etime:
+            negoffset = int(((eearliest-etime)/stream[i].stats.delta + 1.))
+        diffstart = slatest-stream[0].stats.starttime
+        if diffstart < 0:
+            msg = "Specified start-time is smaller than starttime in stream"
+            raise Exception(msg)
+        frac, ddummy = math.modf(diffstart)
+        spoint[i] = int(ddummy)
+        if frac > stream[i].stats.delta * 0.25:
+            msg = "Difference in start times exceeds 25% of samp rate"
+            warnings.warn(msg)
+        spoint[i] += offset;
+        diffend = stream[i].stats.endtime - eearliest;
+        if diffend < 0:
+            msg = "Specified end-time is smaller than endtime in stream"
+            raise Exception(msg)
+        frac, ddummy = math.modf(diffend)
+        epoint[i] = int(ddummy)
+        epoint[i] += negoffset
+
+    return spoint, epoint
+
+
+def ndarray2ptr3D(ndarray):
+    """
+    Construct *** pointer for ctypes from numpy.ndarray
+    """
+    ptr = C.c_void_p
+    dim1, dim2, dim3 = ndarray.shape
+    voids = []
+    for i in xrange(dim1):
+        row = ndarray[i]
+        p = (ptr*dim2)(*[col.ctypes.data_as(ptr) for col in row])
+        voids.append(C.cast(p, C.c_void_p))
+    return (ptr*dim1)(*voids)
+
