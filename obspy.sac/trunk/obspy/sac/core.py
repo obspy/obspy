@@ -118,7 +118,7 @@ def isSacXY(filename):
         return False
     return True
 
-def readSACXY():
+def readSACXY(filename, headonly=False, **kwargs):
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
     
@@ -177,7 +177,7 @@ def readSACXY():
         tr = Trace(header=header, data=t.seis)
     return Stream([tr])
 
-def writeSACXY():
+def writeSACXY(stream, filename, **kwargs):
     """
     Writes SAC file.
     

@@ -43,7 +43,25 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readBigEndianViaObsPy(self):
+    def test_readXYViaObspy(self):
+        """
+        Read files via L{obspy.Stream}
+        """
+        tr = read(self.file, format='SAC')[0]
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile,format='SACXY')
+        tr1 = read(tempfile,format='SACXY')[0]
+        self.assertEqual(tr1.stats['station'], 'STA')
+        self.assertEqual(tr1.stats.npts, 100)
+        self.assertEqual(tr1.stats['sampling_rate'], 1.0)
+        self.assertEqual(tr1.stats.get('channel'), 'Q')
+        self.assertEqual(tr1.stats.starttime.timestamp, 269596810.0)
+        self.assertEqual(tr1.stats.sac.get('nvhdr'), 6)
+        self.assertEqual(tr1.stats.sac.b, 10.0)
+        np.testing.assert_array_almost_equal(self.testdata[0:10],
+                                             tr1.data[0:10])
+
+    def test_readBigEndianViaObspy(self):
         """
         Read files via L{obspy.Stream}
         """
