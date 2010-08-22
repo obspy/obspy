@@ -72,6 +72,46 @@ def isSAC(filename):
             return False
     return True
 
+def istextfile(filename, blocksize = 512):
+    return istext(open(filename).read(blocksize))
+    
+def istext(s):
+    if "\0" in s:
+        return 0
+    
+    if not s:  # Empty files are considered text
+        return 1
+        
+    # Get the non-text characters (maps a character to itself then
+    # use the 'remove' option to get rid of the text characters.)
+    t = s.translate(_null_trans, text_characters)
+    
+    # If more than 30% non-text characters, then
+    # this is considered a binary file
+    if len(t)/len(s) > 0.30:
+        return 0
+    return 1
+
+def isSacXY(filename):
+    """
+    Checks whether a file is alphanumeric SAC or not. Returns True or False.
+
+    Parameters
+    ----------
+    filename : string
+        SAC file to be checked.
+    """
+    ### First find out if it is a text or a binary file. This should
+    ### always be true if a file is a text-file and only true for a
+    ### binary file in rare occasions (Recipe 173220 found on
+    ### http://code.activestate.com/
+    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
+    _null_trans = string.maketrans("", "")
+    if not istextfile(filename, blocksize = 512):
+        return False
+    
+
+                                                        
 
 def readSAC(filename, headonly=False, **kwargs):
     """
