@@ -71,6 +71,5 @@ setup(
         isFormat = obspy.sac.core:isSACXY
         readFormat = obspy.sac.core:readSACXY
         writeFormat = obspy.sac.core:writeSACXY
-        
     """,
 )

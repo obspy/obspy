@@ -10,6 +10,7 @@ from obspy.core import Trace, Stream
 from obspy.sac.sacio import SacIO
 import struct
 import os
+import string
 
 
 # we put here everything but the time, they are going to stats.starttime
@@ -97,7 +98,7 @@ def istext(filename, blocksize = 512):
 
 
 
-def isSacXY(filename):
+def isSACXY(filename):
     """
     Checks whether a file is alphanumeric SAC or not. Returns True or False.
 
