@@ -60,10 +60,17 @@ setup(
     entry_points="""
         [obspy.plugin.waveform]
         SAC = obspy.sac.core
+        SACXY = obspy.sac.core
 
         [obspy.plugin.waveform.SAC]
         isFormat = obspy.sac.core:isSAC
         readFormat = obspy.sac.core:readSAC
         writeFormat = obspy.sac.core:writeSAC
+        
+        [obspy.plugin.waveform.SACXY]
+        isFormat = obspy.sac.core:isSACXY
+        readFormat = obspy.sac.core:readSACXY
+        writeFormat = obspy.sac.core:writeSACXY
+        
     """,
 )
