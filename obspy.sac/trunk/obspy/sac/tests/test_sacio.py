@@ -125,6 +125,22 @@ class SacIOTestCase(unittest.TestCase):
         os.remove(tempfile)
         os.remove(tempfile2)
 
+    def test_readXYheader(self):
+        tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
+        tempfile = NamedTemporaryFile().name
+        t = SacIO(tfile)
+        t.WriteSacXY(tempfile)
+        d = SacIO(tempfile, alpha=True)
+        e = SacIO()
+        e.ReadSacXYHeader(tempfile)
+        self.assertEqual(e.GetHvalue('npts'),d.GetHvalue('npts'))
+        self.assertEqual(e.GetHvalue('depmen'),d.GetHvalue('depmen'))
+        self.assertEqual(e.starttime,d.starttime)
+        self.assertNotEqual(e.seis.size,d.seis.size)
+        c = SacIO(tempfile,alpha=True,headonly=True)
+        self.assertEqual(e.seis.size,c.seis.size)
+        
+        
     def test_readBigEnd(self):
         """
         Test reading big endian binary files
