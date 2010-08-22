@@ -37,10 +37,18 @@ if platform.system() == "Windows":
 src = os.path.join('obspy', 'signal', 'src') + os.sep
 symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
            if s.strip() != '']
+
+# try to find platfrom independently the suffix of fftpack_lite
+numpy_lib_dir = os.path.dirname(np.fft.__file__)
+for ext in ('pyd', 'dylib', 'so'):
+    fftpack = 'fftpack_lite.%s' % ext
+    if not os.path.exists(os.path.join(numpy_lib_dir, fftpack)):
+        continue
+
 lib = MyExtension('libsignal',
                   define_macros=macros,
-                  library_dirs = [os.path.dirname(np.fft.__file__)],
-                  libraries = [':fftpack_lite.so'],
+                  library_dirs = [numpy_lib_dir],
+                  libraries = [':'+fftpack],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
                            src + 'coordtrans.c', src + 'pk_mbaer.c',
                            src + 'filt_util.c', src + 'arpicker.c',
