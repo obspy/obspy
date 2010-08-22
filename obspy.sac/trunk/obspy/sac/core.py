@@ -140,11 +140,87 @@ def readSACXY():
     >>> from obspy.core import read # doctest: +SKIP
     >>> st = read("sac_file") # doctest: +SKIP
     """
-    pass
+    t = SacIO()
+    if headonly:
+        t.ReadSacXYHeader(filename)
+    else:
+        t.ReadSacXY(filename)
+    # assign all header entries to a new dictionary compatible with an ObsPy
+    header = {}
 
+    # convert common header types of the obspy trace object
+    for i, j in convert_dict.iteritems():
+        value = t.GetHvalue(i)
+        if isinstance(value, str):
+            value = value.strip()
+            if value == '-12345':
+                value = ''
+        header[j] = value
+    if header['calib'] == -12345.0:
+        header['calib'] = 1.0
+    # assign extra header types of sac
+    header['sac'] = {}
+    for i in sac_extra:
+        header['sac'][i] = t.GetHvalue(i)
+    # convert time to UTCDateTime
+    header['starttime'] = t.starttime
+    # always add the begin time (if it's defined) to get the given
+    # SAC reference time, no matter which iztype is given
+    # note that the B and E times should not be in the sac_extra
+    # dictionary, as they would overwrite the t.fromarray which sets them
+    # according to the starttime, npts and delta.
+    header['sac']['b'] = float(t.GetHvalue('b'))
+    header['sac']['e'] = float(t.GetHvalue('e'))
+    if headonly:
+        tr = Trace(header=header)
+    else:
+        tr = Trace(header=header, data=t.seis)
+    return Stream([tr])
 
 def writeSACXY():
-    pass
+    """
+    Writes SAC file.
+    
+    This function should NOT be called directly, it registers via the
+    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+    Stream object, call this instead.
+
+    Parameters
+    ----------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+    filename : string
+        SAC file to be written.
+    """
+    # Translate the common (renamed) entries
+    i = 0
+    base, ext = os.path.splitext(filename)
+    for trace in stream:
+        t = SacIO()
+        # extracting relative SAC time as specified with b
+        try:
+            b = float(trace.stats['sac']['b'])
+        except KeyError:
+            b = 0.0
+        # filling in SAC/sacio specific defaults
+        t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
+                    starttime=trace.stats.starttime)
+        # overwriting with ObsPy defaults
+        for _j, _k in convert_dict.iteritems():
+            t.SetHvalue(_j, trace.stats[_k])
+        # overwriting up SAC specific values
+        # note that the SAC reference time values (including B and E) are
+        # not used in here any more, they are already set by t.fromarray
+        # and directly deduce from tr.starttime
+        for _i in sac_extra:
+            try:
+                t.SetHvalue(_i, trace.stats.sac[_i])
+            except KeyError:
+                pass
+        if len(stream) != 1:
+            filename = "%s%02d%s" % (base, i+1, ext)
+        t.WriteSacXY(filename)
+        i += 1
 
                                                         
 
