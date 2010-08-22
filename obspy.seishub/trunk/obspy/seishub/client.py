@@ -241,19 +241,26 @@ class _WaveformMapperClient(object):
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-
+        
+        # allow time strings in arguments
+        for time in ["start_datetime", "end_datetime"]:
+            if isinstance(kwargs[time], str):
+                kwargs[time] = UTCDateTime(kwargs[time])
         # we expand the requested timespan on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
-        band_code = kwargs['channel_id'][0]
-        start = kwargs['start_datetime']
-        if isinstance(start, str):
-            start = UTCDateTime(start)
-        kwargs['start_datetime'] = start - 2.0 / BAND_CODE[band_code]
-        end = kwargs['end_datetime']
-        if isinstance(end, str):
-            end = UTCDateTime(end)
-        kwargs['end_datetime'] = end + 2.0 / BAND_CODE[band_code]
+        # only possible if a channel_id is specified.
+        if channel_id:
+            band_code = kwargs['channel_id'][0]
+            trim_start = kwargs['start_datetime']
+            trim_end = kwargs['end_datetime']
+            kwargs['start_datetime'] = trim_start - 2.0 / BAND_CODE[band_code]
+            kwargs['end_datetime'] = trim_end + 2.0 / BAND_CODE[band_code]
+        else:
+            msg = "No channel_id provided. Specifying a channel_id can " + \
+                  "lead to better selection of first/last samples of " + \
+                  "fetched traces."
+            warnings.warn(msg)
 
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
@@ -263,8 +270,10 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
-
-        stream.trim(start, end)
+        
+        # trimming needs to be done only if we extend the datetime above
+        if channel_id:
+            stream.trim(trim_start, trim_end)
         if getPAZ:
             paz = self.client.station.getPAZ(network_id=network_id,
                     station_id=station_id, location_id=location_id,
