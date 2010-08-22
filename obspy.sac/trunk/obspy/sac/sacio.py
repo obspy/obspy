@@ -235,7 +235,10 @@ class SacIO(object):
 
     def __call__(self, filename, alpha=False):
         if alpha:
-            self.ReadSacXY(filename)
+            if self.headonly:
+                self.ReadSacXYHeader(filename)
+            else:
+                self.ReadSacXY(filename)
         elif self.headonly:
             self.ReadSacHeader(filename)
         else:
