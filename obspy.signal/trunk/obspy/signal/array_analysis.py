@@ -649,7 +649,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
                    frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
         abspow, power, ix, iy, _ifkq = buf
-
         print buf
 
         # here we compute baz, slow
