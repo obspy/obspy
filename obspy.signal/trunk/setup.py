@@ -41,23 +41,35 @@ symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
 # try to find platfrom independently the suffix of fftpack_lite
 numpy_lib_dir = os.path.dirname(np.fft.__file__)
 libraries = []
-for ext in ('dylib', 'so', 'dll'):
+for ext in ('dylib', 'so', 'dll', 'pyd'):
     fftpack = 'fftpack_lite.%s' % ext
     if not os.path.exists(os.path.join(numpy_lib_dir, fftpack)):
         continue
-    libraries.append(fftpack)
+    libraries.append(':'+fftpack)
     break
 
-lib = MyExtension('libsignal',
-                  define_macros=macros,
-                  #library_dirs=[numpy_lib_dir],
-                  #libraries=libraries,
-                  sources=[src + 'recstalta.c', src + 'xcorr.c',
-                           src + 'coordtrans.c', src + 'pk_mbaer.c',
-                           src + 'filt_util.c', src + 'arpicker.c'],
-                           #src + 'bbfk.c', src + 'runtimelink.c'],
-                  export_symbols=symbols,
-                  extra_link_args=[])
+if platform.system() == "Windows":
+    lib = MyExtension('libsignal',
+                      define_macros=macros,
+                      #library_dirs=[numpy_lib_dir],
+                      #libraries=libraries,
+                      sources=[src + 'recstalta.c', src + 'xcorr.c',
+                               src + 'coordtrans.c', src + 'pk_mbaer.c',
+                               src + 'filt_util.c', src + 'arpicker.c'],
+                               #src + 'bbfk.c', src + 'runtimelink.c'],
+                      export_symbols=symbols,
+                      extra_link_args=[])
+else:
+    lib = MyExtension('libsignal',
+                      define_macros=macros,
+                      library_dirs=[numpy_lib_dir],
+                      libraries=libraries,
+                      sources=[src + 'recstalta.c', src + 'xcorr.c',
+                               src + 'coordtrans.c', src + 'pk_mbaer.c',
+                               src + 'filt_util.c', src + 'arpicker.c',
+                               src + 'bbfk.c'],
+                      export_symbols=symbols,
+                      extra_link_args=[])
 
 
 # setup

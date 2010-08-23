@@ -13,8 +13,6 @@
 #include <string.h>
 #include <math.h>
 //#include <mcheck.h>
-#include "platform.h"
-
 
 #define TRUE 1
 #define FALSE 0
@@ -24,7 +22,8 @@
 // e.g. link with -L/path/to/fftpack_lite -l:fftpack_lite.so
 // numpy has no floating point transfrom compiled, therefore we need to
 // cast the result to double
-
+void rffti(int n, double* wsave);            // fftpack init function
+void rfftf(int n, double* r, double* wsave); // fftpack r fwd
 static double* fftpack_work = 0;
 static int     fftpack_len = -1;
 
@@ -55,14 +54,14 @@ void cosine_taper(float *taper, int ndat, float fraction)
             }
         } else if ((k > i1) && (k <= i2)) {
             temp =  M_PI * (float)(k-i1)/((float)(i2-i1+1));
-            fact = 0.5 - 0.5*cos(temp);
-            taper[k] = fabs(fact);
+            fact = 0.5f - 0.5f*cos(temp);
+            taper[k] = (float) fabs(fact);
         } else if ((k >= i3) && (k < i4)) {
-            temp = M_PI * (float)(i4-k)/((float)(i4-i3+1));
-            fact = 0.5 - 0.5*cos(temp);
-            taper[k] = fabs(fact);
+            temp = (float) (M_PI * (float)(i4-k)/((float)(i4-i3+1)));
+            fact = (float) (0.5f - 0.5f*cos(temp));
+            taper[k] = (float) fabs(fact);
         } else
-            taper[k] = 1.0;
+            taper[k] = 1.0f;
     }
 
 }
@@ -123,7 +122,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     window = (double **)calloc(nstat, sizeof(double *));
     /* we allocate the taper buffer, size nsamp! */
     taper = (float *)calloc(nsamp, sizeof(float));
-    cosine_taper(taper,nsamp,0.1); 
+    cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
         if (fftpack_len != nfft) {
             if(fftpack_work != 0)
@@ -138,7 +137,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         //memcpy((void *)window[j],(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
         //memcpy((void *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
         window[j] = (double *)calloc(nfft+1, sizeof(double));
-        memcpy((double *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
+        memcpy(window[j]+1,trace[j]+spoint[j]+offset,nsamp*sizeof(double));
         /*************************************************/
         /* 4.6.98, we insert offset removal and tapering */
         /*************************************************/
@@ -170,7 +169,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
             for (j=0;j<nstat;j++) {
                 re = window[j][2*w];
                 im = window[j][2*w+1];
-                dpow += (float) re*re+im*im;
+                dpow += (float) (re*re+im*im);
             }
             denom += dpow;
         }
@@ -211,11 +210,11 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
                 /********************************************/
                 sumre = sumim = 0.;
                 for (j=0;j<nstat;j++) {
-                    wtau = 2.*M_PI*df*(float)w*stat_tshift_table[j][k][l];
+                    wtau = (float) (2.*M_PI*df*(float)w*stat_tshift_table[j][k][l]);
                     re = window[j][2*w];
                     im = window[j][2*w+1];
-                    sumre += (float) re*cos(wtau)-im*sin(wtau);
-                    sumim += (float) im*cos(wtau)+re*sin(wtau);
+                    sumre += (float) (re*cos(wtau)-im*sin(wtau));
+                    sumim += (float) (im*cos(wtau)+re*sin(wtau));
                 }
                 pow[w][k][l] = (sumre*sumre+sumim*sumim);
                 if (pow[w][k][l] >= maxpow[w]) {
@@ -269,7 +268,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         absval /= (double)(nstat*nstat);
         absval /= (double)nfft;
         absval /= (double)digfreq;
-        *abs = absval;
+        *abs = (float) absval;
     }
 
     /* now we free everything */
