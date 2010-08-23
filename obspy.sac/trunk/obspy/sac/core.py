@@ -8,6 +8,7 @@ SAC bindings to ObsPy core module.
 
 from obspy.core import Trace, Stream
 from obspy.sac.sacio import SacIO
+import numpy as np
 import struct
 import os
 import string
@@ -113,9 +114,15 @@ def isSACXY(filename):
     ### http://code.activestate.com/
     if not istext(filename, blocksize = 512):
         return False
-    try:
-        SacIO.ReadSacXY(filename)
-    except:
+    f = open(filename)
+    hdcards = []
+    # read in the header cards
+    for i in xrange(30):
+        hdcards.append(f.readline())
+    npts = int(hdcards[15].split()[-1])
+    # read in the seismogram
+    seis = f.read(-1).split()
+    if npts != len(seis):
         return False
     return True
 

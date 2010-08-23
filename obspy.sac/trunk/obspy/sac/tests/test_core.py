@@ -22,6 +22,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
         self.file = os.path.join(self.path, 'data', 'test.sac')
+        self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
             - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
@@ -50,7 +51,7 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.file, format='SAC')[0]
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile,format='SACXY')
-        tr1 = read(tempfile,format='SACXY')[0]
+        tr1 = read(tempfile)[0]
         self.assertEqual(tr1.stats['station'], 'STA')
         self.assertEqual(tr1.stats.npts, 100)
         self.assertEqual(tr1.stats['sampling_rate'], 1.0)
