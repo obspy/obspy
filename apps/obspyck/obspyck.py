@@ -21,7 +21,6 @@ import tempfile
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
-from obspy.signal.filter import bandpass, bandstop, lowpass, highpass
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
@@ -31,8 +30,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import MultiCursor as mplMultiCursor
 from matplotlib.patches import Ellipse
-from matplotlib.ticker import FuncFormatter, FormatStrFormatter
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
 
 #gtk
 import gtk
@@ -66,14 +64,27 @@ KEY_FULLNAMES = {'P': "P pick", 'Psynth': "synthetic P pick",
         'MagMax1': "Magnitude maximum estimation pick",
         'MagMin2': "Magnitude minimum estimation pick",
         'MagMax2': "Magnitude maximum estimation pick"}
+WIDGET_NAMES = ["buttonClearAll", "buttonClearOrigMag", "buttonClearFocMec",
+        "buttonDoHyp2000", "buttonDo3dloc", "buttonDoNLLoc",
+        "comboboxNLLocModel", "buttonCalcMag", "buttonDoFocmec",
+        "togglebuttonShowMap", "togglebuttonShowFocMec", "buttonNextFocMec",
+        "togglebuttonShowWadati", "buttonGetNextEvent",
+        "buttonUpdateEventList", "buttonSendEvent", "checkbuttonPublishEvent",
+        "buttonDeleteEvent", "checkbuttonSysop", "entrySysopPassword",
+        "buttonPreviousStream", "labelStreamNumber", "comboboxStreamName",
+        "buttonNextStream", "togglebuttonOverview", "buttonPhaseType",
+        "comboboxPhaseType", "togglebuttonFilter", "comboboxFilterType",
+        "checkbuttonZeroPhase", "labelHighpass", "spinbuttonHighpass",
+        "labelLowpass", "spinbuttonLowpass", "togglebuttonSpectrogram",
+        "checkbuttonSpectrogramLog", "textviewStdOut", "textviewStdErr"]
 #Estimating the maximum/minimum in a sample-window around click
 MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
 AXVLINEWIDTH = 1.2
 #dictionary for key-bindings
 KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
-        'setMagMin': 'alt', 'setMagMax': ' ', 'switchPhase': 'control',
-        'delMagMinMax': 'alt', 'switchWheelZoom': 'z', 'switchPan': 'p',
+        'setMagMin': 'alt', 'setMagMax': ' ', 'delMagMinMax': 'escape',
+        'switchPhase': 'control', 'switchWheelZoom': 'z', 'switchPan': 'p',
         'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
@@ -101,7 +112,7 @@ def check_keybinding_conflicts(keys):
             if isinstance(item, dict):
                 while item:
                     k, v = item.popitem()
-                    tmp_keys2["_".join([key, k])] = v
+                    tmp_keys2["_".join([key, str(v)])] = k
             else:
                 tmp_keys2[key] = item
         if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
@@ -627,13 +638,13 @@ class ObsPyckGUI:
         # example:
         # d = {'on_buttonQuit_clicked': gtk.main_quit}
         # self.gla.signal_autoconnect(d)
-        d = {}
+        autoconnect = {}
         # include every funtion starting with "on_" in the dictionary we use
         # to autoconnect to all the buttons etc. in the GTK GUI
         for func in dir(self):
             if func.startswith("on_"):
-                exec("d['%s'] = self.%s" % (func, func))
-        self.gla.signal_autoconnect(d)
+                exec("autoconnect['%s'] = self.%s" % (func, func))
+        self.gla.signal_autoconnect(autoconnect)
         # get the main window widget and set its title
         self.win = self.gla.get_widget('windowObspyck')
         #self.win.set_title("ObsPyck")
@@ -660,48 +671,33 @@ class ObsPyckGUI:
         self.toolbar.zoom()
         self.canv.widgetlock.release(self.toolbar)
 
-        # define handles for all buttons/GUI-elements we interact with
-        self.buttonClearAll = self.gla.get_widget("buttonClearAll")
-        self.buttonClearOrigMag = self.gla.get_widget("buttonClearOrigMag")
-        self.buttonClearFocMec = self.gla.get_widget("buttonClearFocMec")
-        self.buttonDoHyp2000 = self.gla.get_widget("buttonDoHyp2000")
-        self.buttonDo3dloc = self.gla.get_widget("buttonDo3dloc")
-        self.buttonDoNLLoc = self.gla.get_widget("buttonDoNLLoc")
-        self.comboboxNLLocModel = self.gla.get_widget("comboboxNLLocModel")
-        self.buttonCalcMag = self.gla.get_widget("buttonCalcMag")
-        self.buttonDoFocmec = self.gla.get_widget("buttonDoFocmec")
-        self.togglebuttonShowMap = self.gla.get_widget("togglebuttonShowMap")
-        self.togglebuttonShowFocMec = self.gla.get_widget("togglebuttonShowFocMec")
-        self.buttonNextFocMec = self.gla.get_widget("buttonNextFocMec")
-        self.togglebuttonShowWadati = self.gla.get_widget("togglebuttonShowWadati")
-        self.buttonGetNextEvent = self.gla.get_widget("buttonGetNextEvent")
-        self.buttonUpdateEventList = self.gla.get_widget("buttonUpdateEventList")
-        self.buttonSendEvent = self.gla.get_widget("buttonSendEvent")
-        self.checkbuttonPublishEvent = \
-                self.gla.get_widget("checkbuttonPublishEvent")
-        self.buttonDeleteEvent = self.gla.get_widget("buttonDeleteEvent")
-        self.checkbuttonSysop = self.gla.get_widget("checkbuttonSysop")
-        self.entrySysopPassword = self.gla.get_widget("entrySysopPassword")
-        self.buttonPreviousStream = self.gla.get_widget("buttonPreviousStream")
-        self.labelStreamNumber = self.gla.get_widget("labelStreamNumber")
-        self.comboboxStreamName = self.gla.get_widget("comboboxStreamName")
-        self.buttonNextStream = self.gla.get_widget("buttonNextStream")
-        self.togglebuttonOverview = self.gla.get_widget("togglebuttonOverview")
-        self.buttonPhaseType = self.gla.get_widget("buttonPhaseType")
-        self.comboboxPhaseType = self.gla.get_widget("comboboxPhaseType")
-        self.togglebuttonFilter = self.gla.get_widget("togglebuttonFilter")
-        self.comboboxFilterType = self.gla.get_widget("comboboxFilterType")
-        self.checkbuttonZeroPhase = self.gla.get_widget("checkbuttonZeroPhase")
-        self.labelHighpass = self.gla.get_widget("labelHighpass")
-        self.spinbuttonHighpass = self.gla.get_widget("spinbuttonHighpass")
-        self.labelLowpass = self.gla.get_widget("labelLowpass")
-        self.spinbuttonLowpass = self.gla.get_widget("spinbuttonLowpass")
-        self.togglebuttonSpectrogram = \
-                self.gla.get_widget("togglebuttonSpectrogram")
-        self.checkbuttonSpectrogramLog = \
-                self.gla.get_widget("checkbuttonSpectrogramLog")
-        self.textviewStdOut = self.gla.get_widget("textviewStdOut")
-        self.textviewStdErr = self.gla.get_widget("textviewStdErr")
+        # store handles for all buttons/GUI-elements we interact with
+        self.widgets = {}
+        for name in WIDGET_NAMES:
+            self.widgets[name] = self.gla.get_widget(name)
+
+        # redirect stdout and stderr
+        # first we need to create a new subinstance with write method
+        self.widgets['textviewStdOutImproved'] = TextViewImproved(self.widgets['textviewStdOut'])
+        self.widgets['textviewStdErrImproved'] = TextViewImproved(self.widgets['textviewStdErr'])
+        # we need to remember the original handles because we need to switch
+        # back to them when going to debug mode
+        self.stdout_backup = sys.stdout
+        self.stderr_backup = sys.stderr
+        sys.stdout = self.widgets['textviewStdOutImproved']
+        sys.stderr = self.widgets['textviewStdErrImproved']
+        self.widgets['textviewStdErrImproved'].write(warn_msg)
+
+        # change fonts of textviews and of comboboxStreamName
+        # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
+        try:
+            fontDescription = pango.FontDescription("monospace condensed 9")
+            self.widgets['textviewStdOut'].modify_font(fontDescription)
+            self.widgets['textviewStdErr'].modify_font(fontDescription)
+            fontDescription = pango.FontDescription("monospace bold 11")
+            self.widgets['comboboxStreamName'].child.modify_font(fontDescription)
+        except NameError:
+            pass
 
         # Set up initial plot
         #self.fig = plt.figure()
@@ -723,22 +719,21 @@ class ObsPyckGUI:
         self.multicursor = MultiCursor(self.canv, self.axs, useblit=True,
                                        color='k', linewidth=1, ls='dotted')
         
-        # fill the combobox list with the streams' station name
-        # first remove a temporary item set at startup
-        self.comboboxStreamName.remove_text(0)
-        for st in self.streams:
-            self.comboboxStreamName.append_text(st[0].stats['station'])
-
         # there's a bug in glade so we have to set the default value for the
         # two comboboxes here by hand, otherwise the boxes are empty at startup
         # we also have to make a connection between the combobox labels and our
         # internal event handling (to determine what to do on the various key
         # press events...)
         # activate first item in the combobox designed with glade:
-        self.comboboxPhaseType.set_active(0)
-        self.comboboxFilterType.set_active(0)
-        self.comboboxNLLocModel.set_active(0)
-        self.comboboxStreamName.set_active(0)
+        self.widgets['comboboxPhaseType'].set_active(0)
+        self.widgets['comboboxFilterType'].set_active(0)
+        self.widgets['comboboxNLLocModel'].set_active(0)
+        # fill the combobox list with the streams' station name
+        # first remove a temporary item set at startup
+        self.widgets['comboboxStreamName'].remove_text(0)
+        for st in self.streams:
+            self.widgets['comboboxStreamName'].append_text(st[0].stats['station'])
+        self.widgets['comboboxStreamName'].set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
         # grab focus, otherwise the mpl key_press events get lost...
@@ -749,49 +744,31 @@ class ObsPyckGUI:
         # XXX a possible workaround would be to manually grab focus whenever
         # one of the combobox buttons or spinbuttons is clicked/updated (DONE!)
         nofocus_recursive(self.win)
-        self.comboboxPhaseType.set_focus_on_click(False)
-        self.comboboxFilterType.set_focus_on_click(False)
-        self.comboboxNLLocModel.set_focus_on_click(False)
+        self.widgets['comboboxPhaseType'].set_focus_on_click(False)
+        self.widgets['comboboxFilterType'].set_focus_on_click(False)
+        self.widgets['comboboxNLLocModel'].set_focus_on_click(False)
         self.canv.set_property("can_default", True)
         self.canv.set_property("can_focus", True)
         self.canv.grab_default()
         self.canv.grab_focus()
         # set the filter default values according to command line options
         # or command line default values
-        self.spinbuttonHighpass.set_value(self.options.highpass)
-        self.spinbuttonLowpass.set_value(self.options.lowpass)
+        self.widgets['spinbuttonHighpass'].set_value(self.options.highpass)
+        self.widgets['spinbuttonLowpass'].set_value(self.options.lowpass)
         self.updateStreamLabels()
         self.multicursorReinit()
         self.canv.show()
-
-        # redirect stdout and stderr
-        # first we need to create a new subinstance with write method
-        self.textviewStdOutImproved = TextViewImproved(self.textviewStdOut)
-        self.textviewStdErrImproved = TextViewImproved(self.textviewStdErr)
-        # we need to remember the original handles because we need to switch
-        # back to them when going to debug mode
-        self.stdout_backup = sys.stdout
-        self.stderr_backup = sys.stderr
-        sys.stdout = self.textviewStdOutImproved
-        sys.stderr = self.textviewStdErrImproved
-
-        self.textviewStdErrImproved.write(warn_msg)
-
-        # change fonts of textviews and of comboboxStreamName
-        # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
-        try:
-            fontDescription = pango.FontDescription("monospace condensed 9")
-            self.textviewStdOut.modify_font(fontDescription)
-            self.textviewStdErr.modify_font(fontDescription)
-            fontDescription = pango.FontDescription("monospace bold 11")
-            self.comboboxStreamName.child.modify_font(fontDescription)
-        except NameError:
-            pass
 
         self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                           self.streams[0][0].stats.endtime)
 
         gtk.main()
+
+    def _write_msg(self, msg):
+        self.widgets['textviewStdOutImproved'].write(msg)
+        
+    def _write_err(self, err):
+        self.widgets['textviewStdErrImproved'].write(err)
 
     ###########################################################################
     # Start of list of event handles that get connected to GUI Elements       #
@@ -825,7 +802,7 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.togglebuttonShowMap.set_active(True)
+        self.widgets['togglebuttonShowMap'].set_active(True)
 
     def on_buttonDo3dloc_clicked(self, event):
         self.delAllItems()
@@ -840,7 +817,7 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.togglebuttonShowMap.set_active(True)
+        self.widgets['togglebuttonShowMap'].set_active(True)
 
     def on_buttonDoNLLoc_clicked(self, event):
         self.delAllItems()
@@ -854,7 +831,7 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.togglebuttonShowMap.set_active(True)
+        self.widgets['togglebuttonShowMap'].set_active(True)
 
     def on_buttonCalcMag_clicked(self, event):
         self.calculateEpiHypoDists()
@@ -868,31 +845,13 @@ class ObsPyckGUI:
         self.doFocmec()
 
     def on_togglebuttonShowMap_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowMap.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
+        state = self.widgets['togglebuttonShowMap'].get_active()
+        widgets_leave_active = ["togglebuttonShowMap",
+                                "textviewStdOutImproved",
+                                "textviewStdErrImproved"]
+        for name, widget in self.widgets.iteritems():
+            if name not in widgets_leave_active:
+                widget.set_sensitive(not state)
         if state:
             self.delAxes()
             self.fig.clear()
@@ -902,7 +861,7 @@ class ObsPyckGUI:
             self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
-            self.textviewStdOutImproved.write("http://maps.google.de/maps" + \
+            self._write_msg("http://maps.google.de/maps" + \
                     "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
                     self.dictOrigin['Longitude']))
         else:
@@ -917,31 +876,13 @@ class ObsPyckGUI:
             self.canv.draw()
 
     def on_togglebuttonOverview_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowMap,
-                              self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonOverview.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
+        state = self.widgets['togglebuttonOverview'].get_active()
+        widgets_leave_active = ["togglebuttonOverview",
+                                "textviewStdOutImproved",
+                                "textviewStdErrImproved"]
+        for name, widget in self.widgets.iteritems():
+            if name not in widgets_leave_active:
+                widget.set_sensitive(not state)
         if state:
             self.delAxes()
             self.fig.clear()
@@ -963,30 +904,13 @@ class ObsPyckGUI:
             self.canv.draw()
 
     def on_togglebuttonShowFocMec_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowMap,
-                              self.togglebuttonShowWadati,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowFocMec.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
+        state = self.widgets['togglebuttonShowFocMec'].get_active()
+        widgets_leave_active = ["togglebuttonShowFocMec", "buttonNextFocMec",
+                                "textviewStdOutImproved",
+                                "textviewStdErrImproved"]
+        for name, widget in self.widgets.iteritems():
+            if name not in widgets_leave_active:
+                widget.set_sensitive(not state)
         if state:
             self.delAxes()
             self.fig.clear()
@@ -1010,37 +934,20 @@ class ObsPyckGUI:
 
     def on_buttonNextFocMec_clicked(self, event):
         self.nextFocMec()
-        if self.togglebuttonShowFocMec.get_active():
+        if self.widgets['togglebuttonShowFocMec'].get_active():
             self.delFocMec()
             self.fig.clear()
             self.drawFocMec()
             self.canv.draw()
 
     def on_togglebuttonShowWadati_clicked(self, event):
-        buttons_deactivate = [self.buttonClearAll, self.buttonClearOrigMag,
-                              self.buttonClearFocMec, self.buttonDoHyp2000,
-                              self.buttonDo3dloc, self.buttonDoNLLoc,
-                              self.buttonCalcMag, self.comboboxNLLocModel,
-                              self.buttonDoFocmec, self.togglebuttonShowFocMec,
-                              self.buttonNextFocMec, self.togglebuttonShowMap,
-                              self.buttonGetNextEvent, self.buttonSendEvent,
-                              self.buttonUpdateEventList,
-                              self.checkbuttonPublishEvent,
-                              self.checkbuttonSysop, self.entrySysopPassword,
-                              self.buttonDeleteEvent,
-                              self.buttonPreviousStream, self.buttonNextStream,
-                              self.togglebuttonOverview,
-                              self.comboboxStreamName, self.labelStreamNumber,
-                              self.comboboxPhaseType, self.togglebuttonFilter,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass,
-                              self.togglebuttonSpectrogram,
-                              self.checkbuttonSpectrogramLog]
-        state = self.togglebuttonShowWadati.get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
+        state = self.widgets['togglebuttonShowWadati'].get_active()
+        widgets_leave_active = ["togglebuttonShowWadati",
+                                "textviewStdOutImproved",
+                                "textviewStdErrImproved"]
+        for name, widget in self.widgets.iteritems():
+            if name not in widgets_leave_active:
+                widget.set_sensitive(not state)
         if state:
             self.delAxes()
             self.fig.clear()
@@ -1067,7 +974,7 @@ class ObsPyckGUI:
                                             self.streams[0][0].stats.endtime)
         if not self.seishubEventList:
             msg = "No events available from seishub."
-            self.textviewStdOutImproved.write(msg)
+            self._write_msg(msg)
             return
         # iterate event number to fetch
         self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
@@ -1093,9 +1000,9 @@ class ObsPyckGUI:
                                           self.streams[0][0].stats.endtime)
 
     def on_checkbuttonPublishEvent_toggled(self, event):
-        newstate = self.checkbuttonPublishEvent.get_active()
+        newstate = self.widgets['checkbuttonPublishEvent'].get_active()
         msg = "Setting \"public\" flag of event to: %s" % newstate
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def on_buttonDeleteEvent_clicked(self, event):
         event = self.seishubEventList[self.seishubEventCurrent]
@@ -1124,15 +1031,15 @@ class ObsPyckGUI:
             self.on_buttonUpdateEventList_clicked(event)
     
     def on_checkbuttonSysop_toggled(self, event):
-        newstate = self.checkbuttonSysop.get_active()
+        newstate = self.widgets['checkbuttonSysop'].get_active()
         msg = "Setting usage of \"sysop\"-account to: %s" % newstate
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
     
     # the corresponding signal is emitted when hitting return after entering
     # the password
     def on_entrySysopPassword_activate(self, event):
         # test authentication information:
-        passwd = self.entrySysopPassword.get_text()
+        passwd = self.widgets['entrySysopPassword'].get_text()
         auth = 'Basic ' + (base64.encodestring('sysop:' + passwd)).strip()
         webservice = httplib.HTTP(self.server['Server'])
         webservice.putrequest("HEAD", '/xml/seismology/event/just_a_test')
@@ -1141,12 +1048,12 @@ class ObsPyckGUI:
         statuscode = webservice.getreply()[0]
         # if authentication test fails empty password field and uncheck sysop
         if statuscode == 401: # 401 means "Unauthorized"
-            self.checkbuttonSysop.set_active(False)
-            self.entrySysopPassword.set_text("")
+            self.widgets['checkbuttonSysop'].set_active(False)
+            self.widgets['entrySysopPassword'].set_text("")
             err = "Error: Authentication as sysop failed! (Wrong password!?)"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         else:
-            self.checkbuttonSysop.set_active(True)
+            self.widgets['checkbuttonSysop'].set_active(True)
         self.canv.grab_focus()
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
@@ -1162,10 +1069,10 @@ class ObsPyckGUI:
 
     def on_buttonPreviousStream_clicked(self, event):
         self.stPt = (self.stPt - 1) % self.stNum
-        self.comboboxStreamName.set_active(self.stPt)
+        self.widgets['comboboxStreamName'].set_active(self.stPt)
 
     def on_comboboxStreamName_changed(self, event):
-        self.stPt = self.comboboxStreamName.get_active()
+        self.stPt = self.widgets['comboboxStreamName'].get_active()
         xmin, xmax = self.axs[0].get_xlim()
         self.delAllItems()
         self.delAxes()
@@ -1177,11 +1084,11 @@ class ObsPyckGUI:
         self.updatePlot()
         msg = "Going to stream: %s" % self.dicts[self.stPt]['Station']
         self.updateStreamNumberLabel()
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def on_buttonNextStream_clicked(self, event):
         self.stPt = (self.stPt + 1) % self.stNum
-        self.comboboxStreamName.set_active(self.stPt)
+        self.widgets['comboboxStreamName'].set_active(self.stPt)
 
     def on_comboboxPhaseType_changed(self, event):
         self.updateMulticursorColor()
@@ -1192,65 +1099,65 @@ class ObsPyckGUI:
         self.updatePlot()
 
     def on_comboboxFilterType_changed(self, event):
-        if self.togglebuttonFilter.get_active():
+        if self.widgets['togglebuttonFilter'].get_active():
             self.updatePlot()
 
     def on_checkbuttonZeroPhase_toggled(self, event):
         # if the filter flag is not set, we don't have to update the plot
-        if self.togglebuttonFilter.get_active():
+        if self.widgets['togglebuttonFilter'].get_active():
             self.updatePlot()
 
     def on_spinbuttonHighpass_value_changed(self, event):
-        if not self.togglebuttonFilter.get_active() or \
-           self.comboboxFilterType.get_active_text() == "Lowpass":
+        if not self.widgets['togglebuttonFilter'].get_active() or \
+           self.widgets['comboboxFilterType'].get_active_text() == "Lowpass":
             self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
-        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+        if self.widgets['spinbuttonLowpass'].get_value() < self.widgets['spinbuttonHighpass'].get_value():
             err = "Warning: Lowpass frequency below Highpass frequency!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
         minimum  = float(self.streams[self.stPt][0].stats.sampling_rate) / \
                 self.streams[self.stPt][0].stats.npts
-        if self.spinbuttonHighpass.get_value() < minimum:
+        if self.widgets['spinbuttonHighpass'].get_value() < minimum:
             err = "Warning: Lowpass frequency is not supported by length of trace!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
         self.canv.grab_focus()
 
     def on_spinbuttonLowpass_value_changed(self, event):
-        if not self.togglebuttonFilter.get_active() or \
-           self.comboboxFilterType.get_active_text() == "Highpass":
+        if not self.widgets['togglebuttonFilter'].get_active() or \
+           self.widgets['comboboxFilterType'].get_active_text() == "Highpass":
             self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
-        if self.spinbuttonLowpass.get_value() < self.spinbuttonHighpass.get_value():
+        if self.widgets['spinbuttonLowpass'].get_value() < self.widgets['spinbuttonHighpass'].get_value():
             err = "Warning: Lowpass frequency below Highpass frequency!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
         maximum  = self.streams[self.stPt][0].stats.sampling_rate / 2.0
-        if self.spinbuttonLowpass.get_value() > maximum:
+        if self.widgets['spinbuttonLowpass'].get_value() > maximum:
             err = "Warning: Highpass frequency is lower than Nyquist!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
         self.canv.grab_focus()
 
     def on_togglebuttonSpectrogram_toggled(self, event):
-        buttons_deactivate = [self.togglebuttonFilter,
-                              self.togglebuttonOverview,
-                              self.comboboxFilterType,
-                              self.checkbuttonZeroPhase,
-                              self.labelHighpass, self.labelLowpass,
-                              self.spinbuttonHighpass, self.spinbuttonLowpass]
-        state = self.togglebuttonSpectrogram.get_active()
+        buttons_deactivate = [self.widgets['togglebuttonFilter'],
+                              self.widgets['togglebuttonOverview'],
+                              self.widgets['comboboxFilterType'],
+                              self.widgets['checkbuttonZeroPhase'],
+                              self.widgets['labelHighpass'], self.widgets['labelLowpass'],
+                              self.widgets['spinbuttonHighpass'], self.widgets['spinbuttonLowpass']]
+        state = self.widgets['togglebuttonSpectrogram'].get_active()
         for button in buttons_deactivate:
             button.set_sensitive(not state)
         if state:
@@ -1266,10 +1173,10 @@ class ObsPyckGUI:
         self.multicursorReinit()
         self.axs[0].set_xlim(xmin, xmax)
         self.updatePlot()
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def on_checkbuttonSpectrogramLog_toggled(self, event):
-        if self.togglebuttonSpectrogram.get_active():
+        if self.widgets['togglebuttonSpectrogram'].get_active():
             self.on_togglebuttonSpectrogram_toggled(event)
     ###########################################################################
     # End of list of event handles that get connected to GUI Elements         #
@@ -1294,8 +1201,8 @@ class ObsPyckGUI:
             pdb.set_trace()
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
-        sys.stdout = self.textviewStdOutImproved
-        sys.stderr = self.textviewStdErrImproved
+        sys.stdout = self.widgets['textviewStdOutImproved']
+        sys.stderr = self.widgets['textviewStdErrImproved']
 
     def setFocusToMatplotlib(self):
         self.canv.grab_focus()
@@ -1472,7 +1379,7 @@ class ObsPyckGUI:
             return
         del dict[key]
         msg = "%s deleted." % KEY_FULLNAMES[key]
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         # we have to take care of some special cases:
         if key == 'S':
             if 'Saxind' in dict:
@@ -1516,8 +1423,8 @@ class ObsPyckGUI:
                 self.axs[i].xaxis.set_ticks_position("top")
             self.axs[-1].xaxis.set_ticks_position("both")
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-            if self.togglebuttonSpectrogram.get_active():
-                log = self.checkbuttonSpectrogramLog.get_active()
+            if self.widgets['togglebuttonSpectrogram'].get_active():
+                log = self.widgets['checkbuttonSpectrogramLog'].get_active()
                 spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
                             cmap=self.spectrogramColormap, axis=self.axs[i],
                             zorder=-10)
@@ -1549,61 +1456,52 @@ class ObsPyckGUI:
         self.canv.draw()
     
     def updatePlot(self):
-        filt = []
-        #filter data
-        if self.togglebuttonFilter.get_active():
-            zerophase = self.checkbuttonZeroPhase.get_active()
-            freq_highpass = self.spinbuttonHighpass.get_value()
-            freq_lowpass = self.spinbuttonLowpass.get_value()
-            filter_name = self.comboboxFilterType.get_active_text()
-            for tr in self.streams[self.stPt].traces:
-                if filter_name == "Bandpass":
-                    filt.append(bandpass(tr.data, freq_highpass, freq_lowpass,
-                            df=tr.stats.sampling_rate, zerophase=zerophase))
-                    msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
-                            (filter_name, zerophase, freq_highpass,
-                             freq_lowpass)
-                elif filter_name == "Bandstop":
-                    filt.append(bandstop(tr.data, freq_highpass, freq_lowpass,
-                            df=tr.stats.sampling_rate, zerophase=zerophase))
-                    msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
-                            (filter_name, zerophase, freq_highpass,
-                             freq_lowpass)
-                elif filter_name == "Lowpass":
-                    filt.append(lowpass(tr.data, freq_lowpass,
-                            df=tr.stats.sampling_rate, zerophase=zerophase))
-                    msg = "%s (zerophase=%s): %.2f Hz" % (filter_name,
-                                                          zerophase,
-                                                          freq_lowpass)
-                elif filter_name == "Highpass":
-                    filt.append(highpass(tr.data, freq_highpass,
-                            df=tr.stats.sampling_rate, zerophase=zerophase))
-                    msg = "%s (zerophase=%s): %.2f Hz" % (filter_name,
-                                                          zerophase,
-                                                          freq_highpass)
-                else:
-                    err = "Error: Unrecognized Filter Option. Showing " + \
-                          "unfiltered data."
-                    self.textviewStdErrImproved.write(err)
-                    filt.append(tr.data)
-            self.textviewStdOutImproved.write(msg)
-            #make new plots
-            for i, plot in enumerate(self.plts):
-                plot.set_ydata(filt[i])
+        """
+        Update plot either with raw data or filter data and use filtered data.
+        Depending on status of "Filter" Button.
+        """
+        st = self.streams[self.stPt]
+        # To display filtered data we overwrite our alias to current stream
+        # and replace it with the filtered data.
+        if self.widgets['togglebuttonFilter'].get_active():
+            st = st.copy()
+            # Determine filter type/options, display message, apply filter
+            type = self.widgets['comboboxFilterType'].get_active_text().lower()
+            options = {}
+            options['zerophase'] = self.widgets['checkbuttonZeroPhase'].get_active()
+            if type in ["bandpass", "bandstop"]:
+                options['freqmin'] = self.widgets['spinbuttonHighpass'].get_value()
+                options['freqmax'] = self.widgets['spinbuttonLowpass'].get_value()
+            elif type == "lowpass":
+                options['freq'] = self.widgets['spinbuttonLowpass'].get_value()
+            elif type == "highpass":
+                options['freq'] = self.widgets['spinbuttonHighpass'].get_value()
+            if type in ["bandpass", "bandstop"]:
+                msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
+                        (type, options['zerophase'],
+                         options['freqmin'], options['freqmax'])
+            elif type in ["lowpass", "highpass"]:
+                msg = "%s (zerophase=%s): %.2f Hz" % \
+                        (type, options['zerophase'], options['freq'])
+            try:
+                st.filter(type, options)
+                self._write_msg(msg)
+            except:
+                err = "Error during filtering. Showing unfiltered data."
+                self._write_err(err)
         else:
-            #make new plots
-            for i, plot in enumerate(self.plts):
-                plot.set_ydata(self.streams[self.stPt][i].data)
-            msg = "Unfiltered Traces"
-            self.textviewStdOutImproved.write(msg)
-        # Update all subplots
+            msg = "Unfiltered Traces."
+            self._write_msg(msg)
+        # Update all plots' y data
+        for tr, plot in zip(st, self.plts):
+            plot.set_ydata(tr.data)
         self.redraw()
     
     # Define the event that handles the setting of P- and S-wave picks
     def keypress(self, event):
-        if self.togglebuttonShowMap.get_active():
+        if self.widgets['togglebuttonShowMap'].get_active():
             return
-        phase_type = self.comboboxPhaseType.get_active_text()
+        phase_type = self.widgets['comboboxPhaseType'].get_active_text()
         dict = self.dicts[self.stPt]
         
         #######################################################################
@@ -1648,7 +1546,7 @@ class ObsPyckGUI:
                 self.redraw()
                 msg = "%s set at %.3f" % (KEY_FULLNAMES[phase_type],
                                           dict[phase_type])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key in KEYS['setWeight'].keys():
@@ -1660,7 +1558,7 @@ class ObsPyckGUI:
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %i" % (KEY_FULLNAMES[key], dict[key])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key in KEYS['setPol'].keys():
@@ -1672,7 +1570,7 @@ class ObsPyckGUI:
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key in KEYS['setOnset'].keys():
@@ -1684,7 +1582,7 @@ class ObsPyckGUI:
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key == KEYS['delPick']:
@@ -1715,7 +1613,7 @@ class ObsPyckGUI:
                 self.updateLine(key)
                 self.redraw()
                 msg = "%s set at %.3f" % (KEY_FULLNAMES[key], dict[key])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key == KEYS['setMagMin']:
@@ -1726,7 +1624,7 @@ class ObsPyckGUI:
                 if len(self.axs) < 2:
                     err = "Error: Magnitude picking only supported with a " + \
                           "minimum of 2 axes."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     return
                 # determine which dict keys to work with
                 key = 'MagMin'
@@ -1756,7 +1654,7 @@ class ObsPyckGUI:
                 self.redraw()
                 msg = "%s set: %s at %.3f" % (KEY_FULLNAMES[key], dict[key],
                                               dict[keyT])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key == KEYS['setMagMax']:
@@ -1767,7 +1665,7 @@ class ObsPyckGUI:
                 if len(self.axs) < 2:
                     err = "Error: Magnitude picking only supported with a " + \
                           "minimum of 2 axes."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     return
                 # determine which dict keys to work with
                 key = 'MagMax'
@@ -1797,7 +1695,7 @@ class ObsPyckGUI:
                 self.redraw()
                 msg = "%s set: %s at %.3f" % (KEY_FULLNAMES[key], dict[key],
                                               dict[keyT])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 return
 
         if event.key == KEYS['delMagMinMax']:
@@ -1822,10 +1720,10 @@ class ObsPyckGUI:
             self.flagWheelZoom = not self.flagWheelZoom
             if self.flagWheelZoom:
                 msg = "Mouse wheel zooming activated"
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
             else:
                 msg = "Mouse wheel zooming deactivated"
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
             return
 
         if event.key == KEYS['switchWheelZoomAxis']:
@@ -1836,25 +1734,25 @@ class ObsPyckGUI:
             self.canv.widgetlock.release(self.toolbar)
             self.redraw()
             msg = "Switching pan mode"
-            self.textviewStdOutImproved.write(msg)
+            self._write_msg(msg)
             return
         
         # iterate the phase type combobox
         if event.key == KEYS['switchPhase']:
-            combobox = self.comboboxPhaseType
+            combobox = self.widgets['comboboxPhaseType']
             phase_count = len(combobox.get_model())
             phase_next = (combobox.get_active() + 1) % phase_count
             combobox.set_active(phase_next)
             msg = "Switching Phase button"
-            self.textviewStdOutImproved.write(msg)
+            self._write_msg(msg)
             return
             
         if event.key == KEYS['prevStream']:
-            self.buttonPreviousStream.clicked()
+            self.widgets['buttonPreviousStream'].clicked()
             return
 
         if event.key == KEYS['nextStream']:
-            self.buttonNextStream.clicked()
+            self.widgets['buttonNextStream'].clicked()
             return
     
     def keyrelease(self, event):
@@ -1863,7 +1761,7 @@ class ObsPyckGUI:
 
     # Define zooming for the mouse scroll wheel
     def scroll(self, event):
-        if self.togglebuttonShowMap.get_active():
+        if self.widgets['togglebuttonShowMap'].get_active():
             return
         if not self.flagWheelZoom:
             return
@@ -1894,7 +1792,7 @@ class ObsPyckGUI:
     
     # Define zoom reset for the mouse button 2 (always scroll wheel!?)
     def buttonpress(self, event):
-        if self.togglebuttonShowMap.get_active():
+        if self.widgets['togglebuttonShowMap'].get_active():
             return
         # set widgetlock when pressing mouse buttons and dont show cursor
         # cursor should not be plotted when making a zoom selection etc.
@@ -1909,10 +1807,10 @@ class ObsPyckGUI:
             # Update all subplots
             self.redraw()
             msg = "Resetting axes"
-            self.textviewStdOutImproved.write(msg)
+            self._write_msg(msg)
     
     def buttonrelease(self, event):
-        if self.togglebuttonShowMap.get_active():
+        if self.widgets['togglebuttonShowMap'].get_active():
             return
         # release widgetlock when releasing mouse buttons
         if event.button == 1 or event.button == 3:
@@ -1929,30 +1827,30 @@ class ObsPyckGUI:
         self.canv.widgetlock.release(self.toolbar)
 
     def updateMulticursorColor(self):
-        phase_name = self.comboboxPhaseType.get_active_text()
+        phase_name = self.widgets['comboboxPhaseType'].get_active_text()
         color = PHASE_COLORS[phase_name]
         for l in self.multicursor.lines:
             l.set_color(color)
 
     def updateButtonPhaseTypeColor(self):
-        phase_name = self.comboboxPhaseType.get_active_text()
-        style = self.buttonPhaseType.get_style().copy()
+        phase_name = self.widgets['comboboxPhaseType'].get_active_text()
+        style = self.widgets['buttonPhaseType'].get_style().copy()
         color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
         style.bg[gtk.STATE_INSENSITIVE] = color
-        self.buttonPhaseType.set_style(style)
+        self.widgets['buttonPhaseType'].set_style(style)
 
     #def updateComboboxPhaseTypeColor(self):
-    #    phase_name = self.comboboxPhaseType.get_active_text()
-    #    props = self.comboboxPhaseType.get_cells()[0].props
+    #    phase_name = self.widgets['comboboxPhaseType'].get_active_text()
+    #    props = self.widgets['comboboxPhaseType'].get_cells()[0].props
     #    color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
     #    props.cell_background_gdk = color
 
     def updateStreamNumberLabel(self):
-        self.labelStreamNumber.set_markup("<tt>%02i/%02i</tt>" % \
+        self.widgets['labelStreamNumber'].set_markup("<tt>%02i/%02i</tt>" % \
                 (self.stPt + 1, self.stNum))
     
     def updateStreamNameCombobox(self):
-        self.comboboxStreamName.set_active(self.stPt)
+        self.widgets['comboboxStreamName'].set_active(self.stPt)
 
     def updateStreamLabels(self):
         self.updateStreamNumberLabel()
@@ -1994,7 +1892,7 @@ class ObsPyckGUI:
                     if (phUTCTime > st[0].stats.endtime or \
                         phUTCTime < st[0].stats.starttime):
                         err = "Warning: Synthetic pick outside timespan."
-                        self.textviewStdErrImproved.write(err)
+                        self._write_err(err)
                         continue
                     else:
                         # phSeconds is the time in seconds after the stream-
@@ -2019,8 +1917,8 @@ class ObsPyckGUI:
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
         f = open(self.threeDlocInfile, 'w')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
@@ -2043,14 +1941,14 @@ class ObsPyckGUI:
                 else:
                     err = "Warning: Left error pick for P missing. " + \
                           "Using a default of 3 samples left of P."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     error_1 = dict['P'] - default_error
                 if 'PErr2' in dict:
                     error_2 = dict['PErr2']
                 else:
                     err = "Warning: Right error pick for P missing. " + \
                           "Using a default of 3 samples right of P."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     error_2 = dict['P'] + default_error
                 delta = error_2 - error_1
                 f.write(fmt % (dict['Station'], 'P', date, delta, lon, lat,
@@ -2065,31 +1963,31 @@ class ObsPyckGUI:
                 else:
                     err = "Warning: Left error pick for S missing. " + \
                           "Using a default of 3 samples left of S."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     error_1 = dict['S'] - default_error
                 if 'SErr2' in dict:
                     error_2 = dict['SErr2']
                 else:
                     err = "Warning: Right error pick for S missing. " + \
                           "Using a default of 3 samples right of S."
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     error_2 = dict['S'] + default_error
                 delta = error_2 - error_1
                 f.write(fmt % (dict['Station'], 'S', date, delta, lon, lat,
                                ele))
         f.close()
         msg = 'Phases for 3Dloc:'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.threeDlocInfile)
         #subprocess.call(self.threeDlocCall, shell=True)
         sub = subprocess.Popen(self.threeDlocCall, shell=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
         msg = '--> 3dloc finished'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.threeDlocOutfile)
 
     def doFocmec(self):
@@ -2119,23 +2017,23 @@ class ObsPyckGUI:
             f.write(fmt % (sta, azim, inci, pol))
         f.close()
         msg = 'Phases for focmec: %i' % count
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.focmecPhasefile)
         sub = subprocess.Popen(self.focmecCall, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
         if sub.returncode == 1:
             err = "Error: focmec did not find a suitable solution!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         msg = '--> focmec finished'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         lines = open(self.focmecSummary, "r").readlines()
         msg = '%i suitable solutions found:' % len(lines)
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.focMechList = []
         for line in lines:
             line = line.split()
@@ -2150,18 +2048,18 @@ class ObsPyckGUI:
             msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                     (tempdict['Dip'], tempdict['Strike'], tempdict['Rake'],
                      tempdict['Errors'], tempdict['Station Polarity Count'])
-            self.textviewStdOutImproved.write(msg)
+            self._write_msg(msg)
             self.focMechList.append(tempdict)
         self.focMechCount = len(self.focMechList)
         self.focMechCurrent = 0
         msg = "selecting Focal Mechanism No.  1 of %2i:" % self.focMechCount
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.dictFocalMechanism = self.focMechList[0]
         dF = self.dictFocalMechanism
         msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                 (dF['Dip'], dF['Strike'], dF['Rake'], dF['Errors'],
                  dF['Station Polarity Count'])
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def nextFocMec(self):
         if self.focMechCount is None:
@@ -2170,19 +2068,19 @@ class ObsPyckGUI:
         self.dictFocalMechanism = self.focMechList[self.focMechCurrent]
         msg = "selecting Focal Mechanism No. %2i of %2i:" % \
                 (self.focMechCurrent + 1, self.focMechCount)
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
                 (self.dictFocalMechanism['Dip'],
                  self.dictFocalMechanism['Strike'],
                  self.dictFocalMechanism['Rake'],
                  self.dictFocalMechanism['Errors'],
                  self.dictFocalMechanism['Station Polarity Count'])
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
     
     def drawFocMec(self):
         if self.dictFocalMechanism == {}:
             err = "Error: No focal mechanism data!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         # make up the figure:
         fig = self.fig
@@ -2266,8 +2164,8 @@ class ObsPyckGUI:
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
 
         f = open(self.hyp2000Phasefile, 'w')
         phases_hypo71 = self.dicts2hypo71Phases()
@@ -2280,20 +2178,20 @@ class ObsPyckGUI:
         f2.close()
 
         msg = 'Phases for Hypo2000:'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.hyp2000Phasefile)
         msg = 'Stations for Hypo2000:'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.hyp2000Stationsfile)
 
         sub = subprocess.Popen(self.hyp2000Call, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
         msg = '--> hyp2000 finished'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.hyp2000Summary)
 
     def doNLLoc(self):
@@ -2303,7 +2201,7 @@ class ObsPyckGUI:
         """
         # determine which model should be used in location
         controlfilename = "locate_%s.nlloc" % \
-                          self.comboboxNLLocModel.get_active_text()
+                          self.widgets['comboboxNLLocModel'].get_active_text()
         nllocCall = self.nllocCall % controlfilename
 
         self.setXMLEventID()
@@ -2311,8 +2209,8 @@ class ObsPyckGUI:
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
 
         f = open(self.nllocPhasefile, 'w')
         phases_hypo71 = self.dicts2hypo71Phases()
@@ -2320,17 +2218,17 @@ class ObsPyckGUI:
         f.close()
 
         msg = 'Phases for NLLoc:'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.nllocPhasefile)
 
         sub = subprocess.Popen(nllocCall, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        self.textviewStdOutImproved.write(msg)
-        self.textviewStdErrImproved.write(err)
+        self._write_msg(msg)
+        self._write_err(err)
         msg = '--> NLLoc finished'
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.catFile(self.nllocSummary)
 
     def catFile(self, file):
@@ -2338,14 +2236,14 @@ class ObsPyckGUI:
         msg = ""
         for line in lines:
             msg += line
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def loadNLLocOutput(self):
         lines = open(self.nllocSummary).readlines()
         if not lines:
             err = "Error: NLLoc output file (%s) does not exist!" % \
                     self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         # goto maximum likelihood origin location info line
         try:
@@ -2355,7 +2253,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No correct location info found in NLLoc " + \
                   "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         
         line = line.split()
@@ -2373,7 +2271,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No correct location info found in NLLoc " + \
                   "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         
         line = line.split()
@@ -2393,7 +2291,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No correct location info found in NLLoc " + \
                   "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         
         line = line.split()
@@ -2408,7 +2306,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No correct location info found in NLLoc " + \
                   "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         
         line = line.split()
@@ -2468,7 +2366,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No correct synthetic phase info found in NLLoc " + \
                   "outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
 
         # remove all non phase-info-lines from bottom of list
@@ -2479,7 +2377,7 @@ class ObsPyckGUI:
         except:
             err = "Error: Could not remove unwanted lines at bottom of " + \
                   "NLLoc outputfile (%s)!" % self.nllocSummary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         
         dO['used P Count'] = 0
@@ -2532,7 +2430,7 @@ class ObsPyckGUI:
             if streamnum is None:
                 err = "Warning: Did not find matching stream for pick " + \
                       "data with station id: \"%s\"" % station.strip()
-                self.textviewStdErrImproved.write(err)
+                self._write_err(err)
                 continue
             
             # assign synthetic phase info
@@ -2575,7 +2473,7 @@ class ObsPyckGUI:
         if lines == []:
             err = "Error: Hypo2000 output file (%s) does not exist!" % \
                     self.hyp2000Summary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         # goto origin info line
         while True:
@@ -2590,7 +2488,7 @@ class ObsPyckGUI:
         except:
             err = "Error: No location info found in Hypo2000 outputfile " + \
                   "(%s)!" % self.hyp2000Summary
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
 
         year = int(line[1:5])
@@ -2702,7 +2600,7 @@ class ObsPyckGUI:
             if streamnum is None:
                 err = "Warning: Did not find matching stream for pick " + \
                       "data with station id: \"%s\"" % station.strip()
-                self.textviewStdErrImproved.write(err)
+                self._write_err(err)
                 continue
             
             # assign synthetic phase info
@@ -2788,7 +2686,7 @@ class ObsPyckGUI:
     
     def updateNetworkMag(self):
         msg = "updating network magnitude..."
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         dM = self.dictMagnitude
         dM['Station Count'] = 0
         dM['Magnitude'] = 0
@@ -2796,7 +2694,7 @@ class ObsPyckGUI:
         for dict in self.dicts:
             if dict['MagUse'] and 'Mag' in dict:
                 msg = "%s: %.1f" % (dict['Station'], dict['Mag'])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
                 dM['Station Count'] += 1
                 dM['Magnitude'] += dict['Mag']
                 staMags.append(dict['Mag'])
@@ -2808,7 +2706,7 @@ class ObsPyckGUI:
             dM['Uncertainty'] = np.var(staMags)
         msg = "new network magnitude: %.2f (Variance: %.2f)" % \
                 (dM['Magnitude'], dM['Uncertainty'])
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % (dM['Magnitude'],
                                                            dM['Uncertainty'])
         try:
@@ -2820,7 +2718,7 @@ class ObsPyckGUI:
         if not 'Longitude' in self.dictOrigin or \
            not 'Latitude' in self.dictOrigin:
             err = "Error: No coordinates for origin!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
         epidists = []
         for dict in self.dicts:
             x, y = utlGeoKm(self.dictOrigin['Longitude'],
@@ -2862,7 +2760,7 @@ class ObsPyckGUI:
                                                 st[2].stats.channel)
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (dict['Station'], dict['Mag'], dict['MagChannel'])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
             
             elif 'MagMin1' in dict and 'MagMax1' in dict:
                 amp = dict['MagMax1'] - dict['MagMin1']
@@ -2873,7 +2771,7 @@ class ObsPyckGUI:
                 dict['MagChannel'] = '%s' % st[1].stats.channel
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (dict['Station'], dict['Mag'], dict['MagChannel'])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
             
             elif 'MagMin2' in dict and 'MagMax2' in dict:
                 amp = dict['MagMax2'] - dict['MagMin2']
@@ -2884,7 +2782,7 @@ class ObsPyckGUI:
                 dict['MagChannel'] = '%s' % st[2].stats.channel
                 msg = 'calculated new magnitude for %s: %0.2f (channels: %s)' \
                       % (dict['Station'], dict['Mag'], dict['MagChannel'])
-                self.textviewStdOutImproved.write(msg)
+                self._write_msg(msg)
     
     #see http://www.scipy.org/Cookbook/LinearRegression for alternative routine
     #XXX replace with drawWadati()
@@ -2899,7 +2797,7 @@ class ObsPyckGUI:
         except:
             err = "Error: Package rpy could not be imported!\n" + \
                   "(We should switch to scipy polyfit, anyway!)"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         pTimes = []
         spTimes = []
@@ -2919,7 +2817,7 @@ class ObsPyckGUI:
                 continue
         if len(pTimes) < 2:
             err = "Error: Less than 2 P-S Pairs!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         my_lsfit = rpy.r.lsfit(pTimes, spTimes)
         gradient = my_lsfit['coefficients']['X']
@@ -3003,11 +2901,11 @@ class ObsPyckGUI:
                     self.axs[i].transData, self.axs[i].transAxes))
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(
                                                   formatXTicklabels))
-            if self.togglebuttonFilter.get_active():
-                zerophase = self.checkbuttonZeroPhase.get_active()
-                freq_highpass = self.spinbuttonHighpass.get_value()
-                freq_lowpass = self.spinbuttonLowpass.get_value()
-                filter_name = self.comboboxFilterType.get_active_text()
+            if self.widgets['togglebuttonFilter'].get_active():
+                zerophase = self.widgets['checkbuttonZeroPhase'].get_active()
+                freq_highpass = self.widgets['spinbuttonHighpass'].get_value()
+                freq_lowpass = self.widgets['spinbuttonLowpass'].get_value()
+                filter_name = self.widgets['comboboxFilterType'].get_active_text()
                 if filter_name == "Bandpass":
                     filt_data = bandpass(tr.data, freq_highpass, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
                 elif filter_name == "Bandstop":
@@ -3039,7 +2937,7 @@ class ObsPyckGUI:
         dO = self.dictOrigin
         if dO == {}:
             err = "Error: No hypocenter data!"
-            self.textviewStdErrImproved.write(err)
+            self._write_err(err)
             return
         #toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
@@ -3161,7 +3059,7 @@ class ObsPyckGUI:
            os.path.isfile(self.nllocScatterBin):
             cmap = matplotlib.cm.gist_heat_r
             data = readNLLocScatter(self.nllocScatterBin,
-                                    self.textviewStdErrImproved)
+                                    self.widgets['textviewStdErrImproved'])
             data = data.swapaxes(0, 1)
             self.axEventMap.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
 
@@ -3215,7 +3113,7 @@ class ObsPyckGUI:
             del self.axEventMap
 
     def selectMagnitudes(self, event):
-        if not self.togglebuttonShowMap.get_active():
+        if not self.widgets['togglebuttonShowMap'].get_active():
             return
         if event.artist != self.scatterMag:
             return
@@ -3364,7 +3262,7 @@ class ObsPyckGUI:
                           "with an S phase without P phase.\n" + \
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                 t2 = self.streams[i][0].stats.starttime
                 t2 += dict['S']
                 # if the S time's absolute minute is higher than that of the
@@ -3377,7 +3275,7 @@ class ObsPyckGUI:
                     err = "Warning: S phase seconds are greater than 99 " + \
                           "which is not covered by the hypo phase file " + \
                           "format! Omitting S phase of station %s!" % sta
-                    self.textviewStdErrImproved.write(err)
+                    self._write_err(err)
                     hypo71_string += "\n"
                     continue
                 date2 = str(abs_sec)
@@ -3421,7 +3319,7 @@ class ObsPyckGUI:
 
         # if the sysop checkbox is checked, we set the account in the xml
         # to sysop (and also use sysop as the seishub user)
-        if self.checkbuttonSysop.get_active():
+        if self.widgets['checkbuttonSysop'].get_active():
             Sub(event_type, "account").text = "sysop"
         else:
             Sub(event_type, "account").text = self.server['User']
@@ -3429,7 +3327,7 @@ class ObsPyckGUI:
         Sub(event_type, "user").text = self.username
 
         Sub(event_type, "public").text = "%s" % \
-                self.checkbuttonPublishEvent.get_active()
+                self.widgets['checkbuttonPublishEvent'].get_active()
         
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
@@ -3699,9 +3597,9 @@ class ObsPyckGUI:
         # user_account in the xml to "sysop").
         # the correctness of the sysop password is tested when checking the
         # sysop box and entering the password immediately.
-        if self.checkbuttonSysop.get_active():
+        if self.widgets['checkbuttonSysop'].get_active():
             userid = "sysop"
-            passwd = self.entrySysopPassword.get_text()
+            passwd = self.widgets['entrySysopPassword'].get_text()
         else:
             userid = self.server['User']
             passwd = self.server['Password']
@@ -3721,11 +3619,11 @@ class ObsPyckGUI:
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
         # create XML and also save in temporary directory for inspection purposes
         msg = "creating xml..."
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         data = self.dicts2XML()
         tmpfile = self.tmp_dir + name + ".xml"
         msg = "writing xml as %s (for debugging purposes only!)" % tmpfile
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         open(tmpfile, "w").write(data)
 
         #construct and send the header
@@ -3748,7 +3646,7 @@ class ObsPyckGUI:
         msg += "\nResponse: %s %s" % (statuscode, statusmessage)
         #msg += "\nHeader:"
         #msg += "\n%s" % str(header).strip()
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def deleteEventInSeishub(self, resource_name):
         """
@@ -3763,9 +3661,9 @@ class ObsPyckGUI:
         # easily be resubmitted using the http interface).
         # the correctness of the sysop password is tested when checking the
         # sysop box and entering the password immediately.
-        if self.checkbuttonSysop.get_active():
+        if self.widgets['checkbuttonSysop'].get_active():
             userid = "sysop"
-            passwd = self.entrySysopPassword.get_text()
+            passwd = self.widgets['entrySysopPassword'].get_text()
         else:
             userid = self.server['User']
             passwd = self.server['Password']
@@ -3792,11 +3690,11 @@ class ObsPyckGUI:
         msg += "\nResponse: %s %s" % (statuscode, statusmessage)
         #msg += "\nHeader:"
         #msg += "\n%s" % str(header).strip()
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
     
     def clearDictionaries(self):
         msg = "Clearing previous data."
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         dont_delete = ['Station', 'StaLat', 'StaLon', 'StaEle',
                        'pazZ', 'pazN', 'pazE']
         for dict in self.dicts:
@@ -3815,7 +3713,7 @@ class ObsPyckGUI:
 
     def clearOriginMagnitudeDictionaries(self):
         msg = "Clearing previous origin and magnitude data."
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         dont_delete = ['Station', 'StaLat', 'StaLon', 'StaEle', 'pazZ', 'pazN',
                        'pazE', 'P', 'PErr1', 'PErr2', 'POnset', 'PPol',
                        'PWeight', 'S', 'SErr1', 'SErr2', 'SOnset', 'SPol',
@@ -3836,7 +3734,7 @@ class ObsPyckGUI:
 
     def clearFocmecDictionary(self):
         msg = "Clearing previous focal mechanism data."
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
         self.dictFocalMechanism = {}
         self.focMechList = []
         self.focMechCurrent = None
@@ -3906,7 +3804,7 @@ class ObsPyckGUI:
             if streamnum is None:
                 err = "Warning: Did not find matching stream for pick " + \
                       "data with station id: \"%s\"" % station.strip()
-                self.textviewStdErrImproved.write(err)
+                self._write_err(err)
                 continue
             # values
             time = pick.xpath(".//time/value")[0].text
@@ -4151,7 +4049,7 @@ class ObsPyckGUI:
             if streamnum is None:
                 err = "Warning: Did not find matching stream for station " + \
                       "magnitude data with id: \"%s\"" % station.strip()
-                self.textviewStdErrImproved.write(err)
+                self._write_err(err)
                 continue
             # values
             mag = float(stamag.xpath(".//mag/value")[0].text)
@@ -4212,7 +4110,7 @@ class ObsPyckGUI:
         msg = "Fetched event %i of %i: %s (account: %s, user: %s)"% \
               (self.seishubEventCurrent + 1, self.seishubEventCount,
                resource_name, account, user)
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def getEventListFromSeishub(self, starttime, endtime):
         """
@@ -4277,7 +4175,7 @@ class ObsPyckGUI:
                 user = None
             msg += "\n  - %s (account: %s, user: %s)" % (resource_name,
                                                          account, user)
-        self.textviewStdOutImproved.write(msg)
+        self._write_msg(msg)
 
     def checkForSysopEventDuplicates(self, starttime, endtime):
         """
@@ -4310,8 +4208,8 @@ class ObsPyckGUI:
                   "the current time window! Please check if these are " + \
                   "duplicate events and delete old resources."
             errlist = "\n".join(list_sysop_events)
-            self.textviewStdErrImproved.write(err)
-            self.textviewStdErrImproved.write(errlist)
+            self._write_err(err)
+            self.widgets['textviewStdErrImproved'].write(errlist)
 
             dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                        gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
