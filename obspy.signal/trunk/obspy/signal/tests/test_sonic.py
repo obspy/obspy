@@ -41,7 +41,9 @@ if __name__ == '__main__':
     st[-1].stats.lat = 48.108730
     st[-1].stats.elev = 0.450
 
-    st.filter('bandpass', {'freqmin': 1.0, 'freqmax': 5.0, 'corners': 2, 'zerophase': False})
+    # we do this instead of instrument simulation, take flat part of
+    # response spectrum
+    st.filter('bandpass', {'freqmin': 1.0, 'freqmax': 40.0, 'corners': 1, 'zerophase': False})
 
     stime = UTCDateTime("20080217110520")
     etime = UTCDateTime("20080217110540")
@@ -63,8 +65,8 @@ if __name__ == '__main__':
     frqhigh = 8.0
     prewhiten = 0
 
-    semb_thres = -1e9
-    vel_thres = -1e9
+    semb_thres = -1e99
+    vel_thres = -1e99
 
     st.trim(stime, etime)
 

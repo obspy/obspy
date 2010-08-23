@@ -649,7 +649,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
                    frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
         abspow, power, ix, iy, _ifkq = buf
-        print buf
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
@@ -661,6 +660,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
         if power > semb_thres and 1. / slow > vel_thres:
             res.append([newstart, power, abspow, azimut, slow])
+            print res[-1]
         if (spoint[0] + offset + nstep + nsamp) >= ntrace[0] or \
                 (newstart + nsamp / df) > etime:
             eotr = False
