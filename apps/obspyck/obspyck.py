@@ -1882,8 +1882,7 @@ class ObsPyckGUI:
             phResid = float(phase[8])
             # residual is defined as P-Psynth by NLLOC and 3dloc!
             phUTCTime = phUTCTime - phResid
-            for i, dict in enumerate(self.dicts):
-                st = self.streams[i]
+            for st, dict in zip(self.streams, self.dicts):
                 # check for matching station names
                 if not phStat == st[0].stats.station.strip():
                     continue
@@ -1923,8 +1922,7 @@ class ObsPyckGUI:
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
-        for i, dict in enumerate(self.dicts):
-            st = self.streams[i]
+        for st, dict in zip(self.streams, self.dicts):
             lon = dict['StaLon']
             lat = dict['StaLat']
             ele = dict['StaEle']
@@ -2669,9 +2667,8 @@ class ObsPyckGUI:
         lines = open(self.threeDlocOutfile).readlines()
         for line in lines[1:]:
             pick = line.split()
-            for i, st in enumerate(self.streams):
+            for st, dict in zip(self.streams, self.dicts):
                 if pick[0].strip() == st[0].stats.station.strip():
-                    dict = self.dicts[i]
                     if pick[1] == 'P':
                         dict['PAzim'] = float(pick[9])
                         dict['PInci'] = float(pick[10])
@@ -2741,8 +2738,7 @@ class ObsPyckGUI:
         self.dictOrigin['Median Distance'] = np.median(epidists)
 
     def calculateStationMagnitudes(self):
-        for i, dict in enumerate(self.dicts):
-            st = self.streams[i]
+        for st, dict in zip(self.streams, self.dicts):
             if 'MagMin1' in dict and 'MagMin2' in dict and \
                'MagMax1' in dict and 'MagMax2' in dict:
                 
@@ -2802,9 +2798,8 @@ class ObsPyckGUI:
         pTimes = []
         spTimes = []
         stations = []
-        for i, dict in enumerate(self.dicts):
+        for st, dict in zip(self.streams, self.dicts):
             if 'P' in dict and 'S' in dict:
-                st = self.streams[i]
                 p = st[0].stats.starttime
                 p += dict['P']
                 p = "%.3f" % p.getTimeStamp()
@@ -2980,7 +2975,7 @@ class ObsPyckGUI:
         self.scatterMagIndices = []
         self.scatterMagLon = []
         self.scatterMagLat = []
-        for i, dict in enumerate(self.dicts):
+        for dict in self.dicts:
             # determine which stations are used in location
             if 'Pres' in dict or 'Sres' in dict:
                 stationColor = 'black'
@@ -3148,7 +3143,7 @@ class ObsPyckGUI:
         fmt = "%6s%02i%05.2fN%03i%05.2fE%4i\n"
         hypo71_string = ""
 
-        for i, dict in enumerate(self.dicts):
+        for dict in self.dicts:
             sta = dict['Station']
             lon = dict['StaLon']
             lon_deg = int(lon)
@@ -3224,12 +3219,12 @@ class ObsPyckGUI:
         fmtS = "%12s%1sS%1s%1i\n"
         hypo71_string = ""
 
-        for i, dict in enumerate(self.dicts):
+        for st, dict in zip(self.streams, self.dicts):
             sta = dict['Station']
             if 'P' not in dict and 'S' not in dict:
                 continue
             if 'P' in dict:
-                t = self.streams[i][0].stats.starttime
+                t = st[0].stats.starttime
                 t += dict['P']
                 date = t.strftime("%y%m%d%H%M%S")
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
@@ -3263,7 +3258,7 @@ class ObsPyckGUI:
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
                     self._write_err(err)
-                t2 = self.streams[i][0].stats.starttime
+                t2 = st[0].stats.starttime
                 t2 += dict['S']
                 # if the S time's absolute minute is higher than that of the
                 # P pick, we have to add 60 to the S second count for the
@@ -3332,9 +3327,7 @@ class ObsPyckGUI:
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
         # go through all stream-dictionaries and look for picks
-        for i, dict in enumerate(self.dicts):
-            st = self.streams[i]
-
+        for st, dict in zip(self.streams, self.dicts):
             # write P Pick info
             if 'P' in dict:
                 pick = Sub(xml, "pick")
@@ -3539,8 +3532,7 @@ class ObsPyckGUI:
                 Sub(mag, "uncertainty").text = str(dM['Uncertainty'])
             Sub(magnitude, "type").text = "Ml"
             Sub(magnitude, "stationCount").text = '%i' % dM['Station Count']
-            for i, dict in enumerate(self.dicts):
-                st = self.streams[i]
+            for dict in self.dicts:
                 if 'Mag' in dict:
                     stationMagnitude = Sub(xml, "stationMagnitude")
                     mag = Sub(stationMagnitude, 'mag')
