@@ -8,6 +8,8 @@ extern "C" {
 #if defined(__linux__) || defined(__linux)
   #include <values.h>
   #include <malloc.h>
+  void rffti(int n, double* wsave);            // fftpack init function
+  void rfftf(int n, double* r, double* wsave); // fftpack r fwd
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
   #include <limits.h>
   #include <sys/malloc.h>
@@ -17,6 +19,12 @@ extern "C" {
 #else
   #include <limits.h>
   #include <malloc.h>
+  #include "runtimelink.c"
+#endif
+
+
+#ifndef M_PI
+  #define M_PI 3.14159265
 #endif
 
 

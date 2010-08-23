@@ -30,9 +30,9 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 macros = []
-if platform.system() == "Windows":
-    # disable some warnings for MSVC
-    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
+#if platform.system() == "Windows":
+#    # disable some warnings for MSVC
+#    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
 src = os.path.join('obspy', 'signal', 'src') + os.sep
 symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
@@ -40,19 +40,22 @@ symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
 
 # try to find platfrom independently the suffix of fftpack_lite
 numpy_lib_dir = os.path.dirname(np.fft.__file__)
-for ext in ('pyd', 'dylib', 'so'):
+libraries = []
+for ext in ('dylib', 'so', 'dll'):
     fftpack = 'fftpack_lite.%s' % ext
     if not os.path.exists(os.path.join(numpy_lib_dir, fftpack)):
         continue
+    libraries.append(fftpack)
+    break
 
 lib = MyExtension('libsignal',
                   define_macros=macros,
-                  library_dirs = [numpy_lib_dir],
-                  libraries = [':'+fftpack],
+                  #library_dirs=[numpy_lib_dir],
+                  #libraries=libraries,
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
                            src + 'coordtrans.c', src + 'pk_mbaer.c',
-                           src + 'filt_util.c', src + 'arpicker.c',
-                           src + 'bbfk.c'],
+                           src + 'filt_util.c', src + 'arpicker.c'],
+                           #src + 'bbfk.c', src + 'runtimelink.c'],
                   export_symbols=symbols,
                   extra_link_args=[])
 

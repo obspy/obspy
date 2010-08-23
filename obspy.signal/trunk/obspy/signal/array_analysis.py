@@ -593,8 +593,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thres,
-          vel_thres, frqlow, frqhigh, stime, etime, prewhiten):
+def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
+          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten):
     """
     Returns list of newstart, time, power, abspow, azimut, slow
 
@@ -612,17 +612,15 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thre
     :param etime: Endtime of interest
     :param prewhiten: Do prewhitening
     """
-    counter = 0
-    newstart = 0
     res = []
     eotr = True
     #XXX data must be zero mean, corrected and bandpass filtered
     #XXX check that sampling rates do not vary more than 1e-3
 
-    grdpts_x = int(((slm_x - sll_x)/sl_s + 0.5) + 1)
-    grdpts_y = int(((slm_y - sll_y)/sl_s + 0.5) + 1)
+    grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
+    grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
-    geometry, counter = get_geometry(stream)
+    geometry, _counter = get_geometry(stream)
     time_shift_table_numpy, counter = get_timeshift(geometry, sll_x, sll_y,
                                                     sl_s, grdpts_x, grdpts_y)
     time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
@@ -638,7 +636,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thre
         ntrace[i] = len(tr.data)
 
     # offset of arrays
-    spoint, epoint = get_spoint(stream, stime, etime)
+    spoint, _epoint = get_spoint(stream, stime, etime)
     #
     # loop with a sliding window over the data trace array and apply bbfk
     #
@@ -650,17 +648,19 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thre
     while eotr:
         buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
                    frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
-        abspow, power, ix, iy, ifkq = buf
+        abspow, power, ix, iy, _ifkq = buf
+
+        print buf
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s
 
-        slow = np.sqrt(slow_x**2 + slow_y**2)
+        slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
         if slow < 1e-8:
             slow = 1e-8
-        azimut = 180*math.atan2(slow_x,slow_y)/math.pi
-        if power > semb_thres and 1./slow > vel_thres:
+        azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
+        if power > semb_thres and 1. / slow > vel_thres:
             res.append([newstart, power, abspow, azimut, slow])
         if (spoint[0] + offset + nstep + nsamp) >= ntrace[0] or \
                 (newstart + nsamp / df) > etime:
@@ -668,7 +668,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s, semb_thre
         offset += nstep
         counter += 1
 
-        newstart += nstep/df
+        newstart += nstep / df
     return res
 
 
@@ -700,7 +700,7 @@ def bbfk(spoint, offset, trace, stat_tshift_table, flow, fhigh, digfreq,
         C.c_int,
         C.POINTER(C.c_void_p),
         C.c_void_p,
-        C.POINTER(C.c_float), 
+        C.POINTER(C.c_float),
         C.POINTER(C.c_float),
         C.POINTER(C.c_int),
         C.POINTER(C.c_int),
@@ -745,15 +745,15 @@ def get_geometry(stream):
     for tr in stream:
         center_lat += tr.stats.lat
         center_lon += tr.stats.lon
-        center_h   += tr.stats.elev
+        center_h += tr.stats.elev
 
     center_lat /= nstat
     center_lon /= nstat
-    center_h   /= nstat
+    center_h /= nstat
 
-    geometry = np.empty((nstat+1,3))
+    geometry = np.empty((nstat + 1, 3))
     for i, tr in enumerate(stream):
-        x, y = utlGeoKm(center_lon, center_lat, 
+        x, y = utlGeoKm(center_lon, center_lat,
                         tr.stats.lon, tr.stats.lat)
         geometry[i][0] = x
         geometry[i][1] = y
@@ -789,7 +789,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
             sx = sll_x + k * sl_s
             for l in xrange(grdpts_y):
                 sy = sll_y + l * sl_s
-                time_shift_table[i][k][l] = sx*geometry[i][0] + sy*geometry[i][1]
+                time_shift_table[i][k][l] = sx * geometry[i][0] + sy * geometry[i][1]
                 counter += 1
 
     return time_shift_table, counter
@@ -814,10 +814,10 @@ def get_spoint(stream, stime, etime):
     # now we have to adjust to the beginning of real start time
     for i in xrange(nostat):
         if slatest <= stime:
-            offset = int(((stime-slatest)/stream[i].stats.delta + 1.))
+            offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
         if eearliest >= etime:
-            negoffset = int(((eearliest-etime)/stream[i].stats.delta + 1.))
-        diffstart = slatest-stream[0].stats.starttime
+            negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
+        diffstart = slatest - stream[0].stats.starttime
         if diffstart < 0:
             msg = "Specified start-time is smaller than starttime in stream"
             raise Exception(msg)
@@ -847,7 +847,7 @@ def ndarray2ptr3D(ndarray):
     voids = []
     for i in xrange(dim1):
         row = ndarray[i]
-        p = (ptr*dim2)(*[col.ctypes.data_as(ptr) for col in row])
+        p = (ptr * dim2)(*[col.ctypes.data_as(ptr) for col in row])
         voids.append(C.cast(p, C.c_void_p))
-    return (ptr*dim1)(*voids)
+    return (ptr * dim1)(*voids)
 

@@ -13,18 +13,18 @@ if __name__ == '__main__':
     from obspy.core import read, UTCDateTime
     from obspy.signal.array_analysis import sonic
 
-    path = "/scratch/AGFA/orig_spreng"
-    #path = "tests/data"
+    #path = "/scratch/AGFA/orig_spreng"
+    path = "muh"
     # BW01
-    st  = read("%s/20080217_110000_Z.A060" % path)
+    st = read("%s/20080217_110000_Z.A060" % path)
     st[-1].stats.lon = 11.582967
-    st[-1].stats.lat = 48.108589 
+    st[-1].stats.lat = 48.108589
     st[-1].stats.elev = 0.450
     # BW02
     st += read("%s/20080217_110000_1.bw02" % path)
     st[-1].stats.lon = 48.108192
-    st[-1].stats.lat = 11.583120 
-    st[-1].stats.elev =  0.450
+    st[-1].stats.lat = 11.583120
+    st[-1].stats.elev = 0.450
     # BW03
     st += read("%s/20080217_110000_1.bw03" % path)
     st[-1].stats.lon = 11.583414

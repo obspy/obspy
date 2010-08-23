@@ -13,6 +13,8 @@
 #include <string.h>
 #include <math.h>
 //#include <mcheck.h>
+#include "platform.h"
+
 
 #define TRUE 1
 #define FALSE 0
@@ -22,8 +24,7 @@
 // e.g. link with -L/path/to/fftpack_lite -l:fftpack_lite.so
 // numpy has no floating point transfrom compiled, therefore we need to
 // cast the result to double
-void rffti(int n, double* wsave);            // fftpack init function
-void rfftf(int n, double* r, double* wsave); // fftpack r fwd
+
 static double* fftpack_work = 0;
 static int     fftpack_len = -1;
 
@@ -137,7 +138,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         //memcpy((void *)window[j],(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
         //memcpy((void *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
         window[j] = (double *)calloc(nfft+1, sizeof(double));
-        memcpy((void *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
+        memcpy((double *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
         /*************************************************/
         /* 4.6.98, we insert offset removal and tapering */
         /*************************************************/
