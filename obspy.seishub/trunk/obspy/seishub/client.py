@@ -106,6 +106,28 @@ class Client(object):
 
         return doc
 
+    def _put_test(self):
+        """
+        Send a resource via a PUT request. Test implementation.
+        """
+        method = "PUT"
+        resource_name = "blibla"
+        url = "/".join([self.base_url, "xml", "seismology", "event",
+                        resource_name])
+        data = "<?xml version='1.0' encoding='UTF-8' ?><test>blup</test>"
+        headers = {}
+        # e.g. headers['User-Agent'] = "obspyck"
+        # e.g. headers['Content-type'] = "text/xml; charset=\"UTF-8\""
+        req = RequestWithMethod(method=method, url=url, data=data,
+                                headers=headers)
+        # it seems the following always ends in a urllib2.HTTPError even with
+        # nice status codes...?!?
+        try:
+            response = urllib2.urlopen(req)
+            return response
+        except urllib2.HTTPError, e:
+            return e.code, e.msg
+
     def _objectify(self, url, *args, **kwargs):
         doc = self._fetch(url, *args, **kwargs)
         return objectify.fromstring(doc)
@@ -717,7 +739,28 @@ class _EventMapperClient(_BaseRESTClient):
         kml_string = self.getKML(nolabels=False, **kwargs)
         open(filename, "wt").write(kml_string)
         return
-        
+
+
+class RequestWithMethod(urllib2.Request):
+    """
+    Improved urllib2.Request Class for which the HTTP Method can be set to
+    values other than only GET and POST.
+    See http://benjamin.smedbergs.us/blog/2008-10-21/ \
+    putting-and-deleteing-in-python-urllib2/
+    """
+    ACCEPTED_METHODS = ["GET", "PUT", "POST", "DELETE"]
+
+    def __init__(self, method, *args, **kwargs):
+        if method not in self.ACCEPTED_METHODS:
+            msg = "HTTP Method not supported. " + \
+                  "Supported are: %s." % self.ACCEPTED_METHODS
+            raise ValueError()
+        urllib2.Request.__init__(self, *args, **kwargs)
+        self._method = method
+
+    def get_method(self):
+        return self._method
+
 
 if __name__ == '__main__':
     import doctest
