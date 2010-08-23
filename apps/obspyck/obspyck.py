@@ -686,7 +686,7 @@ class ObsPyckGUI:
         self.stderr_backup = sys.stderr
         sys.stdout = self.widgets['textviewStdOutImproved']
         sys.stderr = self.widgets['textviewStdErrImproved']
-        self.widgets['textviewStdErrImproved'].write(warn_msg)
+        self._write_err(warn_msg)
 
         # change fonts of textviews and of comboboxStreamName
         # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
@@ -4209,7 +4209,7 @@ class ObsPyckGUI:
                   "duplicate events and delete old resources."
             errlist = "\n".join(list_sysop_events)
             self._write_err(err)
-            self.widgets['textviewStdErrImproved'].write(errlist)
+            self._write_err(errlist)
 
             dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                        gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
