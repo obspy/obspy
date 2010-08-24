@@ -114,14 +114,18 @@ def isSACXY(filename):
     ### http://code.activestate.com/
     if not istext(filename, blocksize = 512):
         return False
-    f = open(filename)
-    hdcards = []
-    # read in the header cards
-    for i in xrange(30):
-        hdcards.append(f.readline())
-    npts = int(hdcards[15].split()[-1])
-    # read in the seismogram
-    seis = f.read(-1).split()
+    try:
+        f = open(filename)
+        hdcards = []
+        # read in the header cards
+        for i in xrange(30):
+            hdcards.append(f.readline())
+        npts = int(hdcards[15].split()[-1])
+        # read in the seismogram
+        seis = f.read(-1).split()
+    except:
+        return False
+    # check that npts header value and seismogram length are consistent
     if npts != len(seis):
         return False
     return True
