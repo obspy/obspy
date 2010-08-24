@@ -177,21 +177,20 @@ class Stats(AttribDict):
         else:
             super(Stats, self).__setitem__(key, value)
 
-    #def __str__(self):
-    #    """
-    #    Return better readable string representation of Stats object.
-    #    """
-    #    dict_copy = copy(self.__dict__)
-    #    priorized_keys = ['network', 'station', 'location', 'channel',
-    #                      'starttime', 'endtime', 'sampling_rate', 'delta',
-    #                      'npts', 'calib']
-    #    # determine longest key name for alignment of all items
-    #    align_len = max([len(key) for key in dict_copy.keys()]) + 2
-    #    head = [("%s: %s" % (key, dict_copy.pop(key)).ljust(align_len) \
-    #           for key in priorized_keys]
-    #    head.extend([("%s: %s" % (key, dict_copy.pop(key)).ljust(align_len) \
-    #           for key in dict_copy.keys()]
-    #    return "\n".join(head)
+    def __str__(self):
+        """
+        Return better readable string representation of Stats object.
+        """
+        dict_copy = copy(self.__dict__)
+        priorized_keys = ['network', 'station', 'location', 'channel',
+                          'starttime', 'endtime', 'sampling_rate', 'delta',
+                          'npts', 'calib']
+        # determine longest key name for alignment of all items
+        head = ["%16s: %s" % (key, dict_copy.pop(key)) \
+               for key in priorized_keys]
+        head.extend(["%16s: %s" % (key, dict_copy.pop(key)) \
+               for key in dict_copy.keys()])
+        return "\n".join(head)
 
     __setattr__ = __setitem__
 

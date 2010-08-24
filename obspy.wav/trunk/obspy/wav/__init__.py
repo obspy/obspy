@@ -26,11 +26,18 @@ data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
 'st[0]' will have a stats attribute containing the essential meta information
 of the WAVE file.
 
->>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': '', '_format': 'WAV', 'delta': 0.00014285714285714287,
-       'station': '', 'location': '',
-       'starttime': UTCDateTime(1970, 1, 1, 0, 0), 'npts': 2599,
-       'calib': 1.0, 'sampling_rate': 7000.0, 'channel': ''})
+>>> print st[0].stats
+         network: 
+         station: 
+        location: 
+         channel: 
+       starttime: 1970-01-01T00:00:00.000000Z
+         endtime: 1970-01-01T00:00:00.371143Z
+   sampling_rate: 7000.0
+           delta: 0.000142857142857
+            npts: 2599
+           calib: 1.0
+         _format: WAV
 
 The data is stored in the data attribute.
 

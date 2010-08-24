@@ -34,11 +34,18 @@ attribute contains all Mini-SEED specific attributes which actually is just the
 dataquality.
 
 >>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': 'NL', '_format': 'MSEED',
-       'mseed': AttribDict({'dataquality': 'R'}),
-       'delta': 0.025000000000000001, 'station': 'HGN', 'location': '00',
-       'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 11947,
-       'calib': 1.0, 'sampling_rate': 40.0, 'channel': 'BHZ'})
+         network: NL
+         station: HGN
+        location: 00
+         channel: BHZ
+       starttime: 2003-05-29T02:13:22.043400Z
+         endtime: 2003-05-29T02:18:20.693400Z
+   sampling_rate: 40.0
+           delta: 0.025
+            npts: 11947
+           calib: 1.0
+         _format: MSEED
+           mseed: AttribDict({'dataquality': 'R'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 

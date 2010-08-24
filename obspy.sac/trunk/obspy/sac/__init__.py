@@ -33,43 +33,50 @@ attribute, 'sac', which contains all SAC-specific attributes (SAC header
 values).
 
 >>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': '',
-       'sac': AttribDict({'user6': -12345.0, 'user7': -12345.0,
-                          'user4': -12345.0, 'user5': -12345.0,
-                          'user2': -12345.0, 'user3': -12345.0,
-                          'user0': -12345.0, 'user1': -12345.0,
-                          'ko': '-12345  ', 'kt5': '-12345  ',
-                          'user8': -12345.0, 'user9': -12345.0,
-                          'evla': -12345.0, 'norid': -12345,
-                          't0': -12345.0, 'isynth': -12345, 'dist': -12345.0,
-                          'az': -12345.0, 'idep': -12345, 'stdp': -12345.0,
-                          'evlo': -12345.0, 'kt3': '-12345  ',
-                          'stlo': -12345.0, 'iftype': 1, 'kt8': '-12345  ',
-                          'kt9': '-12345  ', 'nvhdr': 6, 'kt4': '-12345  ',
-                          'nevid': -12345, 'kt6': '-12345  ',
-                          'kt7': '-12345  ', 'kt0': '-12345  ',
-                          'kt1': '-12345  ', 'kt2': '-12345  ',
-                          'nwfid': -12345, 't2': -12345.0, 'ievreg': -12345,
-                          'gcarc': -12345.0, 'cmpaz': -12345.0,
-                          'iinst': -12345, 'ievtype': -12345, 'lpspol': 0,
-                          'kevnm': 'FUNCGEN: SINE   ', 'iqual': -12345,
-                          'depmen': 8.7539462e-08, 't9': -12345.0, 'kinst':
-                          '-12345  ', 'stel': -12345.0, 'imagsrc': -12345,
-                          'depmax': 1.0, 'lovrok': 1, 'cmpinc': -12345.0,
-                          'mag': -12345.0, 'lcalda': 1, 'stla': -12345.0,
-                          'kdatrd': '-12345  ', 'iztype': -12345,
-                          'imagtyp': -12345, 'odelta': -12345.0,
-                          'a': -12345.0, 'ka': '-12345  ', 'b': 10.0,
-                          'e': 109.0, 'leven': 1, 't8': -12345.0,
-                          'f': -12345.0, 't6': -12345.0, 't7': -12345.0,
-                          't4': -12345.0, 't5': -12345.0, 'baz': -12345.0,
-                          't3': -12345.0, 'o': -12345.0, 't1': -12345.0,
-                          'kuser2': '-12345  ', 'kuser0': '-12345  ',
-                          'istreg': -12345, 'kuser1': '-12345  ',
-                          'evdp': -12345.0, 'kf': '-12345  ', 'depmin': -1.0}),
-       '_format': 'SAC', 'delta': 1.0, 'station': 'STA', 'location': '',
-       'starttime': UTCDateTime(1978, 7, 18, 8, 0, 10), 'npts': 100,
-       'calib': 1.0, 'sampling_rate': 1.0, 'channel': 'Q'})
+         network: 
+         station: STA
+        location: 
+         channel: Q
+       starttime: 1978-07-18T08:00:10.000000Z
+         endtime: 1978-07-18T08:01:49.000000Z
+   sampling_rate: 1.0
+           delta: 1.0
+            npts: 100
+           calib: 1.0
+             sac: AttribDict({'user6': -12345.0, 'user7': -12345.0,
+                              'user4': -12345.0, 'user5': -12345.0,
+                              'user2': -12345.0, 'user3': -12345.0,
+                              'user0': -12345.0, 'user1': -12345.0,
+                              'ko': '-12345  ', 'kt5': '-12345  ',
+                              'user8': -12345.0, 'user9': -12345.0,
+                              'evla': -12345.0, 'norid': -12345,
+                              't0': -12345.0, 'isynth': -12345, 'dist': -12345.0,
+                              'az': -12345.0, 'idep': -12345, 'stdp': -12345.0,
+                              'evlo': -12345.0, 'kt3': '-12345  ',
+                              'stlo': -12345.0, 'iftype': 1, 'kt8': '-12345  ',
+                              'kt9': '-12345  ', 'nvhdr': 6, 'kt4': '-12345  ',
+                              'nevid': -12345, 'kt6': '-12345  ',
+                              'kt7': '-12345  ', 'kt0': '-12345  ',
+                              'kt1': '-12345  ', 'kt2': '-12345  ',
+                              'nwfid': -12345, 't2': -12345.0, 'ievreg': -12345,
+                              'gcarc': -12345.0, 'cmpaz': -12345.0,
+                              'iinst': -12345, 'ievtype': -12345, 'lpspol': 0,
+                              'kevnm': 'FUNCGEN: SINE   ', 'iqual': -12345,
+                              'depmen': 8.7539462e-08, 't9': -12345.0, 'kinst':
+                              '-12345  ', 'stel': -12345.0, 'imagsrc': -12345,
+                              'depmax': 1.0, 'lovrok': 1, 'cmpinc': -12345.0,
+                              'mag': -12345.0, 'lcalda': 1, 'stla': -12345.0,
+                              'kdatrd': '-12345  ', 'iztype': -12345,
+                              'imagtyp': -12345, 'odelta': -12345.0,
+                              'a': -12345.0, 'ka': '-12345  ', 'b': 10.0,
+                              'e': 109.0, 'leven': 1, 't8': -12345.0,
+                              'f': -12345.0, 't6': -12345.0, 't7': -12345.0,
+                              't4': -12345.0, 't5': -12345.0, 'baz': -12345.0,
+                              't3': -12345.0, 'o': -12345.0, 't1': -12345.0,
+                              'kuser2': '-12345  ', 'kuser0': '-12345  ',
+                              'istreg': -12345, 'kuser1': '-12345  ',
+                              'evdp': -12345.0, 'kf': '-12345  ', 'depmin': -1.0})
+         _format: SAC
 
 The data is stored in the data attribut.
 

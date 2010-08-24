@@ -44,13 +44,19 @@ additional attribute: 'gse2'. This attribute contains all GSE2 specific
 attributes:
 
 >>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': '', '_format': 'GSE2', 'delta': 0.0050000000000000001,
-       'gse2': AttribDict({'instype': '      ', 'datatype': 'CM6',
-                           'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
-                           'calper': 1.0}),
-       'station': 'RJOB', 'location': '',
-       'starttime': UTCDateTime(2005, 8, 31, 2, 33, 49, 849998), 'npts': 12000,
-       'calib': 0.094899997115135193, 'sampling_rate': 200.0, 'channel': 'Z'})
+         network: 
+         station: RJOB
+        location: 
+         channel: Z
+       starttime: 2005-08-31T02:33:49.849998Z
+         endtime: 2005-08-31T02:34:49.844998Z
+   sampling_rate: 200.0
+           delta: 0.005
+            npts: 12000
+           calib: 0.0948999971151
+         _format: GSE2
+            gse2: AttribDict({'instype': '      ', 'datatype': 'CM6', 'hang': -1.0,
+                              'auxid': 'RJOB', 'vang': -1.0, 'calper': 1.0})
 
 The data are available via the data attribute.
 
