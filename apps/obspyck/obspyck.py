@@ -320,6 +320,55 @@ def check_and_cleanup_streams(streams):
         sta_list.add(net_sta)
     return (warn_msg, merge_msg, streams)
 
+def setup_dicts(streams):
+    """
+    Function to set up the list of dictionaries that is used alongside the
+    streams list.
+    Also removes streams that do not provide the necessary metadata.
+
+    :returns: (list(:class:`obspy.core.stream.Stream`s),
+               list(dict))
+    """
+    #set up a list of dictionaries to store all picking data
+    # set all station magnitude use-flags False
+    dicts = []
+    for i in xrange(len(streams)):
+        dicts.append({})
+    # we need to go through streams/dicts backwards in order not to get
+    # problems because of the pop() statement
+    for i in range(len(streams))[::-1]:
+        dict = dicts[i]
+        st = streams[i]
+        trZ = st.select(component="Z")[0]
+        if len(st) == 3:
+            trN = st.select(component="N")[0]
+            trE = st.select(component="E")[0]
+        dict['MagUse'] = True
+        sta = trZ.stats.station.strip()
+        dict['Station'] = sta
+        #XXX not used: dictsMap[sta] = dict
+        # XXX should not be necessary
+        #if net == '':
+        #    net = 'BW'
+        #    print "Warning: Got no network information, setting to " + \
+        #          "default: BW"
+        try:
+            dict['StaLon'] = trZ.stats.coordinates.longitude
+            dict['StaLat'] = trZ.stats.coordinates.latitude
+            dict['StaEle'] = trZ.stats.coordinates.elevation / 1000. # all depths in km!
+            dict['pazZ'] = trZ.stats.paz
+            if len(st) == 3:
+                dict['pazN'] = trN.stats.paz
+                dict['pazE'] = trE.stats.paz
+        except:
+            net = trZ.stats.network.strip()
+            print 'Error: Missing metadata for %s. Discarding stream.' \
+                    % (":".join([net, sta]))
+            streams.pop(i)
+            dicts.pop(i)
+            continue
+    return streams, dicts
+
 #XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
 # we have to do this, so the focus always remains with our matplotlib
 # inset and all events are directed to the matplotlib canvas...
@@ -521,26 +570,13 @@ class ObsPyckGUI:
         self.flagWheelZoomAmplitude = False
         check_keybinding_conflicts(KEYS)
         self.tmp_dir = tempfile.mkdtemp() + '/'
-        # we have to control which binaries to use depending on architecture...
+        # set binary names to use depending on architecture and platform...
         architecture = platform.architecture()[0]
-        if architecture == '32bit':
-            self.threeDlocBinaryName = '3dloc_pitsa_32bit'
-            self.hyp2000BinaryName = 'hyp2000_32bit'
-            self.focmecScriptName = 'rfocmec_32bit'
-            self.nllocBinaryName = 'NLLoc_32bit'
-        elif architecture == '64bit':
-            self.threeDlocBinaryName = '3dloc_pitsa_64bit'
-            self.hyp2000BinaryName = 'hyp2000_64bit'
-            self.focmecScriptName = 'rfocmec_64bit'
-            self.nllocBinaryName = 'NLLoc_64bit'
-        else:
-            msg = "Warning: Could not determine architecture (32/64bit). " + \
-                  "Using 32bit binaries."
-            warnings.warn(msg)
-            self.threeDlocBinaryName = '3dloc_pitsa_32bit'
-            self.hyp2000BinaryName = 'hyp2000_32bit'
-            self.focmecScriptName = 'rfocmec_32bit'
-            self.nllocBinaryName = 'NLLoc_32bit'
+        system = platform.system()
+        self.threeDlocBinaryName = "__".join(['3dloc_pitsa', system, architecture])
+        self.hyp2000BinaryName = "__".join(['hyp2000', system, architecture])
+        self.focmecScriptName = "__".join(['rfocmec', system, architecture])
+        self.nllocBinaryName = "__".join(['NLLoc', system, architecture])
         
         #######################################################################
         # 3dloc ###############################################################
@@ -668,49 +704,14 @@ class ObsPyckGUI:
         self.streams.sort(key=lambda st: st[0].stats['station'])
 
         #XXX not used: self.dictsMap = {} #XXX not used yet!
-        self.eventMapColors = []
         # set up dictionaries to store phase_type/axes/line informations
         self.lines = {}
         self.texts = {}
-        #set up a list of dictionaries to store all picking data
-        # set all station magnitude use-flags False
-        self.dicts = []
-        for i in xrange(len(self.streams)):
-            self.dicts.append({})
-        # we need to go through streams/dicts backwards in order not to get
-        # problems because of the pop() statement
-        for i in range(len(self.streams))[::-1]:
-            dict = self.dicts[i]
-            st = self.streams[i]
-            trZ = st.select(component="Z")[0]
-            if len(st) == 3:
-                trN = st.select(component="N")[0]
-                trE = st.select(component="E")[0]
-            dict['MagUse'] = True
-            sta = trZ.stats.station.strip()
-            dict['Station'] = sta
-            #XXX not used: self.dictsMap[sta] = dict
+
+        (self.streams, self.dicts) = setup_dicts(self.streams)
+        self.eventMapColors = []
+        for i in xrange(len(self.dicts)):
             self.eventMapColors.append((0.,  1.,  0.,  1.))
-            # XXX should not be necessary
-            #if net == '':
-            #    net = 'BW'
-            #    print "Warning: Got no network information, setting to " + \
-            #          "default: BW"
-            try:
-                dict['StaLon'] = trZ.stats.coordinates.longitude
-                dict['StaLat'] = trZ.stats.coordinates.latitude
-                dict['StaEle'] = trZ.stats.coordinates.elevation / 1000. # all depths in km!
-                dict['pazZ'] = trZ.stats.paz
-                if len(st) == 3:
-                    dict['pazN'] = trN.stats.paz
-                    dict['pazE'] = trE.stats.paz
-            except:
-                net = trZ.stats.network.strip()
-                print 'Error: Missing metadata for %s. Discarding stream.' \
-                        % (":".join([net, sta]))
-                self.streams.pop(i)
-                self.dicts.pop(i)
-                continue
         
         # demean traces if not explicitly deactivated on command line
         if not self.options.nozeromean:
