@@ -1,7 +1,10 @@
 # Makefile for coordtrans
 
 CC = gcc
-CFLAGS = -g -O1 -fno-inline -Wall
+CFLAGS = -g3 -ggdb -O0 -fno-inline -Wall -Wextra 
+#CFLAGS = $(CFLAGS) -pedantic
+#CFLAGS = $(CFLAGS) -lccmalloc –ldl
+#CFLAGS = $(CFLAGS) -lefence
 
 DEPS = \
 	coordtrans.o \
