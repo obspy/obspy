@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # we do this instead of instrument simulation, take flat part of
     # response spectrum
-    st.filter('bandpass', {'freqmin': 1.0, 'freqmax': 40.0, 'corners': 1, 'zerophase': False})
+    st.filter('bandpass', {'freqmin': 1.0, 'freqmax': 5.0, 'corners': 1, 'zerophase': False})
 
     stime = UTCDateTime("20080217110520")
     etime = UTCDateTime("20080217110540")

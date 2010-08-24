@@ -124,6 +124,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     taper = (float *)calloc(nsamp, sizeof(float));
     cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
+        //allocate fft_plan this is not executing the fft
         if (fftpack_len != nfft) {
             if(fftpack_work != 0)
                 free(fftpack_work);
