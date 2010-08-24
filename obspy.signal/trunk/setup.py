@@ -41,11 +41,16 @@ symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
 # try to find platfrom independently the suffix of fftpack_lite
 numpy_lib_dir = os.path.dirname(np.fft.__file__)
 libraries = []
+extra_link_args = []
 for ext in ('dylib', 'so', 'dll', 'pyd'):
     fftpack = 'fftpack_lite.%s' % ext
     if not os.path.exists(os.path.join(numpy_lib_dir, fftpack)):
         continue
-    libraries.append(':'+fftpack)
+    if platform.system() == 'Darwin':
+        extra_link_args=['-dylib_file libfftpack_lite.dylib:%s/%s' % \
+                         (numpy_lib_dir, fftpack)]
+    else:
+        libraries.append(':'+fftpack)
     break
 
 if platform.system() == "Windows":
@@ -58,7 +63,7 @@ if platform.system() == "Windows":
                                src + 'filt_util.c', src + 'arpicker.c'],
                                #src + 'bbfk.c', src + 'runtimelink.c'],
                       export_symbols=symbols,
-                      extra_link_args=[])
+                      extra_link_args=extra_link_args)
 else:
     lib = MyExtension('libsignal',
                       define_macros=macros,
@@ -69,7 +74,7 @@ else:
                                src + 'filt_util.c', src + 'arpicker.c',
                                src + 'bbfk.c'],
                       export_symbols=symbols,
-                      extra_link_args=[])
+                      extra_link_args=extra_link_args)
 
 
 # setup
