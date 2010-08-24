@@ -245,7 +245,7 @@ def _readExample():
            'zeros': [0j, 0j]}} 
     """
     path = os.path.dirname(__file__)
-    path = os.path.join(path, "data", "example.npz")
+    path = os.path.join(path, "tests", "data", "example.npz")
     data = np.load(path)
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
