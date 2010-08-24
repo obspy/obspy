@@ -45,6 +45,55 @@ from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanva
 from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
 
 
+COMMANDLINE_OPTIONS = [
+        [["-t", "--time"], {'dest': "time", 'default': '2009-07-21T04:33:00',
+                'help': "Starttime of seismogram to retrieve. It takes a "
+                "string which UTCDateTime can convert. E.g. "
+                "'2010-01-10T05:00:00'"}],
+        [["-d", "--duration"], {'type': "float", 'dest': "duration",
+                'default': 120, 'help': "Duration of seismogram in seconds"}],
+        [["-i", "--ids"], {'dest': "ids",
+                'default': 'BW.RJOB..EH*,BW.RMOA..EH*',
+                'help': "Ids to retrieve, star for channel and wildcards for "
+                "stations are allowed, e.g. 'BW.RJOB..EH*,BW.RM?*..EH*'"}],
+        [["-s", "--servername"], {'dest': "servername", 'default': 'teide',
+                'help': "Servername of the seishub server"}],
+        [["-p", "--port"], {'type': "int", 'dest': "port", 'default': 8080,
+                'help': "Port of the seishub server"}],
+        [["--user"], {'dest': "user", 'default': 'obspyck',
+                'help': "Username for seishub server"}],
+        [["--password"], {'dest': "password", 'default': 'obspyck',
+                'help': "Password for seishub server"}],
+        [["--timeout"], {'dest': "timeout", 'type': "int", 'default': 10,
+                'help': "Timeout for seishub server"}],
+        [["-k", "--keys"], {'action': "store_true", 'dest': "keybindings",
+                'default': False, 'help': "Show keybindings and quit"}],
+        [["--lowpass"], {'type': "float", 'dest': "lowpass", 'default': 20.0,
+                'help': "Frequency for Lowpass-Slider"}],
+        [["--highpass"], {'type': "float", 'dest': "highpass", 'default': 1.0,
+                'help': "Frequency for Highpass-Slider"}],
+        [["--nozeromean"], {'action': "store_true", 'dest': "nozeromean",
+                'default': False,
+                'help': "Deactivate offset removal of traces"}],
+        [["--pluginpath"], {'dest': "pluginpath",
+                'default': "/baysoft/obspyck/",
+                'help': "Path to local directory containing the folders with "
+                "the files for the external programs"}],
+        [["--starttime-offset"], {'type': "float", 'dest': "starttime_offset",
+                'default': 0.0, 'help': "Offset to add to specified starttime "
+                "in seconds. Thus a time from an automatic picker can be used "
+                "with a specified offset for the starttime. E.g. to request a "
+                "waveform starting 30 seconds earlier than the specified time "
+                "use -30."}],
+        [["-m", "--merge"], {'type': "string", 'dest': "merge", 'default': "",
+                'help': "After fetching the streams from seishub run a merge "
+                "operation on every stream. If not done, streams with gaps "
+                "and therefore more traces per channel get discarded.\nTwo "
+                "methods are supported (see http://svn.geophysik.uni-muenchen"
+                ".de/obspy/docs/packages/auto/obspy.core.trace.Trace.__add__"
+                ".html for details)\n  \"safe\": overlaps are discarded "
+                "completely\n  \"overwrite\": the second trace is used for "
+                "overlapping parts of the trace"}]]
 SEISMIC_PHASES = ['P', 'S']
 PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
         'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
@@ -84,7 +133,7 @@ AXVLINEWIDTH = 1.2
 #dictionary for key-bindings
 KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
         'setMagMin': 'alt', 'setMagMax': ' ', 'delMagMinMax': 'escape',
-        'switchPhase': 'control', 'switchWheelZoom': 'z', 'switchPan': 'p',
+        'switchPhase': 'control', 'switchPan': 'p',
         'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
@@ -118,6 +167,158 @@ def check_keybinding_conflicts(keys):
         if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
             err = "Interfering keybindings. Please check variable KEYS"
             raise Exception(err)
+
+def fetch_waveforms_metadata(options):
+    """
+    Sets up a client and fetches waveforms and metadata according to command
+    line options.
+
+    :returns: (:class:`obspy.seishub.client.Client`,
+               list(:class:`obspy.core.stream.Stream`s))
+    """
+    t = UTCDateTime(options.time)
+    t = t + options.starttime_offset
+    baseurl = "http://" + options.servername + ":%i" % options.port
+    client = Client(base_url=baseurl, user=options.user,
+                    password=options.password, timeout=options.timeout)
+    streams = []
+    sta_fetched = set()
+    print "Fetching waveforms and metadata from seishub:"
+    for id in options.ids.split(","):
+        net, sta_wildcard, loc, cha = id.split(".")
+        for sta in client.waveform.getStationIds(network_id=net):
+            if not fnmatch.fnmatch(sta, sta_wildcard):
+                continue
+            # make sure we dont fetch a single station of
+            # one network twice (could happen with wildcards)
+            net_sta = "%s:%s" % (net, sta)
+            if net_sta in sta_fetched:
+                print "%s skipped! (Was already retrieved)" % net_sta
+                continue
+            try:
+                sys.stdout.write("\r%s ..." % net_sta)
+                sys.stdout.flush()
+                st = client.waveform.getWaveform(net, sta, loc, cha, t,
+                        t + options.duration, apply_filter=True,
+                        getPAZ=True, getCoordinates=True)
+                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.flush()
+                sta_fetched.add(net_sta)
+            except Exception, e:
+                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
+                sys.stdout.flush()
+                continue
+            streams.append(st)
+    return (client, streams)
+
+def check_and_cleanup_streams(streams):
+    """
+    Cleanup given list of streams so that they conform with what ObsPyck
+    expects.
+
+    Conditions:
+    - either one Z or three ZNE traces
+    - no two streams for any station (of same network)
+    - no streams with traces of different stations
+
+    :returns: (warn_msg, merge_msg, list(:class:`obspy.core.stream.Stream`s))
+    """
+    sta_list = set()
+    # we need to go through streams/dicts backwards in order not to get
+    # problems because of the pop() statement
+    warn_msg = ""
+    merge_msg = ""
+    # XXX we need the list() because otherwise the iterator gets garbled if
+    # XXX removing streams inside the for loop!!
+    for st in list(streams):
+        # check for streams with mixed stations/networks and remove them
+        if len(st) != len(st.select(network=st[0].stats.network,
+                                    station=st[0].stats.station)):
+            msg = "Warning: Stream with a mix of stations/networks. " + \
+                  "Discarding stream."
+            print msg
+            warn_msg += msg + "\n"
+            streams.remove(st)
+            continue
+        net_sta = "%s:%s" % (st[0].stats.network.strip(),
+                             st[0].stats.station.strip())
+        # Here we make sure that a station/network combination is not
+        # present with two streams.
+        if net_sta in sta_list:
+            msg = "Warning: Station/Network combination \"%s\" " + \
+                  "already in stream list. Discarding stream." % net_sta
+            print msg
+            warn_msg += msg + "\n"
+            streams.remove(st)
+            continue
+        if len(st) not in [1, 3]:
+            msg = 'Warning: All streams must have either one Z trace ' + \
+                  'or a set of three ZNE traces.'
+            print msg
+            warn_msg += msg + "\n"
+            # remove all unknown channels ending with something other than
+            # Z/N/E and try again...
+            removed_channels = ""
+            for tr in st:
+                if tr.stats.channel[-1] not in ["Z", "N", "E"]:
+                    removed_channels += " " + tr.stats.channel
+                    st.remove(tr)
+            if len(st.traces) in [1, 3]:
+                msg = 'Warning: deleted some unknown channels in ' + \
+                      'stream %s:%s' % (net_sta, removed_channels)
+                print msg
+                warn_msg += msg + "\n"
+                continue
+            else:
+                msg = 'Stream %s discarded.\n' % net_sta + \
+                      'Reason: Number of traces != (1 or 3)'
+                print msg
+                warn_msg += msg + "\n"
+                #for j, tr in enumerate(st.traces):
+                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+                #            (j + 1, tr.stats.channel, tr.stats)
+                msg = str(st)
+                print msg
+                warn_msg += msg + "\n"
+                streams.remove(st)
+                merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
+                        'option merge (-m safe or -m overwrite) to ' + \
+                        'avoid losing streams due gaps/overlaps.'
+                continue
+        if len(st) == 1 and st[0].stats.channel[-1] != 'Z':
+            msg = 'Warning: All streams must have either one Z trace ' + \
+                  'or a set of three ZNE traces.'
+            msg += 'Stream %s discarded. Reason: ' % net_sta + \
+                   'Exactly one trace present but this is no Z trace'
+            print msg
+            warn_msg += msg + "\n"
+            #for j, tr in enumerate(st.traces):
+            #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+            #            (j + 1, tr.stats.channel, tr.stats)
+            msg = str(st)
+            print msg
+            warn_msg += msg + "\n"
+            streams.remove(st)
+            continue
+        if len(st) == 3 and (st[0].stats.channel[-1] != 'Z' or
+                             st[1].stats.channel[-1] != 'N' or
+                             st[2].stats.channel[-1] != 'E'):
+            msg = 'Warning: All streams must have either one Z trace ' + \
+                  'or a set of three ZNE traces.'
+            msg += 'Stream %s discarded. Reason: ' % net_sta + \
+                   'Exactly three traces present but they are not ZNE'
+            print msg
+            warn_msg += msg + "\n"
+            #for j, tr in enumerate(st.traces):
+            #    msg = 'Trace no. %i in Stream: %s\n%s' % \
+            #            (j + 1, tr.stats.channel, tr.stats)
+            msg = str(st)
+            print msg
+            warn_msg += msg + "\n"
+            streams.remove(st)
+            continue
+        sta_list.add(net_sta)
+    return (warn_msg, merge_msg, streams)
 
 #XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
 # we have to do this, so the focus always remains with our matplotlib
@@ -311,19 +512,15 @@ def formatXTicklabels(x, pos):
 
 class ObsPyckGUI:
         
-    def __init__(self, client=None, streams=None, options=None):
+    def __init__(self, client, streams, options):
         self.client = client
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
-        self.flagWheelZoom = True #Switch use of mousewheel for zooming
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
-
         check_keybinding_conflicts(KEYS)
-
         self.tmp_dir = tempfile.mkdtemp() + '/'
-
         # we have to control which binaries to use depending on architecture...
         architecture = platform.architecture()[0]
         if architecture == '32bit':
@@ -415,7 +612,6 @@ class ObsPyckGUI:
         # indicates how many focal mechanisms are available from focmec
         self.focMechCount = None
         self.dictEvent = {}
-        self.dictEvent['xmlEventID'] = None
         self.spectrogramColormap = matplotlib.cm.jet
         # indicates which of the available events from seishub was loaded
         self.seishubEventCurrent = None 
@@ -425,7 +621,10 @@ class ObsPyckGUI:
         try:
             self.username = os.getlogin()
         except:
-            self.username = os.environ['USER']
+            try:
+                self.username = os.environ['USER']
+            except:
+                self.username = "unknown"
         # setup server information
         self.server = {}
         self.server['Name'] = self.options.servername # "teide"
@@ -436,10 +635,6 @@ class ObsPyckGUI:
         self.server['User'] = self.options.user # "obspyck"
         self.server['Password'] = self.options.password # "obspyck"
         
-        # Return, if no streams are given
-        if not streams:
-            return
-
         # Merge on every stream if this option is passed on command line:
         if self.options.merge:
             if self.options.merge.lower() == "safe":
@@ -457,174 +652,71 @@ class ObsPyckGUI:
         for st in self.streams:
             st.sort()
             st.reverse()
-
-        # Define some forbidden scenarios.
-        # We assume there are:
-        # - either one Z or three ZNE traces
-        # - no two streams for any station (of same network)
-        sta_list = set()
-        # we need to go through streams/dicts backwards in order not to get
-        # problems because of the pop() statement
-        warn_msg = ""
-        merge_msg = ""
-        # XXX we need the list() because otherwise the iterator gets garbled if
-        # XXX removing streams inside the for loop!!
-        for st in list(self.streams):
-            net_sta = "%s:%s" % (st[0].stats.network.strip(),
-                                 st[0].stats.station.strip())
-            # Here we make sure that a station/network combination is not
-            # present with two streams. XXX For dynamically acquired data from
-            # seishub this is already done before initialising the GUI and
-            # thus redundant. Here it is only necessary if working with
-            # traces from local file system (option -l)
-            if net_sta in sta_list:
-                msg = "Warning: Station/Network combination \"%s\" already " \
-                      % net_sta + "in stream list. Discarding stream."
-                print msg
-                warn_msg += msg + "\n"
-                self.streams.remove(st)
-                continue
-            if len(st) not in [1, 3]:
-                msg = 'Warning: All streams must have either one Z trace ' + \
-                      'or a set of three ZNE traces.'
-                print msg
-                warn_msg += msg + "\n"
-                # remove all unknown channels ending with something other than
-                # Z/N/E and try again...
-                removed_channels = ""
-                for tr in st:
-                    if tr.stats.channel[-1] not in ["Z", "N", "E"]:
-                        removed_channels += " " + tr.stats.channel
-                        st.remove(tr)
-                if len(st.traces) in [1, 3]:
-                    msg = 'Warning: deleted some unknown channels in ' + \
-                          'stream %s:%s' % (net_sta, removed_channels)
-                    print msg
-                    warn_msg += msg + "\n"
-                    continue
-                else:
-                    msg = 'Stream %s discarded.\n' % net_sta + \
-                          'Reason: Number of traces != (1 or 3)'
-                    print msg
-                    warn_msg += msg + "\n"
-                    #for j, tr in enumerate(st.traces):
-                    #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                    #            (j + 1, tr.stats.channel, tr.stats)
-                    msg = str(st)
-                    print msg
-                    warn_msg += msg + "\n"
-                    self.streams.remove(st)
-                    merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
-                            'option merge (-m safe or -m overwrite) to ' + \
-                            'avoid losing streams due gaps/overlaps.'
-                    continue
-            if len(st) == 1 and st[0].stats.channel[-1] != 'Z':
-                msg = 'Warning: All streams must have either one Z trace ' + \
-                      'or a set of three ZNE traces.'
-                msg += 'Stream %s discarded. Reason: ' % net_sta + \
-                       'Exactly one trace present but this is no Z trace'
-                print msg
-                warn_msg += msg + "\n"
-                #for j, tr in enumerate(st.traces):
-                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                #            (j + 1, tr.stats.channel, tr.stats)
-                msg = str(st)
-                print msg
-                warn_msg += msg + "\n"
-                self.streams.remove(st)
-                continue
-            if len(st) == 3 and (st[0].stats.channel[-1] != 'Z' or
-                                 st[1].stats.channel[-1] != 'N' or
-                                 st[2].stats.channel[-1] != 'E' or
-                                 st[0].stats.station.strip() !=
-                                 st[1].stats.station.strip() or
-                                 st[0].stats.station.strip() !=
-                                 st[2].stats.station.strip()):
-                msg = 'Warning: All streams must have either one Z trace ' + \
-                      'or a set of three ZNE traces.'
-                msg += 'Stream %s discarded. Reason: ' % net_sta + \
-                       'Exactly three traces present but they are not ZNE'
-                print msg
-                warn_msg += msg + "\n"
-                #for j, tr in enumerate(st.traces):
-                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                #            (j + 1, tr.stats.channel, tr.stats)
-                msg = str(st)
-                print msg
-                warn_msg += msg + "\n"
-                self.streams.remove(st)
-                continue
-            sta_list.add(net_sta)
         
-        # if it was assigned at some point show the merge info message now
+        (warn_msg, merge_msg, self.streams) = \
+                check_and_cleanup_streams(self.streams)
+        
+        # if it's not empty show the merge info message now
         if merge_msg:
             print merge_msg
 
-        # exit if no streams are left after removing everthing with missing
-        # information:
-        if self.streams == []:
-            print "Error: No streams."
-            return
+        # exit if no streams are left after removing everthing not suited.
+        if not self.streams:
+            err = "No streams left to work with after removing bad streams."
+            raise Exception(err)
+        # sort streams by station name
+        self.streams.sort(key=lambda st: st[0].stats['station'])
 
-        #set up a list of dictionaries to store all picking data
-        # set all station magnitude use-flags False
-        self.dicts = []
-        for ignored in self.streams:
-            self.dicts.append({})
         #XXX not used: self.dictsMap = {} #XXX not used yet!
         self.eventMapColors = []
         # set up dictionaries to store phase_type/axes/line informations
         self.lines = {}
         self.texts = {}
+        #set up a list of dictionaries to store all picking data
+        # set all station magnitude use-flags False
+        self.dicts = []
+        for i in xrange(len(self.streams)):
+            self.dicts.append({})
         # we need to go through streams/dicts backwards in order not to get
         # problems because of the pop() statement
         for i in range(len(self.streams))[::-1]:
             dict = self.dicts[i]
             st = self.streams[i]
+            trZ = st.select(component="Z")[0]
+            if len(st) == 3:
+                trN = st.select(component="N")[0]
+                trE = st.select(component="E")[0]
             dict['MagUse'] = True
-            sta = st[0].stats.station.strip()
+            sta = trZ.stats.station.strip()
             dict['Station'] = sta
             #XXX not used: self.dictsMap[sta] = dict
             self.eventMapColors.append((0.,  1.,  0.,  1.))
-            net = st[0].stats.network.strip()
-            print "=" * 70
-            print sta
-            if net == '':
-                net = 'BW'
-                print "Warning: Got no network information, setting to " + \
-                      "default: BW"
-            print "-" * 70
-            date = st[0].stats.starttime.date
-            print 'fetching station metadata from seishub...'
+            # XXX should not be necessary
+            #if net == '':
+            #    net = 'BW'
+            #    print "Warning: Got no network information, setting to " + \
+            #          "default: BW"
             try:
-                lon, lat, ele = getCoord(self.client, net, sta)
-                print lon, lat, ele
-                dict['StaLon'] = lon
-                dict['StaLat'] = lat
-                dict['StaEle'] = ele / 1000. # all depths in km!
-                dict['pazZ'] = self.client.station.getPAZ(net, sta, date,
-                        channel_id=st[0].stats.channel)
-                print dict['pazZ']
+                dict['StaLon'] = trZ.stats.coordinates.longitude
+                dict['StaLat'] = trZ.stats.coordinates.latitude
+                dict['StaEle'] = trZ.stats.coordinates.elevation / 1000. # all depths in km!
+                dict['pazZ'] = trZ.stats.paz
                 if len(st) == 3:
-                    dict['pazN'] = self.client.station.getPAZ(net, sta, date,
-                            channel_id=st[1].stats.channel)
-                    dict['pazE'] = self.client.station.getPAZ(net, sta, date,
-                            channel_id=st[2].stats.channel)
-                    print dict['pazN']
-                    print dict['pazE']
+                    dict['pazN'] = trN.stats.paz
+                    dict['pazE'] = trE.stats.paz
             except:
-                print 'Error: could not fetch station metadata. Discarding stream.'
+                net = trZ.stats.network.strip()
+                print 'Error: Missing metadata for %s. Discarding stream.' \
+                        % (":".join([net, sta]))
                 self.streams.pop(i)
                 self.dicts.pop(i)
                 continue
-            print 'done.'
-        print "=" * 70
         
         # demean traces if not explicitly deactivated on command line
         if not self.options.nozeromean:
             for st in self.streams:
                 for tr in st:
-                    tr.data -= tr.data.mean()
+                    tr.data = tr.data - tr.data.mean()
 
         #Define a pointer to navigate through the streams
         self.stNum = len(self.streams)
@@ -1182,13 +1274,35 @@ class ObsPyckGUI:
     # End of list of event handles that get connected to GUI Elements         #
     ###########################################################################
 
-        #>         self.buffer.insert (self.buffer.get_end_iter(), input_data)
-        #>         if self.buffer.get_line_count() > 400:
-        #>             self.buffer.delete(self.buffer.get_start_iter(),
-        #>                                 self.buffer.get_iter_at_line (200))
-        #>         mark = self.buffer.create_mark("end",
-        #>                                 self.buffer.get_end_iter(), False)
-        #>         self.textview.scroll_to_mark(mark, 0.05, True, 0.0, 1.0)
+    def _filter(self, stream):
+        """
+        Applies filter currently selected in GUI to Trace or Stream object.
+        Also displays a message.
+        """
+        w = self.widgets
+        type = w['comboboxFilterType'].get_active_text().lower()
+        options = {}
+        options['zerophase'] = w['checkbuttonZeroPhase'].get_active()
+        if type in ["bandpass", "bandstop"]:
+            options['freqmin'] = w['spinbuttonHighpass'].get_value()
+            options['freqmax'] = w['spinbuttonLowpass'].get_value()
+        elif type == "lowpass":
+            options['freq'] = w['spinbuttonLowpass'].get_value()
+        elif type == "highpass":
+            options['freq'] = w['spinbuttonHighpass'].get_value()
+        if type in ["bandpass", "bandstop"]:
+            msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
+                    (type, options['zerophase'],
+                     options['freqmin'], options['freqmax'])
+        elif type in ["lowpass", "highpass"]:
+            msg = "%s (zerophase=%s): %.2f Hz" % \
+                    (type, options['zerophase'], options['freq'])
+        try:
+            stream.filter(type, options)
+            self._write_msg(msg)
+        except:
+            err = "Error during filtering. Showing unfiltered data."
+            self._write_err(err)
 
     def debug(self):
         sys.stdout = self.stdout_backup
@@ -1214,13 +1328,6 @@ class ObsPyckGUI:
             pass
         gtk.main_quit()
 
-    
-    ## Trim all to same length, us Z as reference
-    #start, end = stZ[0].stats.starttime, stZ[0].stats.endtime
-    #stN.trim(start, end)
-    #stE.trim(start, end)
-    
-    
     def drawLine(self, key):
         """
         Draw a line for pick of given key in all axes of the current stream.
@@ -1465,30 +1572,7 @@ class ObsPyckGUI:
         # and replace it with the filtered data.
         if self.widgets['togglebuttonFilter'].get_active():
             st = st.copy()
-            # Determine filter type/options, display message, apply filter
-            type = self.widgets['comboboxFilterType'].get_active_text().lower()
-            options = {}
-            options['zerophase'] = self.widgets['checkbuttonZeroPhase'].get_active()
-            if type in ["bandpass", "bandstop"]:
-                options['freqmin'] = self.widgets['spinbuttonHighpass'].get_value()
-                options['freqmax'] = self.widgets['spinbuttonLowpass'].get_value()
-            elif type == "lowpass":
-                options['freq'] = self.widgets['spinbuttonLowpass'].get_value()
-            elif type == "highpass":
-                options['freq'] = self.widgets['spinbuttonHighpass'].get_value()
-            if type in ["bandpass", "bandstop"]:
-                msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
-                        (type, options['zerophase'],
-                         options['freqmin'], options['freqmax'])
-            elif type in ["lowpass", "highpass"]:
-                msg = "%s (zerophase=%s): %.2f Hz" % \
-                        (type, options['zerophase'], options['freq'])
-            try:
-                st.filter(type, options)
-                self._write_msg(msg)
-            except:
-                err = "Error during filtering. Showing unfiltered data."
-                self._write_err(err)
+            self._filter(st)
         else:
             msg = "Unfiltered Traces."
             self._write_msg(msg)
@@ -1716,16 +1800,6 @@ class ObsPyckGUI:
         # End of key events related to picking                                #
         #######################################################################
         
-        if event.key == KEYS['switchWheelZoom']:
-            self.flagWheelZoom = not self.flagWheelZoom
-            if self.flagWheelZoom:
-                msg = "Mouse wheel zooming activated"
-                self._write_msg(msg)
-            else:
-                msg = "Mouse wheel zooming deactivated"
-                self._write_msg(msg)
-            return
-
         if event.key == KEYS['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = True
 
@@ -1763,8 +1837,6 @@ class ObsPyckGUI:
     def scroll(self, event):
         if self.widgets['togglebuttonShowMap'].get_active():
             return
-        if not self.flagWheelZoom:
-            return
         # Calculate and set new axes boundaries from old ones
         (left, right) = self.axs[0].get_xbound()
         (bottom, top) = self.axs[0].get_ybound()
@@ -1796,7 +1868,7 @@ class ObsPyckGUI:
             return
         # set widgetlock when pressing mouse buttons and dont show cursor
         # cursor should not be plotted when making a zoom selection etc.
-        if event.button == 1 or event.button == 3:
+        if event.button in [1, 3]:
             self.multicursor.visible = False
             self.canv.widgetlock(self.toolbar)
         # show traces from start to end
@@ -1813,7 +1885,7 @@ class ObsPyckGUI:
         if self.widgets['togglebuttonShowMap'].get_active():
             return
         # release widgetlock when releasing mouse buttons
-        if event.button == 1 or event.button == 3:
+        if event.button in [1, 3]:
             self.multicursor.visible = True
             self.canv.widgetlock.release(self.toolbar)
     
@@ -2870,9 +2942,9 @@ class ObsPyckGUI:
         self.trans = []
         self.t = []
         #we start all our x-axes at 0 with the starttime of the first (Z) trace
-        starttime_global = self.streams[0][0].stats.starttime
+        starttime_global = self.streams[0].select(component="Z")[0].stats.starttime
         for i, st in enumerate(self.streams):
-            tr = st[0]
+            tr = st.select(component="Z")[0]
             npts = tr.stats.npts
             smprt = tr.stats.sampling_rate
             #make sure that the relative times of the x-axes get mapped to our
@@ -2887,7 +2959,7 @@ class ObsPyckGUI:
                 sampletimes = sampletimes[:-1]
             self.t.append(sampletimes)
             if i == 0:
-                self.axs.append(self.fig.add_subplot(stNum,1,i+1))
+                self.axs.append(self.fig.add_subplot(stNum, 1, i+1))
             else:
                 self.axs.append(self.fig.add_subplot(stNum, 1, i+1, 
                         sharex=self.axs[0], sharey=self.axs[0]))
@@ -2897,21 +2969,9 @@ class ObsPyckGUI:
             self.axs[i].xaxis.set_major_formatter(FuncFormatter(
                                                   formatXTicklabels))
             if self.widgets['togglebuttonFilter'].get_active():
-                zerophase = self.widgets['checkbuttonZeroPhase'].get_active()
-                freq_highpass = self.widgets['spinbuttonHighpass'].get_value()
-                freq_lowpass = self.widgets['spinbuttonLowpass'].get_value()
-                filter_name = self.widgets['comboboxFilterType'].get_active_text()
-                if filter_name == "Bandpass":
-                    filt_data = bandpass(tr.data, freq_highpass, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
-                elif filter_name == "Bandstop":
-                    filt_data = bandstop(tr.data, freq_highpass, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
-                elif filter_name == "Lowpass":
-                    filt_data = lowpass(tr.data, freq_lowpass, df=tr.stats.sampling_rate, zerophase=zerophase)
-                elif filter_name == "Highpass":
-                    filt_data = highpass(tr.data, freq_highpass, df=tr.stats.sampling_rate, zerophase=zerophase)
-                self.plts.append(self.axs[i].plot(self.t[i], filt_data, color='k',zorder=1000)[0])
-            else:
-                self.plts.append(self.axs[i].plot(self.t[i], tr.data, color='k',zorder=1000)[0])
+                tr = tr.copy()
+                self._filter(tr)
+            self.plts.append(self.axs[i].plot(self.t[i], tr.data, color='k',zorder=1000)[0])
             self.axs[i].text(0.01, 0.95, st[0].stats.station, va="top",
                              ha="left", fontsize=18, color="b", zorder=10000,
                              transform=self.axs[i].transAxes)
@@ -3050,8 +3110,7 @@ class ObsPyckGUI:
         # make hexbin scatter plot, if located with NLLoc
         # XXX no vital commands should come after this block, as we do not
         # handle exceptions!
-        if 'Program' in dO and dO['Program'] == "NLLoc" and \
-           os.path.isfile(self.nllocScatterBin):
+        if dO.get('Program') == "NLLoc" and os.path.isfile(self.nllocScatterBin):
             cmap = matplotlib.cm.gist_heat_r
             data = readNLLocScatter(self.nllocScatterBin,
                                     self.widgets['textviewStdErrImproved'])
@@ -3116,21 +3175,11 @@ class ObsPyckGUI:
         j = event.ind[0]
         dict = self.dicts[i]
         dict['MagUse'] = not dict['MagUse']
-        #print event.ind[0]
-        #print i
-        #print event.artist
-        #for di in self.dicts:
-        #    print di['MagUse']
-        #print i
-        #print self.dicts[i]['MagUse']
         if dict['MagUse']:
             self.eventMapColors[j] = (0.,  1.,  0.,  1.)
         else:
             self.eventMapColors[j] = (0.,  0.,  0.,  0.)
-        #print self.eventMapColors
         self.scatterMag.set_facecolors(self.eventMapColors)
-        #print self.scatterMag.get_facecolors()
-        #event.artist.set_facecolors(self.eventMapColors)
         self.updateNetworkMag()
         self.canv.draw()
     
@@ -3600,13 +3649,9 @@ class ObsPyckGUI:
 
         path = '/xml/seismology/event'
         
-        # overwrite the same xml file always when using option local
-        # which is intended for testing purposes only
-        if self.options.local:
-            self.dictEvent['xmlEventID'] = '19700101000000'
-        # if we did no location at all, and only picks hould be saved the
+        # if we did no location at all, and only picks would be saved the
         # EventID ist still not set, so we have to do this now.
-        if self.dictEvent['xmlEventID'] is None:
+        if 'xmlEventID' not in self.dictEvent:
             self.setXMLEventID()
         name = "obspyck_%s" % (self.dictEvent['xmlEventID']) #XXX id of the file
         # create XML and also save in temporary directory for inspection purposes
@@ -3701,7 +3746,6 @@ class ObsPyckGUI:
         self.focMechCurrent = None
         self.focMechCount = None
         self.dictEvent = {}
-        self.dictEvent['xmlEventID'] = None
 
     def clearOriginMagnitudeDictionaries(self):
         msg = "Clearing previous origin and magnitude data."
@@ -3722,7 +3766,7 @@ class ObsPyckGUI:
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictEvent = {}
-        self.dictEvent['xmlEventID'] = None
+        del self.dictEvent['xmlEventID']
 
     def clearFocmecDictionary(self):
         msg = "Clearing previous focal mechanism data."
@@ -4214,145 +4258,20 @@ class ObsPyckGUI:
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
     parser = OptionParser(usage)
-    parser.add_option("-t", "--time", dest="time",
-                      help="Starttime of seismogram to retrieve. It takes a "
-                           "string which UTCDateTime can convert. "
-                           "E.g. '2010-01-10T05:00:00'",
-                      default='2009-07-21T04:33:00')
-    parser.add_option("-d", "--duration", type="float", dest="duration",
-                      help="Duration of seismogram in seconds",
-                      default=120)
-    parser.add_option("-i", "--ids", dest="ids",
-                      help="Ids to retrieve, star for channel and "
-                           "wildcards for stations are allowed, e.g. "
-                           "'BW.RJOB..EH*,BW.RM?*..EH*'",
-                      default='BW.RJOB..EH*,BW.RMOA..EH*')
-    parser.add_option("-s", "--servername", dest="servername",
-                      help="Servername of the seishub server",
-                      default='teide')
-    parser.add_option("-p", "--port", type="int", dest="port",
-                      help="Port of the seishub server",
-                      default=8080)
-    parser.add_option("--user", dest="user", default='obspyck',
-                      help="Username for seishub server")
-    parser.add_option("--password", dest="password", default='obspyck',
-                      help="Password for seishub server")
-    parser.add_option("--timeout", dest="timeout", type="int", default=10,
-                      help="Timeout for seishub server")
-    parser.add_option("-l", "--local", action="store_true", dest="local",
-                      default=False,
-                      help="use local files for design purposes " + \
-                           "(overwrites event xml with fixed id)")
-    parser.add_option("-k", "--keys", action="store_true", dest="keybindings",
-                      default=False, help="Show keybindings and quit")
-    parser.add_option("--lowpass", type="float", dest="lowpass",
-                      help="Frequency for Lowpass-Slider", default=20.)
-    parser.add_option("--highpass", type="float", dest="highpass",
-                      help="Frequency for Highpass-Slider", default=1.)
-    parser.add_option("--nozeromean", action="store_true", dest="nozeromean",
-                      help="Deactivate offset removal of traces",
-                      default=False)
-    parser.add_option("--pluginpath", dest="pluginpath",
-                      default="/baysoft/obspyck/",
-                      help="Path to local directory containing the folders" + \
-                           " with the files for the external programs")
-    parser.add_option("--starttime-offset", type="float",
-                      dest="starttime_offset", default=0.0,
-                      help="Offset to add to specified starttime in " + \
-                      "seconds. Thus a time from an automatic picker " + \
-                      "can be used with a specified offset for the " + \
-                      "starttime. E.g. to request a waveform starting 30 " + \
-                      "seconds earlier than the specified time use -30.")
-    parser.add_option("-m", "--merge", type="string", dest="merge",
-                      help="After fetching the streams from seishub run a " + \
-                      "merge operation on every stream. If not done, " + \
-                      "streams with gaps and therefore more traces per " + \
-                      "channel get discarded.\nTwo methods are supported " + \
-                      "(see http://svn.geophysik.uni-muenchen.de/obspy/" + \
-                      "docs/packages/auto/obspy.core.trace.Trace.__add__" + \
-                      ".html for details)\n" + \
-                      "  \"safe\": overlaps are discarded completely\n" + \
-                      "  \"overwrite\": the second trace is used for " + \
-                      "overlapping parts of the trace",
-                      default="")
+    for opt_args, opt_kwargs in COMMANDLINE_OPTIONS:
+        parser.add_option(*opt_args, **opt_kwargs)
     (options, args) = parser.parse_args()
     for req in ['-d','-t','-i']:
         if not getattr(parser.values,parser.get_option(req).dest):
             parser.print_help()
             return
-    
-    # If keybindings option is set, don't prepare streams.
-    # We then only print the keybindings and exit.
+    # For keybindings option, just print them and exit.
     if options.keybindings:
         for key, value in KEYS.iteritems():
             print "%s: \"%s\"" % (key, value)
         return
-
     check_keybinding_conflicts(KEYS)
-
-    # If local option is set we read the locally stored traces.
-    # Just for testing purposes, sent event xmls always overwrite the same xml.
-    if options.local:
-        streams=[]
-        streams.append(read('20091227_105240_Z.RJOB'))
-        streams[0].append(read('20091227_105240_N.RJOB')[0])
-        streams[0].append(read('20091227_105240_E.RJOB')[0])
-        streams.append(read('20091227_105240_Z.RMOA'))
-        streams[1].append(read('20091227_105240_N.RMOA')[0])
-        streams[1].append(read('20091227_105240_E.RMOA')[0])
-        streams.append(read('20091227_105240_Z.RNON'))
-        streams[2].append(read('20091227_105240_N.RNON')[0])
-        streams[2].append(read('20091227_105240_E.RNON')[0])
-        streams.append(read('20091227_105240_Z.RTBE'))
-        streams[3].append(read('20091227_105240_N.RTBE')[0])
-        streams[3].append(read('20091227_105240_E.RTBE')[0])
-        streams.append(read('20091227_105240_Z.RWMO'))
-        streams[4].append(read('20091227_105240_N.RWMO')[0])
-        streams[4].append(read('20091227_105240_E.RWMO')[0])
-        streams.append(read('20091227_105240_Z.RWMO'))
-        streams[5].append(read('20091227_105240_N.RWMO')[0])
-        streams[5].append(read('20091227_105240_E.RWMO')[0])
-        baseurl = "http://" + options.servername + ":%i" % options.port
-        client = Client(base_url=baseurl, user=options.user,
-                        password=options.password, timeout=options.timeout)
-    else:
-        t = UTCDateTime(options.time)
-        t = t + options.starttime_offset
-        baseurl = "http://" + options.servername + ":%i" % options.port
-        try:
-            client = Client(base_url=baseurl, user=options.user,
-                            password=options.password, timeout=options.timeout)
-        except:
-            err = "Error while connecting to server!"
-            raise Exception(err)
-        streams = []
-        sta_fetched = set()
-        for id in options.ids.split(","):
-            net, sta_wildcard, loc, cha = id.split(".")
-            for sta in client.waveform.getStationIds(network_id=net):
-                if not fnmatch.fnmatch(sta, sta_wildcard):
-                    continue
-                # make sure we dont fetch a single station of
-                # one network twice (could happen with wildcards)
-                net_sta = "%s:%s" % (net, sta)
-                if net_sta in sta_fetched:
-                    print net_sta, "was already retrieved. Skipping!"
-                    continue
-                try:
-                    st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                                                     t + options.duration,
-                                                     apply_filter=True)
-                    print net_sta, "fetched successfully."
-                    sta_fetched.add(net_sta)
-                except:
-                    print net_sta, "could not be retrieved. Skipping!"
-                    continue
-                st.sort()
-                st.reverse()
-                streams.append(st)
-        # sort streams by station name
-        streams = sorted(streams, key=lambda st: st[0].stats['station'])
-
+    (client, streams) = fetch_waveforms_metadata(options)
     ObsPyckGUI(client, streams, options)
 
 if __name__ == "__main__":
