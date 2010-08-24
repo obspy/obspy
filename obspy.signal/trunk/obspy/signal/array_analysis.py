@@ -594,23 +594,32 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
 
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten):
+          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
+          geometry=None):
     """
     Returns list of newstart, time, power, abspow, azimut, slow
 
+    :param stream: Stream object, the trace.stats dict like class must
+            contain the 'lat', 'lon' (in degrees) and 'elev' (in km)
+            items/attributes if optional parameter geometry is not set
+    :param win_len: Sliding window length in seconds
+    :param win_frac: Fraction of sliding window to use for step
     :param sll_x: slowness x min (lower)
     :param slm_x: slowness x max
     :param sll_y: slowness y min (lower)
     :param slm_y: slowness y max
     :param sl_s: slowness step
-    :param win_len: Sliding window length in seconds
-    :param win_frac: Fraction of sliding window to use for step
-    :param freqlow: lower frequency for fk
-    :param freqhigh: higher frequency for fk
+    :param semb_thres: Threshold for semblance
     :param vel_thres: Threshold for velocity
+    :param frqlow: lower frequency for fk
+    :param frqhigh: higher frequency for fk
     :param stime: Starttime of interest
     :param etime: Endtime of interest
     :param prewhiten: Do prewhitening
+    :param geometry: geometry of the stations as 2d numpy.ndarray. The first
+        dimension are the station indexes with the same order as the traces in
+        the stream object. The second index are the values of [lat, lon, elev]
+        in km
     """
     res = []
     eotr = True
@@ -620,7 +629,24 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
-    geometry, _counter = get_geometry(stream)
+    # optional direkt input for local coordinates
+    if geometry==None:
+        geometry, _counter = get_geometry(stream)
+    else:
+        # move coordinates to center of gravity
+        center_lat = geometry[:,0].mean()
+        center_lon = geometry[:,1].mean()
+        center_h = geometry[:,2].mean()
+        geometry[:,0] -= center_lat
+        geometry[:,1] -= center_lon
+        geometry[:,2] -= center_h
+        # add one line to geometry for compatibility with output of
+        # get_geometry
+        geometry = np.r_[geometry, np.zeros((1,3))]
+
+    print geometry
+    print stream
+
     time_shift_table_numpy, counter = get_timeshift(geometry, sll_x, sll_y,
                                                     sl_s, grdpts_x, grdpts_y)
     time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
@@ -733,7 +759,8 @@ def get_geometry(stream):
     :return: Returns the geometry of the stations as 2d numpy.ndarray
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
-            values of [lat, lon, elev]
+            values of [lat, lon, elev] in km
+            last index contains center [lat, lon, elev] in degrees and km
     """
     counter = 0
     center_lat = 0.
