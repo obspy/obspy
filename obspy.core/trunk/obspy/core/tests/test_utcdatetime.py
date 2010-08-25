@@ -4,6 +4,7 @@ from obspy.core import UTCDateTime
 import datetime
 import copy
 import unittest
+import numpy as np
 
 
 class UTCDateTimeTestCase(unittest.TestCase):
@@ -249,6 +250,12 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_add(self):
         a = UTCDateTime(0.0)
         self.assertEquals(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + long(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + np.int32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + np.int64(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + np.float32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + np.float64(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertRaises(TypeError, a.__add__, np.complex128(1))
         self.assertEquals(a + 1.123456,
                           UTCDateTime(1970, 1, 1, 0, 0, 1, 123456))
         self.assertEquals(a + 60 * 60 * 24 * 31 + 0.1,

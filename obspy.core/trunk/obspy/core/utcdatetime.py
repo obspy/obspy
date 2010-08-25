@@ -10,6 +10,7 @@ Module containing a UTC-based datetime class.
 """
 from calendar import timegm
 import datetime
+import warnings
 
 
 class UTCDateTime(datetime.datetime):
@@ -422,20 +423,26 @@ class UTCDateTime(datetime.datetime):
         """
         if len(args) == 1:
             arg = args[0]
-            if isinstance(arg, int):
-                td = datetime.timedelta(seconds=arg)
+            try:
+                frac = arg % 1.0
+            except:
+                if isinstance(arg, UTCDateTime):
+                    msg = "Adding UTCDateTime to UTCDateTime will be " + \
+                          "removed in the future"
+                    warnings.warn(msg, DeprecationWarning)
+                    return round(self.timestamp + arg.timestamp, 6)
+                else:
+                    dt = datetime.datetime.__add__(self, arg)
+                    return self.__class__(dt)
+            if frac == 0.0:
+                td = datetime.timedelta(seconds=int(arg))
                 dt = datetime.datetime.__add__(self, td)
                 return self.__class__(dt)
-            elif isinstance(arg, float):
+            else:
                 sec = int(arg)
                 msec = int(round((arg - sec) * 1000000))
                 td = datetime.timedelta(seconds=sec, microseconds=msec)
                 dt = datetime.datetime.__add__(self, td)
-                return self.__class__(dt)
-            elif isinstance(arg, UTCDateTime):
-                return round(self.timestamp + arg.timestamp, 6)
-            else:
-                dt = datetime.datetime.__add__(self, arg)
                 return self.__class__(dt)
         else:
             dt = datetime.datetime.__add__(self, *args, **kwargs)
