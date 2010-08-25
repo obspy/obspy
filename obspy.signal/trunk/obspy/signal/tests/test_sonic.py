@@ -10,6 +10,7 @@ def suite():
     return unittest.makeSuite(SonicTestCase, 'test')
 
 if __name__ == '__main__':
+    #XXX migrate it as real test
     import numpy as np
     from obspy.core import UTCDateTime
     from obspy.signal.array_analysis import sonic

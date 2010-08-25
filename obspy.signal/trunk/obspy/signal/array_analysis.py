@@ -625,6 +625,12 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     eotr = True
     #XXX data must be zero mean, corrected and bandpass filtered
     #XXX check that sampling rates do not vary more than 1e-3
+    #XXX sort stream depending on size similar to sonicloc.c
+    #XXX change coordinate input as suggested by #133
+    #XXX move geometry calculation of x,y to get_geometry
+    #XXX change geometry calculation similar to martins way (more pythonic)
+    #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
+    #XXX remove useless counters
 
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
@@ -634,15 +640,15 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         geometry, _counter = get_geometry(stream)
     else:
         # move coordinates to center of gravity
-        center_lat = geometry[:,0].mean()
-        center_lon = geometry[:,1].mean()
+        center_lon = geometry[:,0].mean()
+        center_lat = geometry[:,1].mean()
         center_h = geometry[:,2].mean()
-        geometry[:,0] -= center_lat
-        geometry[:,1] -= center_lon
+        geometry[:,0] -= center_lon
+        geometry[:,1] -= center_lat
         geometry[:,2] -= center_h
         # add one line to geometry for compatibility with output of
         # get_geometry
-        geometry = np.r_[geometry, np.zeros((1,3))]
+        geometry = np.concatenate([geometry, np.zeros((1,3))])
 
     print geometry
     print stream
