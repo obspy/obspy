@@ -2,7 +2,7 @@
 
 import lxml.etree
 from lxml.etree import SubElement as Sub
-from optparse import OptionParser
+import optparse
 import numpy as np
 import fnmatch
 import shutil
@@ -4143,7 +4143,7 @@ class ObsPyckGUI:
 
 def main():
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
-    parser = OptionParser(usage)
+    parser = optparse.OptionParser(usage)
     for opt_args, opt_kwargs in COMMANDLINE_OPTIONS:
         parser.add_option(*opt_args, **opt_kwargs)
     (options, args) = parser.parse_args()
