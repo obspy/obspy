@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     stime = UTCDateTime(1970, 1, 1, 0, 0) + 1
     etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-        (length -  abs(min_dt) - abs(max_dt)) / df - 1
+        (length -  int(abs(min_dt)) - int(abs(max_dt))) / df - 1
 
     win_len = 10.0
     step_frac = 0.2
