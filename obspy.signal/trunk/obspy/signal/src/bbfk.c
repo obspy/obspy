@@ -288,5 +288,6 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         free((void *)window[j]);
     }
     free((void *)window);
+    free(fftpack_work);
     return 0;
 }
