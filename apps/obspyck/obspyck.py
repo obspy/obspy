@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import lxml.etree
 from lxml.etree import SubElement as Sub
-from lxml.etree import fromstring, Element, parse, tostring
 from optparse import OptionParser
 import numpy as np
 import fnmatch
@@ -10,11 +10,6 @@ import sys
 import os
 import platform
 import subprocess
-import httplib
-import base64
-import datetime
-import time
-import urllib2
 import tempfile
 
 #sys.path.append('/baysoft/obspy/misc/symlink')
@@ -512,23 +507,6 @@ class TextViewImproved:
         endmark = buffer.create_mark("end", end, False)
         self.textview.scroll_mark_onscreen(endmark)
    
-def getCoord(client, network, station):
-    """
-    Returns longitude, latitude and elevation of given station from given
-    client instance
-    """
-    coord = []
-
-    resource = "dataless.seed.%s_%s.xml" % (network, station)
-    xml = fromstring(client.station.getResource(resource, format='metadata'))
-
-    for attrib in [u'Longitude (\xb0)', u'Latitude (\xb0)',  u'Elevation (m)']:
-        node =  xml.xpath(u".//item[@title='%s']" % attrib)[0]
-        value = float(node.getchildren()[0].attrib['text'])
-        coord.append(value)
-
-    return coord
-
 def gk2lonlat(x, y, m_to_km=True):
     """
     This function converts X/Y Gauss-Krueger coordinates (zone 4, central
@@ -642,6 +620,7 @@ class ObsPyckGUI:
         
     def __init__(self, client, streams, options):
         self.client = client
+        self.client_sysop = None
         self.streams = streams
         self.options = options
         #Define some flags, dictionaries and plotting options
@@ -1070,7 +1049,7 @@ class ObsPyckGUI:
         self.seishubEventCurrent = (self.seishubEventCurrent + 1) % \
                                    self.seishubEventCount
         event = self.seishubEventList[self.seishubEventCurrent]
-        resource_name = event.xpath(u"resource_name")[0].text
+        resource_name = event.get('resource_name')
         self.clearDictionaries()
         self.getEventFromSeishub(resource_name)
         #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
@@ -1096,17 +1075,9 @@ class ObsPyckGUI:
 
     def on_buttonDeleteEvent_clicked(self, event):
         event = self.seishubEventList[self.seishubEventCurrent]
-        resource_name = event.xpath(u"resource_name")[0].text
-        account = event.xpath(u"account")
-        user = event.xpath(u"user")
-        if account:
-            account = account[0].text
-        else:
-            account = None
-        if user:
-            user = user[0].text
-        else:
-            user = None
+        resource_name = event.get('resource_name')
+        account = event.get('account')
+        user = event.get('user')
         dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                    gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
         msg = "Delete event from database?\n\n"
@@ -1128,22 +1099,19 @@ class ObsPyckGUI:
     # the corresponding signal is emitted when hitting return after entering
     # the password
     def on_entrySysopPassword_activate(self, event):
-        # test authentication information:
         passwd = self.widgets['entrySysopPassword'].get_text()
-        auth = 'Basic ' + (base64.encodestring('sysop:' + passwd)).strip()
-        webservice = httplib.HTTP(self.server['Server'])
-        webservice.putrequest("HEAD", '/xml/seismology/event/just_a_test')
-        webservice.putheader('Authorization', auth)
-        webservice.endheaders()
-        statuscode = webservice.getreply()[0]
+        tmp_client = Client(base_url=self.server['BaseUrl'], user="sysop",
+                            password=passwd)
+        if tmp_client.testAuth():
+            self.client_sysop = tmp_client
+            self.widgets['checkbuttonSysop'].set_active(True)
         # if authentication test fails empty password field and uncheck sysop
-        if statuscode == 401: # 401 means "Unauthorized"
+        else:
+            self.client_sysop = None
             self.widgets['checkbuttonSysop'].set_active(False)
             self.widgets['entrySysopPassword'].set_text("")
             err = "Error: Authentication as sysop failed! (Wrong password!?)"
             self._write_err(err)
-        else:
-            self.widgets['checkbuttonSysop'].set_active(True)
         self.canv.grab_focus()
 
     def on_buttonSetFocusOnPlot_clicked(self, event):
@@ -1938,7 +1906,7 @@ class ObsPyckGUI:
     def load3dlocSyntheticPhases(self):
         files = PROGRAMS['3dloc']['files']
         try:
-            fhandle = open(files['out'], 'r')
+            fhandle = open(files['out'], 'rt')
             phaseList = fhandle.readlines()
             fhandle.close()
         except:
@@ -1999,7 +1967,7 @@ class ObsPyckGUI:
         err = "".join(sub.stderr.readlines())
         self._write_msg(msg)
         self._write_err(err)
-        f = open(files['in'], 'w')
+        f = open(files['in'], 'wt')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
@@ -2071,7 +2039,7 @@ class ObsPyckGUI:
 
     def doFocmec(self):
         files = PROGRAMS['focmec']['files']
-        f = open(files['phases'], 'w')
+        f = open(files['phases'], 'wt')
         f.write("\n") #first line is ignored!
         #Fortran style! 1: Station 2: Azimuth 3: Incident 4: Polarity
         #fmt = "ONTN  349.00   96.00C"
@@ -2111,7 +2079,7 @@ class ObsPyckGUI:
             return
         msg = '--> focmec finished'
         self._write_msg(msg)
-        lines = open(files['summary'], "r").readlines()
+        lines = open(files['summary'], "rt").readlines()
         msg = '%i suitable solutions found:' % len(lines)
         self._write_msg(msg)
         self.focMechList = []
@@ -2246,12 +2214,12 @@ class ObsPyckGUI:
         self._write_msg(msg)
         self._write_err(err)
 
-        f = open(files['phases'], 'w')
+        f = open(files['phases'], 'wt')
         phases_hypo71 = self.dicts2hypo71Phases()
         f.write(phases_hypo71)
         f.close()
 
-        f2 = open(files['stations'], 'w')
+        f2 = open(files['stations'], 'wt')
         stations_hypo71 = self.dicts2hypo71Stations()
         f2.write(stations_hypo71)
         f2.close()
@@ -2292,7 +2260,7 @@ class ObsPyckGUI:
         self._write_msg(msg)
         self._write_err(err)
 
-        f = open(files['phases'], 'w')
+        f = open(files['phases'], 'wt')
         phases_hypo71 = self.dicts2hypo71Phases()
         f.write(phases_hypo71)
         f.close()
@@ -2312,7 +2280,7 @@ class ObsPyckGUI:
         self.catFile(files['summary'])
 
     def catFile(self, file):
-        lines = open(file).readlines()
+        lines = open(file, "rt").readlines()
         msg = ""
         for line in lines:
             msg += line
@@ -2320,7 +2288,7 @@ class ObsPyckGUI:
 
     def loadNLLocOutput(self):
         files = PROGRAMS['nlloc']['files']
-        lines = open(files['summary']).readlines()
+        lines = open(files['summary'], "rt").readlines()
         if not lines:
             err = "Error: NLLoc output file (%s) does not exist!" % \
                     files['summary']
@@ -2419,7 +2387,7 @@ class ObsPyckGUI:
         # XXX handling of path extremely hackish! to be improved!!
         dirname = os.path.dirname(files['summary'])
         controlfile = os.path.join(dirname, "last.in")
-        lines2 = open(controlfile).readlines()
+        lines2 = open(controlfile, "rt").readlines()
         line2 = lines2.pop()
         while not line2.startswith("LOCFILES"):
             line2 = lines2.pop()
@@ -2553,7 +2521,7 @@ class ObsPyckGUI:
     def loadHyp2000Data(self):
         files = PROGRAMS['hyp_2000']['files']
         #self.load3dlocSyntheticPhases()
-        lines = open(files['summary']).readlines()
+        lines = open(files['summary'], "rt").readlines()
         if lines == []:
             err = "Error: Hypo2000 output file (%s) does not exist!" % \
                     files['summary']
@@ -2725,7 +2693,7 @@ class ObsPyckGUI:
     def load3dlocData(self):
         files = PROGRAMS['3dloc']['files']
         #self.load3dlocSyntheticPhases()
-        event = open(files['out']).readline().split()
+        event = open(files['out'], "rt").readline().split()
         dO = self.dictOrigin
         dO['Longitude'] = float(event[8])
         dO['Latitude'] = float(event[9])
@@ -2741,7 +2709,7 @@ class ObsPyckGUI:
                                  int(event[5]), int(event[6]), float(event[7]))
         dO['used P Count'] = 0
         dO['used S Count'] = 0
-        lines = open(files['in']).readlines()
+        lines = open(files['in'], "rt").readlines()
         for line in lines:
             pick = line.split()
             for st in self.streams:
@@ -2751,7 +2719,7 @@ class ObsPyckGUI:
                     elif pick[1] == 'S':
                         dO['used S Count'] += 1
                     break
-        lines = open(files['out']).readlines()
+        lines = open(files['out'], "rt").readlines()
         for line in lines[1:]:
             pick = line.split()
             for st, dict in zip(self.streams, self.dicts):
@@ -3376,7 +3344,7 @@ class ObsPyckGUI:
         """
         Returns information of all dictionaries as xml file (type string)
         """
-        xml =  Element("event")
+        xml =  lxml.etree.Element("event")
         Sub(Sub(xml, "event_id"), "value").text = self.dictEvent['xmlEventID']
         event_type = Sub(xml, "event_type")
         Sub(event_type, "value").text = "manual"
@@ -3640,35 +3608,29 @@ class ObsPyckGUI:
             Sub(focmec, "possibleSolutionCount").text = "%i" % \
                     dF['Possible Solution Count']
 
-        return tostring(xml, pretty_print=True, xml_declaration=True)
+        return lxml.etree.tostring(xml, pretty_print=True, xml_declaration=True)
     
     def setXMLEventID(self):
         #XXX is problematic if two people make a location at the same second!
         # then one event is overwritten with the other during submission.
-        self.dictEvent['xmlEventID'] = \
-                datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        self.dictEvent['xmlEventID'] = UTCDateTime().strftime('%Y%m%d%H%M%S')
 
     def uploadSeishub(self):
         """
         Upload xml file to seishub
         """
-
         # check, if the event should be uploaded as sysop. in this case we use
-        # the sysop-useraccount in seishub for the upload (and also set
+        # the sysop client instance for the upload (and also set
         # user_account in the xml to "sysop").
         # the correctness of the sysop password is tested when checking the
         # sysop box and entering the password immediately.
         if self.widgets['checkbuttonSysop'].get_active():
             userid = "sysop"
-            passwd = self.widgets['entrySysopPassword'].get_text()
+            client = self.client_sysop
         else:
             userid = self.server['User']
-            passwd = self.server['Password']
+            client = self.client
 
-        auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
-
-        path = '/xml/seismology/event'
-        
         # if we did no location at all, and only picks would be saved the
         # EventID ist still not set, so we have to do this now.
         if 'xmlEventID' not in self.dictEvent:
@@ -3678,31 +3640,23 @@ class ObsPyckGUI:
         msg = "creating xml..."
         self._write_msg(msg)
         data = self.dicts2XML()
-        tmpfile = self.tmp_dir + name + ".xml"
+        tmpfile = os.path.join(self.tmp_dir, name + ".xml")
         msg = "writing xml as %s (for debugging purposes only!)" % tmpfile
         self._write_msg(msg)
-        open(tmpfile, "w").write(data)
+        open(tmpfile, "wt").write(data)
 
-        #construct and send the header
-        webservice = httplib.HTTP(self.server['Server'])
-        webservice.putrequest("PUT", path + '/' + name)
-        webservice.putheader('Authorization', auth )
-        webservice.putheader("Host", "localhost")
-        webservice.putheader("User-Agent", "obspyck")
-        webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
-        webservice.putheader("Content-length", "%d" % len(data))
-        webservice.endheaders()
-        webservice.send(data)
-
-        # get the response
-        statuscode, statusmessage, header = webservice.getreply()
+        headers = {}
+        headers["Host"] = "localhost"
+        headers["User-Agent"] = "obspyck"
+        headers["Content-type"] = "text/xml; charset=\"UTF-8\""
+        headers["Content-length"] = "%d" % len(data)
+        code, message = client.event.putResource(name, xml_string=data,
+                                                 headers=headers)
         msg = "Account: %s" % userid
         msg += "\nUser: %s" % self.username
         msg += "\nName: %s" % name
-        msg += "\nServer: %s%s" % (self.server['Server'], path)
-        msg += "\nResponse: %s %s" % (statuscode, statusmessage)
-        #msg += "\nHeader:"
-        #msg += "\n%s" % str(header).strip()
+        msg += "\nServer: %s" % self.server['Server']
+        msg += "\nResponse: %s %s" % (code, message)
         self._write_msg(msg)
 
     def deleteEventInSeishub(self, resource_name):
@@ -3710,9 +3664,8 @@ class ObsPyckGUI:
         Delete xml file from seishub.
         (Move to seishubs trash folder if this option is activated)
         """
-
         # check, if the event should be deleted as sysop. in this case we
-        # use the sysop-useraccount in seishub for the DELETE request.
+        # use the sysop client instance for the DELETE request.
         # sysop may delete resources from any user.
         # at the moment deleted resources go to seishubs trash folder (and can
         # easily be resubmitted using the http interface).
@@ -3720,33 +3673,22 @@ class ObsPyckGUI:
         # sysop box and entering the password immediately.
         if self.widgets['checkbuttonSysop'].get_active():
             userid = "sysop"
-            passwd = self.widgets['entrySysopPassword'].get_text()
+            client = self.client_sysop
         else:
             userid = self.server['User']
-            passwd = self.server['Password']
-
-        auth = 'Basic ' + (base64.encodestring(userid + ':' + passwd)).strip()
-
-        path = '/xml/seismology/event'
+            client = self.client
         
-        #construct and send the header
-        webservice = httplib.HTTP(self.server['Server'])
-        webservice.putrequest("DELETE", path + '/' + resource_name)
-        webservice.putheader('Authorization', auth )
-        webservice.putheader("Host", "localhost")
-        webservice.putheader("User-Agent", "obspyck")
-        webservice.endheaders()
-
-        # get the response
-        statuscode, statusmessage, header = webservice.getreply()
+        headers = {}
+        headers["Host"] = "localhost"
+        headers["User-Agent"] = "obspyck"
+        code, message = client.event.deleteResource(resource_name,
+                                                    headers=headers)
         msg = "Deleting Event!"
         msg += "\nAccount: %s" % userid
         msg += "\nUser: %s" % self.username
         msg += "\nName: %s" % resource_name
-        msg += "\nServer: %s%s" % (self.server['Server'], path)
-        msg += "\nResponse: %s %s" % (statuscode, statusmessage)
-        #msg += "\nHeader:"
-        #msg += "\n%s" % str(header).strip()
+        msg += "\nServer: %s" % self.server['Server']
+        msg += "\nResponse: %s %s" % (code, message)
         self._write_msg(msg)
     
     def clearDictionaries(self):
@@ -3820,19 +3762,10 @@ class ObsPyckGUI:
         self.drawAllItems()
 
     def getEventFromSeishub(self, resource_name):
-        #document = xml.xpath(".//document_id")
-        #document_id = document[self.seishubEventCurrent].text
-        # Hack to show xml resource as document id
-        resource_url = self.server['BaseUrl'] + "/xml/seismology/event/" + \
-                       resource_name
-        resource_req = urllib2.Request(resource_url)
-        userid = self.server['User']
-        passwd = self.server['Password']
-        auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
-        resource_req.add_header("Authorization", "Basic %s" % auth)
-        fp = urllib2.urlopen(resource_req)
-        resource_xml = parse(fp)
-        fp.close()
+        """
+        Fetch a Resource XML from Seishub
+        """
+        resource_xml = self.client.event.getXMLResource(resource_name)
         if resource_xml.xpath(u".//event_type/account"):
             account = resource_xml.xpath(u".//event_type/account")[0].text
         else:
@@ -4145,36 +4078,6 @@ class ObsPyckGUI:
                resource_name, account, user)
         self._write_msg(msg)
 
-    def getEventListFromSeishub(self, starttime, endtime):
-        """
-        Searches for events in the database and returns a lxml ElementTree
-        object. All events with at least one pick set in between start- and
-        endtime are returned.
-
-        :param starttime: Start datetime as UTCDateTime
-        :param endtime: End datetime as UTCDateTime
-        """
-        
-        # two search criteria are applied:
-        # - first pick of event must be before stream endtime
-        # - last pick of event must be after stream starttime
-        # thus we get any event with at least one pick in between start/endtime
-        url = self.server['BaseUrl'] + \
-              "/seismology/event/getList?" + \
-              "min_last_pick=%s&max_first_pick=%s" % \
-              (str(starttime), str(endtime))
-        req = urllib2.Request(url)
-        userid = self.server['User']
-        passwd = self.server['Password']
-        auth = base64.encodestring('%s:%s' % (userid, passwd))[:-1]
-        req.add_header("Authorization", "Basic %s" % auth)
-
-        f = urllib2.urlopen(req)
-        xml = parse(f)
-        f.close()
-
-        return xml
-
     def updateEventListFromSeishub(self, starttime, endtime):
         """
         Searches for events in the database and stores a list of resource
@@ -4184,28 +4087,18 @@ class ObsPyckGUI:
         :param starttime: Start datetime as UTCDateTime
         :param endtime: End datetime as UTCDateTime
         """
-        # get event list from seishub
-        xml = self.getEventListFromSeishub(starttime, endtime)
-        # populate list with resource information of all available events
-        self.seishubEventList = xml.xpath(u"Item")
-
-        self.seishubEventCount = len(self.seishubEventList)
+        events = self.client.event.getList(min_last_pick=starttime,
+                                           max_first_pick=endtime)
+        self.seishubEventList = events
+        self.seishubEventCount = len(events)
         # we set the current event-pointer to the last list element, because we
         # iterate the counter immediately when fetching the first event...
-        self.seishubEventCurrent = self.seishubEventCount - 1
-        msg = "%i events are available from Seishub" % self.seishubEventCount
-        for event in self.seishubEventList:
-            resource_name = event.xpath(u"resource_name")[0].text
-            account = event.xpath(u"account")
-            user = event.xpath(u"user")
-            if account:
-                account = account[0].text
-            else:
-                account = None
-            if user:
-                user = user[0].text
-            else:
-                user = None
+        self.seishubEventCurrent = len(events) - 1
+        msg = "%i events are available from Seishub" % len(events)
+        for event in events:
+            resource_name = event.get('resource_name')
+            account = event.get('account')
+            user = event.get('user')
             msg += "\n  - %s (account: %s, user: %s)" % (resource_name,
                                                          account, user)
         self._write_msg(msg)
@@ -4219,19 +4112,15 @@ class ObsPyckGUI:
         at the moment this check is conducted for the current timewindow when
         submitting a sysop event.
         """
-        # get event list from seishub
-        xml = self.getEventListFromSeishub(starttime, endtime)
-
-        list_events = xml.xpath("Item")
-
+        list_events = self.client.event.getList(min_last_pick=starttime,
+                                                max_first_pick=endtime)
         list_sysop_events = []
-        
-        for element in list_events:
-            account = element.xpath(u"account")
+        for event in list_events:
+            account = event.get('account')
             if not account:
                 continue
-            if account[0].text == "sysop":
-                resource_name = element.xpath(u"resource_name")[0].text
+            if account == "sysop":
+                resource_name = event.get('resource_name')
                 list_sysop_events.append(resource_name)
 
         # if there is a possible duplicate, pop up a warning window and print a
