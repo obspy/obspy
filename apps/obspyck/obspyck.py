@@ -94,6 +94,11 @@ COMMANDLINE_OPTIONS = [
                 ".html for details)\n  \"safe\": overlaps are discarded "
                 "completely\n  \"overwrite\": the second trace is used for "
                 "overlapping parts of the trace"}]]
+PROGRAMS = {
+        'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs", 'summary': "nlloc.hyp", 'scatter': "nlloc.scat"}},
+        'hyp_2000': {'filenames': {'exe': "hyp2000",'control': "bay2000.inp", 'phases': "hyp2000.pha", 'stations': "stations.dat", 'summary': "hypo.prt"}},
+        'focmec': {'filenames': {'exe': "rfocmec", 'phases': "focmec.dat", 'stdout': "focmec.stdout", 'summary': "focmec.out"}},
+        '3dloc': {'filenames': {'exe': "3dloc_pitsa", 'out': "3dloc-out", 'in': "3dloc-in"}}}
 SEISMIC_PHASES = ['P', 'S']
 PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
         'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
@@ -211,7 +216,7 @@ def fetch_waveforms_metadata(options):
             streams.append(st)
     return (client, streams)
 
-def check_and_cleanup_streams(streams):
+def merge_check_and_cleanup_streams(streams, options):
     """
     Cleanup given list of streams so that they conform with what ObsPyck
     expects.
@@ -223,6 +228,23 @@ def check_and_cleanup_streams(streams):
 
     :returns: (warn_msg, merge_msg, list(:class:`obspy.core.stream.Stream`s))
     """
+    # Merge on every stream if this option is passed on command line:
+    if options.merge:
+        if options.merge.lower() == "safe":
+            for st in streams:
+                st.merge(method=0)
+        elif options.merge.lower() == "overwrite":
+            for st in streams:
+                st.merge(method=1)
+        else:
+            err = "Unrecognized option for merging traces. Try " + \
+                  "\"safe\" or \"overwrite\"."
+            raise Exception(err)
+
+    # Sort streams again, if there was a merge this could be necessary 
+    for st in streams:
+        st.sort()
+        st.reverse()
     sta_list = set()
     # we need to go through streams/dicts backwards in order not to get
     # problems because of the pop() statement
@@ -369,6 +391,63 @@ def setup_dicts(streams):
             continue
     return streams, dicts
 
+def setup_external_programs(options):
+    """
+    Sets up temdir, copies program files, fills in PROGRAMS dict, sets up
+    system calls for programs.
+    Depends on command line options, returns temporary directory.
+
+    :param options: Command line options of ObsPyck
+    :type options: options as returned by optparse.OptionParser.parse_args()
+    :returns: String representation of temporary directory with program files.
+    """
+    tmp_dir = tempfile.mkdtemp()
+    # set binary names to use depending on architecture and platform...
+    architecture = platform.architecture()[0]
+    system = platform.system()
+    # Setup external programs #############################################
+    for prog_basename, prog_dict in PROGRAMS.iteritems():
+        prog_srcpath = os.path.join(options.pluginpath, prog_basename)
+        prog_tmpdir = os.path.join(tmp_dir, prog_basename)
+        prog_dict['dir'] = prog_tmpdir
+        shutil.copytree(prog_srcpath, prog_tmpdir, symlinks=True)
+        prog_dict['files'] = {}
+        for key, filename in prog_dict['filenames'].iteritems():
+            prog_dict['files'][key] = os.path.join(prog_tmpdir, filename)
+        prog_dict['files']['exe'] = "__".join(\
+                [prog_dict['filenames']['exe'], system, architecture])
+    # 3dloc ###############################################################
+    prog_dict = PROGRAMS['3dloc']
+    prog_dict['D3_VELOCITY'] = os.path.join(prog_dict['dir'], 'D3_VELOCITY')
+    prog_dict['D3_VELOCITY_2'] = os.path.join(prog_dict['dir'], 'D3_VELOCITY_2')
+    prog_dict['PreCall'] = 'rm %s %s &> /dev/null' \
+            % (prog_dict['files']['out'], prog_dict['files']['in'])
+    prog_dict['Call'] = 'export D3_VELOCITY=%s/;' % \
+            PROGRAMS['3dloc']['D3_VELOCITY'] + \
+            'export D3_VELOCITY_2=%s/;' % \
+            PROGRAMS['3dloc']['D3_VELOCITY_2'] + \
+            'cd %s; ./%s' % (prog_dict['dir'], prog_dict['files']['exe'])
+    # Hyp2000 #############################################################
+    prog_dict = PROGRAMS['hyp_2000']
+    prog_dict['PreCall'] = 'rm %s %s %s &> /dev/null' \
+            % (prog_dict['files']['phases'], prog_dict['files']['stations'],
+               prog_dict['files']['summary'])
+    prog_dict['Call'] = 'export HYP2000_DATA=%s;' % (prog_dict['dir']) + \
+            'cd $HYP2000_DATA; ./%s < %s &> /dev/null' % \
+            (prog_dict['files']['exe'], prog_dict['filenames']['control'])
+    # NLLoc ###############################################################
+    prog_dict = PROGRAMS['nlloc']
+    prog_dict['PreCall'] = 'rm %s/nlloc* &> /dev/null' % prog_dict['dir']
+    prog_dict['Call'] = 'cd %s; ./%s %%s' % (prog_dict['dir'],
+                                          prog_dict['files']['exe']) + \
+            '; mv nlloc.*.*.*.loc.hyp %s' % prog_dict['files']['summary'] + \
+            '; mv nlloc.*.*.*.loc.scat %s' % prog_dict['files']['scatter']
+    # focmec ##############################################################
+    prog_dict = PROGRAMS['focmec']
+    prog_dict['Call'] = 'cd %s; ./%s' % (prog_dict['dir'], prog_dict['files']['exe'])
+    #######################################################################
+    return tmp_dir
+
 #XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
 # we have to do this, so the focus always remains with our matplotlib
 # inset and all events are directed to the matplotlib canvas...
@@ -472,7 +551,7 @@ def gk2lonlat(x, y, m_to_km=True):
         x = x * 1000.
         y = y * 1000.
     lon, lat = pyproj.transform(proj_gk4, proj_wgs84, x, y)
-    return [lon, lat]
+    return (lon, lat)
 
 def readNLLocScatter(scat_filename, textviewStdErrImproved):
     """
@@ -569,76 +648,7 @@ class ObsPyckGUI:
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
         check_keybinding_conflicts(KEYS)
-        self.tmp_dir = tempfile.mkdtemp() + '/'
-        # set binary names to use depending on architecture and platform...
-        architecture = platform.architecture()[0]
-        system = platform.system()
-        self.threeDlocBinaryName = "__".join(['3dloc_pitsa', system, architecture])
-        self.hyp2000BinaryName = "__".join(['hyp2000', system, architecture])
-        self.focmecScriptName = "__".join(['rfocmec', system, architecture])
-        self.nllocBinaryName = "__".join(['NLLoc', system, architecture])
-        
-        #######################################################################
-        # 3dloc ###############################################################
-        self.threeDlocPath = self.options.pluginpath + '/3dloc/'
-        self.threeDlocPath_D3_VELOCITY = self.threeDlocPath + 'D3_VELOCITY'
-        self.threeDlocPath_D3_VELOCITY_2 = self.threeDlocPath + 'D3_VELOCITY_2'
-        self.threeDlocOutfile = self.tmp_dir + '3dloc-out'
-        self.threeDlocInfile = self.tmp_dir + '3dloc-in'
-        # copy 3dloc files to temp directory
-        subprocess.call('cp -P %s/* %s &> /dev/null' % \
-                (self.threeDlocPath, self.tmp_dir), shell=True)
-        # XXX using shutil. problem: dst dir must not exist, need to change
-        # XXX tmp_dir structure to subfolders for each program...
-        # shutil.copytree(self.threeDlocPath, os.path.join(self.tmp_dir, "3dloc"),
-        #                 symlinks=True)
-        self.threeDlocPreCall = 'rm %s %s &> /dev/null' \
-                % (self.threeDlocOutfile, self.threeDlocInfile)
-        self.threeDlocCall = 'export D3_VELOCITY=%s/;' % \
-                self.threeDlocPath_D3_VELOCITY + \
-                'export D3_VELOCITY_2=%s/;' % \
-                self.threeDlocPath_D3_VELOCITY_2 + \
-                'cd %s; ./%s' % (self.tmp_dir, self.threeDlocBinaryName)
-        #######################################################################
-        # Hyp2000 #############################################################
-        self.hyp2000Path = self.options.pluginpath + '/hyp_2000/'
-        self.hyp2000Controlfilename = 'bay2000.inp'
-        self.hyp2000Phasefile = self.tmp_dir + 'hyp2000.pha'
-        self.hyp2000Stationsfile = self.tmp_dir + 'stations.dat'
-        self.hyp2000Summary = self.tmp_dir + 'hypo.prt'
-        # copy hypo2000 files to temp directory
-        subprocess.call('cp -P %s/* %s &> /dev/null' % \
-                (self.hyp2000Path, self.tmp_dir), shell=True)
-        self.hyp2000PreCall = 'rm %s %s %s &> /dev/null' \
-                % (self.hyp2000Phasefile, self.hyp2000Stationsfile,
-                   self.hyp2000Summary)
-        self.hyp2000Call = 'export HYP2000_DATA=%s;' % (self.tmp_dir) + \
-                'cd $HYP2000_DATA; ./%s < %s &> /dev/null' % \
-                (self.hyp2000BinaryName, self.hyp2000Controlfilename)
-        #######################################################################
-        # NLLoc ###############################################################
-        self.nllocPath = self.options.pluginpath + '/nlloc/'
-        self.nllocPhasefile = self.tmp_dir + 'nlloc.obs'
-        self.nllocSummary = self.tmp_dir + 'nlloc.hyp'
-        self.nllocScatterBin = self.tmp_dir + 'nlloc.scat'
-        # copy nlloc files to temp directory
-        subprocess.call('cp -P %s/* %s &> /dev/null' % \
-                (self.nllocPath, self.tmp_dir), shell=True)
-        self.nllocPreCall = 'rm %s/nlloc* &> /dev/null' % (self.tmp_dir)
-        self.nllocCall = 'cd %s; ./%s %%s' % (self.tmp_dir,
-                                              self.nllocBinaryName) + \
-                '; mv nlloc.*.*.*.loc.hyp %s' % self.nllocSummary + \
-                '; mv nlloc.*.*.*.loc.scat %s' % self.nllocScatterBin
-        #######################################################################
-        # focmec ##############################################################
-        self.focmecPath = self.options.pluginpath + '/focmec/'
-        self.focmecPhasefile = self.tmp_dir + 'focmec.dat'
-        self.focmecStdout = self.tmp_dir + 'focmec.stdout'
-        self.focmecSummary = self.tmp_dir + 'focmec.out'
-        # copy focmec files to temp directory
-        subprocess.call('cp -P %s/* %s &> /dev/null' % \
-                (self.focmecPath, self.tmp_dir), shell=True)
-        self.focmecCall = 'cd %s; ./%s' % (self.tmp_dir, self.focmecScriptName)
+        self.tmp_dir = setup_external_programs(options)
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictFocalMechanism = {} # currently selected focal mechanism
@@ -662,71 +672,53 @@ class ObsPyckGUI:
             except:
                 self.username = "unknown"
         # setup server information
-        self.server = {}
-        self.server['Name'] = self.options.servername # "teide"
-        self.server['Port'] = self.options.port # 8080
-        self.server['Server'] = self.server['Name'] + \
-                                ":%i" % self.server['Port']
-        self.server['BaseUrl'] = "http://" + self.server['Server']
-        self.server['User'] = self.options.user # "obspyck"
-        self.server['Password'] = self.options.password # "obspyck"
+        server = {}
+        self.server = server
+        server['Name'] = options.servername # "teide"
+        server['Port'] = options.port # 8080
+        server['Server'] = server['Name'] + ":%i" % server['Port']
+        server['BaseUrl'] = "http://" + server['Server']
+        server['User'] = options.user # "obspyck"
+        server['Password'] = options.password # "obspyck"
         
-        # Merge on every stream if this option is passed on command line:
-        if self.options.merge:
-            if self.options.merge.lower() == "safe":
-                for st in self.streams:
-                    st.merge(method=0)
-            elif self.options.merge.lower() == "overwrite":
-                for st in self.streams:
-                    st.merge(method=1)
-            else:
-                err = "Unrecognized option for merging traces. Try " + \
-                      "\"safe\" or \"overwrite\"."
-                raise Exception(err)
-
-        # Sort streams again, if there was a merge this could be necessary 
-        for st in self.streams:
-            st.sort()
-            st.reverse()
-        
-        (warn_msg, merge_msg, self.streams) = \
-                check_and_cleanup_streams(self.streams)
-        
+        (warn_msg, merge_msg, streams) = \
+                merge_check_and_cleanup_streams(streams, options)
         # if it's not empty show the merge info message now
         if merge_msg:
             print merge_msg
-
         # exit if no streams are left after removing everthing not suited.
-        if not self.streams:
+        if not streams:
             err = "No streams left to work with after removing bad streams."
             raise Exception(err)
-        # sort streams by station name
-        self.streams.sort(key=lambda st: st[0].stats['station'])
 
         #XXX not used: self.dictsMap = {} #XXX not used yet!
         # set up dictionaries to store phase_type/axes/line informations
         self.lines = {}
         self.texts = {}
 
-        (self.streams, self.dicts) = setup_dicts(self.streams)
+        # sort streams by station name
+        streams.sort(key=lambda st: st[0].stats['station'])
+        (streams, dicts) = setup_dicts(streams)
+        self.dicts = dicts
         self.eventMapColors = []
-        for i in xrange(len(self.dicts)):
+        for i in xrange(len(dicts)):
             self.eventMapColors.append((0.,  1.,  0.,  1.))
         
         # demean traces if not explicitly deactivated on command line
-        if not self.options.nozeromean:
-            for st in self.streams:
+        if not options.nozeromean:
+            for st in streams:
                 for tr in st:
                     tr.data = tr.data - tr.data.mean()
 
         #Define a pointer to navigate through the streams
-        self.stNum = len(self.streams)
+        self.stNum = len(streams)
         self.stPt = 0
     
         # Get the absolute path to the glade file.
         self.root_dir = os.path.split(os.path.abspath(__file__))[0]
         self.glade_file = os.path.join(self.root_dir, 'obspyck.glade')
-        self.gla = gtk.glade.XML(self.glade_file, 'windowObspyck')
+        gla = gtk.glade.XML(self.glade_file, 'windowObspyck')
+        self.gla = gla
         # commodity dictionary to connect event handles
         # example:
         # d = {'on_buttonQuit_clicked': gtk.main_quit}
@@ -737,79 +729,84 @@ class ObsPyckGUI:
         for func in dir(self):
             if func.startswith("on_"):
                 exec("autoconnect['%s'] = self.%s" % (func, func))
-        self.gla.signal_autoconnect(autoconnect)
+        gla.signal_autoconnect(autoconnect)
         # get the main window widget and set its title
-        self.win = self.gla.get_widget('windowObspyck')
-        #self.win.set_title("ObsPyck")
+        win = gla.get_widget('windowObspyck')
+        self.win = win
+        #win.set_title("ObsPyck")
         # matplotlib code to generate an empty Axes
         # we define no dimensions for Figure because it will be
         # expanded to the whole empty space on main window widget
-        self.fig = Figure()
-        #self.fig.set_facecolor("0.9")
+        fig = Figure()
+        self.fig = fig
+        #fig.set_facecolor("0.9")
         # we bind the figure to the FigureCanvas, so that it will be
         # drawn using the specific backend graphic functions
-        self.canv = FigureCanvas(self.fig)
+        canv = FigureCanvas(fig)
+        self.canv = canv
         try:
             #might not be working with ion3 and other windowmanagers...
-            #self.fig.set_size_inches(20, 10, forward = True)
-            self.win.maximize()
+            #fig.set_size_inches(20, 10, forward = True)
+            win.maximize()
         except:
             pass
         # embed the canvas into the empty area left in glade window
-        place1 = self.gla.get_widget("hboxObspyck")
-        place1.pack_start(self.canv, True, True)
-        place2 = self.gla.get_widget("vboxObspyck")
-        self.toolbar = Toolbar(self.canv, self.win)
-        place2.pack_start(self.toolbar, False, False)
-        self.toolbar.zoom()
-        self.canv.widgetlock.release(self.toolbar)
+        place1 = gla.get_widget("hboxObspyck")
+        place1.pack_start(canv, True, True)
+        place2 = gla.get_widget("vboxObspyck")
+        toolbar = Toolbar(canv, win)
+        self.toolbar = toolbar
+        place2.pack_start(toolbar, False, False)
+        toolbar.zoom()
+        canv.widgetlock.release(toolbar)
 
         # store handles for all buttons/GUI-elements we interact with
-        self.widgets = {}
+        widgets = {}
+        self.widgets = widgets
         for name in WIDGET_NAMES:
-            self.widgets[name] = self.gla.get_widget(name)
+            widgets[name] = gla.get_widget(name)
 
         # redirect stdout and stderr
         # first we need to create a new subinstance with write method
-        self.widgets['textviewStdOutImproved'] = TextViewImproved(self.widgets['textviewStdOut'])
-        self.widgets['textviewStdErrImproved'] = TextViewImproved(self.widgets['textviewStdErr'])
+        widgets['textviewStdOutImproved'] = TextViewImproved(widgets['textviewStdOut'])
+        widgets['textviewStdErrImproved'] = TextViewImproved(widgets['textviewStdErr'])
         # we need to remember the original handles because we need to switch
         # back to them when going to debug mode
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
-        sys.stdout = self.widgets['textviewStdOutImproved']
-        sys.stderr = self.widgets['textviewStdErrImproved']
+        sys.stdout = widgets['textviewStdOutImproved']
+        sys.stderr = widgets['textviewStdErrImproved']
         self._write_err(warn_msg)
 
         # change fonts of textviews and of comboboxStreamName
         # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
         try:
             fontDescription = pango.FontDescription("monospace condensed 9")
-            self.widgets['textviewStdOut'].modify_font(fontDescription)
-            self.widgets['textviewStdErr'].modify_font(fontDescription)
+            widgets['textviewStdOut'].modify_font(fontDescription)
+            widgets['textviewStdErr'].modify_font(fontDescription)
             fontDescription = pango.FontDescription("monospace bold 11")
-            self.widgets['comboboxStreamName'].child.modify_font(fontDescription)
+            widgets['comboboxStreamName'].child.modify_font(fontDescription)
         except NameError:
             pass
 
         # Set up initial plot
-        #self.fig = plt.figure()
-        #self.fig.canvas.set_window_title("ObsPyck")
+        #fig = plt.figure()
+        #fig.canvas.set_window_title("ObsPyck")
         #try:
         #    #not working with ion3 and other windowmanagers...
-        #    self.fig.set_size_inches(20, 10, forward = True)
+        #    fig.set_size_inches(20, 10, forward = True)
         #except:
         #    pass
         self.drawAxes()
         #redraw()
-        #self.fig.canvas.draw()
+        #fig.canvas.draw()
         # Activate all mouse/key/Cursor-events
-        self.canv.mpl_connect('key_press_event', self.keypress)
-        self.canv.mpl_connect('key_release_event', self.keyrelease)
-        self.canv.mpl_connect('scroll_event', self.scroll)
-        self.canv.mpl_connect('button_release_event', self.buttonrelease)
-        self.canv.mpl_connect('button_press_event', self.buttonpress)
-        self.multicursor = MultiCursor(self.canv, self.axs, useblit=True,
+        canv.mpl_connect('key_press_event', self.keypress)
+        canv.mpl_connect('key_release_event', self.keyrelease)
+        canv.mpl_connect('scroll_event', self.scroll)
+        canv.mpl_connect('button_release_event', self.buttonrelease)
+        canv.mpl_connect('button_press_event', self.buttonpress)
+        self.multicursor = MultiCursor(canv, self.axs, useblit=True,
                                        color='k', linewidth=1, ls='dotted')
         
         # there's a bug in glade so we have to set the default value for the
@@ -818,15 +815,15 @@ class ObsPyckGUI:
         # internal event handling (to determine what to do on the various key
         # press events...)
         # activate first item in the combobox designed with glade:
-        self.widgets['comboboxPhaseType'].set_active(0)
-        self.widgets['comboboxFilterType'].set_active(0)
-        self.widgets['comboboxNLLocModel'].set_active(0)
+        widgets['comboboxPhaseType'].set_active(0)
+        widgets['comboboxFilterType'].set_active(0)
+        widgets['comboboxNLLocModel'].set_active(0)
         # fill the combobox list with the streams' station name
         # first remove a temporary item set at startup
-        self.widgets['comboboxStreamName'].remove_text(0)
-        for st in self.streams:
-            self.widgets['comboboxStreamName'].append_text(st[0].stats['station'])
-        self.widgets['comboboxStreamName'].set_active(0)
+        widgets['comboboxStreamName'].remove_text(0)
+        for st in streams:
+            widgets['comboboxStreamName'].append_text(st[0].stats['station'])
+        widgets['comboboxStreamName'].set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
         # grab focus, otherwise the mpl key_press events get lost...
@@ -836,24 +833,24 @@ class ObsPyckGUI:
         # >> focus can be rest by clicking the "set focus on plot" button...
         # XXX a possible workaround would be to manually grab focus whenever
         # one of the combobox buttons or spinbuttons is clicked/updated (DONE!)
-        nofocus_recursive(self.win)
-        self.widgets['comboboxPhaseType'].set_focus_on_click(False)
-        self.widgets['comboboxFilterType'].set_focus_on_click(False)
-        self.widgets['comboboxNLLocModel'].set_focus_on_click(False)
-        self.canv.set_property("can_default", True)
-        self.canv.set_property("can_focus", True)
-        self.canv.grab_default()
-        self.canv.grab_focus()
+        nofocus_recursive(win)
+        widgets['comboboxPhaseType'].set_focus_on_click(False)
+        widgets['comboboxFilterType'].set_focus_on_click(False)
+        widgets['comboboxNLLocModel'].set_focus_on_click(False)
+        canv.set_property("can_default", True)
+        canv.set_property("can_focus", True)
+        canv.grab_default()
+        canv.grab_focus()
         # set the filter default values according to command line options
         # or command line default values
-        self.widgets['spinbuttonHighpass'].set_value(self.options.highpass)
-        self.widgets['spinbuttonLowpass'].set_value(self.options.lowpass)
+        widgets['spinbuttonHighpass'].set_value(options.highpass)
+        widgets['spinbuttonLowpass'].set_value(options.lowpass)
         self.updateStreamLabels()
         self.multicursorReinit()
-        self.canv.show()
+        canv.show()
 
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
+        self.checkForSysopEventDuplicates(streams[0][0].stats.starttime,
+                                          streams[0][0].stats.endtime)
 
         gtk.main()
 
@@ -1201,20 +1198,21 @@ class ObsPyckGUI:
             self.updatePlot()
 
     def on_spinbuttonHighpass_value_changed(self, event):
-        if not self.widgets['togglebuttonFilter'].get_active() or \
-           self.widgets['comboboxFilterType'].get_active_text() == "Lowpass":
+        widgets = self.widgets
+        stats = self.streams[self.stPt][0].stats
+        if not widgets['togglebuttonFilter'].get_active() or \
+           widgets['comboboxFilterType'].get_active_text() == "Lowpass":
             self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
-        if self.widgets['spinbuttonLowpass'].get_value() < self.widgets['spinbuttonHighpass'].get_value():
+        if widgets['spinbuttonLowpass'].get_value() < widgets['spinbuttonHighpass'].get_value():
             err = "Warning: Lowpass frequency below Highpass frequency!"
             self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
-        minimum  = float(self.streams[self.stPt][0].stats.sampling_rate) / \
-                self.streams[self.stPt][0].stats.npts
-        if self.widgets['spinbuttonHighpass'].get_value() < minimum:
+        minimum  = float(stats.sampling_rate) / stats.npts
+        if widgets['spinbuttonHighpass'].get_value() < minimum:
             err = "Warning: Lowpass frequency is not supported by length of trace!"
             self._write_err(err)
         self.updatePlot()
@@ -1223,19 +1221,21 @@ class ObsPyckGUI:
         self.canv.grab_focus()
 
     def on_spinbuttonLowpass_value_changed(self, event):
-        if not self.widgets['togglebuttonFilter'].get_active() or \
-           self.widgets['comboboxFilterType'].get_active_text() == "Highpass":
+        widgets = self.widgets
+        stats = self.streams[self.stPt][0].stats
+        if not widgets['togglebuttonFilter'].get_active() or \
+           widgets['comboboxFilterType'].get_active_text() == "Highpass":
             self.canv.grab_focus()
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
-        if self.widgets['spinbuttonLowpass'].get_value() < self.widgets['spinbuttonHighpass'].get_value():
+        if widgets['spinbuttonLowpass'].get_value() < widgets['spinbuttonHighpass'].get_value():
             err = "Warning: Lowpass frequency below Highpass frequency!"
             self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
-        maximum  = self.streams[self.stPt][0].stats.sampling_rate / 2.0
-        if self.widgets['spinbuttonLowpass'].get_value() > maximum:
+        maximum  = stats.sampling_rate / 2.0
+        if widgets['spinbuttonLowpass'].get_value() > maximum:
             err = "Warning: Highpass frequency is lower than Nyquist!"
             self._write_err(err)
         self.updatePlot()
@@ -1244,13 +1244,14 @@ class ObsPyckGUI:
         self.canv.grab_focus()
 
     def on_togglebuttonSpectrogram_toggled(self, event):
-        buttons_deactivate = [self.widgets['togglebuttonFilter'],
-                              self.widgets['togglebuttonOverview'],
-                              self.widgets['comboboxFilterType'],
-                              self.widgets['checkbuttonZeroPhase'],
-                              self.widgets['labelHighpass'], self.widgets['labelLowpass'],
-                              self.widgets['spinbuttonHighpass'], self.widgets['spinbuttonLowpass']]
-        state = self.widgets['togglebuttonSpectrogram'].get_active()
+        widgets = self.widgets
+        buttons_deactivate = [widgets['togglebuttonFilter'],
+                              widgets['togglebuttonOverview'],
+                              widgets['comboboxFilterType'],
+                              widgets['checkbuttonZeroPhase'],
+                              widgets['labelHighpass'], widgets['labelLowpass'],
+                              widgets['spinbuttonHighpass'], widgets['spinbuttonLowpass']]
+        state = widgets['togglebuttonSpectrogram'].get_active()
         for button in buttons_deactivate:
             button.set_sensitive(not state)
         if state:
@@ -1500,10 +1501,15 @@ class ObsPyckGUI:
         st = self.streams[self.stPt]
         #we start all our x-axes at 0 with the starttime of the first (Z) trace
         starttime_global = st[0].stats.starttime
-        self.axs = []
-        self.plts = []
-        self.trans = []
-        self.t = []
+        fig = self.fig
+        axs = []
+        self.axs = axs
+        plts = []
+        self.plts = plts
+        trans = []
+        self.trans = trans
+        t = []
+        self.t = t
         trNum = len(st.traces)
         for i in range(trNum):
             npts = st[i].stats.npts
@@ -1518,34 +1524,34 @@ class ObsPyckGUI:
             # off the last item if this is the case
             if len(sampletimes) == npts + 1:
                 sampletimes = sampletimes[:-1]
-            self.t.append(sampletimes)
+            t.append(sampletimes)
             if i == 0:
-                self.axs.append(self.fig.add_subplot(trNum,1,i+1))
-                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
-                                                                             self.axs[i].transAxes))
+                axs.append(fig.add_subplot(trNum,1,i+1))
+                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
+                                                                             axs[i].transAxes))
             else:
-                self.axs.append(self.fig.add_subplot(trNum, 1, i+1, 
-                        sharex=self.axs[0], sharey=self.axs[0]))
-                self.trans.append(matplotlib.transforms.blended_transform_factory(self.axs[i].transData,
-                                                                             self.axs[i].transAxes))
-                self.axs[i].xaxis.set_ticks_position("top")
-            self.axs[-1].xaxis.set_ticks_position("both")
-            self.axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+                axs.append(fig.add_subplot(trNum, 1, i+1, 
+                        sharex=axs[0], sharey=axs[0]))
+                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
+                                                                             axs[i].transAxes))
+                axs[i].xaxis.set_ticks_position("top")
+            axs[-1].xaxis.set_ticks_position("both")
+            axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if self.widgets['togglebuttonSpectrogram'].get_active():
                 log = self.widgets['checkbuttonSpectrogramLog'].get_active()
                 spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
-                            cmap=self.spectrogramColormap, axis=self.axs[i],
+                            cmap=self.spectrogramColormap, axis=axs[i],
                             zorder=-10)
             else:
-                self.plts.append(self.axs[i].plot(self.t[i], st[i].data, color='k',zorder=1000)[0])
-        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                plts.append(axs[i].plot(t[i], st[i].data, color='k',zorder=1000)[0])
+        self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          st[0].stats.starttime.microsecond / 1e3 + 0.5,
                                                          st[0].stats.endtime.strftime("%H:%M:%S"),
                                                          st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
-        self.xMin, self.xMax=self.axs[0].get_xlim()
-        self.yMin, self.yMax=self.axs[0].get_ylim()
-        #self.fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
-        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
+        self.xMin, self.xMax = axs[0].get_xlim()
+        self.yMin, self.yMax = axs[0].get_ylim()
+        #fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
+        fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
         self.toolbar.update()
         self.toolbar.pan(False)
         self.toolbar.zoom(True)
@@ -1930,8 +1936,9 @@ class ObsPyckGUI:
         self.updateStreamNameCombobox()
 
     def load3dlocSyntheticPhases(self):
+        files = PROGRAMS['3dloc']['files']
         try:
-            fhandle = open(self.threeDlocOutfile, 'r')
+            fhandle = open(files['out'], 'r')
             phaseList = fhandle.readlines()
             fhandle.close()
         except:
@@ -1983,15 +1990,16 @@ class ObsPyckGUI:
         self.redraw()
 
     def do3dLoc(self):
+        files = PROGRAMS['3dloc']['files']
         self.setXMLEventID()
-        #subprocess.call(self.threeDlocPreCall, shell=True)
-        sub = subprocess.Popen(self.threeDlocPreCall, shell=True,
+        #subprocess.call(PROGRAMS['3dloc']['PreCall'], shell=True)
+        sub = subprocess.Popen(PROGRAMS['3dloc']['PreCall'], shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         self._write_msg(msg)
         self._write_err(err)
-        f = open(self.threeDlocInfile, 'w')
+        f = open(files['in'], 'w')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
         self.coords = []
@@ -2049,9 +2057,9 @@ class ObsPyckGUI:
         f.close()
         msg = 'Phases for 3Dloc:'
         self._write_msg(msg)
-        self.catFile(self.threeDlocInfile)
-        #subprocess.call(self.threeDlocCall, shell=True)
-        sub = subprocess.Popen(self.threeDlocCall, shell=True,
+        self.catFile(files['in'])
+        #subprocess.call(PROGRAMS['3dloc']['Call'], shell=True)
+        sub = subprocess.Popen(PROGRAMS['3dloc']['Call'], shell=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
@@ -2059,10 +2067,11 @@ class ObsPyckGUI:
         self._write_err(err)
         msg = '--> 3dloc finished'
         self._write_msg(msg)
-        self.catFile(self.threeDlocOutfile)
+        self.catFile(files['out'])
 
     def doFocmec(self):
-        f = open(self.focmecPhasefile, 'w')
+        files = PROGRAMS['focmec']['files']
+        f = open(files['phases'], 'w')
         f.write("\n") #first line is ignored!
         #Fortran style! 1: Station 2: Azimuth 3: Incident 4: Polarity
         #fmt = "ONTN  349.00   96.00C"
@@ -2089,8 +2098,8 @@ class ObsPyckGUI:
         f.close()
         msg = 'Phases for focmec: %i' % count
         self._write_msg(msg)
-        self.catFile(self.focmecPhasefile)
-        sub = subprocess.Popen(self.focmecCall, shell=True,
+        self.catFile(files['phases'])
+        sub = subprocess.Popen(PROGRAMS['focmec']['Call'], shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
@@ -2102,7 +2111,7 @@ class ObsPyckGUI:
             return
         msg = '--> focmec finished'
         self._write_msg(msg)
-        lines = open(self.focmecSummary, "r").readlines()
+        lines = open(files['summary'], "r").readlines()
         msg = '%i suitable solutions found:' % len(lines)
         self._write_msg(msg)
         self.focMechList = []
@@ -2137,15 +2146,13 @@ class ObsPyckGUI:
             return
         self.focMechCurrent = (self.focMechCurrent + 1) % self.focMechCount
         self.dictFocalMechanism = self.focMechList[self.focMechCurrent]
+        dF = self.dictFocalMechanism
         msg = "selecting Focal Mechanism No. %2i of %2i:" % \
                 (self.focMechCurrent + 1, self.focMechCount)
         self._write_msg(msg)
         msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
-                (self.dictFocalMechanism['Dip'],
-                 self.dictFocalMechanism['Strike'],
-                 self.dictFocalMechanism['Rake'],
-                 self.dictFocalMechanism['Errors'],
-                 self.dictFocalMechanism['Station Polarity Count'])
+                (dF['Dip'], dF['Strike'], dF['Rake'], dF['Errors'],
+                 dF['Station Polarity Count'])
         self._write_msg(msg)
     
     def drawFocMec(self):
@@ -2230,32 +2237,33 @@ class ObsPyckGUI:
         Writes input files for hyp2000 and starts the hyp2000 program via a
         system call.
         """
+        files = PROGRAMS['hyp_2000']['files']
         self.setXMLEventID()
-        sub = subprocess.Popen(self.hyp2000PreCall, shell=True,
+        sub = subprocess.Popen(PROGRAMS['hyp_2000']['PreCall'], shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         self._write_msg(msg)
         self._write_err(err)
 
-        f = open(self.hyp2000Phasefile, 'w')
+        f = open(files['phases'], 'w')
         phases_hypo71 = self.dicts2hypo71Phases()
         f.write(phases_hypo71)
         f.close()
 
-        f2 = open(self.hyp2000Stationsfile, 'w')
+        f2 = open(files['stations'], 'w')
         stations_hypo71 = self.dicts2hypo71Stations()
         f2.write(stations_hypo71)
         f2.close()
 
         msg = 'Phases for Hypo2000:'
         self._write_msg(msg)
-        self.catFile(self.hyp2000Phasefile)
+        self.catFile(files['phases'])
         msg = 'Stations for Hypo2000:'
         self._write_msg(msg)
-        self.catFile(self.hyp2000Stationsfile)
+        self.catFile(files['stations'])
 
-        sub = subprocess.Popen(self.hyp2000Call, shell=True,
+        sub = subprocess.Popen(PROGRAMS['hyp_2000']['Call'], shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
@@ -2263,34 +2271,35 @@ class ObsPyckGUI:
         self._write_err(err)
         msg = '--> hyp2000 finished'
         self._write_msg(msg)
-        self.catFile(self.hyp2000Summary)
+        self.catFile(files['summary'])
 
     def doNLLoc(self):
         """
         Writes input files for NLLoc and starts the NonLinLoc program via a
         system call.
         """
+        files = PROGRAMS['nlloc']['files']
         # determine which model should be used in location
         controlfilename = "locate_%s.nlloc" % \
                           self.widgets['comboboxNLLocModel'].get_active_text()
-        nllocCall = self.nllocCall % controlfilename
+        nllocCall = PROGRAMS['nlloc']['Call'] % controlfilename
 
         self.setXMLEventID()
-        sub = subprocess.Popen(self.nllocPreCall, shell=True,
+        sub = subprocess.Popen(PROGRAMS['nlloc']['PreCall'], shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         self._write_msg(msg)
         self._write_err(err)
 
-        f = open(self.nllocPhasefile, 'w')
+        f = open(files['phases'], 'w')
         phases_hypo71 = self.dicts2hypo71Phases()
         f.write(phases_hypo71)
         f.close()
 
         msg = 'Phases for NLLoc:'
         self._write_msg(msg)
-        self.catFile(self.nllocPhasefile)
+        self.catFile(files['phases'])
 
         sub = subprocess.Popen(nllocCall, shell=True,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -2300,7 +2309,7 @@ class ObsPyckGUI:
         self._write_err(err)
         msg = '--> NLLoc finished'
         self._write_msg(msg)
-        self.catFile(self.nllocSummary)
+        self.catFile(files['summary'])
 
     def catFile(self, file):
         lines = open(file).readlines()
@@ -2310,10 +2319,11 @@ class ObsPyckGUI:
         self._write_msg(msg)
 
     def loadNLLocOutput(self):
-        lines = open(self.nllocSummary).readlines()
+        files = PROGRAMS['nlloc']['files']
+        lines = open(files['summary']).readlines()
         if not lines:
             err = "Error: NLLoc output file (%s) does not exist!" % \
-                    self.nllocSummary
+                    files['summary']
             self._write_err(err)
             return
         # goto maximum likelihood origin location info line
@@ -2323,7 +2333,7 @@ class ObsPyckGUI:
                 line = lines.pop(0)
         except:
             err = "Error: No correct location info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
+                  "outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
         
@@ -2341,7 +2351,7 @@ class ObsPyckGUI:
                 line = lines.pop(0)
         except:
             err = "Error: No correct location info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
+                  "outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
         
@@ -2361,7 +2371,7 @@ class ObsPyckGUI:
                 line = lines.pop(0)
         except:
             err = "Error: No correct location info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
+                  "outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
         
@@ -2376,7 +2386,7 @@ class ObsPyckGUI:
                 line = lines.pop(0)
         except:
             err = "Error: No correct location info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
+                  "outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
         
@@ -2406,7 +2416,9 @@ class ObsPyckGUI:
         errZ *= 2
 
         # determine which model was used:
-        controlfile = self.tmp_dir + "/last.in"
+        # XXX handling of path extremely hackish! to be improved!!
+        dirname = os.path.dirname(files['summary'])
+        controlfile = os.path.join(dirname, "last.in")
         lines2 = open(controlfile).readlines()
         line2 = lines2.pop()
         while not line2.startswith("LOCFILES"):
@@ -2436,7 +2448,7 @@ class ObsPyckGUI:
                 line = lines.pop(0)
         except:
             err = "Error: No correct synthetic phase info found in NLLoc " + \
-                  "outputfile (%s)!" % self.nllocSummary
+                  "outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
 
@@ -2447,7 +2459,7 @@ class ObsPyckGUI:
                 badline = lines.pop()
         except:
             err = "Error: Could not remove unwanted lines at bottom of " + \
-                  "NLLoc outputfile (%s)!" % self.nllocSummary
+                  "NLLoc outputfile (%s)!" % files['summary']
             self._write_err(err)
             return
         
@@ -2539,11 +2551,12 @@ class ObsPyckGUI:
                 dO['used Station Count'] -= 1
 
     def loadHyp2000Data(self):
+        files = PROGRAMS['hyp_2000']['files']
         #self.load3dlocSyntheticPhases()
-        lines = open(self.hyp2000Summary).readlines()
+        lines = open(files['summary']).readlines()
         if lines == []:
             err = "Error: Hypo2000 output file (%s) does not exist!" % \
-                    self.hyp2000Summary
+                    files['summary']
             self._write_err(err)
             return
         # goto origin info line
@@ -2558,7 +2571,7 @@ class ObsPyckGUI:
             line = lines.pop(0)
         except:
             err = "Error: No location info found in Hypo2000 outputfile " + \
-                  "(%s)!" % self.hyp2000Summary
+                  "(%s)!" % files['summary']
             self._write_err(err)
             return
 
@@ -2710,8 +2723,9 @@ class ObsPyckGUI:
                 dO['used Station Count'] -= 1
 
     def load3dlocData(self):
+        files = PROGRAMS['3dloc']['files']
         #self.load3dlocSyntheticPhases()
-        event = open(self.threeDlocOutfile).readline().split()
+        event = open(files['out']).readline().split()
         dO = self.dictOrigin
         dO['Longitude'] = float(event[8])
         dO['Latitude'] = float(event[9])
@@ -2727,7 +2741,7 @@ class ObsPyckGUI:
                                  int(event[5]), int(event[6]), float(event[7]))
         dO['used P Count'] = 0
         dO['used S Count'] = 0
-        lines = open(self.threeDlocInfile).readlines()
+        lines = open(files['in']).readlines()
         for line in lines:
             pick = line.split()
             for st in self.streams:
@@ -2737,7 +2751,7 @@ class ObsPyckGUI:
                     elif pick[1] == 'S':
                         dO['used S Count'] += 1
                     break
-        lines = open(self.threeDlocOutfile).readlines()
+        lines = open(files['out']).readlines()
         for line in lines[1:]:
             pick = line.split()
             for st, dict in zip(self.streams, self.dicts):
@@ -2789,12 +2803,12 @@ class ObsPyckGUI:
            not 'Latitude' in self.dictOrigin:
             err = "Error: No coordinates for origin!"
             self._write_err(err)
+        dO = self.dictOrigin
         epidists = []
         for dict in self.dicts:
-            x, y = utlGeoKm(self.dictOrigin['Longitude'],
-                            self.dictOrigin['Latitude'],
+            x, y = utlGeoKm(dO['Longitude'], dO['Latitude'],
                             dict['StaLon'], dict['StaLat'])
-            z = abs(dict['StaEle'] - self.dictOrigin['Depth'])
+            z = abs(dict['StaEle'] - dO['Depth'])
             dict['distX'] = x
             dict['distY'] = y
             dict['distZ'] = z
@@ -2806,9 +2820,9 @@ class ObsPyckGUI:
             if 'Psynth' in dict or 'Ssynth' in dict:
                 epidists.append(dict['distEpi'])
             dict['distHypo'] = np.sqrt(x**2 + y**2 + z**2)
-        self.dictOrigin['Maximum Distance'] = max(epidists)
-        self.dictOrigin['Minimum Distance'] = min(epidists)
-        self.dictOrigin['Median Distance'] = np.median(epidists)
+        dO['Maximum Distance'] = max(epidists)
+        dO['Minimum Distance'] = min(epidists)
+        dO['Median Distance'] = np.median(epidists)
 
     def calculateStationMagnitudes(self):
         for st, dict in zip(self.streams, self.dicts):
@@ -2938,10 +2952,14 @@ class ObsPyckGUI:
 
     def drawStreamOverview(self):
         stNum = len(self.streams)
-        self.axs = []
-        self.plts = []
-        self.trans = []
-        self.t = []
+        fig = self.fig
+        axs = []
+        self.axs = axs
+        plts = []
+        self.plts = plts
+        trans = []
+        self.trans = trans
+        t = []
         #we start all our x-axes at 0 with the starttime of the first (Z) trace
         starttime_global = self.streams[0].select(component="Z")[0].stats.starttime
         for i, st in enumerate(self.streams):
@@ -2958,32 +2976,32 @@ class ObsPyckGUI:
             # off the last item if this is the case
             if len(sampletimes) == npts + 1:
                 sampletimes = sampletimes[:-1]
-            self.t.append(sampletimes)
+            t.append(sampletimes)
             if i == 0:
-                self.axs.append(self.fig.add_subplot(stNum, 1, i+1))
+                axs.append(fig.add_subplot(stNum, 1, i+1))
             else:
-                self.axs.append(self.fig.add_subplot(stNum, 1, i+1, 
-                        sharex=self.axs[0], sharey=self.axs[0]))
-                self.axs[i].xaxis.set_ticks_position("top")
-            self.trans.append(matplotlib.transforms.blended_transform_factory(
-                    self.axs[i].transData, self.axs[i].transAxes))
-            self.axs[i].xaxis.set_major_formatter(FuncFormatter(
+                axs.append(fig.add_subplot(stNum, 1, i+1, 
+                        sharex=axs[0], sharey=axs[0]))
+                axs[i].xaxis.set_ticks_position("top")
+            trans.append(matplotlib.transforms.blended_transform_factory(
+                    axs[i].transData, axs[i].transAxes))
+            axs[i].xaxis.set_major_formatter(FuncFormatter(
                                                   formatXTicklabels))
             if self.widgets['togglebuttonFilter'].get_active():
                 tr = tr.copy()
                 self._filter(tr)
-            self.plts.append(self.axs[i].plot(self.t[i], tr.data, color='k',zorder=1000)[0])
-            self.axs[i].text(0.01, 0.95, st[0].stats.station, va="top",
+            plts.append(axs[i].plot(t[i], tr.data, color='k',zorder=1000)[0])
+            axs[i].text(0.01, 0.95, st[0].stats.station, va="top",
                              ha="left", fontsize=18, color="b", zorder=10000,
-                             transform=self.axs[i].transAxes)
-        self.axs[-1].xaxis.set_ticks_position("both")
-        self.supTit = self.fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
+                             transform=axs[i].transAxes)
+        axs[-1].xaxis.set_ticks_position("both")
+        self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          tr.stats.starttime.microsecond / 1e3 + 0.5,
                                                          tr.stats.endtime.strftime("%H:%M:%S"),
                                                          tr.stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
-        self.xMin, self.xMax=self.axs[0].get_xlim()
-        self.yMin, self.yMax=self.axs[0].get_ylim()
-        self.fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
+        self.xMin, self.xMax = axs[0].get_xlim()
+        self.yMin, self.yMax = axs[0].get_ylim()
+        fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
         self.toolbar.update()
         self.toolbar.pan(False)
         self.toolbar.zoom(True)
@@ -2998,9 +3016,10 @@ class ObsPyckGUI:
         #toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
         self.axEventMap = self.fig.add_subplot(111)
-        self.axEventMap.set_aspect('equal', adjustable="datalim")
+        axEM = self.axEventMap
+        axEM.set_aspect('equal', adjustable="datalim")
         self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
-        self.axEventMap.scatter([dO['Longitude']], [dO['Latitude']], 30,
+        axEM.scatter([dO['Longitude']], [dO['Latitude']], 30,
                                 color='red', marker='o')
         errLon, errLat = utlLonLat(dO['Longitude'], dO['Latitude'],
                                    dO['Longitude Error'], dO['Latitude Error'])
@@ -3008,7 +3027,7 @@ class ObsPyckGUI:
         errLat -= dO['Latitude']
         ypos = 0.97
         xpos = 0.03
-        self.axEventMap.text(xpos, ypos,
+        axEM.text(xpos, ypos,
                              '%7.3f +/- %0.2fkm\n' % \
                              (dO['Longitude'], dO['Longitude Error']) + \
                              '%7.3f +/- %0.2fkm\n' % \
@@ -3016,23 +3035,23 @@ class ObsPyckGUI:
                              '  %.1fkm +/- %.1fkm' % \
                              (dO['Depth'], dO['Depth Error']),
                              va='top', ha='left', family='monospace',
-                             transform=self.axEventMap.transAxes)
+                             transform=axEM.transAxes)
         if 'Standarderror' in dO:
-            self.axEventMap.text(xpos, ypos, "\n\n\n\n Residual: %.3f s" % \
+            axEM.text(xpos, ypos, "\n\n\n\n Residual: %.3f s" % \
                     dO['Standarderror'], va='top', ha='left',
                     color=PHASE_COLORS['P'],
-                    transform=self.axEventMap.transAxes,
+                    transform=axEM.transAxes,
                     family='monospace')
         if 'Magnitude' in dM and 'Uncertainty' in dM:
             self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % \
                     (dM['Magnitude'], dM['Uncertainty'])
-            self.netMagText = self.axEventMap.text(xpos, ypos,
+            self.netMagText = axEM.text(xpos, ypos,
                     self.netMagLabel, va='top', ha='left',
-                    transform=self.axEventMap.transAxes,
+                    transform=axEM.transAxes,
                     color=PHASE_COLORS['Mag'], family='monospace')
         errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
                 width=errLon, height=errLat, angle=0, fill=False)
-        self.axEventMap.add_artist(errorell)
+        axEM.add_artist(errorell)
         self.scatterMagIndices = []
         self.scatterMagLon = []
         self.scatterMagLat = []
@@ -3043,10 +3062,10 @@ class ObsPyckGUI:
             else:
                 stationColor = 'gray'
             # plot stations at respective coordinates with names
-            self.axEventMap.scatter([dict['StaLon']], [dict['StaLat']], s=300,
+            axEM.scatter([dict['StaLon']], [dict['StaLat']], s=300,
                                     marker='v', color='',
                                     edgecolor=stationColor)
-            self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+            axEM.text(dict['StaLon'], dict['StaLat'],
                                  '  ' + dict['Station'],
                                  color=stationColor, va='top',
                                  family='monospace')
@@ -3054,50 +3073,50 @@ class ObsPyckGUI:
                 presinfo = '\n\n %+0.3fs' % dict['Pres']
                 if 'PPol' in dict:
                     presinfo += '  %s' % dict['PPol']
-                self.axEventMap.text(dict['StaLon'], dict['StaLat'], presinfo,
+                axEM.text(dict['StaLon'], dict['StaLat'], presinfo,
                                      va='top', family='monospace',
                                      color=PHASE_COLORS['P'])
             if 'Sres' in dict:
                 sresinfo = '\n\n\n %+0.3fs' % dict['Sres']
                 if 'SPol' in dict:
                     sresinfo += '  %s' % dict['SPol']
-                self.axEventMap.text(dict['StaLon'], dict['StaLat'], sresinfo,
+                axEM.text(dict['StaLon'], dict['StaLat'], sresinfo,
                                      va='top', family='monospace',
                                      color=PHASE_COLORS['S'])
             if 'Mag' in dict:
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(dict['StaLon'])
                 self.scatterMagLat.append(dict['StaLat'])
-                self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+                axEM.text(dict['StaLon'], dict['StaLat'],
                                      '  ' + dict['Station'], va='top',
                                      family='monospace')
-                self.axEventMap.text(dict['StaLon'], dict['StaLat'],
+                axEM.text(dict['StaLon'], dict['StaLat'],
                                      '\n\n\n\n  %0.2f (%s)' % \
                                      (dict['Mag'], dict['MagChannel']),
                                      va='top', family='monospace',
                                      color=PHASE_COLORS['Mag'])
             if len(self.scatterMagLon) > 0 :
-                self.scatterMag = self.axEventMap.scatter(self.scatterMagLon,
+                self.scatterMag = axEM.scatter(self.scatterMagLon,
                         self.scatterMagLat, s=150, marker='v', color='',
                         edgecolor='black', picker=10)
                 
-        self.axEventMap.set_xlabel('Longitude')
-        self.axEventMap.set_ylabel('Latitude')
+        axEM.set_xlabel('Longitude')
+        axEM.set_ylabel('Latitude')
         time = dO['Time']
         timestr = time.strftime("%Y-%m-%d  %H:%M:%S")
         timestr += ".%02d" % (time.microsecond / 1e4 + 0.5)
-        self.axEventMap.set_title(timestr)
+        axEM.set_title(timestr)
         #####XXX disabled because it plots the wrong info if the event was
         ##### fetched from seishub
-        #####lines = open(self.threeDlocOutfile).readlines()
+        #####lines = open(PROGRAMS['3dloc']['files']['out']).readlines()
         #####infoEvent = lines[0].rstrip()
         #####infoPicks = ''
         #####for line in lines[1:]:
         #####    infoPicks += line
-        #####self.axEventMap.text(0.02, 0.95, infoEvent, transform = self.axEventMap.transAxes,
+        #####axEM.text(0.02, 0.95, infoEvent, transform = axEM.transAxes,
         #####                  fontsize = 12, verticalalignment = 'top',
         #####                  family = 'monospace')
-        #####self.axEventMap.text(0.02, 0.90, infoPicks, transform = self.axEventMap.transAxes,
+        #####axEM.text(0.02, 0.90, infoPicks, transform = axEM.transAxes,
         #####                  fontsize = 10, verticalalignment = 'top',
         #####                  family = 'monospace')
         # save id to disconnect when switching back to stream dislay
@@ -3111,42 +3130,42 @@ class ObsPyckGUI:
         # make hexbin scatter plot, if located with NLLoc
         # XXX no vital commands should come after this block, as we do not
         # handle exceptions!
-        if dO.get('Program') == "NLLoc" and os.path.isfile(self.nllocScatterBin):
+        if dO.get('Program') == "NLLoc" and os.path.isfile(PROGRAMS['nlloc']['files']['scatter']):
             cmap = matplotlib.cm.gist_heat_r
-            data = readNLLocScatter(self.nllocScatterBin,
+            data = readNLLocScatter(PROGRAMS['nlloc']['files']['scatter'],
                                     self.widgets['textviewStdErrImproved'])
             data = data.swapaxes(0, 1)
-            self.axEventMap.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
+            axEM.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
 
             self.axEventMapInletXY = self.fig.add_axes([0.8, 0.8, 0.16, 0.16])
+            axEMiXY = self.axEventMapInletXY
             self.axEventMapInletXZ = self.fig.add_axes([0.8, 0.73, 0.16, 0.06],
-                    sharex=self.axEventMapInletXY)
+                    sharex=axEMiXY)
             self.axEventMapInletZY = self.fig.add_axes([0.73, 0.8, 0.06, 0.16],
-                    sharey=self.axEventMapInletXY)
+                    sharey=axEMiXY)
+            axEMiXZ = self.axEventMapInletXZ
+            axEMiZY = self.axEventMapInletZY
             
             # z axis in km
-            self.axEventMapInletXY.hexbin(data[0], data[1], cmap=cmap)
-            self.axEventMapInletXZ.hexbin(data[0], data[2]/1000., cmap=cmap)
-            self.axEventMapInletZY.hexbin(data[2]/1000., data[1], cmap=cmap)
+            axEMiXY.hexbin(data[0], data[1], cmap=cmap)
+            axEMiXZ.hexbin(data[0], data[2]/1000., cmap=cmap)
+            axEMiZY.hexbin(data[2]/1000., data[1], cmap=cmap)
 
-            self.axEventMapInletXZ.invert_yaxis()
-            self.axEventMapInletZY.invert_xaxis()
-            self.axEventMapInletXY.axis("equal")
+            axEMiXZ.invert_yaxis()
+            axEMiZY.invert_xaxis()
+            axEMiXY.axis("equal")
             
             formatter = FormatStrFormatter("%.3f")
-            self.axEventMapInletXY.xaxis.set_major_formatter(formatter)
-            self.axEventMapInletXY.yaxis.set_major_formatter(formatter)
+            axEMiXY.xaxis.set_major_formatter(formatter)
+            axEMiXY.yaxis.set_major_formatter(formatter)
             
             # only draw very few ticklabels in our tiny subaxes
-            for ax in [self.axEventMapInletXZ.xaxis,
-                       self.axEventMapInletXZ.yaxis,
-                       self.axEventMapInletZY.xaxis,
-                       self.axEventMapInletZY.yaxis]:
+            for ax in [axEMiXZ.xaxis, axEMiXZ.yaxis,
+                       axEMiZY.xaxis, axEMiZY.yaxis]:
                 ax.set_major_locator(MaxNLocator(nbins=3))
             
             # hide ticklabels on XY plot
-            for ax in [self.axEventMapInletXY.xaxis,
-                       self.axEventMapInletXY.yaxis]:
+            for ax in [axEMiXY.xaxis, axEMiXY.yaxis]:
                 plt.setp(ax.get_ticklabels(), visible=False)
 
     def delEventMap(self):
@@ -3767,7 +3786,8 @@ class ObsPyckGUI:
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictEvent = {}
-        del self.dictEvent['xmlEventID']
+        if 'xmlEventID' in self.dictEvent:
+            del self.dictEvent['xmlEventID']
 
     def clearFocmecDictionary(self):
         msg = "Clearing previous focal mechanism data."
@@ -3950,123 +3970,104 @@ class ObsPyckGUI:
                 dict['distHypo'] = float(hyp_dist)
 
         #analyze origin:
+        dO = self.dictOrigin
         try:
             origin = resource_xml.xpath(u".//origin")[0]
             try:
-                program = origin.xpath(".//program")[0].text
-                self.dictOrigin['Program'] = program
+                dO['Program'] = origin.xpath(".//program")[0].text
             except:
                 pass
             try:
-                time = origin.xpath(".//time/value")[0].text
-                self.dictOrigin['Time'] = UTCDateTime(time)
+                dO['Time'] = UTCDateTime(origin.xpath(".//time/value")[0].text)
             except:
                 pass
             try:
-                lat = origin.xpath(".//latitude/value")[0].text
-                self.dictOrigin['Latitude'] = float(lat)
+                dO['Latitude'] = float(origin.xpath(".//latitude/value")[0].text)
             except:
                 pass
             try:
-                lon = origin.xpath(".//longitude/value")[0].text
-                self.dictOrigin['Longitude'] = float(lon)
+                dO['Longitude'] = float(origin.xpath(".//longitude/value")[0].text)
             except:
                 pass
             try:
-                errX = origin.xpath(".//longitude/uncertainty")[0].text
-                self.dictOrigin['Longitude Error'] = float(errX)
+                dO['Longitude Error'] = float(origin.xpath(".//longitude/uncertainty")[0].text)
             except:
                 pass
             try:
-                errY = origin.xpath(".//latitude/uncertainty")[0].text
-                self.dictOrigin['Latitude Error'] = float(errY)
+                dO['Latitude Error'] = float(origin.xpath(".//latitude/uncertainty")[0].text)
             except:
                 pass
             try:
-                z = origin.xpath(".//depth/value")[0].text
-                self.dictOrigin['Depth'] = float(z)
+                dO['Depth'] = float(origin.xpath(".//depth/value")[0].text)
             except:
                 pass
             try:
-                errZ = origin.xpath(".//depth/uncertainty")[0].text
-                self.dictOrigin['Depth Error'] = float(errZ)
+                dO['Depth Error'] = float(origin.xpath(".//depth/uncertainty")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Depth Type'] = \
-                        origin.xpath(".//depth_type")[0].text
+                dO['Depth Type'] = origin.xpath(".//depth_type")[0].text
             except:
                 pass
             try:
-                self.dictOrigin['Earth Model'] = \
-                        origin.xpath(".//earth_mod")[0].text
+                dO['Earth Model'] = origin.xpath(".//earth_mod")[0].text
             except:
                 pass
             try:
-                self.dictOrigin['used P Count'] = \
-                        int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
+                dO['used P Count'] = int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['used S Count'] = \
-                        int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
+                dO['used S Count'] = int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['used Station Count'] = \
-                        int(origin.xpath(".//originQuality/usedStationCount")[0].text)
+                dO['used Station Count'] = int(origin.xpath(".//originQuality/usedStationCount")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Standarderror'] = \
-                        float(origin.xpath(".//originQuality/standardError")[0].text)
+                dO['Standarderror'] = float(origin.xpath(".//originQuality/standardError")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Azimuthal Gap'] = \
-                        float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
+                dO['Azimuthal Gap'] = float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Minimum Distance'] = \
-                        float(origin.xpath(".//originQuality/minimumDistance")[0].text)
+                dO['Minimum Distance'] = float(origin.xpath(".//originQuality/minimumDistance")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Maximum Distance'] = \
-                        float(origin.xpath(".//originQuality/maximumDistance")[0].text)
+                dO['Maximum Distance'] = float(origin.xpath(".//originQuality/maximumDistance")[0].text)
             except:
                 pass
             try:
-                self.dictOrigin['Median Distance'] = \
-                        float(origin.xpath(".//originQuality/medianDistance")[0].text)
+                dO['Median Distance'] = float(origin.xpath(".//originQuality/medianDistance")[0].text)
             except:
                 pass
         except:
             pass
 
         #analyze magnitude:
+        dM = self.dictMagnitude
         try:
             magnitude = resource_xml.xpath(u".//magnitude")[0]
             try:
-                program = magnitude.xpath(".//program")[0].text
-                self.dictMagnitude['Program'] = program
+                dM['Program'] = magnitude.xpath(".//program")[0].text
             except:
                 pass
             try:
-                mag = magnitude.xpath(".//mag/value")[0].text
-                self.dictMagnitude['Magnitude'] = float(mag)
-                self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % (self.dictMagnitude['Magnitude'], self.dictMagnitude['Uncertainty'])
+                dM['Magnitude'] = float(magnitude.xpath(".//mag/value")[0].text)
+                self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % \
+                        (dM['Magnitude'], dM['Uncertainty'])
             except:
                 pass
             try:
-                magVar = magnitude.xpath(".//mag/uncertainty")[0].text
-                self.dictMagnitude['Uncertainty'] = float(magVar)
+                dM['Uncertainty'] = float(magnitude.xpath(".//mag/uncertainty")[0].text)
             except:
                 pass
             try:
-                stacount = magnitude.xpath(".//stationCount")[0].text
-                self.dictMagnitude['Station Count'] = int(stacount)
+                dM['Station Count'] = int(magnitude.xpath(".//stationCount")[0].text)
             except:
                 pass
         except:
@@ -4103,43 +4104,38 @@ class ObsPyckGUI:
             dict['MagChannel'] = mag_channel
         
         #analyze focal mechanism:
+        dF = self.dictFocalMechanism
         try:
             focmec = resource_xml.xpath(u".//focalMechanism")[0]
             try:
-                program = focmec.xpath(".//program")[0].text
-                self.dictFocalMechanism['Program'] = program
-            except:
-                pass
-            try:
-                program = focmec.xpath(".//program")[0].text
-                self.dictFocalMechanism['Program'] = program
+                dF['Program'] = focmec.xpath(".//program")[0].text
             except:
                 pass
             try:
                 strike = focmec.xpath(".//nodalPlanes/nodalPlane1/strike/value")[0].text
-                self.dictFocalMechanism['Strike'] = float(strike)
+                dF['Strike'] = float(strike)
                 self.focMechCount = 1
                 self.focMechCurrent = 0
             except:
                 pass
             try:
                 dip = focmec.xpath(".//nodalPlanes/nodalPlane1/dip/value")[0].text
-                self.dictFocalMechanism['Dip'] = float(dip)
+                dF['Dip'] = float(dip)
             except:
                 pass
             try:
                 rake = focmec.xpath(".//nodalPlanes/nodalPlane1/rake/value")[0].text
-                self.dictFocalMechanism['Rake'] = float(rake)
+                dF['Rake'] = float(rake)
             except:
                 pass
             try:
                 staPolCount = focmec.xpath(".//stationPolarityCount")[0].text
-                self.dictFocalMechanism['Station Polarity Count'] = int(staPolCount)
+                dF['Station Polarity Count'] = int(staPolCount)
             except:
                 pass
             try:
                 staPolErrCount = focmec.xpath(".//stationPolarityErrorCount")[0].text
-                self.dictFocalMechanism['Errors'] = int(staPolErrCount)
+                dF['Errors'] = int(staPolErrCount)
             except:
                 pass
         except:
