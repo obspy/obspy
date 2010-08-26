@@ -625,7 +625,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     eotr = True
     #XXX data must be instrument corrected
     #XXX check that sampling rates do not vary more than 1e-3
-    #XXX sort stream depending on size similar to sonicloc.c
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
     #XXX check units for elevation
 
@@ -664,14 +663,13 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     nstep = int(nsamp * win_frac)
     newstart = stime
     offset = 0
-    if (newstart + (nsamp / df)) > etime:
-        raise Exception('window exceeds data')
-    #XXX with this loop, the window can exceed the trace lengths, because exit
-    #XXX condition is checked after calculating bbfk
     while eotr:
-        buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
-                   frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
-        abspow, power, ix, iy, _ifkq = buf
+        try:
+            buf = bbfk(spoint, offset, trace, ntrace, time_shift_table, frqlow,
+                       frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
+            abspow, power, ix, iy, _ifkq = buf
+        except IndexError:
+            break
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
@@ -685,11 +683,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
             res.append(np.array([newstart.timestamp, power, abspow, azimut, slow]))
             if verbose:
                 print newstart, (newstart + (nsamp/df)), res[-1][1:]
-        #XXX why only test for the first trace?
-        #XXX testing for traces latest start and ealiest end should be done in
-        #XXX get_spoint
-        if (spoint[0] + offset + nstep + nsamp) >= ntrace[0] or \
-                (newstart + (nsamp / df)) > etime:
+        if (newstart + (nsamp / df)) > etime:
             eotr = False
         offset += nstep
 
@@ -697,12 +691,13 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     return np.array(res)
 
 
-def bbfk(spoint, offset, trace, stat_tshift_table, flow, fhigh, digfreq,
-         nsamp, nstat, prewhiten, grdpts_x, grdpts_y):
+def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
+         digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y):
     """
     :int *spoint: Start sample point, probably in julian seconds
     :int offset: The Offset which is counted upwards nwin for shifting array
     :float **trace: The trace matrix, containing the time serious for various stations
+    :float *ntrace: ntrace vector
     :float ***stat_tshift_table: The time shift table for each station for the slowness grid
     :float flow: Lower frequency for fk
     :float fhigh: Higher frequency for fk
@@ -724,6 +719,7 @@ def bbfk(spoint, offset, trace, stat_tshift_table, flow, fhigh, digfreq,
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int,
         C.POINTER(C.c_void_p),
+        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_void_p,
         C.POINTER(C.c_float),
         C.POINTER(C.c_float),
@@ -742,11 +738,13 @@ def bbfk(spoint, offset, trace, stat_tshift_table, flow, fhigh, digfreq,
     iy = C.c_int()
     ifkq = C.c_int()
 
-    lib.bbfk(spoint, offset, C.cast(trace, C.POINTER(C.c_void_p)),
-             C.byref(stat_tshift_table), C.byref(abspow), C.byref(power),
-             C.byref(ix), C.byref(iy), C.byref(ifkq), flow, fhigh, digfreq,
-             nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
+    errcode = lib.bbfk(spoint, offset, C.cast(trace, C.POINTER(C.c_void_p)),
+             ntrace, C.byref(stat_tshift_table), C.byref(abspow),
+             C.byref(power), C.byref(ix), C.byref(iy), C.byref(ifkq), flow,
+             fhigh, digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
 
+    if errcode != 0:
+        raise IndexError('In bbfk index out of bounds, window exceeds data')
     return abspow.value, power.value, ix.value, iy.value, ifkq.value
 
 

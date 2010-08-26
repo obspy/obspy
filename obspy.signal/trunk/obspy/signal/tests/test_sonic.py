@@ -31,7 +31,7 @@ class SonicTestCase(unittest.TestCase):
         df = 100             # samplerate
         # SNR = 100.         # signal to noise ratio
         amp = .00001         # amplitude of coherent wave
-        length = 1300        # signal length in samples
+        length = 10000        # signal length in samples
 
         coherent_wave = amp * np.random.randn(length)
         
@@ -63,7 +63,7 @@ class SonicTestCase(unittest.TestCase):
             (length -  int(abs(min_dt)) - int(abs(max_dt))) / df - 1
             # typecast because of problems with UTCDateTime and Mac with int64
 
-        win_len = 10.0
+        win_len = 20.0
         step_frac = 0.2
         sll_x = -3.0
         slm_x = 3.0
