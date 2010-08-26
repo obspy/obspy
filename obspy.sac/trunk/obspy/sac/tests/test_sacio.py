@@ -138,6 +138,7 @@ class SacIOTestCase(unittest.TestCase):
         self.assertEqual(e.starttime,d.starttime)
         self.assertNotEqual(e.seis.size,d.seis.size)
         c = SacIO(tempfile,alpha=True,headonly=True)
+        os.remove(tempfile)
         self.assertEqual(e.seis.size,c.seis.size)
         
         

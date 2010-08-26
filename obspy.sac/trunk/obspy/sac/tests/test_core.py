@@ -52,6 +52,7 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile,format='SACXY')
         tr1 = read(tempfile)[0]
+        os.remove(tempfile)
         self.assertEqual(tr1.stats['station'], 'STA')
         self.assertEqual(tr1.stats.npts, 100)
         self.assertEqual(tr1.stats['sampling_rate'], 1.0)
@@ -111,6 +112,7 @@ class CoreTestCase(unittest.TestCase):
         st = Stream([Trace(data=np.random.randn(1000))])
         st.write(tempfile, format="SAC")
         st2 = read(tempfile, format="SAC")
+        os.remove(tempfile)
         self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
 
     def test_readAndWriteViaObsPy(self):
@@ -187,10 +189,10 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile, format="SAC")
         sac2 = SacIO(tempfile)
+        os.remove(tempfile)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
-        os.remove(tempfile)
 
 
     def test_defaultValues(self):
