@@ -102,6 +102,13 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         nfft = nfft << 1;
     }
 
+    /***************************************************/
+    /* allocate fft_plan this is not executing the fft */
+    /***************************************************/
+    fftpack_len = nfft;
+    fftpack_work = malloc(sizeof(double) * (2 * nfft + 15));
+    rffti(fftpack_len, fftpack_work);
+
     df = digfreq/(float)nfft;
     wlow = (int)(flow/df+0.5);
     if (wlow < 1) {
@@ -126,21 +133,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     taper = (float *)calloc(nsamp, sizeof(float));
     cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
-        /* allocate fft_plan this is not executing the fft */
-        if (fftpack_len != nfft) {
-            if(fftpack_work != 0)
-                free(fftpack_work);
-            fftpack_len = nfft;
-            fftpack_work = malloc(sizeof(double) * (2 * nfft + 15));
-            /*fftpack_work = malloc(sizeof(double) * fftpack_len);*/
-            /*fftpack_work = (double *)calloc(2*nfft+15, sizeof(double));*/
-            rffti(fftpack_len, fftpack_work);
-        }
-
         /* doing calloc is automatically zero-padding, too */
-        //window[j] = (float *)calloc(nfft, sizeof(float));
-        //memcpy((void *)window[j],(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
-        //memcpy((void *)window[j]+1,(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(float));
         window[j] = (double *)calloc(nfft+1, sizeof(double));
         memcpy((void *)(window[j]+1),(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
         /*************************************************/
@@ -292,6 +285,6 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         free((void *)window[j]);
     }
     free((void *)window);
-    free(fftpack_work);
+    free((void *)fftpack_work);
     return 0;
 }
