@@ -91,8 +91,8 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	wtau;
     double	absval;
     float	maxinmap = 0.;
-    static double* fftpack_work = 0;
-    static int     fftpack_len = -1;
+    double* fftpack_work = 0;
+    int     fftpack_len = -1;
 
     /* mtrace(); */
     /*******************************************/
@@ -106,10 +106,10 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /* allocate fft_plan this is not executing the fft */
     /***************************************************/
     fftpack_len = nfft;
-    /* Magic size needed by rffti:
+    /* Magic size needed by rffti (see also
      * http://projects.scipy.org/numpy/browser/trunk/
-     * +numpy/fft/fftpack_litemodule.c#L277 */
-    fftpack_work = malloc(sizeof(double) * (2 * nfft + 15));
+     * +numpy/fft/fftpack_litemodule.c#L277) */
+    fftpack_work = (double *)calloc((2*nfft+15), sizeof(double));
     rffti(fftpack_len, fftpack_work);
 
     df = digfreq/(float)nfft;
@@ -163,8 +163,9 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         window[j][0] = window[j][1];
         window[j][1] = 0.0;
     }
-    /* we free the taper buffer here already! */
+    /* we free the taper buffer and the fft plan already! */
     free((void *)taper);
+    free((void *)fftpack_work);
 
     /***********************************************************************/
     /* we calculate the scaling factor or denominator, if not prewhitening */
@@ -294,6 +295,5 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         free((void *)window[j]);
     }
     free((void *)window);
-    free((void *)fftpack_work);
     return 0;
 }
