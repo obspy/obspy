@@ -8,6 +8,7 @@ import fnmatch
 import shutil
 import sys
 import os
+import glob
 import platform
 import subprocess
 import tempfile
@@ -398,8 +399,14 @@ def setup_external_programs(options):
     """
     tmp_dir = tempfile.mkdtemp()
     # set binary names to use depending on architecture and platform...
+    env = os.environ
     architecture = platform.architecture()[0]
     system = platform.system()
+    global SHELL
+    if system == "Windows":
+        SHELL = True
+    else:
+        SHELL = False
     # Setup external programs #############################################
     for prog_basename, prog_dict in PROGRAMS.iteritems():
         prog_srcpath = os.path.join(options.pluginpath, prog_basename)
@@ -411,35 +418,84 @@ def setup_external_programs(options):
             prog_dict['files'][key] = os.path.join(prog_tmpdir, filename)
         prog_dict['files']['exe'] = "__".join(\
                 [prog_dict['filenames']['exe'], system, architecture])
+        # setup clean environment
+        prog_dict['env'] = {}
+        prog_dict['env']['PATH'] = prog_dict['dir'] + os.pathsep + env['PATH']
+        if 'SystemRoot' in env:
+            prog_dict['env']['SystemRoot'] = env['SystemRoot']
     # 3dloc ###############################################################
     prog_dict = PROGRAMS['3dloc']
-    prog_dict['D3_VELOCITY'] = os.path.join(prog_dict['dir'], 'D3_VELOCITY')
-    prog_dict['D3_VELOCITY_2'] = os.path.join(prog_dict['dir'], 'D3_VELOCITY_2')
-    prog_dict['PreCall'] = 'rm %s %s &> /dev/null' \
-            % (prog_dict['files']['out'], prog_dict['files']['in'])
-    prog_dict['Call'] = 'export D3_VELOCITY=%s/;' % \
-            PROGRAMS['3dloc']['D3_VELOCITY'] + \
-            'export D3_VELOCITY_2=%s/;' % \
-            PROGRAMS['3dloc']['D3_VELOCITY_2'] + \
-            'cd %s; ./%s' % (prog_dict['dir'], prog_dict['files']['exe'])
+    prog_dict['env']['D3_VELOCITY'] = \
+            os.path.join(prog_dict['dir'], 'D3_VELOCITY') + os.sep
+    prog_dict['env']['D3_VELOCITY_2'] = \
+            os.path.join(prog_dict['dir'], 'D3_VELOCITY_2') + os.sep
+    def tmp(prog_dict):
+        files = prog_dict['files']
+        for file in [files['out'], files['in']]:
+            if os.path.isfile(file):
+                os.remove(file)
+        return
+    prog_dict['PreCall'] = tmp
+    def tmp(prog_dict):
+        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
+                cwd=prog_dict['dir'], env=prog_dict['env'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        msg = "".join(sub.stdout.readlines())
+        err = "".join(sub.stderr.readlines())
+        return (msg, err, sub.returncode)
+    prog_dict['Call'] = tmp
     # Hyp2000 #############################################################
     prog_dict = PROGRAMS['hyp_2000']
-    prog_dict['PreCall'] = 'rm %s %s %s &> /dev/null' \
-            % (prog_dict['files']['phases'], prog_dict['files']['stations'],
-               prog_dict['files']['summary'])
-    prog_dict['Call'] = 'export HYP2000_DATA=%s;' % (prog_dict['dir']) + \
-            'cd $HYP2000_DATA; ./%s < %s &> /dev/null' % \
-            (prog_dict['files']['exe'], prog_dict['filenames']['control'])
+    prog_dict['env']['HYP2000_DATA'] = prog_dict['dir'] + os.sep
+    def tmp(prog_dict):
+        files = prog_dict['files']
+        for file in [files['phases'], files['stations'], files['summary']]:
+            if os.path.isfile(file):
+                os.remove(file)
+        return
+    prog_dict['PreCall'] = tmp
+    def tmp(prog_dict):
+        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
+                cwd=prog_dict['dir'], env=prog_dict['env'],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        input = open(prog_dict['files']['control'], "rt").read()
+        (msg, err) = sub.communicate(input)
+        return (msg, err, sub.returncode)
+    prog_dict['Call'] = tmp
     # NLLoc ###############################################################
     prog_dict = PROGRAMS['nlloc']
-    prog_dict['PreCall'] = 'rm %s/nlloc* &> /dev/null' % prog_dict['dir']
-    prog_dict['Call'] = 'cd %s; ./%s %%s' % (prog_dict['dir'],
-                                          prog_dict['files']['exe']) + \
-            '; mv nlloc.*.*.*.loc.hyp %s' % prog_dict['files']['summary'] + \
-            '; mv nlloc.*.*.*.loc.scat %s' % prog_dict['files']['scatter']
+    def tmp(prog_dict):
+        filepattern = os.path.join(prog_dict['dir'], "nlloc*")
+        print filepattern
+        for file in glob.glob(filepattern):
+            os.remove(file)
+        return
+    prog_dict['PreCall'] = tmp
+    def tmp(prog_dict, controlfilename):
+        sub = subprocess.Popen([prog_dict['files']['exe'], controlfilename],
+                cwd=prog_dict['dir'], env=prog_dict['env'], shell=SHELL,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        msg = "".join(sub.stdout.readlines())
+        err = "".join(sub.stderr.readlines())
+        for pattern, key in [("nlloc.*.*.*.loc.scat", 'scatter'),
+                             ("nlloc.*.*.*.loc.hyp", 'summary')]:
+            pattern = os.path.join(prog_dict['dir'], pattern)
+            newname = os.path.join(prog_dict['dir'], prog_dict['files'][key])
+            for file in glob.glob(pattern):
+                os.rename(file, newname)
+        return (msg, err, sub.returncode)
+    prog_dict['Call'] = tmp
     # focmec ##############################################################
     prog_dict = PROGRAMS['focmec']
-    prog_dict['Call'] = 'cd %s; ./%s' % (prog_dict['dir'], prog_dict['files']['exe'])
+    def tmp(prog_dict):
+        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
+                cwd=prog_dict['dir'], env=prog_dict['env'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        msg = "".join(sub.stdout.readlines())
+        err = "".join(sub.stderr.readlines())
+        return (msg, err, sub.returncode)
+    prog_dict['Call'] = tmp
     #######################################################################
     return tmp_dir
 
@@ -542,30 +598,11 @@ def readNLLocScatter(scat_filename, textviewStdErrImproved):
     Messages on stderr are written to specified GUI textview.
     Returns an array of xy pairs.
     """
-
     # read data, omit the first 4 values (header information) and reshape
     data = np.fromfile(scat_filename, dtype="<f4").astype("float")[4:]
-    data = data.reshape((len(data)/4, 4))
-
-    # convert km to m (*1000), use x/y/z values (columns 0/1/2,
-    # write a file to pipe to cs2cs later
-    tmp_file = tempfile.mkstemp(suffix='.scat',
-                                dir=os.path.dirname(scat_filename))[1]
-    file_lonlat = scat_filename + ".lonlat"
-    np.savetxt(tmp_file, (data[:,:3]*1000.), fmt='%.3f')
-
-    command = "cs2cs +init=epsg:31468 +to +init=epsg:4326 -E -f %.6f " + \
-              "< %s > %s" % (tmp_file, file_lonlat)
-
-    sub = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE)
-
-    err = "".join(sub.stderr.readlines())
-    textviewStdErrImproved.write(err)
-    
-    data = np.loadtxt(file_lonlat, usecols=[3,4,2])
-
-    return data
+    data = data.reshape((len(data)/4, 4)).swapaxes(0, 1)
+    lon, lat = gk2lonlat(data[0], data[1])
+    return np.vstack((lon, lat, data[2]))
 
 def errorEllipsoid2CartesianErrors(azimuth1, dip1, len1, azimuth2, dip2, len2,
                                    len3):
@@ -1958,15 +1995,12 @@ class ObsPyckGUI:
         self.redraw()
 
     def do3dLoc(self):
-        files = PROGRAMS['3dloc']['files']
+        prog_dict = PROGRAMS['3dloc']
+        files = prog_dict['files']
         self.setXMLEventID()
-        #subprocess.call(PROGRAMS['3dloc']['PreCall'], shell=True)
-        sub = subprocess.Popen(PROGRAMS['3dloc']['PreCall'], shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        self._write_msg(msg)
-        self._write_err(err)
+        precall = prog_dict['PreCall']
+        precall(prog_dict)
+
         f = open(files['in'], 'wt')
         network = "BW"
         fmt = "%04s  %s        %s %5.3f -999.0 0.000 -999. 0.000 T__DR_ %9.6f %9.6f %8.6f\n"
@@ -2026,11 +2060,8 @@ class ObsPyckGUI:
         msg = 'Phases for 3Dloc:'
         self._write_msg(msg)
         self.catFile(files['in'])
-        #subprocess.call(PROGRAMS['3dloc']['Call'], shell=True)
-        sub = subprocess.Popen(PROGRAMS['3dloc']['Call'], shell=True,
-                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
+        call = prog_dict['Call']
+        (msg, err, returncode) = call(prog_dict)
         self._write_msg(msg)
         self._write_err(err)
         msg = '--> 3dloc finished'
@@ -2038,7 +2069,8 @@ class ObsPyckGUI:
         self.catFile(files['out'])
 
     def doFocmec(self):
-        files = PROGRAMS['focmec']['files']
+        prog_dict = PROGRAMS['focmec']
+        files = prog_dict['files']
         f = open(files['phases'], 'wt')
         f.write("\n") #first line is ignored!
         #Fortran style! 1: Station 2: Azimuth 3: Incident 4: Polarity
@@ -2067,13 +2099,11 @@ class ObsPyckGUI:
         msg = 'Phases for focmec: %i' % count
         self._write_msg(msg)
         self.catFile(files['phases'])
-        sub = subprocess.Popen(PROGRAMS['focmec']['Call'], shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
+        call = prog_dict['Call']
+        (msg, err, returncode) = call(prog_dict)
         self._write_msg(msg)
         self._write_err(err)
-        if sub.returncode == 1:
+        if returncode == 1:
             err = "Error: focmec did not find a suitable solution!"
             self._write_err(err)
             return
@@ -2205,14 +2235,11 @@ class ObsPyckGUI:
         Writes input files for hyp2000 and starts the hyp2000 program via a
         system call.
         """
-        files = PROGRAMS['hyp_2000']['files']
+        prog_dict = PROGRAMS['hyp_2000']
+        files = prog_dict['files']
         self.setXMLEventID()
-        sub = subprocess.Popen(PROGRAMS['hyp_2000']['PreCall'], shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        self._write_msg(msg)
-        self._write_err(err)
+        precall = prog_dict['PreCall']
+        precall(prog_dict)
 
         f = open(files['phases'], 'wt')
         phases_hypo71 = self.dicts2hypo71Phases()
@@ -2231,10 +2258,8 @@ class ObsPyckGUI:
         self._write_msg(msg)
         self.catFile(files['stations'])
 
-        sub = subprocess.Popen(PROGRAMS['hyp_2000']['Call'], shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
+        call = prog_dict['Call']
+        (msg, err, returncode) = call(prog_dict)
         self._write_msg(msg)
         self._write_err(err)
         msg = '--> hyp2000 finished'
@@ -2246,19 +2271,15 @@ class ObsPyckGUI:
         Writes input files for NLLoc and starts the NonLinLoc program via a
         system call.
         """
-        files = PROGRAMS['nlloc']['files']
+        prog_dict = PROGRAMS['nlloc']
+        files = prog_dict['files']
         # determine which model should be used in location
         controlfilename = "locate_%s.nlloc" % \
                           self.widgets['comboboxNLLocModel'].get_active_text()
-        nllocCall = PROGRAMS['nlloc']['Call'] % controlfilename
 
         self.setXMLEventID()
-        sub = subprocess.Popen(PROGRAMS['nlloc']['PreCall'], shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        self._write_msg(msg)
-        self._write_err(err)
+        precall = prog_dict['PreCall']
+        precall(prog_dict)
 
         f = open(files['phases'], 'wt')
         phases_hypo71 = self.dicts2hypo71Phases()
@@ -2269,10 +2290,8 @@ class ObsPyckGUI:
         self._write_msg(msg)
         self.catFile(files['phases'])
 
-        sub = subprocess.Popen(nllocCall, shell=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
+        call = prog_dict['Call']
+        (msg, err, returncode) = call(prog_dict, controlfilename)
         self._write_msg(msg)
         self._write_err(err)
         msg = '--> NLLoc finished'
@@ -3102,7 +3121,6 @@ class ObsPyckGUI:
             cmap = matplotlib.cm.gist_heat_r
             data = readNLLocScatter(PROGRAMS['nlloc']['files']['scatter'],
                                     self.widgets['textviewStdErrImproved'])
-            data = data.swapaxes(0, 1)
             axEM.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
 
             self.axEventMapInletXY = self.fig.add_axes([0.8, 0.8, 0.16, 0.16])
