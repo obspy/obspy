@@ -13,6 +13,7 @@ class SonicTestCase(unittest.TestCase):
     """
 
     def test_sonic(self):
+#        for i in xrange(100):
         np.random.seed(2348)    
         
         geometry = np.array([[   0.0,  0.0, 0.0],
@@ -25,12 +26,12 @@ class SonicTestCase(unittest.TestCase):
         
         geometry /= 100      # in km
         slowness = 1.3       # in s/km
-        baz = 20.            # 0.0 > source in x direction
+        baz = 20.0            # 0.0 > source in x direction
         baz *= np.pi / 180.
         df = 100             # samplerate
         # SNR = 100.         # signal to noise ratio
         amp = .00001         # amplitude of coherent wave
-        length = 1000        # signal length in samples
+        length = 1300        # signal length in samples
 
         coherent_wave = amp * np.random.randn(length)
         
@@ -59,7 +60,7 @@ class SonicTestCase(unittest.TestCase):
 
         stime = UTCDateTime(1970, 1, 1, 0, 0) + 1
         etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-            (length -  int(abs(min_dt)) - int(abs(max_dt))) / df - 1 
+            (length -  int(abs(min_dt)) - int(abs(max_dt))) / df - 1
             # typecast because of problems with UTCDateTime and Mac with int64
 
         win_len = 10.0
@@ -82,7 +83,7 @@ class SonicTestCase(unittest.TestCase):
         # print "executing sonic"
         out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
                     semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
-                    prewhiten, coordsys='xy')
+                    prewhiten, coordsys='xy', verbose=False)
         
         # print out[:,4].mean()
         np.testing.assert_almost_equal(out[:,4].mean(), 1.26491106407)

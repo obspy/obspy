@@ -639,6 +639,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         print geometry
         print "stream contains following traces:"
         print stream
+        print "stime = " + str(stime) + ", etime = " + str(etime)
 
     time_shift_table_numpy = get_timeshift(geometry, sll_x, sll_y,
                                                     sl_s, grdpts_x, grdpts_y)
@@ -663,6 +664,10 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     nstep = int(nsamp * win_frac)
     newstart = stime
     offset = 0
+    if (newstart + (nsamp / df)) > etime:
+        raise Exception('window exceeds data')
+    #XXX with this loop, the window can exceed the trace lengths, because exit
+    #XXX condition is checked after calculating bbfk
     while eotr:
         buf = bbfk(spoint, offset, trace, time_shift_table, frqlow,
                    frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y)
@@ -679,9 +684,12 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         if power > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, power, abspow, azimut, slow]))
             if verbose:
-                print newstart, res[-1][1:]
+                print newstart, (newstart + (nsamp/df)), res[-1][1:]
+        #XXX why only test for the first trace?
+        #XXX testing for traces latest start and ealiest end should be done in
+        #XXX get_spoint
         if (spoint[0] + offset + nstep + nsamp) >= ntrace[0] or \
-                (newstart + nsamp / df) > etime:
+                (newstart + (nsamp / df)) > etime:
             eotr = False
         offset += nstep
 
@@ -836,7 +844,7 @@ def get_spoint(stream, stime, etime):
     eearliest = stream[0].stats.endtime
     for tr in stream:
         if tr.stats.starttime >= slatest:
-            slatest = tr.stats['starttime']
+            slatest = tr.stats.starttime
         if tr.stats.endtime <= eearliest:
             eearliest = tr.stats.endtime
 
@@ -845,10 +853,15 @@ def get_spoint(stream, stime, etime):
     epoint = np.empty(nostat, dtype="int32", order="C")
     # now we have to adjust to the beginning of real start time
     for i in xrange(nostat):
+    #XXX check if checking for latest start end earliest end works
         if slatest <= stime:
             offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
+        else:
+            raise Exception('starttime < latest start time in stream')
         if eearliest >= etime:
             negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
+        else:
+            raise Exception('endtime > eearliest end time in stream')
         diffstart = slatest - stream[0].stats.starttime
         if diffstart < 0:
             msg = "Specified start-time is smaller than starttime in stream"
