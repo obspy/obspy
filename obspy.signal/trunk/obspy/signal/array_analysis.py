@@ -624,9 +624,15 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     res = []
     eotr = True
     #XXX data must be instrument corrected
-    #XXX check that sampling rates do not vary more than 1e-3
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
     #XXX check units for elevation
+    #XXX performance problem: fft plan is generated new on every call of bbfk.c
+    
+    # check that sampling rates do not vary
+    df = stream[0].stats.sampling_rate
+    if len(stream) != len(stream.select(sampling_rate=df)):
+        msg = 'in sonic sampling rates of traces in stream are not equal'
+        raise ValueError(msg)
 
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
@@ -850,20 +856,16 @@ def get_spoint(stream, stime, etime):
     spoint = np.empty(nostat, dtype="int32", order="C")
     epoint = np.empty(nostat, dtype="int32", order="C")
     # now we have to adjust to the beginning of real start time
+    if slatest > stime:
+        msg = "Specified start-time is smaller than starttime in stream"
+        raise Exception(msg)
+    if eearliest < etime:
+        msg = "Specified end-time bigger is than endtime in stream"
+        raise Exception(msg)
     for i in xrange(nostat):
-    #XXX check if checking for latest start end earliest end works
-        if slatest <= stime:
-            offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        else:
-            raise Exception('starttime < latest start time in stream')
-        if eearliest >= etime:
-            negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
-        else:
-            raise Exception('endtime > eearliest end time in stream')
-        diffstart = slatest - stream[0].stats.starttime
-        if diffstart < 0:
-            msg = "Specified start-time is smaller than starttime in stream"
-            raise Exception(msg)
+        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
+        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
+        diffstart = slatest - stream[i].stats.starttime
         frac, ddummy = math.modf(diffstart)
         spoint[i] = int(ddummy)
         if frac > stream[i].stats.delta * 0.25:
@@ -871,9 +873,6 @@ def get_spoint(stream, stime, etime):
             warnings.warn(msg)
         spoint[i] += offset;
         diffend = stream[i].stats.endtime - eearliest;
-        if diffend < 0:
-            msg = "Specified end-time is smaller than endtime in stream"
-            raise Exception(msg)
         frac, ddummy = math.modf(diffend)
         epoint[i] = int(ddummy)
         epoint[i] += negoffset

@@ -31,7 +31,7 @@ class SonicTestCase(unittest.TestCase):
         df = 100             # samplerate
         # SNR = 100.         # signal to noise ratio
         amp = .00001         # amplitude of coherent wave
-        length = 10000        # signal length in samples
+        length = 1000        # signal length in samples
 
         coherent_wave = amp * np.random.randn(length)
         
@@ -47,7 +47,7 @@ class SonicTestCase(unittest.TestCase):
         for i in xrange(len(geometry)):
             tr = Trace(coherent_wave[-min_dt + dt[i]: -max_dt + dt[i]].copy())
                 #+ amp / SNR * np.random.randn(length - abs(min_dt) - abs(max_dt)))
-            tr.stats.sampling_rate = df
+            tr.stats.sampling_rate = df 
             tr.stats.coordinates = AttribDict()
             tr.stats.coordinates.x = geometry[i,0]
             tr.stats.coordinates.y = geometry[i,1]
@@ -58,12 +58,12 @@ class SonicTestCase(unittest.TestCase):
 
         st = Stream(trl)
 
-        stime = UTCDateTime(1970, 1, 1, 0, 0) + 1
+        stime = UTCDateTime(1970, 1, 1, 0, 0) 
         etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-            (length -  int(abs(min_dt)) - int(abs(max_dt))) / df - 1
+            (length -  int(abs(min_dt)) - int(abs(max_dt))) / df
             # typecast because of problems with UTCDateTime and Mac with int64
 
-        win_len = 20.0
+        win_len = 2.
         step_frac = 0.2
         sll_x = -3.0
         slm_x = 3.0
