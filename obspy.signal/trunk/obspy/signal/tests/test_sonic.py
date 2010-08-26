@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
 import unittest
+import numpy as np
+from obspy.core import UTCDateTime
+from obspy.signal.array_analysis import sonic
+from obspy.core import Trace, Stream
+from obspy.core.util import AttribDict
 
 class SonicTestCase(unittest.TestCase):
-#    def test_empty(self):
-#        pass
+    """
+    Test fk analysis, main function is sonic() in array_analysis.py
+    """
 
     def test_sonic(self):
-        # test fk analysis, main function is sonic() in array_analysis.py
-        import numpy as np
-        from obspy.core import UTCDateTime
-        from obspy.signal.array_analysis import sonic
-        from obspy.core import Trace, Stream
-        from obspy.core.util import AttribDict
-        
         np.random.seed(2348)    
         
         geometry = np.array([[   0.0,  0.0, 0.0],
@@ -24,14 +23,14 @@ class SonicTestCase(unittest.TestCase):
                              [  -5.0, -7.0, 0.0],
                              [ -10.0,  0.0, 0.0]])
         
-        geometry /= 100             # in km
-        slowness = 1.3              # in s/km
-        baz = 20.                   # 0.0 > source in x direction
+        geometry /= 100      # in km
+        slowness = 1.3       # in s/km
+        baz = 20.            # 0.0 > source in x direction
         baz *= np.pi / 180.
-        df = 100                    # samplerate
-        # SNR = 100.                  # Sound to noise ratio
-        amp = .00001                # amplitude of coherent wave
-        length = 1000               # signal length in samples
+        df = 100             # samplerate
+        # SNR = 100.         # signal to noise ratio
+        amp = .00001         # amplitude of coherent wave
+        length = 1000        # signal length in samples
 
         coherent_wave = amp * np.random.randn(length)
         

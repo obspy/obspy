@@ -12,20 +12,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-//#include <mcheck.h>
+/* #include <mcheck.h> */
 
 #define TRUE 1
 #define FALSE 0
 
 
-// numpy fftpack_lite definitions, must be linked with fftpack_lite.so
-// e.g. link with -L/path/to/fftpack_lite -l:fftpack_lite.so
-// numpy has no floating point transfrom compiled, therefore we need to
-// cast the result to double
-void rffti(int n, double* wsave);            // fftpack init function
-void rfftf(int n, double* r, double* wsave); // fftpack r fwd
-static double* fftpack_work = 0;
-static int     fftpack_len = -1;
+/************************************************************************/
+/* numpy fftpack_lite definitions, must be linked with fftpack_lite.so  */
+/* e.g. link with -L/path/to/fftpack_lite -l:fftpack_lite.so            */       
+/* numpy has no floating point transfrom compiled, therefore we need to */
+/* cast the result to double                                            */    
+/************************************************************************/
+extern void rfftf(int N, double* data, const double* wrk);
+extern void rffti(int N, double* wrk);
 
 
 void cosine_taper(float *taper, int ndat, float fraction)
@@ -91,8 +91,10 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     float	wtau;
     double	absval;
     float	maxinmap = 0.;
+    static double* fftpack_work = 0;
+    static int     fftpack_len = -1;
 
-    //mtrace();
+    /* mtrace(); */
     /*******************************************/
     /* get next power of two for window length */
     /*******************************************/
@@ -124,13 +126,15 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     taper = (float *)calloc(nsamp, sizeof(float));
     cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
-        //allocate fft_plan this is not executing the fft
+        /* allocate fft_plan this is not executing the fft */
         if (fftpack_len != nfft) {
             if(fftpack_work != 0)
                 free(fftpack_work);
             fftpack_len = nfft;
             fftpack_work = malloc(sizeof(double) * (2 * nfft + 15));
-            rffti(nfft, fftpack_work);
+            /*fftpack_work = malloc(sizeof(double) * fftpack_len);*/
+            /*fftpack_work = (double *)calloc(2*nfft+15, sizeof(double));*/
+            rffti(fftpack_len, fftpack_work);
         }
 
         /* doing calloc is automatically zero-padding, too */
@@ -152,7 +156,7 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
             window[j][n] *= (double) taper[n];
         }
         //realft(window[j]-1,nfft/2,1);
-        rfftf(nfft, window[j]+1, fftpack_work);
+        rfftf(fftpack_len, (double *)(window[j]+1), fftpack_work);
         window[j][0] = window[j][1];
         window[j][1] = window[j][nfft];
     }

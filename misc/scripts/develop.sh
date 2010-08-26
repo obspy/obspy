@@ -9,7 +9,8 @@ cd ../..
 # Link all packages to python2.x/lib/site-packages/
 for NAME in $PACKAGES; do
     cd obspy.$NAME/trunk
-    python setup.py develop -N -U
+    rm -rf build
+    python setup.py develop -N -U --verbose
     cd ../..
 done
 
