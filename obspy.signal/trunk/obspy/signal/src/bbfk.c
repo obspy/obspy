@@ -24,7 +24,7 @@
 /* numpy has no floating point transfrom compiled, therefore we need to */
 /* cast the result to double                                            */    
 /************************************************************************/
-extern void rfftf(int N, double* data, const double* wrk);
+extern void rfftf(int N, double* data, double* wrk);
 extern void rffti(int N, double* wrk);
 
 
@@ -67,10 +67,10 @@ void cosine_taper(float *taper, int ndat, float fraction)
 }
 
 
-int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table, 
-         float *abs, float *rel, int *ix, int *iy, int *qual, float flow, 
-         float fhigh, float digfreq, int nsamp, int nstat, int prewhiten,
-         int grdpts_x, int grdpts_y) {
+int bbfk(int *spoint, int offset, double **trace, int *ntrace, 
+         float ***stat_tshift_table, float *abs, float *rel, int *ix, 
+         int *iy, int *qual, float flow, float fhigh, float digfreq, int nsamp,
+         int nstat, int prewhiten, int grdpts_x, int grdpts_y) {
     int		j,k,l,w;
     int		n;
     int		nfft = 2;
@@ -106,6 +106,9 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     /* allocate fft_plan this is not executing the fft */
     /***************************************************/
     fftpack_len = nfft;
+    /* Magic size needed by rffti:
+     * http://projects.scipy.org/numpy/browser/trunk/
+     * +numpy/fft/fftpack_litemodule.c#L277 */
     fftpack_work = malloc(sizeof(double) * (2 * nfft + 15));
     rffti(fftpack_len, fftpack_work);
 
@@ -133,6 +136,13 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
     taper = (float *)calloc(nsamp, sizeof(float));
     cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
+        /* be sure we are inside our memory */
+        if ((spoint[j] + offset + nsamp) > ntrace[j]) {
+            free((void *)window);
+            free((void *)taper);
+            free((void *)fftpack_work);
+            return 1;
+        }
         /* doing calloc is automatically zero-padding, too */
         window[j] = (double *)calloc(nfft+1, sizeof(double));
         memcpy((void *)(window[j]+1),(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
@@ -151,11 +161,10 @@ int bbfk(int *spoint, int offset, double **trace, float ***stat_tshift_table,
         //realft(window[j]-1,nfft/2,1);
         rfftf(fftpack_len, (double *)(window[j]+1), fftpack_work);
         window[j][0] = window[j][1];
-        window[j][1] = window[j][nfft];
+        window[j][1] = 0.0;
     }
     /* we free the taper buffer here already! */
     free((void *)taper);
-    //free((void *)fftpack_work);
 
     /***********************************************************************/
     /* we calculate the scaling factor or denominator, if not prewhitening */
