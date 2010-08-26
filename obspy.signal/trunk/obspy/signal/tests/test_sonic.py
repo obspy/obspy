@@ -26,12 +26,12 @@ class SonicTestCase(unittest.TestCase):
         
         geometry /= 100      # in km
         slowness = 1.3       # in s/km
-        baz = 20.0            # 0.0 > source in x direction
+        baz = 20.0           # 0.0 > source in x direction
         baz *= np.pi / 180.
         df = 100             # samplerate
         # SNR = 100.         # signal to noise ratio
         amp = .00001         # amplitude of coherent wave
-        length = 1000        # signal length in samples
+        length = 500         # signal length in samples
 
         coherent_wave = amp * np.random.randn(length)
         
