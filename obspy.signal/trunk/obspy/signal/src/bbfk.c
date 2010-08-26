@@ -6,6 +6,7 @@
 #  Changes: 8.2010 now using numpy fftpack instead of realft (Moritz)
 #           8.2010 changed window and trace to doubles due to fftpack (Moritz)
 #           8.2010 removed group_index_list (Moritz)
+#           8.2010 passing rffti from command line for speed (Moritz)
 # Copyright (C) 2010 M. Beyreuther, J. Wassermann, M. Ohrnberger
 #---------------------------------------------------------------------*/
 #include <stdlib.h>
@@ -28,6 +29,7 @@ extern void rfftf(int N, double* data, double* wrk);
 extern void rffti(int N, double* wrk);
 
 
+/* not used currently for Python, let's leave it for now */
 void cosine_taper(float *taper, int ndat, float fraction)
 {
     int	i1,i2,i3,i4,k;
@@ -69,15 +71,14 @@ void cosine_taper(float *taper, int ndat, float fraction)
 
 int bbfk(int *spoint, int offset, double **trace, int *ntrace, 
          float ***stat_tshift_table, float *abs, float *rel, int *ix, 
-         int *iy, int *qual, float flow, float fhigh, float digfreq, int nsamp,
-         int nstat, int prewhiten, int grdpts_x, int grdpts_y) {
+         int *iy, float flow, float fhigh, float digfreq, int nsamp,
+         int nstat, int prewhiten, int grdpts_x, int grdpts_y, 
+         double *fftpack_work, int nfft, double *taper) {
     int		j,k,l,w;
     int		n;
-    int		nfft = 2;
     int		wlow,whigh;
     float	df;
     double	**window;
-    float	*taper;
     double	mean;
     float	denom = 0;
     float	dpow;
@@ -91,26 +92,26 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	wtau;
     double	absval;
     float	maxinmap = 0.;
-    double* fftpack_work = 0;
-    int     fftpack_len = -1;
 
     /* mtrace(); */
-    /*******************************************/
-    /* get next power of two for window length */
-    /*******************************************/
+    /***********************************************************************/
+    /* do not remove this comment, get next power of two for window length */
+    /***********************************************************************
     while (nfft<nsamp) {
         nfft = nfft << 1;
-    }
+    }*/
 
-    /***************************************************/
-    /* allocate fft_plan this is not executing the fft */
-    /***************************************************/
-    fftpack_len = nfft;
+    /********************************************************************/
+    /* do not remove this comment, it shows how to allocate the plan of */
+    /* fftpack with magic number the fftt                               */
+    /********************************************************************/
     /* Magic size needed by rffti (see also
      * http://projects.scipy.org/numpy/browser/trunk/
-     * +numpy/fft/fftpack_litemodule.c#L277) */
+     * +numpy/fft/fftpack_litemodule.c#L277)
+    double *fftpack_work = 0;
     fftpack_work = (double *)calloc((2*nfft+15), sizeof(double));
-    rffti(fftpack_len, fftpack_work);
+    rffti(nfft, fftpack_work);
+    */
 
     df = digfreq/(float)nfft;
     wlow = (int)(flow/df+0.5);
@@ -132,15 +133,10 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /* first we need the fft'ed window of traces for the stations of this group */
     /****************************************************************************/
     window = (double **)calloc(nstat, sizeof(double *));
-    /* we allocate the taper buffer, size nsamp! */
-    taper = (float *)calloc(nsamp, sizeof(float));
-    cosine_taper(taper,nsamp,0.1f); 
     for (j=0;j<nstat;j++) {
         /* be sure we are inside our memory */
         if ((spoint[j] + offset + nsamp) > ntrace[j]) {
             free((void *)window);
-            free((void *)taper);
-            free((void *)fftpack_work);
             return 1;
         }
         /* doing calloc is automatically zero-padding, too */
@@ -156,16 +152,15 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         mean /= (double)nsamp;
         for (n=0;n<nsamp;n++) {
             window[j][n] -= mean;
-            window[j][n] *= (double) taper[n];
+            window[j][n] *= taper[n];
         }
         //realft(window[j]-1,nfft/2,1);
-        rfftf(fftpack_len, (double *)(window[j]+1), fftpack_work);
+        rfftf(nfft, (double *)(window[j]+1), fftpack_work);
         window[j][0] = window[j][1];
         window[j][1] = 0.0;
     }
     /* we free the taper buffer and the fft plan already! */
-    free((void *)taper);
-    free((void *)fftpack_work);
+    /*free((void *)fftpack_work);*/
 
     /***********************************************************************/
     /* we calculate the scaling factor or denominator, if not prewhitening */
