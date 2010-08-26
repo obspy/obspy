@@ -24,6 +24,12 @@ from obspy.core.util import BAND_CODE, deprecated
 from obspy.core import UTCDateTime
 
 
+HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
+HTTP_ACCEPTED_NODATA_METHODS = ["HEAD", "GET", "DELETE"]
+HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
+                        HTTP_ACCEPTED_NODATA_METHODS
+
+
 class Client(object):
     """
     SeisHub database request Client class.
@@ -82,6 +88,22 @@ class Client(object):
         except:
             None
 
+    def testAuth(self):
+        """
+        Test if authentication information is valid. Raises an Exception if
+        status code of response is not 200 (OK) or 401 (Forbidden).
+
+        :returns: True if OK, False if invalid.
+        """
+        (code, msg) = self._HTTP_request(self.base_url + "/xml/",
+                                         method="HEAD")
+        if code == 200:
+            return True
+        elif code == 401:
+            return False
+        else:
+            raise Exception("Unexpected request status code: %s" % code)
+
     def _fetch(self, url, *args, **kwargs):
         params = {}
         for key, value in kwargs.iteritems():
@@ -106,31 +128,104 @@ class Client(object):
 
         return doc
 
-    def _put_test(self):
+    def _HTTP_request(self, url, method, xml_string="", headers={}):
         """
-        Send a resource via a PUT request. Test implementation.
+        Send a HTTP request via urllib2.
+
+        :type url: String
+        :param url: Complete URL of resource
+        :type method: String
+        :param method: HTTP method of request, e.g. "PUT"
+        :type headers: dict
+        :param headers: Header information for request, e.g.
+                {'User-Agent': "obspyck"}
+        :type xml_string: String
+        :param xml_string: XML for a send request (PUT/POST)
         """
-        method = "PUT"
-        resource_name = "blibla"
-        url = "/".join([self.base_url, "xml", "seismology", "event",
-                        resource_name])
-        data = "<?xml version='1.0' encoding='UTF-8' ?><test>blup</test>"
-        headers = {}
-        # e.g. headers['User-Agent'] = "obspyck"
-        # e.g. headers['Content-type'] = "text/xml; charset=\"UTF-8\""
-        req = RequestWithMethod(method=method, url=url, data=data,
+        if method not in HTTP_ACCEPTED_METHODS:
+            raise ValueError("Method must be one of %s" % HTTP_ACCEPTED_METHODS)
+        if method in HTTP_ACCEPTED_DATA_METHODS and not xml_string:
+            raise TypeError("Missing data for %s request." % method)
+        elif method in HTTP_ACCEPTED_NODATA_METHODS and xml_string:
+            raise TypeError("Unexpected data for %s request." % method)
+
+        req = RequestWithMethod(method=method, url=url, data=xml_string,
                                 headers=headers)
         # it seems the following always ends in a urllib2.HTTPError even with
         # nice status codes...?!?
         try:
             response = urllib2.urlopen(req)
-            return response
+            return response.code, response.msg
         except urllib2.HTTPError, e:
             return e.code, e.msg
 
     def _objectify(self, url, *args, **kwargs):
         doc = self._fetch(url, *args, **kwargs)
         return objectify.fromstring(doc)
+
+
+class _BaseRESTClient(object):
+    def __init__(self, client):
+        self.client = client
+
+    def getResource(self, resource_name, format=None, **kwargs):
+        """
+        Gets a resource.
+
+        :param resource_name: Name of the resource.
+        :param format: Format string, e.g. 'xml' or 'map'.
+        :return: Resource
+        """
+        # NOTHING goes ABOVE this line!
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
+        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
+              resource_name
+        return self.client._fetch(url, **kwargs)
+
+    def getXMLResource(self, resource_name, **kwargs):
+        """
+        Gets a XML resource.
+
+        :param resource_name: Name of the resource.
+        :return: Resource as :class:`lxml.objectify.ObjectifiedElement`
+        """
+        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
+              resource_name
+        return self.client._objectify(url, **kwargs)
+
+    def putResource(self, resource_name, xml_string, headers={}):
+        """
+        PUTs a XML resource.
+
+        :param resource_name: Name of the resource.
+        :type headers: dict
+        :param headers: Header information for request, e.g.
+                {'User-Agent': "obspyck"}
+        :type xml_string: String
+        :param xml_string: XML for a send request (PUT/POST)
+        :return: (HTTP status code, HTTP status message)
+        """
+        url = '/'.join([self.client.base_url, 'xml', self.package,
+                        self.resourcetype, resource_name])
+        return self.client._HTTP_request(url, method="PUT",
+                xml_string=xml_string, headers=headers)
+
+    def deleteResource(self, resource_name, headers={}):
+        """
+        DELETEs a XML resource.
+
+        :param resource_name: Name of the resource.
+        :type headers: dict
+        :param headers: Header information for request, e.g.
+                {'User-Agent': "obspyck"}
+        :return: (HTTP status code, HTTP status message)
+        """
+        url = '/'.join([self.client.base_url, 'xml', self.package,
+                        self.resourcetype, resource_name])
+        return self.client._HTTP_request(url, method="DELETE",
+                headers=headers)
 
 
 class _WaveformMapperClient(object):
@@ -382,38 +477,6 @@ class _WaveformMapperClient(object):
         # unpickle
         stream = pickle.loads(data)
         return stream
-
-
-class _BaseRESTClient(object):
-    def __init__(self, client):
-        self.client = client
-
-    def getResource(self, resource_name, format=None, **kwargs):
-        """
-        Gets a resource.
-
-        :param resource_name: Name of the resource.
-        :param format: Format string, e.g. 'xml' or 'map'.
-        :return: Resource
-        """
-        # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
-            if key not in ["self", "kwargs"]:
-                kwargs[key] = value
-        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
-              resource_name
-        return self.client._fetch(url, **kwargs)
-
-    def getXMLResource(self, resource_name, **kwargs):
-        """
-        Gets a XML resource.
-
-        :param resource_name: Name of the resource.
-        :return: Resource
-        """
-        url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
-              resource_name
-        return self.client._objectify(url, **kwargs)
 
 
 class _StationMapperClient(_BaseRESTClient):
@@ -748,12 +811,10 @@ class RequestWithMethod(urllib2.Request):
     See http://benjamin.smedbergs.us/blog/2008-10-21/ \
     putting-and-deleteing-in-python-urllib2/
     """
-    ACCEPTED_METHODS = ["GET", "PUT", "POST", "DELETE"]
-
     def __init__(self, method, *args, **kwargs):
-        if method not in self.ACCEPTED_METHODS:
+        if method not in HTTP_ACCEPTED_METHODS:
             msg = "HTTP Method not supported. " + \
-                  "Supported are: %s." % self.ACCEPTED_METHODS
+                  "Supported are: %s." % HTTP_ACCEPTED_METHODS
             raise ValueError()
         urllib2.Request.__init__(self, *args, **kwargs)
         self._method = method
