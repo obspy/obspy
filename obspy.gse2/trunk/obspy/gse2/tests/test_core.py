@@ -196,6 +196,7 @@ class CoreTestCase(unittest.TestCase):
         tmpfile = NamedTemporaryFile().name
         st = Stream([Trace(data=np.random.randn(1000))])
         self.assertRaises(Exception, st.write, tmpfile, format="GSE2")
+        os.remove(tmpfile)
 
     def test_readWithWrongChecksum(self):
         """
