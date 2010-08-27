@@ -823,7 +823,10 @@ def get_geometry(stream, coordsys='lonlat', verbose=False):
         geometry[:,0] -= geometry[:,0].mean()
         geometry[:,1] -= geometry[:,1].mean()
         geometry[:,2] -= geometry[:,2].mean()
-        geometry = np.concatenate([geometry, np.zeros((1,3))])
+        geometry[nstat][0] = 0.0
+        geometry[nstat][1] = 0.0
+        geometry[nstat][2] = 0.0
+        #geometry = np.concatenate([geometry, np.zeros((1,3))])
 
     return geometry
 
