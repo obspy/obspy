@@ -421,3 +421,54 @@ class Client(Telnet):
                 temp.end = None
             data[network.attrib['code']] = temp
         return data
+
+    def getStations(self, start_datetime, end_datetime, network_id):
+        """
+        Returns a dictionary of available stations in the given network(s).
+
+        Currently the time span is ignored by the ArcLink servers, therefore
+        all possible stations are returned.
+
+        :type start_datetime: :class:`obspy.core.util.UTCDateTime`
+        :param start_datetime: start time
+        :type end_datetime: :class:`obspy.core.util.UTCDateTime`
+        :param end_datetime: end time
+        :type network_id: String or list of Strings
+        :param network_id: Network(s) to list stations of
+        :return: dictionary of station data.
+        """
+        rtype = 'REQUEST INVENTORY'
+        rdata = []
+        base_str = "%s %s %%s *" % (start_datetime.formatArcLink(),
+                                    end_datetime.formatArcLink())
+        if isinstance(network_id, list):
+            for net in network_id:
+                rdata.append(base_str % net)
+        else:
+            rdata.append(base_str % network_id)
+        # fetch plain XML document
+        xml_doc = self._fetch(rtype, rdata)
+        # generate object by using XML schema
+        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
+        data = []
+        if not xml_doc.countchildren():
+            return data
+        for network in xml_doc.network:
+            for station in network.station:
+                # XXX: not secure - map it manually
+                temp = AttribDict(dict(station.attrib))
+                temp['remark'] = str(station.remark)
+                try:
+                    temp.start = UTCDateTime(temp.start)
+                except:
+                    temp.start = None
+                try:
+                    temp.end = UTCDateTime(temp.end)
+                except:
+                    temp.end = None
+                #data[station.attrib['code']] = temp
+                for key in ['elevation', 'longitude', 'latitude', 'depth']:
+                    if key in temp:
+                        temp[key] = float(temp[key])
+                data.append(temp)
+        return data
