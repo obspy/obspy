@@ -17,6 +17,7 @@ import tempfile
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
+from obspy.arclink import Client as AClient
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
@@ -89,12 +90,38 @@ COMMANDLINE_OPTIONS = [
                 ".de/obspy/docs/packages/auto/obspy.core.trace.Trace.__add__"
                 ".html for details)\n  \"safe\": overlaps are discarded "
                 "completely\n  \"overwrite\": the second trace is used for "
-                "overlapping parts of the trace"}]]
+                "overlapping parts of the trace"}],
+        [["--arclink-ids"], {'dest': "arclink_ids",
+                'default': '',
+                'help': "Ids to retrieve via arclink, star for channel "
+                "is allowed, e.g. 'BW.RJOB..EH*,BW.ROTZ..EH*'"}],
+        [["--arclink-servername"], {'dest': "arclink_servername",
+                'default': 'webdc.eu',
+                'help': "Servername of the arclink server"}],
+        [["--arclink-port"], {'type': "int", 'dest': "arclink_port",
+                'default': 18001, 'help': "Port of the arclink server"}],
+        [["--arclink-user"], {'dest': "arclink_user", 'default': 'Anonymous',
+                'help': "Username for arclink server"}],
+        [["--arclink-password"], {'dest': "arclink_password", 'default': '',
+                'help': "Password for arclink server"}],
+        [["--arclink-institution"], {'dest': "arclink_institution",
+                'default': 'Anonymous',
+                'help': "Password for arclink server"}],
+        [["--arclink-timeout"], {'dest': "arclink_timeout", 'type': "int",
+                'default': 20, 'help': "Timeout for arclink server"}]]
 PROGRAMS = {
-        'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs", 'summary': "nlloc.hyp", 'scatter': "nlloc.scat"}},
-        'hyp_2000': {'filenames': {'exe': "hyp2000",'control': "bay2000.inp", 'phases': "hyp2000.pha", 'stations': "stations.dat", 'summary': "hypo.prt"}},
-        'focmec': {'filenames': {'exe': "rfocmec", 'phases': "focmec.dat", 'stdout': "focmec.stdout", 'summary': "focmec.out"}},
-        '3dloc': {'filenames': {'exe': "3dloc_pitsa", 'out': "3dloc-out", 'in': "3dloc-in"}}}
+        'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs",
+                                'summary': "nlloc.hyp",
+                                'scatter': "nlloc.scat"}},
+        'hyp_2000': {'filenames': {'exe': "hyp2000",'control': "bay2000.inp",
+                                   'phases': "hyp2000.pha",
+                                   'stations': "stations.dat",
+                                   'summary': "hypo.prt"}},
+        'focmec': {'filenames': {'exe': "rfocmec", 'phases': "focmec.dat",
+                                 'stdout': "focmec.stdout",
+                                 'summary': "focmec.out"}},
+        '3dloc': {'filenames': {'exe': "3dloc_pitsa", 'out': "3dloc-out",
+                                'in': "3dloc-in"}}}
 SEISMIC_PHASES = ['P', 'S']
 PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
         'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
@@ -173,18 +200,29 @@ def fetch_waveforms_metadata(options):
     """
     Sets up a client and fetches waveforms and metadata according to command
     line options.
+    Now also fetches data from arclink if arclink_id != "".
+    The arclink client is not returned, it is only useful for downloading
+    the data and not needed afterwards.
+    Notes:
+     - the Arclink client is at the moment only able to fetch PAZ info for
+       channel_ids without wildcards. Therefore a warning might be issued for
+       wildcards in channel_id
+     - there is a problem in the arclink client with duplicate traces in
+       fetched streams. therefore at the moment it is necessary to use "-m
+       overwrite" option.
 
     :returns: (:class:`obspy.seishub.client.Client`,
                list(:class:`obspy.core.stream.Stream`s))
     """
     t = UTCDateTime(options.time)
     t = t + options.starttime_offset
+    streams = []
+    # Seishub
+    print "Fetching waveforms and metadata from seishub:"
     baseurl = "http://" + options.servername + ":%i" % options.port
     client = Client(base_url=baseurl, user=options.user,
                     password=options.password, timeout=options.timeout)
-    streams = []
     sta_fetched = set()
-    print "Fetching waveforms and metadata from seishub:"
     for id in options.ids.split(","):
         net, sta_wildcard, loc, cha = id.split(".")
         for sta in client.waveform.getStationIds(network_id=net):
@@ -202,6 +240,34 @@ def fetch_waveforms_metadata(options):
                 st = client.waveform.getWaveform(net, sta, loc, cha, t,
                         t + options.duration, apply_filter=True,
                         getPAZ=True, getCoordinates=True)
+                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.flush()
+                sta_fetched.add(net_sta)
+            except Exception, e:
+                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
+                sys.stdout.flush()
+                continue
+            streams.append(st)
+    # ArcLink
+    if options.arclink_ids:
+        print "Fetching waveforms and metadata via ArcLink:"
+        aclient = AClient(host=options.arclink_servername,
+                          port=options.arclink_port,
+                          timeout=options.arclink_timeout,
+                          user=options.arclink_user,
+                          password=options.arclink_password,
+                          institution=options.arclink_institution)
+        for id in options.arclink_ids.split(","):
+            net, sta, loc, cha = id.split(".")
+            net_sta = "%s:%s" % (net, sta)
+            try:
+                sys.stdout.write("\r%s ..." % net_sta)
+                sys.stdout.flush()
+                st = aclient.getWaveform(network_id=net, station_id=sta,
+                                         location_id=loc, channel_id=cha,
+                                         start_datetime=t,
+                                         end_datetime=t + options.duration,
+                                         getPAZ=True, getCoordinates=True)
                 sys.stdout.write("\r%s fetched.\n" % net_sta)
                 sys.stdout.flush()
                 sta_fetched.add(net_sta)
