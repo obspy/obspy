@@ -1292,8 +1292,6 @@ class StreamTestCase(unittest.TestCase):
 
     def test_trimConsistentStartEndtimeNearestSamplePadded(self):
         """
-        XXX: Known Bug, currently fails
-
         Test case for #127. It ensures that the sample sizes stay
         consistent after trimming. That is that _ltrim and _rtrim 
         round in the same direction. Padded version.
@@ -1306,10 +1304,10 @@ class StreamTestCase(unittest.TestCase):
             traces[-1].stats.starttime = t + delta
         st=Stream(traces)
         st.trim(t-3.5, t+16.5, pad=True)
-        start = [-4.0, -3.75, -4.5, -4.25, -4.0]
-        end = [17.0, 17.25, 16.50, 16.75, 17.0]
+        start = [-4.0, -3.75, -3.5, -4.25, -4.0]
+        end = [17.0, 17.25, 17.50, 16.75, 17.0]
         for i in xrange(len(st)):
-            self.assertEquals(23, st[i].stats.npts)
+            self.assertEquals(22, st[i].stats.npts)
             self.assertEquals(st[i].stats.starttime.timestamp, start[i])
             self.assertEquals(st[i].stats.endtime.timestamp, end[i])
 

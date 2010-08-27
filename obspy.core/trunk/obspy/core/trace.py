@@ -721,7 +721,16 @@ class Trace(object):
         # check if in boundary
         if nearest_sample:
             delta = round((starttime - self.stats.starttime) * \
-                                          self.stats.sampling_rate)
+                          self.stats.sampling_rate)
+            # due to rounding and npts starttime must always be right of
+            # self.stats.starttime, rtrim relies on it
+            if delta < 0 and pad:
+                npts = abs(delta) + 10 # use this as a start
+                newstarttime = self.stats.starttime - npts / \
+                        self.stats.sampling_rate
+                newdelta = round((starttime - newstarttime) * \
+                                 self.stats.sampling_rate)
+                delta = newdelta - npts
         else:
             delta = -1 * int(math.floor(round((self.stats.starttime - starttime) * \
                                           self.stats.sampling_rate, 7)))

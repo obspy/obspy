@@ -490,7 +490,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
-    def test_trimFloatingPointWithPadding(self):
+    def test_trimFloatingPointWithPadding1(self):
         """
         Tests the slicing of trace objects with the use of the padding option.
         """
@@ -509,24 +509,28 @@ class TraceTestCase(unittest.TestCase):
         # a copy of the stats.
         temp = deepcopy(tr)
         temp.trim(st - 2.5, st + 200, pad=True)
-        self.assertEqual(temp.stats.starttime, UTCDateTime(-3.0))
-        self.assertEqual(temp.stats.endtime, UTCDateTime(200))
-        self.assertEqual(temp.stats.npts, 204)
+        self.assertEqual(temp.stats.starttime.timestamp, -2.0)
+        self.assertEqual(temp.stats.endtime.timestamp, 200)
+        self.assertEqual(temp.stats.npts, 203)
         mask = np.zeros(203).astype("bool")
         mask[:2] = True
         mask[13:] = True
-        np.testing.assert_array_equal(temp.data.mask[1:], mask)
+        np.testing.assert_array_equal(temp.data.mask, mask)
         # Alter the new stats to make sure the old one stays intact.
         temp.stats.starttime = UTCDateTime(1000)
         self.assertEqual(org_stats, tr.stats)
         # Check if the data adress is not the same, that is it is a copy
         self.assertNotEqual(temp.data.ctypes.data, tr.data.ctypes.data)
-        np.testing.assert_array_equal(tr.data, temp.data[3:14])
+        np.testing.assert_array_equal(tr.data, temp.data[2:13])
         # Make sure the original Trace object did not change.
         np.testing.assert_array_equal(tr.data, org_data)
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
-        # Use more complicated times and sampling rate.
+
+    def test_trimFloatingPointWithPadding2(self):
+        """
+        Use more complicated times and sampling rate.
+        """
         tr = Trace(data=np.arange(111))
         tr.stats.starttime = UTCDateTime(111.11111)
         tr.stats.sampling_rate = 50.0
