@@ -16,6 +16,8 @@ from telnetlib import Telnet
 import os
 import sys
 import time
+import warnings
+from copy import deepcopy
 
 
 class ArcLinkException(Exception):
@@ -229,39 +231,42 @@ class Client(Telnet):
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime, format="MSEED",
-                    compressed=True):
+                    compressed=True, getPAZ=False, getCoordinates=False):
         """
-        Retrieve waveform via ArcLink and returns a ObsPy Stream object.
+        Retrieve waveform via ArcLink and returns an ObsPy Stream object.
 
-        Parameters
-        ----------
-        filename : string
-            Name of the output file.
-        network_id : string
-            Network code, e.g. 'BW'.
-        station_id : string
-            Station code, e.g. 'MANZ'.
-        location_id : string
-            Location code, e.g. '01'.
-        channel_id : string
-            Channel code, e.g. 'EHE'.
-        start_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        end_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        format : ['FSEED' | 'MSEED'], optional
-            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED'). 
-            .. note:: 
-                Format 'XSEED' is documented, but not yet implemented in
+        :type filename: string
+        :param filename: Name of the output file.
+        :type network_id: string
+        :param network_id: Network code, e.g. 'BW'.
+        :type station_id: string
+        :param station_id: Station code, e.g. 'MANZ'.
+        :type location_id: string
+        :param location_id: Location code, e.g. '01'.
+        :type channel_id: string
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param start_datetime: Start date and time.
+        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_datetime: End date and time.
+        :type format: String
+        :param format: Output format. Either full SEED ('FSEED') or Mini-SEED
+                ('MSEED') volume (default is 'MSEED'). 
+                Note: Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
-        compressed : boolean, optional 
-            Request compressed files from ArcLink server (default is True).
+        :type compressed: boolean, optional 
+        :paramcompressed: Request compressed files from ArcLink server (default
+                is True).
+        :type getPAZ: Boolean
+        :param getPAZ: Fetch PAZ information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type getCoordinates: Boolean
+        :param getCoordinates: Fetch coordinate information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
 
-        Returns
-        -------
-        :class:`~obspy.core.stream.Stream`
-            Returns an ObsPy Stream object.
+        :returns: :class:`~obspy.core.stream.Stream`
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -298,7 +303,102 @@ class Client(Telnet):
             stream = Stream()
         # trim stream
         stream.trim(start_datetime, end_datetime)
+        # fetch metadata
+        if getPAZ or getCoordinates:
+            if "*" in channel_id:
+                if len(channel_id) < 3:
+                    msg = "Cannot fetch PAZ with wildcarded band codes."
+                    raise Exception(msg)
+                channel_id = channel_id.replace("*", "Z")
+                msg = "Wildcard in channel_id, trying to look up Z " + \
+                      "components PAZ information"
+                warnings.warn(msg)
+            data = self.getMetadata(network_id, station_id, location_id,
+                    channel_id, start_datetime, end_datetime, getPAZ=getPAZ,
+                    getCoordinates=getCoordinates)
+            if getPAZ:
+                for tr in stream:
+                    tr.stats['paz'] = deepcopy(data['paz'])
+            if getCoordinates:
+                for tr in stream:
+                    tr.stats['coordinates'] = deepcopy(data['coordinates'])
         return stream
+
+    def getMetadata(self, network_id, station_id, location_id, channel_id,
+                    start_datetime, end_datetime, getPAZ=True,
+                    getCoordinates=True):
+        """
+        Returns metadata (PAZ and Coordinates).
+
+        :type network_id: String
+        :param network_id: Network code, e.g. 'BW'.
+        :type station_id: String
+        :param station_id: Station code, e.g. 'MANZ'.
+        :type location_id: String
+        :param location_id: Location code, e.g. '01'.
+        :type channel_id: String
+        :param channel_id: Channel code, e.g. 'EHE'.
+        :param start_datetime: start time as L{obspy.UTCDateTime} object.
+        :param end_datetime: end time as L{obspy.UTCDateTime} object.
+        :return: dictionary containing keys 'paz' and 'coordinates'
+        """
+        if not getPAZ and not getCoordinates:
+            return {}
+        data = {}
+        rtype = 'REQUEST INVENTORY instruments=true'
+        if not location_id:
+            location_id = "."
+        rdata = "%s %s %s %s %s %s" % (start_datetime.formatArcLink(),
+                                       end_datetime.formatArcLink(),
+                                       network_id, station_id, channel_id,
+                                       location_id)
+        # fetch plain XML document
+        xml_doc = self._fetch(rtype, [rdata])
+        # generate object by using XML schema
+        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
+        if not xml_doc.countchildren():
+            return {}
+        if getPAZ:
+            data['paz'] = AttribDict()
+            paz = data['paz']
+            if len(xml_doc.resp_paz) > 1:
+                msg = "Received more than one paz metadata set. Using first."
+                warnings.warn(msg)
+            resp_paz = xml_doc.resp_paz[0]
+            # parsing gain
+            paz['gain'] = float(resp_paz.attrib['norm_fac'])
+            # parsing zeros
+            paz['zeros'] = []
+            temp = str(resp_paz.zeros).strip().replace(' ', '')
+            temp = temp.replace(')(', ') (')
+            for zeros in temp.split():
+                paz['zeros'].append(complexifyString(zeros))
+            if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
+                raise ArcLinkException('Could not parse all zeros')
+            # parsing poles
+            paz['poles'] = []
+            temp = str(resp_paz.poles).strip().replace(' ', '')
+            temp = temp.replace(')(', ') (')
+            for poles in temp.split():
+                paz['poles'].append(complexifyString(poles))
+            if len(paz['poles']) != int(resp_paz.attrib['npoles']):
+                raise ArcLinkException('Could not parse all poles')
+            # parsing sensitivity
+            component = xml_doc.network.station.seis_stream.component
+            if len(component) > 1:
+                msg = 'Currently supporting only a single channel, e.g. EHZ'
+                raise ArcLinkException(msg)
+            try:
+                paz['sensitivity'] = float(component[0].attrib['gain'])
+            except:
+                paz['sensitivity'] = float(resp_paz.attrib['gain'])
+        if getCoordinates:
+            data['coordinates'] = AttribDict()
+            coords = data['coordinates']
+            tmp = dict(xml_doc.network.station.attrib)
+            for key in ['latitude', 'longitude', 'elevation']:
+                coords[key] = float(tmp[key])
+        return data
 
     def getPAZ(self, network_id, station_id, location_id, channel_id,
                start_datetime, end_datetime):
