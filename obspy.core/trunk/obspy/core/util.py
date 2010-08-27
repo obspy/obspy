@@ -114,8 +114,8 @@ class AttribDict(dict, object):
     __setattr__ = __setitem__
     __delattr__ = __delitem__
 
-    def copy(self, init={}):
-        return self.__class__(init)
+    def copy(self):
+        return self.__class__(self.__dict__.copy())
 
     def __deepcopy__(self, *args, **kwargs):
         st = self.__class__()
