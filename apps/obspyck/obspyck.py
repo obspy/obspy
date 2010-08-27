@@ -247,6 +247,8 @@ def fetch_waveforms_metadata(options):
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
                 sys.stdout.flush()
                 continue
+            for tr in st:
+                tr.stats['client'] = "seishub"
             streams.append(st)
     # ArcLink
     if options.arclink_ids:
@@ -275,6 +277,8 @@ def fetch_waveforms_metadata(options):
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
                 sys.stdout.flush()
                 continue
+            for tr in st:
+                tr.stats['client'] = "arclink"
             streams.append(st)
     return (client, streams)
 
