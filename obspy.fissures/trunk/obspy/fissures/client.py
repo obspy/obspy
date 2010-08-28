@@ -121,17 +121,34 @@ class Client(object):
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
         >>> print st
         1 Trace(s) in Stream:
-        GE.APE..SHZ | 2003-06-20T05:59:09.401000Z - 2003-06-20T06:10:10.581000Z | 50.0 Hz, 33060 samples
-
+        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
+        >>> st = client.getWaveform("GE", "APE", "", "SH*", t, t+600)
+        >>> print st
+        3 Trace(s) in Stream:
+        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
+        GE.APE..SHN | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
+        GE.APE..SHE | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
 
         :param network_id: Network id, 2 char; e.g. "GE"
         :param station_id: Station id, 5 char; e.g. "APE"
         :param location_id: Location id, 2 char; e.g. "  "
-        :param channel_id: Channel id, 3 char; e.g. "SHZ"
+        :tpye channel_id: String, 3 char
+        :param channel_id: Channel id, e.g. "SHZ". "*" as third letter is
+                supported and requests "Z", "N", "E" components.
         :param start_datetime: UTCDateTime object of starttime
         :param end_datetime: UTCDateTime object of endtime
         :return: Stream object
         """
+        # intercept 3 letter channels with component wildcard
+        # recursive call, quick&dirty and slow, but OK for the moment
+        if len(channel_id) == 3 and channel_id[2] == "*":
+            st = Stream()
+            for cha in (channel_id[:2] + comp for comp in ["Z", "N", "E"]):
+                st += self.getWaveform(network_id=network_id,
+                        station_id=station_id, location_id=location_id,
+                        channel_id=cha, start_datetime=start_datetime,
+                        end_datetime=end_datetime)
+            return st
         # get channel object
         channels = self._getChannelObj(network_id, station_id, location_id,
                 channel_id)
@@ -189,6 +206,7 @@ class Client(object):
             tr.verify()
             st.append(tr)
             # XXX: merging?
+        st.trim(start_datetime, end_datetime)
         return st
 
 
