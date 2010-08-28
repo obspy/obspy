@@ -23,8 +23,10 @@ from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.mseed.libmseed import LibMSEED
 from obspy.fissures.util import poleZeroFilter2PAZ
+import math
 import numpy as np
 import sys
+import warnings
 
 
 class Client(object):
@@ -235,49 +237,39 @@ class Client(object):
                 station_list.append(station.id.station_code)
         return station_list
 
-    def getPAZ(self):
+    def getPAZ(self, network_id="GR", station_id="GRA1"):
         """
-        EXPERIMENTAL! NO REAL IMPLEMENTATION YET!
+        EXPERIMENTAL!
+        Units and scalings not yet correct!
         
         see:
         http://www.seis.sc.edu/software/simple/
         http://www.seis.sc.edu/downloads/simple/simple-1.0.tar.gz
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
+        http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
         """
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
         netFind = netDC._get_a_finder()
-        net = netFind.retrieve_by_code("II")[0]
-        ########
-        #for station in net.retrieve_stations():
-        #    for channel in net.retrieve_for_station(station.id):
-        #        for stage in net.retrieve_instrumentation(channel.id, channel.effective_time.start_time).the_response.stages:
-        #            for filter in stage.filters:
-        #                if str(filter._d) == "POLEZERO":
-        #                    print filter._d, filter._v.poles, filter._v.zeros
-        #                    print filter._v._tuple()
-        #return
-        ########
-        ########
-        # get the first filter that has real information in it
-        for station in net.retrieve_stations():
-            for channel in net.retrieve_for_station(station.id):
-                for stage in net.retrieve_instrumentation(channel.id, channel.effective_time.start_time).the_response.stages:
-                    for filter in stage.filters:
-                        if str(filter._d) == "POLEZERO" and filter._v.poles and filter._v.zeros:
-                            return filter._v
-        ########
-        stations = net.retrieve_stations()
-        channels = net.retrieve_for_station(stations[0].id)
-        inst = net.retrieve_instrumentation(channels[0].id, channels[0].effective_time.start_time)
+        net = netFind.retrieve_by_code(network_id)[0]
+        sta = [sta for sta in net.retrieve_stations() \
+               if sta.id.station_code == station_id][0]
+        channels = net.retrieve_for_station(sta.id)
+        cha = channels[0] # XXX only on first channel!!
+        inst = net.retrieve_instrumentation(cha.id,
+                                            cha.effective_time.start_time)
         resp = inst.the_response
+        # sensitivity = resp.the_sensitivity
         stage = resp.stages[0]
+        # XXX if str(stage.type) == "ANALOG":
+        # XXX     multFac = 2 * math.pi
+        # XXX else:
+        # XXX     multFac = 1.0
         filter = stage.filters[0]
         if str(filter._d) != "POLEZERO":
             raise Exception("Unexpected response type.")
         filter = filter._v
-        # XXX should work? but doesnt..?!
-        # XXX seems this filter is empty, maybe try to get one with different network/station ids?!
+        warnings.warn("EXPERIMENTAL")
         return poleZeroFilter2PAZ(filter)
 
     def _composeName(self, dc, interface):

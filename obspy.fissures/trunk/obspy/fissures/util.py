@@ -26,7 +26,7 @@ def poleZeroFilter2PAZ(filter):
     # be nice and catch an easy to make mistake
     if isinstance(filter, obspy.fissures.idl.Fissures.IfNetwork.Filter):
         if str(filter._d) != "POLEZERO":
-            raise Exception("Filter is no PoleZeroFilter.")
+            raise TypeError("Filter is no PoleZeroFilter.")
         filter = filter._v
     paz = AttribDict()
     paz['poles'] = [complex(p.real, p.imaginary) for p in filter.poles]
