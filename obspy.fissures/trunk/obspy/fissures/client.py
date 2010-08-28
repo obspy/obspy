@@ -237,8 +237,7 @@ class Client(object):
                 station_list.append(station.id.station_code)
         return station_list
 
-    def getCoordinates(self, network_id="GR", station_id="GRA1",
-                       datetime="2010-01-01"):
+    def getCoordinates(self, network_id, station_id, datetime):
         """
         Get Coordinates of a station.
         Still lacks a correct selection of metadata in time!
@@ -249,24 +248,9 @@ class Client(object):
         ...                       datetime="2010-08-01")
         AttribDict({'latitude': 49.691886901855469, 'elevation': 499.5, 'longitude': 11.221719741821289})
         """
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        net = netFind.retrieve_by_code(network_id)[0]
-        # filter by station_id and by datetime (comparing datetime strings)
-        datetime = UTCDateTime(datetime).formatFissures()
-        stations = [sta for sta in net.retrieve_stations() \
-                    if station_id == sta.id.station_code \
-                    and datetime > sta.effective_time.start_time.date_time \
-                    and datetime < sta.effective_time.end_time.date_time]
+        sta = self._getStationObj(network_id=network_id, station_id=station_id,
+                                  datetime=datetime)
         coords = AttribDict()
-        if len(stations) == 0:
-            return coords
-        elif len(stations) == 1:
-            sta = stations[0]
-        elif len(stations) > 1:
-            msg = "Server returned more than one set of coordinates."
-            raise Exception(msg)
         loc = sta.my_location
         coords['elevation'] = loc.elevation.value
         unit = loc.elevation.the_units.name
@@ -293,6 +277,7 @@ class Client(object):
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
         """
+        # XXX in the future use _getChannelObj() instead!!
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
         netFind = netDC._get_a_finder()
@@ -413,3 +398,38 @@ class Client(object):
         #
         # Retrieve Seismogram object
         return seisDC.retrieve_seismograms(request)
+
+    def _getStationObj(self, network_id, station_id, datetime):
+        """
+        Return Fissures station object.
+        
+        Fissures station object is requested from the clients network_dc.
+        
+        :param network_id: Network id, 2 char; e.g. "GE"
+        :param station_id: Station id, 5 char; e.g. "APE"
+        :type datetime: String (understood by
+                :class:`~obspy.core.datetime.DateTime`)
+        :param datetime: Datetime to select station
+        :return: Fissures channel object
+        """
+        netDC = self.rootContext.resolve(self.net_name)
+        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+        netFind = netDC._get_a_finder()
+        net = netFind.retrieve_by_code(network_id)[0]
+        # filter by station_id and by datetime (comparing datetime strings)
+        datetime = UTCDateTime(datetime).formatFissures()
+        stations = [sta for sta in net.retrieve_stations() \
+                    if station_id == sta.id.station_code \
+                    and datetime > sta.effective_time.start_time.date_time \
+                    and datetime < sta.effective_time.end_time.date_time]
+        if len(stations) == 0:
+            raise Exception("No data.")
+        elif len(stations) > 1:
+            msg = "Server returned ambiguous data."
+            raise Exception(msg)
+        return stations[0]
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
