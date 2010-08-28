@@ -27,6 +27,7 @@ import math
 import numpy as np
 import sys
 import warnings
+from copy import deepcopy
 
 
 class Client(object):
@@ -110,7 +111,7 @@ class Client(object):
 
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
-            start_datetime, end_datetime):
+            start_datetime, end_datetime, getPAZ=False, getCoordinates=False):
         """
         Get Waveform in an ObsPy stream object from Fissures / DHI.
 
@@ -137,17 +138,33 @@ class Client(object):
                 supported and requests "Z", "N", "E" components.
         :param start_datetime: UTCDateTime object of starttime
         :param end_datetime: UTCDateTime object of endtime
+        :type getPAZ: Boolean
+        :param getPAZ: Fetch PAZ information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type getCoordinates: Boolean
+        :param getCoordinates: Fetch coordinate information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
         :return: Stream object
         """
+        # NOTHING goes ABOVE this line!
+        # append all args to kwargs, thus having everything in one dictionary
+        # no **kwargs in method definition, so we need a get with default here
+        kwargs = locals().get('kwargs', {})
+        for key, value in locals().iteritems():
+            if key not in ["self", "kwargs"]:
+                kwargs[key] = value
+
         # intercept 3 letter channels with component wildcard
         # recursive call, quick&dirty and slow, but OK for the moment
         if len(channel_id) == 3 and channel_id[2] == "*":
             st = Stream()
             for cha in (channel_id[:2] + comp for comp in ["Z", "N", "E"]):
-                st += self.getWaveform(network_id=network_id,
-                        station_id=station_id, location_id=location_id,
-                        channel_id=cha, start_datetime=start_datetime,
-                        end_datetime=end_datetime)
+                # replace channel_id XXX a bit ugly:
+                if 'channel_id' in kwargs:
+                    kwargs.pop('channel_id')
+                st += self.getWaveform(channel_id=cha, **kwargs)
             return st
         # get channel object
         channels = self._getChannelObj(network_id, station_id, location_id,
@@ -207,6 +224,28 @@ class Client(object):
             st.append(tr)
             # XXX: merging?
         st.trim(start_datetime, end_datetime)
+        if getPAZ:
+            # XXX channel_id ignored at the moment!!!! XXX
+            if "*" in channel_id:
+                if len(channel_id) < 3:
+                    msg = "Cannot fetch PAZ with wildcarded band codes."
+                    raise Exception(msg)
+                channel_id = channel_id.replace("*", "Z")
+                msg = "Wildcard in channel_id, trying to look up Z " + \
+                      "components PAZ information"
+                warnings.warn(msg)
+            # XXX should add a check like metadata_check in seishub.client
+            data = self.getPAZ(network_id=network_id, station_id=station_id,
+                               datetime=start_datetime)
+            for tr in st:
+                tr.stats['paz'] = deepcopy(data)
+        if getCoordinates:
+            # XXX should add a check like metadata_check in seishub.client
+            data = self.getCoordinates(network_id=network_id,
+                                       station_id=station_id,
+                                       datetime=start_datetime)
+            for tr in st:
+                tr.stats['coordinates'] = deepcopy(data)
         return st
 
 
@@ -284,7 +323,8 @@ class Client(object):
         coords['longitude'] = loc.longitude
         return coords
 
-    def getPAZ(self, network_id="GR", station_id="GRA1"):
+    def getPAZ(self, network_id="GR", station_id="GRA1",
+               datetime="2010-08-01"):
         """
         EXPERIMENTAL!
         Units and scalings not yet correct!
@@ -295,7 +335,6 @@ class Client(object):
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
         """
-        # XXX in the future use _getChannelObj() instead!!
         netDC = self.rootContext.resolve(self.net_name)
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
         netFind = netDC._get_a_finder()
@@ -303,7 +342,7 @@ class Client(object):
         sta = [sta for sta in net.retrieve_stations() \
                if sta.id.station_code == station_id][0]
         channels = net.retrieve_for_station(sta.id)
-        cha = channels[0] # XXX only on first channel!!
+        cha = channels[0] # XXX only on first channel!! XXX
         inst = net.retrieve_instrumentation(cha.id,
                                             cha.effective_time.start_time)
         resp = inst.the_response
