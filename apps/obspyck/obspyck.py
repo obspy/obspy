@@ -18,6 +18,7 @@ import tempfile
 from obspy.core import read, UTCDateTime
 from obspy.seishub import Client
 from obspy.arclink import Client as AClient
+from obspy.fissures import Client as FClient
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
@@ -43,6 +44,10 @@ from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolb
 
 
 COMMANDLINE_OPTIONS = [
+        # XXX wasn't working as expected
+        #[["--debug"], {'dest': "debug", 'action': "store_true",
+        #        'default': False,
+        #        'help': "Switch on Ipython debugging in case of exception"}],
         [["-t", "--time"], {'dest': "time", 'default': '2009-07-21T04:33:00',
                 'help': "Starttime of seismogram to retrieve. It takes a "
                 "string which UTCDateTime can convert. E.g. "
@@ -108,7 +113,20 @@ COMMANDLINE_OPTIONS = [
                 'default': 'Anonymous',
                 'help': "Password for arclink server"}],
         [["--arclink-timeout"], {'dest': "arclink_timeout", 'type': "int",
-                'default': 20, 'help': "Timeout for arclink server"}]]
+                'default': 20, 'help': "Timeout for arclink server"}],
+        [["--fissures-ids"], {'dest': "fissures_ids",
+                'default': '',
+                'help': "Ids to retrieve via Fissures, star for component "
+                "is allowed, e.g. 'GE.APE..BH*,GR.GRA1..BH*'"}],
+        [["--fissures-network_dc"], {'dest': "fissures_network_dc",
+                'default': ("/edu/iris/dmc", "IRIS_NetworkDC"),
+                'help': "Tuple containing Fissures dns and NetworkDC name."}],
+        [["--fissures-seismogram_dc"], {'dest': "fissures_seismogram_dc",
+                'default': ("/edu/iris/dmc", "IRIS_DataCenter"),
+                'help': "Tuple containing Fissures dns and DataCenter name."}],
+        [["--fissures-name_service"], {'dest': "fissures_name_service",
+                'default': "dmc.iris.washington.edu:6371/NameService",
+                'help': "String containing the Fissures name service."}]]
 PROGRAMS = {
         'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs",
                                 'summary': "nlloc.hyp",
@@ -200,16 +218,21 @@ def fetch_waveforms_metadata(options):
     """
     Sets up a client and fetches waveforms and metadata according to command
     line options.
-    Now also fetches data from arclink if arclink_id != "".
-    The arclink client is not returned, it is only useful for downloading
-    the data and not needed afterwards.
-    Notes:
+    Now also fetches data via arclink (fissures) if arclink_ids (fissures_ids)
+    != "".
+    The arclink (fissures) client is not returned, it is only useful for
+    downloading the data and not needed afterwards.
+    XXX Notes: XXX
      - the Arclink client is at the moment only able to fetch PAZ info for
        channel_ids without wildcards. Therefore a warning might be issued for
        wildcards in channel_id
      - there is a problem in the arclink client with duplicate traces in
        fetched streams. therefore at the moment it is necessary to use "-m
        overwrite" option.
+     - fetching PAZ via fissures is still utterly beta so these are deactivated
+       for magnitude estimation at the moment.
+       (see calculateStationMagnitudes())
+     - fetching PAZ with wildcards via fissures might also be problematic...
 
     :returns: (:class:`obspy.seishub.client.Client`,
                list(:class:`obspy.core.stream.Stream`s))
@@ -217,12 +240,12 @@ def fetch_waveforms_metadata(options):
     t = UTCDateTime(options.time)
     t = t + options.starttime_offset
     streams = []
+    sta_fetched = set()
     # Seishub
     print "Fetching waveforms and metadata from seishub:"
     baseurl = "http://" + options.servername + ":%i" % options.port
     client = Client(base_url=baseurl, user=options.user,
                     password=options.password, timeout=options.timeout)
-    sta_fetched = set()
     for id in options.ids.split(","):
         net, sta_wildcard, loc, cha = id.split(".")
         for sta in client.waveform.getStationIds(network_id=net):
@@ -240,9 +263,9 @@ def fetch_waveforms_metadata(options):
                 st = client.waveform.getWaveform(net, sta, loc, cha, t,
                         t + options.duration, apply_filter=True,
                         getPAZ=True, getCoordinates=True)
+                sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta)
                 sys.stdout.flush()
-                sta_fetched.add(net_sta)
             except Exception, e:
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
                 sys.stdout.flush()
@@ -262,6 +285,9 @@ def fetch_waveforms_metadata(options):
         for id in options.arclink_ids.split(","):
             net, sta, loc, cha = id.split(".")
             net_sta = "%s:%s" % (net, sta)
+            if net_sta in sta_fetched:
+                print "%s skipped! (Was already retrieved)" % net_sta
+                continue
             try:
                 sys.stdout.write("\r%s ..." % net_sta)
                 sys.stdout.flush()
@@ -270,15 +296,45 @@ def fetch_waveforms_metadata(options):
                                          start_datetime=t,
                                          end_datetime=t + options.duration,
                                          getPAZ=True, getCoordinates=True)
+                sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta)
                 sys.stdout.flush()
-                sta_fetched.add(net_sta)
             except Exception, e:
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
                 sys.stdout.flush()
                 continue
             for tr in st:
                 tr.stats['client'] = "arclink"
+            streams.append(st)
+    # Fissures
+    if options.fissures_ids:
+        print "Fetching waveforms and metadata via Fissures:"
+        fclient = FClient(network_dc=options.fissures_network_dc,
+                          seismogram_dc=options.fissures_seismogram_dc,
+                          name_service=options.fissures_name_service)
+        for id in options.fissures_ids.split(","):
+            net, sta, loc, cha = id.split(".")
+            net_sta = "%s:%s" % (net, sta)
+            if net_sta in sta_fetched:
+                print "%s skipped! (Was already retrieved)" % net_sta
+                continue
+            try:
+                sys.stdout.write("\r%s ..." % net_sta)
+                sys.stdout.flush()
+                st = fclient.getWaveform(network_id=net, station_id=sta,
+                                         location_id=loc, channel_id=cha,
+                                         start_datetime=t,
+                                         end_datetime=t + options.duration,
+                                         getPAZ=True, getCoordinates=True)
+                sta_fetched.add(net_sta)
+                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.flush()
+            except Exception, e:
+                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
+                sys.stdout.flush()
+                continue
+            for tr in st:
+                tr.stats['client'] = "fissures"
             streams.append(st)
     return (client, streams)
 
@@ -1669,6 +1725,7 @@ class ObsPyckGUI:
             return
         phase_type = self.widgets['comboboxPhaseType'].get_active_text()
         dict = self.dicts[self.stPt]
+        st = self.streams[self.stPt]
         
         #######################################################################
         # Start of key events related to picking                              #
@@ -1682,7 +1739,7 @@ class ObsPyckGUI:
                 return
             #We want to round from the picking location to
             #the time value of the nearest time sample:
-            samp_rate = self.streams[self.stPt][0].stats.sampling_rate
+            samp_rate = st[0].stats.sampling_rate
             pickSample = event.xdata * samp_rate
             pickSample = round(pickSample)
             pickSample = pickSample / samp_rate
@@ -1783,6 +1840,12 @@ class ObsPyckGUI:
                 return
 
         if event.key == KEYS['setMagMin']:
+            # XXX ignore on streams fetched via fissures at the moment
+            if st[0].stats.get('client') == "fissures":
+                err = "Warning: getPAZ for Fissures client not stable. " + \
+                      "Magnitude picking disabled!"
+                self._write_err(err)
+                return
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs[1:3]:
                 return
@@ -1824,6 +1887,12 @@ class ObsPyckGUI:
                 return
 
         if event.key == KEYS['setMagMax']:
+            # XXX ignore on streams fetched via fissures at the moment
+            if st[0].stats.get('client') == "fissures":
+                err = "Warning: getPAZ for Fissures client not stable. " + \
+                      "Magnitude picking disabled!"
+                self._write_err(err)
+                return
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs[1:3]:
                 return
@@ -4245,6 +4314,12 @@ def main():
             print "%s: \"%s\"" % (key, value)
         return
     check_keybinding_conflicts(KEYS)
+    # XXX wasn't working as expected
+    #if options.debug:
+    #    import IPython.Shell
+    #    IPython.Shell.IPShellEmbed(['-pdb'],
+    #            banner='Entering IPython.  Press Ctrl-D to exit.',
+    #            exit_msg='Leaving Interpreter, back to program.')()
     (client, streams) = fetch_waveforms_metadata(options)
     ObsPyckGUI(client, streams, options)
 
