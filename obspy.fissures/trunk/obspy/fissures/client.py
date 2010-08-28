@@ -22,6 +22,7 @@ from CosNaming import NameComponent, NamingContext
 from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream
 from obspy.mseed.libmseed import LibMSEED
+from obspy.fissures.util import poleZeroFilter2PAZ
 import numpy as np
 import sys
 
@@ -247,12 +248,24 @@ class Client(object):
         netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
         netFind = netDC._get_a_finder()
         net = netFind.retrieve_by_code("II")[0]
+        ########
         #for station in net.retrieve_stations():
         #    for channel in net.retrieve_for_station(station.id):
         #        for stage in net.retrieve_instrumentation(channel.id, channel.effective_time.start_time).the_response.stages:
         #            for filter in stage.filters:
-        #                print filter._v._tuple()
+        #                if str(filter._d) == "POLEZERO":
+        #                    print filter._d, filter._v.poles, filter._v.zeros
+        #                    print filter._v._tuple()
         #return
+        ########
+        ########
+        # get the first filter that has real information in it
+        for station in net.retrieve_stations():
+            for channel in net.retrieve_for_station(station.id):
+                for stage in net.retrieve_instrumentation(channel.id, channel.effective_time.start_time).the_response.stages:
+                    for filter in stage.filters:
+                        if str(filter._d) == "POLEZERO" and filter._v.poles and filter._v.zeros:
+                            return filter._v
         ########
         stations = net.retrieve_stations()
         channels = net.retrieve_for_station(stations[0].id)
@@ -260,14 +273,12 @@ class Client(object):
         resp = inst.the_response
         stage = resp.stages[0]
         filter = stage.filters[0]
+        if str(filter._d) != "POLEZERO":
+            raise Exception("Unexpected response type.")
+        filter = filter._v
         # XXX should work? but doesnt..?!
         # XXX seems this filter is empty, maybe try to get one with different network/station ids?!
-        # XXX paz = filter.myPoleZeroFilter()
-        # this looks like it:
-        print "Any PAZs in here? ", [filter._v._tuple() for filter in stage.filters for stage in inst.the_response.stages]
-        poles = filter._v.poles
-        zeros = filter._v.zeros
-        return resp
+        return poleZeroFilter2PAZ(filter)
 
     def _composeName(self, dc, interface):
         """
