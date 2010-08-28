@@ -505,6 +505,20 @@ class UTCDateTime(datetime.datetime):
             text += '.000000'
         return text.replace(' ', 'T') + 'Z'
 
+    def formatFissures(self):
+        """
+        Returns string representation for the Fissures protocol.
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.formatFissures()
+        '2008275T123035.0450Z'
+
+        :return: string
+        """
+        return "%04d%03dT%02d%02d%02d.%04dZ" % \
+                (self.year, self.julday, self.hour, self.minute, self.second,
+                 self.microsecond // 100)
+
     def formatArcLink(self):
         """
         Returns string representation for the ArcLink protocol.

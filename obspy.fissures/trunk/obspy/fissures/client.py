@@ -20,7 +20,7 @@ The method is based on omniORB CORBA requests.
 from omniORB import CORBA
 from CosNaming import NameComponent, NamingContext
 from idl import Fissures
-from obspy.core import Trace, UTCDateTime, Stream
+from obspy.core import Trace, UTCDateTime, Stream, AttribDict
 from obspy.mseed.libmseed import LibMSEED
 from obspy.fissures.util import poleZeroFilter2PAZ
 import math
@@ -236,6 +236,51 @@ class Client(object):
             for station in stations:
                 station_list.append(station.id.station_code)
         return station_list
+
+    def getCoordinates(self, network_id="GR", station_id="GRA1",
+                       datetime="2010-01-01"):
+        """
+        Get Coordinates of a station.
+        Still lacks a correct selection of metadata in time!
+
+        >>> from obspy.fissures import Client
+        >>> client = Client()
+        >>> client.getCoordinates(network_id="GR", station_id="GRA1",
+        ...                       datetime="2010-08-01")
+        AttribDict({'latitude': 49.691886901855469, 'elevation': 499.5, 'longitude': 11.221719741821289})
+        """
+        netDC = self.rootContext.resolve(self.net_name)
+        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+        netFind = netDC._get_a_finder()
+        net = netFind.retrieve_by_code(network_id)[0]
+        # filter by station_id and by datetime (comparing datetime strings)
+        datetime = UTCDateTime(datetime).formatFissures()
+        stations = [sta for sta in net.retrieve_stations() \
+                    if station_id == sta.id.station_code \
+                    and datetime > sta.effective_time.start_time.date_time \
+                    and datetime < sta.effective_time.end_time.date_time]
+        coords = AttribDict()
+        if len(stations) == 0:
+            return coords
+        elif len(stations) == 1:
+            sta = stations[0]
+        elif len(stations) > 1:
+            msg = "Server returned more than one set of coordinates."
+            raise Exception(msg)
+        loc = sta.my_location
+        coords['elevation'] = loc.elevation.value
+        unit = loc.elevation.the_units.name
+        if unit != "METER":
+            warnings.warn("Elevation not meter but %s." % unit)
+        type = loc.type
+        if str(type) != "GEOGRAPHIC":
+            msg = "Location types != \"GEOGRAPHIC\" are not yet " + \
+                  "implemented (type: \"%s\").\n" % type + \
+                  "Please report the code that resulted in this error!"
+            raise NotImplementedError(msg)
+        coords['latitude'] = loc.latitude
+        coords['longitude'] = loc.longitude
+        return coords
 
     def getPAZ(self, network_id="GR", station_id="GRA1"):
         """
