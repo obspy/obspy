@@ -1,21 +1,33 @@
 #!/usr/bin/env python
 
-import lxml.etree
-from lxml.etree import SubElement as Sub
-import optparse
-import numpy as np
-import fnmatch
-import shutil
-import sys
 import os
-import glob
+import sys
 import platform
+import shutil
 import subprocess
 import tempfile
+import glob
+import fnmatch
+import optparse
+
+import numpy as np
+import gtk
+import gobject #we use this only for redirecting StdOut and StdErr
+import gtk.glade
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.widgets import MultiCursor as MplMultiCursor
+from matplotlib.patches import Ellipse
+from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
+from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
+import lxml.etree
+from lxml.etree import SubElement as Sub
 
 #sys.path.append('/baysoft/obspy/misc/symlink')
 #os.chdir("/baysoft/obspyck/")
-from obspy.core import read, UTCDateTime
+from obspy.core import UTCDateTime
 from obspy.seishub import Client
 from obspy.arclink import Client as AClient
 from obspy.fissures import Client as FClient
@@ -23,24 +35,6 @@ from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
 from obspy.imaging.beachball import Beachball
-
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.widgets import MultiCursor as mplMultiCursor
-from matplotlib.patches import Ellipse
-from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
-
-#gtk
-import gtk
-import gobject #we use this only for redirecting StdOut and StdErr
-import gtk.glade
-try:
-    import pango #we use this only for changing the font in the textviews
-except:
-    pass
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
-from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
 
 
 COMMANDLINE_OPTIONS = [
@@ -648,7 +642,7 @@ def nofocus_recursive(widget):
 
 #Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
 #See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
-class MultiCursor(mplMultiCursor):
+class MultiCursor(MplMultiCursor):
     def __init__(self, canvas, axes, useblit=True, **lineprops):
         self.canvas = canvas
         self.axes = axes
@@ -922,12 +916,13 @@ class ObsPyckGUI:
         # change fonts of textviews and of comboboxStreamName
         # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
         try:
+            import pango
             fontDescription = pango.FontDescription("monospace condensed 9")
             widgets['textviewStdOut'].modify_font(fontDescription)
             widgets['textviewStdErr'].modify_font(fontDescription)
             fontDescription = pango.FontDescription("monospace bold 11")
             widgets['comboboxStreamName'].child.modify_font(fontDescription)
-        except NameError:
+        except ImportError:
             pass
 
         # Set up initial plot
