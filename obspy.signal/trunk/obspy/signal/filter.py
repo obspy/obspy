@@ -17,6 +17,7 @@ Various Seismogram Filtering Functions
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import warnings
 from numpy import array, where, fft
 from obspy.core.util import deprecated
 from scipy.fftpack import hilbert
@@ -42,7 +43,18 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :return: Filtered data.
     """
     fe = 0.5 * df
-    [b, a] = iirfilter(corners, [freqmin / fe, freqmax / fe], btype='band',
+    low = freqmin / fe
+    high = freqmax / fe
+    # raise for some bad scenarios
+    if high > 1:
+        high = 1.0
+        msg = "Selected high corner frequency is above Nyquist. " + \
+              "Setting Nyquist as high corner."
+        warnings.warn(msg)
+    if low > 1:
+        msg = "Selected low corner frequency is above Nyquist."
+        raise ValueError(msg)
+    [b, a] = iirfilter(corners, [low, high], btype='band',
                        ftype='butter', output='ba')
     if zerophase:
         firstpass = lfilter(b, a, data)
@@ -78,7 +90,18 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :return: Filtered data.
     """
     fe = 0.5 * df
-    [b, a] = iirfilter(corners, [freqmin / fe, freqmax / fe],
+    low = freqmin / fe
+    high = freqmax / fe
+    # raise for some bad scenarios
+    if high > 1:
+        high = 1.0
+        msg = "Selected high corner frequency is above Nyquist. " + \
+              "Setting Nyquist as high corner."
+        warnings.warn(msg)
+    if low > 1:
+        msg = "Selected low corner frequency is above Nyquist."
+        raise ValueError(msg)
+    [b, a] = iirfilter(corners, [low, high],
                        btype='bandstop', ftype='butter', output='ba')
     if zerophase:
         firstpass = lfilter(b, a, data)
@@ -113,7 +136,14 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     :return: Filtered data.
     """
     fe = 0.5 * df
-    [b, a] = iirfilter(corners, freq / fe, btype='lowpass', ftype='butter',
+    f = freq / fe
+    # raise for some bad scenarios
+    if f > 1:
+        f = 1.0
+        msg = "Selected corner frequency is above Nyquist. " + \
+              "Setting Nyquist as high corner."
+        warnings.warn(msg)
+    [b, a] = iirfilter(corners, f, btype='lowpass', ftype='butter',
                        output='ba')
     if zerophase:
         firstpass = lfilter(b, a, data)
@@ -147,7 +177,12 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     :return: Filtered data.
     """
     fe = 0.5 * df
-    [b, a] = iirfilter(corners, freq / fe, btype='highpass', ftype='butter',
+    f = freq / fe
+    # raise for some bad scenarios
+    if f > 1:
+        msg = "Selected corner frequency is above Nyquist."
+        raise ValueError(msg)
+    [b, a] = iirfilter(corners, f, btype='highpass', ftype='butter',
                        output='ba')
     if zerophase:
         firstpass = lfilter(b, a, data)
