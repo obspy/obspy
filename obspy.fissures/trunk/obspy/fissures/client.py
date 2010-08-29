@@ -175,7 +175,7 @@ class Client(object):
 
         # intercept 3 letter channels with component wildcard
         # recursive call, quick&dirty and slow, but OK for the moment
-        if len(channel_id) == 3 and channel_id.find("*") == 2:
+        if len(channel_id) == 3 and channel_id[2] in ["*", "?"]:
             st = Stream()
             for cha in (channel_id[:2] + comp for comp in ["Z", "N", "E"]):
                 # replace channel_id XXX a bit ugly:
@@ -243,19 +243,11 @@ class Client(object):
             # XXX: merging?
         st.trim(start_datetime, end_datetime)
         if getPAZ:
-            # XXX channel_id ignored at the moment!!!! XXX
-            if "*" in channel_id:
-                if len(channel_id) < 3:
-                    msg = "Cannot fetch PAZ with wildcarded band codes."
-                    raise FissuresException(msg)
-                channel_id = channel_id.replace("*", "Z")
-                msg = "Wildcard in channel_id, trying to look up Z " + \
-                      "components PAZ information"
-                warnings.warn(msg, FissuresWarning)
-            # XXX should add a check like metadata_check in seishub.client
-            data = self.getPAZ(network_id=network_id, station_id=station_id,
-                               datetime=start_datetime)
             for tr in st:
+                cha = tr.stats.channel
+                # XXX should add a check like metadata_check in seishub.client
+                data = self.getPAZ(network_id=network_id, station_id=station_id,
+                                   channel_id=cha, datetime=start_datetime)
                 tr.stats['paz'] = deepcopy(data)
         if getCoordinates:
             # XXX should add a check like metadata_check in seishub.client

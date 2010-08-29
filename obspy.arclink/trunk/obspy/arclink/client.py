@@ -304,24 +304,24 @@ class Client(Telnet):
         # trim stream
         stream.trim(start_datetime, end_datetime)
         # fetch metadata
-        if getPAZ or getCoordinates:
-            if "*" in channel_id:
-                if len(channel_id) < 3:
-                    msg = "Cannot fetch PAZ with wildcarded band codes."
-                    raise Exception(msg)
-                channel_id = channel_id.replace("*", "Z")
-                msg = "Wildcard in channel_id, trying to look up Z " + \
-                      "components PAZ information"
-                warnings.warn(msg)
-            data = self.getMetadata(network_id, station_id, location_id,
-                    channel_id, start_datetime, end_datetime, getPAZ=getPAZ,
-                    getCoordinates=getCoordinates)
-            if getPAZ:
-                for tr in stream:
-                    tr.stats['paz'] = deepcopy(data['paz'])
-            if getCoordinates:
-                for tr in stream:
-                    tr.stats['coordinates'] = deepcopy(data['coordinates'])
+        # fetching PAZ with wildcards: one call per channel
+        if getPAZ:
+            for tr in stream:
+                cha = tr.stats.channel
+                # XXX should add a check like metadata_check in seishub.client
+                metadata = self.getMetadata(network_id, station_id, location_id,
+                           cha, start_datetime, end_datetime, getPAZ=getPAZ,
+                           getCoordinates=getCoordinates)
+                tr.stats['paz'] = deepcopy(metadata['paz'])
+        if getCoordinates:
+            # reuse metadata fetched for paz or else fetch it
+            metadata = locals().get('metadata')
+            if not metadata:
+                metadata = self.getMetadata(network_id, station_id, location_id,
+                           channel_id, start_datetime, end_datetime, getPAZ=getPAZ,
+                           getCoordinates=getCoordinates)
+            for tr in stream:
+                tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
     def getMetadata(self, network_id, station_id, location_id, channel_id,
@@ -337,7 +337,7 @@ class Client(Telnet):
         :type location_id: String
         :param location_id: Location code, e.g. '01'.
         :type channel_id: String
-        :param channel_id: Channel code, e.g. 'EHE'.
+        :param channel_id: Channel code, e.g. 'EHE', "*" for component allowed
         :param start_datetime: start time as L{obspy.UTCDateTime} object.
         :param end_datetime: end time as L{obspy.UTCDateTime} object.
         :return: dictionary containing keys 'paz' and 'coordinates'
