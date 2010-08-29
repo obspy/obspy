@@ -126,4 +126,4 @@ class UniqueList(list):
         Unlocks the object.
         """
         # The base class needs to be called explicitly.
-        object.__setattr__(self, '_UniqueList__locked', False)
+        object.__setattr__(self, '__locked', False)
