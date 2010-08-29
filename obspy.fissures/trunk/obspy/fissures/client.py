@@ -333,11 +333,21 @@ class Client(object):
         coords['longitude'] = loc.longitude
         return coords
 
-    def getPAZ(self, network_id="GR", station_id="GRA1", channel_id="BHZ",
-               datetime="2010-08-01"):
+    def getPAZ(self, network_id, station_id, channel_id, datetime):
         """
         Get Poles&Zeros, gain and sensitivity of instrument for given ids and
         datetime.
+
+        >>> from obspy.fissures import Client
+        >>> client = Client()
+        >>> client.getPAZ("GE", "APE", "BHZ", "2010-08-01") #doctest: +NORMALIZE_WHITESPACE
+        AttribDict({'zeros': [0j, 0j], 'sensitivity': 588000000.0,
+                    'poles': [(-0.037004001438617706+0.037016000598669052j),
+                              (-0.037004001438617706-0.037016000598669052j),
+                              (-251.33000183105469+0j),
+                              (-131.03999328613281-467.29000854492188j),
+                              (-131.03999328613281+467.29000854492188j)],
+                    'gain': 60077000.0})
         
         Useful links:
         http://www.seis.sc.edu/software/simple/
@@ -359,8 +369,11 @@ class Client(object):
             raise FissuresException(msg)
         net = self.netFind.retrieve_by_code(network_id)
         net = use_first_and_raise_or_warn(net, "network")
+        datetime = UTCDateTime(datetime).formatFissures()
         sta = [sta for sta in net.retrieve_stations() \
-               if sta.id.station_code == station_id]
+               if sta.id.station_code == station_id \
+               and datetime > sta.effective_time.start_time.date_time \
+               and datetime < sta.effective_time.end_time.date_time]
         sta = use_first_and_raise_or_warn(sta, "station")
         cha = [cha for cha in net.retrieve_for_station(sta.id) \
                if cha.id.channel_code == channel_id]
@@ -369,10 +382,6 @@ class Client(object):
         inst = net.retrieve_instrumentation(cha.id, datetime)
         resp = inst.the_response
         stage = use_first_and_raise_or_warn(resp.stages, "response stage")
-        # XXX if str(stage.type) == "ANALOG":
-        # XXX     multFac = 2 * math.pi
-        # XXX else:
-        # XXX     multFac = 1.0
         filters = [filter._v for filter in stage.filters \
                    if str(filter._d) == "POLEZERO"]
         filter = use_first_and_raise_or_warn(filters, "polezerofilter")
@@ -382,17 +391,6 @@ class Client(object):
         norm_fac = norm.ao_normalization_factor
         paz['gain'] = norm_fac
         paz['sensitivity'] = resp.the_sensitivity.sensitivity_factor
-        #fs = response.getSensitivity().getFrequency();
-        #sd *= Math.pow(2 * Math.PI * fs, gamma);
-        #A0 = stage.getNormalization().getAoNormalizationFactor();
-        #fn = stage.getNormalization().getNormalizationFreq();
-        #A0 = A0 / Math.pow(2 * Math.PI * fn, gamma);
-        #if str(stage.type) == "ANALOG":
-            #A0 *= Math.pow(2 * Math.PI, pz.getPoles().length - pz.getZeros().length);
-        #if(poles.length == 0 && zeros.length == 0)
-        #    constant = (float)(sd * A0);
-        #else
-        #    constant = (float)(sd * calc_A0(poles, zeros, fs));
         return paz
 
 
