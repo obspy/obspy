@@ -333,40 +333,68 @@ class Client(object):
         coords['longitude'] = loc.longitude
         return coords
 
-    def getPAZ(self, network_id="GR", station_id="GRA1",
+    def getPAZ(self, network_id="GR", station_id="GRA1", channel_id="BHZ",
                datetime="2010-08-01"):
         """
-        EXPERIMENTAL!
-        Units and scalings not yet correct!
+        Get Poles&Zeros, gain and sensitivity of instrument for given ids and
+        datetime.
         
-        see:
+        Useful links:
         http://www.seis.sc.edu/software/simple/
         http://www.seis.sc.edu/downloads/simple/simple-1.0.tar.gz
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
+
+        :param network_id: Network id, 2 char; e.g. "GE"
+        :param station_id: Station id, 5 char; e.g. "APE"
+        :type channel_id: String, 3 char
+        :param channel_id: Channel id, e.g. "SHZ", no wildcards.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+                compatible String
+        :param datetime: datetime of response information
+        :return: :class:`~obspy.core.util.AttribDict`
         """
+        if "*" in channel_id:
+            msg = "Wildcards not allowed in channel_id"
+            raise FissuresException(msg)
         net = self.netFind.retrieve_by_code(network_id)
         net = use_first_and_raise_or_warn(net, "network")
         sta = [sta for sta in net.retrieve_stations() \
                if sta.id.station_code == station_id]
         sta = use_first_and_raise_or_warn(sta, "station")
-        channels = net.retrieve_for_station(sta.id)
-        cha = channels[0] # XXX only on first channel!! XXX
-        inst = net.retrieve_instrumentation(cha.id,
-                                            cha.effective_time.start_time)
+        cha = [cha for cha in net.retrieve_for_station(sta.id) \
+               if cha.id.channel_code == channel_id]
+        cha = use_first_and_raise_or_warn(cha, "channel")
+        datetime = utcdatetime2Fissures(datetime)
+        inst = net.retrieve_instrumentation(cha.id, datetime)
         resp = inst.the_response
-        # sensitivity = resp.the_sensitivity
-        stage = resp.stages[0]
+        stage = use_first_and_raise_or_warn(resp.stages, "response stage")
         # XXX if str(stage.type) == "ANALOG":
         # XXX     multFac = 2 * math.pi
         # XXX else:
         # XXX     multFac = 1.0
-        filter = stage.filters[0]
-        if str(filter._d) != "POLEZERO":
-            raise FissuresException("Unexpected response type.")
-        filter = filter._v
-        warnings.warn("EXPERIMENTAL")
-        return poleZeroFilter2PAZ(filter)
+        filters = [filter._v for filter in stage.filters \
+                   if str(filter._d) == "POLEZERO"]
+        filter = use_first_and_raise_or_warn(filters, "polezerofilter")
+        paz = poleZeroFilter2PAZ(filter)
+        norm = use_first_and_raise_or_warn(stage.the_normalization,
+                                           "normalization")
+        norm_fac = norm.ao_normalization_factor
+        paz['gain'] = norm_fac
+        paz['sensitivity'] = resp.the_sensitivity.sensitivity_factor
+        #fs = response.getSensitivity().getFrequency();
+        #sd *= Math.pow(2 * Math.PI * fs, gamma);
+        #A0 = stage.getNormalization().getAoNormalizationFactor();
+        #fn = stage.getNormalization().getNormalizationFreq();
+        #A0 = A0 / Math.pow(2 * Math.PI * fn, gamma);
+        #if str(stage.type) == "ANALOG":
+            #A0 *= Math.pow(2 * Math.PI, pz.getPoles().length - pz.getZeros().length);
+        #if(poles.length == 0 && zeros.length == 0)
+        #    constant = (float)(sd * A0);
+        #else
+        #    constant = (float)(sd * calc_A0(poles, zeros, fs));
+        return paz
+
 
     def _composeName(self, dc, interface):
         """
