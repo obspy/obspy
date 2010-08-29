@@ -80,7 +80,9 @@ COMMANDLINE_OPTIONS = [
         [["--pluginpath"], {'dest': "pluginpath",
                 'default': "/baysoft/obspyck/",
                 'help': "Path to local directory containing the folders with "
-                "the files for the external programs"}],
+                "the files for the external programs. Large files/folders "
+                "should only be linked in this directory as the contents are "
+                "copied to a temporary directory (links are preserved)."}],
         [["--starttime-offset"], {'type': "float", 'dest': "starttime_offset",
                 'default': 0.0, 'help': "Offset to add to specified starttime "
                 "in seconds. Thus a time from an automatic picker can be used "
@@ -218,21 +220,14 @@ def fetch_waveforms_metadata(options):
     """
     Sets up a client and fetches waveforms and metadata according to command
     line options.
-    Now also fetches data via arclink (fissures) if arclink_ids (fissures_ids)
-    != "".
+    Now also fetches data via arclink (fissures) if --arclink_ids
+    (--fissures-ids) is used.
     The arclink (fissures) client is not returned, it is only useful for
     downloading the data and not needed afterwards.
     XXX Notes: XXX
-     - the Arclink client is at the moment only able to fetch PAZ info for
-       channel_ids without wildcards. Therefore a warning might be issued for
-       wildcards in channel_id
      - there is a problem in the arclink client with duplicate traces in
-       fetched streams. therefore at the moment it is necessary to use "-m
-       overwrite" option.
-     - fetching PAZ via fissures is still utterly beta so these are deactivated
-       for magnitude estimation at the moment.
-       (see calculateStationMagnitudes())
-     - fetching PAZ with wildcards via fissures might also be problematic...
+       fetched streams. therefore at the moment it might be necessary to use
+       "-m overwrite" option.
 
     :returns: (:class:`obspy.seishub.client.Client`,
                list(:class:`obspy.core.stream.Stream`s))
@@ -242,7 +237,9 @@ def fetch_waveforms_metadata(options):
     streams = []
     sta_fetched = set()
     # Seishub
+    print "=" * 80
     print "Fetching waveforms and metadata from seishub:"
+    print "-" * 80
     baseurl = "http://" + options.servername + ":%i" % options.port
     client = Client(base_url=baseurl, user=options.user,
                     password=options.password, timeout=options.timeout)
@@ -275,7 +272,9 @@ def fetch_waveforms_metadata(options):
             streams.append(st)
     # ArcLink
     if options.arclink_ids:
+        print "=" * 80
         print "Fetching waveforms and metadata via ArcLink:"
+        print "-" * 80
         aclient = AClient(host=options.arclink_servername,
                           port=options.arclink_port,
                           timeout=options.arclink_timeout,
@@ -308,7 +307,9 @@ def fetch_waveforms_metadata(options):
             streams.append(st)
     # Fissures
     if options.fissures_ids:
+        print "=" * 80
         print "Fetching waveforms and metadata via Fissures:"
+        print "-" * 80
         fclient = FClient(network_dc=options.fissures_network_dc,
                           seismogram_dc=options.fissures_seismogram_dc,
                           name_service=options.fissures_name_service)
@@ -336,6 +337,7 @@ def fetch_waveforms_metadata(options):
             for tr in st:
                 tr.stats['client'] = "fissures"
             streams.append(st)
+    print "=" * 80
     return (client, streams)
 
 def merge_check_and_cleanup_streams(streams, options):
@@ -814,21 +816,18 @@ class ObsPyckGUI:
             except:
                 self.username = "unknown"
         # setup server information
-        server = {}
-        self.server = server
-        server['Name'] = options.servername # "teide"
-        server['Port'] = options.port # 8080
-        server['Server'] = server['Name'] + ":%i" % server['Port']
+        self.server = {}
+        server = self.server
+        server['Server'] = "%s:%i" % (options.servername, options.port)
         server['BaseUrl'] = "http://" + server['Server']
         server['User'] = options.user # "obspyck"
-        server['Password'] = options.password # "obspyck"
         
         (warn_msg, merge_msg, streams) = \
                 merge_check_and_cleanup_streams(streams, options)
         # if it's not empty show the merge info message now
         if merge_msg:
             print merge_msg
-        # exit if no streams are left after removing everthing not suited.
+        # exit if no streams are left after removing everything not suited.
         if not streams:
             err = "No streams left to work with after removing bad streams."
             raise Exception(err)
@@ -964,7 +963,8 @@ class ObsPyckGUI:
         # first remove a temporary item set at startup
         widgets['comboboxStreamName'].remove_text(0)
         for st in streams:
-            widgets['comboboxStreamName'].append_text(st[0].stats['station'])
+            net_sta = ":".join([st[0].stats['network'], st[0].stats['station']])
+            widgets['comboboxStreamName'].append_text(net_sta)
         widgets['comboboxStreamName'].set_active(0)
         
         # correct some focus issues and start the GTK+ main loop
@@ -1415,6 +1415,7 @@ class ObsPyckGUI:
         w = self.widgets
         type = w['comboboxFilterType'].get_active_text().lower()
         options = {}
+        options['corners'] = 1
         options['zerophase'] = w['checkbuttonZeroPhase'].get_active()
         if type in ["bandpass", "bandstop"]:
             options['freqmin'] = w['spinbuttonHighpass'].get_value()
