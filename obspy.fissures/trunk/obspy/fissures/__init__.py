@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.fissres - DHI/Fissures Request Client
+obspy.fissures - DHI/Fissures Request Client
 ===========================================
 See: http://www.iris.edu/dhi/
 
