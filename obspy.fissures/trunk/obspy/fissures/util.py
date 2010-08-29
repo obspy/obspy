@@ -9,9 +9,18 @@ Various additional utilities for obspy.fissures
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import numpy as np
-from obspy.core import AttribDict
+from obspy.core import AttribDict, UTCDateTime
 import obspy.fissures.idl
+from obspy.fissures.idl import Fissures
 import warnings
+
+
+class FissuresException(Exception):
+    pass
+
+
+class FissuresWarning(Warning):
+    pass
 
 
 def poleZeroFilter2PAZ(filter):
@@ -41,6 +50,33 @@ def poleZeroFilter2PAZ(filter):
               "conversion."
         warnings.warn(msg)
     return paz
+
+
+def utcdatetime2Fissures(utc_datetime):
+    """
+    Convert datetime instance to fissures time object
+    
+    :type utc_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param utc_datetime: Time
+    :return: Time as :class:`~obspy.fissures.idl.Fissures.Time` object
+    """
+    t = str(UTCDateTime(utc_datetime))[:-3] + 'Z'
+    return Fissures.Time(t, -1)
+
+
+def use_first_and_raise_or_warn(list, type_str):
+    """
+    Chooses first element of given list.
+    If list is empty raises a FissuresException, if list has more than one
+    element issues a FissuresWarning with the given type_str.
+    """
+    if not list:
+        raise FissuresException("No data for %s." % type_str)
+    elif len(list) > 1:
+        msg = "Received more than one %s object from server. " % type_str + \
+              "Using first."
+        warnings.warn(msg, FissuresWarning)
+    return list[0]
 
 
 if __name__ == '__main__':

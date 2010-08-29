@@ -22,7 +22,8 @@ from CosNaming import NameComponent, NamingContext
 from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream, AttribDict
 from obspy.mseed.libmseed import LibMSEED
-from obspy.fissures.util import poleZeroFilter2PAZ
+from obspy.fissures.util import FissuresException, FissuresWarning, \
+        poleZeroFilter2PAZ, utcdatetime2Fissures, use_first_and_raise_or_warn
 import math
 import numpy as np
 import sys
@@ -75,7 +76,6 @@ class Client(object):
         :param debug:  Enables verbose output of the connection handling
                 (default is False).
         """
-        #
         # Some object wide variables
         if sys.byteorder == 'little':
             self.byteorder = True
@@ -89,8 +89,7 @@ class Client(object):
         # for available options
         args = ["-ORBgiopMaxMsgSize", "2097152",
                 "-ORBInitRef",
-                "NameService=corbaloc:iiop:" + name_service,
-        ]
+                "NameService=corbaloc:iiop:" + name_service]
         if debug:
             args = ["-ORBtraceLevel", "40"] + args
         orb = CORBA.ORB_init(args, CORBA.ORB_ID)
@@ -101,13 +100,31 @@ class Client(object):
             self.rootContext = self.obj._narrow(NamingContext)
         except:
             msg = "Could not connect to " + name_service
-            raise Exception(msg)
+            raise FissuresException(msg)
         #
-        # network cosnaming
+        # network and seismogram cosnaming
         self.net_name = self._composeName(network_dc, 'NetworkDC')
-        #
-        # seismogram cosnaming
         self.seis_name = self._composeName(seismogram_dc, 'DataCenter')
+        # resolve network finder
+        try:
+            netDC = self.rootContext.resolve(self.net_name)
+            netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
+            netFind = netDC._get_a_finder()
+            self.netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
+        except:
+            msg = "Initialization of NetworkFinder failed."
+            warnings.warn(msg, FissuresWarning)
+        # resolve seismogram DataCenter
+        try:
+            seisDC = self.rootContext.resolve(self.seis_name)
+            self.seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
+        except:
+            msg = "Initialization of seismogram DataCenter failed."
+            warnings.warn(msg, FissuresWarning)
+        # if both failed, client instance is useless, so raise
+        if not self.netFind and not self.seisDC:
+            msg = "Neither NetworkFinder nor DataCenter could be initialized."
+            raise FissuresException(msg)
 
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
@@ -133,7 +150,7 @@ class Client(object):
         :param network_id: Network id, 2 char; e.g. "GE"
         :param station_id: Station id, 5 char; e.g. "APE"
         :param location_id: Location id, 2 char; e.g. "  "
-        :tpye channel_id: String, 3 char
+        :type channel_id: String, 3 char
         :param channel_id: Channel id, e.g. "SHZ". "*" as third letter is
                 supported and requests "Z", "N", "E" components.
         :param start_datetime: UTCDateTime object of starttime
@@ -158,7 +175,7 @@ class Client(object):
 
         # intercept 3 letter channels with component wildcard
         # recursive call, quick&dirty and slow, but OK for the moment
-        if len(channel_id) == 3 and channel_id[2] == "*":
+        if len(channel_id) == 3 and channel_id.find("*") == 2:
             st = Stream()
             for cha in (channel_id[:2] + comp for comp in ["Z", "N", "E"]):
                 # replace channel_id XXX a bit ugly:
@@ -166,6 +183,7 @@ class Client(object):
                     kwargs.pop('channel_id')
                 st += self.getWaveform(channel_id=cha, **kwargs)
             return st
+
         # get channel object
         channels = self._getChannelObj(network_id, station_id, location_id,
                 channel_id)
@@ -184,7 +202,7 @@ class Client(object):
             # calculate sampling rate
             unit = str(sei.sampling_info.interval.the_units.the_unit_base)
             if unit != 'SECOND':
-                raise Exception("Wrong unit!")
+                raise FissuresException("Wrong unit!")
             value = sei.sampling_info.interval.value
             power = sei.sampling_info.interval.the_units.power
             multi_factor = sei.sampling_info.interval.the_units.multi_factor
@@ -229,11 +247,11 @@ class Client(object):
             if "*" in channel_id:
                 if len(channel_id) < 3:
                     msg = "Cannot fetch PAZ with wildcarded band codes."
-                    raise Exception(msg)
+                    raise FissuresException(msg)
                 channel_id = channel_id.replace("*", "Z")
                 msg = "Wildcard in channel_id, trying to look up Z " + \
                       "components PAZ information"
-                warnings.warn(msg)
+                warnings.warn(msg, FissuresWarning)
             # XXX should add a check like metadata_check in seishub.client
             data = self.getPAZ(network_id=network_id, station_id=station_id,
                                datetime=start_datetime)
@@ -255,13 +273,9 @@ class Client(object):
 
         :note: This takes a very long time.
         """
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
         # Retrieve all available networks
         net_list = []
-        networks = netFind.retrieve_all()
+        networks = self.netFind.retrieve_all()
         for network in networks:
             network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
             attributes = network.get_attributes()
@@ -277,15 +291,11 @@ class Client(object):
 
         :param network_id: Limit stations to network_id
         """
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
         # Retrieve network informations
         if network_id == None:
-            networks = netFind.retrieve_all()
+            networks = self.netFind.retrieve_all()
         else:
-            networks = netFind.retrieve_by_code(network_id)
+            networks = self.netFind.retrieve_by_code(network_id)
         station_list = []
         for network in networks:
             network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
@@ -335,12 +345,11 @@ class Client(object):
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
         """
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        net = netFind.retrieve_by_code(network_id)[0]
+        net = self.netFind.retrieve_by_code(network_id)
+        net = use_first_and_raise_or_warn(net, "network")
         sta = [sta for sta in net.retrieve_stations() \
-               if sta.id.station_code == station_id][0]
+               if sta.id.station_code == station_id]
+        sta = use_first_and_raise_or_warn(sta, "station")
         channels = net.retrieve_for_station(sta.id)
         cha = channels[0] # XXX only on first channel!! XXX
         inst = net.retrieve_instrumentation(cha.id,
@@ -354,7 +363,7 @@ class Client(object):
         # XXX     multFac = 1.0
         filter = stage.filters[0]
         if str(filter._d) != "POLEZERO":
-            raise Exception("Unexpected response type.")
+            raise FissuresException("Unexpected response type.")
         filter = filter._v
         warnings.warn("EXPERIMENTAL")
         return poleZeroFilter2PAZ(filter)
@@ -390,17 +399,6 @@ class Client(object):
         return dns
 
 
-    def _dateTime2Fissures(self, utc_datetime):
-        """
-        Convert datetime instance to fissures time object
-        
-        :param utc_datetime: UTCDateTime instance
-        :return: Fissures time object
-        """
-        t = str(utc_datetime)[:-3] + 'Z'
-        return Fissures.Time(t, -1)
-
-
     def _getChannelObj(self, network_id, station_id, location_id, channel_id):
         """
         Return Fissures channel object.
@@ -413,22 +411,18 @@ class Client(object):
         :param channel_id: Channel id, 3 char; e.g. "SHZ"
         :return: Fissures channel object
         """
-        # resolve network finder
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        netFind = netFind._narrow(Fissures.IfNetwork.NetworkFinder)
         # retrieve a network
-        network = netFind.retrieve_by_code(network_id)[0]
-        network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
+        net = self.netFind.retrieve_by_code(network_id)
+        net = use_first_and_raise_or_warn(net, "network")
+        net = net._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
         # retrieve channels from network
         if location_id.strip() == "":
             # must be two empty spaces
             location_id = "  "
         # Retrieve Channel object
         # XXX: wildcards not yet implemented
-        return network.retrieve_channels_by_code(station_id, location_id,
-                                                 channel_id)
+        return net.retrieve_channels_by_code(station_id, location_id,
+                                             channel_id)
 
     def _getSeisObj(self, channel_obj, start_datetime, end_datetime):
         """
@@ -442,19 +436,14 @@ class Client(object):
         :param end_datetime: UTCDateTime object of endtime
         :return: Fissures seismogram object
         """
-        seisDC = self.rootContext.resolve(self.seis_name)
-        seisDC = seisDC._narrow(Fissures.IfSeismogramDC.DataCenter)
-        #
         # Transform datetime into correct format
-        t1 = self._dateTime2Fissures(start_datetime)
-        t2 = self._dateTime2Fissures(end_datetime)
-        #
+        t1 = utcdatetime2Fissures(start_datetime)
+        t2 = utcdatetime2Fissures(end_datetime)
         # Form request for all channels
         request = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) \
-                for c in channel_obj]
-        #
+                   for c in channel_obj]
         # Retrieve Seismogram object
-        return seisDC.retrieve_seismograms(request)
+        return self.seisDC.retrieve_seismograms(request)
 
     def _getStationObj(self, network_id, station_id, datetime):
         """
@@ -469,22 +458,15 @@ class Client(object):
         :param datetime: Datetime to select station
         :return: Fissures channel object
         """
-        netDC = self.rootContext.resolve(self.net_name)
-        netDC = netDC._narrow(Fissures.IfNetwork.NetworkDC)
-        netFind = netDC._get_a_finder()
-        net = netFind.retrieve_by_code(network_id)[0]
+        net = self.netFind.retrieve_by_code(network_id)
+        net = use_first_and_raise_or_warn(net, "network")
         # filter by station_id and by datetime (comparing datetime strings)
         datetime = UTCDateTime(datetime).formatFissures()
         stations = [sta for sta in net.retrieve_stations() \
                     if station_id == sta.id.station_code \
                     and datetime > sta.effective_time.start_time.date_time \
                     and datetime < sta.effective_time.end_time.date_time]
-        if len(stations) == 0:
-            raise Exception("No data.")
-        elif len(stations) > 1:
-            msg = "Server returned ambiguous data."
-            raise Exception(msg)
-        return stations[0]
+        return use_first_and_raise_or_warn(stations, "station")
 
 
 if __name__ == '__main__':
