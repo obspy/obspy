@@ -1840,12 +1840,6 @@ class ObsPyckGUI:
                 return
 
         if event.key == KEYS['setMagMin']:
-            # XXX ignore on streams fetched via fissures at the moment
-            if st[0].stats.get('client') == "fissures":
-                err = "Warning: getPAZ for Fissures client not stable. " + \
-                      "Magnitude picking disabled!"
-                self._write_err(err)
-                return
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs[1:3]:
                 return
@@ -1887,12 +1881,6 @@ class ObsPyckGUI:
                 return
 
         if event.key == KEYS['setMagMax']:
-            # XXX ignore on streams fetched via fissures at the moment
-            if st[0].stats.get('client') == "fissures":
-                err = "Warning: getPAZ for Fissures client not stable. " + \
-                      "Magnitude picking disabled!"
-                self._write_err(err)
-                return
             # some keypress events only make sense inside our matplotlib axes
             if not event.inaxes in self.axs[1:3]:
                 return
