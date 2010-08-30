@@ -127,3 +127,19 @@ class UniqueList(list):
         """
         # The base class needs to be called explicitly.
         object.__setattr__(self, '__locked', False)
+
+def str_or_None(object):
+    """
+    Returns str(object) or None if object is None.
+    This is slighty different from str() which returns "None" in this case.
+
+    This could also be done in one line directly in the code via...
+    (object is None) and None or str(object)
+    ...but this would maybe deteriorate readability.
+
+    We use it in the code in a similar manner as dict.get() which returns a
+    value or None.
+    """
+    if object is None:
+        return None
+    return str(object)

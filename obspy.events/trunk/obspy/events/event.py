@@ -3,7 +3,7 @@
 import numpy as np
 import lxml.etree
 from lxml.etree import SubElement as Sub
-from util import UniqueList, raise_locked_warning
+from util import UniqueList, raise_locked_warning, str_or_None
 from obspy.core import AttribDict, UTCDateTime
 from pick import Pick
 
@@ -346,53 +346,32 @@ class Event(object):
         for pick in self.picks:
             p = Sub(xml, "pick")
             wave = Sub(p, "waveform")
-            wave.set("networkCode", pick.network) 
-            wave.set("stationCode", pick.station) 
-            wave.set("channelCode", pick.channel) 
-            wave.set("locationCode", pick.location) 
+            wave.set("networkCode", pick.get("network"))
+            wave.set("stationCode", pick.get("station"))
+            wave.set("channelCode", pick.get("channel"))
+            wave.set("locationCode", pick.get("location"))
             time = Sub(p, "time")
-            Sub(time, "value").text = pick.time
-            Sub(time, "uncertainty").text = pick.uncertainty
-            Sub(p, "phaseHint").text = pick.phasehint
-            phase_compu = ""
-            if pick.get('onset'):
-                Sub(p, "onset").text = pick.onset
-                if pick.onset == "impulsive":
-                    phase_compu += "I"
-                elif pick.onset == "emergent":
-                    phase_compu += "E"
-            else:
-                Sub(p, "onset")
-                phase_compu += "?"
-            phase_compu += pick.phasehint
-            if pick.get('polarity'):
-                Sub(p, "polarity").text = pick.polarity
-                if pick.polarity == 'up':
-                    phase_compu += "U"
-                elif pick.polarity == 'poorup':
-                    phase_compu += "+"
-                elif pick.polarity == 'down':
-                    phase_compu += "D"
-                elif pick.polarity == 'poordown':
-                    phase_compu += "-"
-            else:
-                Sub(p, "polarity")
-                phase_compu += "?"
-            # we can come across 0 here so caution, explicitly compare with None!
-            if 'weight' in pick and pick['weight'] != None:
-                Sub(p, "weight").text = '%i' % pick.weight
-                phase_compu += "%1i" % pick.weight
-            else:
-                Sub(p, "weight")
-                phase_compu += "?"
+            Sub(time, "value").text = pick.get("time")
+            Sub(time, "uncertainty").text = pick.get("uncertainty")
+            Sub(p, "phaseHint").text = pick.get("phasehint")
+            Sub(p, "onset").text = pick.get("onset")
+            Sub(p, "polarity").text = pick.get("polarity")
+            weight = pick.get("weight")
+            Sub(p, "weight").text = str_or_None(weight)
             Sub(Sub(p, "min_amp"), "value") #XXX what is min_amp???
-            
+            # XXX the mapping for phase_compu should go to pick in the fashion
+            # XXX of stats.endtime as a derived attribute...
+            onset_map = {'impulsive': "I", 'emergent': "E"}
+            onset_map['implusive'] = "I" # XXX old xmls have typo
+            pol_map = {'up': "U", 'poorup': "+", 'down': "D", 'poordown': "-"}
+            phase_compu = onset_map.get(pick.get("onset"), "?")
+            phase_compu += pick.phasehint
+            phase_compu += pol_map.get(pick.get("polarity"), "?")
+            phase_compu += (weight is None) and "?" or str(weight)
             Sub(p, "phase_compu").text = phase_compu
-            for key in ["phase_res", 'phase_weight', "phase_delay", "azimuth", "incident", "epi_dist", "hyp_dist"]:
-                if pick.get(key):
-                    Sub(Sub(p, key), "value").text = str(pick[key])
-                else:
-                    Sub(Sub(p, key), "value")
+            for key in ["phase_res", 'phase_weight', "phase_delay", "azimuth",
+                        "incident", "epi_dist", "hyp_dist"]:
+                Sub(Sub(p, key), "value").text = str_or_None(pick.get(key))
 
         #origin output
         o = self.origin
