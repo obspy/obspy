@@ -3,6 +3,7 @@
 import os
 import sys
 import platform
+import copy
 import shutil
 import subprocess
 import tempfile
@@ -194,7 +195,7 @@ def check_keybinding_conflicts(keys):
     """
     for ignored_key_list in [['setMagMin', 'setMagMax', 'delMagMinMax'],
                              ['setPick', 'setPickError', 'delPick']]:
-        tmp_keys = keys.copy()
+        tmp_keys = copy.deepcopy(keys)
         tmp_keys2 = {}
         for ignored_key in ignored_key_list:
             tmp_keys.pop(ignored_key)
@@ -1749,6 +1750,8 @@ class ObsPyckGUI:
                 return
             if phase_type in SEISMIC_PHASES:
                 dict[phase_type] = pickSample
+                if phase_type == "S":
+                    dict['Saxind'] = self.axs.index(event.inaxes)
                 depending_keys = (phase_type + k for k in ['', 'synth'])
                 for key in depending_keys:
                     self.updateLine(key)
@@ -3125,10 +3128,12 @@ class ObsPyckGUI:
             return
         #toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
-        self.axEventMap = self.fig.add_subplot(111)
+        #self.axEventMap = self.fig.add_subplot(111)
+        bbox = matplotlib.transforms.Bbox.from_extents(0.08, 0.08, 0.92, 0.92)
+        self.axEventMap = self.fig.add_axes(bbox, aspect='equal', adjustable='datalim')
         axEM = self.axEventMap
-        axEM.set_aspect('equal', adjustable="datalim")
-        self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
+        #axEM.set_aspect('equal', adjustable="datalim")
+        #self.fig.subplots_adjust(bottom=0.07, top=0.95, left=0.07, right=0.98)
         axEM.scatter([dO['Longitude']], [dO['Latitude']], 30,
                                 color='red', marker='o')
         errLon, errLat = utlLonLat(dO['Longitude'], dO['Latitude'],
@@ -3165,7 +3170,7 @@ class ObsPyckGUI:
         self.scatterMagIndices = []
         self.scatterMagLon = []
         self.scatterMagLat = []
-        for dict in self.dicts:
+        for i, dict in enumerate(self.dicts):
             # determine which stations are used in location
             if 'Pres' in dict or 'Sres' in dict:
                 stationColor = 'black'
