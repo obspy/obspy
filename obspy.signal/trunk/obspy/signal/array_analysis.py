@@ -824,9 +824,9 @@ def get_geometry(stream, coordsys='lonlat', verbose=False):
             geometry[i][1] = tr.stats.coordinates.y
             geometry[i][2] = tr.stats.coordinates.elevation
 
-        geometry[:,0] -= geometry[:,0].mean()
-        geometry[:,1] -= geometry[:,1].mean()
-        geometry[:,2] -= geometry[:,2].mean()
+        geometry[:,0] -= geometry[:-1,0].mean()
+        geometry[:,1] -= geometry[:-1,1].mean()
+        geometry[:,2] -= geometry[:-1,2].mean()
         geometry[nstat][0] = 0.0
         geometry[nstat][1] = 0.0
         geometry[nstat][2] = 0.0
