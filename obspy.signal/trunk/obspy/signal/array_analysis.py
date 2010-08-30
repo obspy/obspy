@@ -696,7 +696,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
             res.append(np.array([newstart.timestamp, power, abspow, azimut, slow]))
             if verbose:
                 print newstart, (newstart + (nsamp/df)), res[-1][1:]
-        if (newstart + (nsamp / df)) > etime:
+        if (newstart + (nsamp + nstep) / df) > etime:
             eotr = False
         offset += nstep
 
