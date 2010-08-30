@@ -26,8 +26,8 @@ class SonicTestCase(unittest.TestCase):
         
         geometry /= 100      # in km
         slowness = 1.3       # in s/km
-        baz = 20.0           # 0.0 > source in x direction
-        baz *= np.pi / 180.
+        baz_degree = 20.0           # 0.0 > source in x direction
+        baz = baz_degree * np.pi / 180.
         df = 100             # samplerate
         # SNR = 100.         # signal to noise ratio
         amp = .00001         # amplitude of coherent wave
@@ -60,8 +60,7 @@ class SonicTestCase(unittest.TestCase):
 
         stime = UTCDateTime(1970, 1, 1, 0, 0) 
         etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-            (length -  int(abs(min_dt)) - int(abs(max_dt))) / df
-            # typecast because of problems with UTCDateTime and Mac with int64
+                (length -  abs(min_dt) - abs(max_dt)) / df
 
         win_len = 2.
         step_frac = 0.2
@@ -78,14 +77,14 @@ class SonicTestCase(unittest.TestCase):
         semb_thres = -1e99
         vel_thres = -1e99
         
-        # print dt
-
-        # print "executing sonic"
+        # out returns: rel. power, abs. power, azimuth, slowness
         out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
                     semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
                     prewhiten, coordsys='xy', verbose=False)
         
-        # print out[:,4].mean()
+        # azimuth: baz_degree - 180 ~= -160
+        np.testing.assert_almost_equal(out[:,3].mean(), -161.565051177)
+        # slowness ~= 1.3
         np.testing.assert_almost_equal(out[:,4].mean(), 1.26491106407)
 
 

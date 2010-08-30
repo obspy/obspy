@@ -26,6 +26,7 @@
         ~invsim.pazToFreqResp
         ~trigger.pkBaer
         ~trigger.recStalta
+        ~array_analysis.sonic
         ~rotate.rotate_NE_RT
         ~invsim.seisSim
         ~util.utlGeoKm

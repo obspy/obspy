@@ -763,8 +763,12 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
              digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y,
              wave, nfft, cosine)
 
-    if errcode != 0:
-        raise IndexError('In bbfk index out of bounds, window exceeds data')
+    if errcode == 0:
+        pass
+    elif errcode == 1:
+        raise IndexError('bbfk: Index out of bounds, window exceeds data')
+    else:
+        raise Exception('bbfk: C-Extension returned error %d' % errcode)
     return abspow.value, power.value, ix.value, iy.value
 
 
