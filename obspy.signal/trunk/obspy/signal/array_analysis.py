@@ -24,6 +24,8 @@ import numpy as np
 from obspy.signal.util import utlGeoKm, lib, nextpow2
 from obspy.signal.invsim import cosTaper
 
+hallo jens
+
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
