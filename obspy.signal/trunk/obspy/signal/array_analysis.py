@@ -596,8 +596,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat'):
+          verbose=False, coordsys='lonlat', timestamp='julsec'):
     """
+    Method for Seismic-Array-Beamforming/FK-Analysis
 
     :param stream: Stream object, the trace.stats dict like class must
         contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
@@ -619,6 +620,10 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     :param prewhiten: Do prewhitening
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
+    :param timestamp: valid values: 'julsec' and 'mlabhour'; 'julsec' returns
+        the timestamp in secons since 1970-01-01T00:00:00, 'mlabhour'
+        returns the timestamp in hours since '0001-01-01T00:00:00' as
+        needed for matplotlib date plotting
     :return: numpy.ndarray of timestamp, relative power, absolute power,
         azimut, slowness
     """
@@ -701,6 +706,10 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         offset += nstep
 
         newstart += nstep / df
+    res = np.array(res)
+    if timestamp == 'mlabhour':
+        # 719162 == hours between 1970 and 0001
+        res[:,0] = res[:,0]/(24.*3600) + 719162
     return np.array(res)
 
 
@@ -708,6 +717,9 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, wave, nfft,
          cosine):
     """
+    Note: Interface not fixed jet
+
+
     :int *spoint: Start sample point, probably in julian seconds
     :int offset: The Offset which is counted upwards nwin for shifting array
     :float **trace: The trace matrix, containing the time serious for various stations
@@ -772,7 +784,7 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     return abspow.value, power.value, ix.value, iy.value
 
 
-def get_geometry(stream, coordsys='lonlat', verbose=False):
+def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
     """
     Method to calculate the array geometry and the center coordinates in km
 
@@ -782,6 +794,7 @@ def get_geometry(stream, coordsys='lonlat', verbose=False):
         items/attributes. See param coordsys
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
+    :param return_center: Retruns the center coordinates as extra tuple
     :return: Returns the geometry of the stations as 2d numpy.ndarray
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
@@ -789,49 +802,39 @@ def get_geometry(stream, coordsys='lonlat', verbose=False):
             last index contains center [lat, lon, elev] in degrees and km
     """
     nstat = len(stream)
-
-    geometry = np.empty((nstat + 1, 3))
+    center_lat = 0.
+    center_lon = 0.
+    center_h = 0.
+    geometry = np.empty((nstat, 3))
     
     if verbose:
         print "coordys = " + coordsys
 
     if coordsys == 'lonlat':
-        center_lat = 0.
-        center_lon = 0.
-        center_h = 0.
-
         for tr in stream:
             center_lat += tr.stats.coordinates.latitude
             center_lon += tr.stats.coordinates.longitude
             center_h += tr.stats.coordinates.elevation
-        
         center_lat /= nstat
         center_lon /= nstat
         center_h /= nstat
-        
         for i, tr in enumerate(stream):
-            x, y = utlGeoKm(center_lon, center_lat, tr.stats.coordinates.lon, tr.stats.coordinates.lat)
-            geometry[i][0] = x
-            geometry[i][1] = y
-            geometry[i][2] = tr.stats.coordinates.elev - center_h
-        
-        geometry[nstat][0] = center_lon
-        geometry[nstat][1] = center_lat
-        geometry[nstat][2] = center_h
+            x, y = utlGeoKm(center_lon, center_lat, tr.stats.coordinates.lon,
+                            tr.stats.coordinates.lat)
+            geometry[i,0] = x
+            geometry[i,1] = y
+            geometry[i,2] = tr.stats.coordinates.elev - center_h
     elif coordsys == 'xy':
         for i, tr in enumerate(stream):
-            geometry[i][0] = tr.stats.coordinates.x
-            geometry[i][1] = tr.stats.coordinates.y
-            geometry[i][2] = tr.stats.coordinates.elevation
+            geometry[i,0] = tr.stats.coordinates.x
+            geometry[i,1] = tr.stats.coordinates.y
+            geometry[i,2] = tr.stats.coordinates.elevation
+        geometry[:,0] -= geometry[:,0].mean()
+        geometry[:,1] -= geometry[:,1].mean()
+        geometry[:,2] -= geometry[:,2].mean()
 
-        geometry[:,0] -= geometry[:-1,0].mean()
-        geometry[:,1] -= geometry[:-1,1].mean()
-        geometry[:,2] -= geometry[:-1,2].mean()
-        geometry[nstat][0] = 0.0
-        geometry[nstat][1] = 0.0
-        geometry[nstat][2] = 0.0
-        #geometry = np.concatenate([geometry, np.zeros((1,3))])
-
+    if return_center:
+        geometry, (center_long, center_lat, center_h)
     return geometry
 
 
@@ -847,15 +850,14 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    nstat = len(geometry) - 1 #last index are center coordinates
+    nstat = len(geometry) #last index are center coordinates
 
     time_shift_table = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-    for i in xrange(nstat):
-        for k in xrange(grdpts_x):
-            sx = sll_x + k * sl_s
-            for l in xrange(grdpts_y):
-                sy = sll_y + l * sl_s
-                time_shift_table[i][k][l] = sx * geometry[i][0] + sy * geometry[i][1]
+    for k in xrange(grdpts_x):
+        sx = sll_x + k * sl_s
+        for l in xrange(grdpts_y):
+            sy = sll_y + l * sl_s
+            time_shift_table[:,k,l] = sx * geometry[:,0] + sy * geometry[:,1]
 
     return time_shift_table
 
