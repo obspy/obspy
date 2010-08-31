@@ -3,6 +3,15 @@
 from obspy.core import UTCDateTime, AttribDict
 from util import raise_locked_warning
 
+PICK_DICT_SEISHUB = {'onset': (".//onset", None),
+                     'polarity': (".//polarity", None),
+                     'weight': (".//weight", None),
+                     'phase_res': (".//phase_res/value", None),
+                     'phase_weight': (".//phase_res/weight", int),
+                     'azimuth': (".//azimuth/value", None),
+                     'incident': (".//incident/value", None),
+                     'epi_dist': (".//epi_dist/value", None),
+                     'hyp_dist': (".//hyp_dist/value", None)}
 
 class Pick(AttribDict):
     """

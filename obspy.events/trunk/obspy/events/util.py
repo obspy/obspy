@@ -143,3 +143,23 @@ def str_or_None(object):
     if object is None:
         return None
     return str(object)
+
+
+def set_attribute(obj, etree, key, path, fct=None, do_pass=False):
+    """
+    Set attribute of obj with first value found in path of etree. Optionally
+    run function fct on found value before assignment.
+    If do_pass do pass.
+    """
+    try:
+        value = etree.xpath(path)[0].text
+        if value is None:
+            return
+        if fct and value is not None:
+            value = fct(value)
+    except IndexError:
+        if do_pass:
+            return
+        else:
+            value = None
+    setattr(obj, key, value)

@@ -3,9 +3,41 @@
 import numpy as np
 import lxml.etree
 from lxml.etree import SubElement as Sub
-from util import UniqueList, raise_locked_warning, str_or_None
+from util import UniqueList, raise_locked_warning, str_or_None, \
+        set_attribute
 from obspy.core import AttribDict, UTCDateTime
-from pick import Pick
+from pick import Pick, PICK_DICT_SEISHUB
+
+ORIGIN_DICT_SEISHUB = {'program': (".//program", None),
+        'time': (".//time/value", UTCDateTime),
+        'latitude': (".//latitude/value", float),
+        'longitude': (".//longitude/value", float),
+        'longitude_error': (".//longitude/uncertainty", float),
+        'latitude_error': (".//latitude/uncertainty", float),
+        'depth': (".//depth/value", float),
+        'depth_error': (".//depth/uncertainty", float),
+        'depth_type': (".//depth_type", None),
+        'earth_model': (".//earth_mod", None),
+        'used_p_count': (".//originQuality/P_usedPhaseCount", int),
+        'used_s_count': (".//originQuality/S_usedPhaseCount", int),
+        'used_phase_count': (".//originQuality/usedPhaseCount", int),
+        'used_station_count': (".//originQuality/usedStationCount", int),
+        'associated_phase_count': (".//originQuality/associatedPhaseCount", int),
+        'associated_station_count': (".//originQuality/associatedStationCount", int),
+        'depth_phase_count': (".//originQuality/depthPhaseCount", int),
+        'standarderror': (".//originQuality/standardError", float),
+        'azimuthal_gap': (".//originQuality/azimuthalGap", float),
+        'ground_truth_level': (".//originQuality/groundTruthLevel", float),
+        'minimum_distance': (".//originQuality/minimumDistance", float),
+        'maximum_distance': (".//originQuality/maximumDistance", float),
+        'median_distance': (".//originQuality/medianDistance", float)}
+
+MAGNITUDE_DICT_SEISHUB = {'program': (".//program", None),
+        'value': (".//mag/value", float),
+        'uncertainty': (".//mag/uncertainty", float),
+        'type': (".//type", None),
+        'station_count': (".//stationCount", int)}
+
 
 class Event(object):
     """
@@ -111,171 +143,26 @@ class Event(object):
             p.time = pick.xpath(".//time/value")[0].text
             p.uncertainty = pick.xpath(".//time/uncertainty")[0].text
             p.phasehint = pick.xpath(".//phaseHint")[0].text
-            try:
-                p.onset = pick.xpath(".//onset")[0].text
-            except:
-                p.onset = None
-            try:
-                p.polarity = pick.xpath(".//polarity")[0].text
-            except:
-                p.polarity = None
-            try:
-                p.weight = int(pick.xpath(".//weight")[0].text)
-            except:
-                p.weight = None
-            try:
-                p.phase_res = pick.xpath(".//phase_res/value")[0].text
-            except:
-                p.phase_res = None
-            try:
-                p.phase_weight = pick.xpath(".//phase_res/weight")[0].text
-            except:
-                p.phase_weight = None
-            try:
-                p.azimuth = pick.xpath(".//azimuth/value")[0].text
-            except:
-                p.azimuth = None
-            try:
-                p.incident = pick.xpath(".//incident/value")[0].text
-            except:
-                p.incident = None
-            try:
-                p.epi_dist = pick.xpath(".//epi_dist/value")[0].text
-            except:
-                p.epi_dist = None
-            try:
-                p.hyp_dist = pick.xpath(".//hyp_dist/value")[0].text
-            except:
-                p.hyp_dist = None
+            for key, value in PICK_DICT_SEISHUB.iteritems():
+                set_attribute(p, pick, key, value[0], value[1]) 
             picks.append(p)
         self.picks = picks
-
         #analyze origin:
         o = self.origin
         try:
             origin = resource_xml.xpath(u".//origin")[0]
-            try:
-                o.program = origin.xpath(".//program")[0].text
-            except:
-                pass
-            try:
-                o.time = UTCDateTime(origin.xpath(".//time/value")[0].text)
-            except:
-                pass
-            try:
-                o.latitude = float(origin.xpath(".//latitude/value")[0].text)
-            except:
-                pass
-            try:
-                o.longitude = float(origin.xpath(".//longitude/value")[0].text)
-            except:
-                pass
-            try:
-                o.longitude_error = float(origin.xpath(".//longitude/uncertainty")[0].text)
-            except:
-                pass
-            try:
-                o.latitude_error = float(origin.xpath(".//latitude/uncertainty")[0].text)
-            except:
-                pass
-            try:
-                o.depth = float(origin.xpath(".//depth/value")[0].text)
-            except:
-                pass
-            try:
-                o.depth_error = float(origin.xpath(".//depth/uncertainty")[0].text)
-            except:
-                pass
-            try:
-                o.depth_type = origin.xpath(".//depth_type")[0].text
-            except:
-                pass
-            try:
-                o.earth_model = origin.xpath(".//earth_mod")[0].text
-            except:
-                pass
-            try:
-                o.used_p_count = int(origin.xpath(".//originQuality/P_usedPhaseCount")[0].text)
-            except:
-                pass
-            try:
-                o.used_s_count = int(origin.xpath(".//originQuality/S_usedPhaseCount")[0].text)
-            except:
-                pass
-            try:
-                o.used_phase_count = int(origin.xpath(".//originQuality/usedPhaseCount")[0].text)
-            except:
-                pass
-            try:
-                o.used_station_count = int(origin.xpath(".//originQuality/usedStationCount")[0].text)
-            except:
-                pass
-            try:
-                o.associated_phase_count = int(origin.xpath(".//originQuality/associatedPhaseCount")[0].text)
-            except:
-                pass
-            try:
-                o.associated_station_count = int(origin.xpath(".//originQuality/associatedStationCount")[0].text)
-            except:
-                pass
-            try:
-                o.depth_phase_count = int(origin.xpath(".//originQuality/depthPhaseCount")[0].text)
-            except:
-                pass
-            try:
-                o.standarderror = float(origin.xpath(".//originQuality/standardError")[0].text)
-            except:
-                pass
-            try:
-                o.azimuthal_gap = float(origin.xpath(".//originQuality/azimuthalGap")[0].text)
-            except:
-                pass
-            try:
-                o.ground_truth_level = float(origin.xpath(".//originQuality/groundTruthLevel")[0].text)
-            except:
-                pass
-            try:
-                o.minimum_distance = float(origin.xpath(".//originQuality/minimumDistance")[0].text)
-            except:
-                pass
-            try:
-                o.maximum_distance = float(origin.xpath(".//originQuality/maximumDistance")[0].text)
-            except:
-                pass
-            try:
-                o.median_distance = float(origin.xpath(".//originQuality/medianDistance")[0].text)
-            except:
-                pass
-        except:
+            for key, value in ORIGIN_DICT_SEISHUB.iteritems():
+                set_attribute(o, origin, key, value[0], value[1], do_pass=True)
+        except IndexError:
             pass
-
         #analyze magnitude:
         m = self.magnitude
         try:
             magnitude = resource_xml.xpath(u".//magnitude")[0]
-            try:
-                m.program = magnitude.xpath(".//program")[0].text
-            except:
-                pass
-            try:
-                m.value = float(magnitude.xpath(".//mag/value")[0].text)
-            except:
-                pass
-            try:
-                m.uncertainty = float(magnitude.xpath(".//mag/uncertainty")[0].text)
-            except:
-                pass
-            try:
-                m.type = magnitude.xpath(".//type")[0].text
-            except:
-                pass
-            try:
-                m.station_count = int(magnitude.xpath(".//stationCount")[0].text)
-            except:
-                pass
-        except:
+            for key, value in MAGNITUDE_DICT_SEISHUB.iteritems():
+                set_attribute(m, magnitude, key, value[0], value[1], do_pass=True)
+        except IndexError:
             pass
-
         #analyze stationmagnitudes:
         self.magnitude.stationmagnitudes = UniqueList()
         for stamag in resource_xml.xpath(u".//stationMagnitude"):
