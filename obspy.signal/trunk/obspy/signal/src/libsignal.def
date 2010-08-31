@@ -14,3 +14,4 @@ EXPORTS
     ppick
     preset
     bbfk
+    cosine_taper

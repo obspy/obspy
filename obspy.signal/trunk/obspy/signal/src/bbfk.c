@@ -29,22 +29,21 @@ extern void rfftf(int N, double* data, double* wrk);
 extern void rffti(int N, double* wrk);
 
 
-/* not used currently for Python, let's leave it for now */
-void cosine_taper(float *taper, int ndat, float fraction)
+int cosine_taper(double *taper, int ndat, double fraction)
 {
     int	i1,i2,i3,i4,k;
-    float fact,temp;
+    double fact,temp;
 
     /* get i1-4 out of ndat and fraction */
     i1 = 0;
     i4 = ndat-1;
-    i2 = (int)(fraction*(float)ndat +0.5);
-    if ( (float)i2 > (float)(ndat-1)/2. ) {
-        i2 = (int)((float)(ndat-1)/2.);
+    i2 = (int)(fraction*(double)ndat +0.5);
+    if ( (double)i2 > (double)(ndat-1)/2. ) {
+        i2 = (int)((double)(ndat-1)/2.);
     }
-    i3 = ndat - 1 - (int)(fraction*(float)ndat +0.5);
-    if ( (float)i3 < (float)(ndat-1)/2. ) {
-        i3 = (int)((float)(ndat-1)/2.+1.);
+    i3 = ndat - 1 - (int)(fraction*(double)ndat +0.5);
+    if ( (double)i3 < (double)(ndat-1)/2. ) {
+        i3 = (int)((double)(ndat-1)/2.+1.);
     }
 
     for (k=0;k<ndat;k++) {
@@ -55,30 +54,31 @@ void cosine_taper(float *taper, int ndat, float fraction)
                 taper[k] = 0.0;
             }
         } else if ((k > i1) && (k <= i2)) {
-            temp =  M_PI * (float)(k-i1)/((float)(i2-i1+1));
-            fact = 0.5f - 0.5f*cos(temp);
-            taper[k] = (float) fabs(fact);
+            temp =  M_PI * (double)(k-i1)/((double)(i2-i1+1));
+            fact = 0.5 - 0.5*cos(temp);
+            taper[k] = (double) fabs(fact);
         } else if ((k >= i3) && (k < i4)) {
-            temp = (float) (M_PI * (float)(i4-k)/((float)(i4-i3+1)));
-            fact = (float) (0.5f - 0.5f*cos(temp));
-            taper[k] = (float) fabs(fact);
+            temp = M_PI * (double)(i4-k)/((double)(i4-i3+1));
+            fact = 0.5 - 0.5*cos(temp);
+            taper[k] = fabs(fact);
         } else
-            taper[k] = 1.0f;
+            taper[k] = 1.0;
     }
 
+    return 0;
 }
 
 
 int bbfk(int *spoint, int offset, double **trace, int *ntrace, 
          float ***stat_tshift_table, float *abs, float *rel, int *ix, 
          int *iy, float flow, float fhigh, float digfreq, int nsamp,
-         int nstat, int prewhiten, int grdpts_x, int grdpts_y, 
-         double *fftpack_work, int nfft, double *taper) {
+         int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
     int		j,k,l,w;
     int		n;
     int		wlow,whigh;
     float	df;
     double	**window;
+    double  *taper;
     double	mean;
     float	denom = 0;
     float	dpow;
@@ -92,6 +92,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	wtau;
     double	absval;
     float	maxinmap = 0.;
+    double  *fftpack_work = 0;
 
     /* mtrace(); */
     /***********************************************************************/
@@ -107,11 +108,9 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /********************************************************************/
     /* Magic size needed by rffti (see also
      * http://projects.scipy.org/numpy/browser/trunk/
-     * +numpy/fft/fftpack_litemodule.c#L277)
-    double *fftpack_work = 0;
+     * +numpy/fft/fftpack_litemodule.c#L277)*/
     fftpack_work = (double *)calloc((2*nfft+15), sizeof(double));
     rffti(nfft, fftpack_work);
-    */
 
     df = digfreq/(float)nfft;
     wlow = (int)(flow/df+0.5);
@@ -133,10 +132,15 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /* first we need the fft'ed window of traces for the stations of this group */
     /****************************************************************************/
     window = (double **)calloc(nstat, sizeof(double *));
+    /* we allocate the taper buffer, size nsamp! */
+    taper = (double *)calloc(nsamp, sizeof(double));
+    cosine_taper(taper, nsamp, 0.1); 
     for (j=0;j<nstat;j++) {
         /* be sure we are inside our memory */
         if ((spoint[j] + offset + nsamp) > ntrace[j]) {
             free((void *)window);
+            free((void *)taper);
+            free((void *)fftpack_work);
             return 1;
         }
         /* doing calloc is automatically zero-padding, too */
@@ -160,7 +164,8 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         window[j][1] = 0.0;
     }
     /* we free the taper buffer and the fft plan already! */
-    /*free((void *)fftpack_work);*/
+    free((void *)taper);
+    free((void *)fftpack_work);
 
     /***********************************************************************/
     /* we calculate the scaling factor or denominator, if not prewhitening */
