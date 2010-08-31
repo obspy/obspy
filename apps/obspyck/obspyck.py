@@ -245,7 +245,7 @@ def fetch_waveforms_metadata(options):
                 continue
             # make sure we dont fetch a single station of
             # one network twice (could happen with wildcards)
-            net_sta = "%s:%s" % (net, sta)
+            net_sta = "%s.%s" % (net, sta)
             if net_sta in sta_fetched:
                 print "%s skipped! (Was already retrieved)" % net_sta
                 continue
@@ -256,7 +256,7 @@ def fetch_waveforms_metadata(options):
                         t + options.duration, apply_filter=True,
                         getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                 sys.stdout.flush()
             except Exception, e:
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
@@ -278,7 +278,7 @@ def fetch_waveforms_metadata(options):
                           institution=options.arclink_institution)
         for id in options.arclink_ids.split(","):
             net, sta, loc, cha = id.split(".")
-            net_sta = "%s:%s" % (net, sta)
+            net_sta = "%s.%s" % (net, sta)
             if net_sta in sta_fetched:
                 print "%s skipped! (Was already retrieved)" % net_sta
                 continue
@@ -291,7 +291,7 @@ def fetch_waveforms_metadata(options):
                                          end_datetime=t + options.duration,
                                          getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                 sys.stdout.flush()
             except Exception, e:
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
@@ -310,7 +310,7 @@ def fetch_waveforms_metadata(options):
                           name_service=options.fissures_name_service)
         for id in options.fissures_ids.split(","):
             net, sta, loc, cha = id.split(".")
-            net_sta = "%s:%s" % (net, sta)
+            net_sta = "%s.%s" % (net, sta)
             if net_sta in sta_fetched:
                 print "%s skipped! (Was already retrieved)" % net_sta
                 continue
@@ -323,7 +323,7 @@ def fetch_waveforms_metadata(options):
                                          end_datetime=t + options.duration,
                                          getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta)
+                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                 sys.stdout.flush()
             except Exception, e:
                 sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
@@ -381,7 +381,7 @@ def merge_check_and_cleanup_streams(streams, options):
             warn_msg += msg + "\n"
             streams.remove(st)
             continue
-        net_sta = "%s:%s" % (st[0].stats.network.strip(),
+        net_sta = "%s.%s" % (st[0].stats.network.strip(),
                              st[0].stats.station.strip())
         # Here we make sure that a station/network combination is not
         # present with two streams.
@@ -406,7 +406,7 @@ def merge_check_and_cleanup_streams(streams, options):
                     st.remove(tr)
             if len(st.traces) in [1, 3]:
                 msg = 'Warning: deleted some unknown channels in ' + \
-                      'stream %s:%s' % (net_sta, removed_channels)
+                      'stream %s.%s' % (net_sta, removed_channels)
                 print msg
                 warn_msg += msg + "\n"
                 continue
@@ -959,7 +959,7 @@ class ObsPyckGUI:
         # first remove a temporary item set at startup
         widgets['comboboxStreamName'].remove_text(0)
         for st in streams:
-            net_sta = ":".join([st[0].stats['network'], st[0].stats['station']])
+            net_sta = ".".join([st[0].stats['network'], st[0].stats['station']])
             widgets['comboboxStreamName'].append_text(net_sta)
         widgets['comboboxStreamName'].set_active(0)
         
@@ -1299,7 +1299,8 @@ class ObsPyckGUI:
         self.multicursorReinit()
         self.axs[0].set_xlim(xmin, xmax)
         self.updatePlot()
-        msg = "Going to stream: %s" % self.dicts[self.stPt]['Station']
+        stats = self.streams[self.stPt][0].stats
+        msg = "Going to stream: %s.%s" % (stats.network, stats.station)
         self.updateStreamNumberLabel()
         self._write_msg(msg)
 
@@ -2274,7 +2275,7 @@ class ObsPyckGUI:
         msg = "selecting Focal Mechanism No. %2i of %2i:" % \
                 (self.focMechCurrent + 1, self.focMechCount)
         self._write_msg(msg)
-        msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i%i" % \
+        msg = "Dip: %6.2f  Strike: %6.2f  Rake: %6.2f  Errors: %i/%i" % \
                 (dF['Dip'], dF['Strike'], dF['Rake'], dF['Errors'],
                  dF['Station Polarity Count'])
         self._write_msg(msg)
@@ -3104,9 +3105,9 @@ class ObsPyckGUI:
                 tr = tr.copy()
                 self._filter(tr)
             plts.append(axs[i].plot(t[i], tr.data, color='k',zorder=1000)[0])
-            axs[i].text(0.01, 0.95, st[0].stats.station, va="top",
-                             ha="left", fontsize=18, color="b", zorder=10000,
-                             transform=axs[i].transAxes)
+            net_sta = "%s.%s" % (st[0].stats.network, st[0].stats.station)
+            axs[i].text(0.01, 0.95, net_sta, va="top", ha="left", fontsize=18,
+                        color="b", zorder=10000, transform=axs[i].transAxes)
         axs[-1].xaxis.set_ticks_position("both")
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          tr.stats.starttime.microsecond / 1e3 + 0.5,
