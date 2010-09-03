@@ -1224,31 +1224,28 @@ class ObsPyck(QtGui.QMainWindow):
 
     # Define zooming for the mouse wheel wheel
     def __mpl_wheelEvent(self, ev):
-        self._write_msg("got into wheel event finally...")
         if self.widgets.qToolButton_showMap.isChecked():
             return
         # Calculate and set new axes boundaries from old ones
         (left, right) = self.axs[0].get_xbound()
         (bottom, top) = self.axs[0].get_ybound()
-        if self.flagWheelZoomAmplitude:
+        if ev.key == 'alt':
             # Zoom in on wheel-up
-            # XXX Qt: if ev.delta() > 0:
-            if ev.button == 'up':
+            if ev.button == 'down':
                 top *= 2.
                 bottom *= 2.
             # Zoom out on wheel-down
-            # XXX Qt: elif ev.delta() < 0:
-            elif ev.button == 'down':
+            elif ev.button == 'up':
                 top /= 2.
                 bottom /= 2.
             self.axs[0].set_ybound(lower=bottom, upper=top)
         else:
-            if ev.button == 'up':
+            if ev.button == 'down':
                 left -= (ev.xdata - left) / 2
                 right += (right - ev.xdata) / 2
-            elif ev.button == 'down':
-                left += (ev.x() - left) / 2
-                right -= (right - ev.x()) / 2
+            elif ev.button == 'up':
+                left += (ev.xdata - left) / 2
+                right -= (right - ev.xdata) / 2
             self.axs[0].set_xbound(lower=left, upper=right)
         self.redraw()
     

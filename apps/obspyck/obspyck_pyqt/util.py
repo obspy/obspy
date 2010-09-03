@@ -45,7 +45,7 @@ COMMANDLINE_OPTIONS = [
                 'help': "Servername of the SeisHub server"}],
         [["--seishub-port"], {'type': "int", 'dest': "seishub_port",
                 'default': 8080, 'help': "Port of the SeisHub server"}],
-        [["--seishub-user"], {'dest': "seishub-user", 'default': 'obspyck',
+        [["--seishub-user"], {'dest': "seishub_user", 'default': 'obspyck',
                 'help': "Username for SeisHub server"}],
         [["--seishub-password"], {'dest': "seishub_password",
                 'default': 'obspyck', 'help': "Password for SeisHub server"}],
@@ -162,10 +162,10 @@ MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
 AXVLINEWIDTH = 1.2
 # dictionary for key-bindings.
-KEYS = {'setPick': "alt", 'setPickError': " ", 'delPick': "escape",
-        'setMagMin': "alt", 'setMagMax': " ", 'delMagMinMax': "escape",
+KEYS = {'setPick': "shift", 'setPickError': " ", 'delPick': "escape",
+        'setMagMin': "shift", 'setMagMax': " ", 'delMagMinMax': "escape",
         'switchPhase': "control", 'switchPan': "p",
-        'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "shift",
+        'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "alt",
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
         'setOnset': {'i': "impulsive", 'e': "emergent"}}
