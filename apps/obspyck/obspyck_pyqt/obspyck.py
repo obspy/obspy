@@ -889,47 +889,46 @@ class ObsPyck(QtGui.QMainWindow):
         self.trans = trans
         t = []
         self.t = t
-        trNum = len(st.traces)
-        for i in range(trNum):
-            npts = st[i].stats.npts
-            smprt = st[i].stats.sampling_rate
+        for i, tr in enumerate(st):
+            if i == 0:
+                ax = fig.add_subplot(len(st), 1, 1)
+            else:
+                ax = fig.add_subplot(len(st), 1, i+1, sharex=axs[0], sharey=axs[0])
+                ax.xaxis.set_ticks_position("top")
+            axs.append(ax) 
             #make sure that the relative times of the x-axes get mapped to our
             #global stream (absolute) starttime (starttime of first (Z) trace)
-            starttime_local = st[i].stats.starttime - starttime_global
-            dt = 1. / smprt
+            starttime_local = tr.stats.starttime - starttime_global
+            dt = 1. / tr.stats.sampling_rate
             sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * npts), dt)
-            # sometimes our arange is one item too long (why??), so we just cut
+                    starttime_local + (dt * tr.stats.npts), dt)
+            # XXX sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
-            if len(sampletimes) == npts + 1:
+            if len(sampletimes) == tr.stats.npts + 1:
                 sampletimes = sampletimes[:-1]
             t.append(sampletimes)
-            if i == 0:
-                axs.append(fig.add_subplot(trNum,1,i+1))
-                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
-                                                                             axs[i].transAxes))
-            else:
-                axs.append(fig.add_subplot(trNum, 1, i+1, 
-                        sharex=axs[0], sharey=axs[0]))
-                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
-                                                                             axs[i].transAxes))
-                axs[i].xaxis.set_ticks_position("top")
-            axs[-1].xaxis.set_ticks_position("both")
-            axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+            trans.append(matplotlib.transforms.blended_transform_factory(ax.transData,
+                                                                         ax.transAxes))
+            ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if self.widgets.qToolButton_spectrogram.isChecked():
                 log = self.widgets.qCheckBox_spectrogramLog.isChecked()
-                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
-                            cmap=self.spectrogramColormap, axis=axs[i],
-                            zorder=-10)
+                spectrogram(tr.data, tr.stats.sampling_rate, log=log,
+                            cmap=self.spectrogramColormap, axis=ax, zorder=-10)
+                textcolor = "red"
             else:
-                plts.append(axs[i].plot(t[i], st[i].data, color='k',zorder=1000)[0])
+                plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+                textcolor = "blue"
+            tr_id = "%s.%s..%s" % (tr.stats.network, tr.stats.station, tr.stats.channel)
+            ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
+                    family='monospace', color=textcolor, zorder=10000,
+                    transform=ax.transAxes)
+        axs[-1].xaxis.set_ticks_position("both")
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          st[0].stats.starttime.microsecond / 1e3 + 0.5,
                                                          st[0].stats.endtime.strftime("%H:%M:%S"),
                                                          st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
-        #fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
         self.toolbar.update()
         self.toolbar.pan(False)
@@ -1212,10 +1211,14 @@ class ObsPyck(QtGui.QMainWindow):
             return
             
         if ev.key == keys['prevStream']:
+            if self.widgets.qToolButton_overview.isChecked():
+                return
             self.on_qToolButton_previousStream_clicked(0)
             return
 
         if ev.key == keys['nextStream']:
+            if self.widgets.qToolButton_overview.isChecked():
+                return
             self.on_qToolButton_nextStream_clicked(0)
             return
     
@@ -2324,36 +2327,33 @@ class ObsPyck(QtGui.QMainWindow):
         starttime_global = self.streams[0].select(component="Z")[0].stats.starttime
         for i, st in enumerate(self.streams):
             tr = st.select(component="Z")[0]
-            npts = tr.stats.npts
-            smprt = tr.stats.sampling_rate
             #make sure that the relative times of the x-axes get mapped to our
             #global stream (absolute) starttime (starttime of first (Z) trace)
             starttime_local = tr.stats.starttime - starttime_global
-            dt = 1. / smprt
+            dt = 1. / tr.stats.sampling_rate
             sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * npts), dt)
+                    starttime_local + (dt * tr.stats.npts), dt)
             # sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
-            if len(sampletimes) == npts + 1:
+            if len(sampletimes) == tr.stats.npts + 1:
                 sampletimes = sampletimes[:-1]
             t.append(sampletimes)
             if i == 0:
-                axs.append(fig.add_subplot(stNum, 1, i+1))
+                ax = fig.add_subplot(stNum, 1, i+1)
             else:
-                axs.append(fig.add_subplot(stNum, 1, i+1, 
-                        sharex=axs[0], sharey=axs[0]))
-                axs[i].xaxis.set_ticks_position("top")
-            trans.append(matplotlib.transforms.blended_transform_factory(
-                    axs[i].transData, axs[i].transAxes))
-            axs[i].xaxis.set_major_formatter(FuncFormatter(
-                                                  formatXTicklabels))
+                ax = fig.add_subplot(stNum, 1, i+1, sharex=axs[0], sharey=axs[0])
+                ax.xaxis.set_ticks_position("top")
+            axs.append(ax)
+            trans.append(matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes))
+            ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
             if self.widgets.qToolButton_filter.isChecked():
                 tr = tr.copy()
                 self._filter(tr)
-            plts.append(axs[i].plot(t[i], tr.data, color='k',zorder=1000)[0])
-            net_sta = "%s.%s" % (st[0].stats.network, st[0].stats.station)
-            axs[i].text(0.01, 0.95, net_sta, va="top", ha="left", fontsize=18,
-                        color="b", zorder=10000, transform=axs[i].transAxes)
+            plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+            tr_id = "%s.%s..%s" % (tr.stats.network, tr.stats.station, tr.stats.channel)
+            ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
+                    family='monospace', color="b", zorder=10000,
+                    transform=ax.transAxes)
         axs[-1].xaxis.set_ticks_position("both")
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          tr.stats.starttime.microsecond / 1e3 + 0.5,
