@@ -195,7 +195,7 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX not working the way I want it to:
         #self.keyPressEvent = lambda ev: ev.key() == Qt.Key_Escape and self.emit(Qt.SIGNAL("escapePressed")) or QtGui.QMainWindow().keyPressEvent(ev)
         #self.event = lambda ev: (ev.type() == QtGui.QKeyEvent and ev.key() == Qt.Key_Escape) and self.__mpl_keyPressEvent(MplEvent("key_press_event", self.canv, guiEvent=ev)) or QtGui.QMainWindow().event(ev)
-        self.widgets.qToolButton_debug.setEnabled(False)
+        self.widgets.qToolButton_debug.setEnabled(True)
     
     # XXX
     #def event(self, ev):
@@ -531,7 +531,7 @@ class ObsPyck(QtGui.QMainWindow):
     # XXX def on_buttonSetFocusOnPlot_clicked(self, event):
     # XXX     self.setFocusToMatplotlib()
 
-    def on_qToolButton_debug_clicked(self, dummy_int):
+    def on_qToolButton_debug_clicked(self):
         self.debug()
     
     def on_qToolButton_previousStream_clicked(self, dummy_int):
@@ -692,12 +692,15 @@ class ObsPyck(QtGui.QMainWindow):
     def debug(self):
         sys.stdout = self.stdout_backup
         sys.stderr = self.stderr_backup
+        ## DEBUG PYQT START
+        from PyQt4 import QtCore
+        QtCore.pyqtRemoveInputHook()
         try:
-            import ipdb
-            ipdb.set_trace()
-        except ImportError:
-            import pdb
-            pdb.set_trace()
+            import ipdb;ipdb.set_trace()
+        except:
+            import pdb;pdb.set_trace()
+        QtCore.pyqtRestoreInputHook()
+        ## DEBUG PYQT END
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
         sys.stdout = self.widgets.qPlainTextEdit_stdout
