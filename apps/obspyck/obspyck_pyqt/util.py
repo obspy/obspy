@@ -162,10 +162,10 @@ MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
 AXVLINEWIDTH = 1.2
 # dictionary for key-bindings.
-KEYS = {'setPick': "shift", 'setPickError': " ", 'delPick': "escape",
-        'setMagMin': "shift", 'setMagMax': " ", 'delMagMinMax': "escape",
+KEYS = {'setPick': "alt", 'setPickError': " ", 'delPick': "escape",
+        'setMagMin': "alt", 'setMagMax': " ", 'delMagMinMax': "escape",
         'switchPhase': "control", 'switchPan': "p",
-        'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "alt",
+        'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "shift",
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
         'setOnset': {'i': "impulsive", 'e': "emergent"}}

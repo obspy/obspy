@@ -68,6 +68,10 @@ class ObsPyck(QtGui.QMainWindow):
         # we bind the figure to the FigureCanvas, so that it will be
         # drawn using the specific backend graphic functions
         self.canv = self.widgets.qMplCanvas
+        # Bind the canvas to the mouse wheel event. Use Qt events for it
+        # because the matplotlib events seem to have a problem with Debian.
+        self.widgets.qMplCanvas.wheelEvent = self.__mpl_wheelEvent
+
         self.fig = self.widgets.qMplCanvas.fig
         self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, self.widgets.qWidget_toolbar)
 
@@ -182,8 +186,9 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX autoconnected via Qt?!?!?
         self.canv.mpl_connect('key_press_event', self.__mpl_keyPressEvent)
         self.canv.mpl_connect('key_release_event', self.__mpl_keyReleaseEvent)
-        self.canv.mpl_connect('scroll_event', self.__mpl_wheelEvent)
         self.canv.mpl_connect('button_release_event', self.__mpl_mouseButtonReleaseEvent)
+        # The scroll event is handles using Qt.
+        #self.canv.mpl_connect('scroll_event', self.__mpl_wheelEvent)
         self.canv.mpl_connect('button_press_event', self.__mpl_mouseButtonPressEvent)
         self.multicursorReinit()
         self.canv.show()
@@ -198,57 +203,57 @@ class ObsPyck(QtGui.QMainWindow):
         self.widgets.qToolButton_debug.setEnabled(True)
     
     # XXX
-    def event(self, ev):
-        """
-        Event handling. We override some keys with special behavior to just
-        emit the standard push-the-button signal.
-        """
-        #if ev.type() == QEvent.KeyPress:
-        #    if ev.key() == Qt.Key_Alt:
-        #        self._write_msg("overriding")
-        #        from matplotlib.backend_bases import KeyEvent
-        #        e = KeyEvent("key_press_event", self.canv, "alt", x=0, y=0, guiEvent=ev)
-        #        self.__mpl_keyPressEvent(e)
-        #        #self.emit(QtCore.SIGNAL("altPressed"))
-        #        return True
-        #        self._write_msg("bad")
-        if ev.type() == QEvent.Wheel:
-            # Mapping from Qt MainWindow coordinates to mpl Canvas coordinates
-            # Qt: Starting at top left window corner, y positive down
-            # Mpl: Starting at bottom left canvas corner, y positive up
-            #
-            #         ev.x()   ----->
-            #     ------------------------------------------------------
-            # ev.y()                                                   |
-            #  |  |     self.canv.pos()                                |
-            #  |  |                 X-------------------------         |
-            #  v  |                 |                      ^ |         |
-            #     |                 |    self.canv.height()| |         |
-            #     |                 |                      | |         |
-            #     |                 |   self.canv.width()  | |         |
-            #     |                 |<---------------------+>|         |
-            #     |               ^ |                      | |         |
-            #     |               | |                      | |         |
-            #     |               | |                      v |         |
-            #     |            e.y()--------------------------         |
-            #     |                  e.x() --->                        |
-            #     |                                                    |
-            #     ------------------------------------------------------
-            x = ev.x() - self.canv.pos().x()
-            y = self.canv.pos().y() + self.canv.height() - ev.y()
-            # only override if in mpl canvas XXX not exactly correct!?!!!
-            if x < 0 or x > self.canv.height() or y < 0 or y > self.canv.width():
-                print "overriding canceled (not in canvas)!!"
-                return QtGui.QMainWindow.event(self, ev)
-            print "overriding!!"
-            if ev.delta() > 0:
-                button = "up"
-            else:
-                button = "down"
-            e = MplMouseEvent("scroll_event", self.canv, x, y, button, guiEvent=ev)
-            self.__mpl_wheelEvent(e)
-            return True
-        return QtGui.QMainWindow.event(self, ev)
+    #def event(self, ev):
+    #    """
+    #    Event handling. We override some keys with special behavior to just
+    #    emit the standard push-the-button signal.
+    #    """
+    #    #if ev.type() == QEvent.KeyPress:
+    #    #    if ev.key() == Qt.Key_Alt:
+    #    #        self._write_msg("overriding")
+    #    #        from matplotlib.backend_bases import KeyEvent
+    #    #        e = KeyEvent("key_press_event", self.canv, "alt", x=0, y=0, guiEvent=ev)
+    #    #        self.__mpl_keyPressEvent(e)
+    #    #        #self.emit(QtCore.SIGNAL("altPressed"))
+    #    #        return True
+    #    #        self._write_msg("bad")
+    #    if ev.type() == QEvent.Wheel:
+    #        # Mapping from Qt MainWindow coordinates to mpl Canvas coordinates
+    #        # Qt: Starting at top left window corner, y positive down
+    #        # Mpl: Starting at bottom left canvas corner, y positive up
+    #        #
+    #        #         ev.x()   ----->
+    #        #     ------------------------------------------------------
+    #        # ev.y()                                                   |
+    #        #  |  |     self.canv.pos()                                |
+    #        #  |  |                 X-------------------------         |
+    #        #  v  |                 |                      ^ |         |
+    #        #     |                 |    self.canv.height()| |         |
+    #        #     |                 |                      | |         |
+    #        #     |                 |   self.canv.width()  | |         |
+    #        #     |                 |<---------------------+>|         |
+    #        #     |               ^ |                      | |         |
+    #        #     |               | |                      | |         |
+    #        #     |               | |                      v |         |
+    #        #     |            e.y()--------------------------         |
+    #        #     |                  e.x() --->                        |
+    #        #     |                                                    |
+    #        #     ------------------------------------------------------
+    #        x = ev.x() - self.canv.pos().x()
+    #        y = self.canv.pos().y() + self.canv.height() - ev.y()
+    #        # only override if in mpl canvas XXX not exactly correct!?!!!
+    #        if x < 0 or x > self.canv.height() or y < 0 or y > self.canv.width():
+    #            print "overriding canceled (not in canvas)!!"
+    #            return QtGui.QMainWindow.event(self, ev)
+    #        print "overriding!!"
+    #        if ev.delta() > 0:
+    #            button = "up"
+    #        else:
+    #            button = "down"
+    #        e = MplMouseEvent("scroll_event", self.canv, x, y, button, guiEvent=ev)
+    #        self.__mpl_wheelEvent(e)
+    #        return True
+    #    return QtGui.QMainWindow.event(self, ev)
     
     def cleanup(self):
         """
@@ -1262,30 +1267,39 @@ class ObsPyck(QtGui.QMainWindow):
             self.flagWheelZoomAmplitude = False
 
     # Define zooming for the mouse wheel wheel
-    def __mpl_wheelEvent(self, ev):
+    def __mpl_wheelEvent(self, event):
+        # Get the keyboard modifiers. They are a enum type.
+        mods =  int(event.modifiers())
         if self.widgets.qToolButton_showMap.isChecked():
             return
         # Calculate and set new axes boundaries from old ones
         (left, right) = self.axs[0].get_xbound()
         (bottom, top) = self.axs[0].get_ybound()
-        if ev.key == self.keys['switchWheelZoomAxis']:
+        # Use bitwise or to compare...hope this is correct.
+        if mods == int(QtCore.Qt.NoModifier):
+            # Will zoom in 10% steps by default.
+            step = abs(0.1 *  (right - left))
+            # Zoom in.
+            if event.delta() < 0:
+                left -= step
+                right += step
+            # Zoom out.
+            elif event.delta() > 0:
+                left += step
+                right -= step
+            self.axs[0].set_xbound(lower=left, upper=right)
+        # Still able to use the dictionary.
+        elif mods == int(getattr(QtCore.Qt,
+                '%sModifier' % self.keys['switchWheelZoomAxis'].capitalize())):
             # Zoom in on wheel-up
-            if ev.button == 'down':
+            if event.delta() < 0:
                 top *= 2.
                 bottom *= 2.
             # Zoom out on wheel-down
-            elif ev.button == 'up':
+            elif event.delta() > 0:
                 top /= 2.
                 bottom /= 2.
             self.axs[0].set_ybound(lower=bottom, upper=top)
-        else:
-            if ev.button == 'down':
-                left -= (ev.xdata - left) / 2
-                right += (right - ev.xdata) / 2
-            elif ev.button == 'up':
-                left += (ev.xdata - left) / 2
-                right -= (right - ev.xdata) / 2
-            self.axs[0].set_xbound(lower=left, upper=right)
         self.redraw()
     
     # Define zoom reset for the mouse button 2 (always wheel wheel!?)
