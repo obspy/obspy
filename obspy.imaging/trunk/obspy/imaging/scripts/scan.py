@@ -14,11 +14,54 @@ otherwise the format is autodetected.
 # supported must be in the last three line, line (28)
 
 import sys
+import os
 from obspy.core import read
 from optparse import OptionParser
 from matplotlib.dates import date2num, num2date
 from matplotlib.pyplot import figure, show
 import numpy as np
+
+def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
+                       verbose=False, ignore_links=False):
+    if ignore_links and os.path.islink(file):
+        print "Ignoring symlink:", file
+        return counter
+    try:
+        stream = read(file, format=format, headonly=True)
+    except:
+        print "Can not read", file
+        return counter
+    s = "%s %s" % (counter, file)
+    if verbose:
+        sys.stdout.write("%s\n" %s)
+        for line in str(stream).split("\n"):
+            sys.stdout.write("    " + line + "\n")
+    else:
+        sys.stdout.write("\r" + s)
+        sys.stdout.flush()
+    for tr in stream:
+        _id = tr.getId()
+        data_dict.setdefault(_id, [])
+        data_dict[_id].append([date2num(tr.stats.starttime),
+                               date2num(tr.stats.endtime)])
+        samp_int_dict.setdefault(_id,
+                                 1.0 / (24 * 3600 * tr.stats.sampling_rate))
+    return (counter + 1)
+
+def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
+                    verbose=False, ignore_links=False):
+    if ignore_links and os.path.islink(path):
+        print "Ignoring symlink:", path
+        return counter
+    if os.path.isfile(path):
+        counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter, format, verbose)
+    elif os.path.isdir(path):
+        for file in (os.path.join(path, file) for file in os.listdir(path)):
+            counter = recursive_parse(data_dict, samp_int_dict, file, counter, format, verbose, ignore_links)
+    else:
+        print "Problem with filename/dirname:", path
+    return counter
+    
 
 def main():
     parser = OptionParser(__doc__.strip())
@@ -26,7 +69,16 @@ def main():
                       type="string", dest="format",
                       help="Optional, the file format.\n" + \
                       " ".join(__doc__.split('\n')[-4:]))
-    (_, largs) = parser.parse_args()
+    parser.add_option("-v", "--verbose", default=False,
+                      action="store_true", dest="verbose",
+                      help="Optional. Verbose output.")
+    parser.add_option("-n", "--non-recursive", default=True,
+                      action="store_false", dest="recursive",
+                      help="Optional. Do not descend into directories.")
+    parser.add_option("-i", "--ignore-links", default=False,
+                      action="store_true", dest="ignore_links",
+                      help="Optional. Do not follow symbolic links.")
+    (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
     if len(largs) == 0:
@@ -38,22 +90,17 @@ def main():
     # station
     data = {}
     samp_int = {}
-    for i, file in enumerate(largs):
-        try:
-            stream = read(file, headonly=True)
-        except:
-            print "Can not read", file
-            continue
-        s = "%s %s" % (i, file)
-        sys.stdout.write('\b' * len(s) + s)
-        for tr in stream:
-            _id = tr.getId()
-            data.setdefault(_id, [])
-            data[_id].append([date2num(tr.stats.starttime),
-                              date2num(tr.stats.endtime)])
-            samp_int.setdefault(_id,
-                                1.0 / (24 * 3600 * tr.stats.sampling_rate))
-
+    for path in largs:
+        if options.recursive:
+            counter = recursive_parse(data, samp_int, path, 1, options.format,
+                                      options.verbose, options.ignore_links)
+        else:
+            counter = parse_file_to_dict(data, samp_int, path, 1, options.format,
+                                         options.verbose, options.ignore_links)
+    
+    if not data:
+        print "No waveform data found."
+        return
     #
     # Loop throught this dictionary
     ids = data.keys()
