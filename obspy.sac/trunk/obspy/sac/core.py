@@ -140,7 +140,7 @@ def readSACXY(filename, headonly=False, **kwargs):
     Parameters
     ----------
     filename : string
-        SAC file to be read.
+        Alphanumeric SAC file to be read.
 
     Returns
     -------
@@ -191,7 +191,7 @@ def readSACXY(filename, headonly=False, **kwargs):
 
 def writeSACXY(stream, filename, **kwargs):
     """
-    Writes SAC file.
+    Writes an alphanumeric SAC file
     
     This function should NOT be called directly, it registers via the
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
@@ -202,7 +202,7 @@ def writeSACXY(stream, filename, **kwargs):
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
     filename : string
-        SAC file to be written.
+        Alphanumeric SAC file to be written.
     """
     # Translate the common (renamed) entries
     i = 0
@@ -299,7 +299,7 @@ def readSAC(filename, headonly=False, **kwargs):
 
 def writeSAC(stream, filename, **kwargs):
     """
-    Writes SAC file.
+    Writes a SAC file
     
     This function should NOT be called directly, it registers via the
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy

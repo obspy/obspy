@@ -93,6 +93,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
     GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
     SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
+    SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.readSACXY`
     SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
     WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
     Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
@@ -933,6 +934,7 @@ class Stream(object):
         MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
         GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
         SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
+        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
         SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.writeSEISAN`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
         Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
