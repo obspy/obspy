@@ -24,7 +24,7 @@ import matplotlib.transforms
 from matplotlib.patches import Ellipse
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as QNavigationToolbar
-#from matplotlib.backend_bases import Event as MplEvent
+from matplotlib.backend_bases import MouseEvent as MplMouseEvent, KeyEvent as MplKeyEvent
 import lxml.etree
 from lxml.etree import SubElement as Sub
 
@@ -198,21 +198,57 @@ class ObsPyck(QtGui.QMainWindow):
         self.widgets.qToolButton_debug.setEnabled(True)
     
     # XXX
-    #def event(self, ev):
-    #    """
-    #    Event handling. We override some keys with special behavior to just
-    #    emit the standard push-the-button signal.
-    #    """
-    #    if ev.type() == QEvent.KeyPress:
-    #        if ev.key() == Qt.Key_Alt:
-    #            self._write_msg("overriding")
-    #            from matplotlib.backend_bases import KeyEvent
-    #            e = KeyEvent("key press", self.canv, "alt", x=0, y=0, guiEvent=ev)
-    #            self.__mpl_keyPressEvent(e)
-    #            #self.emit(QtCore.SIGNAL("altPressed"))
-    #            return True
-    #            self._write_msg("bad")
-    #    return QtGui.QMainWindow.event(self, ev)
+    def event(self, ev):
+        """
+        Event handling. We override some keys with special behavior to just
+        emit the standard push-the-button signal.
+        """
+        #if ev.type() == QEvent.KeyPress:
+        #    if ev.key() == Qt.Key_Alt:
+        #        self._write_msg("overriding")
+        #        from matplotlib.backend_bases import KeyEvent
+        #        e = KeyEvent("key_press_event", self.canv, "alt", x=0, y=0, guiEvent=ev)
+        #        self.__mpl_keyPressEvent(e)
+        #        #self.emit(QtCore.SIGNAL("altPressed"))
+        #        return True
+        #        self._write_msg("bad")
+        if ev.type() == QEvent.Wheel:
+            # Mapping from Qt MainWindow coordinates to mpl Canvas coordinates
+            # Qt: Starting at top left window corner, y positive down
+            # Mpl: Starting at bottom left canvas corner, y positive up
+            #
+            #         ev.x()   ----->
+            #     ------------------------------------------------------
+            # ev.y()                                                   |
+            #  |  |     self.canv.pos()                                |
+            #  |  |                 X-------------------------         |
+            #  v  |                 |                      ^ |         |
+            #     |                 |    self.canv.height()| |         |
+            #     |                 |                      | |         |
+            #     |                 |   self.canv.width()  | |         |
+            #     |                 |<---------------------+>|         |
+            #     |               ^ |                      | |         |
+            #     |               | |                      | |         |
+            #     |               | |                      v |         |
+            #     |            e.y()--------------------------         |
+            #     |                  e.x() --->                        |
+            #     |                                                    |
+            #     ------------------------------------------------------
+            x = ev.x() - self.canv.pos().x()
+            y = self.canv.pos().y() + self.canv.height() - ev.y()
+            # only override if in mpl canvas XXX not exactly correct!?!!!
+            if x < 0 or x > self.canv.height() or y < 0 or y > self.canv.width():
+                print "overriding canceled (not in canvas)!!"
+                return QtGui.QMainWindow.event(self, ev)
+            print "overriding!!"
+            if ev.delta() > 0:
+                button = "up"
+            else:
+                button = "down"
+            e = MplMouseEvent("scroll_event", self.canv, x, y, button, guiEvent=ev)
+            self.__mpl_wheelEvent(e)
+            return True
+        return QtGui.QMainWindow.event(self, ev)
     
     def cleanup(self):
         """
@@ -693,7 +729,6 @@ class ObsPyck(QtGui.QMainWindow):
         sys.stdout = self.stdout_backup
         sys.stderr = self.stderr_backup
         ## DEBUG PYQT START
-        from PyQt4 import QtCore
         QtCore.pyqtRemoveInputHook()
         try:
             import ipdb;ipdb.set_trace()
