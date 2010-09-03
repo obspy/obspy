@@ -1229,7 +1229,7 @@ class ObsPyck(QtGui.QMainWindow):
         # Calculate and set new axes boundaries from old ones
         (left, right) = self.axs[0].get_xbound()
         (bottom, top) = self.axs[0].get_ybound()
-        if ev.key == 'alt':
+        if ev.key == self.keys['switchWheelZoomAxis']:
             # Zoom in on wheel-up
             if ev.button == 'down':
                 top *= 2.
