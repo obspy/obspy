@@ -8,9 +8,11 @@ import tempfile
 import glob
 import fnmatch
 
+import PyQt4
+import numpy as np
 import matplotlib as mpl
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as QFigureCanvas
 from matplotlib.widgets import MultiCursor as MplMultiCursor
 
 from obspy.core import UTCDateTime
@@ -33,20 +35,22 @@ COMMANDLINE_OPTIONS = [
                 "'2010-01-10T05:00:00'"}],
         [["-d", "--duration"], {'type': "float", 'dest': "duration",
                 'default': 120, 'help': "Duration of seismogram in seconds"}],
-        [["-i", "--ids"], {'dest': "ids",
+        [["-i", "--seishub-ids"], {'dest': "seishub_ids",
                 'default': 'BW.RJOB..EH*,BW.RMOA..EH*',
-                'help': "Ids to retrieve, star for channel and wildcards for "
-                "stations are allowed, e.g. 'BW.RJOB..EH*,BW.RM?*..EH*'"}],
-        [["-s", "--servername"], {'dest': "servername", 'default': 'teide',
-                'help': "Servername of the seishub server"}],
-        [["-p", "--port"], {'type': "int", 'dest': "port", 'default': 8080,
-                'help': "Port of the seishub server"}],
-        [["--user"], {'dest': "user", 'default': 'obspyck',
-                'help': "Username for seishub server"}],
-        [["--password"], {'dest': "password", 'default': 'obspyck',
-                'help': "Password for seishub server"}],
-        [["--timeout"], {'dest': "timeout", 'type': "int", 'default': 10,
-                'help': "Timeout for seishub server"}],
+                'help': "Ids to retrieve from SeisHub. Star for channel and "
+                "wildcards for stations are allowed, e.g. "
+                "'BW.RJOB..EH*,BW.RM?*..EH*'"}],
+        [["--seishub-servername"], {'dest': "seishub_servername",
+                'default': 'teide',
+                'help': "Servername of the SeisHub server"}],
+        [["--seishub-port"], {'type': "int", 'dest': "seishub_port",
+                'default': 8080, 'help': "Port of the SeisHub server"}],
+        [["--seishub-user"], {'dest': "seishub-user", 'default': 'obspyck',
+                'help': "Username for SeisHub server"}],
+        [["--seishub-password"], {'dest': "seishub_password",
+                'default': 'obspyck', 'help': "Password for SeisHub server"}],
+        [["--seishub-timeout"], {'dest': "seishub_timeout", 'type': "int",
+                'default': 10, 'help': "Timeout for SeisHub server"}],
         [["-k", "--keys"], {'action': "store_true", 'dest': "keybindings",
                 'default': False, 'help': "Show keybindings and quit"}],
         [["--lowpass"], {'type': "float", 'dest': "lowpass", 'default': 20.0,
@@ -69,7 +73,7 @@ COMMANDLINE_OPTIONS = [
                 "waveform starting 30 seconds earlier than the specified time "
                 "use -30."}],
         [["-m", "--merge"], {'type': "string", 'dest': "merge", 'default': "",
-                'help': "After fetching the streams from seishub run a merge "
+                'help': "After fetching the streams run a merge "
                 "operation on every stream. If not done, streams with gaps "
                 "and therefore more traces per channel get discarded.\nTwo "
                 "methods are supported (see http://svn.geophysik.uni-muenchen"
@@ -145,33 +149,41 @@ WIDGET_NAMES = ["qToolButton_clearAll", "qToolButton_clearOrigMag", "qToolButton
         "qComboBox_nllocModel", "qToolButton_calcMag", "qToolButton_doFocMec",
         "qToolButton_showMap", "qToolButton_showFocMec", "qToolButton_nextFocMec",
         "qToolButton_showWadati", "qToolButton_getNextEvent",
-        "qToolButton_updateEventList", "qToolButton_sendEvent", "qToolButton_deleteEvent",
+        "qToolButton_updateEventList", "qToolButton_sendEvent", "qCheckBox_publishEvent",
         "qToolButton_deleteEvent", "qCheckBox_sysop", "qLineEdit_sysopPassword",
         "qToolButton_previousStream", "qLabel_streamNumber", "qComboBox_streamName",
         "qToolButton_nextStream", "qToolButton_overview", "qPushButton_phaseType",
         "qComboBox_phaseType", "qToolButton_filter", "qComboBox_filterType",
         "qCheckBox_zerophase", "qLabel_highpass", "qDoubleSpinBox_highpass",
-        "qLabel_lowpass", "qDoubleSpinBox_lowpass", "qToolButton_Spectrogram",
+        "qLabel_lowpass", "qDoubleSpinBox_lowpass", "qToolButton_spectrogram",
         "qCheckBox_spectrogramLog", "qPlainTextEdit_stdout", "qPlainTextEdit_stderr"]
 #Estimating the maximum/minimum in a sample-window around click
 MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
 AXVLINEWIDTH = 1.2
-#dictionary for key-bindings
-KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
-        'setMagMin': 'alt', 'setMagMax': ' ', 'delMagMinMax': 'escape',
-        'switchPhase': 'control', 'switchPan': 'p',
-        'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
+# dictionary for key-bindings.
+KEYS = {'setPick': "alt", 'setPickError': " ", 'delPick': "escape",
+        'setMagMin': "alt", 'setMagMax': " ", 'delMagMinMax': "escape",
+        'switchPhase': "control", 'switchPan': "p",
+        'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "shift",
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
         'setOnset': {'i': "impulsive", 'e': "emergent"}}
+# XXX Qt:
+#KEYS = {'setPick': "Key_Alt", 'setPickError': "Key_Space", 'delPick': "Key_Escape",
+#        'setMagMin': "Key_Alt", 'setMagMax': "Key_Space", 'delMagMinMax': "Key_Escape",
+#        'switchPhase': "Key_Control", 'switchPan': "Key_P",
+#        'prevStream': "Key_Y", 'nextStream': "Key_X", 'switchWheelZoomAxis': "Key_Shift",
+#        'setWeight': {'Key_0': 0, 'Key_1': 1, 'Key_2': 2, 'Key_3': 3},
+#        'setPol': {'Key_U': "up", 'Key_D': "down", 'Key_Plus': "poorup", 'Key_Minus': "poordown"},
+#        'setOnset': {'Key_I': "impulsive", 'Key_E': "emergent"}}
 # the following dicts' keys should be all lower case, we use "".lower() later
 POLARITY_CHARS = {'up': "U", 'down': "D", 'poorup': "+", 'poordown': "-"}
 ONSET_CHARS = {'impulsive': "I", 'emergent': "E",
                'implusive': "I"} # XXX some old events have a typo there... =)
 
 
-class QMplCanvas(FigureCanvas):
+class QMplCanvas(QFigureCanvas):
     """
     Class to represent the FigureCanvas widget.
     """
@@ -179,7 +191,7 @@ class QMplCanvas(FigureCanvas):
         # Standard Matplotlib code to generate the plot
         self.fig = Figure()
         # initialize the canvas where the Figure renders into
-        FigureCanvas.__init__(self, self.fig)
+        QFigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
 
@@ -211,7 +223,7 @@ def fetch_waveforms_metadata(options):
     """
     Sets up a client and fetches waveforms and metadata according to command
     line options.
-    Now also fetches data via arclink (fissures) if --arclink_ids
+    Now also fetches data via arclink (fissures) if --arclink-ids
     (--fissures-ids) is used.
     The arclink (fissures) client is not returned, it is only useful for
     downloading the data and not needed afterwards.
@@ -227,40 +239,46 @@ def fetch_waveforms_metadata(options):
     t = t + options.starttime_offset
     streams = []
     sta_fetched = set()
-    # Seishub
-    print "=" * 80
-    print "Fetching waveforms and metadata from seishub:"
-    print "-" * 80
-    baseurl = "http://" + options.servername + ":%i" % options.port
-    client = Client(base_url=baseurl, user=options.user,
-                    password=options.password, timeout=options.timeout)
-    for id in options.ids.split(","):
-        net, sta_wildcard, loc, cha = id.split(".")
-        for sta in client.waveform.getStationIds(network_id=net):
-            if not fnmatch.fnmatch(sta, sta_wildcard):
-                continue
-            # make sure we dont fetch a single station of
-            # one network twice (could happen with wildcards)
-            net_sta = "%s.%s" % (net, sta)
-            if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
-                continue
-            try:
-                sys.stdout.write("\r%s ..." % net_sta)
-                sys.stdout.flush()
-                st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                        t + options.duration, apply_filter=True,
-                        getPAZ=True, getCoordinates=True)
-                sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
-                sys.stdout.flush()
-            except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
-                sys.stdout.flush()
-                continue
-            for tr in st:
-                tr.stats['client'] = "seishub"
-            streams.append(st)
+    # SeisHub
+    if options.seishub_ids:
+        print "=" * 80
+        print "Fetching waveforms and metadata from SeisHub:"
+        print "-" * 80
+        baseurl = "http://" + options.seishub_servername + ":%i" % options.seishub_port
+        client = Client(base_url=baseurl, user=options.seishub_user,
+                        password=options.seishub_password, timeout=options.seishub_timeout)
+        for id in options.seishub_ids.split(","):
+            net, sta_wildcard, loc, cha = id.split(".")
+            stations_to_fetch = []
+            if "?" in sta_wildcard or "*" in sta_wildcard:
+                for sta in client.waveform.getStationIds(network_id=net):
+                    if fnmatch.fnmatch(sta, sta_wildcard):
+                        stations_to_fetch.append(sta)
+            else:
+                stations_to_fetch = [sta_wildcard]
+            for sta in stations_to_fetch:
+                # make sure we dont fetch a single station of
+                # one network twice (could happen with wildcards)
+                net_sta = "%s.%s" % (net, sta)
+                if net_sta in sta_fetched:
+                    print "%s skipped! (Was already retrieved)" % net_sta
+                    continue
+                try:
+                    sys.stdout.write("\r%s ..." % net_sta.ljust(8))
+                    sys.stdout.flush()
+                    st = client.waveform.getWaveform(net, sta, loc, cha, t,
+                            t + options.duration, apply_filter=True,
+                            getPAZ=True, getCoordinates=True)
+                    sta_fetched.add(net_sta)
+                    sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
+                    sys.stdout.flush()
+                except Exception, e:
+                    sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta.ljust(8), e))
+                    sys.stdout.flush()
+                    continue
+                for tr in st:
+                    tr.stats['client'] = "seishub"
+                streams.append(st)
     # ArcLink
     if options.arclink_ids:
         from obspy.arclink import Client as AClient
@@ -457,6 +475,11 @@ def merge_check_and_cleanup_streams(streams, options):
             streams.remove(st)
             continue
         sta_list.add(net_sta)
+    # demean traces if not explicitly deactivated on command line
+    if not options.nozeromean:
+        for st in streams:
+            for tr in st:
+                tr.data = tr.data - tr.data.mean()
     return (warn_msg, merge_msg, streams)
 
 def setup_dicts(streams):
@@ -726,3 +749,40 @@ def formatXTicklabels(x, pos):
         return "%i:%06.3f" % (min, sec)
     else:
         return "%.3f" % x
+
+def map_qKeys(key_dict):
+    """
+    Map Dictionary of form {'functionality': "Qt_Key_name"} to
+    {'functionality': Qt_Key_Code} for use in check against event Keys.
+
+    >>> KEYS = {'delMagMinMax': 'Key_Escape',
+    ...         'delPick': 'Key_Escape',
+    ...         'nextStream': 'Key_X',
+    ...         'prevStream': 'Key_Y',
+    ...         'setPol': {'Key_D': 'down',
+    ...                    'Key_Minus': 'poordown',
+    ...                    'Key_Plus': 'poorup',
+    ...                    'Key_U': 'up'},
+    ...         'setWeight': {'Key_0': 0, 'Key_1': 1, 'Key_2': 2, 'Key_3': 3},
+    ...         'switchWheelZoomAxis': 'Key_Shift'}
+    >>> map_qKeys(KEYS)
+    {'delMagMinMax': 16777216,
+     'delPick': 16777216,
+     'nextStream': 88,
+     'prevStream': 89,
+     'setPol': {43: 'poorup', 45: 'poordown', 68: 'down', 85: 'up'},
+     'setWeight': {48: 0, 49: 1, 50: 2, 51: 3},
+     'switchWheelZoomAxis': 16777248}
+    """
+    Qt = PyQt4.QtCore.Qt
+    for functionality, key_name in key_dict.iteritems():
+        if isinstance(key_name, str):
+            key_dict[functionality] = getattr(Qt, key_name)
+        # sometimes we get a nested dictionary (e.g. "setWeight")...
+        elif isinstance(key_name, dict):
+            nested_dict = key_name
+            new = {}
+            for key_name, value in nested_dict.iteritems():
+                new[getattr(Qt, key_name)] = value
+            key_dict[functionality] = new
+    return key_dict
