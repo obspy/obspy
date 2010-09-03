@@ -916,13 +916,11 @@ class ObsPyck(QtGui.QMainWindow):
                 axs[i].xaxis.set_ticks_position("top")
             axs[-1].xaxis.set_ticks_position("both")
             axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-            if False:
-                pass
-            # XXX if self.widgets.qToolButton_Spectrogram.isChecked():
-            # XXX     log = self.widgets.qCheckBox_spectrogramLog.isChecked()
-            # XXX     spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
-            # XXX                 cmap=self.spectrogramColormap, axis=axs[i],
-            # XXX                 zorder=-10)
+            if self.widgets.qToolButton_spectrogram.isChecked():
+                log = self.widgets.qCheckBox_spectrogramLog.isChecked()
+                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
+                            cmap=self.spectrogramColormap, axis=axs[i],
+                            zorder=-10)
             else:
                 plts.append(axs[i].plot(t[i], st[i].data, color='k',zorder=1000)[0])
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
