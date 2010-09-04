@@ -1230,7 +1230,6 @@ class Stream(object):
         ...             'gain': 60077000.0,
         ...             'sensitivity': 2516778400.0}
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
-        >>> paz_1hz['sensitivity'] = 1.0
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
         >>> st.plot() # doctest: +SKIP
 
@@ -1257,6 +1256,7 @@ class Stream(object):
                     list of complex floating point numbers, gain must be of
                     type float. Poles and Zeros are assumed to correct to m/s,
                     SEED convention. Use None for no inverse filtering.
+                    Use 'self' to use paz AttribDict of attached trace object
         :type paz_simulate: Dictionary, None
         :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
                          'gain'. Poles and zeros must be a list of complex
@@ -1274,6 +1274,8 @@ class Stream(object):
                 simulation.
         """
         for tr in self:
+            if paz_remove=='self':
+                paz_remove = tr.stats.paz
             tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
                         remove_sensitivity=remove_sensitivity,
                         simulate_sensitivity=simulate_sensitivity, **kwargs)

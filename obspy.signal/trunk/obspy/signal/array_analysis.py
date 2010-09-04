@@ -827,7 +827,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         raise Exception("Coordsys must be one of 'lonlat', 'xy'")
 
     if return_center:
-        geometry, (center_long, center_lat, center_h)
+        geometry, (center_lon, center_lat, center_h)
     return geometry
 
 

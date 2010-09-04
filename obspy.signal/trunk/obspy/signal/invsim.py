@@ -83,7 +83,7 @@ def cornFreq2Paz(fc, damp=0.707):
     """
     poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
-    return {'poles':poles, 'zeros':[0j, 0j], 'gain':1}
+    return {'poles':poles, 'zeros':[0j, 0j], 'gain':1, 'sensitivity': 1.0}
 
 
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
