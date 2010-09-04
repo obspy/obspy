@@ -28,6 +28,7 @@ import doctest
 import StringIO
 import numpy as np
 import obspy.core
+from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific
 
 
@@ -390,7 +391,7 @@ def getStartAndEndTime(f):
 
 def attach_faked_paz(tr, paz_file):
     '''
-    Attach faked paz_file to tr.stats.paz attribdict
+    Attach faked paz_file to tr.stats.paz AttribDict
 
     This is prototype code. Please use it only if you understand what is
     going on in the source code!
