@@ -824,7 +824,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         geometry[:,1] -= geometry[:,1].mean()
         geometry[:,2] -= geometry[:,2].mean()
     else:
-        raise Exception("Coordsys must be one of 'lonlat', 'xy'")
+        raise ValueError("Coordsys must be one of 'lonlat', 'xy'")
 
     if return_center:
         geometry, (center_lon, center_lat, center_h)
@@ -874,10 +874,10 @@ def get_spoint(stream, stime, etime):
     # now we have to adjust to the beginning of real start time
     if slatest > stime:
         msg = "Specified start-time is smaller than starttime in stream"
-        raise Exception(msg)
+        raise ValueError(msg)
     if eearliest < etime:
         msg = "Specified end-time bigger is than endtime in stream"
-        raise Exception(msg)
+        raise ValueError(msg)
     for i in xrange(nostat):
         offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
         negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
