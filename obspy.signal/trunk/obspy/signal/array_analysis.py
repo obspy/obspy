@@ -809,11 +809,12 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         center_lon /= nstat
         center_h /= nstat
         for i, tr in enumerate(stream):
-            x, y = utlGeoKm(center_lon, center_lat, tr.stats.coordinates.lon,
-                            tr.stats.coordinates.lat)
+            x, y = utlGeoKm(center_lon, center_lat,
+                            tr.stats.coordinates.longitude,
+                            tr.stats.coordinates.latitude)
             geometry[i,0] = x
             geometry[i,1] = y
-            geometry[i,2] = tr.stats.coordinates.elev - center_h
+            geometry[i,2] = tr.stats.coordinates.elevation - center_h
     elif coordsys == 'xy':
         for i, tr in enumerate(stream):
             geometry[i,0] = tr.stats.coordinates.x
@@ -822,6 +823,8 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         geometry[:,0] -= geometry[:,0].mean()
         geometry[:,1] -= geometry[:,1].mean()
         geometry[:,2] -= geometry[:,2].mean()
+    else:
+        raise Exception("Coordsys must be one of 'lonlat', 'xy'")
 
     if return_center:
         geometry, (center_long, center_lat, center_h)
