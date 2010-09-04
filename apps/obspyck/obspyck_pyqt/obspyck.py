@@ -62,6 +62,23 @@ class ObsPyck(QtGui.QMainWindow):
         # All GUI elements will be accessible via self.widgets.name_of_element
         self.widgets = Ui_qMainWindow_obsPyck()
         self.widgets.setupUi(self)
+
+        # Needs to be done pretty much at the beginning because some other
+        # stuff relies on the phase type being set.
+        # Create little color icons in front of the phase type combo box.
+        pixmap = QtGui.QPixmap(70, 50)
+        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['P'])))
+        icon = QtGui.QIcon(pixmap)
+        self.widgets.qComboBox_phaseType.addItem(icon, 'P')
+
+        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['S'])))
+        icon = QtGui.QIcon(pixmap)
+        self.widgets.qComboBox_phaseType.addItem(icon, 'S')
+
+        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['Mag'])))
+        icon = QtGui.QIcon(pixmap)
+        self.widgets.qComboBox_phaseType.addItem(icon, 'Mag')
+
         self.qMain = self.widgets.centralwidget
         self.__enableTextBrowserWrite()
         # Matplotlib figure.
@@ -146,7 +163,6 @@ class ObsPyck(QtGui.QMainWindow):
         labels = ["%s.%s" % (st[0].stats.network, st[0].stats.station) \
                   for st in self.streams]
         self.widgets.qComboBox_streamName.addItems(labels)
-        self._update_qPushBotton_phaseType_color()
 
         # set the filter default values according to command line options
         # or optionparser default values
@@ -200,6 +216,7 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX not working the way I want it to:
         #self.keyPressEvent = lambda ev: ev.key() == Qt.Key_Escape and self.emit(Qt.SIGNAL("escapePressed")) or QtGui.QMainWindow().keyPressEvent(ev)
         #self.event = lambda ev: (ev.type() == QtGui.QKeyEvent and ev.key() == Qt.Key_Escape) and self.__mpl_keyPressEvent(MplEvent("key_press_event", self.canv, guiEvent=ev)) or QtGui.QMainWindow().event(ev)
+
     
     # XXX
     #def event(self, ev):
@@ -603,9 +620,13 @@ class ObsPyck(QtGui.QMainWindow):
         self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
     def on_qComboBox_phaseType_currentIndexChanged(self, newvalue):
-        self.updateMulticursorColor()
-        self._update_qPushBotton_phaseType_color()
-        self.redraw()
+        # XXX: Ugly hack because it can be called before the combo box has any
+        # entries.
+        try:
+            self.updateMulticursorColor()
+            self.redraw()
+        except AttributeError:
+            pass
 
     def on_qToolButton_filter_toggled(self):
         self.updatePlot()
@@ -1370,16 +1391,6 @@ class ObsPyck(QtGui.QMainWindow):
         color = PHASE_COLORS[phase_name]
         for l in self.multicursor.lines:
             l.set_color(color)
-
-    def _update_qPushBotton_phaseType_color(self):
-        widget = self.widgets.qPushButton_phaseType
-        palette = widget.palette()
-        qstring = self.widgets.qComboBox_phaseType.currentText()
-        qstring = QtCore.QString(PHASE_COLORS[str(qstring)])
-        qcolor = QtGui.QColor(qstring)
-        palette.setColor(QtGui.QPalette.Button, qcolor)
-        widget.setPalette(palette)
-        widget.repaint()
 
     def updateStreamNumberLabel(self):
         label = "%02i/%02i" % (self.stPt + 1, self.stNum)

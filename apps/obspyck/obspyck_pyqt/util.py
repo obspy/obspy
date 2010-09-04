@@ -11,6 +11,7 @@ import fnmatch
 import PyQt4
 import numpy as np
 import matplotlib as mpl
+from matplotlib.colors import ColorConverter
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as QFigureCanvas
 from matplotlib.widgets import MultiCursor as MplMultiCursor
@@ -152,7 +153,7 @@ WIDGET_NAMES = ["qToolButton_clearAll", "qToolButton_clearOrigMag", "qToolButton
         "qToolButton_updateEventList", "qToolButton_sendEvent", "qCheckBox_publishEvent",
         "qToolButton_deleteEvent", "qCheckBox_sysop", "qLineEdit_sysopPassword",
         "qToolButton_previousStream", "qLabel_streamNumber", "qComboBox_streamName",
-        "qToolButton_nextStream", "qToolButton_overview", "qPushButton_phaseType",
+        "qToolButton_nextStream", "qToolButton_overview",
         "qComboBox_phaseType", "qToolButton_filter", "qComboBox_filterType",
         "qCheckBox_zerophase", "qLabel_highpass", "qDoubleSpinBox_highpass",
         "qLabel_lowpass", "qDoubleSpinBox_lowpass", "qToolButton_spectrogram",
@@ -194,6 +195,12 @@ class QMplCanvas(QFigureCanvas):
         QFigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
+def matplotlib_color_to_rgb(color):
+    """
+    Converts matplotlib colors to rgb.
+    """
+    rgb = ColorConverter().to_rgb(color)
+    return [int(_i*255) for _i in rgb]
 
 def check_keybinding_conflicts(keys):
     """
