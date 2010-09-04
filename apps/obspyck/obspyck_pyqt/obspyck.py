@@ -187,7 +187,7 @@ class ObsPyck(QtGui.QMainWindow):
         self.canv.mpl_connect('key_press_event', self.__mpl_keyPressEvent)
         self.canv.mpl_connect('key_release_event', self.__mpl_keyReleaseEvent)
         self.canv.mpl_connect('button_release_event', self.__mpl_mouseButtonReleaseEvent)
-        # The scroll event is handles using Qt.
+        # The scroll event is handled using Qt.
         #self.canv.mpl_connect('scroll_event', self.__mpl_wheelEvent)
         self.canv.mpl_connect('button_press_event', self.__mpl_mouseButtonPressEvent)
         self.multicursorReinit()
@@ -200,7 +200,6 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX not working the way I want it to:
         #self.keyPressEvent = lambda ev: ev.key() == Qt.Key_Escape and self.emit(Qt.SIGNAL("escapePressed")) or QtGui.QMainWindow().keyPressEvent(ev)
         #self.event = lambda ev: (ev.type() == QtGui.QKeyEvent and ev.key() == Qt.Key_Escape) and self.__mpl_keyPressEvent(MplEvent("key_press_event", self.canv, guiEvent=ev)) or QtGui.QMainWindow().event(ev)
-        self.widgets.qToolButton_debug.setEnabled(True)
     
     # XXX
     #def event(self, ev):
@@ -297,8 +296,8 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawStreamOverview()
             self.multicursor.visible = False
-            # XXX XXX how to use mpl toolbar in Qt?!?
             self.toolbar.pan()
+            self.toolbar.zoom()
             self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
@@ -402,7 +401,9 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawEventMap()
             self.multicursor.visible = False
+            # just want to make sure that we end up in normal cursor state
             self.toolbar.pan()
+            self.toolbar.zoom()
             self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
@@ -474,6 +475,8 @@ class ObsPyck(QtGui.QMainWindow):
             self.drawWadati()
             self.multicursor.visible = False
             self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
         else:
@@ -970,9 +973,6 @@ class ObsPyck(QtGui.QMainWindow):
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
-        self.toolbar.update()
-        self.toolbar.pan(False)
-        self.toolbar.zoom(True)
     
     def delAxes(self):
         for ax in self.axs:
@@ -1267,39 +1267,48 @@ class ObsPyck(QtGui.QMainWindow):
             self.flagWheelZoomAmplitude = False
 
     # Define zooming for the mouse wheel wheel
-    def __mpl_wheelEvent(self, event):
-        # Get the keyboard modifiers. They are a enum type.
-        mods =  int(event.modifiers())
-        if self.widgets.qToolButton_showMap.isChecked():
-            return
+    def __mpl_wheelEvent(self, ev):
+        # create mpl event from QEvent to get cursor position in data coords
+        x = ev.x()
+        y = self.canv.height() - ev.y()
+        mpl_ev = MplMouseEvent("scroll_event", self.canv, x, y, "up", guiEvent=ev)
         # Calculate and set new axes boundaries from old ones
-        (left, right) = self.axs[0].get_xbound()
-        (bottom, top) = self.axs[0].get_ybound()
+        if self.widgets.qToolButton_showMap.isChecked():
+            ax = self.axEventMap
+        else:
+            ax = self.axs[0]
+        (left, right) = ax.get_xbound()
+        (bottom, top) = ax.get_ybound()
+        # Get the keyboard modifiers. They are a enum type.
         # Use bitwise or to compare...hope this is correct.
-        if mods == int(QtCore.Qt.NoModifier):
-            # Will zoom in 10% steps by default.
-            step = abs(0.1 *  (right - left))
+        if ev.modifiers() == QtCore.Qt.NoModifier:
             # Zoom in.
-            if event.delta() < 0:
-                left -= step
-                right += step
+            if ev.delta() < 0:
+                left -= (mpl_ev.xdata - left) / 2
+                right += (right - mpl_ev.xdata) / 2
+                if self.widgets.qToolButton_showMap.isChecked():
+                    top -= (mpl_ev.ydata - top) / 2
+                    bottom += (bottom - mpl_ev.ydata) / 2
             # Zoom out.
-            elif event.delta() > 0:
-                left += step
-                right -= step
-            self.axs[0].set_xbound(lower=left, upper=right)
+            elif ev.delta() > 0:
+                left += (mpl_ev.xdata - left) / 2
+                right -= (right - mpl_ev.xdata) / 2
+                if self.widgets.qToolButton_showMap.isChecked():
+                    top += (mpl_ev.ydata - top) / 2
+                    bottom -= (bottom - mpl_ev.ydata) / 2
         # Still able to use the dictionary.
-        elif mods == int(getattr(QtCore.Qt,
-                '%sModifier' % self.keys['switchWheelZoomAxis'].capitalize())):
+        elif ev.modifiers() == getattr(QtCore.Qt,
+                '%sModifier' % self.keys['switchWheelZoomAxis'].capitalize()):
             # Zoom in on wheel-up
-            if event.delta() < 0:
-                top *= 2.
-                bottom *= 2.
+            if ev.delta() < 0:
+                top *= 2
+                bottom *= 2
             # Zoom out on wheel-down
-            elif event.delta() > 0:
-                top /= 2.
-                bottom /= 2.
-            self.axs[0].set_ybound(lower=bottom, upper=top)
+            elif ev.delta() > 0:
+                top /= 2
+                bottom /= 2
+        ax.set_xbound(lower=left, upper=right)
+        ax.set_ybound(lower=bottom, upper=top)
         self.redraw()
     
     # Define zoom reset for the mouse button 2 (always wheel wheel!?)
@@ -1310,12 +1319,30 @@ class ObsPyck(QtGui.QMainWindow):
         # cursor should not be plotted when making a zoom selection etc.
         if ev.button in [1, 3]:
             self.multicursor.visible = False
+            # reuse this event as setPick / setPickError event
+            # XXX i would like to be able to determine toolbar state and do
+            # XXX this only if in normal cursor state.
+            if ev.button == 1:
+                if str(self.widgets.qComboBox_phaseType.currentText()) in SEISMIC_PHASES:
+                    ev.key = self.keys['setPick']
+                else:
+                    ev.key = self.keys['setMagMin']
+            elif ev.button == 3:
+                if str(self.widgets.qComboBox_phaseType.currentText()) in SEISMIC_PHASES:
+                    ev.key = self.keys['setPickError']
+                else:
+                    ev.key = self.keys['setMagMax']
+            self.__mpl_keyPressEvent(ev)
             # XXX self.canv.widgetlock(self.toolbar)
         # show traces from start to end
         # (Use Z trace limits as boundaries)
         elif ev.button == 2:
-            self.axs[0].set_xbound(lower=self.xMin, upper=self.xMax)
-            self.axs[0].set_ybound(lower=self.yMin, upper=self.yMax)
+            if self.widgets.qToolButton_showMap.isChecked():
+                ax = self.axEventMap
+            else:
+                ax = self.axs[0]
+            ax.set_xbound(lower=self.xMin, upper=self.xMax)
+            ax.set_ybound(lower=self.yMin, upper=self.yMax)
             # Update all subplots
             self.redraw()
             msg = "Resetting axes"
@@ -2422,7 +2449,6 @@ class ObsPyck(QtGui.QMainWindow):
             err = "Error: No hypocenter data!"
             self._write_err(err)
             return
-        self.toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
         #self.axEventMap = self.fig.add_subplot(111)
         bbox = matplotlib.transforms.Bbox.from_extents(0.08, 0.08, 0.92, 0.92)
