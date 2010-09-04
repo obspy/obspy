@@ -17,29 +17,17 @@ interfaced via python-ctypes.
 
 See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
-
-GNU General Public License (GPL)
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+GNU Lesser General Public License, Version 3
+(http://www.gnu.org/copyleft/lesser.html)
 """
 
 import os
 import platform
 import ctypes as C
+import doctest
+import StringIO
 import numpy as np
-from obspy.core import UTCDateTime
+import obspy.core
 from obspy.core.util import c_file_p, formatScientific
 
 
@@ -398,3 +386,88 @@ def getStartAndEndTime(f):
                            head.n_samps / float(head.samp_rate))
     del fp, head
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
+
+
+def attach_faked_paz(tr, paz_file):
+    '''
+    Attach faked paz_file to tr.stats.paz attribdict
+
+    This is prototype code. Please use it only if you understand what is
+    going on in the source code!
+
+    Attaches a paz AttribDict to trace containing poles zeros and gain. It
+    is called faked because we use the overall sensitivity to store also
+    the A0_normalization_factor. Which itself is set to 1.0.
+
+    :param tr: An ObsPy trace object
+    :param paz_file: path to pazfile or file pointer
+
+    >>> tr = obspy.core.Trace(header={'calib': 0.596})
+    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    ... 2
+    ... -4.39823 4.48709
+    ... -4.39823 -4.48709
+    ... 3
+    ... 0.0 0.0
+    ... 0.0 0.0
+    ... 0.0 0.0
+    ... 0.4""")
+    >>> attach_faked_paz(tr, f)
+    >>> print round(tr.stats.paz.sensitivity, -4)
+    671140000.0
+    '''
+    poles = []
+    zeros = []
+    found_zero = False
+
+    if isinstance(paz_file, str):
+        paz_file = open(paz_file, 'r')
+
+    PAZ = paz_file.readlines()
+    if PAZ[0][0:4] != 'CAL1':
+        raise Exception("Unknown GSE PAZ file")
+
+    ind = 1
+    npoles = int(PAZ[ind])
+    for i in xrange(npoles):
+        try:
+            poles.append(complex(*[float(n) for n in PAZ[i+1+ind].split()]))
+        except ValueError:
+            poles.append(complex(float(PAZ[i+1+ind][:8]), 
+                                 float(PAZ[i+1+ind][8:])))
+
+    ind += i + 2
+    nzeros = int(PAZ[ind])
+    for i in xrange(nzeros):
+        try:
+            zeros.append(complex(*[float(n) for n in PAZ[i+1+ind].split()]))
+        except ValueError:
+            zeros.append(complex(float(PAZ[i+1+ind][:8]), 
+                                 float(PAZ[i+1+ind][8:])))
+
+    ind += i + 2
+    # seismometer_gain / A0_normalization_factor [microVolt/nm/s]
+    gain = float(PAZ[ind])
+
+    # remove zero at 0,0j to undo integration in GSE PAZ
+    for i, zero in enumerate(list(zeros)):
+        if zero == complex(0,0j):
+            zeros.pop(i)
+            found_zero = True
+            break
+    if not found_zero:
+        raise Exception("Could not remove (0,0j) zero to undo GSE integration")
+
+    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz.poles = poles
+    tr.stats.paz.zeros = zeros
+    # 1000 due to microVolt/nm/s  -> Volt/m/s
+    # 1e-6 due to microVolt/count -> Volt/count
+    # tr.stats.calib == digitizer_gain [microVolt/count]
+    tr.stats.paz.sensitivity = gain * 1000/(tr.stats.calib * 1e-6)
+    # A0_normalization_factor
+    tr.stats.paz.gain = 1.0
+
+
+if __name__ == '__main__':
+    doctest.testmod(exclude_empty=True)
