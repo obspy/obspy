@@ -562,8 +562,8 @@ class ObsPyck(QtGui.QMainWindow):
         resource_name = event.get('resource_name')
         account = event.get('account')
         user = event.get('user')
-
         qMessageBox = QtGui.QMessageBox()
+        qMessageBox.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("obspyck.gif")))
         qMessageBox.setIcon(QtGui.QMessageBox.Warning)
         qMessageBox.setWindowTitle("Delete?")
         qMessageBox.setText("Delete event from database?")

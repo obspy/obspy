@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Sun Sep  5 14:23:52 2010
+# Created: Sun Sep  5 15:21:29 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,6 +18,9 @@ class Ui_qMainWindow_obsPyck(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(qMainWindow_obsPyck.sizePolicy().hasHeightForWidth())
         qMainWindow_obsPyck.setSizePolicy(sizePolicy)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("obspyck.gif"),QtGui.QIcon.Normal,QtGui.QIcon.Off)
+        qMainWindow_obsPyck.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(qMainWindow_obsPyck)
         self.centralwidget.setMouseTracking(True)
         self.centralwidget.setObjectName("centralwidget")
