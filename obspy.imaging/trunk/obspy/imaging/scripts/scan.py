@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspy-scan.py [-f MSEED] file1 file2 file3 ...
+USAGE: obspy-scan [-f MSEED] file1 file2 file3 ...
 
 Plot range of available data in files. Gaps are plotted as vertical red
 lines, startimes of available data are plotted as crosses. The sampling
 rate must stay the same of each station, but can vary between the stations.
 
-Supported formats: MSEED, GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN. If the
-format option (-f) is specified, the reading is significantly faster,
+Supported formats: MSEED, GSE2, SAC, SACXY, WAV, SH-ASC, SH-Q, SEISAN. If
+the format option (-f) is specified, the reading is significantly faster,
 otherwise the format is autodetected.
 """
 # supported must be in the last three line, line (28)

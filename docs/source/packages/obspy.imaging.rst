@@ -3,6 +3,18 @@
 
     .. comment to end block
 
+    Scripts
+    -------
+    .. autosummary::
+      :template: script.rst
+      :toctree: .
+      :nosignatures:
+
+        scripts.scan
+        scripts.plot
+
+    .. comment to end block
+
     Modules
     -------
     .. autosummary::

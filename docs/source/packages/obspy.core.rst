@@ -3,6 +3,17 @@
 
     .. comment to end block
 
+    Scripts
+    -------
+    .. autosummary::
+      :template: script.rst
+      :toctree: .
+      :nosignatures:
+
+        scripts.runtests
+
+    .. comment to end block
+
     Classes & functions
     -------------------
     .. autosummary::
@@ -17,14 +28,6 @@
         ~util.path
 
     .. comment to end block
-
-    Scripts
-    -------
-    .. autosummary::
-      :toctree: .
-      :nosignatures:
-
-        scripts.runtests
 
     Modules
     -------

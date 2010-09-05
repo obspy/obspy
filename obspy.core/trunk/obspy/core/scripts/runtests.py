@@ -19,7 +19,7 @@ Examples
 --------
 (1) Run all tests::
 
-    python runtests.py
+        obspy-runtests
 
     or
 
@@ -28,7 +28,7 @@ Examples
 
 (2) Verbose output::
 
-    python runtests.py -v
+        obspy-runtests -v
 
     or
 
@@ -37,15 +37,15 @@ Examples
 
 (3) Run tests of module :mod:`obspy.mseed`::
 
-    python runtests.py obspy.mseed.tests.suite 
+        obspy-runtests obspy.mseed.tests.suite 
 
     or as shortcut::
 
-    python runtests.py mseed
+        obspy-runtests mseed
 
 (4) Run a certain test case::
 
-    python runtests.py obspy.core.tests.test_stats.StatsTestCase.test_init
+        obspy-runtests obspy.core.tests.test_stats.StatsTestCase.test_init
 
     or
 

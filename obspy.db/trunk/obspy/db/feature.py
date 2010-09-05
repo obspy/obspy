@@ -12,7 +12,10 @@ Feature generators for ObsPy Trace objects.
 from obspy.core.util import scoreatpercentile
 
 
-class MinMaxAmplitudeFeature:
+class MinMaxAmplitudeFeature(object):
+    def __init__(self):
+        # for API doc
+        pass
 
     def process(self, trace):
         """

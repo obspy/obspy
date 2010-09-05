@@ -3,6 +3,19 @@
 
     .. comment to end block
 
+    Scripts
+    -------
+    .. autosummary::
+      :template: script.rst
+      :toctree: .
+      :nosignatures:
+
+        scripts.dataless2resp
+        scripts.dataless2xseed
+        scripts.xseed2dataless
+
+    .. comment to end block
+
     Classes & functions
     -------------------
     .. autosummary::

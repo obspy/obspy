@@ -10,13 +10,16 @@ import os
 import time
 
 
-class WaveformFileCrawler:
+class WaveformFileCrawler(object):
     """
     A waveform file crawler.
     
     This class scans periodically all given paths for waveform files and 
     collects them into a watch list.
     """
+    def __init__(self):
+        # for API doc
+        pass
 
     def _update_or_insert(self, dataset):
         """
