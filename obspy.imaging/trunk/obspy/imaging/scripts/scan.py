@@ -1,15 +1,27 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspy-scan [-f MSEED] file1 file2 file3 ...
+USAGE: obspy-scan.py [-f MSEED] [OPTIONS] file1 file2 dir1 dir2 file3 ...
 
-Plot range of available data in files. Gaps are plotted as vertical red
-lines, startimes of available data are plotted as crosses. The sampling
-rate must stay the same of each station, but can vary between the stations.
+Scan all specified files/directories, determine which time spans are covered
+for which stations and plot everything in summarized in one overview plot.
+Start times of traces with available data are marked by crosses, gaps are
+indicated by vertical red lines.
+The sampling rate must stay the same for each station, but may vary between the
+stations.
 
-Supported formats: MSEED, GSE2, SAC, SACXY, WAV, SH-ASC, SH-Q, SEISAN. If
-the format option (-f) is specified, the reading is significantly faster,
-otherwise the format is autodetected.
+Directories can also be used as arguments. By default they are scanned
+recursively (disable with "-n"). Symbolic links are followed by default
+(disable with "-i"). Detailed information on all files is printed using "-v".
+
+Supported formats: All formats supported by ObsPy modules (currently: MSEED,
+GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN).
+If the format is known beforehand, the reading speed can be increased
+significantly by explicitly specifying the file format ("-f FORMAT"), otherwise
+the format is autodetected.
+
+See also the example in the Tutorial section:
+http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
 """
 # supported must be in the last three line, line (28)
 
@@ -85,18 +97,19 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    # Use recursively parsing function?
+    if options.recursive:
+        parse_func = recursive_parse
+    else:
+        parse_func = parse_file_to_dict
     #
     # Generate dictionary containing nested lists of start and end times per
     # station
     data = {}
     samp_int = {}
     for path in largs:
-        if options.recursive:
-            counter = recursive_parse(data, samp_int, path, 1, options.format,
-                                      options.verbose, options.ignore_links)
-        else:
-            counter = parse_file_to_dict(data, samp_int, path, 1, options.format,
-                                         options.verbose, options.ignore_links)
+        counter = parse_func(data, samp_int, path, 1, options.format,
+                             options.verbose, options.ignore_links)
     
     if not data:
         print "No waveform data found."
@@ -123,7 +136,8 @@ def main():
     #
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
-    ax.set_yticks(np.arange(_i + 1), ids)
+    ax.set_yticks(np.arange(_i + 1))
+    ax.set_yticklabels(ids)
     fig.autofmt_xdate() #rotate date
     ax.set_title(" --- ".join(x.strftime('%Y%m%d %H:%M:%S')
                               for x in num2date(ax.get_xlim())))
