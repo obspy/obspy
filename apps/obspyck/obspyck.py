@@ -203,8 +203,6 @@ class ObsPyck(QtGui.QMainWindow):
         self.canv.mpl_connect('button_press_event', self.__mpl_mouseButtonPressEvent)
         self.multicursorReinit()
         self.canv.show()
-        self.checkForSysopEventDuplicates(streams[0][0].stats.starttime,
-                                          streams[0][0].stats.endtime)
         self.showMaximized()
         # XXX XXX the good old focus issue again!?! no events get to the mpl canvas
         # XXX self.canv.setFocusPolicy(Qt.WheelFocus)
@@ -3568,6 +3566,9 @@ class ObsPyck(QtGui.QMainWindow):
         :param starttime: Start datetime as UTCDateTime
         :param endtime: End datetime as UTCDateTime
         """
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
+
         events = self.client.event.getList(min_last_pick=starttime,
                                            max_first_pick=endtime)
         self.seishubEventList = events
@@ -3593,34 +3594,28 @@ class ObsPyck(QtGui.QMainWindow):
         at the moment this check is conducted for the current timewindow when
         submitting a sysop event.
         """
-        list_events = self.client.event.getList(min_last_pick=starttime,
+        events = self.client.event.getList(min_last_pick=starttime,
                                                 max_first_pick=endtime)
-        list_sysop_events = []
-        for event in list_events:
-            account = event.get('account')
-            if not account:
-                continue
-            if account == "sysop":
-                resource_name = event.get('resource_name')
-                list_sysop_events.append(resource_name)
+        sysop_events = [str(event.get('resource_name')) for event in events \
+                        if event.get('account', None) == "sysop"]
 
         # if there is a possible duplicate, pop up a warning window and print a
         # warning in the GUI error textview:
-        if len(list_sysop_events) > 1:
+        if len(sysop_events) > 1:
             err = "ObsPyck found more than one sysop event with picks in " + \
                   "the current time window! Please check if these are " + \
                   "duplicate events and delete old resources."
-            errlist = "\n".join(list_sysop_events)
+            errlist = "\n".join(sysop_events)
             self._write_err(err)
             self._write_err(errlist)
-            
-            # XXX XXX XXX GTK stuff to replace!
-            dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
-                                       gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
-            dialog.set_markup(err + "\n\n<b><tt>%s</tt></b>" % errlist)
-            dialog.set_title("Possible Duplicate Event!")
-            response = dialog.run()
-            dialog.destroy()
+            qMessageBox = QtGui.QMessageBox()
+            qMessageBox.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("obspyck.gif")))
+            qMessageBox.setIcon(QtGui.QMessageBox.Critical)
+            qMessageBox.setWindowTitle("Possible Duplicate SysOp Event!")
+            qMessageBox.setText(err)
+            qMessageBox.setInformativeText(errlist)
+            qMessageBox.setStandardButtons(QtGui.QMessageBox.Ok)
+            qMessageBox.exec_()
 
 
 def main():
