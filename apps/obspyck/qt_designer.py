@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Sun Sep  5 02:16:30 2010
+# Created: Sun Sep  5 14:23:52 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -437,7 +437,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.qPlainTextEdit_stdout.setAcceptDrops(False)
         self.qPlainTextEdit_stdout.setUndoRedoEnabled(False)
         self.qPlainTextEdit_stdout.setReadOnly(True)
-        self.qPlainTextEdit_stdout.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse|QtCore.Qt.TextSelectableByMouse)
+        self.qPlainTextEdit_stdout.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
         self.qPlainTextEdit_stdout.setObjectName("qPlainTextEdit_stdout")
         self.horizontalLayout.addWidget(self.qPlainTextEdit_stdout)
         self.qPlainTextEdit_stderr = QtGui.QPlainTextEdit(self.layoutWidget1)

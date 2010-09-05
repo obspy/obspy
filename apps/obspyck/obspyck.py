@@ -1,788 +1,92 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#-------------------------------------------------------------------
+# Filename: obspyck.py
+#  Purpose: ...
+#   Author: Tobias Megies, Lion Krischer
+#    Email: megies@geophysik.uni-muenchen.de
+#  License: GPLv2
+#
+# Copyright (C) 2010 Tobias Megies, Lion Krischer
+#---------------------------------------------------------------------
 
 import os
 import sys
-import platform
-import copy
 import shutil
-import subprocess
-import tempfile
-import glob
-import fnmatch
 import optparse
 
+from PyQt4 import QtGui, QtCore
+from PyQt4.QtCore import QEvent, Qt
 import numpy as np
-import gtk
-import gobject #we use this only for redirecting StdOut and StdErr
-import gtk.glade
-import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.widgets import MultiCursor as MplMultiCursor
+import matplotlib.cm
+import matplotlib.transforms
 from matplotlib.patches import Ellipse
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
-from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as Toolbar
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as QNavigationToolbar
+from matplotlib.backend_bases import MouseEvent as MplMouseEvent, KeyEvent as MplKeyEvent
 import lxml.etree
 from lxml.etree import SubElement as Sub
 
 #sys.path.append('/baysoft/obspy/misc/symlink')
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import UTCDateTime
-from obspy.seishub import Client
-from obspy.arclink import Client as AClient
-from obspy.fissures import Client as FClient
 from obspy.signal.util import utlLonLat, utlGeoKm
 from obspy.signal.invsim import estimateMagnitude
 from obspy.imaging.spectrogram import spectrogram
 from obspy.imaging.beachball import Beachball
 
-
-COMMANDLINE_OPTIONS = [
-        # XXX wasn't working as expected
-        #[["--debug"], {'dest': "debug", 'action': "store_true",
-        #        'default': False,
-        #        'help': "Switch on Ipython debugging in case of exception"}],
-        [["-t", "--time"], {'dest': "time", 'default': '2009-07-21T04:33:00',
-                'help': "Starttime of seismogram to retrieve. It takes a "
-                "string which UTCDateTime can convert. E.g. "
-                "'2010-01-10T05:00:00'"}],
-        [["-d", "--duration"], {'type': "float", 'dest': "duration",
-                'default': 120, 'help': "Duration of seismogram in seconds"}],
-        [["-i", "--ids"], {'dest': "ids",
-                'default': 'BW.RJOB..EH*,BW.RMOA..EH*',
-                'help': "Ids to retrieve, star for channel and wildcards for "
-                "stations are allowed, e.g. 'BW.RJOB..EH*,BW.RM?*..EH*'"}],
-        [["-s", "--servername"], {'dest': "servername", 'default': 'teide',
-                'help': "Servername of the seishub server"}],
-        [["-p", "--port"], {'type': "int", 'dest': "port", 'default': 8080,
-                'help': "Port of the seishub server"}],
-        [["--user"], {'dest': "user", 'default': 'obspyck',
-                'help': "Username for seishub server"}],
-        [["--password"], {'dest': "password", 'default': 'obspyck',
-                'help': "Password for seishub server"}],
-        [["--timeout"], {'dest': "timeout", 'type': "int", 'default': 10,
-                'help': "Timeout for seishub server"}],
-        [["-k", "--keys"], {'action': "store_true", 'dest': "keybindings",
-                'default': False, 'help': "Show keybindings and quit"}],
-        [["--lowpass"], {'type': "float", 'dest': "lowpass", 'default': 20.0,
-                'help': "Frequency for Lowpass-Slider"}],
-        [["--highpass"], {'type': "float", 'dest': "highpass", 'default': 1.0,
-                'help': "Frequency for Highpass-Slider"}],
-        [["--nozeromean"], {'action': "store_true", 'dest': "nozeromean",
-                'default': False,
-                'help': "Deactivate offset removal of traces"}],
-        [["--pluginpath"], {'dest': "pluginpath",
-                'default': "/baysoft/obspyck/",
-                'help': "Path to local directory containing the folders with "
-                "the files for the external programs. Large files/folders "
-                "should only be linked in this directory as the contents are "
-                "copied to a temporary directory (links are preserved)."}],
-        [["--starttime-offset"], {'type': "float", 'dest': "starttime_offset",
-                'default': 0.0, 'help': "Offset to add to specified starttime "
-                "in seconds. Thus a time from an automatic picker can be used "
-                "with a specified offset for the starttime. E.g. to request a "
-                "waveform starting 30 seconds earlier than the specified time "
-                "use -30."}],
-        [["-m", "--merge"], {'type': "string", 'dest': "merge", 'default': "",
-                'help': "After fetching the streams from seishub run a merge "
-                "operation on every stream. If not done, streams with gaps "
-                "and therefore more traces per channel get discarded.\nTwo "
-                "methods are supported (see http://svn.geophysik.uni-muenchen"
-                ".de/obspy/docs/packages/auto/obspy.core.trace.Trace.__add__"
-                ".html for details)\n  \"safe\": overlaps are discarded "
-                "completely\n  \"overwrite\": the second trace is used for "
-                "overlapping parts of the trace"}],
-        [["--arclink-ids"], {'dest': "arclink_ids",
-                'default': '',
-                'help': "Ids to retrieve via arclink, star for channel "
-                "is allowed, e.g. 'BW.RJOB..EH*,BW.ROTZ..EH*'"}],
-        [["--arclink-servername"], {'dest': "arclink_servername",
-                'default': 'webdc.eu',
-                'help': "Servername of the arclink server"}],
-        [["--arclink-port"], {'type': "int", 'dest': "arclink_port",
-                'default': 18001, 'help': "Port of the arclink server"}],
-        [["--arclink-user"], {'dest': "arclink_user", 'default': 'Anonymous',
-                'help': "Username for arclink server"}],
-        [["--arclink-password"], {'dest': "arclink_password", 'default': '',
-                'help': "Password for arclink server"}],
-        [["--arclink-institution"], {'dest': "arclink_institution",
-                'default': 'Anonymous',
-                'help': "Password for arclink server"}],
-        [["--arclink-timeout"], {'dest': "arclink_timeout", 'type': "int",
-                'default': 20, 'help': "Timeout for arclink server"}],
-        [["--fissures-ids"], {'dest': "fissures_ids",
-                'default': '',
-                'help': "Ids to retrieve via Fissures, star for component "
-                "is allowed, e.g. 'GE.APE..BH*,GR.GRA1..BH*'"}],
-        [["--fissures-network_dc"], {'dest': "fissures_network_dc",
-                'default': ("/edu/iris/dmc", "IRIS_NetworkDC"),
-                'help': "Tuple containing Fissures dns and NetworkDC name."}],
-        [["--fissures-seismogram_dc"], {'dest': "fissures_seismogram_dc",
-                'default': ("/edu/iris/dmc", "IRIS_DataCenter"),
-                'help': "Tuple containing Fissures dns and DataCenter name."}],
-        [["--fissures-name_service"], {'dest': "fissures_name_service",
-                'default': "dmc.iris.washington.edu:6371/NameService",
-                'help': "String containing the Fissures name service."}]]
-PROGRAMS = {
-        'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs",
-                                'summary': "nlloc.hyp",
-                                'scatter': "nlloc.scat"}},
-        'hyp_2000': {'filenames': {'exe': "hyp2000",'control': "bay2000.inp",
-                                   'phases': "hyp2000.pha",
-                                   'stations': "stations.dat",
-                                   'summary': "hypo.prt"}},
-        'focmec': {'filenames': {'exe': "rfocmec", 'phases': "focmec.dat",
-                                 'stdout': "focmec.stdout",
-                                 'summary': "focmec.out"}},
-        '3dloc': {'filenames': {'exe': "3dloc_pitsa", 'out': "3dloc-out",
-                                'in': "3dloc-in"}}}
-SEISMIC_PHASES = ['P', 'S']
-PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
-        'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
-        'SErr2': "blue"}
-PHASE_LINESTYLES = {'P': "-", 'S': "-", 'Psynth': "--", 'Ssynth': "--",
-        'PErr1': "-", 'PErr2': "-", 'SErr1': "-", 'SErr2': "-"}
-PHASE_LINEHEIGHT_PERC = {'P': 1, 'S': 1, 'Psynth': 1, 'Ssynth': 1,
-        'PErr1': 0.75, 'PErr2': 0.75, 'SErr1': 0.75, 'SErr2': 0.75}
-KEY_FULLNAMES = {'P': "P pick", 'Psynth': "synthetic P pick",
-        'PWeight': "P pick weight", 'PPol': "P pick polarity",
-        'POnset': "P pick onset", 'PErr1': "left P error pick",
-        'PErr2': "right P error pick", 'S': "S pick",
-        'Ssynth': "synthetic S pick", 'SWeight': "S pick weight",
-        'SPol': "S pick polarity", 'SOnset': "S pick onset",
-        'SErr1': "left S error pick", 'SErr2': "right S error pick",
-        'MagMin1': "Magnitude minimum estimation pick",
-        'MagMax1': "Magnitude maximum estimation pick",
-        'MagMin2': "Magnitude minimum estimation pick",
-        'MagMax2': "Magnitude maximum estimation pick"}
-WIDGET_NAMES = ["buttonClearAll", "buttonClearOrigMag", "buttonClearFocMec",
-        "buttonDoHyp2000", "buttonDo3dloc", "buttonDoNLLoc",
-        "comboboxNLLocModel", "buttonCalcMag", "buttonDoFocmec",
-        "togglebuttonShowMap", "togglebuttonShowFocMec", "buttonNextFocMec",
-        "togglebuttonShowWadati", "buttonGetNextEvent",
-        "buttonUpdateEventList", "buttonSendEvent", "checkbuttonPublishEvent",
-        "buttonDeleteEvent", "checkbuttonSysop", "entrySysopPassword",
-        "buttonPreviousStream", "labelStreamNumber", "comboboxStreamName",
-        "buttonNextStream", "togglebuttonOverview", "buttonPhaseType",
-        "comboboxPhaseType", "togglebuttonFilter", "comboboxFilterType",
-        "checkbuttonZeroPhase", "labelHighpass", "spinbuttonHighpass",
-        "labelLowpass", "spinbuttonLowpass", "togglebuttonSpectrogram",
-        "checkbuttonSpectrogramLog", "textviewStdOut", "textviewStdErr"]
-#Estimating the maximum/minimum in a sample-window around click
-MAG_PICKWINDOW = 10
-MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
-AXVLINEWIDTH = 1.2
-#dictionary for key-bindings
-KEYS = {'setPick': 'alt', 'setPickError': ' ', 'delPick': 'escape',
-        'setMagMin': 'alt', 'setMagMax': ' ', 'delMagMinMax': 'escape',
-        'switchPhase': 'control', 'switchPan': 'p',
-        'prevStream': 'y', 'nextStream': 'x', 'switchWheelZoomAxis': 'shift',
-        'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
-        'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
-        'setOnset': {'i': "impulsive", 'e': "emergent"}}
-# the following dicts' keys should be all lower case, we use "".lower() later
-POLARITY_CHARS = {'up': "U", 'down': "D", 'poorup': "+", 'poordown': "-"}
-ONSET_CHARS = {'impulsive': "I", 'emergent': "E",
-               'implusive': "I"} # XXX some old events have a typo there... =)
+from qt_designer import Ui_qMainWindow_obsPyck
+from util import *
 
 
-def check_keybinding_conflicts(keys):
+class ObsPyck(QtGui.QMainWindow):
     """
-    check for conflicting keybindings. 
-    we have to check twice, because keys for setting picks and magnitudes
-    are allowed to interfere...
+    Main Window with the design loaded from the Qt Designer.
+
+    client, stream and options need to be determined by parsing the command
+    line.
     """
-    for ignored_key_list in [['setMagMin', 'setMagMax', 'delMagMinMax'],
-                             ['setPick', 'setPickError', 'delPick']]:
-        tmp_keys = copy.deepcopy(keys)
-        tmp_keys2 = {}
-        for ignored_key in ignored_key_list:
-            tmp_keys.pop(ignored_key)
-        while tmp_keys:
-            key, item = tmp_keys.popitem()
-            if isinstance(item, dict):
-                while item:
-                    k, v = item.popitem()
-                    tmp_keys2["_".join([key, str(v)])] = k
-            else:
-                tmp_keys2[key] = item
-        if len(set(tmp_keys2.keys())) != len(set(tmp_keys2.values())):
-            err = "Interfering keybindings. Please check variable KEYS"
-            raise Exception(err)
-
-def fetch_waveforms_metadata(options):
-    """
-    Sets up a client and fetches waveforms and metadata according to command
-    line options.
-    Now also fetches data via arclink (fissures) if --arclink_ids
-    (--fissures-ids) is used.
-    The arclink (fissures) client is not returned, it is only useful for
-    downloading the data and not needed afterwards.
-    XXX Notes: XXX
-     - there is a problem in the arclink client with duplicate traces in
-       fetched streams. therefore at the moment it might be necessary to use
-       "-m overwrite" option.
-
-    :returns: (:class:`obspy.seishub.client.Client`,
-               list(:class:`obspy.core.stream.Stream`s))
-    """
-    t = UTCDateTime(options.time)
-    t = t + options.starttime_offset
-    streams = []
-    sta_fetched = set()
-    # Seishub
-    print "=" * 80
-    print "Fetching waveforms and metadata from seishub:"
-    print "-" * 80
-    baseurl = "http://" + options.servername + ":%i" % options.port
-    client = Client(base_url=baseurl, user=options.user,
-                    password=options.password, timeout=options.timeout)
-    for id in options.ids.split(","):
-        net, sta_wildcard, loc, cha = id.split(".")
-        for sta in client.waveform.getStationIds(network_id=net):
-            if not fnmatch.fnmatch(sta, sta_wildcard):
-                continue
-            # make sure we dont fetch a single station of
-            # one network twice (could happen with wildcards)
-            net_sta = "%s.%s" % (net, sta)
-            if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
-                continue
-            try:
-                sys.stdout.write("\r%s ..." % net_sta)
-                sys.stdout.flush()
-                st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                        t + options.duration, apply_filter=True,
-                        getPAZ=True, getCoordinates=True)
-                sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
-                sys.stdout.flush()
-            except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
-                sys.stdout.flush()
-                continue
-            for tr in st:
-                tr.stats['client'] = "seishub"
-            streams.append(st)
-    # ArcLink
-    if options.arclink_ids:
-        print "=" * 80
-        print "Fetching waveforms and metadata via ArcLink:"
-        print "-" * 80
-        aclient = AClient(host=options.arclink_servername,
-                          port=options.arclink_port,
-                          timeout=options.arclink_timeout,
-                          user=options.arclink_user,
-                          password=options.arclink_password,
-                          institution=options.arclink_institution)
-        for id in options.arclink_ids.split(","):
-            net, sta, loc, cha = id.split(".")
-            net_sta = "%s.%s" % (net, sta)
-            if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
-                continue
-            try:
-                sys.stdout.write("\r%s ..." % net_sta)
-                sys.stdout.flush()
-                st = aclient.getWaveform(network_id=net, station_id=sta,
-                                         location_id=loc, channel_id=cha,
-                                         start_datetime=t,
-                                         end_datetime=t + options.duration,
-                                         getPAZ=True, getCoordinates=True)
-                sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
-                sys.stdout.flush()
-            except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
-                sys.stdout.flush()
-                continue
-            for tr in st:
-                tr.stats['client'] = "arclink"
-            streams.append(st)
-    # Fissures
-    if options.fissures_ids:
-        print "=" * 80
-        print "Fetching waveforms and metadata via Fissures:"
-        print "-" * 80
-        fclient = FClient(network_dc=options.fissures_network_dc,
-                          seismogram_dc=options.fissures_seismogram_dc,
-                          name_service=options.fissures_name_service)
-        for id in options.fissures_ids.split(","):
-            net, sta, loc, cha = id.split(".")
-            net_sta = "%s.%s" % (net, sta)
-            if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
-                continue
-            try:
-                sys.stdout.write("\r%s ..." % net_sta)
-                sys.stdout.flush()
-                st = fclient.getWaveform(network_id=net, station_id=sta,
-                                         location_id=loc, channel_id=cha,
-                                         start_datetime=t,
-                                         end_datetime=t + options.duration,
-                                         getPAZ=True, getCoordinates=True)
-                sta_fetched.add(net_sta)
-                sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
-                sys.stdout.flush()
-            except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
-                sys.stdout.flush()
-                continue
-            for tr in st:
-                tr.stats['client'] = "fissures"
-            streams.append(st)
-    print "=" * 80
-    return (client, streams)
-
-def merge_check_and_cleanup_streams(streams, options):
-    """
-    Cleanup given list of streams so that they conform with what ObsPyck
-    expects.
-
-    Conditions:
-    - either one Z or three ZNE traces
-    - no two streams for any station (of same network)
-    - no streams with traces of different stations
-
-    :returns: (warn_msg, merge_msg, list(:class:`obspy.core.stream.Stream`s))
-    """
-    # Merge on every stream if this option is passed on command line:
-    if options.merge:
-        if options.merge.lower() == "safe":
-            for st in streams:
-                st.merge(method=0)
-        elif options.merge.lower() == "overwrite":
-            for st in streams:
-                st.merge(method=1)
-        else:
-            err = "Unrecognized option for merging traces. Try " + \
-                  "\"safe\" or \"overwrite\"."
-            raise Exception(err)
-
-    # Sort streams again, if there was a merge this could be necessary 
-    for st in streams:
-        st.sort()
-        st.reverse()
-    sta_list = set()
-    # we need to go through streams/dicts backwards in order not to get
-    # problems because of the pop() statement
-    warn_msg = ""
-    merge_msg = ""
-    # XXX we need the list() because otherwise the iterator gets garbled if
-    # XXX removing streams inside the for loop!!
-    for st in list(streams):
-        # check for streams with mixed stations/networks and remove them
-        if len(st) != len(st.select(network=st[0].stats.network,
-                                    station=st[0].stats.station)):
-            msg = "Warning: Stream with a mix of stations/networks. " + \
-                  "Discarding stream."
-            print msg
-            warn_msg += msg + "\n"
-            streams.remove(st)
-            continue
-        net_sta = "%s.%s" % (st[0].stats.network.strip(),
-                             st[0].stats.station.strip())
-        # Here we make sure that a station/network combination is not
-        # present with two streams.
-        if net_sta in sta_list:
-            msg = "Warning: Station/Network combination \"%s\" " + \
-                  "already in stream list. Discarding stream." % net_sta
-            print msg
-            warn_msg += msg + "\n"
-            streams.remove(st)
-            continue
-        if len(st) not in [1, 3]:
-            msg = 'Warning: All streams must have either one Z trace ' + \
-                  'or a set of three ZNE traces.'
-            print msg
-            warn_msg += msg + "\n"
-            # remove all unknown channels ending with something other than
-            # Z/N/E and try again...
-            removed_channels = ""
-            for tr in st:
-                if tr.stats.channel[-1] not in ["Z", "N", "E"]:
-                    removed_channels += " " + tr.stats.channel
-                    st.remove(tr)
-            if len(st.traces) in [1, 3]:
-                msg = 'Warning: deleted some unknown channels in ' + \
-                      'stream %s.%s' % (net_sta, removed_channels)
-                print msg
-                warn_msg += msg + "\n"
-                continue
-            else:
-                msg = 'Stream %s discarded.\n' % net_sta + \
-                      'Reason: Number of traces != (1 or 3)'
-                print msg
-                warn_msg += msg + "\n"
-                #for j, tr in enumerate(st.traces):
-                #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-                #            (j + 1, tr.stats.channel, tr.stats)
-                msg = str(st)
-                print msg
-                warn_msg += msg + "\n"
-                streams.remove(st)
-                merge_msg = '\nIMPORTANT:\nYou can try the command line ' + \
-                        'option merge (-m safe or -m overwrite) to ' + \
-                        'avoid losing streams due gaps/overlaps.'
-                continue
-        if len(st) == 1 and st[0].stats.channel[-1] != 'Z':
-            msg = 'Warning: All streams must have either one Z trace ' + \
-                  'or a set of three ZNE traces.'
-            msg += 'Stream %s discarded. Reason: ' % net_sta + \
-                   'Exactly one trace present but this is no Z trace'
-            print msg
-            warn_msg += msg + "\n"
-            #for j, tr in enumerate(st.traces):
-            #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-            #            (j + 1, tr.stats.channel, tr.stats)
-            msg = str(st)
-            print msg
-            warn_msg += msg + "\n"
-            streams.remove(st)
-            continue
-        if len(st) == 3 and (st[0].stats.channel[-1] != 'Z' or
-                             st[1].stats.channel[-1] != 'N' or
-                             st[2].stats.channel[-1] != 'E'):
-            msg = 'Warning: All streams must have either one Z trace ' + \
-                  'or a set of three ZNE traces.'
-            msg += 'Stream %s discarded. Reason: ' % net_sta + \
-                   'Exactly three traces present but they are not ZNE'
-            print msg
-            warn_msg += msg + "\n"
-            #for j, tr in enumerate(st.traces):
-            #    msg = 'Trace no. %i in Stream: %s\n%s' % \
-            #            (j + 1, tr.stats.channel, tr.stats)
-            msg = str(st)
-            print msg
-            warn_msg += msg + "\n"
-            streams.remove(st)
-            continue
-        sta_list.add(net_sta)
-    return (warn_msg, merge_msg, streams)
-
-def setup_dicts(streams):
-    """
-    Function to set up the list of dictionaries that is used alongside the
-    streams list.
-    Also removes streams that do not provide the necessary metadata.
-
-    :returns: (list(:class:`obspy.core.stream.Stream`s),
-               list(dict))
-    """
-    #set up a list of dictionaries to store all picking data
-    # set all station magnitude use-flags False
-    dicts = []
-    for i in xrange(len(streams)):
-        dicts.append({})
-    # we need to go through streams/dicts backwards in order not to get
-    # problems because of the pop() statement
-    for i in range(len(streams))[::-1]:
-        dict = dicts[i]
-        st = streams[i]
-        trZ = st.select(component="Z")[0]
-        if len(st) == 3:
-            trN = st.select(component="N")[0]
-            trE = st.select(component="E")[0]
-        dict['MagUse'] = True
-        sta = trZ.stats.station.strip()
-        dict['Station'] = sta
-        #XXX not used: dictsMap[sta] = dict
-        # XXX should not be necessary
-        #if net == '':
-        #    net = 'BW'
-        #    print "Warning: Got no network information, setting to " + \
-        #          "default: BW"
-        try:
-            dict['StaLon'] = trZ.stats.coordinates.longitude
-            dict['StaLat'] = trZ.stats.coordinates.latitude
-            dict['StaEle'] = trZ.stats.coordinates.elevation / 1000. # all depths in km!
-            dict['pazZ'] = trZ.stats.paz
-            if len(st) == 3:
-                dict['pazN'] = trN.stats.paz
-                dict['pazE'] = trE.stats.paz
-        except:
-            net = trZ.stats.network.strip()
-            print 'Error: Missing metadata for %s. Discarding stream.' \
-                    % (":".join([net, sta]))
-            streams.pop(i)
-            dicts.pop(i)
-            continue
-    return streams, dicts
-
-def setup_external_programs(options):
-    """
-    Sets up temdir, copies program files, fills in PROGRAMS dict, sets up
-    system calls for programs.
-    Depends on command line options, returns temporary directory.
-
-    :param options: Command line options of ObsPyck
-    :type options: options as returned by optparse.OptionParser.parse_args()
-    :returns: String representation of temporary directory with program files.
-    """
-    tmp_dir = tempfile.mkdtemp()
-    # set binary names to use depending on architecture and platform...
-    env = os.environ
-    architecture = platform.architecture()[0]
-    system = platform.system()
-    global SHELL
-    if system == "Windows":
-        SHELL = True
-    else:
-        SHELL = False
-    # Setup external programs #############################################
-    for prog_basename, prog_dict in PROGRAMS.iteritems():
-        prog_srcpath = os.path.join(options.pluginpath, prog_basename)
-        prog_tmpdir = os.path.join(tmp_dir, prog_basename)
-        prog_dict['dir'] = prog_tmpdir
-        shutil.copytree(prog_srcpath, prog_tmpdir, symlinks=True)
-        prog_dict['files'] = {}
-        for key, filename in prog_dict['filenames'].iteritems():
-            prog_dict['files'][key] = os.path.join(prog_tmpdir, filename)
-        prog_dict['files']['exe'] = "__".join(\
-                [prog_dict['filenames']['exe'], system, architecture])
-        # setup clean environment
-        prog_dict['env'] = {}
-        prog_dict['env']['PATH'] = prog_dict['dir'] + os.pathsep + env['PATH']
-        if 'SystemRoot' in env:
-            prog_dict['env']['SystemRoot'] = env['SystemRoot']
-    # 3dloc ###############################################################
-    prog_dict = PROGRAMS['3dloc']
-    prog_dict['env']['D3_VELOCITY'] = \
-            os.path.join(prog_dict['dir'], 'D3_VELOCITY') + os.sep
-    prog_dict['env']['D3_VELOCITY_2'] = \
-            os.path.join(prog_dict['dir'], 'D3_VELOCITY_2') + os.sep
-    def tmp(prog_dict):
-        files = prog_dict['files']
-        for file in [files['out'], files['in']]:
-            if os.path.isfile(file):
-                os.remove(file)
-        return
-    prog_dict['PreCall'] = tmp
-    def tmp(prog_dict):
-        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
-                cwd=prog_dict['dir'], env=prog_dict['env'],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        return (msg, err, sub.returncode)
-    prog_dict['Call'] = tmp
-    # Hyp2000 #############################################################
-    prog_dict = PROGRAMS['hyp_2000']
-    prog_dict['env']['HYP2000_DATA'] = prog_dict['dir'] + os.sep
-    def tmp(prog_dict):
-        files = prog_dict['files']
-        for file in [files['phases'], files['stations'], files['summary']]:
-            if os.path.isfile(file):
-                os.remove(file)
-        return
-    prog_dict['PreCall'] = tmp
-    def tmp(prog_dict):
-        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
-                cwd=prog_dict['dir'], env=prog_dict['env'],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        input = open(prog_dict['files']['control'], "rt").read()
-        (msg, err) = sub.communicate(input)
-        return (msg, err, sub.returncode)
-    prog_dict['Call'] = tmp
-    # NLLoc ###############################################################
-    prog_dict = PROGRAMS['nlloc']
-    def tmp(prog_dict):
-        filepattern = os.path.join(prog_dict['dir'], "nlloc*")
-        print filepattern
-        for file in glob.glob(filepattern):
-            os.remove(file)
-        return
-    prog_dict['PreCall'] = tmp
-    def tmp(prog_dict, controlfilename):
-        sub = subprocess.Popen([prog_dict['files']['exe'], controlfilename],
-                cwd=prog_dict['dir'], env=prog_dict['env'], shell=SHELL,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        for pattern, key in [("nlloc.*.*.*.loc.scat", 'scatter'),
-                             ("nlloc.*.*.*.loc.hyp", 'summary')]:
-            pattern = os.path.join(prog_dict['dir'], pattern)
-            newname = os.path.join(prog_dict['dir'], prog_dict['files'][key])
-            for file in glob.glob(pattern):
-                os.rename(file, newname)
-        return (msg, err, sub.returncode)
-    prog_dict['Call'] = tmp
-    # focmec ##############################################################
-    prog_dict = PROGRAMS['focmec']
-    def tmp(prog_dict):
-        sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
-                cwd=prog_dict['dir'], env=prog_dict['env'],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        msg = "".join(sub.stdout.readlines())
-        err = "".join(sub.stderr.readlines())
-        return (msg, err, sub.returncode)
-    prog_dict['Call'] = tmp
-    #######################################################################
-    return tmp_dir
-
-#XXX VERY dirty hack to unset for ALL widgets the property "CAN_FOCUS"
-# we have to do this, so the focus always remains with our matplotlib
-# inset and all events are directed to the matplotlib canvas...
-# there is a bug in glade that does not set this flag to false even
-# if it is selected in the glade GUI for the widget.
-# see: https://bugzilla.gnome.org/show_bug.cgi?id=322340
-def nofocus_recursive(widget):
-    # we have to exclude SpinButtons and the entrySysopPassword otherwise we
-    # cannot put anything into them
-    if not isinstance(widget, gtk.SpinButton) and \
-       not isinstance(widget, gtk.Entry):
-        widget.unset_flags(("GTK_CAN_FOCUS", "GTK_RECEIVES_DEFAULT"))
-    try:
-        children = widget.get_children()
-    except AttributeError:
-        return
-    for widg in children:
-        nofocus_recursive(widg)
-
-#Monkey patch (need to remember the ids of the mpl_connect-statements to remove them later)
-#See source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
-class MultiCursor(MplMultiCursor):
-    def __init__(self, canvas, axes, useblit=True, **lineprops):
-        self.canvas = canvas
-        self.axes = axes
-        xmin, xmax = axes[-1].get_xlim()
-        xmid = 0.5*(xmin+xmax)
-        self.lines = [ax.axvline(xmid, visible=False, **lineprops) for ax in axes]
-        self.visible = True
-        self.useblit = useblit
-        self.background = None
-        self.needclear = False
-        self.id1=self.canvas.mpl_connect('motion_notify_event', self.onmove)
-        self.id2=self.canvas.mpl_connect('draw_event', self.clear)
-    
-    #def set_visible(self, boolean):
-    #    for line in self.lines:
-    #        line.set_visible(boolean)
- 
-# we pimp our gtk textview elements, so that they are accesible via a write()
-# method. this is necessary if we want to redirect stdout and stderr to them.
-# See: http://cssed.sourceforge.net/docs/
-#      pycssed_developers_guide-html-0.1/x139.html
-class TextViewImproved:
-    def __init__(self, textview):
-        self.textview = textview
-    def write(self, string):        
+    def __init__(self, client, streams, options, keys):
         """
-        Appends text 'string' to the given GTKtextview instance.
-        At a certain length (currently 200 lines) we cut off some lines at the top
-        of the corresponding text buffer.
-        This method is needed in order to redirect stdout/stderr.
+        Standard init.
         """
-        buffer = self.textview.get_buffer()
-        if buffer.get_line_count() > 600:
-            start = buffer.get_start_iter()
-            newstart = buffer.get_iter_at_line(500)
-            buffer.delete(start, newstart)
-        end = buffer.get_end_iter()
-        buffer.insert(end, "\n" + string)
-        end = buffer.get_end_iter()
-        endmark = buffer.create_mark("end", end, False)
-        self.textview.scroll_mark_onscreen(endmark)
-   
-def gk2lonlat(x, y, m_to_km=True):
-    """
-    This function converts X/Y Gauss-Krueger coordinates (zone 4, central
-    meridian 12 deg) to Longitude/Latitude in WGS84 reference ellipsoid.
-    We do this using pyproj (python bindings for proj4) which can be installed
-    using 'easy_install pyproj' from pypi.python.org.
-    Input can be single coordinates or coordinate lists/arrays.
-    
-    Useful Links:
-    http://pyproj.googlecode.com/svn/trunk/README.html
-    http://trac.osgeo.org/proj/
-    http://www.epsg-registry.org/
-    """
-    import pyproj
-
-    proj_wgs84 = pyproj.Proj(init="epsg:4326")
-    proj_gk4 = pyproj.Proj(init="epsg:31468")
-    # convert to meters first
-    if m_to_km:
-        x = x * 1000.
-        y = y * 1000.
-    lon, lat = pyproj.transform(proj_gk4, proj_wgs84, x, y)
-    return (lon, lat)
-
-def readNLLocScatter(scat_filename, textviewStdErrImproved):
-    """
-    This function reads location and values of pdf scatter samples from the
-    specified NLLoc *.scat binary file (type "<f4", 4 header values, then 4
-    floats per sample: x, y, z, pdf value) and converts X/Y Gauss-Krueger
-    coordinates (zone 4, central meridian 12 deg) to Longitude/Latitude in
-    WGS84 reference ellipsoid.
-    We do this using the Linux command line tool cs2cs.
-    Messages on stderr are written to specified GUI textview.
-    Returns an array of xy pairs.
-    """
-    # read data, omit the first 4 values (header information) and reshape
-    data = np.fromfile(scat_filename, dtype="<f4").astype("float")[4:]
-    data = data.reshape((len(data)/4, 4)).swapaxes(0, 1)
-    lon, lat = gk2lonlat(data[0], data[1])
-    return np.vstack((lon, lat, data[2]))
-
-def errorEllipsoid2CartesianErrors(azimuth1, dip1, len1, azimuth2, dip2, len2,
-                                   len3):
-    """
-    This method converts the location error of NLLoc given as the 3D error
-    ellipsoid (two azimuths, two dips and three axis lengths) to a cartesian
-    representation.
-    We calculate the cartesian representation of each of the ellipsoids three
-    eigenvectors and use the maximum of these vectors components on every axis.
-    """
-    z = len1 * np.sin(np.radians(dip1))
-    xy = len1 * np.cos(np.radians(dip1))
-    x = xy * np.sin(np.radians(azimuth1))
-    y = xy * np.cos(np.radians(azimuth1))
-    v1 = np.array([x, y, z])
-
-    z = len2 * np.sin(np.radians(dip2))
-    xy = len2 * np.cos(np.radians(dip2))
-    x = xy * np.sin(np.radians(azimuth2))
-    y = xy * np.cos(np.radians(azimuth2))
-    v2 = np.array([x, y, z])
-
-    v3 = np.cross(v1, v2)
-    v3 /= np.sqrt(np.dot(v3, v3))
-    v3 *= len3
-
-    v1 = np.abs(v1)
-    v2 = np.abs(v2)
-    v3 = np.abs(v3)
-
-    error_x = max([v1[0], v2[0], v3[0]])
-    error_y = max([v1[1], v2[1], v3[1]])
-    error_z = max([v1[2], v2[2], v3[2]])
-    
-    return (error_x, error_y, error_z)
-
-def formatXTicklabels(x, pos):
-    """
-    Make a nice formatting for y axis ticklabels: minutes:seconds.microsec
-    """
-    # x is of type numpy.float64, the string representation of that float
-    # strips of all tailing zeros
-    # pos returns the position of x on the axis while zooming, None otherwise
-    min = int(x / 60.)
-    if min > 0:
-        sec = x % 60
-        return "%i:%06.3f" % (min, sec)
-    else:
-        return "%.3f" % x
-
-class ObsPyckGUI:
-        
-    def __init__(self, client, streams, options):
         self.client = client
-        self.client_sysop = None
         self.streams = streams
         self.options = options
+        self.keys = keys
+        
+        # init the GUI stuff
+        QtGui.QMainWindow.__init__(self)
+        # Init the widgets from the autogenerated file.
+        # All GUI elements will be accessible via self.widgets.name_of_element
+        self.widgets = Ui_qMainWindow_obsPyck()
+        self.widgets.setupUi(self)
+
+        # Create little color icons in front of the phase type combo box.
+        # Needs to be done pretty much at the beginning because some other
+        # stuff relies on the phase type being set.
+        pixmap = QtGui.QPixmap(70, 50)
+        for phase_type in SEISMIC_PHASES + ['Mag']:
+            rgb = matplotlib_color_to_rgb(PHASE_COLORS[phase_type])
+            pixmap.fill(QtGui.QColor(*rgb))
+            icon = QtGui.QIcon(pixmap)
+            self.widgets.qComboBox_phaseType.addItem(icon, phase_type)
+
+        self.qMain = self.widgets.centralwidget
+        self.__enableTextBrowserWrite()
+        # Matplotlib figure.
+        # we bind the figure to the FigureCanvas, so that it will be
+        # drawn using the specific backend graphic functions
+        self.canv = self.widgets.qMplCanvas
+        # Bind the canvas to the mouse wheel event. Use Qt events for it
+        # because the matplotlib events seem to have a problem with Debian.
+        self.widgets.qMplCanvas.wheelEvent = self.__mpl_wheelEvent
+        #self.keyPressEvent = self.__mpl_keyPressEvent
+
+        self.fig = self.widgets.qMplCanvas.fig
+        self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, self.widgets.qWidget_toolbar)
+
         #Define some flags, dictionaries and plotting options
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
@@ -813,9 +117,10 @@ class ObsPyckGUI:
         # setup server information
         self.server = {}
         server = self.server
-        server['Server'] = "%s:%i" % (options.servername, options.port)
+        server['Server'] = "%s:%i" % (options.seishub_servername,
+                                      options.seishub_port)
         server['BaseUrl'] = "http://" + server['Server']
-        server['User'] = options.user # "obspyck"
+        server['User'] = options.seishub_user # "obspyck"
         
         (warn_msg, merge_msg, streams) = \
                 merge_check_and_cleanup_streams(streams, options)
@@ -839,93 +144,38 @@ class ObsPyckGUI:
         self.eventMapColors = []
         for i in xrange(len(dicts)):
             self.eventMapColors.append((0.,  1.,  0.,  1.))
-        
-        # demean traces if not explicitly deactivated on command line
-        if not options.nozeromean:
-            for st in streams:
-                for tr in st:
-                    tr.data = tr.data - tr.data.mean()
 
         #Define a pointer to navigate through the streams
         self.stNum = len(streams)
         self.stPt = 0
-    
-        # Get the absolute path to the glade file.
-        self.root_dir = os.path.split(os.path.abspath(__file__))[0]
-        self.glade_file = os.path.join(self.root_dir, 'obspyck.glade')
-        gla = gtk.glade.XML(self.glade_file, 'windowObspyck')
-        self.gla = gla
-        # commodity dictionary to connect event handles
-        # example:
-        # d = {'on_buttonQuit_clicked': gtk.main_quit}
-        # self.gla.signal_autoconnect(d)
-        autoconnect = {}
-        # include every funtion starting with "on_" in the dictionary we use
-        # to autoconnect to all the buttons etc. in the GTK GUI
-        for func in dir(self):
-            if func.startswith("on_"):
-                exec("autoconnect['%s'] = self.%s" % (func, func))
-        gla.signal_autoconnect(autoconnect)
-        # get the main window widget and set its title
-        win = gla.get_widget('windowObspyck')
-        self.win = win
-        #win.set_title("ObsPyck")
-        # matplotlib code to generate an empty Axes
-        # we define no dimensions for Figure because it will be
-        # expanded to the whole empty space on main window widget
-        fig = Figure()
-        self.fig = fig
-        #fig.set_facecolor("0.9")
-        # we bind the figure to the FigureCanvas, so that it will be
-        # drawn using the specific backend graphic functions
-        canv = FigureCanvas(fig)
-        self.canv = canv
-        try:
-            #might not be working with ion3 and other windowmanagers...
-            #fig.set_size_inches(20, 10, forward = True)
-            win.maximize()
-        except:
-            pass
-        # embed the canvas into the empty area left in glade window
-        place1 = gla.get_widget("hboxObspyck")
-        place1.pack_start(canv, True, True)
-        place2 = gla.get_widget("vboxObspyck")
-        toolbar = Toolbar(canv, win)
-        self.toolbar = toolbar
-        place2.pack_start(toolbar, False, False)
-        toolbar.zoom()
-        canv.widgetlock.release(toolbar)
+        
+        self.drawAxes()
+        self.multicursor = MultiCursor(self.canv, self.axs, useblit=True,
+                                       color='k', linewidth=1, ls='dotted')
 
-        # store handles for all buttons/GUI-elements we interact with
-        widgets = {}
-        self.widgets = widgets
-        for name in WIDGET_NAMES:
-            widgets[name] = gla.get_widget(name)
+        # Initialize the stream realted widgets with the right values:
+        self.widgets.qComboBox_streamName.clear()
+        labels = ["%s.%s" % (st[0].stats.network, st[0].stats.station) \
+                  for st in self.streams]
+        self.widgets.qComboBox_streamName.addItems(labels)
 
+        # set the filter default values according to command line options
+        # or optionparser default values
+        self.widgets.qDoubleSpinBox_highpass.setValue(self.options.highpass)
+        self.widgets.qDoubleSpinBox_lowpass.setValue(self.options.lowpass)
+        self.updateStreamLabels()
+
+        # Add write methods to stdout/stderr displays to enable redirections
         # redirect stdout and stderr
-        # first we need to create a new subinstance with write method
-        widgets['textviewStdOutImproved'] = TextViewImproved(widgets['textviewStdOut'])
-        widgets['textviewStdErrImproved'] = TextViewImproved(widgets['textviewStdErr'])
         # we need to remember the original handles because we need to switch
         # back to them when going to debug mode
+        # XXX Enhancement: write all messages to both system stdout/err and
+        # XXX textboxes!
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
-        sys.stdout = widgets['textviewStdOutImproved']
-        sys.stderr = widgets['textviewStdErrImproved']
-        self._write_err(warn_msg)
-
-        # change fonts of textviews and of comboboxStreamName
-        # see http://www.pygtk.org/docs/pygtk/class-pangofontdescription.html
-        try:
-            import pango
-            fontDescription = pango.FontDescription("monospace condensed 9")
-            widgets['textviewStdOut'].modify_font(fontDescription)
-            widgets['textviewStdErr'].modify_font(fontDescription)
-            fontDescription = pango.FontDescription("monospace bold 11")
-            widgets['comboboxStreamName'].child.modify_font(fontDescription)
-        except ImportError:
-            pass
-
+        sys.stdout = self.widgets.qPlainTextEdit_stdout
+        sys.stderr = self.widgets.qPlainTextEdit_stderr
+        self.widgets.qPlainTextEdit_stderr.write(warn_msg)
         # Set up initial plot
         #fig = plt.figure()
         #fig.canvas.set_window_title("ObsPyck")
@@ -934,91 +184,179 @@ class ObsPyckGUI:
         #    fig.set_size_inches(20, 10, forward = True)
         #except:
         #    pass
-        self.drawAxes()
         #redraw()
         #fig.canvas.draw()
-        # Activate all mouse/key/Cursor-events
-        canv.mpl_connect('key_press_event', self.keypress)
-        canv.mpl_connect('key_release_event', self.keyrelease)
-        canv.mpl_connect('scroll_event', self.scroll)
-        canv.mpl_connect('button_release_event', self.buttonrelease)
-        canv.mpl_connect('button_press_event', self.buttonpress)
-        self.multicursor = MultiCursor(canv, self.axs, useblit=True,
-                                       color='k', linewidth=1, ls='dotted')
-        
-        # there's a bug in glade so we have to set the default value for the
-        # two comboboxes here by hand, otherwise the boxes are empty at startup
-        # we also have to make a connection between the combobox labels and our
-        # internal event handling (to determine what to do on the various key
-        # press events...)
-        # activate first item in the combobox designed with glade:
-        widgets['comboboxPhaseType'].set_active(0)
-        widgets['comboboxFilterType'].set_active(0)
-        widgets['comboboxNLLocModel'].set_active(0)
-        # fill the combobox list with the streams' station name
-        # first remove a temporary item set at startup
-        widgets['comboboxStreamName'].remove_text(0)
-        for st in streams:
-            net_sta = ".".join([st[0].stats['network'], st[0].stats['station']])
-            widgets['comboboxStreamName'].append_text(net_sta)
-        widgets['comboboxStreamName'].set_active(0)
-        
-        # correct some focus issues and start the GTK+ main loop
-        # grab focus, otherwise the mpl key_press events get lost...
-        # XXX how can we get the focus to the mpl box permanently???
-        # >> although manually removing the "GTK_CAN_FOCUS" flag of all widgets
-        # >> the combobox-type buttons grab the focus. if really necessary the
-        # >> focus can be rest by clicking the "set focus on plot" button...
-        # XXX a possible workaround would be to manually grab focus whenever
-        # one of the combobox buttons or spinbuttons is clicked/updated (DONE!)
-        nofocus_recursive(win)
-        widgets['comboboxPhaseType'].set_focus_on_click(False)
-        widgets['comboboxFilterType'].set_focus_on_click(False)
-        widgets['comboboxNLLocModel'].set_focus_on_click(False)
-        canv.set_property("can_default", True)
-        canv.set_property("can_focus", True)
-        canv.grab_default()
-        canv.grab_focus()
-        # set the filter default values according to command line options
-        # or command line default values
-        widgets['spinbuttonHighpass'].set_value(options.highpass)
-        widgets['spinbuttonLowpass'].set_value(options.lowpass)
-        self.updateStreamLabels()
-        self.multicursorReinit()
-        canv.show()
 
+        # XXX mpl connect XXX XXX XXX XXX XXX
+        # XXX http://eli.thegreenplace.net/files/prog_code/qt_mpl_bars.py.txt
+        # XXX http://eli.thegreenplace.net/2009/01/20/matplotlib-with-pyqt-guis/
+        # XXX https://www.packtpub.com/sites/default/files/sample_chapters/7900-matplotlib-for-python-developers-sample-chapter-6-embedding-matplotlib-in-qt-4.pdf
+        # XXX mpl connect XXX XXX XXX XXX XXX
+        # Activate all mouse/key/Cursor-events
+        # XXX MAYBE rename the event handles again so that they DONT get
+        # XXX autoconnected via Qt?!?!?
+        self.canv.mpl_connect('key_press_event', self.__mpl_keyPressEvent)
+        self.canv.mpl_connect('key_release_event', self.__mpl_keyReleaseEvent)
+        self.canv.mpl_connect('button_release_event', self.__mpl_mouseButtonReleaseEvent)
+        # The scroll event is handled using Qt.
+        #self.canv.mpl_connect('scroll_event', self.__mpl_wheelEvent)
+        self.canv.mpl_connect('button_press_event', self.__mpl_mouseButtonPressEvent)
+        self.multicursorReinit()
+        self.canv.show()
         self.checkForSysopEventDuplicates(streams[0][0].stats.starttime,
                                           streams[0][0].stats.endtime)
+        self.showMaximized()
+        # XXX XXX the good old focus issue again!?! no events get to the mpl canvas
+        # XXX self.canv.setFocusPolicy(Qt.WheelFocus)
+        #print self.canv.hasFocus()
+        # XXX not working the way I want it to:
+        #self.keyPressEvent = lambda ev: ev.key() == Qt.Key_Escape and self.emit(Qt.SIGNAL("escapePressed")) or QtGui.QMainWindow().keyPressEvent(ev)
+        #self.event = lambda ev: (ev.type() == QtGui.QKeyEvent and ev.key() == Qt.Key_Escape) and self.__mpl_keyPressEvent(MplEvent("key_press_event", self.canv, guiEvent=ev)) or QtGui.QMainWindow().event(ev)
 
-        gtk.main()
+    
+    # XXX
+    #def eventFilter(self, obj, ev):
+    #    print "no filtering but could..."
+    #    return False
 
-    def _write_msg(self, msg):
-        self.widgets['textviewStdOutImproved'].write(msg)
+    #def event(self, ev):
+    #    tmp = getattr(self, "tmp_ev", [])
+    #    if not ev.type() in [77]:
+    #        tmp.append(ev.type())
+    #        self.tmp_ev = tmp
+    #    if ev.type() == 51:
+    #        return False
+    #    if ev.type() == 99 or (ev.type() == QEvent.KeyPress and ev.key() == Qt.Key_Alt):
+    #        "intercepted!"
+    #        return False
+    #        ev = KeyEvent("key_press_event", self.canv, "alt", x=10, y=10, guiEvent=ev)
+    #        return self.keyPressEvent(ev)
+    #    return QtGui.QMainWindow.event(self, ev)
         
-    def _write_err(self, err):
-        self.widgets['textviewStdErrImproved'].write(err)
+    #def event(self, ev):
+    #    """
+    #    Event handling. We override some keys with special behavior to just
+    #    emit the standard push-the-button signal.
+    #    """
+    #    #if ev.type() == QEvent.KeyPress:
+    #    #    if ev.key() == Qt.Key_Alt:
+    #    #        self._write_msg("overriding")
+    #    #        from matplotlib.backend_bases import KeyEvent
+    #    #        e = KeyEvent("key_press_event", self.canv, "alt", x=0, y=0, guiEvent=ev)
+    #    #        self.__mpl_keyPressEvent(e)
+    #    #        #self.emit(QtCore.SIGNAL("altPressed"))
+    #    #        return True
+    #    #        self._write_msg("bad")
+    #    if ev.type() == QEvent.Wheel:
+    #        # Mapping from Qt MainWindow coordinates to mpl Canvas coordinates
+    #        # Qt: Starting at top left window corner, y positive down
+    #        # Mpl: Starting at bottom left canvas corner, y positive up
+    #        #
+    #        #         ev.x()   ----->
+    #        #     ------------------------------------------------------
+    #        # ev.y()                                                   |
+    #        #  |  |     self.canv.pos()                                |
+    #        #  |  |                 X-------------------------         |
+    #        #  v  |                 |                      ^ |         |
+    #        #     |                 |    self.canv.height()| |         |
+    #        #     |                 |                      | |         |
+    #        #     |                 |   self.canv.width()  | |         |
+    #        #     |                 |<---------------------+>|         |
+    #        #     |               ^ |                      | |         |
+    #        #     |               | |                      | |         |
+    #        #     |               | |                      v |         |
+    #        #     |            e.y()--------------------------         |
+    #        #     |                  e.x() --->                        |
+    #        #     |                                                    |
+    #        #     ------------------------------------------------------
+    #        x = ev.x() - self.canv.pos().x()
+    #        y = self.canv.pos().y() + self.canv.height() - ev.y()
+    #        # only override if in mpl canvas XXX not exactly correct!?!!!
+    #        if x < 0 or x > self.canv.height() or y < 0 or y > self.canv.width():
+    #            print "overriding canceled (not in canvas)!!"
+    #            return QtGui.QMainWindow.event(self, ev)
+    #        print "overriding!!"
+    #        if ev.delta() > 0:
+    #            button = "up"
+    #        else:
+    #            button = "down"
+    #        e = MplMouseEvent("scroll_event", self.canv, x, y, button, guiEvent=ev)
+    #        self.__mpl_wheelEvent(e)
+    #        return True
+    #    return QtGui.QMainWindow.event(self, ev)
+    
+    def cleanup(self):
+        """
+        Cleanup and prepare for quit.
+        Do:
+            - check if sysop duplicates are there
+            - remove temporary directory and all contents
+        """
+        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
+                                          self.streams[0][0].stats.endtime)
+        try:
+            shutil.rmtree(self.tmp_dir)
+        except:
+            pass
+
+    def __enableTextBrowserWrite(self):
+        """
+        Add write methods to both text browsers to be able to redirect the
+        stdout and stderr to them.
+        """
+        self.widgets.qPlainTextEdit_stderr.write = \
+                self.widgets.qPlainTextEdit_stderr.appendPlainText
+        self.widgets.qPlainTextEdit_stdout.write = \
+                self.widgets.qPlainTextEdit_stdout.appendPlainText
 
     ###########################################################################
-    # Start of list of event handles that get connected to GUI Elements       #
-    # Note: All fundtions starting with "on_" get connected to GUI Elements   #
+    ### signal handlers START #################################################
     ###########################################################################
-    def on_windowObspyck_destroy(self, event):
-        self.cleanQuit()
 
-    def on_buttonClearAll_clicked(self, event):
+    def on_qToolButton_overview_toggled(self):
+        state = self.widgets.qToolButton_overview.isChecked()
+        widgets_leave_active = ("qToolButton_overview",
+                                "qPlainTextEdit_stdout",
+                                "qPlainTextEdit_stderr")
+        for name in WIDGET_NAMES:
+            if name not in widgets_leave_active:
+                widget = getattr(self.widgets, name)
+                widget.setEnabled(not state)
+        if state:
+            self.delAxes()
+            self.fig.clear()
+            self.drawStreamOverview()
+            self.multicursor.visible = False
+            self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.zoom()
+            self.toolbar.update()
+            self.canv.draw()
+        else:
+            self.delAxes()
+            self.fig.clear()
+            self.drawAxes()
+            self.toolbar.update()
+            self.drawAllItems()
+            self.multicursorReinit()
+            self.updatePlot()
+            self.updateStreamLabels()
+            self.canv.draw()
+
+    def on_qToolButton_clearAll_clicked(self, dummy_int):
         self.clearDictionaries()
         self.updateAllItems()
         self.redraw()
 
-    def on_buttonClearOrigMag_clicked(self, event):
+    def on_qToolButton_clearOrigMag_clicked(self, dummy_int):
         self.clearOriginMagnitudeDictionaries()
         self.updateAllItems()
         self.redraw()
 
-    def on_buttonClearFocMec_clicked(self, event):
+    def on_qToolButton_clearFocMec_clicked(self, dummy_int):
         self.clearFocmecDictionary()
 
-    def on_buttonDoHyp2000_clicked(self, event):
+    def on_qToolButton_doHyp2000_clicked(self, dummy_int):
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "hyp2000"
@@ -1030,9 +368,9 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.widgets['togglebuttonShowMap'].set_active(True)
+        self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_buttonDo3dloc_clicked(self, event):
+    def on_qToolButton_do3dloc_clicked(self, dummy_int):
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "3dloc"
@@ -1045,9 +383,9 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.widgets['togglebuttonShowMap'].set_active(True)
+        self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_buttonDoNLLoc_clicked(self, event):
+    def on_qToolButton_doNlloc_clicked(self, dummy_int):
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "NLLoc"
@@ -1059,39 +397,53 @@ class ObsPyckGUI:
         self.updateNetworkMag()
         self.drawAllItems()
         self.redraw()
-        self.widgets['togglebuttonShowMap'].set_active(True)
+        self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_buttonCalcMag_clicked(self, event):
+    def on_qToolButton_calcMag_clicked(self, dummy_int):
         self.calculateEpiHypoDists()
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
 
-    def on_buttonDoFocmec_clicked(self, event):
+    def on_qToolButton_doFocMec_clicked(self, dummy_int):
         self.clearFocmecDictionary()
         self.dictFocalMechanism['Program'] = "focmec"
         self.doFocmec()
 
-    def on_togglebuttonShowMap_clicked(self, event):
-        state = self.widgets['togglebuttonShowMap'].get_active()
-        widgets_leave_active = ["togglebuttonShowMap",
-                                "textviewStdOutImproved",
-                                "textviewStdErrImproved"]
-        for name, widget in self.widgets.iteritems():
+    def on_qToolButton_showMap_toggled(self):
+        state = self.widgets.qToolButton_showMap.isChecked()
+        widgets_leave_active = ("qToolButton_showMap",
+                                "qPlainTextEdit_stdout",
+                                "qPlainTextEdit_stderr")
+        for name in WIDGET_NAMES:
             if name not in widgets_leave_active:
-                widget.set_sensitive(not state)
+                widget = getattr(self.widgets, name)
+                widget.setEnabled(not state)
+        # XXX XXX would be better to avoid list of widget names nd do it
+        # XXX XXX dynamically, but it doesnt work..
+        # XXX tmp = (getattr(self.widgets, name) for name in widgets_leave_active)
+        # XXX for widget in self.children():
+        # XXX     self._write_msg(str(widget.objectName())+"\n")
+        # XXX     widget.setEnabled(not state)
+        # XXX for widget in tmp:
+        # XXX     widget.setEnabled(state)
         if state:
             self.delAxes()
             self.fig.clear()
             self.drawEventMap()
             self.multicursor.visible = False
+            # just want to make sure that we end up in normal cursor state
             self.toolbar.pan()
+            self.toolbar.zoom()
             self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
-            self._write_msg("http://maps.google.de/maps" + \
-                    "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
-                    self.dictOrigin['Longitude']))
+            #self._write_msg("http://maps.google.de/maps" + \
+            #        "?f=q&q=%.6f,%.6f" % (self.dictOrigin['Latitude'],
+            #        self.dictOrigin['Longitude']))
+            link = "<a href='http://maps.google.de/maps?f=q&q=%.6f,%.6f'>Google Maps</a> " % \
+                    (self.dictOrigin['Latitude'], self.dictOrigin['Longitude'])
+            self.widgets.qPlainTextEdit_stdout.appendHtml(link)
         else:
             self.delEventMap()
             self.fig.clear()
@@ -1103,42 +455,16 @@ class ObsPyckGUI:
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_togglebuttonOverview_clicked(self, event):
-        state = self.widgets['togglebuttonOverview'].get_active()
-        widgets_leave_active = ["togglebuttonOverview",
-                                "textviewStdOutImproved",
-                                "textviewStdErrImproved"]
-        for name, widget in self.widgets.iteritems():
+    def on_qToolButton_showFocMec_toggled(self):
+        state = self.widgets.qToolButton_showFocMec.isChecked()
+        widgets_leave_active = ("qToolButton_showFocMec",
+                                "qToolButton_nextFocMec",
+                                "qPlainTextEdit_stdout",
+                                "qPlainTextEdit_stderr")
+        for name in WIDGET_NAMES:
             if name not in widgets_leave_active:
-                widget.set_sensitive(not state)
-        if state:
-            self.delAxes()
-            self.fig.clear()
-            self.drawStreamOverview()
-            self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.update()
-            self.canv.draw()
-        else:
-            self.delAxes()
-            self.fig.clear()
-            self.drawAxes()
-            self.toolbar.update()
-            self.drawAllItems()
-            self.multicursorReinit()
-            self.updatePlot()
-            self.updateStreamLabels()
-            self.canv.draw()
-
-    def on_togglebuttonShowFocMec_clicked(self, event):
-        state = self.widgets['togglebuttonShowFocMec'].get_active()
-        widgets_leave_active = ["togglebuttonShowFocMec", "buttonNextFocMec",
-                                "textviewStdOutImproved",
-                                "textviewStdErrImproved"]
-        for name, widget in self.widgets.iteritems():
-            if name not in widgets_leave_active:
-                widget.set_sensitive(not state)
+                widget = getattr(self.widgets, name)
+                widget.setEnabled(not state)
         if state:
             self.delAxes()
             self.fig.clear()
@@ -1160,28 +486,31 @@ class ObsPyckGUI:
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_buttonNextFocMec_clicked(self, event):
+    def on_qToolButton_nextFocMec_clicked(self, dummy_int):
         self.nextFocMec()
-        if self.widgets['togglebuttonShowFocMec'].get_active():
+        if self.widgets.qToolButton_showFocMec.isChecked():
             self.delFocMec()
             self.fig.clear()
             self.drawFocMec()
             self.canv.draw()
 
-    def on_togglebuttonShowWadati_clicked(self, event):
-        state = self.widgets['togglebuttonShowWadati'].get_active()
-        widgets_leave_active = ["togglebuttonShowWadati",
-                                "textviewStdOutImproved",
-                                "textviewStdErrImproved"]
-        for name, widget in self.widgets.iteritems():
+    def on_qToolButton_showWadati_toggled(self):
+        state = self.widgets.qToolButton_showWadati.isChecked()
+        widgets_leave_active = ("qToolButton_showWadati",
+                                "qPlainTextEdit_stdout",
+                                "qPlainTextEdit_stderr")
+        for name in WIDGET_NAMES:
             if name not in widgets_leave_active:
-                widget.set_sensitive(not state)
+                widget = getattr(self.widgets, name)
+                widget.setEnabled(not state)
         if state:
             self.delAxes()
             self.fig.clear()
             self.drawWadati()
             self.multicursor.visible = False
             self.toolbar.pan()
+            self.toolbar.zoom()
+            self.toolbar.zoom()
             self.toolbar.update()
             self.canv.draw()
         else:
@@ -1195,13 +524,13 @@ class ObsPyckGUI:
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_buttonGetNextEvent_clicked(self, event):
+    def on_qToolButton_getNextEvent_clicked(self, dummy_int):
         # check if event list is empty and force an update if this is the case
         if not hasattr(self, "seishubEventList"):
             self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
                                             self.streams[0][0].stats.endtime)
         if not self.seishubEventList:
-            msg = "No events available from seishub."
+            msg = "No events available from SeisHub."
             self._write_msg(msg)
             return
         # iterate event number to fetch
@@ -1211,85 +540,83 @@ class ObsPyckGUI:
         resource_name = event.get('resource_name')
         self.clearDictionaries()
         self.getEventFromSeishub(resource_name)
-        #self.getNextEventFromSeishub(self.streams[0][0].stats.starttime, 
-        #                             self.streams[0][0].stats.endtime)
         self.updateAllItems()
         self.redraw()
         
-        #XXX 
-
-    def on_buttonUpdateEventList_clicked(self, event):
+    def on_qToolButton_updateEventList_clicked(self, dummy_int):
         self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
                                         self.streams[0][0].stats.endtime)
 
-    def on_buttonSendEvent_clicked(self, event):
+    def on_qToolButton_sendEvent_clicked(self, dummy_int):
         self.uploadSeishub()
         self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                           self.streams[0][0].stats.endtime)
 
-    def on_checkbuttonPublishEvent_toggled(self, event):
-        newstate = self.widgets['checkbuttonPublishEvent'].get_active()
+    def on_qCheckBox_publishEvent_toggled(self):
+        newstate = self.widgets.qCheckBox_publishEvent.isChecked()
         msg = "Setting \"public\" flag of event to: %s" % newstate
         self._write_msg(msg)
 
-    def on_buttonDeleteEvent_clicked(self, event):
+    def on_qToolButton_deleteEvent_clicked(self, dummy_int):
         event = self.seishubEventList[self.seishubEventCurrent]
         resource_name = event.get('resource_name')
         account = event.get('account')
         user = event.get('user')
-        dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
-                                   gtk.MESSAGE_INFO, gtk.BUTTONS_YES_NO)
-        msg = "Delete event from database?\n\n"
-        msg += "<tt><b>%s</b> (account: %s, user: %s)</tt>" % (resource_name,
-                                                               account, user)
-        dialog.set_markup(msg)
-        dialog.set_title("Delete?")
-        response = dialog.run()
-        dialog.destroy()
-        if response == gtk.RESPONSE_YES:
+
+        qMessageBox = QtGui.QMessageBox()
+        qMessageBox.setIcon(QtGui.QMessageBox.Warning)
+        qMessageBox.setWindowTitle("Delete?")
+        qMessageBox.setText("Delete event from database?")
+        msg = "%s  (account: %s, user: %s)" % (resource_name, account, user)
+        qMessageBox.setInformativeText(msg)
+        qMessageBox.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
+        qMessageBox.setDefaultButton(QtGui.QMessageBox.Cancel)
+        if qMessageBox.exec_() == QtGui.QMessageBox.Ok:
             self.deleteEventInSeishub(resource_name)
-            self.on_buttonUpdateEventList_clicked(event)
+            self.on_qToolButton_updateEventList_clicked(event)
     
-    def on_checkbuttonSysop_toggled(self, event):
-        newstate = self.widgets['checkbuttonSysop'].get_active()
-        msg = "Setting usage of \"sysop\"-account to: %s" % newstate
-        self._write_msg(msg)
+    def on_qCheckBox_sysop_toggled(self):
+        newstate = self.widgets.qCheckBox_sysop.isChecked()
+        if not str(self.widgets.qLineEdit_sysopPassword.text()):
+            self.widgets.qCheckBox_sysop.setChecked(False)
+            err = "Error: Enter password for \"sysop\"-account first."
+            self._write_err(err)
+        else:
+            msg = "Setting usage of \"sysop\"-account to: %s" % newstate
+            self._write_msg(msg)
     
     # the corresponding signal is emitted when hitting return after entering
     # the password
-    def on_entrySysopPassword_activate(self, event):
-        passwd = self.widgets['entrySysopPassword'].get_text()
+    def on_qLineEdit_sysopPassword_editingFinished(self):
+        passwd = str(self.widgets.qLineEdit_sysopPassword.text())
         tmp_client = Client(base_url=self.server['BaseUrl'], user="sysop",
                             password=passwd)
         if tmp_client.testAuth():
             self.client_sysop = tmp_client
-            self.widgets['checkbuttonSysop'].set_active(True)
+            self.widgets.qCheckBox_sysop.setChecked(True)
         # if authentication test fails empty password field and uncheck sysop
         else:
             self.client_sysop = None
-            self.widgets['checkbuttonSysop'].set_active(False)
-            self.widgets['entrySysopPassword'].set_text("")
+            self.widgets.qCheckBox_sysop.setChecked(False)
+            self.widgets.qLineEdit_sysopPassword.clear()
             err = "Error: Authentication as sysop failed! (Wrong password!?)"
             self._write_err(err)
-        self.canv.grab_focus()
+        self.canv.setFocus() # XXX needed??
+    # XXX XXX not used atm. relict from gtk when buttons snatch to grab the
+    # XXX XXX focus away from the mpl-canvas to which key/mouseButtonPresses are
+    # XXX XXX connected
+    # XXX def on_buttonSetFocusOnPlot_clicked(self, event):
+    # XXX     self.setFocusToMatplotlib()
 
-    def on_buttonSetFocusOnPlot_clicked(self, event):
-        self.setFocusToMatplotlib()
-
-    def on_buttonDebug_clicked(self, event):
+    def on_qToolButton_debug_clicked(self):
         self.debug()
-
-    def on_buttonQuit_clicked(self, event):
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
-        self.cleanQuit()
-
-    def on_buttonPreviousStream_clicked(self, event):
+    
+    def on_qToolButton_previousStream_clicked(self, dummy_int):
         self.stPt = (self.stPt - 1) % self.stNum
-        self.widgets['comboboxStreamName'].set_active(self.stPt)
+        self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
-    def on_comboboxStreamName_changed(self, event):
-        self.stPt = self.widgets['comboboxStreamName'].get_active()
+    def on_qComboBox_streamName_currentIndexChanged(self, newvalue):
+        self.stPt = self.widgets.qComboBox_streamName.currentIndex()
         xmin, xmax = self.axs[0].get_xlim()
         self.delAllItems()
         self.delAxes()
@@ -1304,84 +631,85 @@ class ObsPyckGUI:
         self.updateStreamNumberLabel()
         self._write_msg(msg)
 
-    def on_buttonNextStream_clicked(self, event):
+    def on_qToolButton_nextStream_clicked(self, dummy_int):
         self.stPt = (self.stPt + 1) % self.stNum
-        self.widgets['comboboxStreamName'].set_active(self.stPt)
+        self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
-    def on_comboboxPhaseType_changed(self, event):
-        self.updateMulticursorColor()
-        self.updateButtonPhaseTypeColor()
-        self.redraw()
+    def on_qComboBox_phaseType_currentIndexChanged(self, newvalue):
+        # XXX: Ugly hack because it can be called before the combo box has any
+        # entries.
+        try:
+            self.updateMulticursorColor()
+            self.redraw()
+        except AttributeError:
+            pass
 
-    def on_togglebuttonFilter_toggled(self, event):
+    def on_qToolButton_filter_toggled(self):
         self.updatePlot()
 
-    def on_comboboxFilterType_changed(self, event):
-        if self.widgets['togglebuttonFilter'].get_active():
+    def on_qComboBox_filterType_currentIndexChanged(self, newvalue):
+        if self.widgets.qToolButton_filter.isChecked():
             self.updatePlot()
 
-    def on_checkbuttonZeroPhase_toggled(self, event):
-        # if the filter flag is not set, we don't have to update the plot
-        if self.widgets['togglebuttonFilter'].get_active():
+    def on_qCheckBox_zerophase_toggled(self):
+        if self.widgets.qToolButton_filter.isChecked():
             self.updatePlot()
 
-    def on_spinbuttonHighpass_value_changed(self, event):
+    def on_qDoubleSpinBox_highpass_valueChanged(self, newvalue):
         widgets = self.widgets
         stats = self.streams[self.stPt][0].stats
-        if not widgets['togglebuttonFilter'].get_active() or \
-           widgets['comboboxFilterType'].get_active_text() == "Lowpass":
-            self.canv.grab_focus()
+        if not widgets.qToolButton_filter.isChecked() or \
+           str(widgets.qComboBox_filterType.currentText()) == "Lowpass":
+            self.canv.setFocus() # XXX needed??
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a lowpass, we dont need to update!! Not yet implemented!! XXX
-        if widgets['spinbuttonLowpass'].get_value() < widgets['spinbuttonHighpass'].get_value():
+        if widgets.qDoubleSpinBox_lowpass.value() < newvalue:
             err = "Warning: Lowpass frequency below Highpass frequency!"
             self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
         minimum  = float(stats.sampling_rate) / stats.npts
-        if widgets['spinbuttonHighpass'].get_value() < minimum:
+        if newvalue < minimum:
             err = "Warning: Lowpass frequency is not supported by length of trace!"
             self._write_err(err)
         self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
-        self.canv.grab_focus()
+        self.canv.setFocus() # XXX needed?? # XXX do we still need this focus grabbing with QT??? XXX XXX XXX XXX
 
-    def on_spinbuttonLowpass_value_changed(self, event):
+    def on_qDoubleSpinBox_lowpass_valueChanged(self, newvalue):
         widgets = self.widgets
         stats = self.streams[self.stPt][0].stats
-        if not widgets['togglebuttonFilter'].get_active() or \
-           widgets['comboboxFilterType'].get_active_text() == "Highpass":
-            self.canv.grab_focus()
+        if not widgets.qToolButton_filter.isChecked() or \
+           str(widgets.qComboBox_filterType.currentText()) == "Highpass":
+            self.canv.setFocus() # XXX needed??
             return
         # if the filter flag is not set, we don't have to update the plot
         # XXX if we have a highpass, we dont need to update!! Not yet implemented!! XXX
-        if widgets['spinbuttonLowpass'].get_value() < widgets['spinbuttonHighpass'].get_value():
+        if newvalue < widgets.qDoubleSpinBox_highpass.value():
             err = "Warning: Lowpass frequency below Highpass frequency!"
             self._write_err(err)
         # XXX maybe the following check could be done nicer
         # XXX check this criterion!
-        maximum  = stats.sampling_rate / 2.0
-        if widgets['spinbuttonLowpass'].get_value() > maximum:
+        maximum  = stats.sampling_rate / 2.0 # Nyquist
+        if newvalue > maximum:
             err = "Warning: Highpass frequency is lower than Nyquist!"
             self._write_err(err)
         self.updatePlot()
         # XXX we could use this for the combobox too!
         # reset focus to matplotlib figure
-        self.canv.grab_focus()
+        self.canv.setFocus() # XXX needed??
 
-    def on_togglebuttonSpectrogram_toggled(self, event):
-        widgets = self.widgets
-        buttons_deactivate = [widgets['togglebuttonFilter'],
-                              widgets['togglebuttonOverview'],
-                              widgets['comboboxFilterType'],
-                              widgets['checkbuttonZeroPhase'],
-                              widgets['labelHighpass'], widgets['labelLowpass'],
-                              widgets['spinbuttonHighpass'], widgets['spinbuttonLowpass']]
-        state = widgets['togglebuttonSpectrogram'].get_active()
-        for button in buttons_deactivate:
-            button.set_sensitive(not state)
+    def on_qToolButton_spectrogram_toggled(self):
+        state = self.widgets.qToolButton_spectrogram.isChecked()
+        widgets_deactivate = ("qToolButton_filter", "qToolButton_overview",
+                "qComboBox_filterType", "qCheckBox_zerophase",
+                "qLabel_highpass", "qLabel_lowpass", "qDoubleSpinBox_highpass",
+                "qDoubleSpinBox_lowpass")
+        for name in widgets_deactivate:
+            widget = getattr(self.widgets, name)
+            widget.setEnabled(not state)
         if state:
             msg = "Showing spectrograms (takes a few seconds with log-option)."
         else:
@@ -1397,12 +725,19 @@ class ObsPyckGUI:
         self.updatePlot()
         self._write_msg(msg)
 
-    def on_checkbuttonSpectrogramLog_toggled(self, event):
-        if self.widgets['togglebuttonSpectrogram'].get_active():
-            self.on_togglebuttonSpectrogram_toggled(event)
+    def on_qCheckBox_spectrogramLog_toggled(self):
+        if self.widgets.qToolButton_spectrogram.isChecked():
+            self.on_qToolButton_spectrogram_toggled()
+
     ###########################################################################
-    # End of list of event handles that get connected to GUI Elements         #
+    ### signal handlers END ###### ############################################
     ###########################################################################
+
+    def _write_msg(self, msg):
+        self.widgets.qPlainTextEdit_stdout.write(msg)
+        
+    def _write_err(self, err):
+        self.widgets.qPlainTextEdit_stderr.write(err)
 
     def _filter(self, stream):
         """
@@ -1410,22 +745,22 @@ class ObsPyckGUI:
         Also displays a message.
         """
         w = self.widgets
-        type = w['comboboxFilterType'].get_active_text().lower()
+        type = str(w.qComboBox_filterType.currentText()).lower()
         options = {}
         options['corners'] = 1
-        options['zerophase'] = w['checkbuttonZeroPhase'].get_active()
-        if type in ["bandpass", "bandstop"]:
-            options['freqmin'] = w['spinbuttonHighpass'].get_value()
-            options['freqmax'] = w['spinbuttonLowpass'].get_value()
+        options['zerophase'] = w.qCheckBox_zerophase.isChecked()
+        if type in ("bandpass", "bandstop"):
+            options['freqmin'] = w.qDoubleSpinBox_highpass.value()
+            options['freqmax'] = w.qDoubleSpinBox_lowpass.value()
         elif type == "lowpass":
-            options['freq'] = w['spinbuttonLowpass'].get_value()
+            options['freq'] = w.qDoubleSpinBox_lowpass.value()
         elif type == "highpass":
-            options['freq'] = w['spinbuttonHighpass'].get_value()
-        if type in ["bandpass", "bandstop"]:
+            options['freq'] = w.qDoubleSpinBox_highpass.value()
+        if type in ("bandpass", "bandstop"):
             msg = "%s (zerophase=%s): %.2f-%.2f Hz" % \
                     (type, options['zerophase'],
                      options['freqmin'], options['freqmax'])
-        elif type in ["lowpass", "highpass"]:
+        elif type in ("lowpass", "highpass"):
             msg = "%s (zerophase=%s): %.2f Hz" % \
                     (type, options['zerophase'], options['freq'])
         try:
@@ -1438,26 +773,21 @@ class ObsPyckGUI:
     def debug(self):
         sys.stdout = self.stdout_backup
         sys.stderr = self.stderr_backup
+        ## DEBUG PYQT START
+        QtCore.pyqtRemoveInputHook()
         try:
-            import ipdb
-            ipdb.set_trace()
-        except ImportError:
-            import pdb
-            pdb.set_trace()
+            import ipdb;ipdb.set_trace()
+        except:
+            import pdb;pdb.set_trace()
+        QtCore.pyqtRestoreInputHook()
+        ## DEBUG PYQT END
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
-        sys.stdout = self.widgets['textviewStdOutImproved']
-        sys.stderr = self.widgets['textviewStdErrImproved']
+        sys.stdout = self.widgets.qPlainTextEdit_stdout
+        sys.stderr = self.widgets.qPlainTextEdit_stderr
 
     def setFocusToMatplotlib(self):
-        self.canv.grab_focus()
-
-    def cleanQuit(self):
-        try:
-            shutil.rmtree(self.tmp_dir)
-        except:
-            pass
-        gtk.main_quit()
+        self.canv.setFocus() # XXX needed??
 
     def drawLine(self, key):
         """
@@ -1596,7 +926,7 @@ class ObsPyckGUI:
         ylims = list(ax.get_ylim())
         keyT = key + "T"
         self.lines[key] = {}
-        line = ax.plot([d[keyT]], [d[key]], markersize=MAG_MARKER['size'],
+        line = ax.plot((d[keyT],), (d[key],), markersize=MAG_MARKER['size'],
                 markeredgewidth=MAG_MARKER['edgewidth'],
                 color=PHASE_COLORS['Mag'], marker=MAG_MARKER['marker'],
                 zorder=2000)[0]
@@ -1639,51 +969,47 @@ class ObsPyckGUI:
         self.trans = trans
         t = []
         self.t = t
-        trNum = len(st.traces)
-        for i in range(trNum):
-            npts = st[i].stats.npts
-            smprt = st[i].stats.sampling_rate
+        for i, tr in enumerate(st):
+            if i == 0:
+                ax = fig.add_subplot(len(st), 1, 1)
+            else:
+                ax = fig.add_subplot(len(st), 1, i+1, sharex=axs[0], sharey=axs[0])
+                ax.xaxis.set_ticks_position("top")
+            axs.append(ax) 
             #make sure that the relative times of the x-axes get mapped to our
             #global stream (absolute) starttime (starttime of first (Z) trace)
-            starttime_local = st[i].stats.starttime - starttime_global
-            dt = 1. / smprt
+            starttime_local = tr.stats.starttime - starttime_global
+            dt = 1. / tr.stats.sampling_rate
             sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * npts), dt)
-            # sometimes our arange is one item too long (why??), so we just cut
+                    starttime_local + (dt * tr.stats.npts), dt)
+            # XXX sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
-            if len(sampletimes) == npts + 1:
+            if len(sampletimes) == tr.stats.npts + 1:
                 sampletimes = sampletimes[:-1]
             t.append(sampletimes)
-            if i == 0:
-                axs.append(fig.add_subplot(trNum,1,i+1))
-                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
-                                                                             axs[i].transAxes))
+            trans.append(matplotlib.transforms.blended_transform_factory(ax.transData,
+                                                                         ax.transAxes))
+            ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+            if self.widgets.qToolButton_spectrogram.isChecked():
+                log = self.widgets.qCheckBox_spectrogramLog.isChecked()
+                spectrogram(tr.data, tr.stats.sampling_rate, log=log,
+                            cmap=self.spectrogramColormap, axis=ax, zorder=-10)
+                textcolor = "red"
             else:
-                axs.append(fig.add_subplot(trNum, 1, i+1, 
-                        sharex=axs[0], sharey=axs[0]))
-                trans.append(matplotlib.transforms.blended_transform_factory(axs[i].transData,
-                                                                             axs[i].transAxes))
-                axs[i].xaxis.set_ticks_position("top")
-            axs[-1].xaxis.set_ticks_position("both")
-            axs[i].xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-            if self.widgets['togglebuttonSpectrogram'].get_active():
-                log = self.widgets['checkbuttonSpectrogramLog'].get_active()
-                spectrogram(st[i].data, st[i].stats.sampling_rate, log=log,
-                            cmap=self.spectrogramColormap, axis=axs[i],
-                            zorder=-10)
-            else:
-                plts.append(axs[i].plot(t[i], st[i].data, color='k',zorder=1000)[0])
+                plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+                textcolor = "blue"
+            tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
+            ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
+                    family='monospace', color=textcolor, zorder=10000,
+                    transform=ax.transAxes)
+        axs[-1].xaxis.set_ticks_position("both")
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          st[0].stats.starttime.microsecond / 1e3 + 0.5,
                                                          st[0].stats.endtime.strftime("%H:%M:%S"),
                                                          st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
-        #fig.subplots_adjust(bottom=0.04, hspace=0.01, right=0.999, top=0.94, left=0.06)
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
-        self.toolbar.update()
-        self.toolbar.pan(False)
-        self.toolbar.zoom(True)
     
     def delAxes(self):
         for ax in self.axs:
@@ -1706,7 +1032,7 @@ class ObsPyckGUI:
         st = self.streams[self.stPt]
         # To display filtered data we overwrite our alias to current stream
         # and replace it with the filtered data.
-        if self.widgets['togglebuttonFilter'].get_active():
+        if self.widgets.qToolButton_filter.isChecked():
             st = st.copy()
             self._filter(st)
         else:
@@ -1716,12 +1042,14 @@ class ObsPyckGUI:
         for tr, plot in zip(st, self.plts):
             plot.set_ydata(tr.data)
         self.redraw()
-    
+
     # Define the event that handles the setting of P- and S-wave picks
-    def keypress(self, event):
-        if self.widgets['togglebuttonShowMap'].get_active():
+    # XXX prefix with underscores to avoid autoconnect to Qt
+    def __mpl_keyPressEvent(self, ev):
+        if self.widgets.qToolButton_showMap.isChecked():
             return
-        phase_type = self.widgets['comboboxPhaseType'].get_active_text()
+        keys = self.keys
+        phase_type = str(self.widgets.qComboBox_phaseType.currentText())
         dict = self.dicts[self.stPt]
         st = self.streams[self.stPt]
         
@@ -1730,29 +1058,29 @@ class ObsPyckGUI:
         #######################################################################
         # For some key events (picking events) we need information on the x/y
         # position of the cursor:
-        if event.key in (KEYS['setPick'], KEYS['setPickError'],
-                         KEYS['setMagMin'], KEYS['setMagMax']):
-            # some keypress events only make sense inside our matplotlib axes
-            if event.inaxes not in self.axs:
+        if ev.key in [keys['setPick'], keys['setPickError'],
+                      keys['setMagMin'], keys['setMagMax']]:
+            # some keyPress events only make sense inside our matplotlib axes
+            if ev.inaxes not in self.axs:
                 return
             #We want to round from the picking location to
             #the time value of the nearest time sample:
             samp_rate = st[0].stats.sampling_rate
-            pickSample = event.xdata * samp_rate
+            pickSample = ev.xdata * samp_rate
             pickSample = round(pickSample)
             pickSample = pickSample / samp_rate
             # we need the position of the cursor location
             # in the seismogram array:
             xpos = pickSample * samp_rate
 
-        if event.key == KEYS['setPick']:
-            # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs:
+        if ev.key == keys['setPick']:
+            # some keyPress events only make sense inside our matplotlib axes
+            if not ev.inaxes in self.axs:
                 return
             if phase_type in SEISMIC_PHASES:
                 dict[phase_type] = pickSample
                 if phase_type == "S":
-                    dict['Saxind'] = self.axs.index(event.inaxes)
+                    dict['Saxind'] = self.axs.index(ev.inaxes)
                 depending_keys = (phase_type + k for k in ['', 'synth'])
                 for key in depending_keys:
                     self.updateLine(key)
@@ -1772,43 +1100,43 @@ class ObsPyckGUI:
                 self._write_msg(msg)
                 return
 
-        if event.key in KEYS['setWeight'].keys():
+        if ev.key in keys['setWeight'].keys():
             if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Weight"
-                dict[key] = KEYS['setWeight'][event.key]
+                dict[key] = keys['setWeight'][ev.key]
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %i" % (KEY_FULLNAMES[key], dict[key])
                 self._write_msg(msg)
                 return
 
-        if event.key in KEYS['setPol'].keys():
+        if ev.key in keys['setPol'].keys():
             if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Pol"
-                dict[key] = KEYS['setPol'][event.key]
+                dict[key] = keys['setPol'][ev.key]
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
                 self._write_msg(msg)
                 return
 
-        if event.key in KEYS['setOnset'].keys():
+        if ev.key in keys['setOnset'].keys():
             if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
                     return
                 key = phase_type + "Onset"
-                dict[key] = KEYS['setOnset'][event.key]
+                dict[key] = keys['setOnset'][ev.key]
                 self.updateLabel(phase_type)
                 self.redraw()
                 msg = "%s set to %s" % (KEY_FULLNAMES[key], dict[key])
                 self._write_msg(msg)
                 return
 
-        if event.key == KEYS['delPick']:
+        if ev.key == keys['delPick']:
             if phase_type in SEISMIC_PHASES:
                 depending_keys = (phase_type + k for k in ['', 'Err1', 'Err2'])
                 for key in depending_keys:
@@ -1820,9 +1148,9 @@ class ObsPyckGUI:
                 self.redraw()
                 return
 
-        if event.key == KEYS['setPickError']:
-            # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs:
+        if ev.key == keys['setPickError']:
+            # some keyPress events only make sense inside our matplotlib axes
+            if not ev.inaxes in self.axs:
                 return
             if phase_type in SEISMIC_PHASES:
                 if phase_type not in dict:
@@ -1839,9 +1167,9 @@ class ObsPyckGUI:
                 self._write_msg(msg)
                 return
 
-        if event.key == KEYS['setMagMin']:
-            # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs[1:3]:
+        if ev.key == keys['setMagMin']:
+            # some keyPress events only make sense inside our matplotlib axes
+            if not ev.inaxes in self.axs[1:3]:
                 return
             if phase_type == 'Mag':
                 if len(self.axs) < 2:
@@ -1852,16 +1180,16 @@ class ObsPyckGUI:
                 # determine which dict keys to work with
                 key = 'MagMin'
                 key_other = 'MagMax'
-                if event.inaxes is self.axs[1]:
+                if ev.inaxes is self.axs[1]:
                     key += '1'
                     key_other += '1'
-                elif event.inaxes is self.axs[2]:
+                elif ev.inaxes is self.axs[2]:
                     key += '2'
                     key_other += '2'
                 keyT = key + 'T'
                 keyT_other = key_other + 'T'
                 # do the actual work
-                ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                ydata = ev.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 dict[key] = np.min(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
                 # save time of magnitude minimum in seconds
@@ -1880,9 +1208,9 @@ class ObsPyckGUI:
                 self._write_msg(msg)
                 return
 
-        if event.key == KEYS['setMagMax']:
-            # some keypress events only make sense inside our matplotlib axes
-            if not event.inaxes in self.axs[1:3]:
+        if ev.key == keys['setMagMax']:
+            # some keyPress events only make sense inside our matplotlib axes
+            if not ev.inaxes in self.axs[1:3]:
                 return
             if phase_type == 'Mag':
                 if len(self.axs) < 2:
@@ -1893,16 +1221,16 @@ class ObsPyckGUI:
                 # determine which dict keys to work with
                 key = 'MagMax'
                 key_other = 'MagMin'
-                if event.inaxes is self.axs[1]:
+                if ev.inaxes is self.axs[1]:
                     key += '1'
                     key_other += '1'
-                elif event.inaxes is self.axs[2]:
+                elif ev.inaxes is self.axs[2]:
                     key += '2'
                     key_other += '2'
                 keyT = key + 'T'
                 keyT_other = key_other + 'T'
                 # do the actual work
-                ydata = event.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
+                ydata = ev.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMaxT estimation!
                 dict[key] = np.max(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
                 # save time of magnitude maximum in seconds
@@ -1921,13 +1249,13 @@ class ObsPyckGUI:
                 self._write_msg(msg)
                 return
 
-        if event.key == KEYS['delMagMinMax']:
+        if ev.key == keys['delMagMinMax']:
             if phase_type == 'Mag':
-                if event.inaxes is self.axs[1]:
+                if ev.inaxes is self.axs[1]:
                     for key in ['MagMin1', 'MagMax1']:
                         self.delMagMarker(key)
                         self.delKey(key)
-                elif event.inaxes is self.axs[2]:
+                elif ev.inaxes is self.axs[2]:
                     for key in ['MagMin2', 'MagMax2']:
                         self.delMagMarker(key)
                         self.delKey(key)
@@ -1939,94 +1267,131 @@ class ObsPyckGUI:
         # End of key events related to picking                                #
         #######################################################################
         
-        if event.key == KEYS['switchWheelZoomAxis']:
+        if ev.key == keys['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = True
 
-        if event.key == KEYS['switchPan']:
+        if ev.key == keys['switchPan']:
             self.toolbar.pan()
-            self.canv.widgetlock.release(self.toolbar)
+            # XXX self.canv.widgetlock.release(self.toolbar)
             self.redraw()
             msg = "Switching pan mode"
             self._write_msg(msg)
             return
         
         # iterate the phase type combobox
-        if event.key == KEYS['switchPhase']:
-            combobox = self.widgets['comboboxPhaseType']
-            phase_count = len(combobox.get_model())
-            phase_next = (combobox.get_active() + 1) % phase_count
-            combobox.set_active(phase_next)
+        if ev.key == keys['switchPhase']:
+            combobox = self.widgets.qComboBox_phaseType
+            next = (combobox.currentIndex() + 1) % combobox.count()
+            combobox.setCurrentIndex(next)
             msg = "Switching Phase button"
             self._write_msg(msg)
             return
             
-        if event.key == KEYS['prevStream']:
-            self.widgets['buttonPreviousStream'].clicked()
+        if ev.key == keys['prevStream']:
+            if self.widgets.qToolButton_overview.isChecked():
+                return
+            self.on_qToolButton_previousStream_clicked(0)
             return
 
-        if event.key == KEYS['nextStream']:
-            self.widgets['buttonNextStream'].clicked()
+        if ev.key == keys['nextStream']:
+            if self.widgets.qToolButton_overview.isChecked():
+                return
+            self.on_qToolButton_nextStream_clicked(0)
             return
     
-    def keyrelease(self, event):
-        if event.key == KEYS['switchWheelZoomAxis']:
+    def __mpl_keyReleaseEvent(self, ev):
+        if ev.key == self.keys['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = False
 
-    # Define zooming for the mouse scroll wheel
-    def scroll(self, event):
-        if self.widgets['togglebuttonShowMap'].get_active():
-            return
+    # Define zooming for the mouse wheel wheel
+    def __mpl_wheelEvent(self, ev):
+        # create mpl event from QEvent to get cursor position in data coords
+        x = ev.x()
+        y = self.canv.height() - ev.y()
+        mpl_ev = MplMouseEvent("scroll_event", self.canv, x, y, "up", guiEvent=ev)
         # Calculate and set new axes boundaries from old ones
-        (left, right) = self.axs[0].get_xbound()
-        (bottom, top) = self.axs[0].get_ybound()
-        # Zoom in on scroll-up
-        if event.button == 'up':
-            if self.flagWheelZoomAmplitude:
-                top /= 2.
-                bottom /= 2.
-            else:
-                left += (event.xdata - left) / 2
-                right -= (right - event.xdata) / 2
-        # Zoom out on scroll-down
-        elif event.button == 'down':
-            if self.flagWheelZoomAmplitude:
-                top *= 2.
-                bottom *= 2.
-            else:
-                left -= (event.xdata - left) / 2
-                right += (right - event.xdata) / 2
-        if self.flagWheelZoomAmplitude:
-            self.axs[0].set_ybound(lower=bottom, upper=top)
+        if self.widgets.qToolButton_showMap.isChecked():
+            ax = self.axEventMap
         else:
-            self.axs[0].set_xbound(lower=left, upper=right)
+            ax = self.axs[0]
+        (left, right) = ax.get_xbound()
+        (bottom, top) = ax.get_ybound()
+        # Get the keyboard modifiers. They are a enum type.
+        # Use bitwise or to compare...hope this is correct.
+        if ev.modifiers() == QtCore.Qt.NoModifier:
+            # Zoom in.
+            if ev.delta() < 0:
+                left -= (mpl_ev.xdata - left) / 2
+                right += (right - mpl_ev.xdata) / 2
+                if self.widgets.qToolButton_showMap.isChecked():
+                    top -= (mpl_ev.ydata - top) / 2
+                    bottom += (bottom - mpl_ev.ydata) / 2
+            # Zoom out.
+            elif ev.delta() > 0:
+                left += (mpl_ev.xdata - left) / 2
+                right -= (right - mpl_ev.xdata) / 2
+                if self.widgets.qToolButton_showMap.isChecked():
+                    top += (mpl_ev.ydata - top) / 2
+                    bottom -= (bottom - mpl_ev.ydata) / 2
+        # Still able to use the dictionary.
+        elif ev.modifiers() == getattr(QtCore.Qt,
+                '%sModifier' % self.keys['switchWheelZoomAxis'].capitalize()):
+            # Zoom in on wheel-up
+            if ev.delta() < 0:
+                top *= 2
+                bottom *= 2
+            # Zoom out on wheel-down
+            elif ev.delta() > 0:
+                top /= 2
+                bottom /= 2
+        ax.set_xbound(lower=left, upper=right)
+        ax.set_ybound(lower=bottom, upper=top)
         self.redraw()
     
-    # Define zoom reset for the mouse button 2 (always scroll wheel!?)
-    def buttonpress(self, event):
-        if self.widgets['togglebuttonShowMap'].get_active():
+    # Define zoom reset for the mouse button 2 (always wheel wheel!?)
+    def __mpl_mouseButtonPressEvent(self, ev):
+        if self.widgets.qToolButton_showMap.isChecked():
             return
         # set widgetlock when pressing mouse buttons and dont show cursor
         # cursor should not be plotted when making a zoom selection etc.
-        if event.button in [1, 3]:
+        if ev.button in [1, 3]:
             self.multicursor.visible = False
-            self.canv.widgetlock(self.toolbar)
+            # reuse this event as setPick / setPickError event
+            # XXX i would like to be able to determine toolbar state and do
+            # XXX this only if in normal cursor state.
+            if ev.button == 1:
+                if str(self.widgets.qComboBox_phaseType.currentText()) in SEISMIC_PHASES:
+                    ev.key = self.keys['setPick']
+                else:
+                    ev.key = self.keys['setMagMin']
+            elif ev.button == 3:
+                if str(self.widgets.qComboBox_phaseType.currentText()) in SEISMIC_PHASES:
+                    ev.key = self.keys['setPickError']
+                else:
+                    ev.key = self.keys['setMagMax']
+            self.__mpl_keyPressEvent(ev)
+            # XXX self.canv.widgetlock(self.toolbar)
         # show traces from start to end
         # (Use Z trace limits as boundaries)
-        elif event.button == 2:
-            self.axs[0].set_xbound(lower=self.xMin, upper=self.xMax)
-            self.axs[0].set_ybound(lower=self.yMin, upper=self.yMax)
+        elif ev.button == 2:
+            if self.widgets.qToolButton_showMap.isChecked():
+                ax = self.axEventMap
+            else:
+                ax = self.axs[0]
+            ax.set_xbound(lower=self.xMin, upper=self.xMax)
+            ax.set_ybound(lower=self.yMin, upper=self.yMax)
             # Update all subplots
             self.redraw()
             msg = "Resetting axes"
             self._write_msg(msg)
     
-    def buttonrelease(self, event):
-        if self.widgets['togglebuttonShowMap'].get_active():
+    def __mpl_mouseButtonReleaseEvent(self, ev):
+        if self.widgets.qToolButton_showMap.isChecked():
             return
         # release widgetlock when releasing mouse buttons
-        if event.button in [1, 3]:
+        if ev.button in [1, 3]:
             self.multicursor.visible = True
-            self.canv.widgetlock.release(self.toolbar)
+            # XXX self.canv.widgetlock.release(self.toolbar)
     
     #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
     def multicursorReinit(self):
@@ -2035,33 +1400,20 @@ class ObsPyckGUI:
         self.multicursor.__init__(self.canv, self.axs, useblit=True,
                                   color='black', linewidth=1, ls='dotted')
         self.updateMulticursorColor()
-        self.canv.widgetlock.release(self.toolbar)
+        # XXX self.canv.widgetlock.release(self.toolbar)
 
     def updateMulticursorColor(self):
-        phase_name = self.widgets['comboboxPhaseType'].get_active_text()
+        phase_name = str(self.widgets.qComboBox_phaseType.currentText())
         color = PHASE_COLORS[phase_name]
         for l in self.multicursor.lines:
             l.set_color(color)
 
-    def updateButtonPhaseTypeColor(self):
-        phase_name = self.widgets['comboboxPhaseType'].get_active_text()
-        style = self.widgets['buttonPhaseType'].get_style().copy()
-        color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
-        style.bg[gtk.STATE_INSENSITIVE] = color
-        self.widgets['buttonPhaseType'].set_style(style)
-
-    #def updateComboboxPhaseTypeColor(self):
-    #    phase_name = self.widgets['comboboxPhaseType'].get_active_text()
-    #    props = self.widgets['comboboxPhaseType'].get_cells()[0].props
-    #    color = gtk.gdk.color_parse(PHASE_COLORS[phase_name])
-    #    props.cell_background_gdk = color
-
     def updateStreamNumberLabel(self):
-        self.widgets['labelStreamNumber'].set_markup("<tt>%02i/%02i</tt>" % \
-                (self.stPt + 1, self.stNum))
+        label = "%02i/%02i" % (self.stPt + 1, self.stNum)
+        self.widgets.qLabel_streamNumber.setText(label)
     
     def updateStreamNameCombobox(self):
-        self.widgets['comboboxStreamName'].set_active(self.stPt)
+        self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
     def updateStreamLabels(self):
         self.updateStreamNumberLabel()
@@ -2402,7 +1754,7 @@ class ObsPyckGUI:
         files = prog_dict['files']
         # determine which model should be used in location
         controlfilename = "locate_%s.nlloc" % \
-                          self.widgets['comboboxNLLocModel'].get_active_text()
+                          str(self.widgets.qComboBox_nllocModel.currentText())
 
         self.setXMLEventID()
         precall = prog_dict['PreCall']
@@ -3078,36 +2430,33 @@ class ObsPyckGUI:
         starttime_global = self.streams[0].select(component="Z")[0].stats.starttime
         for i, st in enumerate(self.streams):
             tr = st.select(component="Z")[0]
-            npts = tr.stats.npts
-            smprt = tr.stats.sampling_rate
             #make sure that the relative times of the x-axes get mapped to our
             #global stream (absolute) starttime (starttime of first (Z) trace)
             starttime_local = tr.stats.starttime - starttime_global
-            dt = 1. / smprt
+            dt = 1. / tr.stats.sampling_rate
             sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * npts), dt)
+                    starttime_local + (dt * tr.stats.npts), dt)
             # sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
-            if len(sampletimes) == npts + 1:
+            if len(sampletimes) == tr.stats.npts + 1:
                 sampletimes = sampletimes[:-1]
             t.append(sampletimes)
             if i == 0:
-                axs.append(fig.add_subplot(stNum, 1, i+1))
+                ax = fig.add_subplot(stNum, 1, i+1)
             else:
-                axs.append(fig.add_subplot(stNum, 1, i+1, 
-                        sharex=axs[0], sharey=axs[0]))
-                axs[i].xaxis.set_ticks_position("top")
-            trans.append(matplotlib.transforms.blended_transform_factory(
-                    axs[i].transData, axs[i].transAxes))
-            axs[i].xaxis.set_major_formatter(FuncFormatter(
-                                                  formatXTicklabels))
-            if self.widgets['togglebuttonFilter'].get_active():
+                ax = fig.add_subplot(stNum, 1, i+1, sharex=axs[0], sharey=axs[0])
+                ax.xaxis.set_ticks_position("top")
+            axs.append(ax)
+            trans.append(matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes))
+            ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
+            if self.widgets.qToolButton_filter.isChecked():
                 tr = tr.copy()
                 self._filter(tr)
-            plts.append(axs[i].plot(t[i], tr.data, color='k',zorder=1000)[0])
-            net_sta = "%s.%s" % (st[0].stats.network, st[0].stats.station)
-            axs[i].text(0.01, 0.95, net_sta, va="top", ha="left", fontsize=18,
-                        color="b", zorder=10000, transform=axs[i].transAxes)
+            plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+            tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
+            ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
+                    family='monospace', color="b", zorder=10000,
+                    transform=ax.transAxes)
         axs[-1].xaxis.set_ticks_position("both")
         self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
                                                          tr.stats.starttime.microsecond / 1e3 + 0.5,
@@ -3127,7 +2476,6 @@ class ObsPyckGUI:
             err = "Error: No hypocenter data!"
             self._write_err(err)
             return
-        #toolbar.pan()
         #XXX self.figEventMap.canvas.widgetlock.release(toolbar)
         #self.axEventMap = self.fig.add_subplot(111)
         bbox = matplotlib.transforms.Bbox.from_extents(0.08, 0.08, 0.92, 0.92)
@@ -3172,45 +2520,32 @@ class ObsPyckGUI:
         self.scatterMagLon = []
         self.scatterMagLat = []
         for i, dict in enumerate(self.dicts):
-            # determine which stations are used in location
-            if 'Pres' in dict or 'Sres' in dict:
+            # determine which stations are used in location, set color
+            if any([ph + "res" in dict for ph in SEISMIC_PHASES]):
                 stationColor = 'black'
             else:
                 stationColor = 'gray'
             # plot stations at respective coordinates with names
-            axEM.scatter([dict['StaLon']], [dict['StaLat']], s=300,
-                                    marker='v', color='',
-                                    edgecolor=stationColor)
-            axEM.text(dict['StaLon'], dict['StaLat'],
-                                 '  ' + dict['Station'],
-                                 color=stationColor, va='top',
-                                 family='monospace')
-            if 'Pres' in dict:
-                presinfo = '\n\n %+0.3fs' % dict['Pres']
-                if 'PPol' in dict:
-                    presinfo += '  %s' % dict['PPol']
-                axEM.text(dict['StaLon'], dict['StaLat'], presinfo,
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['P'])
-            if 'Sres' in dict:
-                sresinfo = '\n\n\n %+0.3fs' % dict['Sres']
-                if 'SPol' in dict:
-                    sresinfo += '  %s' % dict['SPol']
-                axEM.text(dict['StaLon'], dict['StaLat'], sresinfo,
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['S'])
+            axEM.scatter((dict['StaLon'],), (dict['StaLat'],), s=300,
+                         marker='v', color='', edgecolor=stationColor)
+            axEM.text(dict['StaLon'], dict['StaLat'], '  ' + dict['Station'],
+                      color=stationColor, va='top', family='monospace')
+            for _i, ph in enumerate(SEISMIC_PHASES):
+                if ph + 'res' in dict:
+                    res_info = '\n' * (_i + 2) + '%+0.3fs' % dict[ph + 'res']
+                    if ph + 'Pol' in dict:
+                        res_info += '  %s' % dict[ph + 'Pol']
+                    axEM.text(dict['StaLon'], dict['StaLat'], res_info,
+                              va='top', family='monospace',
+                              color=PHASE_COLORS[ph])
             if 'Mag' in dict:
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(dict['StaLon'])
                 self.scatterMagLat.append(dict['StaLat'])
-                axEM.text(dict['StaLon'], dict['StaLat'],
-                                     '  ' + dict['Station'], va='top',
-                                     family='monospace')
-                axEM.text(dict['StaLon'], dict['StaLat'],
-                                     '\n\n\n\n  %0.2f (%s)' % \
-                                     (dict['Mag'], dict['MagChannel']),
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['Mag'])
+                label = '\n' * (_i + 3) + \
+                        '  %0.2f (%s)' % (dict['Mag'], dict['MagChannel'])
+                axEM.text(dict['StaLon'], dict['StaLat'], label, va='top',
+                          family='monospace', color=PHASE_COLORS['Mag'])
             if len(self.scatterMagLon) > 0 :
                 self.scatterMag = axEM.scatter(self.scatterMagLon,
                         self.scatterMagLat, s=150, marker='v', color='',
@@ -3249,7 +2584,7 @@ class ObsPyckGUI:
         if dO.get('Program') == "NLLoc" and os.path.isfile(PROGRAMS['nlloc']['files']['scatter']):
             cmap = matplotlib.cm.gist_heat_r
             data = readNLLocScatter(PROGRAMS['nlloc']['files']['scatter'],
-                                    self.widgets['textviewStdErrImproved'])
+                                    self.widgets.qPlainTextEdit_stderr)
             axEM.hexbin(data[0], data[1], cmap=cmap, zorder=-1000)
 
             self.axEventMapInletXY = self.fig.add_axes([0.8, 0.8, 0.16, 0.16])
@@ -3302,7 +2637,7 @@ class ObsPyckGUI:
             del self.axEventMap
 
     def selectMagnitudes(self, event):
-        if not self.widgets['togglebuttonShowMap'].get_active():
+        if not self.widgets.qToolButton_showMap.isChecked():
             return
         if event.artist != self.scatterMag:
             return
@@ -3498,7 +2833,7 @@ class ObsPyckGUI:
 
         # if the sysop checkbox is checked, we set the account in the xml
         # to sysop (and also use sysop as the seishub user)
-        if self.widgets['checkbuttonSysop'].get_active():
+        if self.widgets.qCheckBox_sysop.isChecked():
             Sub(event_type, "account").text = "sysop"
         else:
             Sub(event_type, "account").text = self.server['User']
@@ -3506,7 +2841,7 @@ class ObsPyckGUI:
         Sub(event_type, "user").text = self.username
 
         Sub(event_type, "public").text = "%s" % \
-                self.widgets['checkbuttonPublishEvent'].get_active()
+                self.widgets.qCheckBox_publishEvent.isChecked()
         
         # XXX standard values for unset keys!!!???!!!???
         epidists = []
@@ -3764,14 +3099,14 @@ class ObsPyckGUI:
 
     def uploadSeishub(self):
         """
-        Upload xml file to seishub
+        Upload xml file to SeisHub
         """
         # check, if the event should be uploaded as sysop. in this case we use
         # the sysop client instance for the upload (and also set
         # user_account in the xml to "sysop").
         # the correctness of the sysop password is tested when checking the
         # sysop box and entering the password immediately.
-        if self.widgets['checkbuttonSysop'].get_active():
+        if self.widgets.qCheckBox_sysop.isChecked():
             userid = "sysop"
             client = self.client_sysop
         else:
@@ -3808,17 +3143,17 @@ class ObsPyckGUI:
 
     def deleteEventInSeishub(self, resource_name):
         """
-        Delete xml file from seishub.
-        (Move to seishubs trash folder if this option is activated)
+        Delete xml file from SeisHub.
+        (Move to SeisHubs trash folder if this option is activated)
         """
         # check, if the event should be deleted as sysop. in this case we
         # use the sysop client instance for the DELETE request.
         # sysop may delete resources from any user.
-        # at the moment deleted resources go to seishubs trash folder (and can
+        # at the moment deleted resources go to SeisHubs trash folder (and can
         # easily be resubmitted using the http interface).
         # the correctness of the sysop password is tested when checking the
         # sysop box and entering the password immediately.
-        if self.widgets['checkbuttonSysop'].get_active():
+        if self.widgets.qCheckBox_sysop.isChecked():
             userid = "sysop"
             client = self.client_sysop
         else:
@@ -3828,7 +3163,7 @@ class ObsPyckGUI:
         headers = {}
         headers["Host"] = "localhost"
         headers["User-Agent"] = "obspyck"
-        code, message = client.event.deleteResource(resource_name,
+        code, message = client.event.deleteResource(str(resource_name),
                                                     headers=headers)
         msg = "Deleting Event!"
         msg += "\nAccount: %s" % userid
@@ -3848,12 +3183,11 @@ class ObsPyckGUI:
                 if not key in dont_delete:
                     del dict[key]
             dict['MagUse'] = True
+        # XXX delegate all resetting to methods like self.clearOriginMagnitudeDictionaries() !!!
+        # XXX but caution this can easily change behavior of obspyck!!
         self.dictOrigin = {}
         self.dictMagnitude = {}
-        self.dictFocalMechanism = {}
-        self.focMechList = []
-        self.focMechCurrent = None
-        self.focMechCount = None
+        self.clearFocmecDictionary()
         self.dictEvent = {}
 
     def clearOriginMagnitudeDictionaries(self):
@@ -4279,7 +3613,8 @@ class ObsPyckGUI:
             errlist = "\n".join(list_sysop_events)
             self._write_err(err)
             self._write_err(errlist)
-
+            
+            # XXX XXX XXX GTK stuff to replace!
             dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                        gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
             dialog.set_markup(err + "\n\n<b><tt>%s</tt></b>" % errlist)
@@ -4289,6 +3624,9 @@ class ObsPyckGUI:
 
 
 def main():
+    """
+    Gets executed when the program starts.
+    """
     usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
     parser = optparse.OptionParser(usage)
     for opt_args, opt_kwargs in COMMANDLINE_OPTIONS:
@@ -4304,6 +3642,9 @@ def main():
             print "%s: \"%s\"" % (key, value)
         return
     check_keybinding_conflicts(KEYS)
+    # XXX changed this again, we dont want qt to handle keys
+    # XXX obspyck = ObsPyck(client, streams, options, qkeys)
+    #qkeys = map_qKeys(KEYS)
     # XXX wasn't working as expected
     #if options.debug:
     #    import IPython.Shell
@@ -4311,7 +3652,41 @@ def main():
     #            banner='Entering IPython.  Press Ctrl-D to exit.',
     #            exit_msg='Leaving Interpreter, back to program.')()
     (client, streams) = fetch_waveforms_metadata(options)
-    ObsPyckGUI(client, streams, options)
+    # Create the GUI application
+    qApp = QtGui.QApplication(sys.argv)
+    #qApp = MyApp(sys.argv)
+    #qApp.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
+    # XXX changed this again, we dont want qt to handle keys
+    # XXX obspyck = ObsPyck(client, streams, options, qkeys)
+    obspyck = ObsPyck(client, streams, options, KEYS)
+    qApp.connect(qApp, QtCore.SIGNAL("aboutToQuit()"), obspyck.cleanup)
+    #obspyck.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
+    # Start maximized.
+    os._exit(qApp.exec_())
+
+#
+#class SomeFilter(QtCore.QObject):
+#    def eventFilter(self, obj, ev):
+#        print("Event filtering ok")
+#        return True
+#
+#class EventFilter(QtCore.QObject)
+#    def eventFilter(obj, ev):
+#     if (object == target && event->type() == QEvent::KeyPress) {
+#         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+#         if (keyEvent->key() == Qt::Key_Tab) {
+#             // Special tab handling
+#             return true;
+#         } else
+#             return false;
+#     }
+#     return false;
+# }
+
+#class MyApp(QtGui.QApplication):
+#    def eventFilter(self, obj, ev):
+#        print "no filtering but could..."
+#        return False
 
 if __name__ == "__main__":
     main()
