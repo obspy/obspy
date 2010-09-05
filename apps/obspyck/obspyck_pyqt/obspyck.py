@@ -63,21 +63,15 @@ class ObsPyck(QtGui.QMainWindow):
         self.widgets = Ui_qMainWindow_obsPyck()
         self.widgets.setupUi(self)
 
+        # Create little color icons in front of the phase type combo box.
         # Needs to be done pretty much at the beginning because some other
         # stuff relies on the phase type being set.
-        # Create little color icons in front of the phase type combo box.
         pixmap = QtGui.QPixmap(70, 50)
-        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['P'])))
-        icon = QtGui.QIcon(pixmap)
-        self.widgets.qComboBox_phaseType.addItem(icon, 'P')
-
-        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['S'])))
-        icon = QtGui.QIcon(pixmap)
-        self.widgets.qComboBox_phaseType.addItem(icon, 'S')
-
-        pixmap.fill(QtGui.QColor(*matplotlib_color_to_rgb(PHASE_COLORS['Mag'])))
-        icon = QtGui.QIcon(pixmap)
-        self.widgets.qComboBox_phaseType.addItem(icon, 'Mag')
+        for phase_type in SEISMIC_PHASES + ['Mag']:
+            rgb = matplotlib_color_to_rgb(PHASE_COLORS[phase_type])
+            pixmap.fill(QtGui.QColor(*rgb))
+            icon = QtGui.QIcon(pixmap)
+            self.widgets.qComboBox_phaseType.addItem(icon, phase_type)
 
         self.qMain = self.widgets.centralwidget
         self.__enableTextBrowserWrite()
@@ -88,6 +82,7 @@ class ObsPyck(QtGui.QMainWindow):
         # Bind the canvas to the mouse wheel event. Use Qt events for it
         # because the matplotlib events seem to have a problem with Debian.
         self.widgets.qMplCanvas.wheelEvent = self.__mpl_wheelEvent
+        #self.keyPressEvent = self.__mpl_keyPressEvent
 
         self.fig = self.widgets.qMplCanvas.fig
         self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, self.widgets.qWidget_toolbar)
@@ -210,6 +205,7 @@ class ObsPyck(QtGui.QMainWindow):
         self.canv.show()
         self.checkForSysopEventDuplicates(streams[0][0].stats.starttime,
                                           streams[0][0].stats.endtime)
+        self.showMaximized()
         # XXX XXX the good old focus issue again!?! no events get to the mpl canvas
         # XXX self.canv.setFocusPolicy(Qt.WheelFocus)
         #print self.canv.hasFocus()
@@ -219,6 +215,24 @@ class ObsPyck(QtGui.QMainWindow):
 
     
     # XXX
+    #def eventFilter(self, obj, ev):
+    #    print "no filtering but could..."
+    #    return False
+
+    #def event(self, ev):
+    #    tmp = getattr(self, "tmp_ev", [])
+    #    if not ev.type() in [77]:
+    #        tmp.append(ev.type())
+    #        self.tmp_ev = tmp
+    #    if ev.type() == 51:
+    #        return False
+    #    if ev.type() == 99 or (ev.type() == QEvent.KeyPress and ev.key() == Qt.Key_Alt):
+    #        "intercepted!"
+    #        return False
+    #        ev = KeyEvent("key_press_event", self.canv, "alt", x=10, y=10, guiEvent=ev)
+    #        return self.keyPressEvent(ev)
+    #    return QtGui.QMainWindow.event(self, ev)
+        
     #def event(self, ev):
     #    """
     #    Event handling. We override some keys with special behavior to just
@@ -910,7 +924,7 @@ class ObsPyck(QtGui.QMainWindow):
         ylims = list(ax.get_ylim())
         keyT = key + "T"
         self.lines[key] = {}
-        line = ax.plot([d[keyT]], [d[key]], markersize=MAG_MARKER['size'],
+        line = ax.plot((d[keyT],), (d[key],), markersize=MAG_MARKER['size'],
                 markeredgewidth=MAG_MARKER['edgewidth'],
                 color=PHASE_COLORS['Mag'], marker=MAG_MARKER['marker'],
                 zorder=2000)[0]
@@ -982,7 +996,7 @@ class ObsPyck(QtGui.QMainWindow):
             else:
                 plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
                 textcolor = "blue"
-            tr_id = "%s.%s..%s" % (tr.stats.network, tr.stats.station, tr.stats.channel)
+            tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
             ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
                     family='monospace', color=textcolor, zorder=10000,
                     transform=ax.transAxes)
@@ -2437,7 +2451,7 @@ class ObsPyck(QtGui.QMainWindow):
                 tr = tr.copy()
                 self._filter(tr)
             plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
-            tr_id = "%s.%s..%s" % (tr.stats.network, tr.stats.station, tr.stats.channel)
+            tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
             ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
                     family='monospace', color="b", zorder=10000,
                     transform=ax.transAxes)
@@ -2504,45 +2518,32 @@ class ObsPyck(QtGui.QMainWindow):
         self.scatterMagLon = []
         self.scatterMagLat = []
         for i, dict in enumerate(self.dicts):
-            # determine which stations are used in location
-            if 'Pres' in dict or 'Sres' in dict:
+            # determine which stations are used in location, set color
+            if any([ph + "res" in dict for ph in SEISMIC_PHASES]):
                 stationColor = 'black'
             else:
                 stationColor = 'gray'
             # plot stations at respective coordinates with names
-            axEM.scatter([dict['StaLon']], [dict['StaLat']], s=300,
-                                    marker='v', color='',
-                                    edgecolor=stationColor)
-            axEM.text(dict['StaLon'], dict['StaLat'],
-                                 '  ' + dict['Station'],
-                                 color=stationColor, va='top',
-                                 family='monospace')
-            if 'Pres' in dict:
-                presinfo = '\n\n %+0.3fs' % dict['Pres']
-                if 'PPol' in dict:
-                    presinfo += '  %s' % dict['PPol']
-                axEM.text(dict['StaLon'], dict['StaLat'], presinfo,
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['P'])
-            if 'Sres' in dict:
-                sresinfo = '\n\n\n %+0.3fs' % dict['Sres']
-                if 'SPol' in dict:
-                    sresinfo += '  %s' % dict['SPol']
-                axEM.text(dict['StaLon'], dict['StaLat'], sresinfo,
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['S'])
+            axEM.scatter((dict['StaLon'],), (dict['StaLat'],), s=300,
+                         marker='v', color='', edgecolor=stationColor)
+            axEM.text(dict['StaLon'], dict['StaLat'], '  ' + dict['Station'],
+                      color=stationColor, va='top', family='monospace')
+            for _i, ph in enumerate(SEISMIC_PHASES):
+                if ph + 'res' in dict:
+                    res_info = '\n' * (_i + 2) + '%+0.3fs' % dict[ph + 'res']
+                    if ph + 'Pol' in dict:
+                        res_info += '  %s' % dict[ph + 'Pol']
+                    axEM.text(dict['StaLon'], dict['StaLat'], res_info,
+                              va='top', family='monospace',
+                              color=PHASE_COLORS[ph])
             if 'Mag' in dict:
                 self.scatterMagIndices.append(i)
                 self.scatterMagLon.append(dict['StaLon'])
                 self.scatterMagLat.append(dict['StaLat'])
-                axEM.text(dict['StaLon'], dict['StaLat'],
-                                     '  ' + dict['Station'], va='top',
-                                     family='monospace')
-                axEM.text(dict['StaLon'], dict['StaLat'],
-                                     '\n\n\n\n  %0.2f (%s)' % \
-                                     (dict['Mag'], dict['MagChannel']),
-                                     va='top', family='monospace',
-                                     color=PHASE_COLORS['Mag'])
+                label = '\n' * (_i + 3) + \
+                        '  %0.2f (%s)' % (dict['Mag'], dict['MagChannel'])
+                axEM.text(dict['StaLon'], dict['StaLat'], label, va='top',
+                          family='monospace', color=PHASE_COLORS['Mag'])
             if len(self.scatterMagLon) > 0 :
                 self.scatterMag = axEM.scatter(self.scatterMagLon,
                         self.scatterMagLat, s=150, marker='v', color='',
@@ -3610,7 +3611,8 @@ class ObsPyck(QtGui.QMainWindow):
             errlist = "\n".join(list_sysop_events)
             self._write_err(err)
             self._write_err(errlist)
-
+            
+            # XXX XXX XXX GTK stuff to replace!
             dialog = gtk.MessageDialog(self.win, gtk.DIALOG_MODAL,
                                        gtk.MESSAGE_WARNING, gtk.BUTTONS_CLOSE)
             dialog.set_markup(err + "\n\n<b><tt>%s</tt></b>" % errlist)
@@ -3650,19 +3652,39 @@ def main():
     (client, streams) = fetch_waveforms_metadata(options)
     # Create the GUI application
     qApp = QtGui.QApplication(sys.argv)
+    #qApp = MyApp(sys.argv)
+    #qApp.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
     # XXX changed this again, we dont want qt to handle keys
     # XXX obspyck = ObsPyck(client, streams, options, qkeys)
     obspyck = ObsPyck(client, streams, options, KEYS)
+    qApp.connect(qApp, QtCore.SIGNAL("aboutToQuit()"), obspyck.cleanup)
+    #obspyck.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
     # Start maximized.
-    obspyck.show()
-    # start the Qt main loop execution, exiting from this script with
-    # the same return code of Qt the application
-    retcode = qApp.exec_()
-    obspyck.cleanup()
-    qApp.exit()
-    qApp.quit()
-    os._exit(retcode)
-    
+    os._exit(qApp.exec_())
+
+#
+#class SomeFilter(QtCore.QObject):
+#    def eventFilter(self, obj, ev):
+#        print("Event filtering ok")
+#        return True
+#
+#class EventFilter(QtCore.QObject)
+#    def eventFilter(obj, ev):
+#     if (object == target && event->type() == QEvent::KeyPress) {
+#         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+#         if (keyEvent->key() == Qt::Key_Tab) {
+#             // Special tab handling
+#             return true;
+#         } else
+#             return false;
+#     }
+#     return false;
+# }
+
+#class MyApp(QtGui.QApplication):
+#    def eventFilter(self, obj, ev):
+#        print "no filtering but could..."
+#        return False
 
 if __name__ == "__main__":
     main()
