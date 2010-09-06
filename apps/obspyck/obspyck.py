@@ -94,7 +94,18 @@ class ObsPyck(QtGui.QMainWindow):
         #self.keyPressEvent = self.__mpl_keyPressEvent
 
         self.fig = self.widgets.qMplCanvas.fig
-        self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, self.widgets.qWidget_toolbar)
+
+        # Also accessible via self.statusBar() after it has been added to the
+        # main window.
+        qtStatusBar = QtGui.QStatusBar()
+        # May be obscured if a temporary item is added to the status bar. One
+        # way to change this behaviour is to add it as a permanent status bar
+        # widget but then it will always be right justified..there probably is
+        # some way around it but as long as no other use of the status bar is
+        # needed this way is the easiest to get it left aligned.
+        self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, qtStatusBar)
+        qtStatusBar.insertWidget(0, self.toolbar)
+        self.setStatusBar(qtStatusBar)
 
         #Define some flags, dictionaries and plotting options
         #this next flag indicates if we zoom on time or amplitude axis

@@ -812,5 +812,6 @@ class SplitWriter():
                 obj.moveCursor(PyQt4.QtGui.QTextCursor.PreviousCharacter, PyQt4.QtGui.QTextCursor.KeepAnchor)
                 obj.cut()
                 obj.appendPlainText(msg.strip())
+                obj.moveCursor(PyQt4.QtGui.QTextCursor.End)
             else:
                 obj.write(msg)
