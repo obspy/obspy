@@ -14,6 +14,7 @@ import os
 import sys
 import shutil
 import optparse
+import warnings
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import QEvent, Qt
@@ -100,7 +101,12 @@ class ObsPyck(QtGui.QMainWindow):
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
         check_keybinding_conflicts(KEYS)
-        self.tmp_dir = setup_external_programs(options)
+        try:
+            self.tmp_dir = setup_external_programs(options)
+        except OSError:
+            msg = "Cannot find external programs dir, localization " + \
+                    "methods/functions are deactivated"
+            warnings.warn(msg)
         self.dictOrigin = {}
         self.dictMagnitude = {}
         self.dictFocalMechanism = {} # currently selected focal mechanism
