@@ -23,7 +23,6 @@ the format is autodetected.
 See also the example in the Tutorial section:
 http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
 """
-# supported must be in the last three line, line (28)
 
 import sys
 import os
@@ -32,6 +31,7 @@ from optparse import OptionParser
 from matplotlib.dates import date2num, num2date
 from matplotlib.pyplot import figure, show
 import numpy as np
+
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
@@ -143,6 +143,7 @@ def main():
                               for x in num2date(ax.get_xlim())))
     show()
     sys.stdout.write('\n')
+
 
 if __name__ == '__main__':
     main()
