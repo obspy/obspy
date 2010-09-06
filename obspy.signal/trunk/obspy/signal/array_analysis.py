@@ -704,7 +704,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 
         newstart += nstep / df
     res = np.array(res)
-    if timestap == 'julsec':
+    if timestamp == 'julsec':
         pass
     elif timestamp == 'mlabhour':
         # 719162 == hours between 1970 and 0001
