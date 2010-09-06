@@ -79,7 +79,6 @@ class ObsPyck(QtGui.QMainWindow):
         # enable redirections for stdout and stderr.
         # we need to remember the original handles because we only write on the
         # console during debug modus.
-        self.__enableTextBrowserWrite()
         self.stdout_backup = sys.stdout
         self.stderr_backup = sys.stderr
         # We automatically redirect all messages to both console and Gui boxes
@@ -180,7 +179,7 @@ class ObsPyck(QtGui.QMainWindow):
         self.widgets.qDoubleSpinBox_lowpass.setValue(self.options.lowpass)
         self.updateStreamLabels()
 
-        self.widgets.qPlainTextEdit_stderr.write(warn_msg)
+        print >> sys.stderr, warn_msg
         # Set up initial plot
         #fig = plt.figure()
         #fig.canvas.set_window_title("ObsPyck")
@@ -302,16 +301,6 @@ class ObsPyck(QtGui.QMainWindow):
             shutil.rmtree(self.tmp_dir)
         except:
             pass
-
-    def __enableTextBrowserWrite(self):
-        """
-        Add write methods to both text browsers to be able to redirect the
-        stdout and stderr to them.
-        """
-        self.widgets.qPlainTextEdit_stderr.write = \
-                self.widgets.qPlainTextEdit_stderr.appendPlainText
-        self.widgets.qPlainTextEdit_stdout.write = \
-                self.widgets.qPlainTextEdit_stdout.appendPlainText
 
     ###########################################################################
     ### signal handlers START #################################################

@@ -808,4 +808,9 @@ class SplitWriter():
         Sends msg to all childrens write method.
         """
         for obj in self.children:
-            obj.write(msg)
+            if isinstance(obj, PyQt4.QtGui.QPlainTextEdit):
+                obj.moveCursor(PyQt4.QtGui.QTextCursor.PreviousCharacter, PyQt4.QtGui.QTextCursor.KeepAnchor)
+                obj.cut()
+                obj.appendPlainText(msg.strip())
+            else:
+                obj.write(msg)
