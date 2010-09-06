@@ -160,17 +160,17 @@ MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
 AXVLINEWIDTH = 1.2
 # dictionary for key-bindings.
-KEYS = {'setPick': "alt", 'setPickError': " ", 'delPick': "escape",
-        'setMagMin': "alt", 'setMagMax': " ", 'delMagMinMax': "escape",
-        'switchPhase': "control", 'switchPan': "p",
+KEYS = {'setPick': "a", 'setPickError': "s", 'delPick': "q",
+        'setMagMin': "a", 'setMagMax': "s", 'delMagMinMax': "q",
+        'switchPhase': "control",
         'prevStream': "y", 'nextStream': "x", 'switchWheelZoomAxis': "shift",
         'setWeight': {'0': 0, '1': 1, '2': 2, '3': 3},
         'setPol': {'u': "up", 'd': "down", '+': "poorup", '-': "poordown"},
         'setOnset': {'i': "impulsive", 'e': "emergent"}}
 # XXX Qt:
-#KEYS = {'setPick': "Key_Alt", 'setPickError': "Key_Space", 'delPick': "Key_Escape",
-#        'setMagMin': "Key_Alt", 'setMagMax': "Key_Space", 'delMagMinMax': "Key_Escape",
-#        'switchPhase': "Key_Control", 'switchPan': "Key_P",
+#KEYS = {'setPick': "Key_A", 'setPickError': "Key_S", 'delPick': "Key_Q",
+#        'setMagMin': "Key_A", 'setMagMax': "Key_S", 'delMagMinMax': "Key_Q",
+#        'switchPhase': "Key_Control",
 #        'prevStream': "Key_Y", 'nextStream': "Key_X", 'switchWheelZoomAxis': "Key_Shift",
 #        'setWeight': {'Key_0': 0, 'Key_1': 1, 'Key_2': 2, 'Key_3': 3},
 #        'setPol': {'Key_U': "up", 'Key_D': "down", 'Key_Plus': "poorup", 'Key_Minus': "poordown"},

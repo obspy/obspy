@@ -1283,13 +1283,6 @@ class ObsPyck(QtGui.QMainWindow):
         if ev.key == keys['switchWheelZoomAxis']:
             self.flagWheelZoomAmplitude = True
 
-        if ev.key == keys['switchPan']:
-            self.toolbar.pan()
-            # XXX self.canv.widgetlock.release(self.toolbar)
-            self.redraw()
-            print "Switching pan mode"
-            return
-        
         # iterate the phase type combobox
         if ev.key == keys['switchPhase']:
             combobox = self.widgets.qComboBox_phaseType
