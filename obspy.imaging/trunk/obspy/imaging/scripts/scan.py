@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspy-scan.py [-f MSEED] [OPTIONS] file1 file2 dir1 dir2 file3 ...
+USAGE: obspy-scan [-f MSEED] [OPTIONS] file1 file2 dir1 dir2 file3 ...
 
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
@@ -15,7 +15,7 @@ recursively (disable with "-n"). Symbolic links are followed by default
 (disable with "-i"). Detailed information on all files is printed using "-v".
 
 Supported formats: All formats supported by ObsPy modules (currently: MSEED,
-GSE2, SAC, WAV, SH-ASC, SH-Q, SEISAN).
+GSE2, SAC, SACXY, WAV, SH-ASC, SH-Q, SEISAN).
 If the format is known beforehand, the reading speed can be increased
 significantly by explicitly specifying the file format ("-f FORMAT"), otherwise
 the format is autodetected.
