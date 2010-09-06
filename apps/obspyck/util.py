@@ -25,55 +25,54 @@ mpl.rc('figure.subplot', left=0.05, right=0.98, bottom=0.10, top=0.92,
 mpl.rcParams['font.size'] = 10
 
 
-COMMANDLINE_OPTIONS = [
+COMMANDLINE_OPTIONS = (
         # XXX wasn't working as expected
-        #[["--debug"], {'dest': "debug", 'action': "store_true",
+        #(("--debug"), {'dest': "debug", 'action': "store_true",
         #        'default': False,
-        #        'help': "Switch on Ipython debugging in case of exception"}],
-        [["-t", "--time"], {'dest': "time", 'default': '2009-07-21T04:33:00',
+        #        'help': "Switch on Ipython debugging in case of exception"}),
+        (("-t", "--time"), {'dest': "time",
                 'help': "Starttime of seismogram to retrieve. It takes a "
                 "string which UTCDateTime can convert. E.g. "
-                "'2010-01-10T05:00:00'"}],
-        [["-d", "--duration"], {'type': "float", 'dest': "duration",
-                'default': 120, 'help': "Duration of seismogram in seconds"}],
-        [["-i", "--seishub-ids"], {'dest': "seishub_ids",
-                'default': 'BW.RJOB..EH*,BW.RMOA..EH*',
+                "'2010-01-10T05:00:00'"}),
+        (("-d", "--duration"), {'type': "float", 'dest': "duration",
+                'help': "Duration of seismogram in seconds"}),
+        (("-i", "--seishub-ids"), {'dest': "seishub_ids", 'default': "",
                 'help': "Ids to retrieve from SeisHub. Star for channel and "
                 "wildcards for stations are allowed, e.g. "
-                "'BW.RJOB..EH*,BW.RM?*..EH*'"}],
-        [["--seishub-servername"], {'dest': "seishub_servername",
+                "'BW.RJOB..EH*,BW.RM?*..EH*'"}),
+        (("--seishub-servername",), {'dest': "seishub_servername",
                 'default': 'teide',
-                'help': "Servername of the SeisHub server"}],
-        [["--seishub-port"], {'type': "int", 'dest': "seishub_port",
-                'default': 8080, 'help': "Port of the SeisHub server"}],
-        [["--seishub-user"], {'dest': "seishub_user", 'default': 'obspyck',
-                'help': "Username for SeisHub server"}],
-        [["--seishub-password"], {'dest': "seishub_password",
-                'default': 'obspyck', 'help': "Password for SeisHub server"}],
-        [["--seishub-timeout"], {'dest': "seishub_timeout", 'type': "int",
-                'default': 10, 'help': "Timeout for SeisHub server"}],
-        [["-k", "--keys"], {'action': "store_true", 'dest': "keybindings",
-                'default': False, 'help': "Show keybindings and quit"}],
-        [["--lowpass"], {'type': "float", 'dest': "lowpass", 'default': 20.0,
-                'help': "Frequency for Lowpass-Slider"}],
-        [["--highpass"], {'type': "float", 'dest': "highpass", 'default': 1.0,
-                'help': "Frequency for Highpass-Slider"}],
-        [["--nozeromean"], {'action': "store_true", 'dest': "nozeromean",
+                'help': "Servername of the SeisHub server"}),
+        (("--seishub-port",), {'type': "int", 'dest': "seishub_port",
+                'default': 8080, 'help': "Port of the SeisHub server"}),
+        (("--seishub-user",), {'dest': "seishub_user", 'default': 'obspyck',
+                'help': "Username for SeisHub server"}),
+        (("--seishub-password",), {'dest': "seishub_password",
+                'default': 'obspyck', 'help': "Password for SeisHub server"}),
+        (("--seishub-timeout",), {'dest': "seishub_timeout", 'type': "int",
+                'default': 10, 'help': "Timeout for SeisHub server"}),
+        (("-k", "--keys"), {'action': "store_true", 'dest': "keybindings",
+                'default': False, 'help': "Show keybindings and quit"}),
+        (("--lowpass",), {'type': "float", 'dest': "lowpass", 'default': 20.0,
+                'help': "Frequency for Lowpass-Slider"}),
+        (("--highpass",), {'type': "float", 'dest': "highpass", 'default': 1.0,
+                'help': "Frequency for Highpass-Slider"}),
+        (("--nozeromean",), {'action': "store_true", 'dest': "nozeromean",
                 'default': False,
-                'help': "Deactivate offset removal of traces"}],
-        [["--pluginpath"], {'dest': "pluginpath",
+                'help': "Deactivate offset removal of traces"}),
+        (("--pluginpath",), {'dest': "pluginpath",
                 'default': "/baysoft/obspyck/",
                 'help': "Path to local directory containing the folders with "
                 "the files for the external programs. Large files/folders "
                 "should only be linked in this directory as the contents are "
-                "copied to a temporary directory (links are preserved)."}],
-        [["--starttime-offset"], {'type': "float", 'dest': "starttime_offset",
+                "copied to a temporary directory (links are preserved)."}),
+        (("-o", "--starttime-offset"), {'type': "float", 'dest': "starttime_offset",
                 'default': 0.0, 'help': "Offset to add to specified starttime "
                 "in seconds. Thus a time from an automatic picker can be used "
                 "with a specified offset for the starttime. E.g. to request a "
                 "waveform starting 30 seconds earlier than the specified time "
-                "use -30."}],
-        [["-m", "--merge"], {'type': "string", 'dest': "merge", 'default': "",
+                "use -30."}),
+        (("-m", "--merge"), {'type': "string", 'dest': "merge", 'default': "",
                 'help': "After fetching the streams run a merge "
                 "operation on every stream. If not done, streams with gaps "
                 "and therefore more traces per channel get discarded.\nTwo "
@@ -81,38 +80,36 @@ COMMANDLINE_OPTIONS = [
                 ".de/obspy/docs/packages/auto/obspy.core.trace.Trace.__add__"
                 ".html for details)\n  \"safe\": overlaps are discarded "
                 "completely\n  \"overwrite\": the second trace is used for "
-                "overlapping parts of the trace"}],
-        [["--arclink-ids"], {'dest': "arclink_ids",
-                'default': '',
+                "overlapping parts of the trace"}),
+        (("--arclink-ids",), {'dest': "arclink_ids", 'default': '',
                 'help': "Ids to retrieve via arclink, star for channel "
-                "is allowed, e.g. 'BW.RJOB..EH*,BW.ROTZ..EH*'"}],
-        [["--arclink-servername"], {'dest': "arclink_servername",
+                "is allowed, e.g. 'BW.RJOB..EH*,BW.ROTZ..EH*'"}),
+        (("--arclink-servername",), {'dest': "arclink_servername",
                 'default': 'webdc.eu',
-                'help': "Servername of the arclink server"}],
-        [["--arclink-port"], {'type': "int", 'dest': "arclink_port",
-                'default': 18001, 'help': "Port of the arclink server"}],
-        [["--arclink-user"], {'dest': "arclink_user", 'default': 'Anonymous',
-                'help': "Username for arclink server"}],
-        [["--arclink-password"], {'dest': "arclink_password", 'default': '',
-                'help': "Password for arclink server"}],
-        [["--arclink-institution"], {'dest': "arclink_institution",
+                'help': "Servername of the arclink server"}),
+        (("--arclink-port",), {'type': "int", 'dest': "arclink_port",
+                'default': 18001, 'help': "Port of the arclink server"}),
+        (("--arclink-user",), {'dest': "arclink_user", 'default': 'Anonymous',
+                'help': "Username for arclink server"}),
+        (("--arclink-password",), {'dest': "arclink_password", 'default': '',
+                'help': "Password for arclink server"}),
+        (("--arclink-institution",), {'dest': "arclink_institution",
                 'default': 'Anonymous',
-                'help': "Password for arclink server"}],
-        [["--arclink-timeout"], {'dest': "arclink_timeout", 'type': "int",
-                'default': 20, 'help': "Timeout for arclink server"}],
-        [["--fissures-ids"], {'dest': "fissures_ids",
-                'default': '',
+                'help': "Password for arclink server"}),
+        (("--arclink-timeout",), {'dest': "arclink_timeout", 'type': "int",
+                'default': 20, 'help': "Timeout for arclink server"}),
+        (("--fissures-ids",), {'dest': "fissures_ids", 'default': '',
                 'help': "Ids to retrieve via Fissures, star for component "
-                "is allowed, e.g. 'GE.APE..BH*,GR.GRA1..BH*'"}],
-        [["--fissures-network_dc"], {'dest': "fissures_network_dc",
+                "is allowed, e.g. 'GE.APE..BH*,GR.GRA1..BH*'"}),
+        (("--fissures-network_dc",), {'dest': "fissures_network_dc",
                 'default': ("/edu/iris/dmc", "IRIS_NetworkDC"),
-                'help': "Tuple containing Fissures dns and NetworkDC name."}],
-        [["--fissures-seismogram_dc"], {'dest': "fissures_seismogram_dc",
+                'help': "Tuple containing Fissures dns and NetworkDC name."}),
+        (("--fissures-seismogram_dc",), {'dest': "fissures_seismogram_dc",
                 'default': ("/edu/iris/dmc", "IRIS_DataCenter"),
-                'help': "Tuple containing Fissures dns and DataCenter name."}],
-        [["--fissures-name_service"], {'dest': "fissures_name_service",
+                'help': "Tuple containing Fissures dns and DataCenter name."}),
+        (("--fissures-name_service",), {'dest': "fissures_name_service",
                 'default': "dmc.iris.washington.edu:6371/NameService",
-                'help': "String containing the Fissures name service."}]]
+                'help': "String containing the Fissures name service."}))
 PROGRAMS = {
         'nlloc': {'filenames': {'exe': "NLLoc", 'phases': "nlloc.obs",
                                 'summary': "nlloc.hyp",
@@ -126,7 +123,7 @@ PROGRAMS = {
                                  'summary': "focmec.out"}},
         '3dloc': {'filenames': {'exe': "3dloc_pitsa", 'out': "3dloc-out",
                                 'in': "3dloc-in"}}}
-SEISMIC_PHASES = ['P', 'S']
+SEISMIC_PHASES = ('P', 'S')
 PHASE_COLORS = {'P': "red", 'S': "blue", 'Psynth': "black", 'Ssynth': "black",
         'Mag': "green", 'PErr1': "red", 'PErr2': "red", 'SErr1': "blue",
         'SErr2': "blue"}
@@ -145,7 +142,7 @@ KEY_FULLNAMES = {'P': "P pick", 'Psynth': "synthetic P pick",
         'MagMax1': "Magnitude maximum estimation pick",
         'MagMin2': "Magnitude minimum estimation pick",
         'MagMax2': "Magnitude maximum estimation pick"}
-WIDGET_NAMES = ["qToolButton_clearAll", "qToolButton_clearOrigMag", "qToolButton_clearFocMec",
+WIDGET_NAMES = ("qToolButton_clearAll", "qToolButton_clearOrigMag", "qToolButton_clearFocMec",
         "qToolButton_doHyp2000", "qToolButton_do3dloc", "qToolButton_doNlloc",
         "qComboBox_nllocModel", "qToolButton_calcMag", "qToolButton_doFocMec",
         "qToolButton_showMap", "qToolButton_showFocMec", "qToolButton_nextFocMec",
@@ -157,7 +154,7 @@ WIDGET_NAMES = ["qToolButton_clearAll", "qToolButton_clearOrigMag", "qToolButton
         "qComboBox_phaseType", "qToolButton_filter", "qComboBox_filterType",
         "qCheckBox_zerophase", "qLabel_highpass", "qDoubleSpinBox_highpass",
         "qLabel_lowpass", "qDoubleSpinBox_lowpass", "qToolButton_spectrogram",
-        "qCheckBox_spectrogramLog", "qPlainTextEdit_stdout", "qPlainTextEdit_stderr"]
+        "qCheckBox_spectrogramLog", "qPlainTextEdit_stdout", "qPlainTextEdit_stderr")
 #Estimating the maximum/minimum in a sample-window around click
 MAG_PICKWINDOW = 10
 MAG_MARKER = {'marker': "x", 'edgewidth': 1.8, 'size': 20}
@@ -286,6 +283,8 @@ def fetch_waveforms_metadata(options):
                 for tr in st:
                     tr.stats['client'] = "seishub"
                 streams.append(st)
+    else:
+        client = None
     # ArcLink
     if options.arclink_ids:
         from obspy.arclink import Client as AClient
@@ -305,7 +304,7 @@ def fetch_waveforms_metadata(options):
                 print "%s skipped! (Was already retrieved)" % net_sta
                 continue
             try:
-                sys.stdout.write("\r%s ..." % net_sta)
+                sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
                 st = aclient.getWaveform(network_id=net, station_id=sta,
                                          location_id=loc, channel_id=cha,
@@ -338,7 +337,7 @@ def fetch_waveforms_metadata(options):
                 print "%s skipped! (Was already retrieved)" % net_sta
                 continue
             try:
-                sys.stdout.write("\r%s ..." % net_sta)
+                sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
                 st = fclient.getWaveform(network_id=net, station_id=sta,
                                          location_id=loc, channel_id=cha,

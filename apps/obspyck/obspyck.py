@@ -67,7 +67,7 @@ class ObsPyck(QtGui.QMainWindow):
         # Needs to be done pretty much at the beginning because some other
         # stuff relies on the phase type being set.
         pixmap = QtGui.QPixmap(70, 50)
-        for phase_type in SEISMIC_PHASES + ['Mag']:
+        for phase_type in list(SEISMIC_PHASES) + ['Mag']:
             rgb = matplotlib_color_to_rgb(PHASE_COLORS[phase_type])
             pixmap.fill(QtGui.QColor(*rgb))
             icon = QtGui.QIcon(pixmap)
@@ -3259,21 +3259,31 @@ class ObsPyck(QtGui.QMainWindow):
         self.focMechCount = None
 
     def drawAllItems(self):
-        for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
-                    'Ssynth']:
+        keys_line = (phase_type + suffix \
+                     for phase_type in SEISMIC_PHASES \
+                     for suffix in ('', 'Err1', 'Err2', 'synth'))
+        keys_label = (phase_type + suffix \
+                      for phase_type in SEISMIC_PHASES \
+                      for suffix in ('', 'synth'))
+        for key in keys_line:
             self.drawLine(key)
-        for key in ['P', 'Psynth', 'S', 'Ssynth']:
+        for key in keys_label:
             self.drawLabel(key)
-        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
+        for key in ('MagMin1', 'MagMax1', 'MagMin2', 'MagMax2'):
             self.drawMagMarker(key)
     
     def delAllItems(self):
-        for key in ['P', 'PErr1', 'PErr2', 'Psynth', 'S', 'SErr1', 'SErr2',
-                    'Ssynth']:
+        keys_line = (phase_type + suffix \
+                     for phase_type in SEISMIC_PHASES \
+                     for suffix in ('', 'Err1', 'Err2', 'synth'))
+        keys_label = (phase_type + suffix \
+                      for phase_type in SEISMIC_PHASES \
+                      for suffix in ('', 'synth'))
+        for key in keys_line:
             self.delLine(key)
-        for key in ['P', 'Psynth', 'S', 'Ssynth']:
+        for key in keys_label:
             self.delLabel(key)
-        for key in ['MagMin1', 'MagMax1', 'MagMin2', 'MagMax2']:
+        for key in ('MagMin1', 'MagMax1', 'MagMin2', 'MagMax2'):
             self.delMagMarker(key)
 
     def updateAllItems(self):
@@ -3662,15 +3672,26 @@ def main():
     """
     Gets executed when the program starts.
     """
-    usage = "USAGE: %prog -t <datetime> -d <duration> -i <channelids>"
+    usage = "\n * SeisHub:\n    " + \
+            "%prog -t 2010-08-01T12:00:00 -d 30 -i BW.R*..EH*,BW.BGLD..EH*\n" + \
+            " * ArcLink:\n    " + \
+            "%prog -t 2010-08-01T12:00:00 -d 30 --arclink-ids GE.APE..BH*,GE.IMMV..BH*\n" + \
+            " * Fissures:\n    " + \
+            "%prog -t 2010-08-01T12:00:00 -d 30 --fissures-ids GR.GRA1..BH*,DK.BSD..BH*\n" + \
+            " * combination of clients:\n    " + \
+            "%prog -t 2010-08-01T12:00:00 -d 30 -i BW.R*..EH* --arclink-ids GE.APE..BH* --fissures-ids GR.GRA1..BH*" + \
+            "\n\nGet all available options with: %prog -h"
     parser = optparse.OptionParser(usage)
     for opt_args, opt_kwargs in COMMANDLINE_OPTIONS:
         parser.add_option(*opt_args, **opt_kwargs)
     (options, args) = parser.parse_args()
-    for req in ['-d','-t','-i']:
-        if not getattr(parser.values,parser.get_option(req).dest):
-            parser.print_help()
-            return
+    # check for necessary options
+    if not any([getattr(parser.values, parser.get_option(opt).dest) \
+                for opt in ("-i", "--arclink-ids", "--fissures-ids")]) \
+       or not all([getattr(parser.values, parser.get_option(opt).dest) \
+                   for opt in ('-d', '-t')]):
+        parser.print_usage()
+        return
     # For keybindings option, just print them and exit.
     if options.keybindings:
         for key, value in KEYS.iteritems():
