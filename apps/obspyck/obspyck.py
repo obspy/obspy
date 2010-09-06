@@ -341,20 +341,34 @@ class ObsPyck(QtGui.QMainWindow):
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_qToolButton_clearAll_clicked(self, dummy_int):
+    def on_qToolButton_clearAll_clicked(self, *args):
+        # Workaround for overloaded signals:
+        #  - "clicked" signal get emitted once without *args and once with an
+        #    int as additional argument
+        #  - we have to be flexible in the call, otherwise we get errors
+        #  - we have to catch one signal, otherwise the action gets performed
+        #    twice
+        if args:
+            return
         self.clearDictionaries()
         self.updateAllItems()
         self.redraw()
 
-    def on_qToolButton_clearOrigMag_clicked(self, dummy_int):
+    def on_qToolButton_clearOrigMag_clicked(self, *args):
+        if args:
+            return
         self.clearOriginMagnitudeDictionaries()
         self.updateAllItems()
         self.redraw()
 
-    def on_qToolButton_clearFocMec_clicked(self, dummy_int):
+    def on_qToolButton_clearFocMec_clicked(self, *args):
+        if args:
+            return
         self.clearFocmecDictionary()
 
-    def on_qToolButton_doHyp2000_clicked(self, dummy_int):
+    def on_qToolButton_doHyp2000_clicked(self, *args):
+        if args:
+            return
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "hyp2000"
@@ -368,7 +382,9 @@ class ObsPyck(QtGui.QMainWindow):
         self.redraw()
         self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_qToolButton_do3dloc_clicked(self, dummy_int):
+    def on_qToolButton_do3dloc_clicked(self, *args):
+        if args:
+            return
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "3dloc"
@@ -383,7 +399,9 @@ class ObsPyck(QtGui.QMainWindow):
         self.redraw()
         self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_qToolButton_doNlloc_clicked(self, dummy_int):
+    def on_qToolButton_doNlloc_clicked(self, *args):
+        if args:
+            return
         self.delAllItems()
         self.clearOriginMagnitudeDictionaries()
         self.dictOrigin['Program'] = "NLLoc"
@@ -397,13 +415,17 @@ class ObsPyck(QtGui.QMainWindow):
         self.redraw()
         self.widgets.qToolButton_showMap.setChecked(True)
 
-    def on_qToolButton_calcMag_clicked(self, dummy_int):
+    def on_qToolButton_calcMag_clicked(self, *args):
+        if args:
+            return
         self.calculateEpiHypoDists()
         self.dictMagnitude['Program'] = "obspy"
         self.calculateStationMagnitudes()
         self.updateNetworkMag()
 
-    def on_qToolButton_doFocMec_clicked(self, dummy_int):
+    def on_qToolButton_doFocMec_clicked(self, *args):
+        if args:
+            return
         self.clearFocmecDictionary()
         self.dictFocalMechanism['Program'] = "focmec"
         self.doFocmec()
@@ -484,7 +506,9 @@ class ObsPyck(QtGui.QMainWindow):
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_qToolButton_nextFocMec_clicked(self, dummy_int):
+    def on_qToolButton_nextFocMec_clicked(self, *args):
+        if args:
+            return
         self.nextFocMec()
         if self.widgets.qToolButton_showFocMec.isChecked():
             self.delFocMec()
@@ -522,7 +546,9 @@ class ObsPyck(QtGui.QMainWindow):
             self.updateStreamLabels()
             self.canv.draw()
 
-    def on_qToolButton_getNextEvent_clicked(self, dummy_int):
+    def on_qToolButton_getNextEvent_clicked(self, *args):
+        if args:
+            return
         # check if event list is empty and force an update if this is the case
         if not hasattr(self, "seishubEventList"):
             self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
@@ -541,11 +567,15 @@ class ObsPyck(QtGui.QMainWindow):
         self.updateAllItems()
         self.redraw()
         
-    def on_qToolButton_updateEventList_clicked(self, dummy_int):
+    def on_qToolButton_updateEventList_clicked(self, *args):
+        if args:
+            return
         self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
                                         self.streams[0][0].stats.endtime)
 
-    def on_qToolButton_sendEvent_clicked(self, dummy_int):
+    def on_qToolButton_sendEvent_clicked(self, *args):
+        if args:
+            return
         self.uploadSeishub()
         self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                           self.streams[0][0].stats.endtime)
@@ -555,7 +585,9 @@ class ObsPyck(QtGui.QMainWindow):
         msg = "Setting \"public\" flag of event to: %s" % newstate
         self._write_msg(msg)
 
-    def on_qToolButton_deleteEvent_clicked(self, dummy_int):
+    def on_qToolButton_deleteEvent_clicked(self, *args):
+        if args:
+            return
         event = self.seishubEventList[self.seishubEventCurrent]
         resource_name = event.get('resource_name')
         account = event.get('account')
@@ -606,10 +638,14 @@ class ObsPyck(QtGui.QMainWindow):
     # XXX def on_buttonSetFocusOnPlot_clicked(self, event):
     # XXX     self.setFocusToMatplotlib()
 
-    def on_qToolButton_debug_clicked(self):
+    def on_qToolButton_debug_clicked(self, *args):
+        if args:
+            return
         self.debug()
     
-    def on_qToolButton_previousStream_clicked(self, dummy_int):
+    def on_qToolButton_previousStream_clicked(self, *args):
+        if args:
+            return
         self.stPt = (self.stPt - 1) % self.stNum
         self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
@@ -629,7 +665,9 @@ class ObsPyck(QtGui.QMainWindow):
         self.updateStreamNumberLabel()
         self._write_msg(msg)
 
-    def on_qToolButton_nextStream_clicked(self, dummy_int):
+    def on_qToolButton_nextStream_clicked(self, *args):
+        if args:
+            return
         self.stPt = (self.stPt + 1) % self.stNum
         self.widgets.qComboBox_streamName.setCurrentIndex(self.stPt)
 
@@ -774,9 +812,11 @@ class ObsPyck(QtGui.QMainWindow):
         ## DEBUG PYQT START
         QtCore.pyqtRemoveInputHook()
         try:
-            import ipdb;ipdb.set_trace()
-        except:
-            import pdb;pdb.set_trace()
+            import ipdb
+            ipdb.set_trace()
+        except ImportError:
+            import pdb
+            pdb.set_trace()
         QtCore.pyqtRestoreInputHook()
         ## DEBUG PYQT END
         self.stdout_backup = sys.stdout
