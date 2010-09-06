@@ -792,3 +792,20 @@ def map_qKeys(key_dict):
                 new[getattr(Qt, key_name)] = value
             key_dict[functionality] = new
     return key_dict
+
+class SplitWriter():
+    """
+    Implements a write method that writes a given message on all children
+    """
+    def __init__(self, *objects):
+        """
+        Remember provided objects as children.
+        """
+        self.children = objects
+
+    def write(self, msg):
+        """
+        Sends msg to all childrens write method.
+        """
+        for obj in self.children:
+            obj.write(msg)
