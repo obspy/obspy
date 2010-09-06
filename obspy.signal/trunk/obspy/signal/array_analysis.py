@@ -595,7 +595,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='julsec'):
+          verbose=False, coordsys='lonlat', timestamp='mlabhour'):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis
 
