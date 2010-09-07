@@ -9,9 +9,9 @@ segments are organized into files, a file might contain a single segment
 or many, concatenated segments either for the same channel or many
 different channels.
 
-Header lines have the general form:
+Header lines have the general form::
 
-"TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units"
+    "TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units"
 
 Header field descriptions:
 
@@ -23,9 +23,9 @@ Format:    'SLIST' (sample list) or 'TSPAIR' (time-sample pair)
 Type:      Sample type 'INTEGER', 'FLOAT' or 'ASCII'
 Units:     Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
 
-Example header (no line wrapping):
+Example header (no line wrapping)::
 
-TIMESERIES NL_HGN_00_BHZ_R, 11947 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
+    TIMESERIES NL_HGN_00_BHZ_R, 11947 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
 
 
 Sample value format:
@@ -34,32 +34,31 @@ For the SLIST (sample list) format, samples are listed in 6 columns with
 the time-series incrementing from left to right and wrapping to the next 
 line. The time of the first sample is the time listed in the header.
 
+Example SLIST format::
+
+    TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
+    2787        2776        2774        2780        2783        2782
+    2776        2766        2759        2760        2765        2767
+
 For the TSPAIR (time-sample pair) format, each sample is listed on a 
 separate line with a specific time stamp in the same ISO format as used
 in the header line.
 
+Example TSPAIR format::
 
-Example SLIST format:
-
-TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
-      2787        2776        2774        2780        2783        2782
-      2776        2766        2759        2760        2765        2767
-
-Example TSPAIR format:
-
-TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPAIR, INTEGER, Counts
-2003-05-29T02:13:22.043400  2787
-2003-05-29T02:13:22.068400  2776
-2003-05-29T02:13:22.093400  2774
-2003-05-29T02:13:22.118400  2780
-2003-05-29T02:13:22.143400  2783
-2003-05-29T02:13:22.168400  2782
-2003-05-29T02:13:22.193400  2776
-2003-05-29T02:13:22.218400  2766
-2003-05-29T02:13:22.243400  2759
-2003-05-29T02:13:22.268400  2760
-2003-05-29T02:13:22.293400  2765
-2003-05-29T02:13:22.318400  2767
+    TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPAIR, INTEGER, Counts
+    2003-05-29T02:13:22.043400  2787
+    2003-05-29T02:13:22.068400  2776
+    2003-05-29T02:13:22.093400  2774
+    2003-05-29T02:13:22.118400  2780
+    2003-05-29T02:13:22.143400  2783
+    2003-05-29T02:13:22.168400  2782
+    2003-05-29T02:13:22.193400  2776
+    2003-05-29T02:13:22.218400  2766
+    2003-05-29T02:13:22.243400  2759
+    2003-05-29T02:13:22.268400  2760
+    2003-05-29T02:13:22.293400  2765
+    2003-05-29T02:13:22.318400  2767
 
 
 :copyright:
