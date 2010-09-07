@@ -643,10 +643,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     """
     res = []
     eotr = True
-    #XXX data must be instrument corrected
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
-    #XXX check units for elevation
-    #XXX performance problem: fft plan is generated new on every call of bbfk.c
     
     # check that sampling rates do not vary
     df = stream[0].stats.sampling_rate
