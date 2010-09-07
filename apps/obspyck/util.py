@@ -590,9 +590,10 @@ def setup_external_programs(options):
         sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
                 cwd=prog_dict['dir'], env=prog_dict['env'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        return (msg, err, sub.returncode)
+        return (msg, err, returncode)
     prog_dict['Call'] = tmp
     # Hyp2000 #############################################################
     prog_dict = PROGRAMS['hyp_2000']
@@ -611,7 +612,8 @@ def setup_external_programs(options):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         input = open(prog_dict['files']['control'], "rt").read()
         (msg, err) = sub.communicate(input)
-        return (msg, err, sub.returncode)
+        returncode = sub.wait()
+        return (msg, err, returncode)
     prog_dict['Call'] = tmp
     # NLLoc ###############################################################
     prog_dict = PROGRAMS['nlloc']
@@ -626,6 +628,7 @@ def setup_external_programs(options):
         sub = subprocess.Popen([prog_dict['files']['exe'], controlfilename],
                 cwd=prog_dict['dir'], env=prog_dict['env'], shell=SHELL,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         for pattern, key in [("nlloc.*.*.*.loc.scat", 'scatter'),
@@ -634,7 +637,7 @@ def setup_external_programs(options):
             newname = os.path.join(prog_dict['dir'], prog_dict['files'][key])
             for file in glob.glob(pattern):
                 os.rename(file, newname)
-        return (msg, err, sub.returncode)
+        return (msg, err, returncode)
     prog_dict['Call'] = tmp
     # focmec ##############################################################
     prog_dict = PROGRAMS['focmec']
@@ -642,9 +645,10 @@ def setup_external_programs(options):
         sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
                 cwd=prog_dict['dir'], env=prog_dict['env'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
-        return (msg, err, sub.returncode)
+        return (msg, err, returncode)
     prog_dict['Call'] = tmp
     #######################################################################
     return tmp_dir

@@ -477,7 +477,7 @@ class ObsPyck(QtGui.QMainWindow):
             #       (self.dictOrigin['Latitude'], self.dictOrigin['Longitude'])
             link = "http://maps.google.de/maps?f=q&q=%.6f,%.6f" % \
                     (self.dictOrigin['Latitude'], self.dictOrigin['Longitude'])
-            self.widgets.qPlainTextEdit_stdout.appendHtml("<a href='%s'>%s</a> " % (link, link))
+            self.widgets.qPlainTextEdit_stdout.appendHtml("<a href='%s'>%s</a> &nbsp;" % (link, link))
         else:
             self.delEventMap()
             self.fig.clear()
