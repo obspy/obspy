@@ -822,7 +822,8 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
             The first dimension are the station indexes with the same order
             as the traces in the stream object. The second index are the
             values of [lat, lon, elev] in km
-            last index contains center [lat, lon, elev] in degrees and km
+            last index contains center [lat, lon, elev] in degrees and km if
+            return_center is true
     """
     nstat = len(stream)
     center_lat = 0.
