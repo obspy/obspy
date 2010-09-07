@@ -88,6 +88,15 @@ class ObsPyck(QtGui.QMainWindow):
         # we bind the figure to the FigureCanvas, so that it will be
         # drawn using the specific backend graphic functions
         self.canv = self.widgets.qMplCanvas
+        # We have to reset all splitters such that the widget with the canvas
+        # in it can not be collapsed as this leads to a crash of the program
+        _i = self.widgets.qSplitter_vertical.indexOf(self.widgets.qSplitter_horizontal)
+        self.widgets.qSplitter_vertical.setCollapsible(_i, False)
+        _i = self.widgets.qSplitter_horizontal.indexOf(self.widgets.qWidget_mpl)
+        self.widgets.qSplitter_horizontal.setCollapsible(_i, False)
+        # XXX this resizing operation (buttons minimum size) should be done in
+        # XXX the qt_designer.ui but I didn't find the correct settings there..
+        self.widgets.qSplitter_horizontal.setSizes([1, 9999])
         # Bind the canvas to the mouse wheel event. Use Qt events for it
         # because the matplotlib events seem to have a problem with Debian.
         self.widgets.qMplCanvas.wheelEvent = self.__mpl_wheelEvent
