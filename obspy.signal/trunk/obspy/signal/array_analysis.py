@@ -603,22 +603,37 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
         degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
         items/attributes. See param coordsys
+    :type win_len: Float
     :param win_len: Sliding window length in seconds
+    :type win_frac: Float
     :param win_frac: Fraction of sliding window to use for step
+    :type sll_x: Float
     :param sll_x: slowness x min (lower)
+    :type slm_x: Float
     :param slm_x: slowness x max
+    :type sll_y: Float
     :param sll_y: slowness y min (lower)
+    :type slm_y: Float
     :param slm_y: slowness y max
+    :type sl_s: Float
     :param sl_s: slowness step
+    :type semb_thres: Float
     :param semb_thres: Threshold for semblance
+    :type vel_thres: Float
     :param vel_thres: Threshold for velocity
+    :type frqlow: Float
     :param frqlow: lower frequency for fk
+    :type frqhigh: Float
     :param frqhigh: higher frequency for fk
+    :type stime: UTCDateTime
     :param stime: Starttime of interest
+    :type etime: UTCDateTime
     :param etime: Endtime of interest
-    :param prewhiten: Do prewhitening
+    :type prewhiten: int
+    :param prewhiten: Do prewhitening, values: 1 or 0
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
+    :type timestamp: string
     :param timestamp: valid values: 'julsec' and 'mlabhour'; 'julsec' returns
         the timestamp in secons since 1970-01-01T00:00:00, 'mlabhour'
         returns the timestamp in hours since '0001-01-01T00:00:00' as
@@ -719,29 +734,44 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
     """
     Note: Interface not fixed jet
-
-
-    :int *spoint: Start sample point, probably in julian seconds
-    :int offset: The Offset which is counted upwards nwin for shifting array
-    :float **trace: The trace matrix, containing the time serious for various stations
-    :float *ntrace: ntrace vector
-    :float ***stat_tshift_table: The time shift table for each station for the slowness grid
-    :float flow: Lower frequency for fk
-    :float fhigh: Higher frequency for fk
-    :float digfreq: The common sampling rate in group
+    
+    :type spoint: int
+    :param spoint: Start sample point, probably in julian seconds
+    :type offset: int
+    :param offset: The Offset which is counted upwards nwin for shifting array
+    :type trace: ??
+    :param trace: The trace matrix, containing the time serious for various stations
+    :type ntrace: float
+    :param ntrace: ntrace vector
+    :type stat_tshift_table: ??
+    :param stat_tshift_table: The time shift table for each station for the slowness grid
+    :type flow: float
+    :param flow: Lower frequency for fk
+    :type fhigh: float
+    :param fhigh: Higher frequency for fk
+    :type digfreq: float
+    :param digfreq: The common sampling rate in group
+    :type nsamp: int
     :int nsamp: Number of samples
-    :int nstat: Number of stations
-    :int prewhiten: Integer regulating prewhitening
-    :int grdpts_x: Number of grid points in x direction to loop over
-    :int grdpts_y: Number of grid points in y direction to loop over
-    :int nfft: Number of points to use for fft
+    :tpye nstat: int
+    :param nstat: Number of stations
+    :type prewhiten: int
+    :param prewhiten: Integer regulating prewhitening
+    :type grdpts_x: int
+    :param grdpts_x: Number of grid points in x direction to loop over
+    :type grdpts_y: int
+    :param grdpts_y: Number of grid points in y direction to loop over
+    :type nfft: int
+    :param nfft: Number of points to use for fft
 
-    :Returns:
-    :float *abs: The absolut power, output variable printed to file
-    :float *rel: The relative power, output variable printed to file
-    :int *ix: ix output for backazimuth calculation
-    :int *iy: iy output for backazimuth calculation
+    :return: Tuple with fields:
+        | **float abs:** The absolut power, output variable printed to file
+        | **float rel:** The relative power, output variable printed to file
+        | **int ix:** ix output for backazimuth calculation
+        | **int iy:** iy output for backazimuth calculation
     """
+    #XXX moritz: add a note where params are pointers
+
     lib.bbfk.argtypes = [ \
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int,
