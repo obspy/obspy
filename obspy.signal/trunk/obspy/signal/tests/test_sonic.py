@@ -77,13 +77,15 @@ class SonicTestCase(unittest.TestCase):
         semb_thres = -1e99
         vel_thres = -1e99
         
-        # out returns: rel. power, abs. power, azimuth, slowness
+        # out returns: rel. power, abs. power, backazimuth, slowness
         out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
                     semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
                     prewhiten, coordsys='xy', verbose=False)
         
-        # azimuth: baz_degree - 180 ~= -160
-        np.testing.assert_almost_equal(out[:,3].mean(), -161.565051177)
+        # now returns baz
+        #azimuth: baz_degree - 180 ~= -160
+        #np.testing.assert_almost_equal(out[:,3].mean(), -161.565051177)
+        np.testing.assert_almost_equal(out[:,3].mean(), 18.434948822922024)
         # slowness ~= 1.3
         np.testing.assert_almost_equal(out[:,4].mean(), 1.26491106407)
 

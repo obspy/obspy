@@ -639,7 +639,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         returns the timestamp in hours since '0001-01-01T00:00:00' as
         needed for matplotlib date plotting
     :return: numpy.ndarray of timestamp, relative power, absolute power,
-        azimut, slowness
+        backazimut, slowness
     """
     res = []
     eotr = True
@@ -706,8 +706,9 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         if slow < 1e-8:
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
+        baz = azimut - np.sign(azimut)*180
         if power > semb_thres and 1. / slow > vel_thres:
-            res.append(np.array([newstart.timestamp, power, abspow, azimut, slow]))
+            res.append(np.array([newstart.timestamp, power, abspow, baz, slow]))
             if verbose:
                 print newstart, (newstart + (nsamp/df)), res[-1][1:]
         if (newstart + (nsamp + nstep) / df) > etime:
