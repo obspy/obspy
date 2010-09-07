@@ -82,9 +82,7 @@ class SonicTestCase(unittest.TestCase):
                     semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
                     prewhiten, coordsys='xy', verbose=False)
         
-        # now returns baz
-        #azimuth: baz_degree - 180 ~= -160
-        #np.testing.assert_almost_equal(out[:,3].mean(), -161.565051177)
+        # returns baz
         np.testing.assert_almost_equal(out[:,3].mean(), 18.434948822922024)
         # slowness ~= 1.3
         np.testing.assert_almost_equal(out[:,4].mean(), 1.26491106407)
