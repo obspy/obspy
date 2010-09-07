@@ -1305,13 +1305,13 @@ class ObsPyck(QtGui.QMainWindow):
         if ev.key == keys['prevStream']:
             if self.widgets.qToolButton_overview.isChecked():
                 return
-            self.on_qToolButton_previousStream_clicked(0)
+            self.on_qToolButton_previousStream_clicked()
             return
 
         if ev.key == keys['nextStream']:
             if self.widgets.qToolButton_overview.isChecked():
                 return
-            self.on_qToolButton_nextStream_clicked(0)
+            self.on_qToolButton_nextStream_clicked()
             return
     
     def __mpl_keyReleaseEvent(self, ev):
