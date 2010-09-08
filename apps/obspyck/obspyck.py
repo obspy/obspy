@@ -104,18 +104,6 @@ class ObsPyck(QtGui.QMainWindow):
 
         self.fig = self.widgets.qMplCanvas.fig
 
-        # Also accessible via self.statusBar() after it has been added to the
-        # main window.
-        qtStatusBar = QtGui.QStatusBar()
-        # May be obscured if a temporary item is added to the status bar. One
-        # way to change this behaviour is to add it as a permanent status bar
-        # widget but then it will always be right justified..there probably is
-        # some way around it but as long as no other use of the status bar is
-        # needed this way is the easiest to get it left aligned.
-        self.toolbar = QNavigationToolbar(self.widgets.qMplCanvas, qtStatusBar)
-        qtStatusBar.insertWidget(0, self.toolbar)
-        self.setStatusBar(qtStatusBar)
-
         #Define some flags, dictionaries and plotting options
         #this next flag indicates if we zoom on time or amplitude axis
         self.flagWheelZoomAmplitude = False
@@ -225,6 +213,7 @@ class ObsPyck(QtGui.QMainWindow):
         # The scroll event is handled using Qt.
         #self.canv.mpl_connect('scroll_event', self.__mpl_wheelEvent)
         self.canv.mpl_connect('button_press_event', self.__mpl_mouseButtonPressEvent)
+        self.canv.mpl_connect('motion_notify_event', self.__mpl_motionNotifyEvent)
         self.multicursorReinit()
         self.canv.show()
         self.showMaximized()
@@ -340,16 +329,11 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawStreamOverview()
             self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.zoom()
-            self.toolbar.update()
             self.canv.draw()
         else:
             self.delAxes()
             self.fig.clear()
             self.drawAxes()
-            self.toolbar.update()
             self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
@@ -467,11 +451,6 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawEventMap()
             self.multicursor.visible = False
-            # just want to make sure that we end up in normal cursor state
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.zoom()
-            self.toolbar.update()
             self.canv.draw()
             #print "http://maps.google.de/maps?f=q&q=%.6f,%.6f" % \
             #       (self.dictOrigin['Latitude'], self.dictOrigin['Longitude'])
@@ -482,7 +461,6 @@ class ObsPyck(QtGui.QMainWindow):
             self.delEventMap()
             self.fig.clear()
             self.drawAxes()
-            self.toolbar.update()
             self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
@@ -504,16 +482,11 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawFocMec()
             self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.zoom()
-            self.toolbar.update()
             self.canv.draw()
         else:
             self.delFocMec()
             self.fig.clear()
             self.drawAxes()
-            self.toolbar.update()
             self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
@@ -544,16 +517,11 @@ class ObsPyck(QtGui.QMainWindow):
             self.fig.clear()
             self.drawWadati()
             self.multicursor.visible = False
-            self.toolbar.pan()
-            self.toolbar.zoom()
-            self.toolbar.zoom()
-            self.toolbar.update()
             self.canv.draw()
         else:
             self.delWadati()
             self.fig.clear()
             self.drawAxes()
-            self.toolbar.update()
             self.drawAllItems()
             self.multicursorReinit()
             self.updatePlot()
@@ -1386,8 +1354,6 @@ class ObsPyck(QtGui.QMainWindow):
         if ev.button in [1, 3]:
             self.multicursor.visible = False
             # reuse this event as setPick / setPickError event
-            # XXX i would like to be able to determine toolbar state and do
-            # XXX this only if in normal cursor state.
             if ev.button == 1:
                 if str(self.widgets.qComboBox_phaseType.currentText()) in SEISMIC_PHASES:
                     ev.key = self.keys['setPick']
@@ -1420,6 +1386,17 @@ class ObsPyck(QtGui.QMainWindow):
         if ev.button in [1, 3]:
             self.multicursor.visible = True
             # XXX self.canv.widgetlock.release(self.toolbar)
+
+    def __mpl_motionNotifyEvent(self, ev):
+        try:
+            if ev.inaxes in self.axs:
+                self.widgets.qLabel_xdata.setText(formatXTicklabels(ev.xdata))
+                self.widgets.qLabel_ydata.setText("%.1f" % ev.ydata)
+            else:
+                self.widgets.qLabel_xdata.setText(str(ev.xdata))
+                self.widgets.qLabel_ydata.setText(str(ev.ydata))
+        except TypeError:
+            pass
     
     #lookup multicursor source: http://matplotlib.sourcearchive.com/documentation/0.98.1/widgets_8py-source.html
     def multicursorReinit(self):
@@ -2475,9 +2452,6 @@ class ObsPyck(QtGui.QMainWindow):
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
-        self.toolbar.update()
-        self.toolbar.pan(False)
-        self.toolbar.zoom(True)
 
     def drawEventMap(self):
         dM = self.dictMagnitude

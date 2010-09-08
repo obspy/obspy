@@ -750,7 +750,7 @@ def errorEllipsoid2CartesianErrors(azimuth1, dip1, len1, azimuth2, dip2, len2,
     
     return (error_x, error_y, error_z)
 
-def formatXTicklabels(x, pos):
+def formatXTicklabels(x, *pos):
     """
     Make a nice formatting for y axis ticklabels: minutes:seconds.microsec
     """
