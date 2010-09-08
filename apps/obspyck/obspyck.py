@@ -1037,7 +1037,12 @@ class ObsPyck(QtGui.QMainWindow):
                             cmap=self.spectrogramColormap, axis=ax, zorder=-10)
                 textcolor = "red"
             else:
-                plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+                # normalize with overall sensitivity and convert to nm/s
+                # if not explicitly deactivated on command line
+                if not self.options.nonormalization:
+                    plts.append(ax.plot(sampletimes, tr.data / tr.stats.paz.sensitivity * 1e9, color='k', zorder=1000)[0])
+                else:
+                    plts.append(ax.plot(sampletimes, tr.data, color='k', zorder=1000)[0])
                 textcolor = "blue"
             tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
             ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
@@ -2452,7 +2457,12 @@ class ObsPyck(QtGui.QMainWindow):
             if self.widgets.qToolButton_filter.isChecked():
                 tr = tr.copy()
                 self._filter(tr)
-            plts.append(ax.plot(sampletimes, tr.data, color='k',zorder=1000)[0])
+            # normalize with overall sensitivity and convert to nm/s
+            # if not explicitly deactivated on command line
+            if not self.options.nonormalization:
+                plts.append(ax.plot(sampletimes, tr.data / tr.stats.paz.sensitivity * 1e9, color='k', zorder=1000)[0])
+            else:
+                plts.append(ax.plot(sampletimes, tr.data, color='k', zorder=1000)[0])
             tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
             ax.text(0.01, 0.95, tr_id, va="top", ha="left", fontsize=18,
                     family='monospace', color="b", zorder=10000,
