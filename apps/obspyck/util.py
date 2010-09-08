@@ -60,6 +60,10 @@ COMMANDLINE_OPTIONS = (
         (("--nozeromean",), {'action': "store_true", 'dest': "nozeromean",
                 'default': False,
                 'help': "Deactivate offset removal of traces"}),
+        (("--nonormalization",), {'action': "store_true",
+                'dest': "nonormalization", 'default': False,
+                'help': "Deactivate normalization to nm/s using overall " + \
+                "sensitivity (tr.stats.paz.sensitivity)"}),
         (("--pluginpath",), {'dest': "pluginpath",
                 'default': "/baysoft/obspyck/",
                 'help': "Path to local directory containing the folders with "
@@ -481,11 +485,25 @@ def merge_check_and_cleanup_streams(streams, options):
             streams.remove(st)
             continue
         sta_list.add(net_sta)
-    # demean traces if not explicitly deactivated on command line
-    if not options.nozeromean:
+    # if working on trace data, make sure we have float...
+    if options.nonormalization and options.nozeromean:
+        pass
+    else:
         for st in streams:
             for tr in st:
-                tr.data = tr.data - tr.data.mean()
+                tr.data = tr.data.astype("float64")
+        # normalize with overall sensitivity and convert to nm/s
+        # if not explicitly deactivated on command line
+        if not options.nonormalization:
+            for st in streams:
+                for tr in st:
+                    tr.data /= tr.stats.paz.sensitivity
+                    tr.data *= 1e9
+        # demean traces if not explicitly deactivated on command line
+        if not options.nozeromean:
+            for st in streams:
+                for tr in st:
+                    tr.data -= tr.data.mean()
     return (warn_msg, merge_msg, streams)
 
 def setup_dicts(streams):

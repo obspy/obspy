@@ -3635,17 +3635,17 @@ def main():
     for opt_args, opt_kwargs in COMMANDLINE_OPTIONS:
         parser.add_option(*opt_args, **opt_kwargs)
     (options, args) = parser.parse_args()
+    # For keybindings option, just print them and exit.
+    if options.keybindings:
+        for key, value in KEYS.iteritems():
+            print "%s: \"%s\"" % (key, value)
+        return
     # check for necessary options
     if not any([getattr(parser.values, parser.get_option(opt).dest) \
                 for opt in ("-i", "--arclink-ids", "--fissures-ids")]) \
        or not all([getattr(parser.values, parser.get_option(opt).dest) \
                    for opt in ('-d', '-t')]):
         parser.print_usage()
-        return
-    # For keybindings option, just print them and exit.
-    if options.keybindings:
-        for key, value in KEYS.iteritems():
-            print "%s: \"%s\"" % (key, value)
         return
     check_keybinding_conflicts(KEYS)
     # XXX changed this again, we dont want qt to handle keys
