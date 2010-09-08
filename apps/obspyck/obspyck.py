@@ -2492,29 +2492,23 @@ class ObsPyck(QtGui.QMainWindow):
         ypos = 0.97
         xpos = 0.03
         axEM.text(xpos, ypos,
-                             '%7.3f +/- %0.2fkm\n' % \
-                             (dO['Longitude'], dO['Longitude Error']) + \
-                             '%7.3f +/- %0.2fkm\n' % \
-                             (dO['Latitude'], dO['Latitude Error']) + \
-                             '  %.1fkm +/- %.1fkm' % \
-                             (dO['Depth'], dO['Depth Error']),
-                             va='top', ha='left', family='monospace',
-                             transform=axEM.transAxes)
+                  '%7.3f +/- %0.2fkm\n' % (dO['Longitude'], dO['Longitude Error']) + \
+                  '%7.3f +/- %0.2fkm\n' % (dO['Latitude'], dO['Latitude Error']) + \
+                  '  %.1fkm +/- %.1fkm' % (dO['Depth'], dO['Depth Error']),
+                  va='top', ha='left', family='monospace', transform=axEM.transAxes)
         if 'Standarderror' in dO:
             axEM.text(xpos, ypos, "\n\n\n\n Residual: %.3f s" % \
-                    dO['Standarderror'], va='top', ha='left',
-                    color=PHASE_COLORS['P'],
-                    transform=axEM.transAxes,
-                    family='monospace')
+                      dO['Standarderror'], va='top', ha='left',
+                      color=PHASE_COLORS['P'], transform=axEM.transAxes,
+                      family='monospace')
         if 'Magnitude' in dM and 'Uncertainty' in dM:
             self.netMagLabel = '\n\n\n\n\n %.2f (Var: %.2f)' % \
-                    (dM['Magnitude'], dM['Uncertainty'])
-            self.netMagText = axEM.text(xpos, ypos,
-                    self.netMagLabel, va='top', ha='left',
-                    transform=axEM.transAxes,
+                               (dM['Magnitude'], dM['Uncertainty'])
+            self.netMagText = axEM.text(xpos, ypos, self.netMagLabel, va='top',
+                    ha='left', transform=axEM.transAxes,
                     color=PHASE_COLORS['Mag'], family='monospace')
-        errorell = Ellipse(xy = [dO['Longitude'], dO['Latitude']],
-                width=errLon, height=errLat, angle=0, fill=False)
+        errorell = Ellipse(xy=[dO['Longitude'], dO['Latitude']],
+                           width=errLon, height=errLat, angle=0, fill=False)
         axEM.add_artist(errorell)
         self.scatterMagIndices = []
         self.scatterMagLon = []
@@ -2546,10 +2540,10 @@ class ObsPyck(QtGui.QMainWindow):
                         '  %0.2f (%s)' % (dict['Mag'], dict['MagChannel'])
                 axEM.text(dict['StaLon'], dict['StaLat'], label, va='top',
                           family='monospace', color=PHASE_COLORS['Mag'])
-            if len(self.scatterMagLon) > 0 :
-                self.scatterMag = axEM.scatter(self.scatterMagLon,
-                        self.scatterMagLat, s=150, marker='v', color='',
-                        edgecolor='black', picker=10)
+        if len(self.scatterMagLon) > 0:
+            self.scatterMag = axEM.scatter(self.scatterMagLon,
+                    self.scatterMagLat, s=150, marker='v', color='',
+                    edgecolor='black', picker=10)
                 
         axEM.set_xlabel('Longitude')
         axEM.set_ylabel('Latitude')
