@@ -2,6 +2,8 @@
 #
 # PyQt API:
 # http://www.riverbankcomputing.co.uk/static/Docs/PyQt4/html/classes.html
+# Tutorials:
+# http://zetcode.com/tutorials/pyqt4/
 
 import os
 import sys
@@ -16,7 +18,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from obspy.core import read
 
 
-class MyMainWindow(QtGui.QMainWindow):
+class MyWidget(QtGui.QWidget):
     """
     Main Window docstring...
     """
@@ -30,7 +32,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.zerophase = options.zerophase
 
         # setup GUI
-        QtGui.QMainWindow.__init__(self)
+        QtGui.QWidget.__init__(self)
         self.__setup_GUI()
         self.__connect_signals()
 
@@ -47,22 +49,15 @@ class MyMainWindow(QtGui.QMainWindow):
         Add matplotlib canvas, some buttons and stuff...
         """
         self.setWindowTitle("Title of main window...")
-
-        main = QtGui.QWidget(self)
-        main.setGeometry(100, 100, 300, 300)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding,
-                                       QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(main.sizePolicy().hasHeightForWidth())
-        main.setSizePolicy(sizePolicy)
-
+        self.setGeometry(300, 300, 500, 500)
         # add matplotlib canvas and setup layouts to put buttons in
-        hlayout = QtGui.QVBoxLayout(main)
+        hlayout = QtGui.QVBoxLayout()
+        hlayout.addStretch(1)
+        self.setLayout(hlayout)
         canv = QMplCanvas()
-        #canv.setSizePolicy(sizePolicy)
         hlayout.addWidget(canv)
         vlayout = QtGui.QHBoxLayout()
+        vlayout.addStretch(1)
         hlayout.addLayout(vlayout)
 
         # add some buttons
@@ -158,7 +153,7 @@ def main():
     (options, args) = parser.parse_args()
 
     qApp = QtGui.QApplication(sys.argv)
-    myMainWindow = MyMainWindow(options)
+    myWidget = MyWidget(options)
     os._exit(qApp.exec_())
 
 
