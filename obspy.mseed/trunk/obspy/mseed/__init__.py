@@ -54,9 +54,6 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
 Writing
 -------
-WARNING: No matter what is written in the Stream[i].stats.mseed['dataquality']
-field, the dataquality in the resulting Mini-SEED file will always be 'D'.
-
 Writing is also done in the usual way.
 
 >>> st.write('Mini-SEED-filename.mseed', format='MSEED') #doctest: +SKIP

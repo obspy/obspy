@@ -197,9 +197,15 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
             header[_j] = trace.stats[_k]
         # Set data quality to indeterminate (= D) if it is not already set.
         try:
-            header['dataquality'] = trace.stats['mseed']['dataquality']
+            header['dataquality'] = trace.stats['mseed']['dataquality'].upper()
         except:
             header['dataquality'] = 'D'
+        # Sanity check for the dataquality to get a nice Python exception
+        # instead of a C error.
+        if header['dataquality'] not in ['D', 'R', 'Q', 'M']:
+            msg = 'The dataquality for Mini-SEED must be either D, R, Q ' + \
+                   'or M. See the SEED manual for further information.'
+            raise ValueError(msg)
         # Convert UTCDateTime times to Mini-SEED times.
         header['starttime'] = \
             __libmseed__._convertDatetimeToMSTime(header['starttime'])

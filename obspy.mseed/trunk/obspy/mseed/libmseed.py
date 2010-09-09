@@ -444,6 +444,7 @@ class LibMSEED(object):
             msr.contents.station = trace[0]['station']
             msr.contents.location = trace[0]['location']
             msr.contents.channel = trace[0]['channel']
+            msr.contents.dataquality = trace[0]['dataquality']
             # Only use Blockette 1001 if necessary.
             if use_blkt_1001:
                 size = C.sizeof(blkt_1001_s)

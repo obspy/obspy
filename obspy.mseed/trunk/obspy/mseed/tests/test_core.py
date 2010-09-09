@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
@@ -535,6 +536,66 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
             # Should also be true for the stream objects.
             self.assertEqual(st[0].stats, st2[0].stats)
+
+    def test_readingAndWritingDataquality(self):
+        """
+        Tests if the dataquality is written and read correctly. There is no
+        corresponding test in test_libmseed.py as it is just more convenient to
+        write it in here.
+        """
+        tempfile = NamedTemporaryFile().name
+        np.random.seed(800) # make test reproduceable
+        data = np.random.randint(-1000, 1000, 50).astype('int32')
+        # Create 4 different traces with 4 different dataqualities.
+        stats1 = {'network': 'BW', 'station': 'TEST', 'location':'A',
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
+                 'mseed' : {'dataquality' : 'D'}}
+        stats1['starttime'] = UTCDateTime(2000, 1, 1)
+        stats2 = deepcopy(stats1)
+        stats2['mseed']['dataquality'] = 'R'
+        stats2['location'] = 'B'
+        stats3 = deepcopy(stats1)
+        stats3['mseed']['dataquality'] = 'Q'
+        stats3['location'] = 'C'
+        stats4 = deepcopy(stats1)
+        stats4['mseed']['dataquality'] = 'M'
+        stats4['location'] = 'D'
+        # Create the traces.
+        tr1 = Trace(data=data, header=stats1)
+        tr2 = Trace(data=data, header=stats2)
+        tr3 = Trace(data=data, header=stats3)
+        tr4 = Trace(data=data, header=stats4)
+        st = Stream([tr1, tr2, tr3, tr4])
+        # Write it.
+        st.write(tempfile, format="MSEED")
+        # Read it again and delete the temporary file.
+        stream = read(tempfile)
+        os.remove(tempfile)
+        stream.verify()
+        # Check all four dataqualities.
+        for tr_old, tr_new in zip(st, stream):
+            self.assertEqual(tr_old.stats.mseed.dataquality,
+                             tr_new.stats.mseed.dataquality)
+
+    def test_writingInvalidDataQuality(self):
+        """
+        Trying to write an invalid dataquality results in an error. Only D, R,
+        Q and M are allowed.
+        """
+        tempfile = NamedTemporaryFile().name
+        data = np.zeros(10)
+        # Create 4 different traces with 4 different dataqualities.
+        stats1 = {'network': 'BW', 'station': 'TEST', 'location':'A',
+                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
+                 'mseed' : {'dataquality' : 'X'}}
+        st = Stream([Trace(data=data, header=stats1)])
+        # Write it.
+        self.assertRaises(ValueError, st.write, tempfile, format="MSEED")
+        # Delete the file if it has been written, i.e. the test failed.
+        try:
+            os.remove(tempfile)
+        except:
+            pass
 
     def test_isInvalidMSEED(self):
         """
