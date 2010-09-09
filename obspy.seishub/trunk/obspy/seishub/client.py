@@ -312,7 +312,8 @@ class _WaveformMapperClient(object):
                 kwargs[key] = value
         url = '/seismology/waveform/getLatency'
         root = self.client._objectify(url, **kwargs)
-        return [node.__dict__ for node in root.getchildren()]
+        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+                for node in root.getchildren()]
 
     def getWaveform(self, network_id, station_id,
             location_id=None, channel_id=None, start_datetime=None,
@@ -502,7 +503,8 @@ class _StationMapperClient(_BaseRESTClient):
                 kwargs[key] = value
         url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
-        return [node.__dict__ for node in root.getchildren()]
+        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+                for node in root.getchildren()]
 
     def getCoordinates(self, network_id, station_id, datetime, location_id=''):
         """
