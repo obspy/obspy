@@ -663,7 +663,8 @@ class _EventMapperClient(_BaseRESTClient):
                 kwargs[key] = value
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
-        return [node.__dict__ for node in root.getchildren()]
+        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+                for node in root.getchildren()]
     
     @deprecated
     def getKml(self, nolabels=False, **kwargs):
