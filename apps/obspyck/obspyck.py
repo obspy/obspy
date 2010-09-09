@@ -1108,8 +1108,9 @@ class ObsPyck(QtGui.QMainWindow):
                     self.delLine(key2)
                     self.delKey(key2)
                 self.redraw()
-                print "%s set at %.3f" % (KEY_FULLNAMES[phase_type],
-                                          dict[phase_type])
+                abs_time = st[0].stats.starttime + dict[phase_type]
+                print "%s set at %.3f (%s)" % (KEY_FULLNAMES[phase_type],
+                                               dict[phase_type], abs_time.isoformat())
                 return
 
         if ev.key in keys['setWeight'].keys():
@@ -1172,7 +1173,9 @@ class ObsPyck(QtGui.QMainWindow):
                 dict[key] = pickSample
                 self.updateLine(key)
                 self.redraw()
-                print "%s set at %.3f" % (KEY_FULLNAMES[key], dict[key])
+                abs_time = st[0].stats.starttime + dict[key]
+                print "%s set at %.3f (%s)" % (KEY_FULLNAMES[key],
+                                               dict[key], abs_time.isoformat())
                 return
 
         if ev.key == keys['setMagMin']:

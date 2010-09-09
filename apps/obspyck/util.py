@@ -819,6 +819,6 @@ class SplitWriter():
             if isinstance(obj, PyQt4.QtGui.QPlainTextEdit):
                 if msg == '\n':
                     return
-                obj.appendPlainText(msg.strip())
+                obj.appendPlainText(msg)
             else:
                 obj.write(msg)
