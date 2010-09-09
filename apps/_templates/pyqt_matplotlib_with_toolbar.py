@@ -14,6 +14,7 @@ from PyQt4.QtCore import QEvent, Qt
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 
 from obspy.core import read
 
@@ -77,6 +78,11 @@ class MyMainWindow(QtGui.QMainWindow):
         self.qCheckBox_zerophase.setChecked(self.options.zerophase)
         self.qCheckBox_zerophase.setText("zerophase")
         vlayout.addWidget(self.qCheckBox_zerophase)
+
+        qStatusBar = QtGui.QStatusBar()
+        self.toolbar = NavigationToolbar2QTAgg(canv, qStatusBar)
+        qStatusBar.insertWidget(0, self.toolbar)
+        self.setStatusBar(qStatusBar)
 
         # make matplotlib stuff available
         self.canv = canv
