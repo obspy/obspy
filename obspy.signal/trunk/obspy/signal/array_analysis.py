@@ -22,7 +22,7 @@ import warnings
 import ctypes as C
 import numpy as np
 from obspy.signal.util import utlGeoKm, lib, nextpow2
-
+from obspy.core import AttribDict, Stream
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
@@ -831,29 +831,34 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
     center_h = 0.
     geometry = np.empty((nstat, 3))
     
+    if isinstance(stream, Stream):
+        for i, tr in enumerate(stream):
+            if coordsys == 'lonlat':
+                geometry[i, 0] = tr.stats.coordinates.longitude
+                geometry[i, 1] = tr.stats.coordinates.latitude
+                geometry[i, 2] = tr.stats.coordinates.elevation
+            elif coordsys == 'xy':
+                geometry[i, 0] = tr.stats.coordinates.x
+                geometry[i, 1] = tr.stats.coordinates.y
+                geometry[i, 2] = tr.stats.coordinates.elevation
+    elif isinstance(stream, np.ndarray):
+        geometry = stream.copy()
+    else:
+        raise TypeError('only Stream or numpy.ndarray allowed')
+
     if verbose:
         print "coordys = " + coordsys
 
     if coordsys == 'lonlat':
-        for tr in stream:
-            center_lat += tr.stats.coordinates.latitude
-            center_lon += tr.stats.coordinates.longitude
-            center_h += tr.stats.coordinates.elevation
-        center_lat /= nstat
-        center_lon /= nstat
-        center_h /= nstat
-        for i, tr in enumerate(stream):
-            x, y = utlGeoKm(center_lon, center_lat,
-                            tr.stats.coordinates.longitude,
-                            tr.stats.coordinates.latitude)
+        center_lon = geometry[:,0].mean()
+        center_lat = geometry[:,1].mean()
+        center_h = geometry[:,2].mean()
+        for i in np.arange(nstat):
+            x, y = utlGeoKm(center_lon, center_lat, geometry[i,0], geometry[i,1])
             geometry[i,0] = x
             geometry[i,1] = y
-            geometry[i,2] = tr.stats.coordinates.elevation - center_h
+            geometry[i,2] -= center_h
     elif coordsys == 'xy':
-        for i, tr in enumerate(stream):
-            geometry[i,0] = tr.stats.coordinates.x
-            geometry[i,1] = tr.stats.coordinates.y
-            geometry[i,2] = tr.stats.coordinates.elevation
         geometry[:,0] -= geometry[:,0].mean()
         geometry[:,1] -= geometry[:,1].mean()
         geometry[:,2] -= geometry[:,2].mean()

@@ -6,7 +6,7 @@ The array_analysis test suite.
 
 import unittest
 import numpy as np
-from obspy.signal.array_analysis import array_rotation_strain
+from obspy.signal.array_analysis import array_rotation_strain, get_geometry
 
 
 class ArrayTestCase(unittest.TestCase):
@@ -161,6 +161,29 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
                 decimal=12)
 
+    def test_get_geometry(self):
+        """
+        test get_geometry() in array_analysis.py
+        """
+        ll = np.array([[24.5797167, 121.4842444, 385.106],
+                       [24.5797611, 121.4842333, 384.893],
+                       [24.5796694, 121.4842556, 385.106]])
+
+        la = get_geometry(ll)
+
+        np.testing.assert_almost_equal(la[:,0].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:,1].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:,2].sum(), 0., decimal=8)
+        
+        ll = np.array([[10., 10., 10.],
+                       [0.,   5.,  5.],
+                       [0.,   0.,  0.]])
+        
+        la = get_geometry(ll, coordsys='xy')
+
+        np.testing.assert_almost_equal(la[:,0].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:,1].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:,2].sum(), 0., decimal=8)
 
 def suite():
     return unittest.makeSuite(ArrayTestCase, 'test')
