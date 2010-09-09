@@ -54,35 +54,37 @@ class MyMainWindow(QtGui.QMainWindow):
         main = QtGui.QWidget()
         self.setCentralWidget(main)
         # add matplotlib canvas and setup layouts to put buttons in
-        hlayout = QtGui.QVBoxLayout()
-        hlayout.addStretch(1)
-        main.setLayout(hlayout)
-        canv = QMplCanvas()
-        hlayout.addWidget(canv)
-        vlayout = QtGui.QHBoxLayout()
+        vlayout = QtGui.QVBoxLayout()
         vlayout.addStretch(1)
-        hlayout.addLayout(vlayout)
+        main.setLayout(vlayout)
+        canv = QMplCanvas()
+        vlayout.addWidget(canv)
+        hlayout = QtGui.QHBoxLayout()
+        hlayout.addStretch(1)
+        vlayout.addLayout(hlayout)
 
         # add some buttons
         self.qDoubleSpinBox_low = QtGui.QDoubleSpinBox()
         self.qDoubleSpinBox_low.setValue(self.options.low)
-        vlayout.addWidget(QtGui.QLabel("low"))
-        vlayout.addWidget(self.qDoubleSpinBox_low)
+        hlayout.addWidget(QtGui.QLabel("low"))
+        hlayout.addWidget(self.qDoubleSpinBox_low)
         
         self.qDoubleSpinBox_high = QtGui.QDoubleSpinBox()
         self.qDoubleSpinBox_high.setValue(self.options.high)
-        vlayout.addWidget(QtGui.QLabel("high"))
-        vlayout.addWidget(self.qDoubleSpinBox_high)
+        hlayout.addWidget(QtGui.QLabel("high"))
+        hlayout.addWidget(self.qDoubleSpinBox_high)
 
         self.qCheckBox_zerophase = QtGui.QCheckBox()
         self.qCheckBox_zerophase.setChecked(self.options.zerophase)
         self.qCheckBox_zerophase.setText("zerophase")
-        vlayout.addWidget(self.qCheckBox_zerophase)
+        hlayout.addWidget(self.qCheckBox_zerophase)
 
-        qStatusBar = QtGui.QStatusBar()
-        self.toolbar = NavigationToolbar2QTAgg(canv, qStatusBar)
-        qStatusBar.insertWidget(0, self.toolbar)
-        self.setStatusBar(qStatusBar)
+        qToolBar = QtGui.QToolBar()
+        self.toolbar = NavigationToolbar2QTAgg(canv, qToolBar)
+        qToolBar.addWidget(self.toolbar)
+        qToolBar.setMovable(False)
+        qToolBar.setFloatable(False)
+        self.addToolBar(Qt.BottomToolBarArea, qToolBar)
 
         # make matplotlib stuff available
         self.canv = canv
@@ -110,6 +112,9 @@ class MyMainWindow(QtGui.QMainWindow):
         """
         # clear axes before anything else
         ax = self.ax
+        if ax.lines:
+            xlims = list(ax.get_xlim())
+            ylims = list(ax.get_ylim())
         ax.clear()
 
         st = self.st.copy()
@@ -118,6 +123,11 @@ class MyMainWindow(QtGui.QMainWindow):
         tr = st.select(component="Z")[0]
         ax.plot(tr.data)
         # update matplotlib canvas
+        try:
+            ax.set_xlim(xlims)
+            ax.set_ylim(ylims)
+        except UnboundLocalError:
+            pass
         self.canv.draw()
     
     def on_qDoubleSpinBox_low_valueChanged(self, newvalue):

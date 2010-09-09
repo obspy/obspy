@@ -53,30 +53,30 @@ class MyMainWindow(QtGui.QMainWindow):
         main = QtGui.QWidget()
         self.setCentralWidget(main)
         # add matplotlib canvas and setup layouts to put buttons in
-        hlayout = QtGui.QVBoxLayout()
-        hlayout.addStretch(1)
-        main.setLayout(hlayout)
-        canv = QMplCanvas()
-        hlayout.addWidget(canv)
-        vlayout = QtGui.QHBoxLayout()
+        vlayout = QtGui.QVBoxLayout()
         vlayout.addStretch(1)
-        hlayout.addLayout(vlayout)
+        main.setLayout(vlayout)
+        canv = QMplCanvas()
+        vlayout.addWidget(canv)
+        hlayout = QtGui.QHBoxLayout()
+        hlayout.addStretch(1)
+        vlayout.addLayout(hlayout)
 
         # add some buttons
         self.qDoubleSpinBox_low = QtGui.QDoubleSpinBox()
         self.qDoubleSpinBox_low.setValue(self.options.low)
-        vlayout.addWidget(QtGui.QLabel("low"))
-        vlayout.addWidget(self.qDoubleSpinBox_low)
+        hlayout.addWidget(QtGui.QLabel("low"))
+        hlayout.addWidget(self.qDoubleSpinBox_low)
         
         self.qDoubleSpinBox_high = QtGui.QDoubleSpinBox()
         self.qDoubleSpinBox_high.setValue(self.options.high)
-        vlayout.addWidget(QtGui.QLabel("high"))
-        vlayout.addWidget(self.qDoubleSpinBox_high)
+        hlayout.addWidget(QtGui.QLabel("high"))
+        hlayout.addWidget(self.qDoubleSpinBox_high)
 
         self.qCheckBox_zerophase = QtGui.QCheckBox()
         self.qCheckBox_zerophase.setChecked(self.options.zerophase)
         self.qCheckBox_zerophase.setText("zerophase")
-        vlayout.addWidget(self.qCheckBox_zerophase)
+        hlayout.addWidget(self.qCheckBox_zerophase)
 
         # make matplotlib stuff available
         self.canv = canv
