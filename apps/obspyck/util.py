@@ -817,9 +817,8 @@ class SplitWriter():
         """
         for obj in self.children:
             if isinstance(obj, PyQt4.QtGui.QPlainTextEdit):
-                obj.moveCursor(PyQt4.QtGui.QTextCursor.PreviousCharacter, PyQt4.QtGui.QTextCursor.KeepAnchor)
-                obj.cut()
+                if msg == '\n':
+                    return
                 obj.appendPlainText(msg.strip())
-                obj.moveCursor(PyQt4.QtGui.QTextCursor.End)
             else:
                 obj.write(msg)
