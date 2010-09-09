@@ -23,6 +23,7 @@ import ctypes as C
 import numpy as np
 from obspy.signal.util import utlGeoKm, lib, nextpow2
 from obspy.core import AttribDict, Stream
+from scipy.integrate import cumtrapz
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
@@ -978,6 +979,105 @@ def cosine_taper(ndat, fraction=0.1):
     if errcode != 0:
         raise Exception('bbfk: C-Extension returned error %d' % errcode)
     return data
+
+
+def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
+    """
+    returns array transfer function as a function of wavenumber difference
+    :type coords: numpy.ndarray
+    :param coords: coordinates of stations in longitude and latitude in degrees
+        elevation in km, or x, y, z in km
+    :type coordsys: string
+    :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
+        to use
+    :param klim: either a float to use symmetric limits for wavenumber
+        differences or the tupel (kxmin, kxmax, kymin, kymax)
+
+    """
+    coords = get_geometry(coords, coordsys)
+    if isinstance(klim, float):
+        kxmin = - klim
+        kxmax = klim
+        kymin = - klim
+        kymax = klim
+    elif isinstance(klim, tuple):
+        if len(k) == 4:
+            kxmin = klim[0]
+            kxmax = klim[1]
+            kymin = klim[2]
+            kymax = klim[3]
+    else:
+        raise TypeError('klim must either be a float or a tuple of length 4')
+    
+    nkx = np.ceil((kxmax + kstep/10. - kxmin)/kstep)
+    nky = np.ceil((kymax + kstep/10. - kymin)/kstep)
+
+    transff = np.zeros((nkx, nky))
+    
+    for i, kx in enumerate(np.arange(kxmin, kxmax + kstep/10., kstep)):
+        for j, ky in enumerate(np.arange(kymin, kymax + kstep/10., kstep)):
+            for k in np.arange(len(coords)):
+                transff[i, j] += np.exp(complex(0., 
+                    coords[k,0] * kx + coords[k,1] * ky))
+            transff[i, j] = abs(transff[i, j])**2
+
+    transff /= transff.max()
+    return transff
+
+
+def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
+    coordsys='lonlat'):
+    """
+    returns array transfer function as a function of slowness difference and
+    frequency
+    :type coords: numpy.ndarray
+    :param coords: coordinates of stations in longitude and latitude in degrees
+        elevation in km, or x, y, z in km
+    :type coordsys: string
+    :param coordsys: valid values: 'lonlat' and 'xy', choose which coordinates
+        to use
+    :param slim: either a float to use symmetric limits for slowness
+        differences or the tupel (sxmin, sxmax, symin, symax)
+    :type fmin: double
+    :param fmin: minimum frequency in signal
+    :type fmax: double
+    :param fmin: maximum frequency in signal
+    :type fstep: double
+    :param fmin: frequency sample distance 
+    """
+    coords = get_geometry(coords, coordsys)
+    if isinstance(slim, float):
+        sxmin = - slim
+        sxmax = slim
+        symin = - slim
+        symax = slim
+    elif isinstance(klim, tuple):
+        if len(k) == 4:
+            sxmin = slim[0]
+            sxmax = slim[1]
+            symin = slim[2]
+            symax = slim[3]
+    else:
+        raise TypeError('slim must either be a float or a tuple of length 4')
+    
+    nsx = np.ceil((sxmax + sstep/10. - sxmin)/sstep)
+    nsy = np.ceil((symax + sstep/10. - symin)/sstep)
+    nf = np.ceil((fmax + fstep/10. - fmin)/fstep)
+
+    transff = np.zeros((nsx, nsy))
+
+    for i, sx in enumerate(np.arange(sxmin, sxmax + sstep/10., sstep)):
+        for j, sy in enumerate(np.arange(symin, symax + sstep/10., sstep)):
+            buff = np.zeros(nf)
+            for k, f in enumerate(np.arange(fmin, fmax + fstep/10.,fstep)):
+                for l in np.arange(len(coords)):
+                    buff[k] += np.exp(complex(0., (coords[l,0] * sx 
+                        + coords[l,1] * sy) * 2 * np.pi * f))
+                buff[k] = abs(buff[k])**2
+            transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
+
+    transff /= transff.max()
+    return transff
 
 
 if __name__ == '__main__':
