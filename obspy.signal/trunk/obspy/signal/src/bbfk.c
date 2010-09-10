@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-/* #include <mcheck.h> */
+#include "platform.h"
 
 #define TRUE 1
 #define FALSE 0

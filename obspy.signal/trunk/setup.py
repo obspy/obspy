@@ -12,7 +12,8 @@ obspy.signal installer
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-import os, numpy as np
+import numpy as np
+import os
 import platform
 
 
@@ -29,17 +30,16 @@ class MyExtension(Extension):
         Extension.__init__(self, *args, **kwargs)
         self.export_symbols = finallist(self.export_symbols)
 
-macros = []
-#if platform.system() == "Windows":
-#    # disable some warnings for MSVC
-#    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
 src = os.path.join('obspy', 'signal', 'src') + os.sep
+src_fft = os.path.join('obspy', 'signal', 'src', 'fft') + os.sep
 symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
            if s.strip() != '']
 
-# try to find platfrom independently the suffix of fftpack_lite
+# try to find platform independently the suffix of fftpack_lite
 numpy_lib_dir = os.path.dirname(np.fft.__file__)
+numpy_include_dir = os.path.join(os.path.dirname(np.core.__file__), 'include')
+
 libraries = []
 extra_link_args = []
 for ext in ('dylib', 'so', 'dll', 'pyd'):
@@ -47,26 +47,26 @@ for ext in ('dylib', 'so', 'dll', 'pyd'):
     if not os.path.exists(os.path.join(numpy_lib_dir, fftpack)):
         continue
     if platform.system() == 'Darwin':
-        extra_link_args=['-dylib_file libfftpack_lite.dylib:%s/%s' % \
+        extra_link_args = ['-dylib_file libfftpack_lite.dylib:%s/%s' % \
                          (numpy_lib_dir, fftpack)]
     else:
-        libraries.append(':'+fftpack)
+        libraries.append(':' + fftpack)
     break
 
 if platform.system() == "Windows":
     lib = MyExtension('libsignal',
-                      define_macros=macros,
-                      #library_dirs=[numpy_lib_dir],
-                      #libraries=libraries,
+                      # disable some warnings for MSVC
+                      define_macros=[('_CRT_[SECURE_NO_WARNINGS', '1')],
+                      include_dirs=[numpy_include_dir],
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
                                src + 'coordtrans.c', src + 'pk_mbaer.c',
-                               src + 'filt_util.c', src + 'arpicker.c'],
-                               #src + 'bbfk.c', src + 'runtimelink.c'],
+                               src + 'filt_util.c', src + 'arpicker.c',
+                               src + 'bbfk.c', src_fft + 'fftpack.c',
+                               src_fft + 'fftpack_litemodule.c'],
                       export_symbols=symbols,
                       extra_link_args=extra_link_args)
 else:
     lib = MyExtension('libsignal',
-                      define_macros=macros,
                       library_dirs=[numpy_lib_dir],
                       libraries=libraries,
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
