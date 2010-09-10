@@ -56,8 +56,9 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     
     >>> utlGeoKm(12.0, 48.0, 12.0, 48.0)
     (0.0, 0.0)
-    >>> utlGeoKm(12.0, 48.0, 13.0, 49.0)
-    (73.904141685064957, 111.19082623047636)
+    >>> x, y = utlGeoKm(12.0, 48.0, 13.0, 49.0)
+    >>> print round(x,7), round(y,7)
+    73.9041417 111.1908262
     
     :param orig_lon: Longitude of reference origin
     :param orig_lat: Latitude of reference origin
@@ -84,8 +85,9 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     
     >>> utlLonLat(12.0, 48.0, 0.0, 0.0)
     (12.0, 48.0)
-    >>> utlLonLat(12.0, 48.0, 73.904141685064957, 111.19082623047636)
-    (13.0, 49.0)
+    >>> lon, lat = utlLonLat(12.0, 48.0, 73.904141685064957, 111.19082623047636)
+    >>> print lon, lat
+    13.0 49.0
     
     :param orig_lon: Longitude of reference origin
     :param orig_lat: Latitude of reference origin
