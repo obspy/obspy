@@ -251,7 +251,8 @@ class _WaveformMapperClient(object):
         """
         Gets a list of station ids
 
-        :param network_id: Network code, e.g. 'BW'.
+        :param network_id: Network code, e.g. 'BW'. If not specified,
+                station_ids of all networks are returned.
         :return: List of containing station ids
         """
         # NOTHING goes ABOVE this line!
@@ -621,19 +622,19 @@ class _StationMapperClient(_BaseRESTClient):
         poles_real = paz_node.complex_pole.real_pole[:]
         poles_imag = paz_node.complex_pole.imaginary_pole[:]
         poles = zip(poles_real, poles_imag)
-        paz['poles'] = [p[0] + p[1] * 1j for p in poles]
+        paz['poles'] = [complex(p[0], p[1]) for p in poles]
         # zeros
         zeros_real = paz_node.complex_zero.real_zero[:][:]
         zeros_imag = paz_node.complex_zero.imaginary_zero[:][:]
         zeros = zip(zeros_real, zeros_imag)
-        paz['zeros'] = [p[0] + p[1] * 1j for p in zeros]
+        paz['zeros'] = [complex(z[0], z[1]) for z in zeros]
         # gain
-        paz['gain'] = paz_node.A0_normalization_factor
+        paz['gain'] = paz_node.A0_normalization_factor.pyval
         # sensitivity
-        paz['sensitivity'] = sensitivity_node.sensitivity_gain
+        paz['sensitivity'] = sensitivity_node.sensitivity_gain.pyval
         # paz['name'] = name
         if seismometer_gain:
-            paz['seismometer_gain'] = seismometer_gain_node.sensitivity_gain
+            paz['seismometer_gain'] = seismometer_gain_node.sensitivity_gain.pyval
         return paz
 
 
