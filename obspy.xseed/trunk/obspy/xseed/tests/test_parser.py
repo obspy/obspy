@@ -332,6 +332,25 @@ class ParserTestCase(unittest.TestCase):
             self.assertEqual(paz['poles'], poles[i])
             self.assertEqual(paz['sensitivity'], sensitivity[i])
             self.assertEqual(paz['seismometer_gain'], seismometer_gain[i])
+        sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
+        paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
+        result = {'gain': 1.0,
+                  'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                  'seismometer_gain': 400.0,
+                  'sensitivity': 671140000.0,
+                  'zeros': [0j, 0j, 0j]}
+        self.assertEqual(sorted(paz), sorted(result))
+        paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        result = {'gain': 60077000.0,
+                  'poles': [(-0.037004000000000002+0.037016j),
+                            (-0.037004000000000002-0.037016j),
+                            (-251.33000000000001+0j),
+                            (-131.03999999999999-467.29000000000002j),
+                            (-131.03999999999999+467.29000000000002j)],
+                  'seismometer_gain': 1500.0,
+                  'sensitivity': 2516800000.0,
+                  'zeros': [0j, 0j]}
+        self.assertEqual(sorted(paz), sorted(result))
 
     def test_createRESPFromXSEED(self):
         """

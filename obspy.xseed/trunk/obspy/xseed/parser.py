@@ -419,11 +419,11 @@ class Parser(object):
                         [complex(x, y) for x, y in zip(resp.real_zero,
                                                        resp.imaginary_zero)]
         # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha]
+        channel = [cha for cha in channels if cha.split('/')[0] == channel_id]
         if datetime:
-            start, end = [float(g) for g  in cha.split('/')[1:]]
-            channel = [cha for cha in channels if start < datetime.timestamp \
-                       and end > datetime.timestamp]
+            channel = [cha for cha in channel \
+                       if float(cha.split('/')[1]) < datetime.timestamp \
+                       and float(cha.split('/')[2]) > datetime.timestamp]
         if len(channel) != 1:
             msg = 'None or more than one channel with the given description:' \
                 + ', '.join(channel)
