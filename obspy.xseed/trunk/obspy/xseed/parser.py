@@ -419,7 +419,7 @@ class Parser(object):
                         [complex(x, y) for x, y in zip(resp.real_zero,
                                                        resp.imaginary_zero)]
         # Returns only the keys.
-        channel = [cha for cha in channels if cha.split('/')[0] == channel_id]
+        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
             channel = [cha for cha in channel \
                        if float(cha.split('/')[1]) < datetime.timestamp \

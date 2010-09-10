@@ -6,6 +6,7 @@ from __future__ import with_statement
 from StringIO import StringIO
 from lxml import etree
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import UTCDateTime
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
