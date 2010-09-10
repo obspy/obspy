@@ -353,6 +353,18 @@ class ParserTestCase(unittest.TestCase):
                   'zeros': [0j, 0j]}
         self.assertEqual(sorted(paz), sorted(result))
 
+    def test_getCoordinates(self):
+        """
+        Test extracting coordinate information
+        """
+        sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
+        paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
+        result = {'elevation': 860.0, 'latitude': 47.737166999999999,
+                  'longitude': 12.795714}
+        self.assertEqual(sorted(paz), sorted(result))
+        paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        self.assertEqual(sorted(paz), sorted(result))
+
     def test_createRESPFromXSEED(self):
         """
         Tests RESP file creation from XML-SEED.

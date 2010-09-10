@@ -430,6 +430,47 @@ class Parser(object):
             raise SEEDParserException(msg)
         return channels[channel[0]]
 
+    def getCoordinates(self, channel_id, datetime=None):
+        """
+        Return Coordinates (from blockette 52)
+        No multiple stations or locations codes in the same XSEED volume are
+        allowed.
+
+        :param channel_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
+        :param datetime: UTCDateTime of requested Coordinate information
+        :return: Dictionary containing Coordinates (latitude, longitude,
+                elevation)
+        """
+        channels = {}
+        for station in self.stations:
+            for blockette in station:
+                if blockette.id == 50:
+                    station_id = "%s.%s" % (blockette.network_code,
+                                            blockette.station_call_letters)
+                    start = blockette.start_effective_date
+                    end = blockette.end_effective_date or UTCDateTime()
+                elif blockette.id == 52:
+                    id = "%s.%s.%s/%e/%e" % (station_id,
+                                             blockette.location_identifier,
+                                             blockette.channel_identifier,
+                                             start.timestamp,
+                                             end.timestamp)
+                    channels[id] = {}
+                    channels[id]['latitude'] = blockette.latitude
+                    channels[id]['longitude'] = blockette.longitude
+                    channels[id]['elevation'] = blockette.elevation
+        # Returns only the keys.
+        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
+        if datetime:
+            channel = [cha for cha in channel \
+                       if float(cha.split('/')[1]) < datetime.timestamp \
+                       and float(cha.split('/')[2]) > datetime.timestamp]
+        if len(channel) != 1:
+            msg = 'None or more than one channel with the given description:' \
+                + ', '.join(channel)
+            raise SEEDParserException(msg)
+        return channels[channel[0]]
+
     def writeRESP(self, folder, zipped=False):
         """
         Stores channel responses into files within a given folder.
