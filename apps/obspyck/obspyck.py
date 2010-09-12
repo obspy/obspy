@@ -103,6 +103,8 @@ class ObsPyck(QtGui.QMainWindow):
         #self.keyPressEvent = self.__mpl_keyPressEvent
 
         self.fig = self.widgets.qMplCanvas.fig
+        facecolor = self.qMain.palette().color(QtGui.QPalette.Window).getRgb()
+        self.fig.set_facecolor([value / 255.0 for value in facecolor])
 
         #Define some flags, dictionaries and plotting options
         #this next flag indicates if we zoom on time or amplitude axis

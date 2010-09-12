@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Wed Sep  8 16:25:06 2010
+# Created: Sun Sep 12 14:22:08 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,13 +12,14 @@ from PyQt4 import QtCore, QtGui
 class Ui_qMainWindow_obsPyck(object):
     def setupUi(self, qMainWindow_obsPyck):
         qMainWindow_obsPyck.setObjectName("qMainWindow_obsPyck")
-        qMainWindow_obsPyck.resize(1109,756)
+        qMainWindow_obsPyck.resize(1149,756)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(qMainWindow_obsPyck.sizePolicy().hasHeightForWidth())
         qMainWindow_obsPyck.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
+        font.setFamily("Arial")
         font.setPointSize(11)
         qMainWindow_obsPyck.setFont(font)
         icon = QtGui.QIcon()
@@ -482,7 +483,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.verticalLayout_4.addLayout(self.verticalLayout)
         qMainWindow_obsPyck.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(qMainWindow_obsPyck)
-        self.menubar.setGeometry(QtCore.QRect(0,0,1109,21))
+        self.menubar.setGeometry(QtCore.QRect(0,0,1149,28))
         self.menubar.setObjectName("menubar")
         qMainWindow_obsPyck.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(qMainWindow_obsPyck)
