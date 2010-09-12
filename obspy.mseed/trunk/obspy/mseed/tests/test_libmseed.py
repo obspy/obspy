@@ -9,7 +9,7 @@ from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
-from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS
+from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS
 from obspy.mseed.libmseed import clibmseed, _MSStruct
 import copy
 import ctypes as C
@@ -247,6 +247,56 @@ class LibMSEEDTestCase(unittest.TestCase):
                     np.testing.assert_array_equal(trace_list[0][1],
                                                   new_trace_list[0][1])
                     os.remove(temp_file)
+
+    def test_readingFileformatInformation(self):
+        """
+        Tests the reading of Mini-SEED fileformat information.
+        """
+        # Build encoding strings.
+        encoding_strings = {}
+        for key, value in ENCODINGS.iteritems():
+            encoding_strings[value[0]] = key
+        __libmseed__ = LibMSEED()
+        # Test the encodings and byteorders.
+        path = os.path.join(self.path, "encoding")
+        files = ['float32_Float32_bigEndian.mseed',
+                 'float32_Float32_littleEndian.mseed',
+                 'float64_Float64_bigEndian.mseed',
+                 'float64_Float64_littleEndian.mseed',
+                 'fullASCII_bigEndian.mseed', 'fullASCII_littleEndian.mseed',
+                 'int16_INT16_bigEndian.mseed',
+                 'int16_INT16_littleEndian.mseed',
+                 'int32_INT32_bigEndian.mseed',
+                 'int32_INT32_littleEndian.mseed',
+                 'int32_Steim1_bigEndian.mseed',
+                 'int32_Steim1_littleEndian.mseed',
+                 'int32_Steim2_bigEndian.mseed',
+                 'int32_Steim2_littleEndian.mseed']
+        for file in files:
+            info = __libmseed__.getFileformatInformation(os.path.join(path,
+                                                                      file))
+            if not 'ASCII' in file:
+                encoding = file.split('_')[1].upper()
+                byteorder = file.split('_')[2].split('.')[0]
+            else:
+                encoding = 'ASCII'
+                byteorder = file.split('_')[1].split('.')[0]
+            if 'big' in byteorder:
+                byteorder = 1
+            else:
+                byteorder = 0
+            self.assertEqual(encoding_strings[encoding], info['encoding'])
+            self.assertEqual(byteorder, info['byteorder'])
+            # Also test the record length although it is equal for all files.
+            self.assertEqual(256, info['reclen'])
+        # No really good test files for the record length so just two files
+        # with known record lengths are tested.
+        info = __libmseed__.getFileformatInformation(os.path.join(self.path,
+                                                      'timingquality.mseed'))
+        self.assertEqual(info['reclen'], 512)
+        info = __libmseed__.getFileformatInformation(os.path.join(self.path,
+                                                      'steim2.mseed'))
+        self.assertEqual(info['reclen'], 4096)
 
     def test_readAndWriteFileWithGaps(self):
         """

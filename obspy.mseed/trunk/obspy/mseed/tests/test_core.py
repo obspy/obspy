@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import AttribDict, NamedTemporaryFile
 from obspy.mseed import LibMSEED
 from obspy.mseed.core import readMSEED, isMSEED
 from obspy.mseed.headers import ENCODINGS
@@ -167,7 +167,8 @@ class CoreTestCase(unittest.TestCase):
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location':'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed' : {'dataquality' : 'D'}}
+                 'mseed' : {'dataquality' : 'D', 'record_length' : 512,
+                            'encoding' : 'STEIM2', 'byteorder' : '>'}}
         stats['starttime'] = UTCDateTime(2000, 1, 1)
         st = Stream([Trace(data=data, header=stats)])
         # Write it.
@@ -181,8 +182,6 @@ class CoreTestCase(unittest.TestCase):
         # This also assures that there are no additional keys.
         for key in stats.keys():
             self.assertEqual(stats[key], stream[0].stats[key])
-        # Test the dataquality key extra.
-        self.assertEqual(stream[0].stats.mseed.dataquality, 'D')
 
     def test_writeAndReadDifferentRecordLengths(self):
         """
@@ -213,6 +212,51 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(info['record_length'], rec_len)
             # Check if filesize is a multiple of the record length.
             self.assertEqual(info['filesize'] % rec_len, 0)
+
+    def test_readingAndWritingViaTheStatsAttribute(self):
+        """
+        Tests the writing with MSEED file attributes set via the attributes in
+        trace.stats.mseed.
+        """
+        __libmseed__ = LibMSEED()
+        npts = 6000
+        np.random.seed(815) # make test reproducable
+        data = np.random.randint(-1000, 1000, npts).astype('int32')
+        # Test all possible combinations of record length, encoding and
+        # byteorder.
+        record_lengths = [256, 512, 1024, 2048, 4096, 8192]
+        byteorders = ['>', '<']
+        encodings = [value[0] for value in ENCODINGS.values()]
+        np_encodings = {}
+        for value in ENCODINGS.values():
+            np_encodings[value[0]] = value[2]
+        st = Stream([Trace(data=data)])
+        st[0].stats.mseed = AttribDict()
+        st[0].stats.mseed.dataquality = 'D'
+        # Loop over all combinations.
+        for reclen in record_lengths:
+            for order in byteorders:
+                for encoding in encodings:
+                    # Create new stream and change stats.
+                    stream = deepcopy(st)
+                    stream[0].stats.mseed.record_length = reclen
+                    stream[0].stats.mseed.byteorder = order
+                    stream[0].stats.mseed.encoding = encoding
+                    # Convert the data so that it is compatible with the
+                    # encoding.
+                    stream[0].data = np.require(stream[0].data,
+                                        np_encodings[encoding])
+                    # Write it.
+                    tempfile = NamedTemporaryFile().name
+                    stream.write(tempfile, format="MSEED")
+                    # Open the file.
+                    stream2 = read(tempfile)
+                    # Assert the stats.
+                    self.assertEqual(stream[0].stats.mseed,
+                                     stream2[0].stats.mseed)
+                    del stream
+                    del stream2
+                    os.remove(tempfile)
 
     def test_invalidRecordLength(self):
         """

@@ -573,6 +573,25 @@ class LibMSEED(object):
         del mstg
         return header
 
+    def getFileformatInformation(self, filename):
+        """
+        Reads the first record and returns all information about the Mini-SEED
+        file format is can find.
+        """
+        # Read the file.
+        f = open(filename, 'rb')
+        # Create _MSStruct instance to read the file.
+        msr = _MSStruct(filename, filepointer=True)
+        chain = msr.msr.contents
+        # Read all interesting attributes.
+        attribs = ['byteorder', 'encoding', 'reclen']
+        info = {}
+        for attr in attribs:
+            info[attr] = getattr(chain, attr)
+        # Will delete C pointers and structures.
+        del msr
+        return info
+
     def getDataQualityFlagsCount(self, filename):
         """
         Counts all data quality flags of the given MiniSEED file.

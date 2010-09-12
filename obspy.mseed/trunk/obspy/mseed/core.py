@@ -25,7 +25,7 @@ def isMSEED(filename):
 
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
-              reclen= -1, quality=False, **kwargs):
+              readMSInfo=True, reclen=-1, quality=False, **kwargs):
     """
     Reads a given Mini-SEED file and returns an Stream object.
     
@@ -44,6 +44,11 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         extracted. Providing a starttime usually results into faster reading.
     endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         See description of starttime.
+    readMSInfo : bool, optional
+        If True the byteorder, record length and the encoding of the file will
+        be read and stored in the Stream object. Only the very first record of
+        the file will be read and all following records are assumed to be the
+        same. Defaults to True.
     reclen : int, optional
         Record length in bytes of Mini-SEED file to read. This option might
         be usefull if blockette 10 is missing and thus read cannot
@@ -64,6 +69,20 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     >>> st = read("test.mseed") # doctest: +SKIP
     """
     __libmseed__ = LibMSEED()
+    # Read fileformat information if necessary.
+    if readMSInfo:
+        info = __libmseed__.getFileformatInformation(filename)
+        # Better readability.
+        if 'reclen' in info:
+            info['record_length'] = info['reclen']
+            del info['reclen']
+        if 'encoding' in info:
+            info['encoding'] = ENCODINGS[info['encoding']][0]
+        if 'byteorder' in info:
+            if info['byteorder'] == 1:
+                info['byteorder'] = '>'
+            else:
+                info['byteorder'] = '<'
     # read MiniSEED file
     if headonly:
         trace_list = __libmseed__.readMSHeader(filename, reclen=reclen)
@@ -106,6 +125,10 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
                 np.array(old_header['timing_quality'])
                 header['mseed']['data_quality_flags_count'] = \
                                       old_header['data_quality_flags']
+        # Append information if necessary.
+        if readMSInfo:
+            for key, value in info.iteritems():
+                header['mseed'][key] = value
         # Append traces.
         if headonly:
             header['npts'] = int((header['endtime'] - header['starttime']) *
@@ -153,9 +176,21 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         Controls verbosity, a value of zero will result in no diagnostic
         output.
     """
+    # Write all fileformat descriptions that might occur in the
+    # trace.stats.mseed dictionary to the kwargs if they do not exists yet.
+    # This means that the kwargs will overwrite whatever is set in the
+    # trace.stats.mseed attributes. Only check for the first trace!
+    stats = stream[0].stats
+    if hasattr(stats, 'mseed'):
+        if not 'byteorder' in kwargs and hasattr(stats.mseed, 'byteorder'):
+            kwargs['byteorder'] = stats.mseed.byteorder
+        if not 'reclen' in kwargs and hasattr(stats.mseed, 'record_length'):
+            kwargs['reclen'] = stats.mseed.record_length
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking numpy support.
     encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
+    if encoding is None and hasattr(stats, 'mseed') and hasattr(stats.mseed, 'encoding'):
+        encoding = stats.mseed.encoding
     if encoding is None:
         encoding = -1
     elif isinstance(encoding, int) and encoding in ENCODINGS:
