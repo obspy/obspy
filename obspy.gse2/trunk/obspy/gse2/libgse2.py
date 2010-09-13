@@ -405,9 +405,9 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
 
     :param tr: An ObsPy trace object
     :param paz_file: path to pazfile or file pointer
-    :param read_digitizer_gain_from_file: Experimental, if this option is
-            specified, obspy tries to read the digitizer gain from gse2
-            attached paz file
+    :param read_digitizer_gain_from_file: Even more experimental. If this
+            option is specified, it tries to read the digitizer_gain from
+            the paz_file
 
     >>> tr = obspy.core.Trace(header={'calib': 0.596})
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
