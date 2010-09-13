@@ -393,8 +393,11 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
     Attach faked paz_file to tr.stats.paz AttribDict
 
-    This is prototype code. Please use it only if you understand what is
-    going on in the source code!
+    This is experimental code, nevertheless it might be useful. Please use
+    it only if you understand what is going on in the source code! It
+    makes several assumption on the gse2 paz format which are valid for the
+    geophysical observatory in Fuerstenfeldbruck but might be wrong in
+    other cases.
 
     Attaches a paz AttribDict to trace containing poles zeros and gain. It
     is called faked because we use the overall sensitivity to store also
@@ -451,7 +454,7 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
 
     ind += i + 2
     # seismometer_gain / A0_normalization_factor [microVolt/nm/s]
-    gain = float(PAZ[ind])
+    seismometer_gain = float(PAZ[ind])
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
@@ -462,19 +465,22 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     if not found_zero:
         raise Exception("Could not remove (0,0j) zero to undo GSE integration")
 
+    # read digitizer gain from paz file or trace
+    calib = tr.stats.calib
+    if read_digitizer_gain_from_file:
+        calib = float(PAZ[ind+1].split()[-2])
+
+    # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()
+    # convert seismometer_tain from [microVolt/nm/s] to [Volt/m/s]
+    tr.stats.paz.seismometer_gain = seismometer_gain * 1000
+    # convert digitizer gain [microVolt/count] to [Volt/count]
+    tr.stats.paz.digitizer_gain = 1 / (calib * 1e-6)
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
-    # 1000 due to microVolt/nm/s  -> Volt/m/s
-    # 1e-6 due to microVolt/count -> Volt/count
-    # tr.stats.calib == digitizer_gain [microVolt/count]
-    tr.stats.paz.seismometer_gain = gain
-    tr.stats.paz.sensitivity = gain * 1000/(tr.stats.calib * 1e-6)
-    if read_digitizer_gain_from_file:
-        tr.stats.paz.digitizer_gain = float(PAZ[ind+1].split()[-2])
-        tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * 1000 / \
-                (tr.stats.calib * 1e-6)
-    # A0_normalization_factor
+    tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
+            tr.stats.paz.seismometer_gain
+    # A0_normalization_factor convention for gse2 paz in Observatory in FFB
     tr.stats.paz.gain = 1.0
 
 
