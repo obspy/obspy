@@ -389,7 +389,7 @@ def getStartAndEndTime(f):
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
 
 
-def attach_faked_paz(tr, paz_file):
+def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
     Attach faked paz_file to tr.stats.paz AttribDict
 
@@ -402,6 +402,9 @@ def attach_faked_paz(tr, paz_file):
 
     :param tr: An ObsPy trace object
     :param paz_file: path to pazfile or file pointer
+    :param read_digitizer_gain_from_file: Experimental, if this option is
+            specified, obspy tries to read the digitizer gain from gse2
+            attached paz file
 
     >>> tr = obspy.core.Trace(header={'calib': 0.596})
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
@@ -465,7 +468,12 @@ def attach_faked_paz(tr, paz_file):
     # 1000 due to microVolt/nm/s  -> Volt/m/s
     # 1e-6 due to microVolt/count -> Volt/count
     # tr.stats.calib == digitizer_gain [microVolt/count]
+    tr.stats.paz.seismometer_gain = gain
     tr.stats.paz.sensitivity = gain * 1000/(tr.stats.calib * 1e-6)
+    if read_digitizer_gain_from_file:
+        tr.stats.paz.digitizer_gain = float(PAZ[ind+1].split()[-2])
+        tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * 1000 / \
+                (tr.stats.calib * 1e-6)
     # A0_normalization_factor
     tr.stats.paz.gain = 1.0
 

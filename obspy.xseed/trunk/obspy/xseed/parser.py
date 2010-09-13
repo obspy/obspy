@@ -388,6 +388,9 @@ class Parser(object):
                     elif blockette.stage_sequence_number == 1:
                         channels[id]['seismometer_gain'] = \
                             blockette.sensitivity_gain
+                    elif blockette.stage_sequence_number == 2:
+                        channels[id]['digitizer_gain'] = \
+                            blockette.sensitivity_gain
                 elif blockette.id == 53 or blockette.id == 60:
                     if blockette.id == 60:
                         abbreviation = blockette.stages[0][1]

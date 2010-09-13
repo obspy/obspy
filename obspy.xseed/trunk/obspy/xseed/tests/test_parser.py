@@ -339,8 +339,9 @@ class ParserTestCase(unittest.TestCase):
                   'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
                   'seismometer_gain': 400.0,
                   'sensitivity': 671140000.0,
-                  'zeros': [0j, 0j, 0j]}
-        self.assertEqual(sorted(paz), sorted(result))
+                  'zeros': [0j, 0j, 0j],
+                  'digitizer_gain': 1677850.0}
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         result = {'gain': 60077000.0,
                   'poles': [(-0.037004000000000002+0.037016j),
@@ -350,8 +351,9 @@ class ParserTestCase(unittest.TestCase):
                             (-131.03999999999999+467.29000000000002j)],
                   'seismometer_gain': 1500.0,
                   'sensitivity': 2516800000.0,
-                  'zeros': [0j, 0j]}
-        self.assertEqual(sorted(paz), sorted(result))
+                  'zeros': [0j, 0j],
+                  'digitizer_gain':  1677850.0}
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_getCoordinates(self):
         """
@@ -361,9 +363,9 @@ class ParserTestCase(unittest.TestCase):
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
                   'longitude': 12.795714}
-        self.assertEqual(sorted(paz), sorted(result))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
-        self.assertEqual(sorted(paz), sorted(result))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_createRESPFromXSEED(self):
         """
