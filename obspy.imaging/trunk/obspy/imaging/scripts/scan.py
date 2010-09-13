@@ -107,8 +107,9 @@ def main():
     # station
     data = {}
     samp_int = {}
+    counter = 1
     for path in largs:
-        counter = parse_func(data, samp_int, path, 1, options.format,
+        counter = parse_func(data, samp_int, path, counter, options.format,
                              options.verbose, options.ignore_links)
     
     if not data:
