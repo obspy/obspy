@@ -195,13 +195,12 @@ class ParserTestCase(unittest.TestCase):
         """
         # Loop over all files.
         for file in self.BW_SEED_files:
-            parser = Parser()
             f = open(file, 'r')
             # Original SEED file.
             original_seed = f.read()
             f.seek(0)
             # Parse and write the data.
-            parser.read(f)
+            parser = Parser(f)
             f.close()
             new_seed = parser.getSEED()
             # compare both SEED strings

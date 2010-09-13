@@ -58,11 +58,12 @@ class Parser(object):
     @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
-    def __init__(self, filename=None, debug=False, strict=False,
+    def __init__(self, data=None, debug=False, strict=False,
                  compact=False):
         """
         Initializes the SEED parser.
 
+        :param data: Filename, XSEED/SEED string, file pointer or StringIO
         :type debug: Boolean.
         :param debug: Enables a verbose debug log during parsing of SEED file.
         :type strict: Boolean.
@@ -85,8 +86,8 @@ class Parser(object):
         self.abbreviations = None
         self.stations = []
         # if a file name is given, read it directly to the parser object
-        if filename:
-            self.read(filename)
+        if data:
+            self.read(data)
 
     def __str__(self):
         """
@@ -116,7 +117,7 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Basestring or StringIO object.
+        :type data: Filename, Basestring or StringIO object.
         :param data: Filename or XSEED/SEED string as file pointer or StringIO.
         """
         # try to transform everything into StringIO object
