@@ -19,6 +19,7 @@ import os
 import warnings
 import zipfile
 import copy
+import urllib2
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -122,7 +123,10 @@ class Parser(object):
         """
         # try to transform everything into StringIO object
         if isinstance(data, basestring):
-            if os.path.isfile(data):
+            if "://" in data:
+                # some URL
+                data = urllib2.urlopen(data).read()
+            elif os.path.isfile(data):
                 # looks like a file - read it
                 data = open(data, 'rb').read()
             # but could also be a big string with data
