@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # 2010-01-27 Moritz Beyreuther
 """
-USAGE: obspy-scan [-f MSEED] [OPTIONS] file1 file2 dir1 dir2 file3 ...
+USAGE: obspy-scan [-f FORMAT] [OPTIONS] file1 file2 dir1 dir2 file3 ...
 
 Scan all specified files/directories, determine which time spans are covered
 for which stations and plot everything in summarized in one overview plot.
