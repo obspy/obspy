@@ -29,7 +29,7 @@ import StringIO
 import numpy as np
 import obspy.core
 from obspy.core import UTCDateTime
-from obspy.core.util import c_file_p, formatScientific
+from obspy.core.util import c_file_p, formatScientific, deprecated
 
 
 # Import shared libmseed library depending on the platform.
@@ -388,28 +388,33 @@ def getStartAndEndTime(f):
     del fp, head
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
 
+@deprecated
+def attach_faked_paz(*args, **kwargs):
+    """
+    DEPRECATED. Use :func:`~obspy.gse2.libgse2.add_paz` instead.
+    """
+    return add_paz(*args, **kwargs)
 
-def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
+def add_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
-    Attach faked paz_file to tr.stats.paz AttribDict
+    Attach tr.stats.paz AttribDict to trace from GSE2 paz_file
 
-    This is experimental code, nevertheless it might be useful. Please use
-    it only if you understand what is going on in the source code! It
+    This is experimental code, nevertheless it might be useful. It
     makes several assumption on the gse2 paz format which are valid for the
     geophysical observatory in Fuerstenfeldbruck but might be wrong in
     other cases.
 
-    Attaches a paz AttribDict to trace containing poles zeros and gain. It
-    is called faked because we use the overall sensitivity to store also
-    the A0_normalization_factor. Which itself is set to 1.0.
+    Attaches to a trace a paz AttribDict containing poles zeros and gain.
+    The A0_normalization_factor is set to 1.0.
 
-    :param tr: An ObsPy trace object
+    :param tr: An ObsPy trace object containing the calib and gse2 calper
+            attributes
     :param paz_file: path to pazfile or file pointer
     :param read_digitizer_gain_from_file: Even more experimental. If this
             option is specified, it tries to read the digitizer_gain from
-            the paz_file
+            the comment line in the paz_file
 
-    >>> tr = obspy.core.Trace(header={'calib': 0.596})
+    >>> tr = obspy.core.Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
@@ -419,7 +424,7 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     ... 0.0 0.0
     ... 0.0 0.0
     ... 0.4""")
-    >>> attach_faked_paz(tr, f)
+    >>> add_paz(tr, f)
     >>> print round(tr.stats.paz.sensitivity, -4)
     671140000.0
     '''
@@ -465,17 +470,20 @@ def attach_faked_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     if not found_zero:
         raise Exception("Could not remove (0,0j) zero to undo GSE integration")
 
-    # read digitizer gain from paz file or trace
-    calib = tr.stats.calib
+    # ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/gse2001.pdf
+    # page 3
+    calibration = tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper
+    # if we read it from the commented line in the paz file, this is not
+    # the case
     if read_digitizer_gain_from_file:
-        calib = float(PAZ[ind+1].split()[-2])
+        calibration = float(PAZ[ind+1].split()[-2])
 
     # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()
     # convert seismometer_tain from [microVolt/nm/s] to [Volt/m/s]
     tr.stats.paz.seismometer_gain = seismometer_gain * 1000
     # convert digitizer gain [microVolt/count] to [Volt/count]
-    tr.stats.paz.digitizer_gain = 1 / (calib * 1e-6)
+    tr.stats.paz.digitizer_gain = 1 / (calibration * 1e-6)
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
