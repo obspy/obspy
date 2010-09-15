@@ -58,7 +58,7 @@ class Client(Telnet):
 
     Further mirrors listed at webdc.eu (restricted access only):
       * ODC Server:  bhlsa03.knmi.nl:18001
-      * INGV Server: discovery1.rm.ingv.it:18001
+      * INGV Server: eida.rm.ingv.it:18001
       * IPGP Server: geosrt2.ipgp.fr:18001
     """
     status_timeout = 1
