@@ -12,12 +12,19 @@ ArcLink client.
 from copy import deepcopy
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
+from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString, \
+    deprecated
 from telnetlib import Telnet
 import os
 import sys
 import time
 import warnings
+
+
+ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
+ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
+INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
+INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 
 class ArcLinkException(Exception):
@@ -183,7 +190,10 @@ class Client(Telnet):
         if buf != "END" or len(data) != length:
             raise Exception('Wrong length!')
         if self.debug:
-            print "%d bytes of data read" % len(data)
+            if data.startswith('<?xml'):
+                print data
+            else:
+                print "%d bytes of data read" % len(data)
         self._writeln('PURGE %d' % req_id)
         self._bye()
         return data
@@ -260,33 +270,26 @@ class Client(Telnet):
                                  (end_datetime + 1).formatArcLink(),
                                  network_id, station_id)
         # fetch plain XML document
-        xml_doc = self._fetch(rtype, [rdata])
-        if self.debug:
-            print
-            print "CONTENT:"
-            print xml_doc
+        result = self._fetch(rtype, [rdata])
+        # parse XML document
+        xml_doc = etree.fromstring(result)
         # get routing version
-        if "http://geofon.gfz-potsdam.de/ns/Routing/1.0" in xml_doc:
-            version = 1.0
-        elif "http://geofon.gfz-potsdam.de/ns/routing/0.1" in xml_doc:
-            version = 0.1
+        if ROUTING_NS_1_0 in xml_doc.nsmap.values():
+            xml_ns = ROUTING_NS_1_0
+        elif ROUTING_NS_0_1 in xml_doc.nsmap.values():
+            xml_ns = ROUTING_NS_0_1
         else:
-            raise ArcLinkException("Unknown routing version")
-        # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc)
+            msg = "Unknown routing namespace %s"
+            raise ArcLinkException(msg % xml_doc.nsmap)
         # convert into dictionary
         result = {}
-        for route in xml_doc.getchildren():
-            if 'route' not in route.tag:
-                continue
-            if version == 0.1:
+        for route in xml_doc.xpath('ns0:route', namespaces={'ns0':xml_ns}):
+            if xml_ns == ROUTING_NS_0_1:
                 id = route.get('net_code') + '.' + route.get('sta_code')
             else:
                 id = route.get('networkCode') + '.' + route.get('stationCode')
             result[id] = []
-            for node in route.getchildren():
-                if 'arclink' not in node.tag:
-                    continue
+            for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
                 temp = {}
                 temp['priority'] = int(node.get('priority'))
                 temp['start'] = UTCDateTime(node.get('start'))
@@ -559,6 +562,95 @@ class Client(Telnet):
         fh.write(data)
         fh.close()
 
+    def getInventory(self, network_id, station_id='*',
+                     start_datetime=UTCDateTime(), end_datetime=UTCDateTime()):
+        """
+        """
+        rtype = 'REQUEST INVENTORY '
+        # adding one second to start and end time to ensure right date times
+        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                 (end_datetime + 1).formatArcLink(),
+                                 network_id, station_id)
+        # fetch plain XML document
+        result = self._fetch(rtype, [rdata])
+        # parse XML document
+        xml_doc = etree.fromstring(result)
+        # get routing version
+        if INVENTORY_NS_1_0 in xml_doc.nsmap.values():
+            xml_ns = INVENTORY_NS_1_0
+        elif INVENTORY_NS_0_2 in xml_doc.nsmap.values():
+            xml_ns = INVENTORY_NS_0_2
+        else:
+            msg = "Unknown inventory namespace %s"
+            raise ArcLinkException(msg % xml_doc.nsmap)
+        # convert into dictionary
+        data = AttribDict()
+        for network in xml_doc.xpath('ns:network', namespaces={'ns':xml_ns}):
+            temp = AttribDict()
+            # strings
+            for key in ['archive', 'code', 'description', 'institutions',
+                        'net_class', 'region', 'type']:
+                temp[key] = network.get(key, '')
+            # restricted
+            if network.get('restricted', '') == 'false':
+                temp['restricted'] = False
+            else:
+                temp['restricted'] = True
+            # date / times
+            try:
+                temp.start = UTCDateTime(network.get('start'))
+            except:
+                temp.start = None
+            try:
+                temp.end = UTCDateTime(network.get('end'))
+            except:
+                temp.end = None
+            # remark
+            try:
+                temp.remark = network.xpath('ns:remark',
+                    namespaces={'ns':xml_ns})[0].text or ''
+            except:
+                temp.remark = ''
+            # stations
+            temp.stations = AttribDict()
+            for station in network.xpath('ns0:station',
+                                         namespaces={'ns0':xml_ns}):
+                sta = AttribDict()
+                # strings
+                for key in ['code', 'description', 'affiliation', 'country',
+                            'place', 'restricted', 'archive_net']:
+                    sta[key] = station.get(key, '')
+                # floats
+                for key in ['elevation', 'longitude', 'depth', 'latitude']:
+                    try:
+                        sta[key] = float(station.get(key))
+                    except:
+                        sta[key] = None
+                # restricted
+                if station.get('restricted', '') == 'false':
+                    sta['restricted'] = False
+                else:
+                    sta['restricted'] = True
+                # date / times
+                try:
+                    sta.start = UTCDateTime(station.get('start'))
+                except:
+                    sta.start = None
+                try:
+                    sta.end = UTCDateTime(station.get('end'))
+                except:
+                    sta.end = None
+                # remark
+                try:
+                    sta.remark = station.xpath('ns:remark',
+                        namespaces={'ns':xml_ns})[0].text or ''
+                except:
+                    sta.remark = ''
+                temp.stations[sta.code] = sta
+            data[temp.code] = temp
+        return data
+
+    @deprecated
     def getNetworks(self, start_datetime, end_datetime):
         """
         Returns a dictionary of available networks within the given time span.
@@ -570,31 +662,9 @@ class Client(Telnet):
         :param end_datetime: end time as L{obspy.UTCDateTime} object.
         :return: dictionary of network data.
         """
-        rtype = 'REQUEST INVENTORY'
-        rdata = "%s %s *" % (start_datetime.formatArcLink(),
-                             end_datetime.formatArcLink())
-        # fetch plain XML document
-        xml_doc = self._fetch(rtype, [rdata])
-        # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-        data = AttribDict()
-        if not xml_doc.countchildren():
-            return data
-        for network in xml_doc.network:
-            # XXX: not secure - map it manually
-            temp = AttribDict(dict(network.attrib))
-            temp['remark'] = str(network.remark)
-            try:
-                temp.start = UTCDateTime(temp.start)
-            except:
-                temp.start = None
-            try:
-                temp.end = UTCDateTime(temp.end)
-            except:
-                temp.end = None
-            data[network.attrib['code']] = temp
-        return data
+        return self.getInventory('*', '*', start_datetime, end_datetime)
 
+    @deprecated
     def getStations(self, start_datetime, end_datetime, network_id):
         """
         Returns a dictionary of available stations in the given network(s).
@@ -610,38 +680,5 @@ class Client(Telnet):
         :param network_id: Network(s) to list stations of
         :return: dictionary of station data.
         """
-        rtype = 'REQUEST INVENTORY'
-        rdata = []
-        base_str = "%s %s %%s *" % (start_datetime.formatArcLink(),
-                                    end_datetime.formatArcLink())
-        if isinstance(network_id, list):
-            for net in network_id:
-                rdata.append(base_str % net)
-        else:
-            rdata.append(base_str % network_id)
-        # fetch plain XML document
-        xml_doc = self._fetch(rtype, rdata)
-        # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-        data = []
-        if not xml_doc.countchildren():
-            return data
-        for network in xml_doc.network:
-            for station in network.station:
-                # XXX: not secure - map it manually
-                temp = AttribDict(dict(station.attrib))
-                temp['remark'] = str(station.remark)
-                try:
-                    temp.start = UTCDateTime(temp.start)
-                except:
-                    temp.start = None
-                try:
-                    temp.end = UTCDateTime(temp.end)
-                except:
-                    temp.end = None
-                #data[station.attrib['code']] = temp
-                for key in ['elevation', 'longitude', 'latitude', 'depth']:
-                    if key in temp:
-                        temp[key] = float(temp[key])
-                data.append(temp)
-        return data
+        data = self.getInventory(network_id, '*', start_datetime, end_datetime)
+        return data[network_id].stations.values()
