@@ -391,11 +391,11 @@ def getStartAndEndTime(f):
 @deprecated
 def attach_faked_paz(*args, **kwargs):
     """
-    DEPRECATED. Use :func:`~obspy.gse2.libgse2.add_paz` instead.
+    DEPRECATED. Use :func:`~obspy.gse2.libgse2.attach_paz` instead.
     """
-    return add_paz(*args, **kwargs)
+    return attach_paz(*args, **kwargs)
 
-def add_paz(tr, paz_file, read_digitizer_gain_from_file=False):
+def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
     Attach tr.stats.paz AttribDict to trace from GSE2 paz_file
 
@@ -424,7 +424,7 @@ def add_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     ... 0.0 0.0
     ... 0.0 0.0
     ... 0.4""")
-    >>> add_paz(tr, f)
+    >>> attach_paz(tr, f)
     >>> print round(tr.stats.paz.sensitivity, -4)
     671140000.0
     '''
