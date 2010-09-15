@@ -150,15 +150,20 @@ class Client(Telnet):
         #           message is shown in STATUS response)
         #     = SIZE <n> - data size. In case of volume, it must be the 
         #           exact size of downloadable product.
-        if 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
+        if 'status="NODATA"' in xml_doc:
+            # no data
+            self._writeln('PURGE %d' % req_id)
+            self._bye()
+            raise ArcLinkException('No data (e.g. wrong route)')
+        elif 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
             # error or no data
             self._writeln('PURGE %d' % req_id)
             self._bye()
             # parse XML for error message
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
-        # XXX: safeguard as long not all status messages are covered 
-        if '<line content' not in xml_doc:
+        elif '<line content' not in xml_doc:
+            # XXX: safeguard as long not all status messages are covered 
             self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No content')
@@ -228,6 +233,62 @@ class Client(Telnet):
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
+
+    def getRouting(self, network_id, station_id, start_datetime, end_datetime):
+        """
+        Get responsible host addresses for given network/stations from ArcLink.
+
+        :type network_id: string
+        :param network_id: Network code, e.g. 'BW'.
+        :type station_id: string
+        :param station_id: Station code, e.g. 'MANZ'.
+        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param start_datetime: Start date and time.
+        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_datetime: End date and time.
+
+        :returns: dict of host names.
+        """
+        rtype = 'REQUEST ROUTING '
+        # adding one second to start and end time to ensure right date times
+        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                 (end_datetime + 1).formatArcLink(),
+                                 network_id, station_id)
+        # fetch plain XML document
+        xml_doc = self._fetch(rtype, [rdata])
+        if self.debug:
+            print
+            print "CONTENT:"
+            print xml_doc
+        # get routing version
+        if "http://geofon.gfz-potsdam.de/ns/Routing/1.0" in xml_doc:
+            version = 1.0
+        elif "http://geofon.gfz-potsdam.de/ns/routing/0.1" in xml_doc:
+            version = 0.1
+        else:
+            raise ArcLinkException("Unknown routing version")
+        # generate object by using XML schema
+        xml_doc = objectify.fromstring(xml_doc)
+        # convert into dictionary
+        result = {}
+        for route in xml_doc.route:
+            if version == 0.1:
+                id = route.get('net_code') + '.' + route.get('sta_code')
+            else:
+                id = route.get('networkCode') + '.' + route.get('stationCode')
+            result[id] = []
+            for node in route.arclink:
+                temp = {}
+                temp['priority'] = int(node.get('priority'))
+                temp['start'] = UTCDateTime(node.get('start'))
+                if node.get('end'):
+                    temp['end'] = UTCDateTime(node.get('end'))
+                else:
+                    temp['end'] = None
+                temp['host'] = node.get('address').split(':')[0].strip()
+                temp['port'] = int(node.get('address').split(':')[1].strip())
+                result[id].append(temp)
+        return result
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime, format="MSEED",

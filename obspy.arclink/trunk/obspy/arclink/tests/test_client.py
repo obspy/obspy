@@ -45,6 +45,38 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(trace2.stats.location, '')
         self.assertEquals(trace2.stats.channel, 'EHE')
 
+    def test_getRouting(self):
+        """
+        Requesting a node which is not responsible should use routing.
+        """
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        # BW network via webdc:18001
+        client = Client(host="webdc.eu", port=18001)
+        results = client.getRouting('BW', 'RJOB', start, end)
+        self.assertTrue('BW.' in results)
+        self.assertEquals(len(results['BW.']), 1)
+        self.assertEquals(results['BW.'][0]['priority'], 1)
+        self.assertEquals(results['BW.'][0]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][0]['end'], None)
+        self.assertEquals(results['BW.'][0]['host'], 'webdc.eu')
+        self.assertEquals(results['BW.'][0]['port'], 18001)
+        # BW network via webdc:18002
+        client = Client(host="webdc.eu", port=18002)
+        results = client.getRouting('BW', 'MANZ', start, end)
+        self.assertTrue('BW.' in results)
+        self.assertEquals(len(results['BW.']), 2)
+        self.assertEquals(results['BW.'][0]['priority'], 2)
+        self.assertEquals(results['BW.'][0]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][0]['end'], None)
+        self.assertEquals(results['BW.'][0]['host'], 'webdc.eu')
+        self.assertEquals(results['BW.'][0]['port'], 18002)
+        self.assertEquals(results['BW.'][1]['priority'], 1)
+        self.assertEquals(results['BW.'][1]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][1]['end'], None)
+        self.assertEquals(results['BW.'][1]['host'], 'erde.geophysik.uni-muenchen.de')
+        self.assertEquals(results['BW.'][1]['port'], 18001)
+
     def test_getWaveform_with_Metadata(self):
         """
         """
@@ -52,7 +84,7 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # example 1
         t = UTCDateTime("2010-08-01T12:00:00")
-        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t+60, getPAZ=True,
+        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60, getPAZ=True,
                                 getCoordinates=True)
         statsdict = st[0].stats.__dict__
         statsdict.pop("endtime")
@@ -68,27 +100,27 @@ class ClientTestCase(unittest.TestCase):
                    'network': 'BW',
                    'npts': 12001,
                    'paz': AttribDict({
-                           'poles': [(-0.037004000000000002+0.037016j),
-                                     (-0.037004000000000002-0.037016j),
-                                     (-251.33000000000001+0j),
-                                     (-131.03999999999999-467.29000000000002j),
-                                     (-131.03999999999999+467.29000000000002j)],
+                           'poles': [(-0.037004000000000002 + 0.037016j),
+                                     (-0.037004000000000002 - 0.037016j),
+                                     (-251.33000000000001 + 0j),
+                                     (-131.03999999999999 - 467.29000000000002j),
+                                     (-131.03999999999999 + 467.29000000000002j)],
                            'sensitivity': 2516778600.0, 'zeros': [0j, 0j],
                            'gain': 60077000.0}),
                    'sampling_rate': 200.0,
                    'starttime': UTCDateTime(2010, 8, 1, 12, 0),
                    'station': 'RJOB'}
         self.assertEquals(statsdict, results)
-        st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t+60, getPAZ=True,
+        st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60, getPAZ=True,
                                 getCoordinates=True)
         statsdict = st[0].stats.__dict__
         statsdict.pop("endtime")
         statsdict.pop("delta")
         results = {'network': 'CZ', '_format': 'MSEED',
-                'paz': AttribDict({'poles': [(-0.037004000000000002+0.037016j),
-                (-0.037004000000000002-0.037016j), (-251.33000000000001+0j),
-                (-131.03999999999999-467.29000000000002j),
-                (-131.03999999999999+467.29000000000002j)],
+                'paz': AttribDict({'poles': [(-0.037004000000000002 + 0.037016j),
+                (-0.037004000000000002 - 0.037016j), (-251.33000000000001 + 0j),
+                (-131.03999999999999 - 467.29000000000002j),
+                (-131.03999999999999 + 467.29000000000002j)],
                 'sensitivity': 8200000000.0, 'zeros': [0j, 0j],
                 'gain': 60077000.0}),
                 'mseed': AttribDict({'dataquality': 'D'}),
