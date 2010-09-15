@@ -9,6 +9,7 @@ ArcLink client.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from copy import deepcopy
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
@@ -17,7 +18,6 @@ import os
 import sys
 import time
 import warnings
-from copy import deepcopy
 
 
 class ArcLinkException(Exception):
@@ -48,6 +48,8 @@ class Client(Telnet):
         person (default is an 'Anonymous').
     debug : boolean, optional
         Enables verbose output of the connection handling (default is False). 
+    command_delay : float, optional
+        Delay between each command send to the ArcLink server (default is 0). 
 
     Notes
     -----
@@ -66,12 +68,13 @@ class Client(Telnet):
 
     def __init__(self, host="webdc.eu", port=18001, timeout=20,
                  user="Anonymous", password="", institution="Anonymous",
-                 debug=False):
+                 debug=False, command_delay=0):
         """
         """
         self.user = user
         self.password = password
         self.institution = institution
+        self.command_delay = command_delay
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
@@ -89,6 +92,8 @@ class Client(Telnet):
         file.close()
 
     def _writeln(self, buffer):
+        if self.command_delay:
+            time.sleep(self.command_delay)
         Telnet.write(self, buffer + '\n')
         if self.debug:
             print '>>> ' + buffer
@@ -271,13 +276,17 @@ class Client(Telnet):
         xml_doc = objectify.fromstring(xml_doc)
         # convert into dictionary
         result = {}
-        for route in xml_doc.route:
+        for route in xml_doc.getchildren():
+            if 'route' not in route.tag:
+                continue
             if version == 0.1:
                 id = route.get('net_code') + '.' + route.get('sta_code')
             else:
                 id = route.get('networkCode') + '.' + route.get('stationCode')
             result[id] = []
-            for node in route.arclink:
+            for node in route.getchildren():
+                if 'arclink' not in node.tag:
+                    continue
                 temp = {}
                 temp['priority'] = int(node.get('priority'))
                 temp['start'] = UTCDateTime(node.get('start'))
