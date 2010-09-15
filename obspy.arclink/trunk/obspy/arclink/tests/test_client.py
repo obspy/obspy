@@ -45,6 +45,21 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(trace2.stats.location, '')
         self.assertEquals(trace2.stats.channel, 'EHE')
 
+    def test_delayedRequest(self):
+        """
+        """
+        client = Client(host='webdc.eu', port=18002, command_delay=0.1)
+        start = UTCDateTime(2010, 1, 1)
+        end = start + 100
+        # getWaveform with 0.1 delay 
+        stream = client.getWaveform('BW', 'MANZ', '', 'EHE', start, end)
+        self.assertEquals(len(stream), 1)
+        # getRouting with 0.1 delay 
+        results = client.getRouting('BW', '*', start, end)
+        self.assertEquals(len(results), 1)
+        self.assertTrue(results.has_key('BW.'))
+        self.assertEquals(len(results['BW.']), 2)
+
     def test_getRouting(self):
         """
         Requesting a node which is not responsible should use routing.
@@ -57,7 +72,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('BW.' in results)
         self.assertEquals(len(results['BW.']), 1)
         self.assertEquals(results['BW.'][0]['priority'], 1)
-        self.assertEquals(results['BW.'][0]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][0]['start'],
+                          UTCDateTime('1980-01-01T00:00:00.0000Z'))
         self.assertEquals(results['BW.'][0]['end'], None)
         self.assertEquals(results['BW.'][0]['host'], 'webdc.eu')
         self.assertEquals(results['BW.'][0]['port'], 18001)
@@ -67,15 +83,22 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('BW.' in results)
         self.assertEquals(len(results['BW.']), 2)
         self.assertEquals(results['BW.'][0]['priority'], 2)
-        self.assertEquals(results['BW.'][0]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][0]['start'],
+                          UTCDateTime('1980-01-01T00:00:00.0000Z'))
         self.assertEquals(results['BW.'][0]['end'], None)
         self.assertEquals(results['BW.'][0]['host'], 'webdc.eu')
         self.assertEquals(results['BW.'][0]['port'], 18002)
         self.assertEquals(results['BW.'][1]['priority'], 1)
-        self.assertEquals(results['BW.'][1]['start'], UTCDateTime('1980-01-01T00:00:00.0000Z'))
+        self.assertEquals(results['BW.'][1]['start'],
+                          UTCDateTime('1980-01-01T00:00:00.0000Z'))
         self.assertEquals(results['BW.'][1]['end'], None)
-        self.assertEquals(results['BW.'][1]['host'], 'erde.geophysik.uni-muenchen.de')
+        self.assertEquals(results['BW.'][1]['host'],
+                          'erde.geophysik.uni-muenchen.de')
         self.assertEquals(results['BW.'][1]['port'], 18001)
+        # IV network has no routing entry
+        client = Client(host="webdc.eu", port=18001)
+        results = client.getRouting('IV', '', start, end)
+        self.assertEquals(results, {})
 
     def test_getWaveform_with_Metadata(self):
         """
@@ -84,52 +107,69 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # example 1
         t = UTCDateTime("2010-08-01T12:00:00")
-        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60, getPAZ=True,
-                                getCoordinates=True)
+        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60,
+                                getPAZ=True, getCoordinates=True)
         statsdict = st[0].stats.__dict__
         statsdict.pop("endtime")
         statsdict.pop("delta")
-        results = {'_format': 'MSEED',
-                   'calib': 1.0,
-                   'channel': 'EHZ',
-                   'coordinates': AttribDict({'latitude': 47.737166999999999,
-                                              'elevation': 860.0,
-                                              'longitude': 12.795714}),
-                   'location': '',
-                   'mseed': AttribDict({'dataquality': 'D'}),
-                   'network': 'BW',
-                   'npts': 12001,
-                   'paz': AttribDict({
-                           'poles': [(-0.037004000000000002 + 0.037016j),
-                                     (-0.037004000000000002 - 0.037016j),
-                                     (-251.33000000000001 + 0j),
-                                     (-131.03999999999999 - 467.29000000000002j),
-                                     (-131.03999999999999 + 467.29000000000002j)],
-                           'sensitivity': 2516778600.0, 'zeros': [0j, 0j],
-                           'gain': 60077000.0}),
-                   'sampling_rate': 200.0,
-                   'starttime': UTCDateTime(2010, 8, 1, 12, 0),
-                   'station': 'RJOB'}
-        self.assertEquals(statsdict, results)
-        st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60, getPAZ=True,
-                                getCoordinates=True)
-        statsdict = st[0].stats.__dict__
-        statsdict.pop("endtime")
-        statsdict.pop("delta")
-        results = {'network': 'CZ', '_format': 'MSEED',
-                'paz': AttribDict({'poles': [(-0.037004000000000002 + 0.037016j),
-                (-0.037004000000000002 - 0.037016j), (-251.33000000000001 + 0j),
-                (-131.03999999999999 - 467.29000000000002j),
-                (-131.03999999999999 + 467.29000000000002j)],
-                'sensitivity': 8200000000.0, 'zeros': [0j, 0j],
+        results = {
+            'network': 'BW',
+            '_format': 'MSEED',
+            'paz': AttribDict({
+                'poles': [(-0.037004000000000002 + 0.037016j),
+                          (-0.037004000000000002 - 0.037016j),
+                          (-251.33000000000001 + 0j),
+                          (-131.03999999999999 - 467.29000000000002j),
+                          (-131.03999999999999 + 467.29000000000002j)],
+                'sensitivity': 2516778600.0,
+                'zeros': [0j, 0j],
                 'gain': 60077000.0}),
-                'mseed': AttribDict({'dataquality': 'D'}),
-                'coordinates': AttribDict({'latitude': 49.308399999999999,
-                'elevation': 470.0, 'longitude': 16.593299999999999}),
-                'station': 'VRAC',
-                'location': '',
-                'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
-                'npts': 2401, 'calib': 1.0, 'sampling_rate': 40.0, 'channel': 'BHZ'}
+            'mseed': AttribDict({'dataquality': 'D',
+                                 'record_length': 512,
+                                 'encoding': 'STEIM1',
+                                 'byteorder': '>'}),
+            'coordinates': AttribDict({'latitude': 47.737166999999999,
+                                       'elevation': 860.0,
+                                       'longitude': 12.795714}),
+            'station': 'RJOB',
+            'location': '',
+            'starttime': UTCDateTime(2010, 8, 1, 12, 0),
+            'npts': 546,
+            'calib': 1.0,
+            'sampling_rate': 200.0,
+            'channel': 'EHZ'}
+        self.assertEquals(statsdict, results)
+        st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60,
+                                getPAZ=True, getCoordinates=True)
+        statsdict = st[0].stats.__dict__
+        statsdict.pop("endtime")
+        statsdict.pop("delta")
+        results = {
+            'network': 'CZ',
+            '_format': 'MSEED',
+            'paz': AttribDict({
+                'poles': [(-0.037004000000000002 + 0.037016j),
+                          (-0.037004000000000002 - 0.037016j),
+                          (-251.33000000000001 + 0j),
+                          (-131.03999999999999 - 467.29000000000002j),
+                          (-131.03999999999999 + 467.29000000000002j)],
+                'sensitivity': 8200000000.0,
+                'zeros': [0j, 0j],
+                'gain': 60077000.0}),
+            'mseed': AttribDict({'dataquality': 'D',
+                                 'record_length': 512,
+                                 'encoding': 'STEIM1',
+                                 'byteorder': '>'}),
+            'coordinates': AttribDict({'latitude': 49.308399999999999,
+                                       'elevation': 470.0,
+                                       'longitude': 16.593299999999999}),
+            'station': 'VRAC',
+            'location': '',
+            'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
+            'npts': 2401,
+            'calib': 1.0,
+            'sampling_rate': 40.0,
+            'channel': 'BHZ'}
         self.assertEquals(statsdict, results)
 
     def test_getNotExistingWaveform(self):

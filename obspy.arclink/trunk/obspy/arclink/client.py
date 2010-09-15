@@ -379,17 +379,20 @@ class Client(Telnet):
             for tr in stream:
                 cha = tr.stats.channel
                 # XXX should add a check like metadata_check in seishub.client
-                metadata = self.getMetadata(network_id, station_id, location_id,
-                           cha, start_datetime, end_datetime, getPAZ=getPAZ,
-                           getCoordinates=getCoordinates)
+                metadata = self.getMetadata(network_id, station_id,
+                                            location_id, cha, start_datetime,
+                                            end_datetime, getPAZ=getPAZ,
+                                            getCoordinates=getCoordinates)
                 tr.stats['paz'] = deepcopy(metadata['paz'])
         if getCoordinates:
             # reuse metadata fetched for paz or else fetch it
             metadata = locals().get('metadata')
             if not metadata:
-                metadata = self.getMetadata(network_id, station_id, location_id,
-                           channel_id, start_datetime, end_datetime, getPAZ=getPAZ,
-                           getCoordinates=getCoordinates)
+                metadata = self.getMetadata(network_id, station_id,
+                                            location_id, channel_id,
+                                            start_datetime, end_datetime,
+                                            getPAZ=getPAZ,
+                                            getCoordinates=getCoordinates)
             for tr in stream:
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
