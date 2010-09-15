@@ -140,8 +140,6 @@ def main():
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(ids)
     fig.autofmt_xdate() #rotate date
-    ax.set_title(" --- ".join(x.strftime('%Y%m%d %H:%M:%S')
-                              for x in num2date(ax.get_xlim())))
     show()
     sys.stdout.write('\n')
 
