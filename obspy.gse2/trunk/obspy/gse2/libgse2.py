@@ -458,7 +458,8 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
                                  float(PAZ[i+1+ind][8:])))
 
     ind += i + 2
-    # seismometer_gain / A0_normalization_factor [microVolt/nm/s]
+    # in the observatory this is the seismometer gain [muVolt/nm/s]
+    # the A0_normalization_factor is hardcoded to 1.0
     seismometer_gain = float(PAZ[ind])
 
     # remove zero at 0,0j to undo integration in GSE PAZ
@@ -480,10 +481,10 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
 
     # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()
-    # convert seismometer_tain from [microVolt/nm/s] to [Volt/m/s]
-    tr.stats.paz.seismometer_gain = seismometer_gain * 1000
-    # convert digitizer gain [microVolt/count] to [Volt/count]
-    tr.stats.paz.digitizer_gain = 1 / (calibration * 1e-6)
+    # convert seismometer gain from [muVolt/nm/s] to [Volt/m/s]
+    tr.stats.paz.seismometer_gain = seismometer_gain * 1e3
+    # convert digitizer gain [count/muVolt] to [count/Volt]
+    tr.stats.paz.digitizer_gain = 1e6 / calibration
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
