@@ -102,6 +102,12 @@ class RotateTestCase(unittest.TestCase):
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
+    def test_gps2DistAzimuthBUG150(self):
+        """
+        Test case for #150
+        """
+        res = gps2DistAzimuth(0, 0, 0, 180)
+        self.assertEqual(res, (20004314.5, 0.0, 0.0))
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')
