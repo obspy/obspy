@@ -352,19 +352,44 @@ class ParserTestCase(unittest.TestCase):
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
                   'digitizer_gain':  1677850.0}
-        self.assertEqual(paz, result)
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+
+    def test_getPAZFromXSEED(self):
+        """
+        Get PAZ from XSEED file, testcase for #146
+        """
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        sp1 = Parser(filename)
+        sp2 = Parser(sp1.getXSEED())
+        paz = sp2.getPAZ('EHE')
+        result = {'gain': +1.00000e+00,
+                  'zeros': [0j, 0j, 0j],
+                  'poles': [(-4.44400e+00 + 4.44400e+00j),
+                             (-4.44400e+00 - 4.44400e+00j),
+                             (-1.08300e+00 + 0.00000e+00j)],
+                  'sensitivity': +6.71140E+08,
+                  'seismometer_gain': 4.00000E+02,
+                  'digitizer_gain': 1677850.0}
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_getCoordinates(self):
         """
-        Test extracting coordinate information
+        Test extracting coordinates for seed and xseed (including #146)
         """
+        # seed
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
-        paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
                   'longitude': 12.795714}
-        self.assertEqual(paz, result)
+        paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
-        self.assertEqual(paz, result)
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        # xseed
+        sp2 = Parser(sp.getXSEED())
+        paz = sp2.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        paz = sp2.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_createRESPFromXSEED(self):
         """

@@ -139,9 +139,11 @@ class Parser(object):
         if first_byte.isdigit():
             # SEED volumes starts with a number
             self._parseSEED(data)
+            self._format = 'SEED'
         elif first_byte == '<':
             # XML files should always starts with an '<'
             self._parseXSEED(data)
+            self._format = 'XSEED'
         else:
             raise IOError
 
@@ -371,6 +373,9 @@ class Parser(object):
             sensitivity, the gain in the dictionary is the A0 normalization
             constant
         """
+        # parse blockettes if XSEED
+        if self._format == 'XSEED':
+            self._xseed2seed()
         channels = {}
         for station in self.stations:
             for blockette in station:
@@ -449,6 +454,9 @@ class Parser(object):
         :return: Dictionary containing Coordinates (latitude, longitude,
                 elevation)
         """
+        # parse blockettes if XSEED
+        if self._format == 'XSEED':
+            self._xseed2seed()
         channels = {}
         for station in self.stations:
             for blockette in station:
@@ -975,3 +983,10 @@ class Parser(object):
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
+
+    def _xseed2seed(self):
+        """
+        Update blockette structure. Ugly writes as seed string and reads it
+        again.
+        """
+        self.__init__(self.getSEED())
