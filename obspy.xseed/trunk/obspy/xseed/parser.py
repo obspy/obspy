@@ -373,8 +373,8 @@ class Parser(object):
             sensitivity, the gain in the dictionary is the A0 normalization
             constant
         """
-        # parse blockettes if XSEED
-        if self._format == 'XSEED':
+        # parse blockettes if not SEED
+        if self._format != 'SEED':
             self._xseed2seed()
         channels = {}
         for station in self.stations:
@@ -454,8 +454,8 @@ class Parser(object):
         :return: Dictionary containing Coordinates (latitude, longitude,
                 elevation)
         """
-        # parse blockettes if XSEED
-        if self._format == 'XSEED':
+        # parse blockettes if not SEED
+        if self._format != 'SEED':
             self._xseed2seed()
         channels = {}
         for station in self.stations:
