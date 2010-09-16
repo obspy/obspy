@@ -70,7 +70,7 @@ class Client(Telnet):
       * INGV Server: eida.rm.ingv.it:18001
       * IPGP Server: geosrt2.ipgp.fr:18001
     """
-    status_timeout = 1
+    status_timeout = 2
     status_delay = 0.1
 
     def __init__(self, host="webdc.eu", port=18001, timeout=20,
@@ -243,64 +243,16 @@ class Client(Telnet):
                                        network_id, station_id, channel_id,
                                        location_id)
         data = self._fetch(rtype, [rdata])
-        if compressed:
+        if data and compressed:
             data = bz2.decompress(data)
-        fh = open(filename, "wb")
-        fh.write(data)
-        fh.close()
-
-    def getRouting(self, network_id, station_id, start_datetime, end_datetime):
-        """
-        Get responsible host addresses for given network/stations from ArcLink.
-
-        :type network_id: string
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: string
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param start_datetime: Start date and time.
-        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_datetime: End date and time.
-
-        :returns: dict of host names.
-        """
-        rtype = 'REQUEST ROUTING '
-        # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                 (end_datetime + 1).formatArcLink(),
-                                 network_id, station_id)
-        # fetch plain XML document
-        result = self._fetch(rtype, [rdata])
-        # parse XML document
-        xml_doc = etree.fromstring(result)
-        # get routing version
-        if ROUTING_NS_1_0 in xml_doc.nsmap.values():
-            xml_ns = ROUTING_NS_1_0
-        elif ROUTING_NS_0_1 in xml_doc.nsmap.values():
-            xml_ns = ROUTING_NS_0_1
+        # create file handler if a file name is given
+        if isinstance(filename, basestring):
+            fh = open(filename, "wb")
         else:
-            msg = "Unknown routing namespace %s"
-            raise ArcLinkException(msg % xml_doc.nsmap)
-        # convert into dictionary
-        result = {}
-        for route in xml_doc.xpath('ns0:route', namespaces={'ns0':xml_ns}):
-            if xml_ns == ROUTING_NS_0_1:
-                id = route.get('net_code') + '.' + route.get('sta_code')
-            else:
-                id = route.get('networkCode') + '.' + route.get('stationCode')
-            result[id] = []
-            for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
-                temp = {}
-                temp['priority'] = int(node.get('priority'))
-                temp['start'] = UTCDateTime(node.get('start'))
-                if node.get('end'):
-                    temp['end'] = UTCDateTime(node.get('end'))
-                else:
-                    temp['end'] = None
-                temp['host'] = node.get('address').split(':')[0].strip()
-                temp['port'] = int(node.get('address').split(':')[1].strip())
-                result[id].append(temp)
-        return result
+            fh = filename
+        fh.write(data)
+        if isinstance(filename, basestring):
+            fh.close()
 
     def getWaveform(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime, format="MSEED",
@@ -354,26 +306,22 @@ class Client(Telnet):
                                        (end_datetime + 1).formatArcLink(),
                                        network_id, station_id, channel_id,
                                        location_id)
-        data = self._fetch(rtype, [rdata])
-        if data:
-            if compressed:
-                data = bz2.decompress(data)
-            # we need to create a temporary file, as libmseed only accepts
-            # filenames and not Python file pointers 
-            tf = NamedTemporaryFile()
-            tf.write(data)
-            tf.seek(0)
-            try:
-                stream = read(tf.name, 'MSEED')
-            finally:
-                tf.close()
-            # remove temporary file:
-            try:
-                os.remove(tf.name)
-            except:
-                pass
-        else:
+        tf = NamedTemporaryFile()
+        self.saveWaveform(tf, network_id, station_id, location_id, channel_id,
+                          start_datetime, end_datetime, format=format,
+                          compressed=compressed)
+        # read stream using obspy.mseed
+        tf.seek(0)
+        try:
+            stream = read(tf.name, 'MSEED')
+        except:
             stream = Stream()
+        tf.close()
+        # remove temporary file:
+        try:
+            os.remove(tf.name)
+        except:
+            pass
         # trim stream
         stream.trim(start_datetime, end_datetime)
         # fetch metadata
@@ -399,6 +347,59 @@ class Client(Telnet):
             for tr in stream:
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
+
+    def getRouting(self, network_id, station_id, start_datetime, end_datetime):
+        """
+        Get responsible host addresses for given network/stations from ArcLink.
+
+        :type network_id: string
+        :param network_id: Network code, e.g. 'BW'.
+        :type station_id: string
+        :param station_id: Station code, e.g. 'MANZ'.
+        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param start_datetime: Start date and time.
+        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_datetime: End date and time.
+
+        :returns: dict of host names.
+        """
+        rtype = 'REQUEST ROUTING '
+        # adding one second to start and end time to ensure right date times
+        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
+                                 (end_datetime + 1).formatArcLink(),
+                                 network_id, station_id)
+        # fetch plain XML document
+        result = self._fetch(rtype, [rdata])
+        # parse XML document
+        xml_doc = etree.fromstring(result)
+        # get routing version
+        if ROUTING_NS_1_0 in xml_doc.nsmap.values():
+            xml_ns = ROUTING_NS_1_0
+        elif ROUTING_NS_0_1 in xml_doc.nsmap.values():
+            xml_ns = ROUTING_NS_0_1
+        else:
+            msg = "Unknown routing namespace %s"
+            raise ArcLinkException(msg % xml_doc.nsmap)
+        # convert into dictionary
+        result = {}
+        for route in xml_doc.xpath('ns0:route', namespaces={'ns0':xml_ns}):
+            if xml_ns == ROUTING_NS_0_1:
+                id = route.get('net_code') + '.' + route.get('sta_code')
+            else:
+                id = route.get('networkCode') + '.' + route.get('stationCode')
+            result[id] = []
+            for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
+                temp = {}
+                temp['priority'] = int(node.get('priority'))
+                temp['start'] = UTCDateTime(node.get('start'))
+                if node.get('end'):
+                    temp['end'] = UTCDateTime(node.get('end'))
+                else:
+                    temp['end'] = None
+                temp['host'] = node.get('address').split(':')[0].strip()
+                temp['port'] = int(node.get('address').split(':')[1].strip())
+                result[id].append(temp)
+        return result
 
     def getMetadata(self, network_id, station_id, location_id, channel_id,
                     start_datetime, end_datetime, getPAZ=True,
