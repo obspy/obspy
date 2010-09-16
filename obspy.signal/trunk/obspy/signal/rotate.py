@@ -44,50 +44,12 @@ def rotate_NE_RT(n, e, ba):
     return r, t
 
 
-def gps2DistAzimuth(lat1, lon1, lat2, lon2) :
+def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """
-    Computes the distance between two geographic points on the WGS84
-    ellipsoid and the forward and backward azimuths between these points.
+    For the documentation see :func:`gps2DistAzimuth`
 
-    Latitudes should be positive for eastern/northern hemispheres and
-    negative for western/southern hemispheres respectively.
-    
-    This code is based on an implementation incorporated in 
-    Matplotlib Basemap Toolkit 0.9.5
-    http://sourceforge.net/projects/matplotlib/files/
-    (basemap-0.9.5/lib/matplotlib/toolkits/basemap/greatcircle.py)
-
-    Algorithm from Geocentric Datum of Australia Technical Manual.
-    http://www.icsm.gov.au/gda/gdatm/index.html
-    http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf
-
-    It states::
-
-        Computations on the Ellipsoid
-
-        There are a number of formulae that are available to calculate accurate
-        geodetic positions, azimuths and distances on the ellipsoid.
-
-        Vincenty's formulae (Vincenty, 1975) may be used for lines ranging from
-        a few cm to nearly 20,000 km, with millimetre accuracy. The formulae
-        have been extensively tested for the Australian region, by comparison
-        with results from other formulae (Rainsford, 1955 & Sodano, 1965).
-
-        * Inverse problem: azimuth and distance from known latitudes and
-            longitudes
-        * Direct problem: Latitude and longitude from known position, azimuth
-            and distance.
-
-    :param lat1: Latitude of point A in degrees (positive for northern,
-        negative for southern hemisphere)
-    :param lon1: Longitude of point A in degrees (positive for eastern,
-        negative for western hemisphere)
-    :param lat2: Latitude of point B in degrees (positive for northern,
-        negative for southern hemisphere)
-    :param lon2: Longitude of point B in degrees (positive for eastern,
-        negative for western hemisphere)
-    :return: (Great circle distance in m, azimuth A->B in degrees, 
-        azimuth B->A in degrees)
+    This method is vulnerable if the two points are close to being antipodes.
+    (Starts failing at e.g. (0,0,0,179.4))
     """
     #Check inputs
     if lat1 > 90 or lat1 < -90:
@@ -176,3 +138,65 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2) :
     alpha21 = alpha21 * 360 / (2.0 * pi)
 
     return dist, alpha12, alpha21
+
+
+def gps2DistAzimuth(lat1, lon1, lat2, lon2):
+    """
+    Computes the distance between two geographic points on the WGS84
+    ellipsoid and the forward and backward azimuths between these points.
+
+    Latitudes should be positive for eastern/northern hemispheres and
+    negative for western/southern hemispheres respectively.
+    
+    This code is based on an implementation incorporated in 
+    Matplotlib Basemap Toolkit 0.9.5
+    http://sourceforge.net/projects/matplotlib/files/
+    (basemap-0.9.5/lib/matplotlib/toolkits/basemap/greatcircle.py)
+
+    Algorithm from Geocentric Datum of Australia Technical Manual.
+    http://www.icsm.gov.au/gda/gdatm/index.html
+    http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf
+
+    It states::
+
+        Computations on the Ellipsoid
+
+        There are a number of formulae that are available to calculate accurate
+        geodetic positions, azimuths and distances on the ellipsoid.
+
+        Vincenty's formulae (Vincenty, 1975) may be used for lines ranging from
+        a few cm to nearly 20,000 km, with millimetre accuracy. The formulae
+        have been extensively tested for the Australian region, by comparison
+        with results from other formulae (Rainsford, 1955 & Sodano, 1965).
+
+        * Inverse problem: azimuth and distance from known latitudes and
+            longitudes
+        * Direct problem: Latitude and longitude from known position, azimuth
+            and distance.
+
+    :param lat1: Latitude of point A in degrees (positive for northern,
+        negative for southern hemisphere)
+    :param lon1: Longitude of point A in degrees (positive for eastern,
+        negative for western hemisphere)
+    :param lat2: Latitude of point B in degrees (positive for northern,
+        negative for southern hemisphere)
+    :param lon2: Longitude of point B in degrees (positive for eastern,
+        negative for western hemisphere)
+    :return: (Great circle distance in m, azimuth A->B in degrees, 
+        azimuth B->A in degrees)
+    """
+    try:
+        return _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2)
+    # we should use an alternative calculation method for this case
+    # but for now just settle with this quick fix
+    # see #150
+    except ValueError, e:
+        if str(e) == "math domain error" and abs(lon1 - lon2) > 179.3:
+            import warnings
+            msg = "Catching unstable calculation on antipodes. " + \
+                  "If this happens too often please bully the developers " + \
+                  "into implementing a more secure solution for this issue."
+            warnings.warn(msg)
+            return (20004314.5, 0.0, 0.0)
+        else:
+            raise e
