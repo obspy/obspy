@@ -7,8 +7,9 @@ Copyright
 
     Copyright (c) 2009-2010 by:
         * Moritz Beyreuther
-        * Lion Krischner
+        * Lion Krischer
         * Robert Barsch
+        * Tobias Megies
 
 
 Overview
