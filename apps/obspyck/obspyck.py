@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: obspyck.py
-#  Purpose: ...
+#  Purpose: ObsPyck main program
 #   Author: Tobias Megies, Lion Krischer
 #    Email: megies@geophysik.uni-muenchen.de
 #  License: GPLv2
@@ -26,16 +26,31 @@ from matplotlib.patches import Ellipse
 from matplotlib.ticker import FuncFormatter, FormatStrFormatter, MaxNLocator
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as QNavigationToolbar
 from matplotlib.backend_bases import MouseEvent as MplMouseEvent, KeyEvent as MplKeyEvent
-import lxml.etree
-from lxml.etree import SubElement as Sub
+try:
+    import lxml.etree
+    from lxml.etree import SubElement as Sub
+except ImportError:
+    msg = "Unable to import lxml. Creating event XML files will not work."
+    warnings.warn(msg)
 
 #sys.path.append('/baysoft/obspy/misc/symlink')
 #os.chdir("/baysoft/obspyck/")
 from obspy.core import UTCDateTime
-from obspy.signal.util import utlLonLat, utlGeoKm
-from obspy.signal.invsim import estimateMagnitude
-from obspy.imaging.spectrogram import spectrogram
-from obspy.imaging.beachball import Beachball
+try:
+    from obspy.signal.util import utlLonLat, utlGeoKm
+    from obspy.signal.invsim import estimateMagnitude
+except ImportError:
+    msg = "Unable to import obspy.signal. Locating and estimating " + \
+          "magnitudes will not work."
+    warnings.warn(msg)
+try:
+    from obspy.imaging.spectrogram import spectrogram
+    from obspy.imaging.beachball import Beachball
+except ImportError:
+    msg = "Unable to import obspy.imaging. Spectrograms and beach balls " + \
+          "will not work."
+    warnings.warn(msg)
+    warnings.warn("Import of obspy.imaging (spectrogram, beachball) failed.")
 
 from qt_designer import Ui_qMainWindow_obsPyck
 from util import *
@@ -44,18 +59,18 @@ from util import *
 class ObsPyck(QtGui.QMainWindow):
     """
     Main Window with the design loaded from the Qt Designer.
-
-    client, stream and options need to be determined by parsing the command
-    line.
     """
-    def __init__(self, client, streams, options, keys):
+    def __init__(self, clients, streams, options, keys):
         """
         Standard init.
         """
-        self.client = client
+        self.clients = clients
         self.streams = streams
         self.options = options
         self.keys = keys
+
+        self.T0 = UTCDateTime(self.options.time)
+        self.T0 += self.options.starttime_offset
         
         # init the GUI stuff
         QtGui.QMainWindow.__init__(self)
@@ -101,6 +116,18 @@ class ObsPyck(QtGui.QMainWindow):
         # because the matplotlib events seem to have a problem with Debian.
         self.widgets.qMplCanvas.wheelEvent = self.__mpl_wheelEvent
         #self.keyPressEvent = self.__mpl_keyPressEvent
+
+        # some SeisHub specific adjustments
+        if 'SeisHub' in clients:
+            from obspy.seishub import Client as SClient
+        else:
+            print "Hiding SeisHub specific widgets."
+            disable = ("qToolButton_getNextEvent",
+                       "qToolButton_updateEventList", "qToolButton_sendEvent",
+                       "qCheckBox_publishEvent", "qToolButton_deleteEvent",
+                       "qCheckBox_sysop", "qLineEdit_sysopPassword")
+            for widget in disable:
+                getattr(self.widgets, widget).hide()
 
         self.fig = self.widgets.qMplCanvas.fig
         facecolor = self.qMain.palette().color(QtGui.QPalette.Window).getRgb()
@@ -156,7 +183,6 @@ class ObsPyck(QtGui.QMainWindow):
             err = "No streams left to work with after removing bad streams."
             raise Exception(err)
 
-        #XXX not used: self.dictsMap = {} #XXX not used yet!
         # set up dictionaries to store phase_type/axes/line informations
         self.lines = {}
         self.texts = {}
@@ -190,16 +216,6 @@ class ObsPyck(QtGui.QMainWindow):
         self.updateStreamLabels()
 
         print >> sys.stderr, warn_msg
-        # Set up initial plot
-        #fig = plt.figure()
-        #fig.canvas.set_window_title("ObsPyck")
-        #try:
-        #    #not working with ion3 and other windowmanagers...
-        #    fig.set_size_inches(20, 10, forward = True)
-        #except:
-        #    pass
-        #redraw()
-        #fig.canvas.draw()
 
         # XXX mpl connect XXX XXX XXX XXX XXX
         # XXX http://eli.thegreenplace.net/files/prog_code/qt_mpl_bars.py.txt
@@ -222,81 +238,7 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX XXX the good old focus issue again!?! no events get to the mpl canvas
         # XXX self.canv.setFocusPolicy(Qt.WheelFocus)
         #print self.canv.hasFocus()
-        # XXX not working the way I want it to:
-        #self.keyPressEvent = lambda ev: ev.key() == Qt.Key_Escape and self.emit(Qt.SIGNAL("escapePressed")) or QtGui.QMainWindow().keyPressEvent(ev)
-        #self.event = lambda ev: (ev.type() == QtGui.QKeyEvent and ev.key() == Qt.Key_Escape) and self.__mpl_keyPressEvent(MplEvent("key_press_event", self.canv, guiEvent=ev)) or QtGui.QMainWindow().event(ev)
 
-    
-    # XXX
-    #def eventFilter(self, obj, ev):
-    #    print "no filtering but could..."
-    #    return False
-
-    #def event(self, ev):
-    #    tmp = getattr(self, "tmp_ev", [])
-    #    if not ev.type() in [77]:
-    #        tmp.append(ev.type())
-    #        self.tmp_ev = tmp
-    #    if ev.type() == 51:
-    #        return False
-    #    if ev.type() == 99 or (ev.type() == QEvent.KeyPress and ev.key() == Qt.Key_Alt):
-    #        "intercepted!"
-    #        return False
-    #        ev = KeyEvent("key_press_event", self.canv, "alt", x=10, y=10, guiEvent=ev)
-    #        return self.keyPressEvent(ev)
-    #    return QtGui.QMainWindow.event(self, ev)
-        
-    #def event(self, ev):
-    #    """
-    #    Event handling. We override some keys with special behavior to just
-    #    emit the standard push-the-button signal.
-    #    """
-    #    #if ev.type() == QEvent.KeyPress:
-    #    #    if ev.key() == Qt.Key_Alt:
-    #    #        print "overriding"
-    #    #        from matplotlib.backend_bases import KeyEvent
-    #    #        e = KeyEvent("key_press_event", self.canv, "alt", x=0, y=0, guiEvent=ev)
-    #    #        self.__mpl_keyPressEvent(e)
-    #    #        #self.emit(QtCore.SIGNAL("altPressed"))
-    #    #        return True
-    #    #        print "bad"
-    #    if ev.type() == QEvent.Wheel:
-    #        # Mapping from Qt MainWindow coordinates to mpl Canvas coordinates
-    #        # Qt: Starting at top left window corner, y positive down
-    #        # Mpl: Starting at bottom left canvas corner, y positive up
-    #        #
-    #        #         ev.x()   ----->
-    #        #     ------------------------------------------------------
-    #        # ev.y()                                                   |
-    #        #  |  |     self.canv.pos()                                |
-    #        #  |  |                 X-------------------------         |
-    #        #  v  |                 |                      ^ |         |
-    #        #     |                 |    self.canv.height()| |         |
-    #        #     |                 |                      | |         |
-    #        #     |                 |   self.canv.width()  | |         |
-    #        #     |                 |<---------------------+>|         |
-    #        #     |               ^ |                      | |         |
-    #        #     |               | |                      | |         |
-    #        #     |               | |                      v |         |
-    #        #     |            e.y()--------------------------         |
-    #        #     |                  e.x() --->                        |
-    #        #     |                                                    |
-    #        #     ------------------------------------------------------
-    #        x = ev.x() - self.canv.pos().x()
-    #        y = self.canv.pos().y() + self.canv.height() - ev.y()
-    #        # only override if in mpl canvas XXX not exactly correct!?!!!
-    #        if x < 0 or x > self.canv.height() or y < 0 or y > self.canv.width():
-    #            print "overriding canceled (not in canvas)!!"
-    #            return QtGui.QMainWindow.event(self, ev)
-    #        print "overriding!!"
-    #        if ev.delta() > 0:
-    #            button = "up"
-    #        else:
-    #            button = "down"
-    #        e = MplMouseEvent("scroll_event", self.canv, x, y, button, guiEvent=ev)
-    #        self.__mpl_wheelEvent(e)
-    #        return True
-    #    return QtGui.QMainWindow.event(self, ev)
     
     def cleanup(self):
         """
@@ -305,7 +247,7 @@ class ObsPyck(QtGui.QMainWindow):
             - check if sysop duplicates are there
             - remove temporary directory and all contents
         """
-        if self.client:
+        if 'SeisHub' in self.clients:
             self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                               self.streams[0][0].stats.endtime)
         try:
@@ -535,7 +477,7 @@ class ObsPyck(QtGui.QMainWindow):
             return
         # check if event list is empty and force an update if this is the case
         if not hasattr(self, "seishubEventList"):
-            self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+            self.updateEventListFromSeisHub(self.streams[0][0].stats.starttime,
                                             self.streams[0][0].stats.endtime)
         if not self.seishubEventList:
             print "No events available from SeisHub."
@@ -546,20 +488,20 @@ class ObsPyck(QtGui.QMainWindow):
         event = self.seishubEventList[self.seishubEventCurrent]
         resource_name = event.get('resource_name')
         self.clearDictionaries()
-        self.getEventFromSeishub(resource_name)
+        self.getEventFromSeisHub(resource_name)
         self.updateAllItems()
         self.redraw()
         
     def on_qToolButton_updateEventList_clicked(self, *args):
         if args:
             return
-        self.updateEventListFromSeishub(self.streams[0][0].stats.starttime,
+        self.updateEventListFromSeisHub(self.streams[0][0].stats.starttime,
                                         self.streams[0][0].stats.endtime)
 
     def on_qToolButton_sendEvent_clicked(self, *args):
         if args:
             return
-        self.uploadSeishub()
+        self.uploadSeisHub()
         self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                           self.streams[0][0].stats.endtime)
 
@@ -584,7 +526,7 @@ class ObsPyck(QtGui.QMainWindow):
         qMessageBox.setStandardButtons(QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok)
         qMessageBox.setDefaultButton(QtGui.QMessageBox.Cancel)
         if qMessageBox.exec_() == QtGui.QMessageBox.Ok:
-            self.deleteEventInSeishub(resource_name)
+            self.deleteEventInSeisHub(resource_name)
             self.on_qToolButton_updateEventList_clicked(event)
     
     def on_qCheckBox_sysop_toggled(self):
@@ -600,14 +542,14 @@ class ObsPyck(QtGui.QMainWindow):
     # the password
     def on_qLineEdit_sysopPassword_editingFinished(self):
         passwd = str(self.widgets.qLineEdit_sysopPassword.text())
-        tmp_client = Client(base_url=self.server['BaseUrl'], user="sysop",
-                            password=passwd)
+        tmp_client = SClient(base_url=self.server['BaseUrl'], user="sysop",
+                             password=passwd)
         if tmp_client.testAuth():
-            self.client_sysop = tmp_client
+            self.clients['SeisHub-sysop'] = tmp_client
             self.widgets.qCheckBox_sysop.setChecked(True)
         # if authentication test fails empty password field and uncheck sysop
         else:
-            self.client_sysop = None
+            self.clients.pop('SeisHub-sysop', None)
             self.widgets.qCheckBox_sysop.setChecked(False)
             self.widgets.qLineEdit_sysopPassword.clear()
             err = "Error: Authentication as sysop failed! (Wrong password!?)"
@@ -969,8 +911,6 @@ class ObsPyck(QtGui.QMainWindow):
     
     def drawAxes(self):
         st = self.streams[self.stPt]
-        #we start all our x-axes at 0 with the starttime of the first (Z) trace
-        starttime_global = st[0].stats.starttime
         fig = self.fig
         axs = []
         self.axs = axs
@@ -987,12 +927,12 @@ class ObsPyck(QtGui.QMainWindow):
                 ax = fig.add_subplot(len(st), 1, i+1, sharex=axs[0], sharey=axs[0])
                 ax.xaxis.set_ticks_position("top")
             axs.append(ax) 
-            #make sure that the relative times of the x-axes get mapped to our
-            #global stream (absolute) starttime (starttime of first (Z) trace)
-            starttime_local = tr.stats.starttime - starttime_global
-            dt = 1. / tr.stats.sampling_rate
-            sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * tr.stats.npts), dt)
+            # make sure that the relative x-axis times start with 0 at the time
+            # specified as start time on command line
+            starttime_relative = tr.stats.starttime - self.T0
+            sampletimes = np.arange(starttime_relative,
+                    starttime_relative + (tr.stats.delta * tr.stats.npts),
+                    tr.stats.delta)
             # XXX sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
             if len(sampletimes) == tr.stats.npts + 1:
@@ -1019,10 +959,9 @@ class ObsPyck(QtGui.QMainWindow):
                     family='monospace', color=textcolor, zorder=10000,
                     transform=ax.transAxes)
         axs[-1].xaxis.set_ticks_position("both")
-        self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (st[0].stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
-                                                         st[0].stats.starttime.microsecond / 1e3 + 0.5,
-                                                         st[0].stats.endtime.strftime("%H:%M:%S"),
-                                                         st[0].stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
+        label = self.T0.isoformat().replace("T", "  ")
+        self.supTit = fig.suptitle(label, ha="left", va="bottom",
+                                   x=0.01, y=0.01)
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
@@ -1395,10 +1334,13 @@ class ObsPyck(QtGui.QMainWindow):
     def __mpl_motionNotifyEvent(self, ev):
         try:
             if ev.inaxes in self.axs:
-                self.widgets.qLabel_xdata.setText(formatXTicklabels(ev.xdata))
+                self.widgets.qLabel_xdata_rel.setText(formatXTicklabels(ev.xdata))
+                label = (self.T0 + ev.xdata).isoformat().replace("T", "  ")
+                self.widgets.qLabel_xdata_abs.setText(label)
                 self.widgets.qLabel_ydata.setText("%.1f" % ev.ydata)
             else:
-                self.widgets.qLabel_xdata.setText(str(ev.xdata))
+                self.widgets.qLabel_xdata_rel.setText(str(ev.xdata))
+                self.widgets.qLabel_xdata_abs.setText("")
                 self.widgets.qLabel_ydata.setText(str(ev.ydata))
         except TypeError:
             pass
@@ -2413,16 +2355,14 @@ class ObsPyck(QtGui.QMainWindow):
         trans = []
         self.trans = trans
         t = []
-        #we start all our x-axes at 0 with the starttime of the first (Z) trace
-        starttime_global = self.streams[0].select(component="Z")[0].stats.starttime
         for i, st in enumerate(self.streams):
             tr = st.select(component="Z")[0]
-            #make sure that the relative times of the x-axes get mapped to our
-            #global stream (absolute) starttime (starttime of first (Z) trace)
-            starttime_local = tr.stats.starttime - starttime_global
-            dt = 1. / tr.stats.sampling_rate
-            sampletimes = np.arange(starttime_local,
-                    starttime_local + (dt * tr.stats.npts), dt)
+            # make sure that the relative x-axis times start with 0 at the time
+            # specified as start time on command line
+            starttime_relative = tr.stats.starttime - self.T0
+            sampletimes = np.arange(starttime_relative,
+                    starttime_relative + (tr.stats.delta * tr.stats.npts),
+                    tr.stats.delta)
             # sometimes our arange is one item too long (why??), so we just cut
             # off the last item if this is the case
             if len(sampletimes) == tr.stats.npts + 1:
@@ -2450,10 +2390,9 @@ class ObsPyck(QtGui.QMainWindow):
                     family='monospace', color="b", zorder=10000,
                     transform=ax.transAxes)
         axs[-1].xaxis.set_ticks_position("both")
-        self.supTit = fig.suptitle("%s.%03d -- %s.%03d" % (tr.stats.starttime.strftime("%Y-%m-%d  %H:%M:%S"),
-                                                         tr.stats.starttime.microsecond / 1e3 + 0.5,
-                                                         tr.stats.endtime.strftime("%H:%M:%S"),
-                                                         tr.stats.endtime.microsecond / 1e3 + 0.5), ha="left", va="bottom", x=0.01, y=0.01)
+        label = self.T0.isoformat().replace("T", "  ")
+        self.supTit = fig.suptitle(label, ha="left", va="bottom",
+                                   x=0.01, y=0.01)
         self.xMin, self.xMax = axs[0].get_xlim()
         self.yMin, self.yMax = axs[0].get_ylim()
         fig.subplots_adjust(bottom=0.001, hspace=0.000, right=0.999, top=0.999, left=0.001)
@@ -3080,7 +3019,7 @@ class ObsPyck(QtGui.QMainWindow):
         # then one event is overwritten with the other during submission.
         self.dictEvent['xmlEventID'] = UTCDateTime().strftime('%Y%m%d%H%M%S')
 
-    def uploadSeishub(self):
+    def uploadSeisHub(self):
         """
         Upload xml file to SeisHub
         """
@@ -3091,10 +3030,10 @@ class ObsPyck(QtGui.QMainWindow):
         # sysop box and entering the password immediately.
         if self.widgets.qCheckBox_sysop.isChecked():
             userid = "sysop"
-            client = self.client_sysop
+            client = self.clients['SeisHub-sysop']
         else:
             userid = self.server['User']
-            client = self.client
+            client = self.clients['SeisHub']
 
         # if we did no location at all, and only picks would be saved the
         # EventID ist still not set, so we have to do this now.
@@ -3122,7 +3061,7 @@ class ObsPyck(QtGui.QMainWindow):
         msg += "\nResponse: %s %s" % (code, message)
         print msg
 
-    def deleteEventInSeishub(self, resource_name):
+    def deleteEventInSeisHub(self, resource_name):
         """
         Delete xml file from SeisHub.
         (Move to SeisHubs trash folder if this option is activated)
@@ -3136,10 +3075,10 @@ class ObsPyck(QtGui.QMainWindow):
         # sysop box and entering the password immediately.
         if self.widgets.qCheckBox_sysop.isChecked():
             userid = "sysop"
-            client = self.client_sysop
+            client = self.clients['SeisHub-sysop']
         else:
             userid = self.server['User']
-            client = self.client
+            client = self.clients['SeisHub']
         
         headers = {}
         headers["Host"] = "localhost"
@@ -3230,11 +3169,12 @@ class ObsPyck(QtGui.QMainWindow):
         self.delAllItems()
         self.drawAllItems()
 
-    def getEventFromSeishub(self, resource_name):
+    def getEventFromSeisHub(self, resource_name):
         """
-        Fetch a Resource XML from Seishub
+        Fetch a Resource XML from SeisHub
         """
-        resource_xml = self.client.event.getXMLResource(resource_name)
+        client = self.clients['SeisHub']
+        resource_xml = client.event.getXMLResource(resource_name)
         if resource_xml.xpath(u".//event_type/account"):
             account = resource_xml.xpath(u".//event_type/account")[0].text
         else:
@@ -3546,7 +3486,7 @@ class ObsPyck(QtGui.QMainWindow):
               (self.seishubEventCurrent + 1, self.seishubEventCount,
                resource_name, account, user)
 
-    def updateEventListFromSeishub(self, starttime, endtime):
+    def updateEventListFromSeisHub(self, starttime, endtime):
         """
         Searches for events in the database and stores a list of resource
         names. All events with at least one pick set in between start- and
@@ -3558,14 +3498,14 @@ class ObsPyck(QtGui.QMainWindow):
         self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
                                           self.streams[0][0].stats.endtime)
 
-        events = self.client.event.getList(min_last_pick=starttime,
-                                           max_first_pick=endtime)
+        events = self.clients['SeisHub'].event.getList(min_last_pick=starttime,
+                                                       max_first_pick=endtime)
         self.seishubEventList = events
         self.seishubEventCount = len(events)
         # we set the current event-pointer to the last list element, because we
         # iterate the counter immediately when fetching the first event...
         self.seishubEventCurrent = len(events) - 1
-        msg = "%i events are available from Seishub" % len(events)
+        msg = "%i events are available from SeisHub" % len(events)
         for event in events:
             resource_name = event.get('resource_name')
             account = event.get('account')
@@ -3583,8 +3523,8 @@ class ObsPyck(QtGui.QMainWindow):
         at the moment this check is conducted for the current timewindow when
         submitting a sysop event.
         """
-        events = self.client.event.getList(min_last_pick=starttime,
-                                                max_first_pick=endtime)
+        events = self.clients['SeisHub'].event.getList(min_last_pick=starttime,
+                                                       max_first_pick=endtime)
         sysop_events = [str(event.get('resource_name')) for event in events \
                         if event.get('account', None) == "sysop"]
 
@@ -3613,6 +3553,7 @@ def main():
     """
     usage = "\n * SeisHub:\n    " + \
             "%prog -t 2010-08-01T12:00:00 -d 30 -i BW.R*..EH*,BW.BGLD..EH*\n" + \
+            "%prog -t 2010-08-01T12:00:00 -d 30 --seishub-ids BW.R*..EH*,BW.BGLD..EH*\n" + \
             " * ArcLink:\n    " + \
             "%prog -t 2010-08-01T12:00:00 -d 30 --arclink-ids GE.APE..BH*,GE.IMMV..BH*\n" + \
             " * Fissures:\n    " + \
@@ -3631,57 +3572,25 @@ def main():
         return
     # check for necessary options
     if not any([getattr(parser.values, parser.get_option(opt).dest) \
-                for opt in ("-i", "--arclink-ids", "--fissures-ids")]) \
+                for opt in ("--seishub-ids", "--arclink-ids", "--fissures-ids")]) \
        or not all([getattr(parser.values, parser.get_option(opt).dest) \
                    for opt in ('-d', '-t')]):
         parser.print_usage()
         return
     check_keybinding_conflicts(KEYS)
-    # XXX changed this again, we dont want qt to handle keys
-    # XXX obspyck = ObsPyck(client, streams, options, qkeys)
-    #qkeys = map_qKeys(KEYS)
     # XXX wasn't working as expected
     #if options.debug:
     #    import IPython.Shell
     #    IPython.Shell.IPShellEmbed(['-pdb'],
     #            banner='Entering IPython.  Press Ctrl-D to exit.',
     #            exit_msg='Leaving Interpreter, back to program.')()
-    (client, streams) = fetch_waveforms_metadata(options)
+    (clients, streams) = fetch_waveforms_with_metadata(options)
     # Create the GUI application
     qApp = QtGui.QApplication(sys.argv)
-    #qApp = MyApp(sys.argv)
-    #qApp.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
-    # XXX changed this again, we dont want qt to handle keys
-    # XXX obspyck = ObsPyck(client, streams, options, qkeys)
-    obspyck = ObsPyck(client, streams, options, KEYS)
+    obspyck = ObsPyck(clients, streams, options, KEYS)
     qApp.connect(qApp, QtCore.SIGNAL("aboutToQuit()"), obspyck.cleanup)
-    #obspyck.installEventFilter(SomeFilter()) #ev_filt = Qt.EventFilter(qApp)
-    # Start maximized.
     os._exit(qApp.exec_())
 
-#
-#class SomeFilter(QtCore.QObject):
-#    def eventFilter(self, obj, ev):
-#        print("Event filtering ok")
-#        return True
-#
-#class EventFilter(QtCore.QObject)
-#    def eventFilter(obj, ev):
-#     if (object == target && event->type() == QEvent::KeyPress) {
-#         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-#         if (keyEvent->key() == Qt::Key_Tab) {
-#             // Special tab handling
-#             return true;
-#         } else
-#             return false;
-#     }
-#     return false;
-# }
-
-#class MyApp(QtGui.QApplication):
-#    def eventFilter(self, obj, ev):
-#        print "no filtering but could..."
-#        return False
 
 if __name__ == "__main__":
     main()

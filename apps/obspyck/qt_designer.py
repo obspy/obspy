@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Sun Sep 12 14:22:08 2010
+# Created: Thu Sep 16 21:28:58 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 class Ui_qMainWindow_obsPyck(object):
     def setupUi(self, qMainWindow_obsPyck):
         qMainWindow_obsPyck.setObjectName("qMainWindow_obsPyck")
-        qMainWindow_obsPyck.resize(1149,756)
+        qMainWindow_obsPyck.resize(1176,756)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -413,15 +413,17 @@ class Ui_qMainWindow_obsPyck(object):
         self.horizontalLayout_2.addItem(spacerItem7)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.horizontalLayout_9 = QtGui.QHBoxLayout()
+        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.horizontalLayout_8 = QtGui.QHBoxLayout()
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
-        self.qLabel_x = QtGui.QLabel(self.qWidget_mpl)
-        self.qLabel_x.setObjectName("qLabel_x")
-        self.horizontalLayout_8.addWidget(self.qLabel_x)
-        self.qLabel_xdata = QtGui.QLabel(self.qWidget_mpl)
-        self.qLabel_xdata.setObjectName("qLabel_xdata")
-        self.horizontalLayout_8.addWidget(self.qLabel_xdata)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_8)
+        self.qLabel_x_rel = QtGui.QLabel(self.qWidget_mpl)
+        self.qLabel_x_rel.setObjectName("qLabel_x_rel")
+        self.horizontalLayout_8.addWidget(self.qLabel_x_rel)
+        self.qLabel_xdata_rel = QtGui.QLabel(self.qWidget_mpl)
+        self.qLabel_xdata_rel.setObjectName("qLabel_xdata_rel")
+        self.horizontalLayout_8.addWidget(self.qLabel_xdata_rel)
+        self.horizontalLayout_9.addLayout(self.horizontalLayout_8)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.qLabel_y = QtGui.QLabel(self.qWidget_mpl)
@@ -436,7 +438,17 @@ class Ui_qMainWindow_obsPyck(object):
         self.qLabel_ydata.setBaseSize(QtCore.QSize(0,0))
         self.qLabel_ydata.setObjectName("qLabel_ydata")
         self.horizontalLayout_7.addWidget(self.qLabel_ydata)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_7)
+        self.horizontalLayout_9.addLayout(self.horizontalLayout_7)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+        self.horizontalLayout_8b = QtGui.QHBoxLayout()
+        self.horizontalLayout_8b.setObjectName("horizontalLayout_8b")
+        self.qLabel_x_abs = QtGui.QLabel(self.qWidget_mpl)
+        self.qLabel_x_abs.setObjectName("qLabel_x_abs")
+        self.horizontalLayout_8b.addWidget(self.qLabel_x_abs)
+        self.qLabel_xdata_abs = QtGui.QLabel(self.qWidget_mpl)
+        self.qLabel_xdata_abs.setObjectName("qLabel_xdata_abs")
+        self.horizontalLayout_8b.addWidget(self.qLabel_xdata_abs)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_8b)
         self.horizontalLayout_2.addLayout(self.verticalLayout_2)
         self.qVBoxLayout_mpl.addLayout(self.horizontalLayout_2)
         self.layoutWidget = QtGui.QWidget(self.qSplitter_vertical)
@@ -483,7 +495,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.verticalLayout_4.addLayout(self.verticalLayout)
         qMainWindow_obsPyck.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(qMainWindow_obsPyck)
-        self.menubar.setGeometry(QtCore.QRect(0,0,1149,28))
+        self.menubar.setGeometry(QtCore.QRect(0,0,1176,28))
         self.menubar.setObjectName("menubar")
         qMainWindow_obsPyck.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(qMainWindow_obsPyck)
@@ -541,7 +553,8 @@ class Ui_qMainWindow_obsPyck(object):
         self.qLabel_lowpass.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "Lowpass", None, QtGui.QApplication.UnicodeUTF8))
         self.qToolButton_spectrogram.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "Spectrogram", None, QtGui.QApplication.UnicodeUTF8))
         self.qCheckBox_spectrogramLog.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "log", None, QtGui.QApplication.UnicodeUTF8))
-        self.qLabel_x.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "x:", None, QtGui.QApplication.UnicodeUTF8))
+        self.qLabel_x_rel.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "x (rel):", None, QtGui.QApplication.UnicodeUTF8))
         self.qLabel_y.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "y:", None, QtGui.QApplication.UnicodeUTF8))
+        self.qLabel_x_abs.setText(QtGui.QApplication.translate("qMainWindow_obsPyck", "x (abs):", None, QtGui.QApplication.UnicodeUTF8))
 
 from util import QMplCanvas

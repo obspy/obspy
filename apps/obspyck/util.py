@@ -1,3 +1,13 @@
+#-------------------------------------------------------------------
+# Filename: util.py
+#  Purpose: Helper functions for ObsPyck
+#   Author: Tobias Megies, Lion Krischer
+#    Email: megies@geophysik.uni-muenchen.de
+#  License: GPLv2
+#
+# Copyright (C) 2010 Tobias Megies, Lion Krischer
+#---------------------------------------------------------------------
+
 import os
 import sys
 import platform
@@ -17,7 +27,6 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as QFigureCanva
 from matplotlib.widgets import MultiCursor as MplMultiCursor
 
 from obspy.core import UTCDateTime
-from obspy.seishub import Client
 
 
 mpl.rc('figure.subplot', left=0.05, right=0.98, bottom=0.10, top=0.92,
@@ -76,7 +85,8 @@ COMMANDLINE_OPTIONS = (
                 "with a specified offset for the starttime. E.g. to request a "
                 "waveform starting 30 seconds earlier than the specified time "
                 "use -30."}),
-        (("-m", "--merge"), {'type': "string", 'dest': "merge", 'default': "",
+        (("-m", "--merge"), {'type': "choice", 'dest': "merge", 'default': "",
+                'choices': ("", "safe", "overwrite"),
                 'help': "After fetching the streams run a merge "
                 "operation on every stream. If not done, streams with gaps "
                 "and therefore more traces per channel get discarded.\nTwo "
@@ -227,28 +237,28 @@ def check_keybinding_conflicts(keys):
             err = "Interfering keybindings. Please check variable KEYS"
             raise Exception(err)
 
-def fetch_waveforms_metadata(options):
+def fetch_waveforms_with_metadata(options):
     """
-    Sets up a client and fetches waveforms and metadata according to command
+    Sets up obspy clients and fetches waveforms and metadata according to command
     line options.
     Now also fetches data via arclink (fissures) if --arclink-ids
     (--fissures-ids) is used.
-    The arclink (fissures) client is not returned, it is only useful for
-    downloading the data and not needed afterwards.
     XXX Notes: XXX
      - there is a problem in the arclink client with duplicate traces in
        fetched streams. therefore at the moment it might be necessary to use
        "-m overwrite" option.
 
-    :returns: (:class:`obspy.seishub.client.Client`,
+    :returns: (dictionary with clients,
                list(:class:`obspy.core.stream.Stream`s))
     """
-    t = UTCDateTime(options.time)
-    t = t + options.starttime_offset
+    t1 = UTCDateTime(options.time) + options.starttime_offset
+    t2 = t1 + options.duration
     streams = []
+    clients = {}
     sta_fetched = set()
     # SeisHub
     if options.seishub_ids:
+        from obspy.seishub import Client
         print "=" * 80
         print "Fetching waveforms and metadata from SeisHub:"
         print "-" * 80
@@ -269,14 +279,14 @@ def fetch_waveforms_metadata(options):
                 # one network twice (could happen with wildcards)
                 net_sta = "%s.%s" % (net, sta)
                 if net_sta in sta_fetched:
-                    print "%s skipped! (Was already retrieved)" % net_sta
+                    print "%s skipped! (Was already retrieved)" % net_sta.ljust(8)
                     continue
                 try:
                     sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                     sys.stdout.flush()
-                    st = client.waveform.getWaveform(net, sta, loc, cha, t,
-                            t + options.duration, apply_filter=True,
-                            getPAZ=True, getCoordinates=True)
+                    st = client.waveform.getWaveform(net, sta, loc, cha, t1,
+                            t2, apply_filter=True, getPAZ=True,
+                            getCoordinates=True)
                     sta_fetched.add(net_sta)
                     sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                     sys.stdout.flush()
@@ -285,81 +295,80 @@ def fetch_waveforms_metadata(options):
                     sys.stdout.flush()
                     continue
                 for tr in st:
-                    tr.stats['client'] = "seishub"
+                    tr.stats['_format'] = "SeisHub"
                 streams.append(st)
-    else:
-        client = None
+        clients['SeisHub'] = client
     # ArcLink
     if options.arclink_ids:
-        from obspy.arclink import Client as AClient
+        from obspy.arclink import Client
         print "=" * 80
         print "Fetching waveforms and metadata via ArcLink:"
         print "-" * 80
-        aclient = AClient(host=options.arclink_servername,
-                          port=options.arclink_port,
-                          timeout=options.arclink_timeout,
-                          user=options.arclink_user,
-                          password=options.arclink_password,
-                          institution=options.arclink_institution)
+        client = Client(host=options.arclink_servername,
+                        port=options.arclink_port,
+                        timeout=options.arclink_timeout,
+                        user=options.arclink_user,
+                        password=options.arclink_password,
+                        institution=options.arclink_institution)
         for id in options.arclink_ids.split(","):
             net, sta, loc, cha = id.split(".")
             net_sta = "%s.%s" % (net, sta)
             if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
+                print "%s skipped! (Was already retrieved)" % net_sta.ljust(8)
                 continue
             try:
                 sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
-                st = aclient.getWaveform(network_id=net, station_id=sta,
-                                         location_id=loc, channel_id=cha,
-                                         start_datetime=t,
-                                         end_datetime=t + options.duration,
-                                         getPAZ=True, getCoordinates=True)
+                st = client.getWaveform(network_id=net, station_id=sta,
+                                        location_id=loc, channel_id=cha,
+                                        start_datetime=t1, end_datetime=t2,
+                                        getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                 sys.stdout.flush()
             except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
+                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta.ljust(8), e))
                 sys.stdout.flush()
                 continue
             for tr in st:
-                tr.stats['client'] = "arclink"
+                tr.stats['_format'] = "ArcLink"
             streams.append(st)
+        clients['ArcLink'] = client
     # Fissures
     if options.fissures_ids:
-        from obspy.fissures import Client as FClient
+        from obspy.fissures import Client
         print "=" * 80
         print "Fetching waveforms and metadata via Fissures:"
         print "-" * 80
-        fclient = FClient(network_dc=options.fissures_network_dc,
-                          seismogram_dc=options.fissures_seismogram_dc,
-                          name_service=options.fissures_name_service)
+        client = Client(network_dc=options.fissures_network_dc,
+                        seismogram_dc=options.fissures_seismogram_dc,
+                        name_service=options.fissures_name_service)
         for id in options.fissures_ids.split(","):
             net, sta, loc, cha = id.split(".")
             net_sta = "%s.%s" % (net, sta)
             if net_sta in sta_fetched:
-                print "%s skipped! (Was already retrieved)" % net_sta
+                print "%s skipped! (Was already retrieved)" % net_sta.ljust(8)
                 continue
             try:
                 sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
-                st = fclient.getWaveform(network_id=net, station_id=sta,
-                                         location_id=loc, channel_id=cha,
-                                         start_datetime=t,
-                                         end_datetime=t + options.duration,
-                                         getPAZ=True, getCoordinates=True)
+                st = client.getWaveform(network_id=net, station_id=sta,
+                                        location_id=loc, channel_id=cha,
+                                        start_datetime=t1, end_datetime=t2,
+                                        getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
                 sys.stdout.flush()
             except Exception, e:
-                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta, e))
+                sys.stdout.write("\r%s skipped! (Server replied: %s)\n" % (net_sta.ljust(8), e))
                 sys.stdout.flush()
                 continue
             for tr in st:
-                tr.stats['client'] = "fissures"
+                tr.stats['_format'] = "Fissures"
             streams.append(st)
+        clients['Fissures'] = client
     print "=" * 80
-    return (client, streams)
+    return (clients, streams)
 
 def merge_check_and_cleanup_streams(streams, options):
     """
