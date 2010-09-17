@@ -69,8 +69,11 @@ class ObsPyck(QtGui.QMainWindow):
         self.options = options
         self.keys = keys
 
-        self.T0 = UTCDateTime(self.options.time)
-        self.T0 += self.options.starttime_offset
+        # T0 is the global reference time (zero in relative time scales)
+        self.T0 = UTCDateTime(options.time)
+        self.T0 += options.starttime_offset
+        # T1 is the end time specified by user
+        self.T1 = self.T0 + options.duration
         
         # init the GUI stuff
         QtGui.QMainWindow.__init__(self)
@@ -121,13 +124,9 @@ class ObsPyck(QtGui.QMainWindow):
         if 'SeisHub' in clients:
             from obspy.seishub import Client as SClient
         else:
-            print "Hiding SeisHub specific widgets."
-            disable = ("qToolButton_getNextEvent",
-                       "qToolButton_updateEventList", "qToolButton_sendEvent",
-                       "qCheckBox_publishEvent", "qToolButton_deleteEvent",
-                       "qCheckBox_sysop", "qLineEdit_sysopPassword")
-            for widget in disable:
-                getattr(self.widgets, widget).hide()
+            msg = "Warning: SeisHub specific features will not work " + \
+                  "(e.g. 'send Event')."
+            print >> sys.stderr, msg
 
         self.fig = self.widgets.qMplCanvas.fig
         facecolor = self.qMain.palette().color(QtGui.QPalette.Window).getRgb()
@@ -141,7 +140,7 @@ class ObsPyck(QtGui.QMainWindow):
             self.tmp_dir = setup_external_programs(options)
         except OSError:
             msg = "Cannot find external programs dir, localization " + \
-                    "methods/functions are deactivated"
+                  "methods/functions are deactivated"
             warnings.warn(msg)
         self.dictOrigin = {}
         self.dictMagnitude = {}
@@ -239,6 +238,27 @@ class ObsPyck(QtGui.QMainWindow):
         # XXX self.canv.setFocusPolicy(Qt.WheelFocus)
         #print self.canv.hasFocus()
 
+    def time_abs2rel(self, abstime):
+        """
+        Converts an absolute UTCDateTime to the time in ObsPyck's relative time
+        frame.
+
+        :type abstime: :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param abstime: Absolute time in UTC.
+        :returns: time in ObsPyck's relative time as a float
+        """
+        return abstime - self.T0
+
+    def time_rel2abs(self, reltime):
+        """
+        Converts a relative time in global relative time system to the absolute
+        UTCDateTime.
+
+        :type reltime: float
+        :param reltime: Relative time in ObsPyck's realtive time frame
+        :returns: absolute UTCDateTime
+        """
+        return self.T0 + reltime
     
     def cleanup(self):
         """
@@ -248,8 +268,7 @@ class ObsPyck(QtGui.QMainWindow):
             - remove temporary directory and all contents
         """
         if 'SeisHub' in self.clients:
-            self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                              self.streams[0][0].stats.endtime)
+            self.checkForSysopEventDuplicates(self.T0, self.T1)
         try:
             shutil.rmtree(self.tmp_dir)
         except:
@@ -477,8 +496,7 @@ class ObsPyck(QtGui.QMainWindow):
             return
         # check if event list is empty and force an update if this is the case
         if not hasattr(self, "seishubEventList"):
-            self.updateEventListFromSeisHub(self.streams[0][0].stats.starttime,
-                                            self.streams[0][0].stats.endtime)
+            self.updateEventListFromSeisHub(self.T0, self.T1)
         if not self.seishubEventList:
             print "No events available from SeisHub."
             return
@@ -495,15 +513,13 @@ class ObsPyck(QtGui.QMainWindow):
     def on_qToolButton_updateEventList_clicked(self, *args):
         if args:
             return
-        self.updateEventListFromSeisHub(self.streams[0][0].stats.starttime,
-                                        self.streams[0][0].stats.endtime)
+        self.updateEventListFromSeisHub(self.T0, self.T1)
 
     def on_qToolButton_sendEvent_clicked(self, *args):
         if args:
             return
         self.uploadSeisHub()
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
+        self.checkForSysopEventDuplicates(self.T0, self.T1)
 
     def on_qCheckBox_publishEvent_toggled(self):
         newstate = self.widgets.qCheckBox_publishEvent.isChecked()
@@ -927,9 +943,8 @@ class ObsPyck(QtGui.QMainWindow):
                 ax = fig.add_subplot(len(st), 1, i+1, sharex=axs[0], sharey=axs[0])
                 ax.xaxis.set_ticks_position("top")
             axs.append(ax) 
-            # make sure that the relative x-axis times start with 0 at the time
-            # specified as start time on command line
-            starttime_relative = tr.stats.starttime - self.T0
+            # relative x-axis times start with 0 at global reference time
+            starttime_relative = self.time_abs2rel(tr.stats.starttime)
             sampletimes = np.arange(starttime_relative,
                     starttime_relative + (tr.stats.delta * tr.stats.npts),
                     tr.stats.delta)
@@ -1049,7 +1064,7 @@ class ObsPyck(QtGui.QMainWindow):
                     self.delLine(key2)
                     self.delKey(key2)
                 self.redraw()
-                abs_time = st[0].stats.starttime + dict[phase_type]
+                abs_time = self.time_rel2abs(dict[phase_type])
                 print "%s set at %.3f (%s)" % (KEY_FULLNAMES[phase_type],
                                                dict[phase_type], abs_time.isoformat())
                 return
@@ -1114,7 +1129,7 @@ class ObsPyck(QtGui.QMainWindow):
                 dict[key] = pickSample
                 self.updateLine(key)
                 self.redraw()
-                abs_time = st[0].stats.starttime + dict[key]
+                abs_time = self.time_rel2abs(dict[key])
                 print "%s set at %.3f (%s)" % (KEY_FULLNAMES[key],
                                                dict[key], abs_time.isoformat())
                 return
@@ -1335,7 +1350,7 @@ class ObsPyck(QtGui.QMainWindow):
         try:
             if ev.inaxes in self.axs:
                 self.widgets.qLabel_xdata_rel.setText(formatXTicklabels(ev.xdata))
-                label = (self.T0 + ev.xdata).isoformat().replace("T", "  ")
+                label = self.time_rel2abs(ev.xdata).isoformat().replace("T", "  ")
                 self.widgets.qLabel_xdata_abs.setText(label)
                 self.widgets.qLabel_ydata.setText("%.1f" % ev.ydata)
             else:
@@ -1403,23 +1418,20 @@ class ObsPyck(QtGui.QMainWindow):
                 if not phStat == st[0].stats.station.strip():
                     continue
                 else:
-                    # check if synthetic pick is within time range of stream
-                    if (phUTCTime > st[0].stats.endtime or \
-                        phUTCTime < st[0].stats.starttime):
+                    # check if synthetic pick is within global time range
+                    if (phUTCTime < self.T0 or phUTCTime > self.T1):
                         err = "Warning: Synthetic pick outside timespan."
                         print >> sys.stderr, err
-                        continue
-                    else:
-                        # phSeconds is the time in seconds after the stream-
-                        # starttime at which the time of the synthetic phase
-                        # is located
-                        phSeconds = phUTCTime - st[0].stats.starttime
-                        if phType == 'P':
-                            dict['Psynth'] = phSeconds
-                            dict['Pres'] = phResid
-                        elif phType == 'S':
-                            dict['Ssynth'] = phSeconds
-                            dict['Sres'] = phResid
+                    # phSeconds is the time in seconds after the stream-
+                    # starttime at which the time of the synthetic phase
+                    # is located
+                    phSeconds = self.time_abs2rel(phUTCTime)
+                    if phType == 'P':
+                        dict['Psynth'] = phSeconds
+                        dict['Pres'] = phResid
+                    elif phType == 'S':
+                        dict['Ssynth'] = phSeconds
+                        dict['Sres'] = phResid
         for key in ['Psynth', 'Ssynth']:
             self.updateLine(key)
             self.updateLabel(key)
@@ -1444,8 +1456,7 @@ class ObsPyck(QtGui.QMainWindow):
             # if the error picks are not set, we use a default of three samples
             default_error = 3 / st[0].stats.sampling_rate
             if 'P' in dict:
-                t = st[0].stats.starttime
-                t += dict['P']
+                t = self.time_rel2abs(dict['P'])
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 if 'PErr1' in dict:
@@ -1466,8 +1477,7 @@ class ObsPyck(QtGui.QMainWindow):
                 f.write(fmt % (dict['Station'], 'P', date, delta, lon, lat,
                                ele))
             if 'S' in dict:
-                t = st[0].stats.starttime
-                t += dict['S']
+                t = self.time_rel2abs(dict['S'])
                 date = t.strftime("%Y %m %d %H %M %S")
                 date += ".%03d" % (t.microsecond / 1e3 + 0.5)
                 if 'SErr1' in dict:
@@ -2282,8 +2292,7 @@ class ObsPyck(QtGui.QMainWindow):
         stations = []
         for st, dict in zip(self.streams, self.dicts):
             if 'P' in dict and 'S' in dict:
-                p = st[0].stats.starttime
-                p += dict['P']
+                p = self.time_rel2abs(dict['P'])
                 p = "%.3f" % p.getTimeStamp()
                 p = float(p[-7:])
                 pTimes.append(p)
@@ -2359,7 +2368,7 @@ class ObsPyck(QtGui.QMainWindow):
             tr = st.select(component="Z")[0]
             # make sure that the relative x-axis times start with 0 at the time
             # specified as start time on command line
-            starttime_relative = tr.stats.starttime - self.T0
+            starttime_relative = self.time_abs2rel(tr.stats.starttime)
             sampletimes = np.arange(starttime_relative,
                     starttime_relative + (tr.stats.delta * tr.stats.npts),
                     tr.stats.delta)
@@ -2665,8 +2674,7 @@ class ObsPyck(QtGui.QMainWindow):
             if 'P' not in dict and 'S' not in dict:
                 continue
             if 'P' in dict:
-                t = st[0].stats.starttime
-                t += dict['P']
+                t = self.time_rel2abs(dict['P'])
                 date = t.strftime("%y%m%d%H%M%S")
                 date += ".%02d" % (t.microsecond / 1e4 + 0.5)
                 if 'POnset' in dict:
@@ -2699,8 +2707,7 @@ class ObsPyck(QtGui.QMainWindow):
                           "This case might not be covered correctly and " + \
                           "could screw our file up!"
                     print >> sys.stderr, err
-                t2 = st[0].stats.starttime
-                t2 += dict['S']
+                t2 = self.time_rel2abs(dict['S'])
                 # if the S time's absolute minute is higher than that of the
                 # P pick, we have to add 60 to the S second count for the
                 # hypo 2000 output file
@@ -2778,9 +2785,8 @@ class ObsPyck(QtGui.QMainWindow):
                 wave.set("channelCode", st[0].stats.channel) 
                 wave.set("locationCode", st[0].stats.location) 
                 date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = st[0].stats.starttime
-                picktime += dict['P']
+                # prepare time of pick (global reference + relative time)
+                picktime = self.time_rel2abs(dict['P'])
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if 'PErr1' in dict and 'PErr2' in dict:
                     temp = dict['PErr2'] - dict['PErr1']
@@ -2846,9 +2852,8 @@ class ObsPyck(QtGui.QMainWindow):
                 wave.set("channelCode", st[axind].stats.channel) 
                 wave.set("locationCode", st[axind].stats.location) 
                 date = Sub(pick, "time")
-                # prepare time of pick
-                picktime = st[0].stats.starttime
-                picktime += dict['S']
+                # prepare time of pick (global reference + relative time)
+                picktime = self.time_rel2abs(dict['S'])
                 Sub(date, "value").text = picktime.isoformat() # + '.%06i' % picktime.microsecond)
                 if 'SErr1' in dict and 'SErr2' in dict:
                     temp = dict['SErr2'] - dict['SErr1']
@@ -3244,9 +3249,8 @@ class ObsPyck(QtGui.QMainWindow):
                 hyp_dist = pick.xpath(".//hyp_dist/value")[0].text
             except:
                 hyp_dist = None
-            # convert UTC time to seconds after stream starttime
-            time = UTCDateTime(time)
-            time -= self.streams[streamnum][0].stats.starttime
+            # convert UTC time to seconds after global reference time
+            time = self.time_abs2rel(UTCDateTime(time))
             # map uncertainty in seconds to error picks in seconds
             if uncertainty:
                 uncertainty = float(uncertainty)
@@ -3495,8 +3499,7 @@ class ObsPyck(QtGui.QMainWindow):
         :param starttime: Start datetime as UTCDateTime
         :param endtime: End datetime as UTCDateTime
         """
-        self.checkForSysopEventDuplicates(self.streams[0][0].stats.starttime,
-                                          self.streams[0][0].stats.endtime)
+        self.checkForSysopEventDuplicates(self.T0, self.T1)
 
         events = self.clients['SeisHub'].event.getList(min_last_pick=starttime,
                                                        max_first_pick=endtime)
