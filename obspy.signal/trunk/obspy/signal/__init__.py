@@ -163,9 +163,10 @@ But it also means that the trace's built-in methods can be used.
     tr.plot()
 
 
-For more examples check out the
-[http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/TriggerTutorial triggering page]
-in the [https://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial Tutorial].
+For more examples check out the `triggering page`_ or the `Tutorial`_.
+
+.. _`triggering page`: http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/TriggerTutorial
+.. _`Tutorial`: https://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
 
 **There are many more functions available (rotation, pazToFreqResp, 
 cpxtrace analysis, ...), please also check the tutorial.**
