@@ -163,5 +163,6 @@ formats are png, svg, pdf or ps.
 # see tests/__init__.py for details
 
 from obspy.core.util import _getVersionString
+from obspy.imaging.waveform import plot_trigger
 
 __version__ = _getVersionString("obspy.imaging")

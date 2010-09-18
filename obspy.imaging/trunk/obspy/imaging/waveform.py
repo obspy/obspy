@@ -828,3 +828,48 @@ def _plot_list(streams):
     #fig.autofmt_xdate()
     fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
     plt.show()
+
+
+def plot_trigger(trace, cft, thrOn, thrOff):
+    """
+    Plot characteristic function of trigger along with waveform data and
+    trigger On/Off from given thresholds.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: waveform data
+    :type cft: :class:`numpy.ndarray`
+    :param cft: characteristic function as returned by a trigger in
+            :mod:`obspy.signal.trigger`
+    :type thrOn: float
+    :param thrOn: threshold for switching trigger on
+    :type thrOff: float
+    :param thrOff: threshold for switching trigger off
+    """
+    try:
+        from obspy.signal.trigger import triggerOnset
+    except ImportError:
+        msg = "Error during import from obspy.signal. Please make " + \
+              "sure obspy.signal is installed properly."
+        raise ImportError(msg)
+    df = trace.stats.sampling_rate
+    npts = trace.stats.npts
+    t = np.arange(npts, dtype='float32') / df
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax1.plot(t, trace.data, 'k')
+    ax2 = fig.add_subplot(212, sharex=ax1)
+    ax2.plot(t, cft, 'k')
+    onOff = np.array(triggerOnset(cft, thrOn, thrOff))
+    i, j = ax1.get_ylim()
+    try:
+        ax1.vlines(onOff[:,0] / df, i, j, color='r', lw=2, label="Trigger On")
+        ax1.vlines(onOff[:,1] / df, i, j, color='b', lw=2, label="Trigger Off")
+        ax1.legend()
+    except IndexError:
+        pass
+    ax2.axhline(thrOn, color='red', lw = 1, ls = '--')
+    ax2.axhline(thrOff, color='blue', lw = 1, ls = '--')
+    ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
+    fig.suptitle(trace.id)
+    fig.canvas.draw()
+    plt.show()

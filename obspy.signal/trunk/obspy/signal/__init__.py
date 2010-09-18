@@ -35,13 +35,11 @@ comparison with the other traces in the plot.
 ...         df=tr.stats.sampling_rate, corners=1, zerophase=True)
 >>> st.plot() #doctest: +SKIP
 
-Working with stream's implemented method works similar:
+Working with the convenience methods implemented on
+:class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`
+works similar:
 
->>> from obspy.core import read
->>> st = read()
->>> tr = st[0]
 >>> tr.filter('highpass', {'freq': 1.0, 'corners': 1, 'zerophase': True})
->>> st.plot() #doctest: +SKIP
 
 .. plot::
 
@@ -75,8 +73,16 @@ comparison with the other traces in the plot.
 ...         'sensitivity': 2516778400.0,
 ...         'zeros': [0j, 0j]}
 >>> df = tr.stats.sampling_rate
->>> tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
+>>> tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+...                   water_level=60.0, remove_sensitivity=False,
+...                   simulate_sensitivity=False)
 >>> st.plot() #doctest: +SKIP
+
+Again, there are convenience methods implemented on
+:class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`:
+
+>>> tr.simulate(paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0,
+...             remove_sensitivity=False, simulate_sensitivity=False)
 
 .. plot::
 
@@ -97,7 +103,71 @@ comparison with the other traces in the plot.
     tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
     st.plot()
 
-**There are many more functions available (rotation, pazToFreqResp, triggers,
+Trigger
+-------
+
+The :mod:`~obspy.signal.trigger` module provides various triggering algorithms,
+including different Sta/Lta routines, Z-Detector, AR picker and the P-picker by
+M. Bear.
+
+The following example demonstrates a recursive Sta/Lta triggering:
+
+>>> from obspy.core import read
+>>> from obspy.signal import recStalta
+>>> from obspy.imaging import plot_trigger
+>>> 
+>>> st = read()
+>>> tr = st.select(component="Z")[0]
+>>> tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
+>>> sta = 0.5
+>>> lta = 4
+>>> cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate),
+...                 int(lta * tr.stats.sampling_rate))
+>>> thrOn = 4
+>>> thrOff = 0.7
+>>> plot_trigger(tr, cft, thrOn, thrOff)
+
+.. plot::
+
+    from obspy.core import read
+    from obspy.signal import recStalta
+    from obspy.imaging import plot_trigger
+    st = read()
+    tr = st.select(component="Z")[0]
+    tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
+    sta = 0.5
+    lta = 4
+    cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate), int(lta * tr.stats.sampling_rate))
+    thrOn = 4
+    thrOff = 0.7
+    plot_trigger(tr, cft, thrOn, thrOff)
+
+There is also a convenience method implemented on
+:class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`.
+It works on and overwrites the traces waveform data and is intended for batch
+processing rather than for interactive determination of triggering parameters.
+But it also means that the trace's built-in methods can be used.
+
+>>> tr.trigger("recstalta", {'sta': 0.5, 'lta': 4})
+>>> tr.plot() #doctest: #SKIP
+
+.. plot::
+
+    from obspy.core import read
+    from obspy.signal import recStalta
+    from obspy.imaging import plot_trigger
+    st = read()
+    tr = st.select(component="Z")[0]
+    tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
+    tr.trigger("recstalta", {'sta': 0.5, 'lta': 4})
+    tr.plot()
+
+
+For more examples check out the
+[http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/TriggerTutorial triggering page]
+in the [https://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial Tutorial].
+
+**There are many more functions available (rotation, pazToFreqResp, 
 cpxtrace analysis, ...), please also check the tutorial.**
 """
 
