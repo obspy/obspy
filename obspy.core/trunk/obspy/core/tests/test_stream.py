@@ -4,6 +4,7 @@ from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import createDummyStream
 import numpy as np
+import sys
 import pickle
 import unittest
 
@@ -438,11 +439,13 @@ class StreamTestCase(unittest.TestCase):
                 ['bandstop', None],
                 ['bandstop', 3],
                 ['bandstop', 'XXX'],
-                ['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}],
                 ['bandpass', {'freqmin': 5, 'corners': 6}],
                 ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, st.filter, filt_ops, in_place=True)
+            self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
+        bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
+        for filt_type, filt_ops in bad_filters:
+            self.assertRaises(ValueError, st.filter, filt_type, filt_ops)
         # test if stream is unchanged after all these bad tests
         for i, tr in enumerate(st):
             np.testing.assert_array_equal(tr.data, st_bkp[i].data)

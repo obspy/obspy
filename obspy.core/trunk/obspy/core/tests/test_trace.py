@@ -820,11 +820,13 @@ class TraceTestCase(unittest.TestCase):
                 ['bandstop', None],
                 ['bandstop', 3],
                 ['bandstop', 'XXX'],
-                ['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}],
                 ['bandpass', {'freqmin': 5, 'corners': 6}],
                 ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, tr.filter, filt_ops, in_place=True)
+            self.assertRaises(TypeError, tr.filter, filt_type, filt_ops)
+        bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
+        for filt_type, filt_ops in bad_filters:
+            self.assertRaises(ValueError, tr.filter, filt_type, filt_ops)
         # test if trace is unchanged after all these bad tests
         np.testing.assert_array_equal(tr.data, traces_bkp[0].data)
         self.assertEqual(tr.stats, traces_bkp[0].stats)

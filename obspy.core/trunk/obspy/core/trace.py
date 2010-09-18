@@ -11,7 +11,8 @@ Module for handling ObsPy Trace objects.
 
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk, deprecated
+from obspy.core.util import AttribDict, createEmptyDataChunk, deprecated, \
+                            interceptDict
 import numpy as np
 import math
 import warnings
@@ -659,13 +660,8 @@ class Trace(object):
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
-        try:
-            spec = spec(data=self.data, samp_rate=self.stats.sampling_rate,
-                        title=str(self), *args, **kwargs)
-        except TypeError, e:
-            print spec.__doc__
-            print "(Data and sampling rate are passed on internally)"
-            raise e
+        spec = spec(data=self.data, samp_rate=self.stats.sampling_rate,
+                    title=str(self), *args, **kwargs)
         return spec
 
     def write(self, filename, format, **kwargs):
@@ -850,7 +846,7 @@ class Trace(object):
         """
         # check time order and swap eventually
         if starttime and endtime and starttime > endtime:
-            raise Exception("startime is larger than endtime")
+            raise ValueError("startime is larger than endtime")
         # cut it
         if starttime:
             self._ltrim(starttime, pad, nearest_sample=nearest_sample)
@@ -1025,15 +1021,10 @@ class Trace(object):
                       "sure obspy.signal is installed properly."
                 raise ImportError(msg)
 
-        try:
-            self.data = signal.seisSim(self.data, self.stats.sampling_rate,
-                    paz_remove=paz_remove, paz_simulate=paz_simulate,
-                    remove_sensitivity=remove_sensitivity,
-                    simulate_sensitivity=simulate_sensitivity, **kwargs)
-        except TypeError, e:
-            print signal.seisSim.__doc__
-            print "(Data and sampling rate are passed on internally)"
-            raise e
+        self.data = signal.seisSim(self.data, self.stats.sampling_rate,
+                paz_remove=paz_remove, paz_simulate=paz_simulate,
+                remove_sensitivity=remove_sensitivity,
+                simulate_sensitivity=simulate_sensitivity, **kwargs)
 
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
@@ -1047,7 +1038,8 @@ class Trace(object):
                     (paz_simulate, simulate_sensitivity)
             self.stats['processing'].append(proc_info)
 
-    def filter(self, type, options):
+    @interceptDict
+    def filter(self, type, **options):
         """
         Filters the data of the current trace.
 
@@ -1065,7 +1057,7 @@ class Trace(object):
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", {'freq': 1.0})
+        >>> tr.filter("highpass", freq=1.0)
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1073,15 +1065,14 @@ class Trace(object):
             from obspy.core import read
             st = read()
             tr = st[0]
-            tr.filter("highpass", {'freq': 1.0})
+            tr.filter("highpass", freq=1.0)
             tr.plot()
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
-        :param options: Dictionary that contains arguments that will
-                be passed to the respective filter function as kwargs.
-                (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
-        :return: ``None``
+        :param options: Necessary keyword arguments for the respective filter
+                that will be passed on.
+                (e.g. freqmin=1.0, freqmax=20.0 for "bandpass")
         """
         global signal
         if not signal:
@@ -1104,18 +1095,13 @@ class Trace(object):
         if type not in filter_functions:
             msg = "Filter type \"%s\" not recognized. " % type + \
                   "Filter type must be one of: %s." % filter_functions.keys()
-            raise Exception(msg)
+            raise ValueError(msg)
 
         # do the actual filtering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # filter_functions dictionary.
-        try:
-            self.data = filter_functions[type](self.data,
-                    df=self.stats.sampling_rate, **options)
-        except TypeError, e:
-            print filter_functions[type].__doc__
-            print "(Data and sampling rate are passed on internally)"
-            raise e
+        self.data = filter_functions[type](self.data,
+                df=self.stats.sampling_rate, **options)
 
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
@@ -1123,7 +1109,8 @@ class Trace(object):
         proc_info = "filter:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
 
-    def trigger(self, type, options):
+    @interceptDict
+    def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.
 
@@ -1141,9 +1128,9 @@ class Trace(object):
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", {'freq': 1.0})
+        >>> tr.filter("highpass", freq=1.0)
         >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger('recStalta', {'sta': 3, 'lta': 10})
+        >>> tr.trigger("recStalta", sta=3, lta=10)
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1151,20 +1138,21 @@ class Trace(object):
             from obspy.core import read
             st = read()
             tr = st[0]
-            tr.filter("highpass", {'freq': 1.0})
+            tr.filter("highpass", freq=1.0)
             tr.plot()
-            tr.trigger('recStalta', {'sta': 3, 'lta': 10})
+            tr.trigger('recStalta', sta=3, lta=10)
             tr.plot()
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
-        :param options: Dictionary that contains arguments that will
-                be passed to the respective trigger function as kwargs.
-                Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
-                ``nlta`` by multiplying with sampling rate of trace.
-                (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
+        :param options: Necessary keyword arguments for the respective trigger
+                that will be passed on.
+                (e.g. sta=3, lta=10)
+                Arguments ``sta`` and ``lta`` (seconds) will be mapped to
+                ``nsta`` and ``nlta`` (samples) by multiplying with sampling
+                rate of trace.
+                (e.g. sta=3, lta=10 would call the trigger with 3 and
                 10 seconds average, respectively)
-        :return: ``None``
         """
         global signal
         if not signal:
@@ -1188,7 +1176,7 @@ class Trace(object):
         if type not in trigger_functions:
             msg = "Trigger type \"%s\" not recognized. " % type + \
                   "Trigger type must be one of: %s." % trigger_functions.keys()
-            raise Exception(msg)
+            raise ValueError(msg)
 
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
@@ -1202,14 +1190,7 @@ class Trace(object):
         # do the actual triggering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # trigger_functions dictionary.
-        try:
-            self.data = trigger_functions[type](self.data, **options)
-        except TypeError, e:
-            print trigger_functions[type].__doc__
-            print "(Data are passed on internally, average lengths are " + \
-                  "converted from seconds to samples (e.g. sta=2 gets " + \
-                  "mapped to nsta=400 for a sampling rate of 200 Hz)"
-            raise e
+        self.data = trigger_functions[type](self.data, **options)
 
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:

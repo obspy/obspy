@@ -12,7 +12,8 @@ Module for handling ObsPy Stream objects.
 from glob import iglob
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.trace import Trace
-from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated
+from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
+                            interceptDict
 from pkg_resources import load_entry_point
 from StringIO import StringIO
 import copy
@@ -766,7 +767,7 @@ class Stream(object):
 
         return spec_list
 
-    def pop(self, index= -1):
+    def pop(self, index=-1):
         """
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.
@@ -1067,7 +1068,7 @@ class Stream(object):
             if channel and component != channel[-1]:
                 msg = "Selection criteria for channel and component are " + \
                       "mutually exclusive!"
-                raise Exception(msg)
+                raise ValueError(msg)
         traces = []
         for trace in self:
             # skip trace if any given criterion is not matched
@@ -1281,7 +1282,8 @@ class Stream(object):
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return
 
-    def filter(self, type, options):
+    @interceptDict
+    def filter(self, type, **options):
         """
         Filters the data of all traces in the ``Stream``. This is performed in
         place on the actual data arrays. The raw data is not accessible anymore
@@ -1296,28 +1298,28 @@ class Stream(object):
 
         >>> from obspy.core import read
         >>> st = read()
-        >>> st.filter("highpass", {'freq': 1.0})
+        >>> st.filter("highpass", freq=1.0)
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
             
             from obspy.core import read
             st = read()
-            st.filter("highpass", {'freq': 1.0})
+            st.filter("highpass", freq=1.0)
             st.plot()
 
         :param type: String that specifies which filter is applied (e.g.
                 "bandpass").
-        :param options: Dictionary that contains arguments that will
-                be passed to the respective filter function as kwargs.
-                (e.g. {'freqmin': 1.0, 'freqmax': 20.0})
-        :return: ``None``
+        :param options: Necessary keyword arguments for the respective filter
+                that will be passed on.
+                (e.g. freqmin=1.0, freqmax=20.0 for "bandpass")
         """
         for tr in self:
-            tr.filter(type=type, options=options)
+            tr.filter(type, **options)
         return
 
-    def trigger(self, type, options):
+    @interceptDict
+    def trigger(self, type, **options):
         """
         Runs a triggering algorithm on all traces in the stream. This is
         performed in place on the actual data arrays. The raw data
@@ -1332,32 +1334,33 @@ class Stream(object):
 
         >>> from obspy.core import read
         >>> st = read()
-        >>> st.filter("highpass", {'freq': 1.0})
+        >>> st.filter("highpass", freq=1.0)
         >>> st.plot() # doctest: +SKIP
-        >>> st.trigger('recStalta', {'sta': 3, 'lta': 10})
+        >>> st.trigger('recStalta', sta=3, lta=10)
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
             
             from obspy.core import read
             st = read()
-            st.filter("highpass", {'freq': 1.0})
+            st.filter("highpass", freq=1.0)
             st.plot()
-            st.trigger('recStalta', {'sta': 3, 'lta': 10})
+            st.trigger('recStalta', sta=3, lta=10)
             st.plot()
 
         :param type: String that specifies which trigger is applied (e.g.
                 'recStalta').
-        :param options: Dictionary that contains arguments that will
-                be passed to the respective trigger function as kwargs.
-                Arguments ``sta`` and ``lta`` will be mapped to ``nsta`` and
-                ``nlta`` by multiplying with sampling rate of each trace.
-                (e.g. {'sta': 3, 'lta': 10} would call the trigger with 3 and
+        :param options: Necessary keyword arguments for the respective trigger
+                that will be passed on.
+                (e.g. sta=3, lta=10)
+                Arguments ``sta`` and ``lta`` (seconds) will be mapped to
+                ``nsta`` and ``nlta`` (samples) by multiplying with sampling
+                rate of trace.
+                (e.g. sta=3, lta=10 would call the trigger with 3 and
                 10 seconds average, respectively)
-        :return: ``None``
         """
         for tr in self:
-            tr.trigger(type=type, options=options)
+            tr.trigger(type, **options)
         return
 
     def downsample(self, decimation_factor, no_filter=False,
