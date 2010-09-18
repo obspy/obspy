@@ -39,7 +39,7 @@ Working with the convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`
 works similar:
 
->>> tr.filter('highpass', {'freq': 1.0, 'corners': 1, 'zerophase': True})
+>>> tr.filter('highpass', freq=1.0, corners=1, zerophase=True)
 
 .. plot::
 
@@ -118,7 +118,7 @@ The following example demonstrates a recursive Sta/Lta triggering:
 >>> 
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
->>> tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
+>>> tr.filter("bandpass", freqmin=1, freqmax=20)
 >>> sta = 0.5
 >>> lta = 4
 >>> cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate),
@@ -134,7 +134,7 @@ The following example demonstrates a recursive Sta/Lta triggering:
     from obspy.imaging.waveform import plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
-    tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
+    tr.filter("bandpass", freqmin=1, freqmax=20)
     sta = 0.5
     lta = 4
     cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate), int(lta * tr.stats.sampling_rate))
@@ -148,7 +148,7 @@ It works on and overwrites the traces waveform data and is intended for batch
 processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
->>> tr.trigger("recstalta", {'sta': 0.5, 'lta': 4})
+>>> tr.trigger("recstalta", sta=0.5, lta=4)
 >>> tr.plot() #doctest: #SKIP
 
 .. plot::
@@ -158,8 +158,8 @@ But it also means that the trace's built-in methods can be used.
     from obspy.imaging import plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
-    tr.filter("bandpass", {'freqmin': 1, 'freqmax': 20})
-    tr.trigger("recstalta", {'sta': 0.5, 'lta': 4})
+    tr.filter("bandpass", freqmin=1, freqmax=20)
+    tr.trigger("recstalta", sta=0.5, lta=4)
     tr.plot()
 
 
