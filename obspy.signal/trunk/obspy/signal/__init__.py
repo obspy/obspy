@@ -155,7 +155,7 @@ But it also means that the trace's built-in methods can be used.
 
     from obspy.core import read
     from obspy.signal import recStalta
-    from obspy.imaging import plot_trigger
+    from obspy.imaging.waveform import plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
