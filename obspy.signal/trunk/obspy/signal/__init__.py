@@ -108,7 +108,18 @@ Trigger
 
 The :mod:`~obspy.signal.trigger` module provides various triggering algorithms,
 including different Sta/Lta routines, Z-Detector, AR picker and the P-picker by
-M. Bear.
+M. Bear. The implementation is based on these articles:
+
+.. note:: Withers, M., Aster, R., Young, C., Beiriger, J., Harris, M.,
+    Moore, S., & Trujillo, J., 1998. A comparison of
+    selected trigger algorithms for automated global seismic phase and event
+    detection, Bulletin of the Seismological
+    Society of America, 88, 95—106.
+
+.. note:: Baer, M. & Kradolfer, U., 1987. An automatic phase picker for
+    local and teleseismic events, Bulletin of the
+    Seismological Society of America, 77, 1437—1445.
+
 
 The following example demonstrates a recursive Sta/Lta triggering:
 
