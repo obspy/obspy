@@ -20,7 +20,7 @@ This submodule can plot multiple :class:`~obspy.core.trace.Trace` in one
 arguments to adjust the plot like color and tick format changes.
 
 Additionally the start- and endtime of the plot can be given as
-:class:`obspy.core.utcdatetime.UTCDateTime` objects.
+:class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 Examples files may be retrieved via http://examples.obspy.org.
 
@@ -47,21 +47,28 @@ Spectrograms
 ------------
 This submodule plots spectrograms.
 
-The spectrogram will on default have 80% overlap and a maximum sliding window
+The spectrogram will on default have 90% overlap and a maximum sliding window
 size of 4096 points.
 
 >>> from obspy.imaging.spectrogram import spectrogram
 >>> from obspy.core import read
 >>> st = read()
->>> spectrogram(st[0].data, st[0].stats.sampling_rate) #doctest: +ELLIPSIS
+>>> tr = st[0]
+>>> spectrogram(tr.data, tr.stats.sampling_rate) #doctest: +ELLIPSIS
 <matplotlib.figure.Figure object at 0x...>
+
+There are also a convenience method for :class:`~obspy.core.stream.Stream`/
+:class:`~obspy.core.trace.Trace`:
+
+>>> tr.spectrogram() #doctest: +SKIP
 
 .. plot::
 
     from obspy.imaging.spectrogram import spectrogram
     from obspy.core import read
     st = read()
-    spectrogram(st[0].data, st[0].stats.sampling_rate)
+    tr = st[0]
+    spectrogram(tr.data, tr.stats.sampling_rate)
 
 For more info see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
@@ -112,16 +119,20 @@ Plot the beach ball as matplotlib collection into an existing plot.
 >>>
 >>> np1 = [150, 87, 1]
 >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
+>>> beach1 = Beach(np1, xy=(-70, 80), width=30)
+>>> beach2 = Beach(mt, xy=(50, 50), width=50)
 >>>
->>> plt.plot([-100, 100], [0, 100], "rv", ms=10) #doctest: +ELLIPSIS
+>>> plt.plot([-100, 100], [0, 100], "rv", ms=20) #doctest: +ELLIPSIS
 [<matplotlib.lines.Line2D object at 0x...>]
 >>> ax = plt.gca()
->>> ax.add_collection(Beach(np1, xy=(50,50), width=30)) #doctest: +SKIP
->>> ax.add_collection(Beach(mt, xy=(50,50), width=50)) #doctest: +SKIP
->>> plt.axis('scaled')
-(-100.0, 100.0, -100.0, 100.0)
->>> plt.axis([-120, 120, -20, 120])
-[-120, 120, -20, 120]
+>>> ax.add_collection(beach1) #doctest: +SKIP
+>>> ax.add_collection(beach2) #doctest: +SKIP
+>>> ax.set_aspect("equal")
+>>> ax.set_xlim((-120, 120))
+(-120, 120)
+>>> ax.set_ylim((-20, 120))
+(-20, 120)
+
 
 .. plot::
 
@@ -129,12 +140,15 @@ Plot the beach ball as matplotlib collection into an existing plot.
     from obspy.imaging.beachball import Beach
     np1 = [150, 87, 1]
     mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-    plt.plot([-100, 100], [0, 100], "rv", ms=10)
+    beach1 = Beach(np1, xy=(-70, 80), width=30)
+    beach2 = Beach(mt, xy=(50, 50), width=50)
+    plt.plot([-100, 100], [0, 100], "rv", ms=20)
     ax = plt.gca()
-    ax.add_collection(Beach(np1, xy=(50,50), width=30))
-    ax.add_collection(Beach(mt, xy=(50,50), width=50))
-    plt.axis('scaled')
-    plt.axis([-120, 120, -20, 120])
+    ax.add_collection(beach1)
+    ax.add_collection(beach2)
+    ax.set_aspect("equal")
+    ax.set_xlim((-120, 120))
+    ax.set_ylim((-20, 120))
 
 For more info see :func:`~obspy.imaging.beachball.Beach`.
 
