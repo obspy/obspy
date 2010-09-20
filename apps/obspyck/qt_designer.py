@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Thu Sep 16 21:28:58 2010
+# Created: Mon Sep 20 12:34:51 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -256,7 +256,7 @@ class Ui_qMainWindow_obsPyck(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.qLineEdit_sysopPassword.sizePolicy().hasHeightForWidth())
         self.qLineEdit_sysopPassword.setSizePolicy(sizePolicy)
-        self.qLineEdit_sysopPassword.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.qLineEdit_sysopPassword.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.qLineEdit_sysopPassword.setAcceptDrops(False)
         self.qLineEdit_sysopPassword.setEchoMode(QtGui.QLineEdit.Password)
         self.qLineEdit_sysopPassword.setObjectName("qLineEdit_sysopPassword")
@@ -495,7 +495,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.verticalLayout_4.addLayout(self.verticalLayout)
         qMainWindow_obsPyck.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(qMainWindow_obsPyck)
-        self.menubar.setGeometry(QtCore.QRect(0,0,1176,28))
+        self.menubar.setGeometry(QtCore.QRect(0,0,1176,21))
         self.menubar.setObjectName("menubar")
         qMainWindow_obsPyck.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(qMainWindow_obsPyck)

@@ -122,7 +122,8 @@ class ObsPyck(QtGui.QMainWindow):
 
         # some SeisHub specific adjustments
         if 'SeisHub' in clients:
-            from obspy.seishub import Client as SClient
+            from obspy.seishub import Client
+            self.SClient = Client
         else:
             msg = "Warning: SeisHub specific features will not work " + \
                   "(e.g. 'send Event')."
@@ -558,8 +559,8 @@ class ObsPyck(QtGui.QMainWindow):
     # the password
     def on_qLineEdit_sysopPassword_editingFinished(self):
         passwd = str(self.widgets.qLineEdit_sysopPassword.text())
-        tmp_client = SClient(base_url=self.server['BaseUrl'], user="sysop",
-                             password=passwd)
+        tmp_client = self.SClient(base_url=self.server['BaseUrl'],
+                                  user="sysop", password=passwd)
         if tmp_client.testAuth():
             self.clients['SeisHub-sysop'] = tmp_client
             self.widgets.qCheckBox_sysop.setChecked(True)
