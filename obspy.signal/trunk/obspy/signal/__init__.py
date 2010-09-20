@@ -136,7 +136,7 @@ The following example demonstrates a recursive Sta/Lta triggering:
 ...                 int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
->>> plot_trigger(tr, cft, thrOn, thrOff)
+>>> plot_trigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
 
 .. plot::
 
@@ -160,7 +160,7 @@ processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
 >>> tr.trigger("recstalta", sta=0.5, lta=4)
->>> tr.plot() #doctest: #SKIP
+>>> tr.plot() #doctest: +SKIP
 
 .. plot::
 
