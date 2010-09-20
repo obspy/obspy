@@ -459,12 +459,19 @@ def add_doctests(testsuite, module_name):
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([MODULE_NAME, name]) for name in names)
     for module_name in module_names:
-        try:
+        # try/except here can silently skip not executed tests due to e.g. bad
+        # doctest option syntax, see [1887] (" #SKIP" instead of " +SKIP").
+        # An option would be to try and only catch that particular error but
+        # first let's see if we can omit the try/except completely as files
+        # without doctests seem not to make problems.
+        #try:
             module = __import__(module_name, fromlist="obspy")
             testsuite.addTest(doctest.DocTestSuite(module))
-        except Exception, e:
-            warnings.warn(str(e))
-            pass
+        #except Exception, e:
+        #    if "doctest" in str(e) and "invalid" in str(e):
+        #        raise e
+        #    warnings.warn(str(e))
+        #    pass
 
 
 def add_unittests(testsuite, module_name):
