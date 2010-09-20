@@ -1,3 +1,9 @@
+/*--------------------------------------------------------------------
+# Filename: arpicker.c
+#  Purpose: Auto Regressive Picker
+#   Author: Joachim Wassermann
+# Copyright (C) J. Wassermann
+#---------------------------------------------------------------------*/
 #include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>

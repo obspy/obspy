@@ -1,3 +1,9 @@
+/*--------------------------------------------------------------------
+# Filename: pk_mbaer.c
+#  Purpose: C-Verions of Baer Picker based on Fortran code of Baer
+#   Author: Andreas Rietbrock, Joachim Wassermann
+# Copyright (C) A. Rietbrock, J. Wassermann
+#---------------------------------------------------------------------*/
 #include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>

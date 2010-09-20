@@ -1,3 +1,9 @@
+/*--------------------------------------------------------------------
+# Filename: recstalta.c
+#  Purpose: Recursive STA/LTA
+#   Author: Moritz Beyreuther
+# Copyright (C) 2009 M. Beyreuther
+#---------------------------------------------------------------------*/
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

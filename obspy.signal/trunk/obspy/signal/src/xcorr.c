@@ -1,3 +1,10 @@
+/*--------------------------------------------------------------------
+# Filename: xcorr.c
+#  Purpose: Cross correlation in time domain
+#   Author: Hansruedi Maurer
+#  Changes: Joachim Wassermann
+# Copyright (C) 2010 H. Maurer, J. Wassermann
+#---------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

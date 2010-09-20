@@ -1,3 +1,9 @@
+/*--------------------------------------------------------------------
+# Filename: coordtrans.c
+#  Purpose: Transform Coordinates
+#   Author: Matthias Ohrnberger, Matthias Hardt
+# Copyright (C) M. Ohrnberger, M. Hardt
+#---------------------------------------------------------------------*/
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
