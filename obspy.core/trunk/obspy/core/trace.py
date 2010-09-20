@@ -998,9 +998,10 @@ class Trace(object):
                     SEED convention. Use None for no inverse filtering.
         :type paz_simulate: Dictionary, None
         :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
-                         'gain'. Poles and zeros must be a list of complex
-                         floating point numbers, gain must be of type float. Or
-                         None for no simulation.
+                'gain'. Poles and zeros must be a list of complex
+                floating point numbers, gain must be of type float. Or
+                None for no simulation.
+                Use 'self' to use paz AttribDict in trace.stats
         :type remove_sensitivity: Boolean
         :param remove_sensitivity: Determines if data is divided by
                 `paz_remove['sensitivity']` to correct for overall sensitivity
@@ -1020,6 +1021,10 @@ class Trace(object):
                 msg = "Error during import from obspy.signal. Please make " + \
                       "sure obspy.signal is installed properly."
                 raise ImportError(msg)
+
+        # XXX accepting string "self" and using attached paz then
+        if paz_remove=='self':
+            paz_remove = self.stats.paz
 
         self.data = signal.seisSim(self.data, self.stats.sampling_rate,
                 paz_remove=paz_remove, paz_simulate=paz_simulate,

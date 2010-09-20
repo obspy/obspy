@@ -1257,7 +1257,8 @@ class Stream(object):
                     list of complex floating point numbers, gain must be of
                     type float. Poles and Zeros are assumed to correct to m/s,
                     SEED convention. Use None for no inverse filtering.
-                    Use 'self' to use paz AttribDict of attached trace object
+                    Use 'self' to use paz AttribDict in trace.stats for every
+                    trace in stream.
         :type paz_simulate: Dictionary, None
         :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
                          'gain'. Poles and zeros must be a list of complex
@@ -1275,8 +1276,6 @@ class Stream(object):
                 simulation.
         """
         for tr in self:
-            if paz_remove=='self':
-                paz_remove = tr.stats.paz
             tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
                         remove_sensitivity=remove_sensitivity,
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
