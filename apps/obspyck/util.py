@@ -45,6 +45,13 @@ COMMANDLINE_OPTIONS = (
                 "'2010-01-10T05:00:00'"}),
         (("-d", "--duration"), {'type': "float", 'dest': "duration",
                 'help': "Duration of seismogram in seconds"}),
+        (("-f", "--files"), {'type': "string", 'dest': "files",
+                'help': "Local files containing waveform data. List of "
+                "absolute paths separated by commas"}),
+        (("--dataless",), {'type': "string", 'dest': "dataless",
+                'help': "Local Dataless SEED files to look up metadata for "
+                "local waveform files. List of absolute paths separated by "
+                "commas"}),
         (("-i", "--seishub-ids"), {'dest': "seishub_ids", 'default': "",
                 'help': "Ids to retrieve from SeisHub. Star for channel and "
                 "wildcards for stations are allowed, e.g. "
@@ -256,6 +263,30 @@ def fetch_waveforms_with_metadata(options):
     streams = []
     clients = {}
     sta_fetched = set()
+    # Local files:
+    if options.files and options.dataless:
+        from obspy.core import read
+        from obspy.xseed import Parser
+        print "=" * 80
+        print "Reading local files:"
+        print "-" * 80
+        parsers = []
+        for file in options.dataless.split(","):
+            print file
+            parsers.append(Parser(file))
+        for file in options.files.split(","):
+            print file
+            st = read(file, starttime=t1, endtime=t2)
+            for tr in st:
+                for parser in parsers:
+                    try:
+                        tr.stats.paz = parser.getPAZ(tr.id, tr.stats.starttime)
+                        tr.stats.coordinates = parser.getCoordinates(tr.id, tr.stats.starttime)
+                        break
+                    except:
+                        continue
+                    print "found no metadata for %s!!!" % file
+            streams.append(st)
     # SeisHub
     if options.seishub_ids:
         from obspy.seishub import Client

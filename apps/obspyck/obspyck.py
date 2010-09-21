@@ -1351,7 +1351,7 @@ class ObsPyck(QtGui.QMainWindow):
         try:
             if ev.inaxes in self.axs:
                 self.widgets.qLabel_xdata_rel.setText(formatXTicklabels(ev.xdata))
-                label = self.time_rel2abs(ev.xdata).isoformat().replace("T", "  ")
+                label = self.time_rel2abs(ev.xdata).isoformat().replace("T", "  ")[:-3]
                 self.widgets.qLabel_xdata_abs.setText(label)
                 self.widgets.qLabel_ydata.setText("%.1f" % ev.ydata)
             else:
