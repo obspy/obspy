@@ -416,6 +416,7 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
             the comment line in the paz_file
 
     >>> tr = obspy.core.Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
+    >>> import StringIO
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
