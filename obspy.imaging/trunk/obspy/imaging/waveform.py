@@ -830,7 +830,7 @@ def _plot_list(streams):
     plt.show()
 
 
-def plot_trigger(trace, cft, thrOn, thrOff):
+def plot_trigger(trace, cft, thrOn, thrOff, noshow=False):
     """
     Plot characteristic function of trigger along with waveform data and
     trigger On/Off from given thresholds.
@@ -844,6 +844,9 @@ def plot_trigger(trace, cft, thrOn, thrOff):
     :param thrOn: threshold for switching trigger on
     :type thrOff: float
     :param thrOff: threshold for switching trigger off
+    :type noshow: bool
+    :param noshow: Do not call `plt.show()` at end of routine. That way,
+            further modifications can be done to the figure before showing it.
     """
     try:
         from obspy.signal.trigger import triggerOnset
@@ -872,4 +875,5 @@ def plot_trigger(trace, cft, thrOn, thrOff):
     ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
     fig.suptitle(trace.id)
     fig.canvas.draw()
-    plt.show()
+    if not noshow:
+        plt.show()
