@@ -92,6 +92,6 @@ stats and stats['sac'] are written with the following command to a file:
 """
 
 from obspy.core.util import _getVersionString
-from sacio import SacIO, SacError, SacIOError, ReadSac
+from sacio import SacIO, SacError, SacIOError, ReadSac, attach_paz
 
 __version__ = _getVersionString("obspy.sac")

@@ -3,9 +3,10 @@
 """
 The SacIO test suite.
 """
-
+import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, ReadSac
+from obspy.sac import SacIO, SacError, ReadSac, attach_paz
+import StringIO
 import numpy as np
 import inspect
 import os
@@ -227,6 +228,23 @@ class SacIOTestCase(unittest.TestCase):
     ###     #import ipdb; ipdb.set_trace()
     ###     self.assertRaises(SacError, t._get_dist_)
     ###     sys.path.extend(signal_path)
+
+    def test_attach_paz(self):
+        fvelhz = StringIO.StringIO("""ZEROS 3
+        -5.032 0.0
+        POLES 6
+        -0.02365 0.02365
+        -0.02365 -0.02365
+        -39.3011 0.
+        -7.74904 0.
+        -53.5979 21.7494
+        -53.5979 -21.7494
+        CONSTANT 2.16e18""")
+        tr = obspy.core.Trace()
+        attach_paz(tr, fvelhz, torad=True, todisp=True)
+        np.testing.assert_array_almost_equal(tr.stats.paz['zeros'][0], -31.616988, decimal=6)
+        self.assertEqual(len(tr.stats.paz['zeros']),4)
+        
 
 def suite():
     return unittest.makeSuite(SacIOTestCase, 'test')

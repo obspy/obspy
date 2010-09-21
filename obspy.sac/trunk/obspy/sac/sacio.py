@@ -7,6 +7,8 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
+import obspy.core
+import StringIO
 from obspy.core import UTCDateTime
 from obspy.core.util import deprecated
 import warnings
@@ -1173,6 +1175,139 @@ class ReadSac(SacIO):
     def __init__(self, *args, **kwargs): 
         warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning) 
         SacIO.__init__(self, *args, **kwargs)
+
+
+
+
+############# UTILITIES ###################################################
+def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
+    '''
+    Attach tr.stats.paz AttribDict to trace from SAC paz_file
+
+    This is experimental code, taken from
+    obspy.gse2.libgse2.attach_paz and adapted to the SAC-pole-zero
+    conventions. Especially the conversion from velocity to
+    displacement and vice versa is still under construction. It works
+    but I cannot guarantee that the values are correct. For more
+    information on the SAC-pole-zero format see:
+    http://www.iris.edu/software/sac/commands/transfer.html. For a
+    useful discussion on polezero files and transfer functions in
+    general see:
+    http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf
+
+    Attaches to a trace a paz AttribDict containing poles zeros and gain.
+
+    :param tr: An ObsPy trace object containing the calib and gse2 calper
+            attributes
+    :param paz_file: path to pazfile or file pointer
+    :param todisp: change a velocity transfer function to a displacement
+                   transfer function by adding another zero
+    :param tovel: change a displacement transfer function to a velocity transfer
+                  function by removing one 0,0j zero
+    :param torad: change to radians
+    :param tohz: change to Hertz
+    
+    >>> tr = obspy.core.Trace()
+    >>> f = StringIO.StringIO("""ZEROS 3
+    ... -5.032 0.0
+    ... POLES 6
+    ... -0.02365 0.02365
+    ... -0.02365 -0.02365
+    ... -39.3011 0.
+    ... -7.74904 0.
+    ... -53.5979 21.7494
+    ... -53.5979 -21.7494
+    ... CONSTANT 2.16e18""")
+    >>> attach_paz(tr, f,torad=True)
+    >>> print tr.stats.paz['zeros'][0]
+    (-31.6169884657+0j)
+    '''
+
+    poles = []
+    zeros = []
+    found_zero = False
+
+    if isinstance(paz_file, str):
+        paz_file = open(paz_file, 'r')
+
+    while True:
+        line = paz_file.readline()
+        if not line: break
+        if line.find('ZEROS')!=-1:
+            a = line.split()
+            noz = int(a[1])
+            for k in xrange(noz):
+                line = paz_file.readline()
+                a = line.split()
+                if line.find('POLES') != -1:
+                    while len(zeros) < noz:
+                        zeros.append(complex(0,0j))
+                    break
+                else:
+                    zeros.append(complex(float(a[0]),float(a[1])))
+
+        if line.find('POLES') != -1:
+            a = line.split()
+            nop = int(a[1])
+            for k in xrange(nop):
+                line = paz_file.readline()
+                a = line.split()
+                if line.find('CONSTANT') != -1:
+                    while len(poles) < nop:
+                        poles.append(complex(0,0j))
+                    break
+                else:
+                    poles.append(complex(float(a[0]),float(a[1])))
+        if line.find('CONSTANT') != -1:
+            a = line.split()
+            # in the observatory this is the seismometer gain [muVolt/nm/s]
+            # the A0_normalization_factor is hardcoded to 1.0
+            seismometer_gain = float(a[1])
+            break
+    paz_file.close()
+
+    ### To convert the velocity response to the displacement response,
+    ### multiplication with jw is used. This is equivalent to one more
+    ### zero in the pole-zero representation
+    if todisp:
+        zeros.append(complex(0,0j))
+
+    ### To convert the displacement response to the velocity response,
+    ### division with jw is used. This is equivalent to one less zero
+    ### in the pole-zero representation
+    if tovel:
+        for i, zero in enumerate(list(zeros)):
+            if zero == complex(0,0j):
+                zeros.pop(i)
+                found_zero = True
+                break
+        if not found_zero:
+            raise Exception("Could not remove (0,0j) zero to change \
+            displacement response to velocity response")
+
+    ### convert poles, zeros and gain in Hertz to radians
+    if torad:
+        tmp = [z*2.*np.pi for z in zeros]
+        zeros = tmp
+        tmp = [p*2.*np.pi for p in poles]
+        poles = tmp
+        seismometer_gain *= 2.*np.pi
+    
+    ### convert poles, zeros and gain in radian to Hertz
+    if tohz:
+        for i,z in enumerate(zeros):
+            if abs(z) > 0.0:
+                zeros[i] /= 2*np.pi
+        for i,p in enumerate(poles):
+            if abs(p) > 0.0:
+                poles[i] /= 2*np.pi
+        seismometer_gain /= 2.*np.pi
+    
+    # fill up ObsPy Poles and Zeros AttribDict
+    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz.seismometer_gain = seismometer_gain 
+    tr.stats.paz.poles = poles
+    tr.stats.paz.zeros = zeros
 
 
 if __name__ == "__main__":
