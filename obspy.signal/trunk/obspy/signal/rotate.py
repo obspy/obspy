@@ -17,8 +17,10 @@ Various Seismogram Rotation Functions
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from numpy import sin, cos
-from math import sqrt, pi, asin, tan, atan, atan2
+
+import warnings
+import numpy as np
+from math import sqrt, pi, sin, cos, asin, tan, atan, atan2
 
 
 def rotate_NE_RT(n, e, ba):
@@ -186,16 +188,21 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         azimuth B->A in degrees)
     """
     try:
-        return _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2)
+        values = _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2)
+        if values == (np.nan, np.nan, np.nan):
+            raise ValueError("excepting nan return values")
+        return values
     # we should use an alternative calculation method for this case
     # but for now just settle with this quick fix
     # see #150
     except ValueError, e:
+        msg = "Catching unstable calculation on antipodes. " + \
+              "If this happens too often please bully the developers " + \
+              "into implementing a more secure solution for this issue."
         if str(e) == "math domain error" and abs(lon1 - lon2) > 179.3:
-            import warnings
-            msg = "Catching unstable calculation on antipodes. " + \
-                  "If this happens too often please bully the developers " + \
-                  "into implementing a more secure solution for this issue."
+            warnings.warn(msg)
+            return (20004314.5, 0.0, 0.0)
+        elif str(e) == "excepting nan return values" and abs(lon1 - lon2) > 179.3:
             warnings.warn(msg)
             return (20004314.5, 0.0, 0.0)
         else:
