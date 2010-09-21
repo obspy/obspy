@@ -95,7 +95,7 @@ class Client(object):
 
         :returns: True if OK, False if invalid.
         """
-        (code, msg) = self._HTTP_request(self.base_url + "/xml/",
+        (code, _msg) = self._HTTP_request(self.base_url + "/xml/",
                                          method="HEAD")
         if code == 200:
             return True
@@ -143,7 +143,8 @@ class Client(object):
         :param xml_string: XML for a send request (PUT/POST)
         """
         if method not in HTTP_ACCEPTED_METHODS:
-            raise ValueError("Method must be one of %s" % HTTP_ACCEPTED_METHODS)
+            raise ValueError("Method must be one of %s" % \
+                             HTTP_ACCEPTED_METHODS)
         if method in HTTP_ACCEPTED_DATA_METHODS and not xml_string:
             raise TypeError("Missing data for %s request." % method)
         elif method in HTTP_ACCEPTED_NODATA_METHODS and xml_string:
@@ -360,7 +361,7 @@ class _WaveformMapperClient(object):
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        
+
         # allow time strings in arguments
         for time in ["start_datetime", "end_datetime"]:
             if isinstance(kwargs[time], str):
@@ -389,7 +390,7 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
-        
+
         # trimming needs to be done only if we extend the datetime above
         if channel_id:
             stream.trim(trim_start, trim_end)
@@ -668,7 +669,7 @@ class _EventMapperClient(_BaseRESTClient):
         root = self.client._objectify(url, **kwargs)
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
-    
+
     @deprecated
     def getKml(self, nolabels=False, **kwargs):
         """
@@ -707,8 +708,8 @@ class _EventMapperClient(_BaseRESTClient):
         iconstyle = SubElement(style, "IconStyle")
         SubElement(iconstyle, "scale").text = "0.5"
         icon = SubElement(iconstyle, "Icon")
-        SubElement(icon, "href").text = "http://maps.google.com/mapfiles/kml/" + \
-                                 "shapes/earthquake.png"
+        SubElement(icon, "href").text = \
+            "http://maps.google.com/mapfiles/kml/shapes/earthquake.png"
         hotspot = SubElement(iconstyle, "hotSpot")
         hotspot.set("x", "0.5")
         hotspot.set("y", "0")
@@ -728,7 +729,8 @@ class _EventMapperClient(_BaseRESTClient):
         descrip_str = "Fetched from: %s" % self.client.base_url
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
-        descrip_str += "\n".join(["=".join(str(item)) for item in kwargs.items()])
+        descrip_str += "\n".join(["=".join(str(item))
+                                  for item in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")
@@ -819,7 +821,7 @@ class RequestWithMethod(urllib2.Request):
         if method not in HTTP_ACCEPTED_METHODS:
             msg = "HTTP Method not supported. " + \
                   "Supported are: %s." % HTTP_ACCEPTED_METHODS
-            raise ValueError()
+            raise ValueError(msg)
         urllib2.Request.__init__(self, *args, **kwargs)
         self._method = method
 

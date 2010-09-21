@@ -423,7 +423,7 @@ class LibMSEED(object):
         use_blkt_1001 = 0
         for trace in trace_list:
             if trace[0]['starttime'] % 100 != 0 or \
-               (1.0/trace[0]['samprate'] * HPTMODULUS) % 100 != 0:
+               (1.0 / trace[0]['samprate'] * HPTMODULUS) % 100 != 0:
                 use_blkt_1001 += 1
         for trace in trace_list:
             # Populate MSTG Structure
@@ -578,8 +578,6 @@ class LibMSEED(object):
         Reads the first record and returns all information about the Mini-SEED
         file format is can find.
         """
-        # Read the file.
-        f = open(filename, 'rb')
         # Create _MSStruct instance to read the file.
         msr = _MSStruct(filename, filepointer=True)
         chain = msr.msr.contents

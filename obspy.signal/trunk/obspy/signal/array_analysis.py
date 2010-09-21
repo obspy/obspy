@@ -22,7 +22,7 @@ import warnings
 import ctypes as C
 import numpy as np
 from obspy.signal.util import utlGeoKm, lib, nextpow2
-from obspy.core import AttribDict, Stream
+from obspy.core import Stream
 from scipy.integrate import cumtrapz
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -645,7 +645,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     res = []
     eotr = True
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
-    
+
     # check that sampling rates do not vary
     df = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=df)):
@@ -707,11 +707,11 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         if slow < 1e-8:
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
-        baz = azimut - np.sign(azimut)*180
+        baz = azimut - np.sign(azimut) * 180
         if power > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, power, abspow, baz, slow]))
             if verbose:
-                print newstart, (newstart + (nsamp/df)), res[-1][1:]
+                print newstart, (newstart + (nsamp / df)), res[-1][1:]
         if (newstart + (nsamp + nstep) / df) > etime:
             eotr = False
         offset += nstep
@@ -722,7 +722,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         pass
     elif timestamp == 'mlabhour':
         # 719162 == hours between 1970 and 0001
-        res[:,0] = res[:,0]/(24.*3600) + 719162
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabhour'"
         raise ValueError(msg)
@@ -831,7 +831,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
     center_lon = 0.
     center_h = 0.
     geometry = np.empty((nstat, 3))
-    
+
     if isinstance(stream, Stream):
         for i, tr in enumerate(stream):
             if coordsys == 'lonlat':
@@ -851,18 +851,18 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         print "coordys = " + coordsys
 
     if coordsys == 'lonlat':
-        center_lon = geometry[:,0].mean()
-        center_lat = geometry[:,1].mean()
-        center_h = geometry[:,2].mean()
+        center_lon = geometry[:, 0].mean()
+        center_lat = geometry[:, 1].mean()
+        center_h = geometry[:, 2].mean()
         for i in np.arange(nstat):
-            x, y = utlGeoKm(center_lon, center_lat, geometry[i,0], geometry[i,1])
-            geometry[i,0] = x
-            geometry[i,1] = y
-            geometry[i,2] -= center_h
+            x, y = utlGeoKm(center_lon, center_lat, geometry[i, 0], geometry[i, 1])
+            geometry[i, 0] = x
+            geometry[i, 1] = y
+            geometry[i, 2] -= center_h
     elif coordsys == 'xy':
-        geometry[:,0] -= geometry[:,0].mean()
-        geometry[:,1] -= geometry[:,1].mean()
-        geometry[:,2] -= geometry[:,2].mean()
+        geometry[:, 0] -= geometry[:, 0].mean()
+        geometry[:, 1] -= geometry[:, 1].mean()
+        geometry[:, 2] -= geometry[:, 2].mean()
     else:
         raise ValueError("Coordsys must be one of 'lonlat', 'xy'")
 
@@ -890,7 +890,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
         sx = sll_x + k * sl_s
         for l in xrange(grdpts_y):
             sy = sll_y + l * sl_s
-            time_shift_table[:,k,l] = sx * geometry[:,0] + sy * geometry[:,1]
+            time_shift_table[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
 
     return time_shift_table
 
@@ -941,7 +941,7 @@ def ndarray2ptr3D(ndarray):
     Construct *** pointer for ctypes from numpy.ndarray
     """
     ptr = C.c_void_p
-    dim1, dim2, dim3 = ndarray.shape
+    dim1, dim2, _dim3 = ndarray.shape
     voids = []
     for i in xrange(dim1):
         row = ndarray[i]
@@ -973,7 +973,8 @@ def cosine_taper(ndat, fraction=0.1):
     data = np.empty(ndat, dtype='float64')
     # the c extension tapers fraction from the beginning and the end,
     # therefore we half it
-    frac = C.c_double(fraction/2.0)
+    # XXX: frac is never used
+    #frac = C.c_double(fraction / 2.0)
 
     errcode = lib.cosine_taper(data, ndat, fraction)
     if errcode != 0:
@@ -996,11 +997,12 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(klim, float):
-        kxmin = - klim
+        kxmin = -klim
         kxmax = klim
-        kymin = - klim
+        kymin = -klim
         kymax = klim
     elif isinstance(klim, tuple):
+        # XXX: k is not defined
         if len(k) == 4:
             kxmin = klim[0]
             kxmax = klim[1]
@@ -1008,25 +1010,25 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
             kymax = klim[3]
     else:
         raise TypeError('klim must either be a float or a tuple of length 4')
-    
-    nkx = np.ceil((kxmax + kstep/10. - kxmin)/kstep)
-    nky = np.ceil((kymax + kstep/10. - kymin)/kstep)
+
+    nkx = np.ceil((kxmax + kstep / 10. - kxmin) / kstep)
+    nky = np.ceil((kymax + kstep / 10. - kymin) / kstep)
 
     transff = np.zeros((nkx, nky))
-    
-    for i, kx in enumerate(np.arange(kxmin, kxmax + kstep/10., kstep)):
-        for j, ky in enumerate(np.arange(kymin, kymax + kstep/10., kstep)):
+
+    for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
+        for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             for k in np.arange(len(coords)):
-                transff[i, j] += np.exp(complex(0., 
-                    coords[k,0] * kx + coords[k,1] * ky))
-            transff[i, j] = abs(transff[i, j])**2
+                transff[i, j] += np.exp(complex(0.,
+                    coords[k, 0] * kx + coords[k, 1] * ky))
+            transff[i, j] = abs(transff[i, j]) ** 2
 
     transff /= transff.max()
     return transff
 
 
 def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
-    coordsys='lonlat'):
+                               coordsys='lonlat'):
     """
     returns array transfer function as a function of slowness difference and
     frequency
@@ -1047,11 +1049,13 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(slim, float):
-        sxmin = - slim
+        sxmin = -slim
         sxmax = slim
-        symin = - slim
+        symin = -slim
         symax = slim
+    # XXX: klim is not defined
     elif isinstance(klim, tuple):
+        # XXX: k is not defined
         if len(k) == 4:
             sxmin = slim[0]
             sxmax = slim[1]
@@ -1059,21 +1063,21 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
             symax = slim[3]
     else:
         raise TypeError('slim must either be a float or a tuple of length 4')
-    
-    nsx = np.ceil((sxmax + sstep/10. - sxmin)/sstep)
-    nsy = np.ceil((symax + sstep/10. - symin)/sstep)
-    nf = np.ceil((fmax + fstep/10. - fmin)/fstep)
+
+    nsx = np.ceil((sxmax + sstep / 10. - sxmin) / sstep)
+    nsy = np.ceil((symax + sstep / 10. - symin) / sstep)
+    nf = np.ceil((fmax + fstep / 10. - fmin) / fstep)
 
     transff = np.zeros((nsx, nsy))
 
-    for i, sx in enumerate(np.arange(sxmin, sxmax + sstep/10., sstep)):
-        for j, sy in enumerate(np.arange(symin, symax + sstep/10., sstep)):
+    for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
+        for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
             buff = np.zeros(nf)
-            for k, f in enumerate(np.arange(fmin, fmax + fstep/10.,fstep)):
+            for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
                 for l in np.arange(len(coords)):
-                    buff[k] += np.exp(complex(0., (coords[l,0] * sx 
-                        + coords[l,1] * sy) * 2 * np.pi * f))
-                buff[k] = abs(buff[k])**2
+                    buff[k] += np.exp(complex(0., (coords[l, 0] * sx
+                        + coords[l, 1] * sy) * 2 * np.pi * f))
+                buff[k] = abs(buff[k]) ** 2
             transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
 
     transff /= transff.max()

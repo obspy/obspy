@@ -28,7 +28,7 @@ import sys
 import os
 from obspy.core import read
 from optparse import OptionParser
-from matplotlib.dates import date2num, num2date
+from matplotlib.dates import date2num
 from matplotlib.pyplot import figure, show
 import numpy as np
 
@@ -45,7 +45,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         return counter
     s = "%s %s" % (counter, file)
     if verbose:
-        sys.stdout.write("%s\n" %s)
+        sys.stdout.write("%s\n" % s)
         for line in str(stream).split("\n"):
             sys.stdout.write("    " + line + "\n")
     else:
@@ -73,7 +73,7 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
     else:
         print "Problem with filename/dirname:", path
     return counter
-    
+
 
 def main():
     parser = OptionParser(__doc__.strip())
@@ -111,7 +111,7 @@ def main():
     for path in largs:
         counter = parse_func(data, samp_int, path, counter, options.format,
                              options.verbose, options.ignore_links)
-    
+
     if not data:
         print "No waveform data found."
         return

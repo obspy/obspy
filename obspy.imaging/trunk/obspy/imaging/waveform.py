@@ -347,10 +347,10 @@ class WaveformPlotting(object):
             # Merge with 'interpolation'. In case of overlaps this method will
             # always use the longest available trace.
             if hasattr(trace[0].stats, 'preview') and trace[0].stats.preview:
-                stream = Stream(traces = stream)
+                stream = Stream(traces=stream)
                 stream = mergePreviews(stream)
             else:
-                stream.merge(method = 1)
+                stream.merge(method=1)
             trace = stream[0]
         else:
             trace = trace[0]
@@ -359,14 +359,13 @@ class WaveformPlotting(object):
         if hasattr(trace.stats, 'preview') and trace.stats.preview:
             # Mask the gaps.
             trace.data = np.ma.masked_array(trace.data)
-            trace.data[trace.data==-1] = np.ma.masked
+            trace.data[trace.data == -1] = np.ma.masked
             # Recreate the min_max scene.
             dtype = trace.data.dtype
-            npts = trace.stats.npts
             old_time_range = trace.stats.endtime - trace.stats.starttime
-            data = np.empty(2*trace.stats.npts, dtype=dtype)
-            data[0::2] = trace.data/2.0
-            data[1::2] = -trace.data/2.0
+            data = np.empty(2 * trace.stats.npts, dtype=dtype)
+            data[0::2] = trace.data / 2.0
+            data[1::2] = -trace.data / 2.0
             trace.data = data
             # The times are not supposed to change.
             trace.stats.delta = old_time_range / float(trace.stats.npts - 1)
@@ -534,8 +533,8 @@ class WaveformPlotting(object):
         for _i, ax in enumerate(self.axis):
             mean = self.stats[_i][1]
             # Set the ylimit.
-            min_range = mean-max_distance
-            max_range = mean+max_distance
+            min_range = mean - max_distance
+            max_range = mean + max_distance
             # Set the location of the ticks.
             ticks = [mean - 0.7 * max_distance, mean, mean + 0.7 *
                            max_distance]
@@ -746,7 +745,7 @@ class WaveformPlotting(object):
             warnings.warn("Available matplotlib version too old. You'll get a simpler plot.")
 
 def _plot_list(streams):
-    
+
     def formatXTicklabels(x, pos):
         """
         Make a nice formatting for x axis ticklabels
@@ -754,7 +753,7 @@ def _plot_list(streams):
         # pos is the ticklabel index, None if hovering with the mouse
         dt = UTCDateTime(num2date(x))
         return str(dt).rstrip("0Z").replace("T", " ")
-    
+
     st = Stream()
 
     # go through all streams and collect traces
@@ -775,13 +774,13 @@ def _plot_list(streams):
     sta_ids = list(set(["%s.%s" % (tr.stats.network, tr.stats.station) for tr in st]))
     num_plots = len(comp_ids)
     num_lines = len(sta_ids)
-    
+
     # assign one color per network-station id
     colors = {}
     for i, sta_id in enumerate(sta_ids):
         colors[sta_id] = hsv(float(i) / num_lines)
-    alpha = 2./len(sta_ids)
-    
+    alpha = 2. / len(sta_ids)
+
     # assign one subplot per component id
     # the first one we do by hand to be able to sharex with it
     fig = plt.figure()
@@ -789,8 +788,8 @@ def _plot_list(streams):
     ax0 = fig.add_subplot(num_plots, 1, 1)
     axs[comp_ids[0]] = ax0
     for i, comp_id in enumerate(comp_ids[1:]):
-        axs[comp_id] = fig.add_subplot(num_plots, 1, i+2, sharex=ax0)
-    
+        axs[comp_id] = fig.add_subplot(num_plots, 1, i + 2, sharex=ax0)
+
     # plot every trace with respective color in respective subplot
     for tr in st:
         comp_id = tr.stats.channel[-1]
@@ -802,7 +801,7 @@ def _plot_list(streams):
         #                       alpha=alpha, label=sta_id)
         axs[comp_id].plot(time, tr.data, ls="-", marker="", c=colors[sta_id],
                           alpha=alpha, label=sta_id)
-    
+
     # we have to group our axes for sharing x after the plotting commands,
     # plot_date has problems otherwise.
     # as we don't use plot_date anymore, we can do the sharex right at the
@@ -819,12 +818,12 @@ def _plot_list(streams):
         plt.setp(ax.xaxis.get_ticklabels(), visible=False)
     plt.setp(ax1.xaxis.get_ticklabels(), visible=True)
     ax0.legend()
-    
+
     #locator = AutoDateLocator()#minticks=3, maxticks=6)
     #locator = ax1.xaxis.set_major_locator(locator)
     #ax1.xaxis.set_major_formatter(DateFormatter('%a %d\n%b %Y'))
     # XXX ax1.xaxis.set_major_formatter(AutoDateFormatter(ax1.xaxis.get_major_locator()))
-    
+
     #fig.autofmt_xdate()
     fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
     plt.show()
@@ -865,13 +864,13 @@ def plot_trigger(trace, cft, thrOn, thrOff, show=True):
     onOff = np.array(triggerOnset(cft, thrOn, thrOff))
     i, j = ax1.get_ylim()
     try:
-        ax1.vlines(onOff[:,0] / df, i, j, color='r', lw=2, label="Trigger On")
-        ax1.vlines(onOff[:,1] / df, i, j, color='b', lw=2, label="Trigger Off")
+        ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
+        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2, label="Trigger Off")
         ax1.legend()
     except IndexError:
         pass
-    ax2.axhline(thrOn, color='red', lw = 1, ls = '--')
-    ax2.axhline(thrOff, color='blue', lw = 1, ls = '--')
+    ax2.axhline(thrOn, color='red', lw=1, ls='--')
+    ax2.axhline(thrOff, color='blue', lw=1, ls='--')
     ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
     fig.suptitle(trace.id)
     fig.canvas.draw()

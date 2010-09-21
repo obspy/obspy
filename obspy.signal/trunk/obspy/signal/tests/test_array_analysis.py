@@ -171,19 +171,20 @@ class ArrayTestCase(unittest.TestCase):
 
         la = get_geometry(ll)
 
-        np.testing.assert_almost_equal(la[:,0].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:,1].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:,2].sum(), 0., decimal=8)
-        
+        np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
+
         ll = np.array([[10., 10., 10.],
-                       [0.,   5.,  5.],
-                       [0.,   0.,  0.]])
-        
+                       [0., 5., 5.],
+                       [0., 0., 0.]])
+
         la = get_geometry(ll, coordsys='xy')
 
-        np.testing.assert_almost_equal(la[:,0].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:,1].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:,2].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
+        np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
+
 
 def suite():
     return unittest.makeSuite(ArrayTestCase, 'test')

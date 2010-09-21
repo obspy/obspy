@@ -4,7 +4,6 @@ from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import createDummyStream
 import numpy as np
-import sys
 import pickle
 import unittest
 
@@ -464,13 +463,13 @@ class StreamTestCase(unittest.TestCase):
             return
         st1 = read()
         st2 = read()
-        paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-                              -251.33+0j, -131.04-467.29j, -131.04+467.29j],
+        paz_sts2 = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                              - 251.33 + 0j, -131.04 - 467.29j, -131.04 + 467.29j],
                     'zeros': [0j, 0j],
                     'gain': 60077000.0,
                     'sensitivity': 2516778400.0}
-        paz_le3d1s = {'poles': [-4.440+4.440j, -4.440-4.440j, -1.083+0.0j],
-                      'zeros': [0.0+0.0j, 0.0+0.0j, 0.0+0.0j],
+        paz_le3d1s = {'poles': [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j],
+                      'zeros': [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
                       'gain': 0.4,
                       'sensitivity': 1.0}
         st1.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
@@ -1277,14 +1276,14 @@ class StreamTestCase(unittest.TestCase):
         consistent after trimming. That is that _ltrim and _rtrim 
         round in the same direction.
         """
-        data=np.zeros(10)
-        t=UTCDateTime(0)
+        data = np.zeros(10)
+        t = UTCDateTime(0)
         traces = []
         for delta in (0, 0.25, 0.5, 0.75, 1):
             traces.append(Trace(data.copy()))
             traces[-1].stats.starttime = t + delta
-        st=Stream(traces)
-        st.trim(t+3.5, t+6.5)
+        st = Stream(traces)
+        st.trim(t + 3.5, t + 6.5)
         start = [4.0, 4.25, 4.5, 3.75, 4.0]
         end = [6.0, 6.25, 6.50, 5.75, 6.0]
         for i in xrange(len(st)):
@@ -1299,14 +1298,14 @@ class StreamTestCase(unittest.TestCase):
         consistent after trimming. That is that _ltrim and _rtrim 
         round in the same direction. Padded version.
         """
-        data=np.zeros(10)
-        t=UTCDateTime(0)
+        data = np.zeros(10)
+        t = UTCDateTime(0)
         traces = []
         for delta in (0, 0.25, 0.5, 0.75, 1):
             traces.append(Trace(data.copy()))
             traces[-1].stats.starttime = t + delta
-        st=Stream(traces)
-        st.trim(t-3.5, t+16.5, pad=True)
+        st = Stream(traces)
+        st.trim(t - 3.5, t + 16.5, pad=True)
         start = [-4.0, -3.75, -3.5, -4.25, -4.0]
         end = [17.0, 17.25, 17.50, 16.75, 17.0]
         for i in xrange(len(st)):
@@ -1320,14 +1319,14 @@ class StreamTestCase(unittest.TestCase):
         Test case for #127. It ensures that the sample start and entimes
         stay consistent after trimming.
         """
-        data=np.zeros(10)
-        t=UTCDateTime(0)
+        data = np.zeros(10)
+        t = UTCDateTime(0)
         traces = []
         for delta in (0, 0.25, 0.5, 0.75, 1):
             traces.append(Trace(data.copy()))
             traces[-1].stats.starttime = t + delta
-        st=Stream(traces)
-        st.trim(t+3.5, t+6.5, nearest_sample=False)
+        st = Stream(traces)
+        st.trim(t + 3.5, t + 6.5, nearest_sample=False)
         start = [4.00, 4.25, 3.50, 3.75, 4.00]
         end = [6.00, 6.25, 6.50, 5.75, 6.00]
         npts = [3, 3, 4, 3, 3]
@@ -1341,14 +1340,14 @@ class StreamTestCase(unittest.TestCase):
         Test case for #127. It ensures that the sample start and entimes
         stay consistent after trimming. Padded version.
         """
-        data=np.zeros(10)
-        t=UTCDateTime(0)
+        data = np.zeros(10)
+        t = UTCDateTime(0)
         traces = []
         for delta in (0, 0.25, 0.5, 0.75, 1):
             traces.append(Trace(data.copy()))
             traces[-1].stats.starttime = t + delta
-        st=Stream(traces)
-        st.trim(t-3.5, t+16.5, nearest_sample=False, pad=True)
+        st = Stream(traces)
+        st.trim(t - 3.5, t + 16.5, nearest_sample=False, pad=True)
         start = [-3.00, -2.75, -3.50, -3.25, -3.00]
         end = [16.00, 16.25, 16.50, 15.75, 16.00]
         npts = [20, 20, 21, 20, 20]

@@ -25,7 +25,6 @@ import os
 import platform
 import ctypes as C
 import doctest
-import StringIO
 import numpy as np
 import obspy.core
 from obspy.core import UTCDateTime
@@ -388,12 +387,14 @@ def getStartAndEndTime(f):
     del fp, head
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
 
+
 @deprecated
 def attach_faked_paz(*args, **kwargs):
     """
     DEPRECATED. Use :func:`~obspy.gse2.libgse2.attach_paz` instead.
     """
     return attach_paz(*args, **kwargs)
+
 
 def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
@@ -443,19 +444,21 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     npoles = int(PAZ[ind])
     for i in xrange(npoles):
         try:
-            poles.append(complex(*[float(n) for n in PAZ[i+1+ind].split()]))
+            poles.append(complex(*[float(n)
+                                   for n in PAZ[i + 1 + ind].split()]))
         except ValueError:
-            poles.append(complex(float(PAZ[i+1+ind][:8]), 
-                                 float(PAZ[i+1+ind][8:])))
+            poles.append(complex(float(PAZ[i + 1 + ind][:8]),
+                                 float(PAZ[i + 1 + ind][8:])))
 
     ind += i + 2
     nzeros = int(PAZ[ind])
     for i in xrange(nzeros):
         try:
-            zeros.append(complex(*[float(n) for n in PAZ[i+1+ind].split()]))
+            zeros.append(complex(*[float(n)
+                                   for n in PAZ[i + 1 + ind].split()]))
         except ValueError:
-            zeros.append(complex(float(PAZ[i+1+ind][:8]), 
-                                 float(PAZ[i+1+ind][8:])))
+            zeros.append(complex(float(PAZ[i + 1 + ind][:8]),
+                                 float(PAZ[i + 1 + ind][8:])))
 
     ind += i + 2
     # in the observatory this is the seismometer gain [muVolt/nm/s]
@@ -464,7 +467,7 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
-        if zero == complex(0,0j):
+        if zero == complex(0, 0j):
             zeros.pop(i)
             found_zero = True
             break
@@ -477,7 +480,7 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     # if we read it from the commented line in the paz file, this is not
     # the case
     if read_digitizer_gain_from_file:
-        calibration = float(PAZ[ind+1].split()[-2])
+        calibration = float(PAZ[ind + 1].split()[-2])
 
     # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()
