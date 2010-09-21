@@ -28,7 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-
 from copy import deepcopy, copy
 from datetime import datetime
 from math import ceil
@@ -38,7 +37,7 @@ import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.dates import date2num, num2date
 from matplotlib.ticker import FuncFormatter
-from matplotlib.cm import hsv
+from matplotlib.cm import hsv #@UnresolvedImport
 import numpy as np
 import warnings
 
@@ -252,7 +251,8 @@ class WaveformPlotting(object):
             # Each trace needs to have the same sampling rate.
             sampling_rates = set([_tr.stats.sampling_rate for _tr in tr])
             if len(sampling_rates) > 1:
-                msg = "All traces with the same id need to have the same " + "sampling rate."
+                msg = "All traces with the same id need to have the same " + \
+                      "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
             ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
@@ -450,15 +450,19 @@ class WaveformPlotting(object):
             extreme_values[start: start + pixel_count, 1] = max
             # First and last and last pixel need separate treatment.
             if start and prestart:
-                extreme_values[start - 1, 0] = _t.data[:prestart].min() * _t.stats.calib
-                extreme_values[start - 1, 1] = _t.data[:prestart].max() * _t.stats.calib
+                extreme_values[start - 1, 0] = \
+                    _t.data[:prestart].min() * _t.stats.calib
+                extreme_values[start - 1, 1] = \
+                    _t.data[:prestart].max() * _t.stats.calib
             if rest:
                 if start + pixel_count == self.width:
                     index = self.width - 1
                 else:
                     index = start + pixel_count
-                extreme_values[index, 0] = _t.data[-rest:].min() * _t.stats.calib
-                extreme_values[index, 1] = _t.data[-rest:].max() * _t.stats.calib
+                extreme_values[index, 0] = \
+                    _t.data[-rest:].min() * _t.stats.calib
+                extreme_values[index, 1] = \
+                    _t.data[-rest:].max() * _t.stats.calib
             # Use the first array as a reference and merge all following
             # extreme_values into it.
             if _i == 0:
@@ -487,9 +491,9 @@ class WaveformPlotting(object):
         aranged = np.arange(self.width)
         x_values[0::2] = aranged
         x_values[1::2] = aranged
-        # Initialze completely masked array. This version is a little bit
+        # Initialize completely masked array. This version is a little bit
         # slower than first creating an empty array and then setting the mask
-        # to True. But on numpy 1.1 this results in a 0-D array which can not
+        # to True. But on NumPy 1.1 this results in a 0-D array which can not
         # be indexed.
         y_values = np.ma.masked_all(2 * self.width)
         y_values[0::2] = minmax[:, 0]
@@ -525,7 +529,7 @@ class WaveformPlotting(object):
         This method also adjusts the y limits so that the mean value is always
         in the middle of the graph and all graphs are equally scaled.
         """
-        # Figure out the maxiumum distance from the mean value to either end.
+        # Figure out the maximum distance from the mean value to either end.
         # Add 10 percent for better looking graphs.
         max_distance = max([max(trace[1] - trace[2], trace[3] - trace[1])
                             for trace in self.stats]) * 1.1
@@ -604,7 +608,7 @@ class WaveformPlotting(object):
                     extreme_values[_i, -1, 0] = data_rest.min()
                 if data_rest.max() < extreme_values[_i, -1, 1]:
                     extreme_values[_i, -1, 1] = data_rest.max()
-        # The last step might need seperate handling.
+        # The last step might need separate handling.
         if not good_sample_count:
             data = trace.data[(self.steps - 1) * spt:]
             # Mask all entries in the last row. Therefore no more need to worry
@@ -623,7 +627,7 @@ class WaveformPlotting(object):
             if len(data_rest):
                 extreme_values[-1, pixel_count, 0] = data_rest.min()
                 extreme_values[-1, pixel_count, 1] = data_rest.max()
-        # One might also need to incluse the single valued trace.
+        # One might also need to include the single valued trace.
         if merged_value:
             point = trace.data[-1]
             if point < extreme_values[-1, -1, 0]:
@@ -653,7 +657,6 @@ class WaveformPlotting(object):
             self.extreme_values = (self.extreme_values / max) / 2 + 0.5
         else:
             self.extreme_values = (self.extreme_values / abs(min)) / 2 + 0.5
-
 
     def __dayplotSetXTicks(self, *args, **kwargs):
         """
@@ -742,7 +745,10 @@ class WaveformPlotting(object):
             self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
                               horizontalalignment='left')
         except AttributeError:
-            warnings.warn("Available matplotlib version too old. You'll get a simpler plot.")
+            msg = "Available matplotlib version too old. You'll get a " + \
+                  "simpler plot."
+            warnings.warn(msg)
+
 
 def _plot_list(streams):
 
@@ -771,7 +777,8 @@ def _plot_list(streams):
 
     # go through stream and compile unique lists of ids
     comp_ids = list(set([tr.stats.channel[-1] for tr in st]))
-    sta_ids = list(set(["%s.%s" % (tr.stats.network, tr.stats.station) for tr in st]))
+    sta_ids = list(set(["%s.%s" % (tr.stats.network, tr.stats.station)
+                        for tr in st]))
     num_plots = len(comp_ids)
     num_lines = len(sta_ids)
 
@@ -811,8 +818,8 @@ def _plot_list(streams):
     #grouper = ax0._shared_x_axes
     for comp_id, ax in axs.items():
         #grouper.join(ax0, ax)
-        ax.text(0.02, 0.95, comp_id, color="b", fontsize=16, ha="left", va="top",
-                transform=ax.transAxes)
+        ax.text(0.02, 0.95, comp_id, color="b", fontsize=16, ha="left",
+                va="top", transform=ax.transAxes)
         ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
         plt.setp(ax.get_xticklabels(), rotation=20, horizontalalignment="right")
         plt.setp(ax.xaxis.get_ticklabels(), visible=False)
@@ -865,7 +872,8 @@ def plot_trigger(trace, cft, thrOn, thrOff, show=True):
     i, j = ax1.get_ylim()
     try:
         ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
-        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2, label="Trigger Off")
+        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2,
+                   label="Trigger Off")
         ax1.legend()
     except IndexError:
         pass
