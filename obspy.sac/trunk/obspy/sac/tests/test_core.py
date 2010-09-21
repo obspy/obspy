@@ -50,7 +50,7 @@ class CoreTestCase(unittest.TestCase):
         """
         tr = read(self.file, format='SAC')[0]
         tempfile = NamedTemporaryFile().name
-        tr.write(tempfile,format='SACXY')
+        tr.write(tempfile, format='SACXY')
         tr1 = read(tempfile)[0]
         os.remove(tempfile)
         self.assertEqual(tr1.stats['station'], 'STA')
@@ -250,6 +250,20 @@ class CoreTestCase(unittest.TestCase):
         sac_ref_time2 = SacIO(tmpfile).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
         os.remove(tmpfile)
+
+    def test_issue156(self):
+        """
+        Test case for issue #156. 
+        """
+        sac_file = NamedTemporaryFile().name
+        tr = Trace()
+        tr.stats.delta = 0.01
+        tr.data = np.arange(0, 2000)
+        tr.write(sac_file, 'SAC')
+        st = read(sac_file)
+        os.remove(sac_file)
+        self.assertAlmostEquals(st[0].stats.delta, 0.01)
+        self.assertAlmostEquals(st[0].stats.sampling_rate, 100.0)
 
 
 def suite():
