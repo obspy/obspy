@@ -121,6 +121,9 @@ class Parser(object):
         :type data: Filename, Basestring or StringIO object.
         :param data: Filename or XSEED/SEED string as file pointer or StringIO.
         """
+        if getattr(self, "_format", None):
+            warnings.warn("Clearing parser before every subsequent read()")
+            self.__init__()
         # try to transform everything into StringIO object
         if isinstance(data, basestring):
             if "://" in data:
