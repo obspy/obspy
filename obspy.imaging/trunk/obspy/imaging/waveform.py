@@ -830,7 +830,7 @@ def _plot_list(streams):
     plt.show()
 
 
-def plot_trigger(trace, cft, thrOn, thrOff, noshow=False):
+def plot_trigger(trace, cft, thrOn, thrOff, show=True):
     """
     Plot characteristic function of trigger along with waveform data and
     trigger On/Off from given thresholds.
@@ -844,8 +844,8 @@ def plot_trigger(trace, cft, thrOn, thrOff, noshow=False):
     :param thrOn: threshold for switching trigger on
     :type thrOff: float
     :param thrOff: threshold for switching trigger off
-    :type noshow: bool
-    :param noshow: Do not call `plt.show()` at end of routine. That way,
+    :type show: bool
+    :param show: Do not call `plt.show()` at end of routine. That way,
             further modifications can be done to the figure before showing it.
     """
     try:
@@ -875,5 +875,5 @@ def plot_trigger(trace, cft, thrOn, thrOff, noshow=False):
     ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
     fig.suptitle(trace.id)
     fig.canvas.draw()
-    if not noshow:
+    if show:
         plt.show()
