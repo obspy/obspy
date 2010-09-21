@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import read
+from obspy.core.preview import createPreview
+from obspy.core.util import _getPlugins
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
     WaveformGaps, WaveformFeatures
-from obspy.core.util import _getPlugins
-from obspy.core.preview import createPreview
 import fnmatch
 import os
+import sys
 import time
 
 
@@ -189,6 +190,10 @@ class WaveformFileCrawler(object):
         """
         Resets the crawler parameters.
         """
+        # break if options run_once is set
+        if self.options.run_once:
+            sys.exit()
+            return
         self.log.debug('Crawler restarted.')
         # reset attributes
         self._current_path = None

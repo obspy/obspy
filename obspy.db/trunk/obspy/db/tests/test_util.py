@@ -51,6 +51,7 @@ class UtilTestCase(unittest.TestCase):
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2009-01-01 2008-01-01"]
         self.assertRaises(Exception, parseMappingData, data)
 
+
 def suite():
     return unittest.makeSuite(UtilTestCase, 'test')
 
