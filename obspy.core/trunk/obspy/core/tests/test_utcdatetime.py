@@ -339,6 +339,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEquals(result2 - result3, 0.0)
         self.assertAlmostEquals(result1.timestamp, result2.timestamp)
 
+    def test_issue159(self):
+        """
+        Test case for issue #159.
+        """
+        dt = UTCDateTime("2010-2-13T2:13:11")
+        self.assertEquals(dt, UTCDateTime(2010, 2, 13, 2, 13, 11))
+        dt = UTCDateTime("2010-2-13T02:13:11")
+        self.assertEquals(dt, UTCDateTime(2010, 2, 13, 2, 13, 11))
+        dt = UTCDateTime("2010-2-13T2:13:11.123456")
+        self.assertEquals(dt, UTCDateTime(2010, 2, 13, 2, 13, 11, 123456))
+        dt = UTCDateTime("2010-2-13T02:9:9.123456")
+        self.assertEquals(dt, UTCDateTime(2010, 2, 13, 2, 9, 9, 123456))
+
+
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
 

@@ -193,9 +193,13 @@ class UTCDateTime(datetime.datetime):
                     # looks like an ordinal date string
                     patterns = ["%Y%j%H%M%S", "%Y%j"]
                 else:
+                    # some parts should have 2 digits
+                    for i in range(1, min(len(parts), 6)):
+                        if len(parts[i]) == 1:
+                            parts[i] = '0' + parts[i]
                     # standard date string
                     patterns = ["%Y%m%d%H%M%S", "%Y%m%d"]
-                value = value.replace(' ', '')
+                value = ''.join(parts)
                 ms = 0
                 if '.' in value:
                     parts = value.split('.')
@@ -287,7 +291,7 @@ class UTCDateTime(datetime.datetime):
             if day == 7:
                 day = 0
             date = "%04d%02d%1d" % (year, week, day)
-        elif length_date == 7 and date.isdigit():
+        elif length_date == 7 and date.isdigit() and value.count('-') != 2:
             # we got a ordinal date: YYYYDDD
             date_pattern = "%Y%j"
         elif length_date == 8 and date.isdigit():
