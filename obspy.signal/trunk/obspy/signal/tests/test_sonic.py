@@ -2,7 +2,8 @@
 
 from obspy.core import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.signal.array_analysis import sonic
+from obspy.signal.array_analysis import sonic, array_transff_freqslowness
+from obspy.signal.array_analysis import array_transff_wavenumber
 import numpy as np
 import unittest
 
@@ -87,6 +88,65 @@ class SonicTestCase(unittest.TestCase):
         # slowness ~= 1.3
         np.testing.assert_almost_equal(out[:, 4].mean(), 1.26491106407)
 
+    
+    def test_array_transff_freqslowness(self):
+        
+        coords = np.array([[  10.,   60., 0.],
+                           [ 200.,   50., 0.],
+                           [-120.,  170., 0.],
+                           [-100., -150., 0.],
+                           [  30., -220., 0.]])
+
+        coords /= 1000.
+
+        slim = 40.
+        fmin = 1.
+        fmax = 10.
+        fstep = 1.
+
+        sstep = slim/2.
+
+        transff = array_transff_freqslowness(coords, slim, sstep, fmin, fmax,
+            fstep, coordsys='xy')
+
+        transffth = np.array(
+            [[ 0.17074014,  0.33333333,  0.11102387, 0.12237009,  0.3278369 ],
+            [ 0.08828665,  0.21897583,  0.18096393, 0.34051651,  0.22606102], 
+            [ 0.1118241 ,  0.08828665,  1.        , 0.08828665,  0.1118241 ], 
+            [ 0.22606102,  0.34051651,  0.18096393, 0.21897583,  0.08828665], 
+            [ 0.3278369 ,  0.12237009,  0.11102387, 0.33333333,  0.17074014]])
+
+        np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
+    
+    
+    def test_array_transff_wavenumber(self):
+        
+        coords = np.array([[  10.,   60., 0.],
+                           [ 200.,   50., 0.],
+                           [-120.,  170., 0.],
+                           [-100., -150., 0.],
+                           [  30., -220., 0.]])
+
+        coords /= 1000.
+
+        klim = 40.
+        kstep = klim/2.
+
+        transff = array_transff_wavenumber(coords, klim, kstep, coordsys='xy')
+
+        transffth = np.array(
+            [[  2.51325969e-01,   3.68857351e-02,   5.87486028e-02,
+                3.07845295e-02,   3.35042906e-04],
+            [  4.22331189e-02,   1.70231459e-03,   6.54354311e-04,
+                3.91531577e-02,   3.95319293e-01],
+            [  6.46052074e-02,   1.75467603e-01,   1.00000000e+00,
+                1.75467603e-01,   6.46052074e-02],
+            [  3.95319293e-01,   3.91531577e-02,   6.54354311e-04,
+                1.70231459e-03,   4.22331189e-02],
+            [  3.35042906e-04,   3.07845295e-02,   5.87486028e-02,
+                3.68857351e-02,   2.51325969e-01]])
+
+        np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
 
 def suite():
     return unittest.makeSuite(SonicTestCase, 'test')
