@@ -1002,8 +1002,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
         kymin = -klim
         kymax = klim
     elif isinstance(klim, tuple):
-        # XXX: k is not defined
-        if len(k) == 4:
+        if len(klim) == 4:
             kxmin = klim[0]
             kxmax = klim[1]
             kymin = klim[2]
@@ -1053,10 +1052,8 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
         sxmax = slim
         symin = -slim
         symax = slim
-    # XXX: klim is not defined
-    elif isinstance(klim, tuple):
-        # XXX: k is not defined
-        if len(k) == 4:
+    elif isinstance(slim, tuple):
+        if len(slim) == 4:
             sxmin = slim[0]
             sxmax = slim[1]
             symin = slim[2]
