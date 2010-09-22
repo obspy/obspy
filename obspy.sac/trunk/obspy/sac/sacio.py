@@ -1225,6 +1225,7 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
 
     poles = []
     zeros = []
+    seismometer_gain = 1.0
     found_zero = False
 
     if isinstance(paz_file, str):
@@ -1233,6 +1234,8 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
     while True:
         line = paz_file.readline()
         if not line: break
+        ### lines starting with * are comments
+        if line.startswith('*'): continue
         if line.find('ZEROS')!=-1:
             a = line.split()
             noz = int(a[1])
