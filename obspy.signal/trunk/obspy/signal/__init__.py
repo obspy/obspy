@@ -173,11 +173,13 @@ But it also means that the trace's built-in methods can be used.
     tr.trigger("recstalta", sta=0.5, lta=4)
     tr.plot()
 
-
-For more examples check out the `triggering page`_ or the `Tutorial`_.
+For more examples check out the `triggering page`_ in the `Tutorial`_. For
+automated use and network coincidence there are some example scripts in the
+`svn repository`_.
 
 .. _`triggering page`: http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/TriggerTutorial
 .. _`Tutorial`: https://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
+.. _`svn repository`: http://svn.geophysik.uni-muenchen.de/trac/obspy/browser/misc/sandbox/stalta
 
 **There are many more functions available (rotation, pazToFreqResp, 
 cpxtrace analysis, ...), please also check the tutorial.**
