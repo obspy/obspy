@@ -254,6 +254,8 @@ class CoreTestCase(unittest.TestCase):
     def test_issue156(self):
         """
         Test case for issue #156. 
+        
+        Due to floating point representation, nothing we can do about it.
         """
         sac_file = NamedTemporaryFile().name
         tr = Trace()
@@ -262,8 +264,8 @@ class CoreTestCase(unittest.TestCase):
         tr.write(sac_file, 'SAC')
         st = read(sac_file)
         os.remove(sac_file)
-        self.assertAlmostEquals(st[0].stats.delta, 0.01, 10)
-        self.assertAlmostEquals(st[0].stats.sampling_rate, 100.0)
+        self.assertAlmostEquals(st[0].stats.delta, 0.01, 9)
+        self.assertAlmostEquals(st[0].stats.sampling_rate, 100.0, 5)#9-4=5
 
 
 def suite():
