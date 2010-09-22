@@ -3,7 +3,7 @@
 """
 The SacIO test suite.
 """
-import obspy
+from obspy.core import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, ReadSac, attach_paz
 import StringIO
@@ -34,7 +34,7 @@ class SacIOTestCase(unittest.TestCase):
         future release.
         """
         data = np.array([1.1, -1.2, 1.3, -1.4, 1.5, -1.6, 1.7, -1.8,
-                           1.9, -2.0], dtype='<f4')
+                         1.9, -2.0], dtype='<f4')
         t = ReadSac()
         t.fromarray(data)
         tempfile = NamedTemporaryFile().name
@@ -96,7 +96,8 @@ class SacIOTestCase(unittest.TestCase):
         t.WriteSacHeader(tempfile)
         t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
         self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"), 'Z       ')
-        self.assertEqual(SacIO(tempfile, headonly=True).GetHvalue('kcmpnm'), 'Z       ')
+        self.assertEqual(SacIO(tempfile, headonly=True).GetHvalue('kcmpnm'),
+                         'Z       ')
         self.assertEqual(t.IsValidSacFile(tempfile), True)
         self.assertEqual(t.IsValidXYSacFile(tempfile), False)
         self.assertEqual(SacIO().GetHvalueFromFile(sacfile, 'npts'), 100)
@@ -134,15 +135,14 @@ class SacIOTestCase(unittest.TestCase):
         d = SacIO(tempfile, alpha=True)
         e = SacIO()
         e.ReadSacXYHeader(tempfile)
-        self.assertEqual(e.GetHvalue('npts'),d.GetHvalue('npts'))
-        self.assertEqual(e.GetHvalue('depmen'),d.GetHvalue('depmen'))
-        self.assertEqual(e.starttime,d.starttime)
-        self.assertNotEqual(e.seis.size,d.seis.size)
-        c = SacIO(tempfile,alpha=True,headonly=True)
+        self.assertEqual(e.GetHvalue('npts'), d.GetHvalue('npts'))
+        self.assertEqual(e.GetHvalue('depmen'), d.GetHvalue('depmen'))
+        self.assertEqual(e.starttime, d.starttime)
+        self.assertNotEqual(e.seis.size, d.seis.size)
+        c = SacIO(tempfile, alpha=True, headonly=True)
         os.remove(tempfile)
-        self.assertEqual(e.seis.size,c.seis.size)
-        
-        
+        self.assertEqual(e.seis.size, c.seis.size)
+
     def test_readBigEnd(self):
         """
         Test reading big endian binary files
@@ -240,11 +240,12 @@ class SacIOTestCase(unittest.TestCase):
         -53.5979 21.7494
         -53.5979 -21.7494
         CONSTANT 2.16e18""")
-        tr = obspy.core.Trace()
+        tr = Trace()
         attach_paz(tr, fvelhz, torad=True, todisp=True)
-        np.testing.assert_array_almost_equal(tr.stats.paz['zeros'][0], -31.616988, decimal=6)
-        self.assertEqual(len(tr.stats.paz['zeros']),4)
-        
+        np.testing.assert_array_almost_equal(tr.stats.paz['zeros'][0],
+                                             - 31.616988, decimal=6)
+        self.assertEqual(len(tr.stats.paz['zeros']), 4)
+
 
 def suite():
     return unittest.makeSuite(SacIOTestCase, 'test')

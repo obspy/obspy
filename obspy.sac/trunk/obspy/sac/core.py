@@ -9,9 +9,9 @@ SAC bindings to ObsPy core module.
 from obspy.core import Trace, Stream
 from obspy.sac.sacio import SacIO
 import numpy as np
-import struct
 import os
 import string
+import struct
 
 
 # we put here everything but the time, they are going to stats.starttime
@@ -73,7 +73,8 @@ def isSAC(filename):
             return False
     return True
 
-def istext(filename, blocksize = 512):
+
+def istext(filename, blocksize=512):
     ### Find out if it is a text or a binary file. This should
     ### always be true if a file is a text-file and only true for a
     ### binary file in rare occasions (Recipe 173220 found on
@@ -93,10 +94,9 @@ def istext(filename, blocksize = 512):
 
     # If more than 30% non-text characters, then
     # this is considered a binary file
-    if len(t)/len(s) > 0.30:
+    if len(t) / len(s) > 0.30:
         return 0
     return 1
-
 
 
 def isSACXY(filename):
@@ -112,13 +112,13 @@ def isSACXY(filename):
     ### always be true if a file is a text-file and only true for a
     ### binary file in rare occasions (Recipe 173220 found on
     ### http://code.activestate.com/
-    if not istext(filename, blocksize = 512):
+    if not istext(filename, blocksize=512):
         return False
     try:
         f = open(filename)
         hdcards = []
         # read in the header cards
-        for i in xrange(30):
+        for _i in xrange(30):
             hdcards.append(f.readline())
         npts = int(hdcards[15].split()[-1])
         # read in the seismogram
@@ -129,6 +129,7 @@ def isSACXY(filename):
     if npts != len(seis):
         return False
     return True
+
 
 def readSACXY(filename, headonly=False, **kwargs):
     """
@@ -167,7 +168,11 @@ def readSACXY(filename, headonly=False, **kwargs):
             value = value.strip()
             if value == '-12345':
                 value = ''
-        header[j] = value
+        # fix for issue #156
+        if i == 'delta':
+            header['sampling_rate'] = np.float32(1.0) / np.float32(t.hf[0])
+        else:
+            header[j] = value
     if header['calib'] == -12345.0:
         header['calib'] = 1.0
     # assign extra header types of sac
@@ -188,6 +193,7 @@ def readSACXY(filename, headonly=False, **kwargs):
     else:
         tr = Trace(header=header, data=t.seis)
     return Stream([tr])
+
 
 def writeSACXY(stream, filename, **kwargs):
     """
@@ -230,11 +236,10 @@ def writeSACXY(stream, filename, **kwargs):
             except KeyError:
                 pass
         if len(stream) != 1:
-            filename = "%s%02d%s" % (base, i+1, ext)
+            filename = "%s%02d%s" % (base, i + 1, ext)
         t.WriteSacXY(filename)
         i += 1
 
-                                                        
 
 def readSAC(filename, headonly=False, **kwargs):
     """
@@ -274,7 +279,11 @@ def readSAC(filename, headonly=False, **kwargs):
             value = value.strip()
             if value == '-12345':
                 value = ''
-        header[j] = value
+        # fix for issue #156
+        if i == 'delta':
+            header['sampling_rate'] = np.float32(1.0) / np.float32(t.hf[0])
+        else:
+            header[j] = value
     if header['calib'] == -12345.0:
         header['calib'] = 1.0
     # assign extra header types of SAC

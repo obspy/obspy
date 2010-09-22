@@ -8,9 +8,7 @@
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 import obspy.core
-import StringIO
 from obspy.core import UTCDateTime
-from obspy.core.util import deprecated
 import warnings
 import numpy as np
 import os
@@ -24,6 +22,7 @@ An object-oriented version of C. J. Ammon's SAC I/O module.
 
 # avoid import statement overhead
 signal = False
+
 
 class SacError(Exception):
     """
@@ -344,7 +343,6 @@ class SacIO(object):
 
         """
         key = item.lower() # convert the item to lower case
-
         if key in self.fdict:
             index = self.fdict[key]
             return(self.hf[index])
@@ -368,13 +366,14 @@ class SacIO(object):
         Assign new value to SAC-header variable.
 
         :param item: SAC-header variable name
-        :param value: numeric or string value to be assigned to header-variable.
+        :param value: numeric or string value to be assigned to header 
+                      variable.
 
         >>> from obspy.sac import SacIO
         >>> tr = SacIO()
         >>> tr.GetHvalue('kstnm')
         '-12345  '
-        >>> tr.SetHvalue('kstnm','STA_NEW')
+        >>> tr.SetHvalue('kstnm', 'STA_NEW')
         >>> tr.GetHvalue('kstnm')
         'STA_NEW '
 
@@ -383,23 +382,23 @@ class SacIO(object):
         key = item.lower() # convert the item to lower case
         #
         if key in self.fdict:
-                index = self.fdict[key]
-                self.hf[index] = float(value)
+            index = self.fdict[key]
+            self.hf[index] = float(value)
         elif key in self.idict:
-                index = self.idict[key]
-                self.hi[index] = int(value)
+            index = self.idict[key]
+            self.hi[index] = int(value)
         elif key in self.sdict:
-                index = self.sdict[key]
-                value = '%-8s' % value
-                if index == 0:
-                        self.hs[0] = value
-                elif index == 1:
-                    value1 = '%-8s' % value[0:8]
-                    value2 = '%-8s' % value[8:16]
-                    self.hs[1] = value1
-                    self.hs[2] = value2
-                else:
-                        self.hs[index + 1] = value
+            index = self.sdict[key]
+            value = '%-8s' % value
+            if index == 0:
+                    self.hs[0] = value
+            elif index == 1:
+                value1 = '%-8s' % value[0:8]
+                value2 = '%-8s' % value[8:16]
+                self.hs[1] = value1
+                self.hs[2] = value2
+            else:
+                    self.hs[index + 1] = value
         else:
             raise SacError("Cannot find header entry for: ", item)
 
@@ -609,7 +608,6 @@ class SacIO(object):
             except SacError:
                 pass
 
-    
     def ReadSacXY(self, fname):
         """
         Read SAC XY files (ascii)
@@ -663,7 +661,7 @@ class SacIO(object):
                 f.close()
                 raise SacIOError("%s is not a valid SAC file:" % fname, e)
             try:
-                self.IsSACfile(fname, fsize=False,lenchk=True)
+                self.IsSACfile(fname, fsize=False, lenchk=True)
             except SacError, e:
                 f.close()
                 raise SacError(e)
@@ -676,8 +674,6 @@ class SacIO(object):
                     self._get_dist_()
                 except SacError:
                     pass
-
-
 
     def ReadSacXYHeader(self, fname):
         """
@@ -695,7 +691,8 @@ class SacIO(object):
         
         >>> tr = SacIO('testxy.sac',alpha=True) # doctest: +SKIP 
 
-        Reading only the header portion of alphanumeric SAC-files is currently not supported.
+        Reading only the header portion of alphanumeric SAC-files is currently
+        not supported.
         """
         ###### open the file
         try:
@@ -751,8 +748,6 @@ class SacIO(object):
         >>> tr.WriteSacXY('test2.sac') # doctest: +SKIP
         >>> tr.IsValidXYSacFile('test2.sac') # doctest: +SKIP
         True
-
-
         """
         try:
             f = open(ofname, 'w')
@@ -1124,7 +1119,8 @@ class SacIO(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = signal.rotate.gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
+        dist, az, baz = signal.rotate.gps2DistAzimuth(eqlat, eqlon, stlat,
+                                                      stlon)
         self.SetHvalue('dist', dist / 1000.)
         self.SetHvalue('az', az)
         self.SetHvalue('baz', baz)
@@ -1172,15 +1168,14 @@ class ReadSac(SacIO):
     """
     DEPRECATED. Use :class:`~obspy.sac.SacIO` instead.
     """
-    def __init__(self, *args, **kwargs): 
-        warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning) 
+    def __init__(self, *args, **kwargs):
+        warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning)
         SacIO.__init__(self, *args, **kwargs)
 
 
-
-
 ############# UTILITIES ###################################################
-def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
+def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
+               tohz=False):
     '''
     Attach tr.stats.paz AttribDict to trace from SAC paz_file
 
@@ -1202,12 +1197,13 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
     :param paz_file: path to pazfile or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero
-    :param tovel: change a displacement transfer function to a velocity transfer
-                  function by removing one 0,0j zero
+    :param tovel: change a displacement transfer function to a velocity
+                  transfer function by removing one 0,0j zero
     :param torad: change to radians
     :param tohz: change to Hertz
     
     >>> tr = obspy.core.Trace()
+    >>> import StringIO
     >>> f = StringIO.StringIO("""ZEROS 3
     ... -5.032 0.0
     ... POLES 6
@@ -1236,31 +1232,31 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
         if not line: break
         ### lines starting with * are comments
         if line.startswith('*'): continue
-        if line.find('ZEROS')!=-1:
+        if line.find('ZEROS') != -1:
             a = line.split()
             noz = int(a[1])
-            for k in xrange(noz):
+            for _k in xrange(noz):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('POLES') != -1:
                     while len(zeros) < noz:
-                        zeros.append(complex(0,0j))
+                        zeros.append(complex(0, 0j))
                     break
                 else:
-                    zeros.append(complex(float(a[0]),float(a[1])))
+                    zeros.append(complex(float(a[0]), float(a[1])))
 
         if line.find('POLES') != -1:
             a = line.split()
             nop = int(a[1])
-            for k in xrange(nop):
+            for _k in xrange(nop):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('CONSTANT') != -1:
                     while len(poles) < nop:
-                        poles.append(complex(0,0j))
+                        poles.append(complex(0, 0j))
                     break
                 else:
-                    poles.append(complex(float(a[0]),float(a[1])))
+                    poles.append(complex(float(a[0]), float(a[1])))
         if line.find('CONSTANT') != -1:
             a = line.split()
             # in the observatory this is the seismometer gain [muVolt/nm/s]
@@ -1273,14 +1269,14 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
     ### multiplication with jw is used. This is equivalent to one more
     ### zero in the pole-zero representation
     if todisp:
-        zeros.append(complex(0,0j))
+        zeros.append(complex(0, 0j))
 
     ### To convert the displacement response to the velocity response,
     ### division with jw is used. This is equivalent to one less zero
     ### in the pole-zero representation
     if tovel:
         for i, zero in enumerate(list(zeros)):
-            if zero == complex(0,0j):
+            if zero == complex(0, 0j):
                 zeros.pop(i)
                 found_zero = True
                 break
@@ -1290,25 +1286,25 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
 
     ### convert poles, zeros and gain in Hertz to radians
     if torad:
-        tmp = [z*2.*np.pi for z in zeros]
+        tmp = [z * 2. * np.pi for z in zeros]
         zeros = tmp
-        tmp = [p*2.*np.pi for p in poles]
+        tmp = [p * 2. * np.pi for p in poles]
         poles = tmp
-        seismometer_gain *= 2.*np.pi
-    
+        seismometer_gain *= 2. * np.pi
+
     ### convert poles, zeros and gain in radian to Hertz
     if tohz:
-        for i,z in enumerate(zeros):
+        for i, z in enumerate(zeros):
             if abs(z) > 0.0:
-                zeros[i] /= 2*np.pi
-        for i,p in enumerate(poles):
+                zeros[i] /= 2 * np.pi
+        for i, p in enumerate(poles):
             if abs(p) > 0.0:
-                poles[i] /= 2*np.pi
-        seismometer_gain /= 2.*np.pi
-    
+                poles[i] /= 2 * np.pi
+        seismometer_gain /= 2. * np.pi
+
     # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()
-    tr.stats.paz.seismometer_gain = seismometer_gain 
+    tr.stats.paz.seismometer_gain = seismometer_gain
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
 
@@ -1316,4 +1312,3 @@ def attach_paz(tr,paz_file,todisp=False,tovel=False,torad=False,tohz=False):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-

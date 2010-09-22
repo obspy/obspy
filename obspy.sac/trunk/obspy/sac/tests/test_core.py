@@ -176,7 +176,6 @@ class CoreTestCase(unittest.TestCase):
         # file must exist, we just created it
         os.remove(tmpfile)
 
-
     def test_iztype11(self):
         # test that iztype 11 is read correctly
         sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
@@ -194,13 +193,11 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
 
-
     def test_defaultValues(self):
         tr = read(self.file)[0]
         self.assertEqual(tr.stats.calib, 1.0)
         self.assertEqual(tr.stats.location, '')
         self.assertEqual(tr.stats.network, '')
-
 
     def test_referenceTime(self):
         """
@@ -224,7 +221,6 @@ class CoreTestCase(unittest.TestCase):
         # test some more entries, I can see from the plot
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
-
 
     def test_undefinedB(self):
         """
@@ -257,15 +253,26 @@ class CoreTestCase(unittest.TestCase):
         
         Due to floating point representation, nothing we can do about it.
         """
-        sac_file = NamedTemporaryFile().name
+        #1
         tr = Trace()
         tr.stats.delta = 0.01
-        tr.data = np.arange(0, 2000)
+        tr.data = np.arange(0, 3000)
+        sac_file = NamedTemporaryFile().name
         tr.write(sac_file, 'SAC')
         st = read(sac_file)
         os.remove(sac_file)
-        self.assertAlmostEquals(st[0].stats.delta, 0.01, 9)
-        self.assertAlmostEquals(st[0].stats.sampling_rate, 100.0, 5)#9-4=5
+        self.assertEquals(st[0].stats.delta, 0.01)
+        self.assertEquals(st[0].stats.sampling_rate, 100.0)
+        #2
+        tr = Trace()
+        tr.stats.delta = 0.005
+        tr.data = np.arange(0, 2000)
+        sac_file = NamedTemporaryFile().name
+        tr.write(sac_file, 'SAC')
+        st = read(sac_file)
+        os.remove(sac_file)
+        self.assertEquals(st[0].stats.delta, 0.005)
+        self.assertEquals(st[0].stats.sampling_rate, 200.0)
 
 
 def suite():
