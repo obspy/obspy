@@ -14,6 +14,10 @@ import os, glob, sys
 from obspy.core import UTCDateTime
 from pprint import pprint
 
+
+MIN_STATIONS = 3
+
+
 if len(sys.argv) == 1:
     print __doc__
     sys.exit(1)
@@ -23,31 +27,32 @@ trigger_list = []
 for file in sys.argv[1:]:
     try:
         f = open(file)
-    except:
+    except IOError:
         continue
     for line in f:
         begin, end, station = line.strip().split(",")
-        trigger_list.append([UTCDateTime(begin).timestamp,
+        trigger_list.append((UTCDateTime(begin).timestamp,
                              UTCDateTime(end).timestamp,
-                             station])
+                             station))
 
 trigger_list.sort()
 #pprint(trigger_list)
 
-count = set()
-on, of, nix = trigger_list[0]
-while len(trigger_list) > 2:
-    begin, end, station = trigger_list.pop(0)
-    if begin < of:
-        count.add(station)
-        if end > of:
-            of = end
-        continue
-    else:
-        if len(count) >= 4:
-            print "%s %04.1f %s" % (UTCDateTime(on), of - on, count)
-        count = set()
-        on, of, nix = trigger_list[1]
-#
-if len(count) >= 4:
-    print "%s %04.1f %s" % (UTCDateTime(on), of - on, count)
+
+while len(trigger_list) > 1:
+    coinc = set()
+    on, off, sta = trigger_list[0]
+    coinc.add(sta)
+    for i in range(1, len(trigger_list)):
+        tmp_on, tmp_off, tmp_sta = trigger_list[i]
+        if tmp_on < off:
+            #import ipdb; ipdb.set_trace()
+            coinc.add(tmp_sta)
+            off = max(off, tmp_off)
+        else:
+            break
+    if len(coinc) >= MIN_STATIONS:
+        print "%s %04.1f %s" % (UTCDateTime(on), off - on, coinc)
+    # index i marks the index of the next non-matching pick
+    trigger_list = trigger_list[i:]
+
