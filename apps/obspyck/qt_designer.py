@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'qt_designer.ui'
 #
-# Created: Mon Sep 20 12:34:51 2010
+# Created: Wed Sep 22 10:07:40 2010
 #      by: PyQt4 UI code generator 4.4.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -369,7 +369,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.qVBoxLayout_mpl.addWidget(self.qMplCanvas)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem5 = QtGui.QSpacerItem(40,20,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
+        spacerItem5 = QtGui.QSpacerItem(10,10,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem5)
         self.qToolButton_filter = QtGui.QToolButton(self.qWidget_mpl)
         self.qToolButton_filter.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -398,7 +398,7 @@ class Ui_qMainWindow_obsPyck(object):
         self.qDoubleSpinBox_lowpass.setFocusPolicy(QtCore.Qt.NoFocus)
         self.qDoubleSpinBox_lowpass.setObjectName("qDoubleSpinBox_lowpass")
         self.horizontalLayout_2.addWidget(self.qDoubleSpinBox_lowpass)
-        spacerItem6 = QtGui.QSpacerItem(40,20,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
+        spacerItem6 = QtGui.QSpacerItem(10,10,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem6)
         self.qToolButton_spectrogram = QtGui.QToolButton(self.qWidget_mpl)
         self.qToolButton_spectrogram.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -409,9 +409,10 @@ class Ui_qMainWindow_obsPyck(object):
         self.qCheckBox_spectrogramLog.setFocusPolicy(QtCore.Qt.NoFocus)
         self.qCheckBox_spectrogramLog.setObjectName("qCheckBox_spectrogramLog")
         self.horizontalLayout_2.addWidget(self.qCheckBox_spectrogramLog)
-        spacerItem7 = QtGui.QSpacerItem(40,20,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
+        spacerItem7 = QtGui.QSpacerItem(10,10,QtGui.QSizePolicy.Expanding,QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem7)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
+        self.verticalLayout_2.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.horizontalLayout_9 = QtGui.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")

@@ -1355,8 +1355,8 @@ class ObsPyck(QtGui.QMainWindow):
                 self.widgets.qLabel_xdata_abs.setText(label)
                 self.widgets.qLabel_ydata.setText("%.1f" % ev.ydata)
             else:
-                self.widgets.qLabel_xdata_rel.setText(str(ev.xdata))
-                self.widgets.qLabel_xdata_abs.setText("")
+                self.widgets.qLabel_xdata_rel.setText("")
+                self.widgets.qLabel_xdata_abs.setText(str(ev.xdata))
                 self.widgets.qLabel_ydata.setText(str(ev.ydata))
         except TypeError:
             pass
