@@ -262,7 +262,7 @@ class CoreTestCase(unittest.TestCase):
         tr.write(sac_file, 'SAC')
         st = read(sac_file)
         os.remove(sac_file)
-        self.assertAlmostEquals(st[0].stats.delta, 0.01)
+        self.assertAlmostEquals(st[0].stats.delta, 0.01, 10)
         self.assertAlmostEquals(st[0].stats.sampling_rate, 100.0)
 
 
