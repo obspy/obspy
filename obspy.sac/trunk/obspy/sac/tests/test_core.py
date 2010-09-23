@@ -250,8 +250,6 @@ class CoreTestCase(unittest.TestCase):
     def test_issue156(self):
         """
         Test case for issue #156. 
-        
-        Due to floating point representation, nothing we can do about it.
         """
         #1
         tr = Trace()
@@ -274,6 +272,19 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.delta, 0.005)
         self.assertEquals(st[0].stats.sampling_rate, 200.0)
 
+    def test_writeSACXYWithMinimumStats(self):
+        """
+        Write SACXY with minimal stats header, no inhereted from SAC file
+        """
+        tr = Trace()
+        tr.stats.delta = 0.01
+        tr.data = np.arange(0, 3000)
+        sac_file = NamedTemporaryFile().name
+        tr.write(sac_file, 'SACXY')
+        st = read(sac_file)
+        #os.remove(sac_file)
+        self.assertEquals(st[0].stats.delta, 0.01)
+        self.assertEquals(st[0].stats.sampling_rate, 100.0)
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

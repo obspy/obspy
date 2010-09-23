@@ -412,7 +412,7 @@ class SacIO(object):
         npts = self.GetHvalue('npts')
         if lenchk:
             if npts != len(self.seis):
-                raise SacError("Number of points in header and" + \
+                raise SacError("Number of points in header and " + \
                                "length of trace inconsistent!")
         if fsize:
             st = os.stat(name) #file's size = st[6]
@@ -660,11 +660,6 @@ class SacIO(object):
                 self.hf = self.hs = self.hi = self.seis = None
                 f.close()
                 raise SacIOError("%s is not a valid SAC file:" % fname, e)
-            try:
-                self.IsSACfile(fname, fsize=False, lenchk=True)
-            except SacError, e:
-                f.close()
-                raise SacError(e)
             try:
                 self._get_date_()
             except SacError:
