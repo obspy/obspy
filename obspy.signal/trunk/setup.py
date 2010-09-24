@@ -65,6 +65,16 @@ if platform.system() == "Windows":
                                src_fft + 'fftpack_litemodule.c'],
                       export_symbols=symbols,
                       extra_link_args=extra_link_args)
+elif platform.system() == "FreeBSD":
+    lib = MyExtension('libsignal',
+                      include_dirs=[numpy_include_dir],
+                      sources=[src + 'recstalta.c', src + 'xcorr.c',
+                               src + 'coordtrans.c', src + 'pk_mbaer.c',
+                               src + 'filt_util.c', src + 'arpicker.c',
+                               src + 'bbfk.c', src_fft + 'fftpack.c',
+                               src_fft + 'fftpack_litemodule.c'],
+                      export_symbols=symbols,
+                      extra_link_args=extra_link_args)
 else:
     lib = MyExtension('libsignal',
                       library_dirs=[numpy_lib_dir],
