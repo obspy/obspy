@@ -107,8 +107,6 @@ class RotateTestCase(unittest.TestCase):
         Test case for #150
         """
         res = gps2DistAzimuth(0, 0, 0, 180)
-        if not res == (20004314.5, 0.0, 0.0):
-            print type(res[0])
         self.assertEqual(res, (20004314.5, 0.0, 0.0))
 
 def suite():
