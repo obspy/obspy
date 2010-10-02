@@ -19,11 +19,11 @@ Functions for Array Analysis
 
 import math
 import warnings
-import ctypes
-import numpy
-import obspy.signal.util
-import obspy.core
-import scipy.integrate
+import ctypes as C
+import numpy as np
+from obspy.signal.util import utlGeoKm, lib, nextpow2
+from obspy.core import Stream
+from scipy.integrate import cumtrapz
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
@@ -214,7 +214,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         coordinate system. x3 must point either UP or DOWN.  
 
     """
-    np = numpy
+
 
     # start the code -------------------------------------------------
 
@@ -700,10 +700,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     :return: numpy.ndarray of timestamp, relative power, absolute power,
         backazimut, slowness
     """
-    C = ctypes
-    np =  numpy
-    nextpow2 = obspy.signal.util.nextpow2
-    
     res = []
     eotr = True
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
@@ -831,10 +827,6 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
         | **int ix:** ix output for backazimuth calculation
         | **int iy:** iy output for backazimuth calculation
     """
-    C = ctypes
-    np = numpy
-    lib = obspy.signal.util.lib
-
     #XXX moritz: add a note where params are pointers
 
     lib.bbfk.argtypes = [ \
@@ -892,10 +884,6 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
             last index contains center [lat, lon, elev] in degrees and km if
             return_center is true
     """
-    np = numpy
-    utlGeoKm = obspy.signal.util.utlGeoKm 
-    Stream = obspy.core.Stream
-    
     nstat = len(stream)
     center_lat = 0.
     center_lon = 0.
@@ -953,8 +941,6 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    np = numpy
-    
     nstat = len(geometry) #last index are center coordinates
 
     time_shift_table = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
@@ -972,8 +958,6 @@ def get_spoint(stream, stime, etime):
     :param stime: UTCDateTime to start
     :param etime: UTCDateTime to end
     """
-    np = numpy
-    
     slatest = stream[0].stats.starttime
     eearliest = stream[0].stats.endtime
     for tr in stream:
@@ -1014,8 +998,6 @@ def ndarray2ptr3D(ndarray):
     """
     Construct *** pointer for ctypes from numpy.ndarray
     """
-    C = ctypes
-    
     ptr = C.c_void_p
     dim1, dim2, _dim3 = ndarray.shape
     voids = []
@@ -1041,8 +1023,6 @@ def cosine_taper(ndat, fraction=0.1):
     >>> print abs(tap - buf).max() < 1e-2
     True
     """
-    C = ctypes
-    
     lib.cosine_taper.argtypes = [
             np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
             C.c_int,
@@ -1073,9 +1053,6 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
         differences or the tupel (kxmin, kxmax, kymin, kymax)
 
     """
-    np = numpy
-    Stream = obspy.core.Stream
-    
     coords = get_geometry(coords, coordsys)
     if isinstance(klim, float):
         kxmin = -klim
@@ -1127,10 +1104,6 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type fstep: double
     :param fmin: frequency sample distance 
     """
-    np = numpy
-    Stream = obspy.core.Stream
-    cumtrapz = scipy.integrate.cumtrapz
-    
     coords = get_geometry(coords, coordsys)
     if isinstance(slim, float):
         sxmin = -slim
