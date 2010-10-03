@@ -1302,7 +1302,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.seismometer_gain = seismometer_gain
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
-
+    tr.stats.paz.gain = 1.0
 
 if __name__ == "__main__":
     import doctest
