@@ -189,7 +189,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """
     try:
         values = _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2)
-        if values == np.alltrue(np.isnan(x)):
+        if np.alltrue(np.isnan(values)):
             raise ValueError("excepting nan return values")
         return values
     # we should use an alternative calculation method for this case
