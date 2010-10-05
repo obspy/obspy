@@ -606,7 +606,7 @@ class Trace(object):
 
     id = property(getId)
 
-    def plot(self, *args, **kwargs):
+    def plot(self, **kwargs):
         """
         Creates a simple graph of the current trace.
 
@@ -630,10 +630,10 @@ class Trace(object):
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Trace objects."
             raise ImportError(msg)
-        waveform = WaveformPlotting(stream=self, *args, **kwargs)
+        waveform = WaveformPlotting(stream=self, **kwargs)
         return waveform.plotWaveform()
 
-    def spectrogram(self, *args, **kwargs):
+    def spectrogram(self, **kwargs):
         """
         Creates a spectrogram plot of the trace.
 
@@ -661,7 +661,7 @@ class Trace(object):
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
         spec = spec(data=self.data, samp_rate=self.stats.sampling_rate,
-                    title=str(self), *args, **kwargs)
+                    title=str(self), **kwargs)
         return spec
 
     def write(self, filename, format, **kwargs):
