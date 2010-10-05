@@ -73,15 +73,14 @@ class Client(Telnet):
     status_timeout = 2
     status_delay = 0.1
 
-    def __init__(self, host="webdc.eu", port=18001, timeout=20,
+    def __init__(self, host="webdc.eu", port=18002, timeout=20,
                  user="Anonymous", password="", institution="Anonymous",
-                 debug=False, command_delay=0):
+                 debug=False):
         """
         """
         self.user = user
         self.password = password
         self.institution = institution
-        self.command_delay = command_delay
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
@@ -91,16 +90,8 @@ class Client(Telnet):
         self.debug = False
         self._hello()
         self.debug = debug
-        # fetch and parse inventory schema only once
-        path = os.path.dirname(__file__)
-        file = open(os.path.join(path, 'xsd', 'inventory.xsd'))
-        schema = etree.XMLSchema(file=file)
-        self.inventory_parser = objectify.makeparser(schema=schema)
-        file.close()
 
     def _writeln(self, buffer):
-        if self.command_delay:
-            time.sleep(self.command_delay)
         Telnet.write(self, buffer + '\n')
         if self.debug:
             print '>>> ' + buffer
@@ -132,11 +123,46 @@ class Client(Telnet):
         self._writeln('BYE')
         self.close()
 
-    def _fetch(self, request_type, request_data):
+    def _fetch(self, request_type, request_data, route=True):
+        # skip routing on request
+        if not route:
+            return self._request(request_type, request_data)
+        # using route
+        routes = self.getRouting(network_id=request_data[2],
+                                 station_id=request_data[3],
+                                 start_datetime=request_data[0],
+                                 end_datetime=request_data[1])
+        id = request_data[2] + '.' + request_data[3]
+        if id in routes.keys() and routes[id] == []:
+            # we are at the responsible ArcLink node
+            return self._request(request_type, request_data)
+        id = request_data[2] + '.'
+        if id not in routes.keys():
+            msg = 'Could not find route to %s.%s'
+            raise ArcLinkException(msg % (request_data[2], request_data[3]))
+        routes = routes[id]
+        routes.sort(lambda x, y: cmp(x['priority'], y['priority']))
+        for route in routes:
+            self.host = route['host']
+            self.port = route['port']
+            self.open(self.host, self.port, self.timeout)
+            try:
+                return self._request(request_type, request_data)
+            except ArcLinkException:
+                raise
+            except Exception:
+                raise
+        msg = 'Could not find route to %s.%s'
+        raise ArcLinkException(msg % (request_data[2], request_data[3]))
+
+    def _request(self, request_type, request_data):
         self._hello()
         self._writeln(request_type)
-        for line in request_data:
-            self._writeln(line)
+        # create request string
+        out = (request_data[0] - 1).formatArcLink() + ' '
+        out += (request_data[1] + 1).formatArcLink() + ' '
+        out += ' '.join([str(i) for i in request_data[2:]])
+        self._writeln(out)
         self._writeln('END')
         self._readln('OK')
         self._writeln('STATUS')
@@ -196,6 +222,7 @@ class Client(Telnet):
                 print "%d bytes of data read" % len(data)
         self._writeln('PURGE %d' % req_id)
         self._bye()
+        self.data = data
         return data
 
     def saveWaveform(self, filename, network_id, station_id, location_id,
@@ -238,11 +265,9 @@ class Client(Telnet):
             else:
                 rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                       (end_datetime + 1).formatArcLink(),
-                                       network_id, station_id, channel_id,
-                                       location_id)
-        data = self._fetch(rtype, [rdata])
+        rdata = [start_datetime, end_datetime, network_id, station_id,
+                 channel_id, location_id]
+        data = self._fetch(rtype, rdata)
         if data and compressed:
             data = bz2.decompress(data)
         # create file handler if a file name is given
@@ -293,19 +318,6 @@ class Client(Telnet):
 
         :returns: :class:`~obspy.core.stream.Stream`
         """
-        rtype = 'REQUEST WAVEFORM format=%s' % format
-        if compressed:
-            try:
-                import bz2
-            except:
-                compressed = False
-            else:
-                rtype += " compression=bzip2"
-        # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                       (end_datetime + 1).formatArcLink(),
-                                       network_id, station_id, channel_id,
-                                       location_id)
         tf = NamedTemporaryFile()
         self.saveWaveform(tf, network_id, station_id, location_id, channel_id,
                           start_datetime, end_datetime, format=format,
@@ -365,11 +377,9 @@ class Client(Telnet):
         """
         rtype = 'REQUEST ROUTING '
         # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                 (end_datetime + 1).formatArcLink(),
-                                 network_id, station_id)
+        rdata = [start_datetime, end_datetime, network_id, station_id]
         # fetch plain XML document
-        result = self._fetch(rtype, [rdata])
+        result = self._fetch(rtype, rdata, route=False)
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
@@ -421,61 +431,73 @@ class Client(Telnet):
         """
         if not getPAZ and not getCoordinates:
             return {}
+        result = self.getInventory(network_id=network_id,
+                                   station_id=station_id,
+                                   location_id=location_id,
+                                   channel_id=channel_id,
+                                   start_datetime=start_datetime,
+                                   end_datetime=end_datetime,
+                                   instruments=True)
         data = {}
-        rtype = 'REQUEST INVENTORY instruments=true'
-        if not location_id:
-            location_id = "."
-        rdata = "%s %s %s %s %s %s" % (start_datetime.formatArcLink(),
-                                       end_datetime.formatArcLink(),
-                                       network_id, station_id, channel_id,
-                                       location_id)
-        # fetch plain XML document
-        xml_doc = self._fetch(rtype, [rdata])
-        # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-        if not xml_doc.countchildren():
-            return {}
         if getPAZ:
-            data['paz'] = AttribDict()
-            paz = data['paz']
-            if len(xml_doc.resp_paz) > 1:
-                msg = "Received more than one paz metadata set. Using first."
-                warnings.warn(msg)
-            resp_paz = xml_doc.resp_paz[0]
-            # parsing gain
-            paz['gain'] = float(resp_paz.attrib['norm_fac'])
-            # parsing zeros
-            paz['zeros'] = []
-            temp = str(resp_paz.zeros).strip().replace(' ', '')
-            temp = temp.replace(')(', ') (')
+            id = '.'.join([network_id, station_id, location_id, channel_id])
+            data['paz'] = result[id].paz
+        if getCoordinates:
+            id = '.'.join([network_id, station_id])
+            data['coordinates'] = AttribDict()
+            for key in ['latitude', 'longitude', 'elevation']:
+                data['coordinates'][key] = result[id][key]
+        return data
+
+    def __parsePAZ(self, xml_doc, xml_ns):
+        """
+        """
+        paz = AttribDict()
+        # instrument name
+        paz['name'] = xml_doc.get('name', '')
+        # gain
+        try:
+            if xml_ns == INVENTORY_NS_1_0:
+                paz['gain'] = float(xml_doc.get('normalizationFactor'))
+            else:
+                paz['gain'] = float(xml_doc.get('norm_fac'))
+        except:
+            paz['gain'] = None
+        # zeros
+        paz['zeros'] = []
+        if xml_ns == INVENTORY_NS_1_0:
+            nzeros = int(xml_doc.get('numberOfZeros', 0))
+        else:
+            nzeros = int(xml_doc.get('nzeros', 0))
+        try:
+            zeros = xml_doc.xpath('ns:zeros/text()',
+                                  namespaces={'ns':xml_ns})[0]
+            temp = zeros.strip().replace(' ', '').replace(')(', ') (')
             for zeros in temp.split():
                 paz['zeros'].append(complexifyString(zeros))
-            if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
-                raise ArcLinkException('Could not parse all zeros')
-            # parsing poles
-            paz['poles'] = []
-            temp = str(resp_paz.poles).strip().replace(' ', '')
-            temp = temp.replace(')(', ') (')
+        except:
+            pass
+        # check number of zeros
+        if len(paz['zeros']) != nzeros:
+            raise ArcLinkException('Could not parse all zeros')
+        # poles
+        paz['poles'] = []
+        if xml_ns == INVENTORY_NS_1_0:
+            npoles = int(xml_doc.get('numberOfPoles', 0))
+        else:
+            npoles = int(xml_doc.get('npoles', 0))
+        try:
+            poles = xml_doc.xpath('ns:poles/text()',
+                                  namespaces={'ns':xml_ns})[0]
+            temp = poles.strip().replace(' ', '').replace(')(', ') (')
             for poles in temp.split():
                 paz['poles'].append(complexifyString(poles))
-            if len(paz['poles']) != int(resp_paz.attrib['npoles']):
-                raise ArcLinkException('Could not parse all poles')
-            # parsing sensitivity
-            component = xml_doc.network.station.seis_stream.component
-            if len(component) > 1:
-                msg = 'Currently supporting only a single channel, e.g. EHZ'
-                raise ArcLinkException(msg)
-            try:
-                paz['sensitivity'] = float(component[0].attrib['gain'])
-            except:
-                paz['sensitivity'] = float(resp_paz.attrib['gain'])
-        if getCoordinates:
-            data['coordinates'] = AttribDict()
-            coords = data['coordinates']
-            tmp = dict(xml_doc.network.station.attrib)
-            for key in ['latitude', 'longitude', 'elevation']:
-                coords[key] = float(tmp[key])
-        return data
+        except:
+            pass
+        # check number of poles
+        if len(paz['poles']) != npoles:
+            raise ArcLinkException('Could not parse all poles')
+        return paz
 
     def getPAZ(self, network_id, station_id, location_id, channel_id,
                start_datetime, end_datetime):
@@ -490,53 +512,17 @@ class Client(Telnet):
         :param end_datetime: end time as L{obspy.UTCDateTime} object.
         :return: dictionary containing PAZ information
         """
-        rtype = 'REQUEST INVENTORY instruments=true'
-        rdata = "%s %s %s %s %s %s" % (start_datetime.formatArcLink(),
-                             end_datetime.formatArcLink(),
-                             network_id,
-                             location_id,
-                             station_id,
-                             channel_id)
-        # fetch plain XML document
-        xml_doc = self._fetch(rtype, [rdata])
-        # generate object by using XML schema
-        xml_doc = objectify.fromstring(xml_doc, self.inventory_parser)
-        if not xml_doc.countchildren():
-            return {}
-        pazs = {}
-        for resp_paz in xml_doc.resp_paz:
-            paz = {}
-            # instrument name
-            instrument = resp_paz.attrib['name']
-            # parsing gain
-            paz['gain'] = float(resp_paz.attrib['norm_fac'])
-            # parsing zeros
-            paz['zeros'] = []
-            temp = str(resp_paz.zeros).strip().replace(' ', '')
-            temp = temp.replace(')(', ') (')
-            for zeros in temp.split():
-                paz['zeros'].append(complexifyString(zeros))
-            if len(paz['zeros']) != int(resp_paz.attrib['nzeros']):
-                raise ArcLinkException('Could not parse all zeros')
-            # parsing poles
-            paz['poles'] = []
-            temp = str(resp_paz.poles).strip().replace(' ', '')
-            temp = temp.replace(')(', ') (')
-            for poles in temp.split():
-                paz['poles'].append(complexifyString(poles))
-            if len(paz['poles']) != int(resp_paz.attrib['npoles']):
-                raise ArcLinkException('Could not parse all poles')
-            # parsing sensitivity
-            component = xml_doc.network.station.seis_stream.component
-            if len(component) > 1:
-                msg = 'Currently supporting only a single channel, e.g. EHZ'
-                raise ArcLinkException(msg)
-            try:
-                paz['sensitivity'] = float(component[0].attrib['gain'])
-            except:
-                paz['sensitivity'] = float(resp_paz.attrib['gain'])
-            pazs[instrument] = paz
-        return pazs
+        result = self.getInventory(network_id=network_id,
+                                   station_id=station_id,
+                                   location_id=location_id,
+                                   channel_id=channel_id,
+                                   start_datetime=start_datetime,
+                                   end_datetime=end_datetime,
+                                   instruments=True)
+        id = '.'.join([network_id, station_id, location_id, channel_id])
+        paz = result[id].paz
+        # XXX: why dict of instruments? Only one instrument is returned!
+        return {paz.name: paz}
 
     def saveResponse(self, filename, network_id, station_id, location_id,
                      channel_id, start_datetime, end_datetime, format='SEED'):
@@ -554,33 +540,44 @@ class Client(Telnet):
         """
         rtype = 'REQUEST RESPONSE format=%s' % format
         # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                       (end_datetime + 1).formatArcLink(),
-                                       network_id, station_id, channel_id,
-                                       location_id)
-        data = self._fetch(rtype, [rdata])
+        rdata = [start_datetime, end_datetime, network_id, station_id,
+                 channel_id, location_id]
+        data = self._fetch(rtype, rdata)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
 
-    def getInventory(self, network_id, station_id='*',
-                     start_datetime=UTCDateTime(), end_datetime=UTCDateTime()):
+    def getInventory(self, network_id, station_id='*', location_id='*',
+                     channel_id='*', start_datetime=UTCDateTime(),
+                     end_datetime=UTCDateTime(), instruments=False,
+                     route=True):
         """
         """
         rtype = 'REQUEST INVENTORY '
+        if instruments:
+            rtype += 'instruments=true '
         # adding one second to start and end time to ensure right date times
-        rdata = "%s %s %s %s" % ((start_datetime - 1).formatArcLink(),
-                                 (end_datetime + 1).formatArcLink(),
-                                 network_id, station_id)
+        rdata = [start_datetime, end_datetime, network_id, station_id,
+                 channel_id, location_id]
         # fetch plain XML document
-        result = self._fetch(rtype, [rdata])
+        result = self._fetch(rtype, rdata, route=route)
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
         if INVENTORY_NS_1_0 in xml_doc.nsmap.values():
             xml_ns = INVENTORY_NS_1_0
+            stream_ns = 'sensorLocation'
+            component_ns = 'stream'
+            seismometer_ns = 'sensor'
+            name_ns = 'publicID'
+            resp_paz_ns = 'responsePAZ'
         elif INVENTORY_NS_0_2 in xml_doc.nsmap.values():
             xml_ns = INVENTORY_NS_0_2
+            stream_ns = 'seis_stream'
+            component_ns = 'component'
+            seismometer_ns = 'seismometer'
+            name_ns = 'name'
+            resp_paz_ns = 'resp_paz'
         else:
             msg = "Unknown inventory namespace %s"
             raise ArcLinkException(msg % xml_doc.nsmap)
@@ -612,8 +609,9 @@ class Client(Telnet):
                     namespaces={'ns':xml_ns})[0].text or ''
             except:
                 temp.remark = ''
+            # write network entries
+            data[temp.code] = temp
             # stations
-            temp.stations = AttribDict()
             for station in network.xpath('ns0:station',
                                          namespaces={'ns0':xml_ns}):
                 sta = AttribDict()
@@ -647,8 +645,66 @@ class Client(Telnet):
                         namespaces={'ns':xml_ns})[0].text or ''
                 except:
                     sta.remark = ''
-                temp.stations[sta.code] = sta
-            data[temp.code] = temp
+                # write station entry
+                data[temp.code + '.' + sta.code] = sta
+                if not instruments:
+                    continue
+                # instruments
+                for stream in station.xpath('ns:' + stream_ns,
+                                            namespaces={'ns':xml_ns}):
+                    # date / times
+                    try:
+                        start = UTCDateTime(stream.get('start'))
+                    except:
+                        start = None
+                    try:
+                        end = UTCDateTime(stream.get('end'))
+                    except:
+                        end = None
+                    # check date/time boundaries
+                    if end and end_datetime > end:
+                        continue
+                    if start_datetime < start:
+                        continue
+                    # fetch component
+                    for comp in stream.xpath('ns:' + component_ns,
+                                             namespaces={'ns':xml_ns}):
+                        if xml_ns == INVENTORY_NS_0_2:
+                            seismometer_id = stream.get(seismometer_ns, None)
+                        else:
+                            seismometer_id = comp.get(seismometer_ns, None)
+                        if not seismometer_id:
+                            continue
+                        paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
+                                               '[@' + name_ns + '="' + \
+                                               seismometer_id + '"]/@response',
+                                               namespaces={'ns':xml_ns})
+                        if not paz_id:
+                            continue
+                        paz_id = paz_id[0]
+                        # hack for 0.2 schema
+                        if paz_id.startswith('paz:'):
+                            paz_id = paz_id[4:]
+                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' + \
+                                                name_ns + '="' + paz_id + '"]',
+                                                namespaces={'ns':xml_ns})
+                        if not xml_paz:
+                            continue
+                        id = temp.code + '.' + sta.code + '.' + \
+                            stream.get('loc_code' , '') + '.' + \
+                            stream.get('code' , '  ') + \
+                            comp.get('code', ' ').strip()
+                        # parse PAZ
+                        paz = self.__parsePAZ(xml_paz[0], xml_ns)
+                        # sensitivity
+                        # here we try to overwrites PAZ with component gain 
+                        try:
+                            paz['sensitivity'] = float(comp.get('gain'))
+                        except:
+                            paz['sensitivity'] = paz['gain']
+                        # write channel entry
+                        data[id] = AttribDict()
+                        data[id]['paz'] = paz
         return data
 
     @deprecated
@@ -663,7 +719,9 @@ class Client(Telnet):
         :param end_datetime: end time as L{obspy.UTCDateTime} object.
         :return: dictionary of network data.
         """
-        return self.getInventory('*', '*', start_datetime, end_datetime)
+        return self.getInventory(network_id='*',
+                                 start_datetime=start_datetime,
+                                 end_datetime=end_datetime, route=False)
 
     @deprecated
     def getStations(self, start_datetime, end_datetime, network_id):
@@ -681,5 +739,8 @@ class Client(Telnet):
         :param network_id: Network(s) to list stations of
         :return: dictionary of station data.
         """
-        data = self.getInventory(network_id, '*', start_datetime, end_datetime)
-        return data[network_id].stations.values()
+        data = self.getInventory(network_id=network_id,
+                                 start_datetime=start_datetime,
+                                 end_datetime=end_datetime)
+        return [value for key, value in data.items() \
+                if key.startswith(network_id + '.')]

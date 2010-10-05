@@ -31,9 +31,8 @@ class ClientTestCase(unittest.TestCase):
     def test_getWaveform(self):
         """
         """
-        # initialize client
-        client = Client()
         # example 1
+        client = Client()
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
@@ -44,32 +43,18 @@ class ClientTestCase(unittest.TestCase):
             self.assertEquals(trace.stats.network, 'BW')
             self.assertEquals(trace.stats.station, 'MANZ')
         # example 2
-        start = UTCDateTime(2009, 1, 1)
+        client = Client()
+        start = UTCDateTime("2008-12-31T23:59:50.495000Z")
         end = start + 100
-        stream2 = client.getWaveform('BW', 'RJOB', '', 'EHE', start, end)
+        stream2 = client.getWaveform('GE', 'APE', '', 'BHE', start, end)
         self.assertEquals(len(stream2), 1)
         trace2 = stream2[0]
         self.assertEquals(trace2.stats.starttime, start)
         self.assertEquals(trace2.stats.endtime, end)
-        self.assertEquals(trace2.stats.network, 'BW')
-        self.assertEquals(trace2.stats.station, 'RJOB')
+        self.assertEquals(trace2.stats.network, 'GE')
+        self.assertEquals(trace2.stats.station, 'APE')
         self.assertEquals(trace2.stats.location, '')
-        self.assertEquals(trace2.stats.channel, 'EHE')
-
-    def test_delayedRequest(self):
-        """
-        """
-        client = Client(host='webdc.eu', port=18002, command_delay=0.1)
-        start = UTCDateTime(2010, 1, 1)
-        end = start + 100
-        # getWaveform with 0.1 delay 
-        stream = client.getWaveform('BW', 'MANZ', '', 'EHE', start, end)
-        self.assertEquals(len(stream), 1)
-        # getRouting with 0.1 delay 
-        results = client.getRouting('BW', '*', start, end)
-        self.assertEquals(len(results), 1)
-        self.assertTrue(results.has_key('BW.'))
-        self.assertEquals(len(results['BW.']), 2)
+        self.assertEquals(trace2.stats.channel, 'BHE')
 
     def test_getRouting(self):
         """
@@ -84,8 +69,11 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
-            {'BW.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'webdc.eu', 'end': None, 'port': 18001}]})
+            {'BW.': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+                      'host': 'webdc.eu', 'end': None, 'port': 18002},
+                     {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+                      'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
+                      'port': 18001}]})
         #3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
@@ -96,38 +84,38 @@ class ClientTestCase(unittest.TestCase):
                       'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
                       'port': 18001}]})
         #4 - BW network via bhlsa03.knmi.nl:18001
-        client = Client(host="bhlsa03.knmi.nl", port=18001)
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEquals(results,
-            {'BW.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'webdc.eu', 'end': None, 'port': 18001}]})
-        #5 - BW network via bhlsa03.knmi.nl:18002
-        client = Client(host="bhlsa03.knmi.nl", port=18002)
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEquals(results,
-            {'BW.': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'webdc.eu', 'end': None, 'port': 18002},
-                     {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
-                      'port': 18001}]})
-        #6 - IV network has no routing entry in webdc.eu:18001
+#        client = Client(host="bhlsa03.knmi.nl", port=18001)
+#        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
+#        self.assertEquals(results,
+#            {'BW.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+#                      'host': 'webdc.eu', 'end': None, 'port': 18001}]})
+#        #5 - BW network via bhlsa03.knmi.nl:18002
+#        client = Client(host="bhlsa03.knmi.nl", port=18002)
+#        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
+#        self.assertEquals(results,
+#            {'BW.': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+#                      'host': 'webdc.eu', 'end': None, 'port': 18002},
+#                     {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+#                      'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
+#                      'port': 18001}]})
+        #6 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEquals(results, {})
+        self.assertEquals(results,
+            {'IV.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+                      'host': 'eida.rm.ingv.it', 'end': None, 'port': 18002}]})
         #7 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('IV', '', dt, dt + 1)
         self.assertEquals(results,
             {'IV.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'eida.rm.ingv.it', 'end': None, 'port': 18002},
-                     {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'eida.rm.ingv.it', 'end': None, 'port': 18001}]})
+                      'host': 'eida.rm.ingv.it', 'end': None, 'port': 18002}]})
         #8 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEquals(results,
             {'GE.': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                      'host': 'webdc.eu', 'end': None, 'port': 18001}]})
+                      'host': 'webdc.eu', 'end': None, 'port': 18002}]})
         #9 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('GE', 'APE', dt, dt + 1)
@@ -143,74 +131,37 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests getInventory method on various ArcLink nodes.
         """
+        client = Client()
         dt = UTCDateTime(2010, 1, 1)
-        # expected results for inventory schmea 0.2 and 1.0
-        expected_results_0_2 = AttribDict({
-            'remark': '', 'code': 'BW', 'end': None,
-            'description': 'BayernNetz',
-            'stations': AttribDict({
-                'MANZ': AttribDict({
-                    'remark': '', 'code': 'MANZ', 'elevation': 635.0,
-                    'description': 'Manzenberg,Bavaria',
-                    'start': UTCDateTime(2005, 12, 6, 0, 0),
-                    'restricted': False, 'archive_net': 'BW',
-                    'longitude': 12.1083, 'affiliation': '', 'depth': 4.0,
-                    'place': 'Manzenberg, Bavaria', 'country': 'Germany',
-                    'latitude': 49.986199999999997, 'end': None})}),
-            'restricted': False, 'region': 'Germany', 'archive': 'LMU',
-            'start': UTCDateTime(1980, 1, 1, 0, 0), 'net_class': 'p',
-            'type': 'SP/BB', 'institutions': u'Uni M\xfcnchen'})
-        expected_results_1_0 = AttribDict({
-            'remark': '', 'code': 'BW', 'end': None,
-            'description': 'BayernNetz',
-            'stations': AttribDict({
-                'MANZ': AttribDict({
-                    'remark': '', 'code': 'MANZ', 'elevation': 635.0,
-                    'description': 'Manzenberg,Bavaria',
-                    'start': UTCDateTime(2005, 12, 6, 0, 0),
-                    'restricted': False, 'archive_net': '',
-                    'longitude': 12.1083, 'affiliation': '', 'depth': None,
-                    'place': 'Manzenberg, Bavaria', 'country': 'Germany',
-                    'latitude': 49.986199999999997, 'end': None})}),
-            'restricted': False, 'region': 'Germany', 'archive': 'LMU',
-            'start': UTCDateTime(1980, 1, 1, 0, 0), 'net_class': '',
-            'type': 'SP/BB', 'institutions': u'Uni M\xfcnchen'})
-        #1 - BW network via erde.geophysik.uni-muenchen.de:18001
-        client = Client(host="erde.geophysik.uni-muenchen.de", port=18001)
-        results = client.getInventory('BW', 'MANZ', dt, dt + 1)
-        self.assertEquals(len(results), 1)
-        self.assertTrue('BW' in results)
-        self.assertEquals(results.BW, expected_results_0_2)
-        #2 - BW network via webdc:18001
-        client = Client(host="webdc.eu", port=18001)
-        results = client.getInventory('BW', 'MANZ', dt, dt + 1)
-        self.assertEquals(len(results), 1)
-        self.assertTrue('BW' in results)
-        self.assertEquals(results.BW, expected_results_0_2)
-        #3 - BW network via webdc:18002
-        client = Client(host="webdc.eu", port=18002)
-        results = client.getInventory('BW', 'MANZ', dt, dt + 1)
-        self.assertEquals(len(results), 1)
-        self.assertTrue('BW' in results)
-        self.assertEquals(results.BW, expected_results_1_0)
-        #4 - BW network via bhlsa03.knmi.nl:18001
-        client = Client(host="bhlsa03.knmi.nl", port=18001)
-        results = client.getInventory('BW', 'MANZ', dt, dt + 1)
-        self.assertEquals(len(results), 1)
-        self.assertTrue('BW' in results)
-        self.assertEquals(results.BW, expected_results_0_2)
-        #5 - BW network via bhlsa03.knmi.nl:18002
-        client = Client(host="bhlsa03.knmi.nl", port=18002)
-        results = client.getInventory('BW', 'MANZ', dt, dt + 1)
-        self.assertEquals(len(results), 1)
-        self.assertTrue('BW' in results)
-        self.assertEquals(results.BW, expected_results_1_0)
-        #10 - unknown network 00 via webdc.eu:18002
-        client = Client(host="webdc.eu", port=18002)
-        results = client.getInventory('00', '', dt, dt + 1)
-        self.assertFalse(results)
+        #1 - GE network
+        result = client.getInventory('GE', 'APE', start_datetime=dt,
+                                     end_datetime=dt + 1)
+        self.assertTrue('GE' in result)
+        self.assertTrue('GE.APE' in result)
+        #2 - GE network
+        result = client.getInventory('GE', 'APE', '', 'BHE',
+                                     start_datetime=dt, end_datetime=dt + 1,
+                                     instruments=True)
+        self.assertTrue('GE' in result)
+        self.assertTrue('GE.APE' in result)
+        self.assertTrue('GE.APE..BHE' in result) # only for instruments=True
+        #3 - BW network
+        result = client.getInventory('BW', 'RJOB', start_datetime=dt,
+                                     end_datetime=dt + 1)
+        self.assertTrue('BW' in result)
+        self.assertTrue('BW.RJOB' in result)
+        #4 - BW network
+        result = client.getInventory('BW', 'MANZ', '', 'EHE',
+                                     start_datetime=dt, end_datetime=dt + 1,
+                                     instruments=True)
+        self.assertTrue('BW' in result)
+        self.assertTrue('BW.MANZ' in result)
+        self.assertTrue('BW.MANZ..EHE' in result) # only for instruments=True
+        #5 - unknown network 00 via webdc.eu:18002
+        self.assertRaises(ArcLinkException, client.getInventory, '00', '',
+                          start_datetime=dt, end_datetime=dt + 1)
 
-    def test_getWaveform_with_Metadata(self):
+    def test_getWaveformWithMetadata(self):
         """
         """
         # initialize client
@@ -219,9 +170,6 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime("2010-08-01T12:00:00")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60,
                                 getPAZ=True, getCoordinates=True)
-        statsdict = st[0].stats.__dict__
-        statsdict.pop("endtime")
-        statsdict.pop("delta")
         results = {
             'network': 'BW',
             '_format': 'MSEED',
@@ -233,6 +181,7 @@ class ClientTestCase(unittest.TestCase):
                           (-131.03999999999999 + 467.29000000000002j)],
                 'sensitivity': 2516778600.0,
                 'zeros': [0j, 0j],
+                'name': 'STS-2/N/g=1500',
                 'gain': 60077000.0}),
             'mseed': AttribDict({'dataquality': 'D',
                                  'record_length': 512,
@@ -244,16 +193,16 @@ class ClientTestCase(unittest.TestCase):
             'station': 'RJOB',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 12, 0),
-            'npts': 546,
+            'npts': 12001,
             'calib': 1.0,
             'sampling_rate': 200.0,
-            'channel': 'EHZ'}
-        self.assertEquals(statsdict, results)
+            'channel': 'EHZ',
+            'delta': 0.005}
+        self.assertEquals(st[0].stats, results)
+        # example 2
+        client = Client()
         st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60,
                                 getPAZ=True, getCoordinates=True)
-        statsdict = st[0].stats.__dict__
-        statsdict.pop("endtime")
-        statsdict.pop("delta")
         results = {
             'network': 'CZ',
             '_format': 'MSEED',
@@ -265,7 +214,8 @@ class ClientTestCase(unittest.TestCase):
                           (-131.03999999999999 + 467.29000000000002j)],
                 'sensitivity': 8200000000.0,
                 'zeros': [0j, 0j],
-                'gain': 60077000.0}),
+                'gain': 60077000.0,
+                'name': 'GFZ:STS-2/N/g=20000'}),
             'mseed': AttribDict({'dataquality': 'D',
                                  'record_length': 512,
                                  'encoding': 'STEIM1',
@@ -279,8 +229,9 @@ class ClientTestCase(unittest.TestCase):
             'npts': 2401,
             'calib': 1.0,
             'sampling_rate': 40.0,
-            'channel': 'BHZ'}
-        self.assertEquals(statsdict, results)
+            'channel': 'BHZ',
+            'delta': 0.025}
+        self.assertEquals(st[0].stats, results)
 
     def test_getNotExistingWaveform(self):
         """
@@ -335,12 +286,12 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(
             AttribDict({'remark': '', 'code': 'RWMO', 'elevation': 763.0,
                         'description': 'Wildenmoos, Bavaria',
-                        'affiliation': '', 'country': 'Germany',
-                        'longitude': 12.729887,
-                        'start': UTCDateTime(2006, 6, 4, 0, 0), 'depth': 1.0,
-                        'place': 'Wildenmoos, Bavaria', 'archive_net': 'BW',
-                        'latitude': 47.744171999999999, 'end': None,
-                        'restricted': False}) in result)
+                        'start': UTCDateTime(2006, 6, 4, 0, 0),
+                        'restricted': False, 'archive_net': 'BW',
+                        'longitude': 12.729887, 'affiliation': '',
+                        'depth': 1.0, 'place': 'Wildenmoos, Bavaria',
+                        'country': 'Germany', 'latitude': 47.744171999999999,
+                        'end': None}) in result)
 
     def test_saveWaveform(self):
         """
@@ -348,14 +299,12 @@ class ClientTestCase(unittest.TestCase):
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
         # initialize client
-        client = Client()
+        client = Client("erde.geophysik.uni-muenchen.de", 18001)
         start = UTCDateTime(2008, 1, 1)
-        end = start + 1
+        end = start + 10
         # MiniSEED
         client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-        stats = os.stat(mseedfile)
         st = read(mseedfile)
-        self.assertEquals(stats.st_size, 1024)
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -367,9 +316,7 @@ class ClientTestCase(unittest.TestCase):
         # Full SEED
         client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                             format='FSEED')
-        stats = os.stat(fseedfile)
         st = read(fseedfile)
-        self.assertTrue(stats.st_size > 1024)
         self.assertEquals(open(fseedfile).read(8), "000001V ")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
@@ -385,30 +332,14 @@ class ClientTestCase(unittest.TestCase):
         """
         # initialize client
         client = Client()
-        # example 1
-        start = UTCDateTime(2008, 1, 1)
-        end = start + 1
-        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
+        start = UTCDateTime(2008, 1, 1, 0, 0)
+        end = start + 10
+        stream = client.getWaveform('GE', 'APE', '', 'BH*', start, end,
                                     compressed=False)
         self.assertEquals(len(stream), 3)
         for trace in stream:
-            self.assertEquals(trace.stats.starttime, start)
-            self.assertEquals(trace.stats.endtime, end)
-            self.assertEquals(trace.stats.network, 'BW')
-            self.assertEquals(trace.stats.station, 'MANZ')
-        # example 2
-        start = UTCDateTime(2009, 1, 1)
-        end = start + 100
-        stream2 = client.getWaveform('BW', 'RJOB', '', 'EHE', start, end,
-                                     compressed=False)
-        self.assertEquals(len(stream2), 1)
-        trace2 = stream2[0]
-        self.assertEquals(trace2.stats.starttime, start)
-        self.assertEquals(trace2.stats.endtime, end)
-        self.assertEquals(trace2.stats.network, 'BW')
-        self.assertEquals(trace2.stats.station, 'RJOB')
-        self.assertEquals(trace2.stats.location, '')
-        self.assertEquals(trace2.stats.channel, 'EHE')
+            self.assertEquals(trace.stats.network, 'GE')
+            self.assertEquals(trace.stats.station, 'APE')
 
     def test_saveCompressedWaveform(self):
         """
@@ -417,36 +348,28 @@ class ClientTestCase(unittest.TestCase):
         fseedfile = NamedTemporaryFile().name
         # initialize client
         client = Client()
-        start = UTCDateTime(2008, 1, 1)
+        start = UTCDateTime(2008, 1, 1, 0, 0)
         end = start + 1
         # MiniSEED
-        client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+        client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                             compressed=False)
-        stats = os.stat(mseedfile)
         st = read(mseedfile)
-        self.assertEquals(stats.st_size, 1024)
         # ArcLink cuts on record base
-        self.assertTrue(st[0].stats.starttime <= start)
-        self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.network, 'GE')
+        self.assertEquals(st[0].stats.station, 'APE')
         self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
+        self.assertEquals(st[0].stats.channel, 'BHZ')
         os.remove(mseedfile)
         # Full SEED
-        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+        client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                             format='FSEED')
-        stats = os.stat(fseedfile)
         st = read(fseedfile)
-        self.assertTrue(stats.st_size > 1024)
         self.assertEquals(open(fseedfile).read(8), "000001V ")
         # ArcLink cuts on record base
-        self.assertTrue(st[0].stats.starttime <= start)
-        self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.network, 'GE')
+        self.assertEquals(st[0].stats.station, 'APE')
         self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
+        self.assertEquals(st[0].stats.channel, 'BHZ')
         os.remove(fseedfile)
 
     def test_getPAZ(self):
@@ -463,12 +386,11 @@ class ClientTestCase(unittest.TestCase):
                  - 1.310400e+02 + 4.672900e+02j]
         gain = 6.0077e+07
         sensitivity = 2.5168e+09
-        # set start and end time
+        # initialize client
+        client = Client('erde.geophysik.uni-muenchen.de', 18001)
+        # fetch poles and zeros
         start = UTCDateTime(2009, 1, 1)
         end = start + 1
-        # initialize client
-        client = Client()
-        # fetch poles and zeros
         pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
         # compare first instrument
         paz = pazs.values()[0]
@@ -485,7 +407,7 @@ class ClientTestCase(unittest.TestCase):
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         t = UTCDateTime(2009, 1, 1)
-        client = Client("erde.geophysik.uni-muenchen.de")
+        client = Client("erde.geophysik.uni-muenchen.de", 18001)
         # fetch poles and zeros
         pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
         paz = pazs['STS-2/N/g=1500']
