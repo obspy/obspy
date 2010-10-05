@@ -145,7 +145,11 @@ class Client(Telnet):
         for route in routes:
             self.host = route['host']
             self.port = route['port']
-            self.open(self.host, self.port, self.timeout)
+            # only use timeout from python2.6
+            if sys.hexversion < 0x020600F0:
+                self.open(self.host, self.port)
+            else:
+                self.open(self.host, self.port, self.timeout)
             try:
                 return self._request(request_type, request_data)
             except ArcLinkException:
