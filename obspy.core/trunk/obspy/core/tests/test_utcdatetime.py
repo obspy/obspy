@@ -352,6 +352,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2010-2-13T02:9:9.123456")
         self.assertEquals(dt, UTCDateTime(2010, 2, 13, 2, 9, 9, 123456))
 
+    def test_invalidDates(self):
+        """
+        Tests invalid dates.
+        """
+        # Both should raise a value error that the day is too large for the
+        # month.
+        self.assertRaises(ValueError, UTCDateTime, 2010, 9, 31)
+        self.assertRaises(ValueError, UTCDateTime, '2010-09-31')
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
