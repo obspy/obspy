@@ -160,7 +160,6 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     ax.set_ylabel('Frequency [Hz]')
     if title:
         ax.set_title(title)
-    fig.canvas.draw()
 
     if outfile:
         if format:
