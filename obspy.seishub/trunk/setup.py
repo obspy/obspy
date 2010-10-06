@@ -52,7 +52,6 @@ setup(
         'obspy.core',
         'obspy.mseed',
         'lxml',
-        'matplotlib',
     ],
     download_url="https://svn.geophysik.uni-muenchen.de" + \
         "/svn/obspy/obspy.seishub/trunk#egg=obspy.seishub-dev",
