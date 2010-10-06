@@ -422,18 +422,35 @@ class Parser(object):
                         label = 'transfer_function_types'
                     # Check if Laplace transform
                     if getattr(resp, label) != "A":
-                        msg = 'Only supporting Laplace transform response type'
-                        raise SEEDParserException(msg)
+                        msg = 'Only supporting Laplace transform response ' + \
+                              'type. Skipping other response information.'
+                        warnings.warn(msg)
+                        del resp
+                        del label
+                        continue
+                        #raise SEEDParserException(msg)
                     # A0_normalization_factor
                     channels[id]['gain'] = resp.A0_normalization_factor
                     # Poles
-                    channels[id]['poles'] = \
-                        [complex(x, y) for x, y in zip(resp.real_pole,
-                                                       resp.imaginary_pole)]
+                    try:
+                        channels[id]['poles'] = \
+                            [complex(x, y) for x, y in \
+                             zip(resp.real_pole, resp.imaginary_pole)]
+                    except AttributeError, e:
+                        if resp.number_of_complex_poles == 0:
+                            channels[id]['poles'] = []
+                        else:
+                            raise e
                     # Zeros
-                    channels[id]['zeros'] = \
-                        [complex(x, y) for x, y in zip(resp.real_zero,
-                                                       resp.imaginary_zero)]
+                    try:
+                        channels[id]['zeros'] = \
+                            [complex(x, y) for x, y in \
+                             zip(resp.real_zero, resp.imaginary_zero)]
+                    except AttributeError, e:
+                        if resp.number_of_complex_zeros == 0:
+                            channels[id]['zeros'] = []
+                        else:
+                            raise e
         # Returns only the keys.
         channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
