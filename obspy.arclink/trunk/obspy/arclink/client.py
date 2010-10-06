@@ -18,7 +18,6 @@ from telnetlib import Telnet
 import os
 import sys
 import time
-import warnings
 
 
 ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
@@ -173,7 +172,13 @@ class Client(Telnet):
         self._writeln('END')
         self._readln('OK')
         self._writeln('STATUS')
-        req_id = int(self._readln())
+        while 1:
+            try:
+                req_id = int(self._readln())
+            except:
+                pass
+            else:
+                break
         while 1:
             self._writeln('STATUS %d' % req_id)
             xml_doc = self._readln()
