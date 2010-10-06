@@ -56,6 +56,19 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(trace2.stats.location, '')
         self.assertEquals(trace2.stats.channel, 'BHE')
 
+    def test_delayedRequest(self):
+        """ 
+        """
+        client = Client(host='webdc.eu', port=18002, command_delay=0.1)
+        start = UTCDateTime(2010, 1, 1)
+        end = start + 100
+        # getWaveform with 0.1 delay  
+        stream = client.getWaveform('BW', 'MANZ', '', 'EHE', start, end)
+        self.assertEquals(len(stream), 1)
+        # getRouting with 0.1 delay  
+        results = client.getRouting('BW', 'MANZ', start, end)
+        self.assertTrue(results.has_key('BW.MANZ'))
+
     def test_getRouting(self):
         """
         Tests getRouting method on various ArcLink nodes.

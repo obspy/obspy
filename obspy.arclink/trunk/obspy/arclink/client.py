@@ -75,12 +75,13 @@ class Client(Telnet):
 
     def __init__(self, host="webdc.eu", port=18002, timeout=20,
                  user="Anonymous", password="", institution="Anonymous",
-                 debug=False):
+                 debug=False, command_delay=0):
         """
         """
         self.user = user
         self.password = password
         self.institution = institution
+        self.command_delay = command_delay
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
@@ -92,6 +93,8 @@ class Client(Telnet):
         self.debug = debug
 
     def _writeln(self, buffer):
+        if self.command_delay:
+            time.sleep(self.command_delay)
         Telnet.write(self, buffer + '\n')
         if self.debug:
             print '>>> ' + buffer
