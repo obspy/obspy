@@ -532,9 +532,16 @@ class Client(Telnet):
                                    end_datetime=end_datetime,
                                    instruments=True)
         id = '.'.join([network_id, station_id, location_id, channel_id])
-        paz = result[id].paz
-        # XXX: why dict of instruments? Only one instrument is returned!
-        return {paz.name: paz}
+        if '*' in id:
+            msg = 'getPAZ supports only a single channel, use getInventory' + \
+                  ' instead'
+            raise ArcLinkException(msg)
+        if id in result:
+            # XXX: why dict of instruments? Only one instrument is returned!
+            paz = result[id].paz
+            return {paz.name: paz}
+        msg = 'Could not find PAZ for channel %s' % id
+        raise ArcLinkException(msg)
 
     def saveResponse(self, filename, network_id, station_id, location_id,
                      channel_id, start_datetime, end_datetime, format='SEED'):

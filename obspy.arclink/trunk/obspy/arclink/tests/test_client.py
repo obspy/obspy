@@ -413,6 +413,9 @@ class ClientTestCase(unittest.TestCase):
         # can only compare four decimal places
         self.assertAlmostEqual(sensitivity / 1e9,
                                paz['sensitivity'] / 1e9, places=4)
+        # PAZ over multiple channels should raise an exception
+        self.assertRaises(ArcLinkException, client.getPAZ, 'BW', 'MANZ', '',
+                          'EH*', start, end)
 
     def test_getPAZ2(self):
         """
