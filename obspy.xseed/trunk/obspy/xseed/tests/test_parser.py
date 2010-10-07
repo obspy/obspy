@@ -5,7 +5,7 @@ from __future__ import with_statement
 
 from StringIO import StringIO
 from lxml import etree
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, path
 from obspy.core import UTCDateTime
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
@@ -488,6 +488,27 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette1, blockette3))
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
+
+    def test_bug165(self):
+        """
+        Test cases related to #165:
+         - number of poles or zeros can be 0
+         - an unsupported response information somewhere in the metadata should
+           not automatically raise an Error, if the desired information can
+           still be retrieved
+        """
+        parser = Parser()
+        t = UTCDateTime("2010-01-01T00:00:00")
+        parser.read(path("bug165.dataless"))
+        paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
+        result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
+                  'poles': [(-981+1009j), (-981-1009j), (-3290+1263j),
+                            (-3290-1263j)],
+                  'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
+                  'zeros': []}
+        self.assertEqual(paz, result)
+        self.assertRaises(SEEDParserException, parser.getPAZ,
+                          "NZ.DCZ.10.HHZ", t)
 
 
 def suite():
