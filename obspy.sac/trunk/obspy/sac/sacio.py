@@ -1184,6 +1184,11 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     useful discussion on polezero files and transfer functions in
     general see:
     http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf
+    Also bear in mind that according to the SAC convention for
+    pole-zero files CONSTANT is defined as:
+    digitizer_gain*seismometer_gain*A0. This means that it does not
+    have explicit information on the digitizer gain and seismometer
+    gain which we therefore set to 1.0. 
 
     Attaches to a trace a paz AttribDict containing poles zeros and gain.
 
@@ -1256,7 +1261,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             a = line.split()
             # in the observatory this is the seismometer gain [muVolt/nm/s]
             # the A0_normalization_factor is hardcoded to 1.0
-            seismometer_gain = float(a[1])
+            constant = float(a[1])
             break
     paz_file.close()
 
@@ -1285,7 +1290,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         zeros = tmp
         tmp = [p * 2. * np.pi for p in poles]
         poles = tmp
-        seismometer_gain *= 2. * np.pi
+        constant *= (2. * np.pi)**3
 
     ### convert poles, zeros and gain in radian to Hertz
     if tohz:
@@ -1295,14 +1300,18 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         for i, p in enumerate(poles):
             if abs(p) > 0.0:
                 poles[i] /= 2 * np.pi
-        seismometer_gain /= 2. * np.pi
+        constant /= (2. * np.pi)**3
 
     # fill up ObsPy Poles and Zeros AttribDict
+    # In SAC pole-zero files CONSTANT is defined as:
+    # digitizer_gain*seismometer_gain*A0
+    
     tr.stats.paz = obspy.core.AttribDict()
-    tr.stats.paz.seismometer_gain = seismometer_gain
+    tr.stats.paz.seismometer_gain = 1.0
+    tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
-    tr.stats.paz.gain = 1.0
+    tr.stats.paz.gain = constant
 
 if __name__ == "__main__":
     import doctest
