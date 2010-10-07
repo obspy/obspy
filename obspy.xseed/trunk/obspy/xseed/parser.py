@@ -380,6 +380,7 @@ class Parser(object):
         if self._format != 'SEED':
             self._xseed2seed()
         channels = {}
+        channel_ids_unsupported = []
         for station in self.stations:
             for blockette in station:
                 if blockette.id == 50:
@@ -425,8 +426,7 @@ class Parser(object):
                         msg = 'Only supporting Laplace transform response ' + \
                               'type. Skipping other response information.'
                         warnings.warn(msg)
-                        del resp
-                        del label
+                        channel_ids_unsupported.append(id)
                         continue
                         #raise SEEDParserException(msg)
                     # A0_normalization_factor
@@ -451,6 +451,9 @@ class Parser(object):
                             channels[id]['zeros'] = []
                         else:
                             raise e
+        # Remove channels with response of unsupported format
+        for id in channel_ids_unsupported:
+            channels.pop(id)
         # Returns only the keys.
         channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
