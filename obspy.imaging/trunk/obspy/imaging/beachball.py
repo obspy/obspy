@@ -380,18 +380,18 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         for i in range(0, j):
             xp1[i] = x[i]
             yp1[i] = y[i]
-#        if azi[0][0] - azi[0][1] > pi:
-#            azi[0][0] -= pi * 2.;
-#        elif azi[0][1] - azi[0][0] > pi:
-#            azi[0][0] += pi * 2.
+        if azi[0][0] - azi[0][1] > pi:
+            azi[0][0] -= pi * 2.;
+        elif azi[0][1] - azi[0][0] > pi:
+            azi[0][0] += pi * 2.
         if azi[0][0] < azi[0][1]:
             az = azi[0][1] - D2R
             while az > azi[0][0]:
                 si = sin(az)
                 co = cos(az)
                 xp1[i] = x0 + radius_size * si
-                i += 1
                 yp1[i] = y0 + radius_size * co
+                i += 1
                 az -= D2R
         else:
             az = azi[0][1] + D2R
@@ -399,18 +399,18 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
                 si = sin(az)
                 co = cos(az)
                 xp1[i] = x0 + radius_size * si
-                i += 1
                 yp1[i] = y0 + radius_size * co
+                i += 1
                 az += D2R
         collect.append(xy2patch(xp1[0:i], yp1[0:i], res, xy))
         colors.append(rgb1)
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
-#        if azi[1][0] - azi[1][1] > pi:
-#            azi[1][0] -= pi * 2.
-#        elif azi[1][1] - azi[1][0] > pi:
-#            azi[1][0] += pi * 2.
+        if azi[1][0] - azi[1][1] > pi:
+            azi[1][0] -= pi * 2.
+        elif azi[1][1] - azi[1][0] > pi:
+            azi[1][0] += pi * 2.
         if azi[1][0] < azi[1][1]:
             az = azi[1][1] - D2R
             while az > azi[1][0]:
@@ -451,10 +451,10 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             colors.append(rgb1)
             return colors, collect
 
-#        if azi[2][0] - azi[0][1] > pi:
-#            azi[2][0] -= pi * 2.
-#        elif azi[0][1] - azi[2][0] < pi:
-#            azi[2][0] += pi * 2.
+        if azi[2][0] - azi[0][1] > pi:
+            azi[2][0] -= pi * 2.
+        elif azi[0][1] - azi[2][0] > pi:
+            azi[2][0] += pi * 2.
         if azi[2][0] < azi[0][1]:
             az = azi[0][1] - D2R
             while az > azi[2][0]:
@@ -479,10 +479,10 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
-#        if azi[1][0] - azi[1][1] > pi:
-#            azi[1][0] -= pi * 2.
-#        elif azi[1][1] - azi[1][0] > pi:
-#            azi[1][0] += pi * 2.
+        if azi[1][0] - azi[1][1] > pi:
+            azi[1][0] -= pi * 2.
+        elif azi[1][1] - azi[1][0] > pi:
+            azi[1][0] += pi * 2.
         if azi[1][0] < azi[1][1]:
             az = azi[1][1] - D2R
             while az > azi[1][0]:
