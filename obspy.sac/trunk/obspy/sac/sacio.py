@@ -1221,7 +1221,6 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
     poles = []
     zeros = []
-    seismometer_gain = 1.0
     found_zero = False
 
     if isinstance(paz_file, str):
@@ -1290,7 +1289,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         zeros = tmp
         tmp = [p * 2. * np.pi for p in poles]
         poles = tmp
-        constant *= (2. * np.pi)**3
+        constant *= (2. * np.pi) ** 3
 
     ### convert poles, zeros and gain in radian to Hertz
     if tohz:
@@ -1300,12 +1299,12 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         for i, p in enumerate(poles):
             if abs(p) > 0.0:
                 poles[i] /= 2 * np.pi
-        constant /= (2. * np.pi)**3
+        constant /= (2. * np.pi) ** 3
 
     # fill up ObsPy Poles and Zeros AttribDict
     # In SAC pole-zero files CONSTANT is defined as:
     # digitizer_gain*seismometer_gain*A0
-    
+
     tr.stats.paz = obspy.core.AttribDict()
     tr.stats.paz.seismometer_gain = 1.0
     tr.stats.paz.digitizer_gain = 1.0
