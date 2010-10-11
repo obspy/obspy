@@ -1458,7 +1458,7 @@ class ObsPyck(QtGui.QMainWindow):
             default_error = 3 / st[0].stats.sampling_rate
             if 'P' in dict:
                 t = self.time_rel2abs(dict['P'])
-                millisec = t.microsecond / 1e3 + 0.5
+                millisec = int(round(t.microsecond / 1e3))
                 if millisec == 1000:
                     t += 1
                     millisec = 0
@@ -1483,7 +1483,7 @@ class ObsPyck(QtGui.QMainWindow):
                                ele))
             if 'S' in dict:
                 t = self.time_rel2abs(dict['S'])
-                millisec = t.microsecond / 1e3 + 0.5
+                millisec = int(round(t.microsecond / 1e3))
                 if millisec == 1000:
                     t += 1
                     millisec = 0
@@ -2684,11 +2684,13 @@ class ObsPyck(QtGui.QMainWindow):
                 continue
             if 'P' in dict:
                 t = self.time_rel2abs(dict['P'])
-                hundredth = t.microsecond / 1e4 + 0.5
+                hundredth = int(round(t.microsecond / 1e4))
                 if hundredth == 100:
-                    t += 1
+                    t_p = UTCDateTime(t) + 1
                     hundredth = 0
-                date = t.strftime("%y%m%d%H%M%S") + ".%02d" % hundredth
+                else:
+                    t_p = UTCDateTime(t)
+                date = t_p.strftime("%y%m%d%H%M%S") + ".%02d" % hundredth
                 if 'POnset' in dict:
                     if dict['POnset'] == 'impulsive':
                         onset = 'I'
@@ -2733,7 +2735,7 @@ class ObsPyck(QtGui.QMainWindow):
                     print >> sys.stderr, err
                     hypo71_string += "\n"
                     continue
-                hundredth = t2.microsecond / 1e4 + 0.5
+                hundredth = int(round(t2.microsecond / 1e4))
                 if hundredth == 100:
                     abs_sec += 1
                     hundredth = 0
