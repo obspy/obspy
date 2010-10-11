@@ -1458,8 +1458,12 @@ class ObsPyck(QtGui.QMainWindow):
             default_error = 3 / st[0].stats.sampling_rate
             if 'P' in dict:
                 t = self.time_rel2abs(dict['P'])
+                millisec = t.microsecond / 1e3 + 0.5
+                if millisec == 1000:
+                    t += 1
+                    millisec = 0
                 date = t.strftime("%Y %m %d %H %M %S")
-                date += ".%03d" % (t.microsecond / 1e3 + 0.5)
+                date += ".%03d" % millisec
                 if 'PErr1' in dict:
                     error_1 = dict['PErr1']
                 else:
@@ -1479,8 +1483,12 @@ class ObsPyck(QtGui.QMainWindow):
                                ele))
             if 'S' in dict:
                 t = self.time_rel2abs(dict['S'])
+                millisec = t.microsecond / 1e3 + 0.5
+                if millisec == 1000:
+                    t += 1
+                    millisec = 0
                 date = t.strftime("%Y %m %d %H %M %S")
-                date += ".%03d" % (t.microsecond / 1e3 + 0.5)
+                date += ".%03d" % millisec
                 if 'SErr1' in dict:
                     error_1 = dict['SErr1']
                 else:
@@ -2676,8 +2684,11 @@ class ObsPyck(QtGui.QMainWindow):
                 continue
             if 'P' in dict:
                 t = self.time_rel2abs(dict['P'])
-                date = t.strftime("%y%m%d%H%M%S")
-                date += ".%02d" % (t.microsecond / 1e4 + 0.5)
+                hundredth = t.microsecond / 1e4 + 0.5
+                if hundredth == 100:
+                    t += 1
+                    hundredth = 0
+                date = t.strftime("%y%m%d%H%M%S") + ".%02d" % hundredth
                 if 'POnset' in dict:
                     if dict['POnset'] == 'impulsive':
                         onset = 'I'
@@ -2722,8 +2733,11 @@ class ObsPyck(QtGui.QMainWindow):
                     print >> sys.stderr, err
                     hypo71_string += "\n"
                     continue
-                date2 = str(abs_sec)
-                date2 += ".%02d" % (t2.microsecond / 1e4 + 0.5)
+                hundredth = t2.microsecond / 1e4 + 0.5
+                if hundredth == 100:
+                    abs_sec += 1
+                    hundredth = 0
+                date2 = "%s.%02d" % (abs_sec, hundredth)
                 if 'SOnset' in dict:
                     if dict['SOnset'] == 'impulsive':
                         onset2 = 'I'
