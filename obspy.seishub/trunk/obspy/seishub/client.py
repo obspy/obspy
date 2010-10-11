@@ -785,11 +785,12 @@ class _EventMapperClient(_BaseRESTClient):
         # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
 
-    def saveKML(self, filename, overwrite=False, nolabels=False, **kwargs):
+    def saveKML(self, filename, overwrite=False, **kwargs):
         """
         Posts an event.getList() and writes the results as a KML file. For
-        optional arguments, see docstring of
-        :meth:`~obspy.seishub.client._EventMapperClient.getList()`
+        optional arguments, see help for
+        :meth:`~obspy.seishub.client._EventMapperClient.getList()` and
+        :meth:`~obspy.seishub.client._EventMapperClient.getKML()`
         
         :type filename: String
         :param filename: Filename (complete path) to save KML to.
@@ -805,7 +806,7 @@ class _EventMapperClient(_BaseRESTClient):
         """
         if not overwrite and os.path.lexists(filename):
             raise OSError("File %s exists and overwrite=False." % filename)
-        kml_string = self.getKML(nolabels=False, **kwargs)
+        kml_string = self.getKML(**kwargs)
         open(filename, "wt").write(kml_string)
         return
 
