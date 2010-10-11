@@ -729,8 +729,8 @@ class _EventMapperClient(_BaseRESTClient):
         descrip_str = "Fetched from: %s" % self.client.base_url
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
-        descrip_str += "\n".join(["=".join(str(item))
-                                  for item in kwargs.items()])
+        descrip_str += "\n".join(["=".join((str(k), str(v))) \
+                                  for k, v in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
         style = SubElement(folder, "Style")
