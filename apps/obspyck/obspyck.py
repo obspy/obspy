@@ -1033,15 +1033,18 @@ class ObsPyck(QtGui.QMainWindow):
             # some keyPress events only make sense inside our matplotlib axes
             if ev.inaxes not in self.axs:
                 return
-            #We want to round from the picking location to
-            #the time value of the nearest time sample:
+            # get the correct sample times array for the click
+            t = self.t[self.axs.index(ev.inaxes)]
+            # We want to round from the picking location to
+            # the time value of the nearest sample:
             samp_rate = st[0].stats.sampling_rate
-            pickSample = ev.xdata * samp_rate
+            pickSample = (ev.xdata - t[0]) * samp_rate
             pickSample = round(pickSample)
-            pickSample = pickSample / samp_rate
             # we need the position of the cursor location
             # in the seismogram array:
-            xpos = pickSample * samp_rate
+            xpos = pickSample
+            # Determine the time of the nearest sample
+            pickSample = t[pickSample]
 
         if ev.key == keys['setPick']:
             # some keyPress events only make sense inside our matplotlib axes
