@@ -26,7 +26,7 @@ http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
 
 import sys
 import os
-from obspy.core import read
+from obspy.core import read, UTCDateTime
 from optparse import OptionParser
 from matplotlib.dates import date2num
 from matplotlib.pyplot import figure, show
@@ -90,6 +90,13 @@ def main():
     parser.add_option("-i", "--ignore-links", default=False,
                       action="store_true", dest="ignore_links",
                       help="Optional. Do not follow symbolic links.")
+    parser.add_option("-t", "--event-times", default=None,
+                      type="string", dest="event_times",
+                      help="Optional, a list of UTCDateTime compatible " + \
+                      "strings separated by commas " + \
+                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " + \
+                      "These get marked by vertical lines in the plot. " + \
+                      "Useful e.g. to mark event origin times.")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -102,6 +109,18 @@ def main():
         parse_func = recursive_parse
     else:
         parse_func = parse_file_to_dict
+
+    fig = figure()
+    ax = fig.add_subplot(111)
+
+    # Plot vertical lines if option 'event_times' was specified
+    if options.event_times:
+        times = options.event_times.split(',')
+        times = map(UTCDateTime, times)
+        times = map(date2num, times)
+        for time in times:
+            ax.axvline(time, color='k')
+
     #
     # Generate dictionary containing nested lists of start and end times per
     # station
@@ -119,8 +138,6 @@ def main():
     # Loop throught this dictionary
     ids = data.keys()
     ids.sort()
-    fig = figure()
-    ax = fig.add_subplot(111)
     for _i, _id in enumerate(ids):
         data[_id].sort()
         startend = np.array(data[_id])
