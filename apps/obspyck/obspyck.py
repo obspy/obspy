@@ -733,7 +733,7 @@ class ObsPyck(QtGui.QMainWindow):
             msg = "%s (zerophase=%s): %.2f Hz" % \
                     (type, options['zerophase'], options['freq'])
         try:
-            stream.filter(type, options)
+            stream.filter(type, **options)
             print msg
         except:
             err = "Error during filtering. Showing unfiltered data."
