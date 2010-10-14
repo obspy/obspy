@@ -135,6 +135,7 @@ class WaveformPlotting(object):
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
+        self.handle = kwargs.get('handle')
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
@@ -189,6 +190,8 @@ class WaveformPlotting(object):
                                  format=self.format)
                 imgdata.seek(0)
                 return imgdata.read()
+            elif self.handle:
+                return self.fig
             else:
                 if not self.fig_obj:
                     plt.show()
@@ -404,7 +407,7 @@ class WaveformPlotting(object):
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
-
+        
     def __plotMinMax(self, trace, ax, *args, **kwargs):
         """
         Plots the data using a min/max approach that calculated the minimum and
@@ -540,9 +543,11 @@ class WaveformPlotting(object):
             min_range = mean - max_distance
             max_range = mean + max_distance
             # Set the location of the ticks.
-            ticks = [mean - 0.7 * max_distance, mean, mean + 0.7 *
-                           max_distance]
-            ax.set_yticks([round(_j, 2) for _j in ticks])
+            ticks = [mean - 1.0 * max_distance, mean - 0.75 * max_distance,
+                     mean - 0.5 * max_distance, mean - 0.25 * max_distance,
+                     mean, mean + 0.25 * max_distance, mean + 0.5 * max_distance,
+                     mean + 0.75 *max_distance, mean + 1.0 *max_distance]
+            ax.set_yticks([round(_j, -1) for _j in ticks])
             ax.set_yticklabels(ax.get_yticks(), fontsize='small')
             # Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='left',
