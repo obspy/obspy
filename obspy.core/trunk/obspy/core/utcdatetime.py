@@ -185,21 +185,29 @@ class UTCDateTime(datetime.datetime):
                 value = value.replace('W', ' ')
                 # check for ordinal date (julian date)
                 parts = value.split(' ')
+                # check for patterns
                 if len(parts) == 1 and len(value) == 7 and value.isdigit():
                     # looks like an compact ordinal date string
-                    patterns = ["%Y%j"]
+                    pattern = "%Y%j"
                 elif len(parts) > 1 and len(parts[1]) == 3 and \
                    parts[1].isdigit():
                     # looks like an ordinal date string
-                    patterns = ["%Y%j%H%M%S", "%Y%j"]
+                    value = ''.join(parts)
+                    if len(parts) > 2:
+                        pattern = "%Y%j%H%M%S"
+                    else:
+                        pattern = "%Y%j"
                 else:
                     # some parts should have 2 digits
                     for i in range(1, min(len(parts), 6)):
                         if len(parts[i]) == 1:
                             parts[i] = '0' + parts[i]
                     # standard date string
-                    patterns = ["%Y%m%d%H%M%S", "%Y%m%d"]
-                value = ''.join(parts)
+                    value = ''.join(parts)
+                    if len(value) > 8:
+                        pattern = "%Y%m%d%H%M%S"
+                    else:
+                        pattern = "%Y%m%d"
                 ms = 0
                 if '.' in value:
                     parts = value.split('.')
@@ -212,19 +220,11 @@ class UTCDateTime(datetime.datetime):
                 # UTCDateTime which contains the class specifications. If
                 # argument is not a digit by now, it must be a binary string
                 # and we pass it to datetime.datetime,
-                if not value.isdigit():
+                if not ''.join(parts).isdigit():
                     return datetime.datetime.__new__(cls, *args, **kwargs)
-                dt = None
-                for pattern in patterns:
-                    try:
-                        dt = datetime.datetime.strptime(value, pattern)
-                    except:
-                        continue
-                    else:
-                        break
-                if dt:
-                    dt = UTCDateTime(dt) + ms
-                    return UTCDateTime._new(cls, dt)
+                dt = datetime.datetime.strptime(value, pattern)
+                dt = UTCDateTime(dt) + ms
+                return UTCDateTime._new(cls, dt)
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs and 'year' in kwargs:
             try:
