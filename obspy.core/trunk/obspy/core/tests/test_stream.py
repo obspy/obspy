@@ -1356,6 +1356,24 @@ class StreamTestCase(unittest.TestCase):
             self.assertEquals(st[i].stats.starttime.timestamp, start[i])
             self.assertEquals(st[i].stats.endtime.timestamp, end[i])
 
+    def test_str(self):
+        """
+        Test case for issue #162 - print streams in a more consistent way.
+        """
+        tr1 = Trace()
+        tr1.stats.station = "1"
+        tr2 = Trace()
+        tr2.stats.station = "12345"
+        st = Stream([tr1, tr2])
+        result = st.__str__()
+        expected = "2 Trace(s) in Stream:\n" + \
+                   ".1..     | 1970-01-01T00:00:00.000000Z - 1970-01-01" + \
+                   "T00:00:00.000000Z | 1.0 Hz, 0 samples\n" + \
+                   ".12345.. | 1970-01-01T00:00:00.000000Z - 1970-01-01" + \
+                   "T00:00:00.000000Z | 1.0 Hz, 0 samples"
+        self.assertEqual(result, expected)
+
+
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
 

@@ -395,8 +395,11 @@ class Stream(object):
         It will contain the number of Traces in the Stream and the return value
         of each Trace's __str__ method.
         """
-        return_string = str(len(self.traces)) + ' Trace(s) in Stream:\n'
-        return return_string + "\n".join([str(tr) for tr in self])
+        # get longest id
+        id_length = max(len(tr.id) for tr in self)
+        out = str(len(self.traces)) + ' Trace(s) in Stream:\n'
+        out = out + "\n".join([tr.__str__(id_length) for tr in self])
+        return out
 
     def __eq__(self, other):
         """
@@ -767,7 +770,7 @@ class Stream(object):
 
         return spec_list
 
-    def pop(self, index=-1):
+    def pop(self, index= -1):
         """
         Removes the Trace object specified by index from the Stream object and
         returns it. If no index is given it will remove the last Trace.

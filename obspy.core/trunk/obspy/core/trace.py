@@ -326,7 +326,7 @@ class Trace(object):
     # define their own __hash__() to explicitly raise TypeError).
     __hash__ = None
 
-    def __str__(self):
+    def __str__(self, id_length=None):
         """
         Returns short summary string of the current trace.
 
@@ -343,25 +343,31 @@ class Trace(object):
         >>> str(tr)
         'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples'
         """
+        # set fixed id width
+        if id_length:
+            out = "%%-%ds" % (id_length)
+            out = out % (self.id)
+        else:
+            out = "%s" % (self.id)
+        # output depending on delta or sampling rate bigger than one
         if self.stats.sampling_rate < 0.1:
             if hasattr(self.stats, 'preview')  and self.stats.preview:
-                out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(delta).1f s, %(npts)d samples [preview]"
             else:
-                out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(delta).1f s, %(npts)d samples"
         else:
             if hasattr(self.stats, 'preview')  and self.stats.preview:
-                out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
             else:
-                out = "%(network)s.%(station)s.%(location)s.%(channel)s | " + \
+                out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(sampling_rate).1f Hz, %(npts)d samples"
-
         return out % (self.stats)
 
     def __len__(self):
@@ -782,7 +788,7 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) *\
+            delta = round((endtime - self.stats.starttime) * \
                            self.stats.sampling_rate) - self.stats.npts + 1
         else:
             # solution for #127, however some tests need to be changed
@@ -1023,7 +1029,7 @@ class Trace(object):
                 raise ImportError(msg)
 
         # XXX accepting string "self" and using attached paz then
-        if paz_remove=='self':
+        if paz_remove == 'self':
             paz_remove = self.stats.paz
 
         self.data = signal.seisSim(self.data, self.stats.sampling_rate,
