@@ -724,13 +724,13 @@ class TraceTestCase(unittest.TestCase):
         except ImportError:
             return
         tr = read()[0]
-        paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-                              -251.33+0j, -131.04-467.29j, -131.04+467.29j],
+        paz_sts2 = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                              - 251.33 + 0j, -131.04 - 467.29j, -131.04 + 467.29j],
                     'zeros': [0j, 0j],
                     'gain': 60077000.0,
                     'sensitivity': 2516778400.0}
-        paz_le3d1s = {'poles': [-4.440+4.440j, -4.440-4.440j, -1.083+0.0j],
-                      'zeros': [0.0+0.0j, 0.0+0.0j, 0.0+0.0j],
+        paz_le3d1s = {'poles': [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j],
+                      'zeros': [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
                       'gain': 0.4,
                       'sensitivity': 1.0}
         data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=paz_sts2,
@@ -1002,6 +1002,18 @@ class TraceTestCase(unittest.TestCase):
         # see that it is actually rounded to the next sample point
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
+
+    def test_maskedArrayToString(self):
+        """
+        Masked arrays should be marked using __str__.
+        """
+        st = read()
+        overlaptrace = st[0].copy()
+        overlaptrace.stats.starttime += 1
+        st.append(overlaptrace)
+        st.merge()
+        out = st[0].__str__()
+        self.assertTrue(out.endswith('(masked)'))
 
 
 def suite():

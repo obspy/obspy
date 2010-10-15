@@ -368,6 +368,9 @@ class Trace(object):
                 out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(sampling_rate).1f Hz, %(npts)d samples"
+        # check for masked array
+        if np.ma.count_masked(self.data):
+            out += ' (masked)'
         return out % (self.stats)
 
     def __len__(self):
