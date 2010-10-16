@@ -361,6 +361,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, UTCDateTime, 2010, 9, 31)
         self.assertRaises(ValueError, UTCDateTime, '2010-09-31')
 
+    def test_issue168(self):
+        """
+        Couldn't calculate julday before 1900.
+        """
+        #1
+        dt = UTCDateTime("2010-01-01")
+        self.assertEquals(dt.julday, 1)
+        #2
+        dt = UTCDateTime("1900-12-31")
+        self.assertEquals(dt.julday, 365)
+        #3
+        dt = UTCDateTime("1899-12-31T23:59:59.999999Z")
+        self.assertEquals(dt.julday, 365)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

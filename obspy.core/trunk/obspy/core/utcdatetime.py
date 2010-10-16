@@ -405,7 +405,11 @@ class UTCDateTime(datetime.datetime):
         :rtype: int
         :return: Julian day of current UTCDateTime
         """
-        return int(self.strftime("%j"))
+        try:
+            return int(self.strftime("%j"))
+        except:
+            # calculate it
+            return (self.date - UTCDateTime(self.year, 1, 1).date).days + 1
 
     julday = property(getJulday)
 
