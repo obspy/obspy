@@ -939,7 +939,6 @@ class Trace(object):
            self.data.dtype.byteorder not in ["=", "|"]:
             msg = "Trace data should be stored as numpy.ndarray in the " + \
                   "system specific byte order."
-            print self.data.dtype.byteorder
             raise Exception(msg)
 
     def simulate(self, paz_remove=None, paz_simulate=None,

@@ -7,13 +7,13 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
-import obspy.core
 from obspy.core import UTCDateTime
-import warnings
 import numpy as np
+import obspy.core
 import os
 import string
 import time
+import warnings
 
 """
 An object-oriented version of C. J. Ammon's SAC I/O module.
@@ -515,7 +515,7 @@ class SacIO(object):
         try:
             os.path.exists(fname)
         except IOError:
-            print "No such file:" + fname
+            warnings.warn("No such file:" + fname, category=Warning)
         else:
             f = open(fname, 'r+') # open file for modification
             f.seek(0, 0) # set pointer to the file beginning
@@ -1100,8 +1100,9 @@ class SacIO(object):
             try:
                 import obspy.signal as signal
             except ImportError, e:
-                print "ERROR: obspy.signal is needed for this function " + \
+                msg = "ERROR: obspy.signal is needed for this function " + \
                       "and is not installed"
+                warnings.warn(msg, category=ImportWarning)
                 raise SacError(e)
 
         eqlat = self.GetHvalue('evla')

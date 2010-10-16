@@ -5,6 +5,7 @@ from lxml.etree import Element
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
 import os
+import warnings
 
 
 class BlocketteLengthException(Exception):
@@ -104,7 +105,7 @@ class Blockette(object):
                 if self.strict:
                     raise BlocketteLengthException(msg)
                 else:
-                    print('WARN: ' + msg)
+                    warnings.warn(msg, category=Warning)
                 break
             field.parseSEED(self, data)
             if field.id == 2:
@@ -124,7 +125,7 @@ class Blockette(object):
         if self.strict:
             raise BlocketteLengthException(msg)
         else:
-            print('WARN: ' + msg)
+            warnings.warn(msg, category=Warning)
 
     def getSEED(self):
         """

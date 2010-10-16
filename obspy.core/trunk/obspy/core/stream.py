@@ -9,18 +9,19 @@ Module for handling ObsPy Stream objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from glob import iglob
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.trace import Trace
-from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
-                            interceptDict
-from pkg_resources import load_entry_point
 from StringIO import StringIO
+from glob import iglob
+from obspy.core.trace import Trace
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
+    interceptDict
+from pkg_resources import load_entry_point
 import copy
 import math
 import numpy as np
 import os
 import urllib2
+import warnings
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
@@ -200,7 +201,8 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                             'isFormat')
             except Exception, e:
                 # verbose error handling/parsing
-                print "WARNING: Cannot load module %s:" % ep.dist.key, e
+                msg = "Cannot load module %s:" % ep.dist.key, e
+                warnings.warn(msg, category=ImportWarning)
                 continue
             if isFormat(filename):
                 format_ep = ep
@@ -739,7 +741,7 @@ class Stream(object):
         except:
             msg = "Please install module obspy.imaging to be able to " + \
                   "plot ObsPy Stream objects."
-            print msg
+            warnings.warn(msg, category=ImportWarning)
             raise
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform()
@@ -957,7 +959,8 @@ class Stream(object):
         formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         if not format:
             msg = "Please provide a output format. Supported Formats: "
-            print msg + ', '.join(formats_ep.keys())
+            msg = msg + ', '.join(formats_ep.keys())
+            warnings.warn(msg, category=SyntaxWarning)
             return
         try:
             # search writeFormat for given entry point

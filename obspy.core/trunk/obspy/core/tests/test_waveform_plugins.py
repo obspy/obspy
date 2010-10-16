@@ -44,7 +44,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
         for format in formats:
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
-                    #print format, native_byteorder, byteorder
                     # new trace object in native byte order
                     dt = np.dtype("int").newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
