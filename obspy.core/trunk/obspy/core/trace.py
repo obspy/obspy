@@ -126,7 +126,7 @@ class Stats(AttribDict):
         >>> trace = Trace()
         >>> trace.stats.npts
         0
-        >>> trace.data = [1, 2, 3, 4]
+        >>> trace.data = np.array([1, 2, 3, 4])
         >>> trace.stats.npts
         4
     """
@@ -251,6 +251,8 @@ class Trace(object):
         # otherwise we could end up with e.g. a list object in self.data
         if not isinstance(data, np.ndarray):
             data = np.array(data)
+            msg = "Trace.data should be a NumPy array."
+            warnings.warn(msg, category=DeprecationWarning)
         # set some defaults if not set yet
         if header == None:
             # Default values: For detail see
@@ -400,6 +402,10 @@ class Trace(object):
         """
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
+            if not isinstance(value, np.ndarray):
+                value = np.array(value)
+                msg = "Trace.data should be a NumPy array."
+                warnings.warn(msg, category=DeprecationWarning)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
@@ -1294,13 +1300,13 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.max()
         9
-        >>> tr = Trace(data=[0, -3, -9, 6, 4])
+        >>> tr = Trace(data=np.array([0, -3, -9, 6, 4]))
         >>> tr.max()
         -9
-        >>> tr = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> tr.max()
         9.0
 
@@ -1321,10 +1327,10 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.std()
         4.2614551505325036
-        >>> tr = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> tr.std()
         4.4348618918744247
 
@@ -1346,13 +1352,13 @@ class Trace(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=[0, -3, 9, 6, 4])
+        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.normalize()
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
         >>> tr.stats.processing
         ['normalize:9']
-        >>> tr = Trace(data=[0.3, -3.5, -9.2, 6.4, 4.3])
+        >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4, 4.3]))
         >>> tr.normalize()
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217,  0.4673913 ])

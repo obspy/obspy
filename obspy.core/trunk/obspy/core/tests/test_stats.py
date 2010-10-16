@@ -138,7 +138,7 @@ class StatsTestCase(unittest.TestCase):
         """
         Second test related to issue #4.
         """
-        st = Stream([Trace([], {'station': 'BGLD'})])
+        st = Stream([Trace(header={'station': 'BGLD'})])
         self.assertEquals(st[0].stats.station, 'BGLD')
         self.assertEquals(st[0].stats['station'], 'BGLD')
         st[0].stats.station = 'AAA'
@@ -155,7 +155,7 @@ class StatsTestCase(unittest.TestCase):
         """
         Third test related to issue #4.
         """
-        st = Stream([Trace([], {'station': 'BGLD'})])
+        st = Stream([Trace(header={'station': 'BGLD'})])
         self.assertEquals(st[0].stats.station, 'BGLD')
         st = st + st
         st[0].stats.station = 'AAA'

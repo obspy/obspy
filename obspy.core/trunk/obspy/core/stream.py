@@ -1101,7 +1101,7 @@ class Stream(object):
 
         Basic Usage
         -----------
-        >>> tr = Trace(data=[1,2,3,4])
+        >>> tr = Trace(data=np.array([1, 2, 3, 4]))
         >>> tr.stats.npts = 100
         >>> st = Stream([tr])
         >>> st.verify()  #doctest: +ELLIPSIS
@@ -1424,9 +1424,9 @@ class Stream(object):
         Method to get the values of the absolute maximum amplitudes of all
         traces in the stream. See :meth:`~obspy.core.trace.Trace.max`.
 
-        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
-        >>> tr2 = Trace(data=[0, -3, -9, 6, 4])
-        >>> tr3 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr2 = Trace(data=np.array([0, -3, -9, 6, 4]))
+        >>> tr3 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2, tr3])
         >>> st.max()
         [9, -9, 9.0]
@@ -1443,8 +1443,8 @@ class Stream(object):
         :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
         stream.
         
-        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
-        >>> tr2 = Trace(data=[0.3, -3.5, 9.0, 6.4, 4.3])
+        >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr2 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2])
         >>> st.std()
         [4.2614551505325036, 4.4348618918744247]
@@ -1473,8 +1473,8 @@ class Stream(object):
         
         Make a Stream with two Traces:
 
-        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
-        >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
+        >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])
 
         All traces are normalized to their absolute maximum and processing
@@ -1493,8 +1493,8 @@ class Stream(object):
         Now let's do it again normalize all traces to the stream's global
         maximum:
 
-        >>> tr1 = Trace(data=[0, -3, 9, 6, 4])
-        >>> tr2 = Trace(data=[0.3, -0.5, -0.8, 0.4, 0.3])
+        >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])
 
         >>> st.normalize(global_max=True)
