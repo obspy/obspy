@@ -394,7 +394,7 @@ def deprecated(func):
     It will result in a warning being emitted when the function is used.
     """
     def new_func(*args, **kwargs):
-        if 'deprecated' in func.__doc__.lower():
+        if 'deprecated' in str(func.__doc__).lower():
             msg = func.__doc__
         else:
             msg = "Call to deprecated function %s." % func.__name__
@@ -404,6 +404,25 @@ def deprecated(func):
     new_func.__doc__ = func.__doc__
     new_func.__dict__.update(func.__dict__)
     return new_func
+
+
+class deprecated_keywords:
+    def __init__(self, keywords):
+        self.keywords = keywords
+
+    def __call__(self, func):
+        fname = func.func_name
+        msg = "Deprecated keyword %s in %s() call - please use %s instead."
+        def echo_func(*args, **kwargs):
+            for kw in kwargs.keys():
+                if kw in self.keywords:
+                    nkw = self.keywords[kw]
+                    warnings.warn(msg % (kw, fname, nkw),
+                                  category=DeprecationWarning)
+                    kwargs[nkw] = kwargs[kw]
+                    del(kwargs[kw])
+            return func(*args, **kwargs)
+        return echo_func
 
 
 def interceptDict(func):

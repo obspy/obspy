@@ -13,7 +13,7 @@ from copy import deepcopy
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString, \
-    deprecated
+    deprecated, deprecated_keywords
 from telnetlib import Telnet
 import os
 import sys
@@ -24,6 +24,11 @@ ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
 ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
 INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
+
+
+DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
+                       'location_id':'location', 'channel_id':'channel',
+                       'start_datetime':'starttime', 'end_datetime':'endtime'}
 
 
 class ArcLinkException(Exception):
@@ -130,10 +135,10 @@ class Client(Telnet):
         if not route:
             return self._request(request_type, request_data)
         # using route
-        routes = self.getRouting(network_id=request_data[2],
-                                 station_id=request_data[3],
-                                 start_datetime=request_data[0],
-                                 end_datetime=request_data[1])
+        routes = self.getRouting(network=request_data[2],
+                                 station=request_data[3],
+                                 starttime=request_data[0],
+                                 endtime=request_data[1])
         id = request_data[2] + '.' + request_data[3]
         if id in routes.keys() and routes[id] == []:
             # we are at the responsible ArcLink node
@@ -237,9 +242,9 @@ class Client(Telnet):
         self.data = data
         return data
 
-    def saveWaveform(self, filename, network_id, station_id, location_id,
-                     channel_id, start_datetime, end_datetime, format="MSEED",
-                     compressed=True):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def saveWaveform(self, filename, network, station, location, channel,
+                     starttime, endtime, format="MSEED", compressed=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -247,17 +252,17 @@ class Client(Telnet):
         ----------
         filename : string
             Name of the output file.
-        network_id : string
+        network : string
             Network code, e.g. 'BW'.
-        station_id : string
+        station : string
             Station code, e.g. 'MANZ'.
-        location_id : string
+        location : string
             Location code, e.g. '01'.
-        channel_id : string
+        channel : string
             Channel code, e.g. 'EHE'.
-        start_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             Start date and time.
-        end_datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
         format : ['FSEED' | 'MSEED'], optional
             Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
@@ -277,8 +282,7 @@ class Client(Telnet):
             else:
                 rtype += " compression=bzip2"
         # adding one second to start and end time to ensure right date times
-        rdata = [start_datetime, end_datetime, network_id, station_id,
-                 channel_id, location_id]
+        rdata = [starttime, endtime, network, station, channel, location]
         data = self._fetch(rtype, rdata)
         if data and compressed:
             data = bz2.decompress(data)
@@ -291,49 +295,51 @@ class Client(Telnet):
         if isinstance(filename, basestring):
             fh.close()
 
-    def getWaveform(self, network_id, station_id, location_id, channel_id,
-                    start_datetime, end_datetime, format="MSEED",
-                    compressed=True, getPAZ=False, getCoordinates=False):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getWaveform(self, network, station, location, channel, starttime,
+                    endtime, format="MSEED", compressed=True, getPAZ=False,
+                    getCoordinates=False):
         """
         Retrieve waveform via ArcLink and returns an ObsPy Stream object.
 
-        :type filename: string
-        :param filename: Name of the output file.
-        :type network_id: string
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: string
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type location_id: string
-        :param location_id: Location code, e.g. '01'.
-        :type channel_id: string
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param start_datetime: Start date and time.
-        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_datetime: End date and time.
-        :type format: String
-        :param format: Output format. Either full SEED ('FSEED') or Mini-SEED
-                ('MSEED') volume (default is 'MSEED'). 
-                Note: Format 'XSEED' is documented, but not yet implemented in
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['FSEED' | 'MSEED'], optional
+            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
+            volume (default is an 'MSEED'). 
+            .. note:: 
+                Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
-        :type compressed: boolean, optional 
-        :paramcompressed: Request compressed files from ArcLink server (default
-                is True).
-        :type getPAZ: Boolean
-        :param getPAZ: Fetch PAZ information and append to
+        compressed : boolean, optional 
+            Request compressed files from ArcLink server (default is True).
+        getPAZ : boolean
+            Fetch PAZ information and append to 
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request.
-        :type getCoordinates: Boolean
-        :param getCoordinates: Fetch coordinate information and append to
+        getCoordinates : boolean
+            Fetch coordinate information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request.
 
-        :returns: :class:`~obspy.core.stream.Stream`
+        Returns
+        -------
+            :class:`~obspy.core.stream.Stream`
         """
         tf = NamedTemporaryFile()
-        self.saveWaveform(tf, network_id, station_id, location_id, channel_id,
-                          start_datetime, end_datetime, format=format,
-                          compressed=compressed)
+        self.saveWaveform(tf, network, station, location, channel, starttime,
+                          endtime, format=format, compressed=compressed)
         # read stream using obspy.mseed
         tf.seek(0)
         try:
@@ -347,49 +353,53 @@ class Client(Telnet):
         except:
             pass
         # trim stream
-        stream.trim(start_datetime, end_datetime)
+        stream.trim(starttime, endtime)
         # fetch metadata
         # fetching PAZ with wildcards: one call per channel
         if getPAZ:
             for tr in stream:
                 cha = tr.stats.channel
                 # XXX should add a check like metadata_check in seishub.client
-                metadata = self.getMetadata(network_id, station_id,
-                                            location_id, cha, start_datetime,
-                                            end_datetime, getPAZ=getPAZ,
+                metadata = self.getMetadata(network, station, location, cha,
+                                            starttime, endtime, getPAZ=getPAZ,
                                             getCoordinates=getCoordinates)
                 tr.stats['paz'] = deepcopy(metadata['paz'])
         if getCoordinates:
-            # reuse metadata fetched for paz or else fetch it
+            # reuse metadata fetched for PAZ or else fetch it
             metadata = locals().get('metadata')
             if not metadata:
-                metadata = self.getMetadata(network_id, station_id,
-                                            location_id, channel_id,
-                                            start_datetime, end_datetime,
-                                            getPAZ=getPAZ,
+                metadata = self.getMetadata(network, station, location, cha,
+                                            starttime, endtime, getPAZ=getPAZ,
                                             getCoordinates=getCoordinates)
             for tr in stream:
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
-    def getRouting(self, network_id, station_id, start_datetime, end_datetime):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station',
+                          'start_datetime':'starttime',
+                          'end_datetime':'endtime'})
+    def getRouting(self, network, station, starttime, endtime):
         """
         Get responsible host addresses for given network/stations from ArcLink.
 
-        :type network_id: string
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: string
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type start_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param start_datetime: Start date and time.
-        :type end_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_datetime: End date and time.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
 
-        :returns: dict of host names.
+        Returns
+        -------
+            Dictionary of host names.
         """
         rtype = 'REQUEST ROUTING '
         # adding one second to start and end time to ensure right date times
-        rdata = [start_datetime, end_datetime, network_id, station_id]
+        rdata = [starttime, endtime, network, station]
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=False)
         # parse XML document
@@ -423,39 +433,43 @@ class Client(Telnet):
                 result[id].append(temp)
         return result
 
-    def getMetadata(self, network_id, station_id, location_id, channel_id,
-                    start_datetime, end_datetime, getPAZ=True,
-                    getCoordinates=True):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getMetadata(self, network, station, location, channel, starttime,
+                    endtime, getPAZ=True, getCoordinates=True):
         """
         Returns metadata (PAZ and Coordinates).
 
-        :type network_id: String
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: String
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type location_id: String
-        :param location_id: Location code, e.g. '01'.
-        :type channel_id: String
-        :param channel_id: Channel code, e.g. 'EHE', "*" for component allowed
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :return: dictionary containing keys 'paz' and 'coordinates'
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            Dictionary containing keys 'paz' and 'coordinates'.
         """
         if not getPAZ and not getCoordinates:
             return {}
-        result = self.getInventory(network_id=network_id,
-                                   station_id=station_id,
-                                   location_id=location_id,
-                                   channel_id=channel_id,
-                                   start_datetime=start_datetime,
-                                   end_datetime=end_datetime,
+        result = self.getInventory(network=network, station=station,
+                                   location=location, channel=channel,
+                                   starttime=starttime, endtime=endtime,
                                    instruments=True)
         data = {}
         if getPAZ:
-            id = '.'.join([network_id, station_id, location_id, channel_id])
+            id = '.'.join([network, station, location, channel])
             data['paz'] = result[id].paz
         if getCoordinates:
-            id = '.'.join([network_id, station_id])
+            id = '.'.join([network, station])
             data['coordinates'] = AttribDict()
             for key in ['latitude', 'longitude', 'elevation']:
                 data['coordinates'][key] = result[id][key]
@@ -511,27 +525,35 @@ class Client(Telnet):
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    def getPAZ(self, network_id, station_id, location_id, channel_id,
-               start_datetime, end_datetime):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getPAZ(self, network, station, location, channel, starttime, endtime):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :return: dictionary containing PAZ information
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            Dictionary containing PAZ information.
         """
-        result = self.getInventory(network_id=network_id,
-                                   station_id=station_id,
-                                   location_id=location_id,
-                                   channel_id=channel_id,
-                                   start_datetime=start_datetime,
-                                   end_datetime=end_datetime,
+        result = self.getInventory(network=network, station=station,
+                                   location=location, channel=channel,
+                                   starttime=starttime, endtime=endtime,
                                    instruments=True)
-        id = '.'.join([network_id, station_id, location_id, channel_id])
+        id = '.'.join([network, station, location, channel])
         if '*' in id:
             msg = 'getPAZ supports only a single channel, use getInventory' + \
                   ' instead'
@@ -543,41 +565,79 @@ class Client(Telnet):
         msg = 'Could not find PAZ for channel %s' % id
         raise ArcLinkException(msg)
 
-    def saveResponse(self, filename, network_id, station_id, location_id,
-                     channel_id, start_datetime, end_datetime, format='SEED'):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def saveResponse(self, filename, network, station, location, channel,
+                     starttime, endtime, format='SEED'):
         """
         Writes a response information into a file.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :param format: 'SEED' ('XSEED' is documented, but not yet implemented 
-            in ArcLink).
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['SEED'], optional
+            Output format. 
+            .. note:: 
+                Format 'XSEED' is documented, but not yet implemented in
+                ArcLink.
         """
         rtype = 'REQUEST RESPONSE format=%s' % format
         # adding one second to start and end time to ensure right date times
-        rdata = [start_datetime, end_datetime, network_id, station_id,
-                 channel_id, location_id]
+        rdata = [starttime, endtime, network, station, channel, location]
         data = self._fetch(rtype, rdata)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
 
-    def getInventory(self, network_id, station_id='*', location_id='*',
-                     channel_id='*', start_datetime=UTCDateTime(),
-                     end_datetime=UTCDateTime(), instruments=False,
-                     route=True):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getInventory(self, network, station='*', location='*', channel='*',
+                     starttime=UTCDateTime(), endtime=UTCDateTime(),
+                     instruments=False, route=True):
         """
+        Returns inventory data.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        instruments : boolean, optional
+            Include instrument data (default is False).
+        route : boolean, optional
+            Enables ArcLink routing (default is True).
+
+        Returns
+        -------
+            Dictionary of inventory information.
         """
         rtype = 'REQUEST INVENTORY '
         if instruments:
             rtype += 'instruments=true '
         # adding one second to start and end time to ensure right date times
-        rdata = [start_datetime, end_datetime, network_id, station_id,
-                 channel_id, location_id]
+        rdata = [starttime, endtime, network, station, channel, location]
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=route)
         # parse XML document
@@ -681,9 +741,9 @@ class Client(Telnet):
                     except:
                         end = None
                     # check date/time boundaries
-                    if end and end_datetime > end:
+                    if end and endtime > end:
                         continue
-                    if start_datetime < start:
+                    if starttime < start:
                         continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
@@ -726,40 +786,56 @@ class Client(Telnet):
                         data[id]['paz'] = paz
         return data
 
+    @deprecated_keywords({'start_datetime':'starttime',
+                          'end_datetime':'endtime'})
     @deprecated
-    def getNetworks(self, start_datetime, end_datetime):
+    def getNetworks(self, starttime, endtime):
         """
         Returns a dictionary of available networks within the given time span.
 
-        Currently the time span is ignored by the ArcLink servers, therefore
-        all possible networks are returned.
+        .. note:: 
+            Currently the time span seems to be ignored by the ArcLink servers,
+            therefore all possible networks are returned.
 
-        :param start_datetime: start time as L{obspy.UTCDateTime} object.
-        :param end_datetime: end time as L{obspy.UTCDateTime} object.
-        :return: dictionary of network data.
+        Parameters
+        ----------
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            Dictionary of network data.
         """
-        return self.getInventory(network_id='*',
-                                 start_datetime=start_datetime,
-                                 end_datetime=end_datetime, route=False)
+        return self.getInventory(network='*', starttime=starttime,
+                                 endtime=endtime, route=False)
 
+    @deprecated_keywords({'start_datetime':'starttime',
+                          'end_datetime':'endtime', 'network_id':'network'})
     @deprecated
-    def getStations(self, start_datetime, end_datetime, network_id):
+    def getStations(self, starttime, endtime, network):
         """
         Returns a dictionary of available stations in the given network(s).
 
-        Currently the time span is ignored by the ArcLink servers, therefore
-        all possible stations are returned.
+        .. note:: 
+            Currently the time span seems to be ignored by the ArcLink servers,
+            therefore all possible stations are returned.
 
-        :type start_datetime: :class:`obspy.core.util.UTCDateTime`
-        :param start_datetime: start time
-        :type end_datetime: :class:`obspy.core.util.UTCDateTime`
-        :param end_datetime: end time
-        :type network_id: String or list of Strings
-        :param network_id: Network(s) to list stations of
-        :return: dictionary of station data.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            Dictionary of station data.
         """
-        data = self.getInventory(network_id=network_id,
-                                 start_datetime=start_datetime,
-                                 end_datetime=end_datetime)
+        data = self.getInventory(network=network, starttime=starttime,
+                                 endtime=endtime)
         return [value for key, value in data.items() \
-                if key.startswith(network_id + '.')]
+                if key.startswith(network + '.')]

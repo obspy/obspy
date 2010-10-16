@@ -13,17 +13,6 @@ import os
 import unittest
 
 
-def dict_checker(dict1, dict2):
-    for key, value in dict1.iteritems():
-        if not dict2.has_key(key):
-            print "dict2: missing key %s" % key
-            continue
-        if isinstance(value, AttribDict):
-            dict_checker(dict1[key], dict2[key])
-        elif dict2[key] != value:
-            print "%s: %s != %s" % (key, value, dict2[key])
-
-
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.arclink.client.Client}.
@@ -147,32 +136,29 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         dt = UTCDateTime(2010, 1, 1)
         #1 - GE network
-        result = client.getInventory('GE', 'APE', start_datetime=dt,
-                                     end_datetime=dt + 1)
+        result = client.getInventory('GE', 'APE', starttime=dt, endtime=dt + 1)
         self.assertTrue('GE' in result)
         self.assertTrue('GE.APE' in result)
         #2 - GE network
-        result = client.getInventory('GE', 'APE', '', 'BHE',
-                                     start_datetime=dt, end_datetime=dt + 1,
-                                     instruments=True)
+        result = client.getInventory('GE', 'APE', '', 'BHE', starttime=dt,
+                                     endtime=dt + 1, instruments=True)
         self.assertTrue('GE' in result)
         self.assertTrue('GE.APE' in result)
         self.assertTrue('GE.APE..BHE' in result) # only for instruments=True
         #3 - BW network
-        result = client.getInventory('BW', 'RJOB', start_datetime=dt,
-                                     end_datetime=dt + 1)
+        result = client.getInventory('BW', 'RJOB', starttime=dt,
+                                     endtime=dt + 1)
         self.assertTrue('BW' in result)
         self.assertTrue('BW.RJOB' in result)
         #4 - BW network
-        result = client.getInventory('BW', 'MANZ', '', 'EHE',
-                                     start_datetime=dt, end_datetime=dt + 1,
-                                     instruments=True)
+        result = client.getInventory('BW', 'MANZ', '', 'EHE', starttime=dt,
+                                     endtime=dt + 1, instruments=True)
         self.assertTrue('BW' in result)
         self.assertTrue('BW.MANZ' in result)
         self.assertTrue('BW.MANZ..EHE' in result) # only for instruments=True
         #5 - unknown network 00 via webdc.eu:18002
         self.assertRaises(ArcLinkException, client.getInventory, '00', '',
-                          start_datetime=dt, end_datetime=dt + 1)
+                          starttime=dt, endtime=dt + 1)
 
     def test_getWaveformWithMetadata(self):
         """

@@ -9,25 +9,33 @@ SeisHub database client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
-from datetime import datetime
 from math import log
+from obspy.core import UTCDateTime
+from obspy.core.util import BAND_CODE, deprecated, deprecated_keywords
+import os
 import pickle
 import sys
 import time
-import urllib2
 import urllib
-import os
+import urllib2
 import warnings
-from obspy.core.util import BAND_CODE, deprecated
-from obspy.core import UTCDateTime
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
 HTTP_ACCEPTED_NODATA_METHODS = ["HEAD", "GET", "DELETE"]
 HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
                         HTTP_ACCEPTED_NODATA_METHODS
+
+
+DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
+                       'location_id':'location', 'channel_id':'channel',
+                       'start_datetime':'starttime', 'end_datetime':'endtime'}
+KEYWORDS = {'network':'network_id', 'station':'station_id',
+            'location':'location_id', 'channel':'channel_id',
+            'starttime':'start_datetime', 'endtime':'end_datetime'}
 
 
 class Client(object):
@@ -93,7 +101,9 @@ class Client(object):
         Test if authentication information is valid. Raises an Exception if
         status code of response is not 200 (OK) or 401 (Forbidden).
 
-        :returns: True if OK, False if invalid.
+        Returns
+        -------
+            True if OK, False if invalid.
         """
         (code, _msg) = self._HTTP_request(self.base_url + "/xml/",
                                          method="HEAD")
@@ -106,6 +116,12 @@ class Client(object):
 
     def _fetch(self, url, *args, **kwargs):
         params = {}
+        # map keywords
+        for key, value in KEYWORDS.iteritems():
+            if key in kwargs.keys():
+                kwargs[value] = kwargs[key]
+                del kwargs[key]
+        # check for ranges and empty values
         for key, value in kwargs.iteritems():
             if not value:
                 continue
@@ -173,9 +189,16 @@ class _BaseRESTClient(object):
         """
         Gets a resource.
 
-        :param resource_name: Name of the resource.
-        :param format: Format string, e.g. 'xml' or 'map'.
-        :return: Resource
+        Parameters
+        ----------
+        resource_name : string
+            Name of the resource.
+        format : string, optional
+            Format string, e.g. 'xml' or 'map'.
+
+        Returns
+        -------
+            Resource
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -189,8 +212,14 @@ class _BaseRESTClient(object):
         """
         Gets a XML resource.
 
-        :param resource_name: Name of the resource.
-        :return: Resource as :class:`lxml.objectify.ObjectifiedElement`
+        Parameters
+        ----------
+        resource_name : string
+            Name of the resource.
+
+        Returns
+        -------
+            Resource as :class:`lxml.objectify.ObjectifiedElement`
         """
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
@@ -200,13 +229,18 @@ class _BaseRESTClient(object):
         """
         PUTs a XML resource.
 
-        :param resource_name: Name of the resource.
-        :type headers: dict
-        :param headers: Header information for request, e.g.
-                {'User-Agent': "obspyck"}
-        :type xml_string: String
-        :param xml_string: XML for a send request (PUT/POST)
-        :return: (HTTP status code, HTTP status message)
+        Parameters
+        ----------
+        resource_name : string
+            Name of the resource.
+        headers : dict
+            Header information for request, e.g. {'User-Agent': "obspyck"}
+        xml_string : string
+            XML for a send request (PUT/POST)
+
+        Returns
+        -------
+            (HTTP status code, HTTP status message)
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
@@ -217,11 +251,16 @@ class _BaseRESTClient(object):
         """
         DELETEs a XML resource.
 
-        :param resource_name: Name of the resource.
-        :type headers: dict
-        :param headers: Header information for request, e.g.
-                {'User-Agent': "obspyck"}
-        :return: (HTTP status code, HTTP status message)
+        Parameters
+        ----------
+        resource_name : string
+            Name of the resource.
+        headers : dict
+            Header information for request, e.g. {'User-Agent': "obspyck"}
+
+        Returns
+        -------
+            (HTTP status code, HTTP status message)
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
@@ -231,7 +270,7 @@ class _BaseRESTClient(object):
 
 class _WaveformMapperClient(object):
     """
-    Waveform class to access the seishub waveform-mapper_
+    Waveform class to access the SeisHub waveform-mapper_
 
     .. _waveform-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
     """
@@ -240,21 +279,30 @@ class _WaveformMapperClient(object):
 
     def getNetworkIds(self, **kwargs):
         """
-        Gets a list of network ids
+        Gets a list of network ids.
 
-        :return: List of containing network ids
+        Returns
+        -------
+            List of containing network ids.
         """
         url = '/seismology/waveform/getNetworkIds'
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
-    def getStationIds(self, network_id=None, **kwargs):
+    @deprecated_keywords({'network_id':'network'})
+    def getStationIds(self, network=None, **kwargs):
         """
-        Gets a list of station ids
+        Gets a list of station ids.
 
-        :param network_id: Network code, e.g. 'BW'. If not specified,
-                station_ids of all networks are returned.
-        :return: List of containing station ids
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'. If not specified, station ids of all
+            networks are returned.
+
+        Returns
+        -------
+            List of containing station ids.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -264,13 +312,21 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
-    def getLocationIds(self, network_id=None, station_id=None, **kwargs):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station'})
+    def getLocationIds(self, network=None, station=None, **kwargs):
         """
-        Gets a list of location ids
+        Gets a list of location ids.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :return: List of containing location ids
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+
+        Returns
+        -------
+            List of containing location ids.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -280,14 +336,25 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
-    def getChannelIds(self, network_id=None, station_id=None,
-                      location_id=None, **kwargs):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station',
+                          'location_id':'location'})
+    def getChannelIds(self, network=None, station=None, location=None,
+                      **kwargs):
         """
-        Gets a list of channel ids
+        Gets a list of channel ids.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :return: List of containing channel ids
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '00'.
+
+        Returns
+        -------
+            List of containing channel ids.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -297,16 +364,27 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    def getLatency(self, network_id=None, station_id=None,
-                   location_id=None, channel_id=None, **kwargs):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station',
+                          'location_id':'location', 'channel_id':'channel'})
+    def getLatency(self, network=None, station=None, location=None,
+                   channel=None, **kwargs):
         """
         Gets a list of network latency values.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :return: List of dictionaries containing latency information.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '00'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+
+        Returns
+        -------
+            List of dictionaries containing latency information.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -317,44 +395,47 @@ class _WaveformMapperClient(object):
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
 
-    def getWaveform(self, network_id, station_id,
-            location_id=None, channel_id=None, start_datetime=None,
-            end_datetime=None, apply_filter=False, getPAZ=False,
-            getCoordinates=False, metadata_timecheck=True, **kwargs):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getWaveform(self, network, station, location=None, channel=None,
+                    starttime=None, endtime=None, apply_filter=False,
+                    getPAZ=False, getCoordinates=False,
+                    metadata_timecheck=True, **kwargs):
         """
         Gets a ObsPy Stream object.
 
-        :type network_id: String
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: String
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type location_id: String
-        :param location_id: Location code, e.g. '01'.
-        :type channel_id: String
-        :param channel_id: Channel code, supporting wildcard for component,
-            e.g. 'EHE' or 'EH*'.
-        :type start_datetime: String or
-            :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param start_datetime: start time of requested data
-        :type end_datetime: String or
-            :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_datetime: end time of requested data
-        :type apply_filter: Boolean
-        :param apply_filter: apply filter, default False.
-        :type getPAZ: Boolean
-        :param getPAZ: Fetch PAZ information and append to
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '00'.
+        channel : string
+            Channel code, supporting wildcard for component, e.g. 'EHE' or 
+            'EH*'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        apply_filter : boolean, optional
+            Apply filter (default is False).
+        getPAZ : boolean, optional
+            Fetch PAZ information and append to 
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
-        :type getCoordinates: Boolean
-        :param getCoordinates: Fetch coordinate information and append to
+            considerably slows down the request (default is False).
+        getCoordinates : boolean, optional
+            Fetch coordinate information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
-        :type metadata_timecheck: Boolean
-        :param metadata_timecheck: For ``getPAZ`` and ``getCoordinates`` check
-            if metadata information is changing from start to end time. Raises
-            an Exception if this is the case. This can be deactivated to save
-            time.
-        :return: :class:`~obspy.core.stream.Stream`
+            considerably slows down the request (default is False).
+        metadata_timecheck : boolean, optional
+            For ``getPAZ`` and ``getCoordinates`` check if metadata information
+            is changing from start to end time. Raises an Exception if this is
+            the case. This can be deactivated to save time.
+
+        Returns
+        -------
+            :class:`~obspy.core.stream.Stream`
         """
         # NOTHING goes ABOVE this line!
         # append all args to kwargs, thus having everything in one dictionary
@@ -363,21 +444,21 @@ class _WaveformMapperClient(object):
                 kwargs[key] = value
 
         # allow time strings in arguments
-        for time in ["start_datetime", "end_datetime"]:
+        for time in ["starttime", "endtime"]:
             if isinstance(kwargs[time], str):
                 kwargs[time] = UTCDateTime(kwargs[time])
         # we expand the requested timespan on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
-        # only possible if a channel_id is specified.
-        if channel_id:
-            band_code = kwargs['channel_id'][0]
-            trim_start = kwargs['start_datetime']
-            trim_end = kwargs['end_datetime']
-            kwargs['start_datetime'] = trim_start - 2.0 / BAND_CODE[band_code]
-            kwargs['end_datetime'] = trim_end + 2.0 / BAND_CODE[band_code]
+        # only possible if a channel is specified.
+        if channel:
+            band_code = kwargs['channel'][0]
+            trim_start = kwargs['starttime']
+            trim_end = kwargs['endtime']
+            kwargs['starttime'] = trim_start - 2.0 / BAND_CODE[band_code]
+            kwargs['endtime'] = trim_end + 2.0 / BAND_CODE[band_code]
         else:
-            msg = "No channel_id provided. Specifying a channel_id can " + \
+            msg = "No channel id provided. Specifying a channel id can " + \
                   "lead to better selection of first/last samples of " + \
                   "fetched traces."
             warnings.warn(msg)
@@ -392,16 +473,16 @@ class _WaveformMapperClient(object):
             raise Exception("No waveform data available")
 
         # trimming needs to be done only if we extend the datetime above
-        if channel_id:
+        if channel:
             stream.trim(trim_start, trim_end)
         if getPAZ:
-            paz = self.client.station.getPAZ(network_id=network_id,
-                    station_id=station_id, location_id=location_id,
-                    channel_id=channel_id, datetime=start_datetime)
+            paz = self.client.station.getPAZ(network=network, station=station,
+                            location=location, channel=channel,
+                            datetime=starttime)
             if metadata_timecheck:
-                paz_check = self.client.station.getPAZ(network_id=network_id,
-                        station_id=station_id, location_id=location_id,
-                        channel_id=channel_id, datetime=end_datetime)
+                paz_check = self.client.station.getPAZ(network=network,
+                        station=station, location=location, channel=channel,
+                        datetime=endtime)
                 if paz != paz_check:
                     msg = "PAZ information changing from start time to " + \
                           "end time."
@@ -409,13 +490,13 @@ class _WaveformMapperClient(object):
             for tr in stream:
                 tr.stats['paz'] = paz.copy()
         if getCoordinates:
-            coords = self.client.station.getCoordinates(network_id=network_id,
-                    station_id=station_id, location_id=location_id,
-                    datetime=start_datetime)
+            coords = self.client.station.getCoordinates(network=network,
+                    station=station, location=location,
+                    datetime=starttime)
             if metadata_timecheck:
                 coords_check = self.client.station.getCoordinates(
-                        network_id=network_id, station_id=station_id,
-                        location_id=location_id, datetime=end_datetime)
+                        network=network, station=station,
+                        location=location, datetime=endtime)
                 if coords != coords_check:
                     msg = "Coordinate information changing from start " + \
                           "time to end time."
@@ -424,21 +505,31 @@ class _WaveformMapperClient(object):
                 tr.stats['coordinates'] = coords.copy()
         return stream
 
-    def getPreview(self, network_id, station_id,
-            location_id=None, channel_id=None, start_datetime=None,
-            end_datetime=None, trace_ids=None, **kwargs):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getPreview(self, network, station, location=None, channel=None,
+                   starttime=None, endtime=None, trace_ids=None, **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :param location_id: Location code, e.g. '01'.
-        :param channel_id: Channel code, e.g. 'EHE'.
-        :param start_datetime: start time as
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        :param end_datetime: end time as 
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object
-        :return: :class:`~obspy.core.stream.Stream` object.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '00'.
+        channel : string
+            Channel code, supporting wildcard for component, e.g. 'EHE' or 
+            'EH*'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            :class:`~obspy.core.stream.Stream`
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -453,17 +544,23 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         return stream
 
-    def getPreviewByIds(self, trace_ids=None, start_datetime=None,
-            end_datetime=None, **kwargs):
+    @deprecated_keywords({'start_datetime':'starttime',
+                          'end_datetime':'endtime'})
+    def getPreviewByIds(self, trace_ids=None, starttime=None, endtime=None,
+                        **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
-        :param trace_ids: List of trace IDs, e.g. ['BW.MANZ..EHE'].
-        :param start_datetime: start time as
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object.
-        :param end_datetime: end time as 
-            :class:`~obspy.core.utcdatetime.UTCDateTime` object
-        :return: :class:`~obspy.core.stream.Stream` object.
+        trace_ids : list
+            List of trace IDs, e.g. ['BW.MANZ..EHE'].
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            :class:`~obspy.core.stream.Stream`
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -484,20 +581,28 @@ class _WaveformMapperClient(object):
 
 class _StationMapperClient(_BaseRESTClient):
     """
-    Station class to access the seishub station-mapper_
+    Station class to access the SeisHub station-mapper_
 
     .. _station-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/station.py
     """
     package = 'seismology'
     resourcetype = 'station'
 
-    def getList(self, network_id=None, station_id=None, **kwargs):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station'})
+    def getList(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
 
-        :param network_id: Network code, e.g. 'BW'.
-        :param station_id: Station code, e.g. 'MANZ'.
-        :return: List of dictionaries containing station information.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+
+        Returns
+        -------
+            List of dictionaries containing station information.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -508,25 +613,29 @@ class _StationMapperClient(_BaseRESTClient):
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
 
-    def getCoordinates(self, network_id, station_id, datetime, location_id=''):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station',
+                          'location_id':'location'})
+    def getCoordinates(self, network, station, datetime, location=''):
         """
         Get coordinate information.
 
         Returns a dictionary with coordinate information for specified station
         at the specified time.
 
-        :type network_id: String
-        :param network_id: Network code, e.g. 'BW'.
-        :type station_id: String
-        :param station_id: Station code, e.g. 'MANZ'.
-        :type location_id: String
-        :param location_id: Location id, e.g. ''.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
-                time :class:`~obspy.core.utcdatetime.UTCDateTime`
-                compatible string.
-        :param datetime: Time for which the PAZ information is requested, e.g.
-                '2010-01-01 12:00:00'.
-        :return: Dictionary containing station coordinate information.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Time for which the PAZ is requested, e.g. '2010-01-01 12:00:00'.
+        location : string
+            Location code, e.g. '00'.
+
+        Returns
+        -------
+            Dictionary containing station coordinate information.
         """
         # NOTHING goes ABOVE this line!
         kwargs = {} #no **kwargs so use empty dict
@@ -543,14 +652,16 @@ class _StationMapperClient(_BaseRESTClient):
             coords[key] = metadata[key]
         return coords
 
-    def getPAZ(self, network_id, station_id, datetime, location_id='',
-               channel_id='', seismometer_gain=False):
+    @deprecated_keywords({'network_id':'network', 'station_id':'station',
+                          'location_id':'location', 'channel_id':'channel'})
+    def getPAZ(self, network, station, datetime, location='', channel='',
+               seismometer_gain=False):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
         constant for the poles and zeros.
 
         >>> c = Client()
-        >>> a = c.station.getPAZ('BW', 'MANZ', '20090707', channel_id='EHZ')
+        >>> a = c.station.getPAZ('BW', 'MANZ', '20090707', channel='EHZ')
         >>> a['zeros']
         [0j, 0j]
         >>> a['poles']
@@ -560,29 +671,36 @@ class _StationMapperClient(_BaseRESTClient):
         >>> a['sensitivity']
         2516800000.0
 
-        :param network_id: Network id, e.g. 'BW'.
-        :param station_id: Station id, e.g. 'RJOB'.
-        :param location_id: Location id, e.g. ''.
-        :param channel_id: Channel id, e.g. 'EHE'.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
-                time :class:`~obspy.core.utcdatetime.UTCDateTime`
-                compatible string.
-        :param datetime: Time for which the PAZ information is requested.
-        :param seismometer_gain: If True add also seismometer gain to
-            dictionary
-        :return: Dictionary containing zeros, poles, gain and sensitivity.
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        datetime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Time for which the PAZ is requested, e.g. '2010-01-01 12:00:00'.
+        location : string
+            Location code, e.g. '00'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        seismometer_gain : boolean, optional
+            Adds seismometer gain to dictionary (default is True).
+
+        Returns
+        -------
+            Dictionary containing zeros, poles, gain and sensitivity.
         """
         # request station information
-        station_list = self.getList(network_id=network_id,
-                                    station_id=station_id, datetime=datetime)
+        station_list = self.getList(network=network, station=station,
+                                    datetime=datetime)
         if not station_list:
             return {}
         # don't allow wild cards - either search over exact one node or all
         for t in ['*', '?']:
-            if t in channel_id:
-                channel_id = ''
-            if t in location_id:
-                location_id = ''
+            if t in channel:
+                channel = ''
+            if t in location:
+                location = ''
 
         if len(station_list) > 1:
             warnings.warn("Received more than one PAZ file. Using first.")
@@ -591,25 +709,25 @@ class _StationMapperClient(_BaseRESTClient):
         res = self.client.station.getXMLResource(xml_doc['resource_name'])
         base_node = res.station_control_header
         # search for nodes with correct channel and location code
-        if channel_id or location_id:
+        if channel or location:
             xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel_id + "' and location_identifier='" + location_id + "']"
+                channel + "' and location_identifier='" + location + "']"
             # fetch next following response_poles_and_zeros node
             xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel_id + "' and location_identifier='" + location_id + \
+                channel + "' and location_identifier='" + location + \
                 "']/following-sibling::response_poles_and_zeros"
             paz_node = base_node.xpath(xpath_expr)[0]
             # fetch next following channel_sensitivity_node with 
             # stage_sequence_number == 0
             xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel_id + "' and location_identifier='" + location_id + \
+                channel + "' and location_identifier='" + location + \
                 "']/following-sibling::channel_sensitivity_" + \
                 "gain[stage_sequence_number='0']"
             sensitivity_node = base_node.xpath(xpath_expr)[0]
             # fetch seismometer gain following channel_sensitivity_node with 
             # stage_sequence_number == 1
             xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel_id + "' and location_identifier='" + location_id + \
+                channel + "' and location_identifier='" + location + \
                 "']/following-sibling::channel_sensitivity_" + \
                 "gain[stage_sequence_number='1']"
             seismometer_gain_node = base_node.xpath(xpath_expr)[0]
@@ -635,13 +753,14 @@ class _StationMapperClient(_BaseRESTClient):
         paz['sensitivity'] = sensitivity_node.sensitivity_gain.pyval
         # paz['name'] = name
         if seismometer_gain:
-            paz['seismometer_gain'] = seismometer_gain_node.sensitivity_gain.pyval
+            paz['seismometer_gain'] = \
+                seismometer_gain_node.sensitivity_gain.pyval
         return paz
 
 
 class _EventMapperClient(_BaseRESTClient):
     """
-    Event class to access the seishub event-mapper_
+    Event class to access the SeisHub event-mapper_
 
     .. _event-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/event.py
     """
@@ -649,17 +768,19 @@ class _EventMapperClient(_BaseRESTClient):
     resourcetype = 'event'
 
     def getList(self, limit=None, offset=None, localization_method=None,
-            account=None, user=None, min_datetime=None, max_datetime=None,
-            first_pick=None, last_pick=None, min_latitude=None,
-            max_latitude=None, min_longitude=None, max_longitude=None,
-            min_magnitude=None, max_magnitude=None, min_depth=None,
-            max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
-            used_s=None, min_used_s=None, max_used_s=None,
-            document_id=None, **kwargs):
+                account=None, user=None, min_datetime=None, max_datetime=None,
+                first_pick=None, last_pick=None, min_latitude=None,
+                max_latitude=None, min_longitude=None, max_longitude=None,
+                min_magnitude=None, max_magnitude=None, min_depth=None,
+                max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
+                used_s=None, min_used_s=None, max_used_s=None,
+                document_id=None, **kwargs):
         """
         Gets a list of event information. 
 
-        :return: List of dictionaries containing event information.
+        Returns
+        -------
+            List of dictionaries containing event information.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -681,15 +802,16 @@ class _EventMapperClient(_BaseRESTClient):
     def getKML(self, nolabels=False, **kwargs):
         """
         Posts an event.getList() and returns the results as a KML file. For
-        optional arguments, see docstring of
+        optional arguments, see documentation of
         :meth:`~obspy.seishub.client._EventMapperClient.getList()`
         
         :type nolabels: Boolean
         :param nolabels: Hide labels of events in KML. Can be useful with large
                 data sets.
-        :return: String containing KML information of all matching events. This
-                 string can be written to a file and loaded into e.g. Google
-                 Earth.
+        Returns
+        -------
+            String containing KML information of all matching events. This
+            string can be written to a file and loaded into e.g. Google Earth.
         """
         events = self.getList(**kwargs)
         timestamp = datetime.now()
@@ -721,7 +843,7 @@ class _EventMapperClient(_BaseRESTClient):
         SubElement(labelstyle, "scale").text = "0.8"
 
         folder = SubElement(document, "Folder")
-        SubElement(folder, "name").text = "Seishub Events (%s)" % \
+        SubElement(folder, "name").text = "SeisHub Events (%s)" % \
                                           timestamp.date()
         SubElement(folder, "open").text = "1"
 
@@ -815,8 +937,7 @@ class RequestWithMethod(urllib2.Request):
     """
     Improved urllib2.Request Class for which the HTTP Method can be set to
     values other than only GET and POST.
-    See http://benjamin.smedbergs.us/blog/2008-10-21/ \
-    putting-and-deleteing-in-python-urllib2/
+    See http://benjamin.smedbergs.us/blog/2008-10-21/putting-and-deleteing-in-python-urllib2/
     """
     def __init__(self, method, *args, **kwargs):
         if method not in HTTP_ACCEPTED_METHODS:

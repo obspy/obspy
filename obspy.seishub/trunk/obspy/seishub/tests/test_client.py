@@ -81,7 +81,7 @@ class ClientTestCase(unittest.TestCase):
                  'RNON', 'ROTZ', 'RTAK', 'RTBE', 'RTEA', 'RTFA', 'RTKA',
                  'RTLI', 'RTPA', 'RTPI', 'RTSA', 'RTSH', 'RTSL', 'RTSP',
                  'RTSW', 'RTZA', 'RWMO', 'UH1', 'UH2', 'VIEL', 'WETR', 'ZUGS']
-        data = self.client.waveform.getStationIds(network_id='BW')
+        data = self.client.waveform.getStationIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
 
@@ -93,13 +93,13 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(item in data)
         #2 - all locations for network BW
         items = ['']
-        data = self.client.waveform.getLocationIds(network_id='BW')
+        data = self.client.waveform.getLocationIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
         #3 - all locations for network BW and station MANZ
         items = ['']
-        data = self.client.waveform.getLocationIds(network_id='BW',
-                                                   station_id='MANZ')
+        data = self.client.waveform.getLocationIds(network='BW',
+                                                   station='MANZ')
         for item in items:
             self.assertTrue(item in data)
 
@@ -114,19 +114,17 @@ class ClientTestCase(unittest.TestCase):
         #2 - all channels for network BW
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'SHE', 'SHN', 'SHZ']
-        data = self.client.waveform.getChannelIds(network_id='BW')
+        data = self.client.waveform.getChannelIds(network='BW')
         for item in items:
             self.assertTrue(item in data)
         #3 - all channels for network BW and station MANZ
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
-        data = self.client.waveform.getChannelIds(network_id='BW',
-                                                  station_id='MANZ')
+        data = self.client.waveform.getChannelIds(network='BW', station='MANZ')
         for item in items:
             self.assertTrue(item in data)
         #4 - all channels for network BW, station MANZ and given location
         items = ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
-        data = self.client.waveform.getChannelIds(network_id='BW',
-                                                  station_id='MANZ',
+        data = self.client.waveform.getChannelIds(network='BW', station='MANZ',
                                                   location='')
         for item in items:
             self.assertTrue(item in data)
@@ -186,8 +184,8 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getCoordinates(self):
         t = UTCDateTime("2010-05-03T23:59:30")
-        data = self.client.station.getCoordinates(network_id="BW",
-                station_id="UH1", datetime=t, location_id="")
+        data = self.client.station.getCoordinates(network="BW", station="UH1",
+                                                  datetime=t, location="")
         result = {'elevation': 500.0, 'latitude': 48.081493000000002,
                   'longitude': 11.636093000000001}
         self.assertEqual(data, result)
@@ -198,15 +196,19 @@ class ClientTestCase(unittest.TestCase):
         t2 = UTCDateTime("2010-05-04T00:00:30")
         client = self.client
         self.assertRaises(Exception, client.waveform.getWaveform, "BW",
-                "UH1", "", "EH*", t1, t2, getPAZ=True, getCoordinates=True)
+                          "UH1", "", "EH*", t1, t2, getPAZ=True,
+                          getCoordinates=True)
         st = client.waveform.getWaveform("BW", "UH1", "", "EH*", t1, t2,
-                getPAZ=True, getCoordinates=True, metadata_timecheck=False)
+                                         getPAZ=True, getCoordinates=True,
+                                         metadata_timecheck=False)
         result = AttribDict({'zeros': [0j, 0j, 0j], 'sensitivity': 251650000.0,
-                'poles': [(-0.88+0.88j), (-0.88-0.88j), (-0.22+0j)],
-                'gain': 1.0})
+                             'poles': [(-0.88 + 0.88j), (-0.88 - 0.88j),
+                                       (-0.22 + 0j)],
+                             'gain': 1.0})
         self.assertEqual(st[0].stats.paz, result)
         result = AttribDict({'latitude': 48.081493000000002,
-                'elevation': 500.0, 'longitude': 11.636093000000001})
+                             'elevation': 500.0,
+                             'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
 
     def untested(self):
@@ -217,9 +219,9 @@ class ClientTestCase(unittest.TestCase):
         print client.waveform.getWaveform("BW", "HROE", "", "EHN", t, t + 1800)
         t = UTCDateTime("2010-03-19 00:00:01")
         print client.waveform.getWaveform("BW", "MANZ", "", "EHZ", t, t + 20)
-        data = client.station.getList(network_id='BW', station_id='MANZ')
+        data = client.station.getList(network='BW', station='MANZ')
         print data
-        data = client.waveform.getLatency(network_id='BW', station_id='HROE')
+        data = client.waveform.getLatency(network='BW', station='HROE')
         print data
         data = client.station.getResource('dataless.seed.BW_MANZ.xml',
                                           format='metadata')
