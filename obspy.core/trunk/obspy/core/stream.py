@@ -486,9 +486,9 @@ class Stream(object):
     # Classes which inherit a __hash__() method from a parent class but change
     # the meaning of __cmp__() or __eq__() such that [...] can explicitly flag
     # themselves as being unhashable by setting __hash__ = None in the class
-    # definition. Doing so means that not only will instances of the classraise
-    # an appropriate TypeError when a program attempts to retrieve their hash
-    # value, but they will also be correctly identified as unhashable when
+    # definition. Doing so means that not only will instances of the class 
+    # raise an appropriate TypeError when a program attempts to retrieve their 
+    # hash value, but they will also be correctly identified as unhashable when
     # checking isinstance(obj, collections.Hashable) (unlike classes which
     # define their own __hash__() to explicitly raise TypeError).
     __hash__ = None
@@ -703,9 +703,9 @@ class Stream(object):
             If no outfile is specified but a format is than a binary
             imagestring will be returned.
             Defaults to None.
-        :param size: Size tupel in pixel for the output file. This corresponds
+        :param size: Size tuple in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
-            Defaults to 800x200 px.
+            Defaults to 800x200 pixels.
         :param starttime: Starttime of the graph as a datetime object. If not
             set the graph will be plotted from the beginning.
             Defaults to False.
@@ -716,11 +716,11 @@ class Stream(object):
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
         :param color: Color of the graph. If the supplied parameter is a
-            2-tupel containing two html hex string colors a gradient between
+            2-tuple containing two HTML hex string colors a gradient between
             the two colors will be applied to the graph.
             Defaults to 'red'.
         :param bgcolor: Background color of the graph. If the supplied
-            parameter is a 2-tupel containing two html hex string colors a
+            parameter is a 2-tuple containing two HTML hex string colors a
             gradient between the two colors will be applied to the background.
             Defaults to 'white'.
         :param transparent: Make all backgrounds transparent (True/False). This
@@ -830,8 +830,8 @@ class Stream(object):
 
     def remove(self, trace):
         """
-        Removes the first occurence of the specified Trace object in the Stream
-        object.
+        Removes the first occurrence of the specified Trace object in the
+        Stream object.
         Passes on the remove() call to self.traces.
 
         Example
@@ -970,7 +970,8 @@ class Stream(object):
             raise TypeError(msg + ', '.join(formats_ep.keys()))
         writeFormat(self, filename, **kwargs)
 
-    def trim(self, starttime=None, endtime=None, pad=False, nearest_sample=True):
+    def trim(self, starttime=None, endtime=None, pad=False,
+             nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start and end time.
         If nearest_sample=True the closest sample point of the first trace
@@ -989,7 +990,8 @@ class Stream(object):
             if endtime:
                 delta = round((endtime - tr.stats.endtime) * \
                                tr.stats.sampling_rate)
-                endtime = tr.stats.endtime + delta * tr.stats.delta #delta is negativ!
+                # delta is negative!
+                endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
             trace.trim(starttime, endtime, pad,
                        nearest_sample=nearest_sample)
@@ -1083,7 +1085,8 @@ class Stream(object):
                 continue
             if channel and channel != trace.stats.channel:
                 continue
-            if sampling_rate and float(sampling_rate) != trace.stats.sampling_rate:
+            if sampling_rate and \
+               float(sampling_rate) != trace.stats.sampling_rate:
                 continue
             if npts and int(npts) != trace.stats.npts:
                 continue
@@ -1436,7 +1439,7 @@ class Stream(object):
         """
         Method to get the standard deviations of amplitudes in all trace in the
         stream.
-        Standard deviations are calculated by numpy method
+        Standard deviations are calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
         stream.
         
