@@ -334,8 +334,8 @@ class LibMSEED(object):
         except:
             pass
 
-    def readMSTraces(self, filename, reclen= -1, timetol= -1,
-                     sampratetol= -1, dataflag=1, skipnotdata=1,
+    def readMSTraces(self, filename, reclen=-1, timetol=-1,
+                     sampratetol=-1, dataflag=1, skipnotdata=1,
                      dataquality=1, verbose=0, starttime=None,
                      endtime=None):
         """
@@ -475,8 +475,8 @@ class LibMSEED(object):
         if isinstance(f, file): # necessary for Python 2.5.2 BUG otherwise!
             f.close()
 
-    def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
-                             sampratetol= -1, dataflag=1, skipnotdata=1,
+    def readFileToTraceGroup(self, filename, reclen=-1, timetol=-1,
+                             sampratetol=-1, dataflag=1, skipnotdata=1,
                              dataquality=1, verbose=0, starttime=None,
                              endtime=None):
         """
@@ -545,23 +545,33 @@ class LibMSEED(object):
         del ms # for valgrind
         return starttime, endtime
 
-    def readMSHeader(self, filename, time_tolerance= -1,
-                     samprate_tolerance= -1, reclen= -1):
+    def readMSHeader(self, filename, reclen=-1, timetol=-1,
+                     sampratetol=-1, dataflag=1, skipnotdata=1,
+                     dataquality=1, verbose=0, starttime=None,
+                     endtime=None):
         """
-        Returns trace header information of a given file.
+        Returns trace header information of a given file without reading
+        the data part.
         
-        :param time_tolerance: Time tolerance while reading the traces, default
-            to -1 (1/2 sample period).
-        :param samprate_tolerance: Sample rate tolerance while reading the 
-            traces, defaults to -1 (rate dependent).
+        :param filename: Name of MiniSEED file.
+        :param reclen: Directly to the readFileToTraceGroup method.
+        :param timetol: Directly to the readFileToTraceGroup method.
+        :param sampratetol: Directly to the readFileToTraceGroup method.
+        :param skipnotdata: Directly to the readFileToTraceGroup method.
+        :param dataquality: Directly to the readFileToTraceGroup method.
+        :param verbose: Directly to the readFileToTraceGroup method.
         :return: Dictionary containing header entries
         """
         # read file
-        mstg = self.readFileToTraceGroup(filename, dataflag=0,
-                                         skipnotdata=0,
-                                         timetol=time_tolerance,
-                                         sampratetol=samprate_tolerance,
-                                         reclen=reclen)
+        mstg = self.readFileToTraceGroup(str(filename), reclen=reclen,
+                                         timetol=timetol,
+                                         sampratetol=sampratetol,
+                                         dataflag=0,
+                                         skipnotdata=skipnotdata,
+                                         dataquality=dataquality,
+                                         verbose=verbose,
+                                         starttime=starttime,
+                                         endtime=endtime)
         # iterate through traces
         cur = mstg.contents.traces.contents
         header = [[self._convertMSTToDict(cur), None]]

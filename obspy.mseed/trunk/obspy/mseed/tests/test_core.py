@@ -700,6 +700,16 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.npts, 11947)
             self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
 
+    def test_issue160(self):
+        """
+        Reading head of old mseed files
+        """
+        file = os.path.join(self.path, 'data',
+                            'RJOB.BW.EHZ.D.300806.0000.two_records')
+        tr1 = read(file)[0]
+        tr2 = read(file, headonly=True)[0]
+        self.assertEqual(tr1.stats, tr2.stats)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
