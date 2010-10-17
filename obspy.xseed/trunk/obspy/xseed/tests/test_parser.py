@@ -335,7 +335,7 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'gain': 1.0,
-                  'poles': [(-4.444+4.444j), (-4.444-4.444j), (-1.083+0j)],
+                  'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j), (-1.083 + 0j)],
                   'seismometer_gain': 400.0,
                   'sensitivity': 671140000.0,
                   'zeros': [0j, 0j, 0j],
@@ -343,11 +343,11 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz, result)
         paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         result = {'gain': 60077000.0,
-                  'poles': [(-0.037004000000000002+0.037016j),
-                            (-0.037004000000000002-0.037016j),
-                            (-251.33000000000001+0j),
-                            (-131.03999999999999-467.29000000000002j),
-                            (-131.03999999999999+467.29000000000002j)],
+                  'poles': [(-0.037004000000000002 + 0.037016j),
+                            (-0.037004000000000002 - 0.037016j),
+                            (-251.33000000000001 + 0j),
+                            (-131.03999999999999 - 467.29000000000002j),
+                            (-131.03999999999999 + 467.29000000000002j)],
                   'seismometer_gain': 1500.0,
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
@@ -362,12 +362,12 @@ class ParserTestCase(unittest.TestCase):
         sp1 = Parser(filename)
         sp2 = Parser(sp1.getXSEED())
         paz = sp2.getPAZ('EHE')
-        result = {'gain': +1.00000e+00,
+        result = {'gain':+1.00000e+00,
                   'zeros': [0j, 0j, 0j],
                   'poles': [(-4.44400e+00 + 4.44400e+00j),
                              (-4.44400e+00 - 4.44400e+00j),
                              (-1.08300e+00 + 0.00000e+00j)],
-                  'sensitivity': +6.71140E+08,
+                  'sensitivity':+6.71140E+08,
                   'seismometer_gain': 4.00000E+02,
                   'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
@@ -431,21 +431,10 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns. The complicated structure is necessary.
         blockette = Blockette010()
-        # Only suppress warnings starting with Python 2.6. This is necessary
-        # because there is no suitable context manager for Python 2.5 that
-        # can suppress warnings.
-        if hasattr(warnings, 'catch_warnings'):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                # Trigger a warning.
-                blockette.parseSEED(b010)
-                self.assertEqual(len(w), 1)
-                self.assertTrue(issubclass(w[-1].category, UserWarning))
-                self.assertTrue('date' and 'required' in \
-                                        w[-1].message.message.lower())
-        else:
-            # Just raise the warning using Python 2.5.
-            blockette.parseSEED(b010)
+        # suppress warnings
+        warnings.simplefilter("always")
+        blockette.parseSEED(b010)
+        warnings.resetwarnings()
         self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = "0100034 2.4082008,001~2038,001~~~~"
@@ -454,18 +443,10 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns
         blockette = Blockette010()
-        # Only suppress warnings starting with Python 2.6
-        if hasattr(warnings, 'catch_warnings'):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                # Trigger a warning.
-                blockette.parseSEED(b010)
-                self.assertEqual(len(w), 1)
-                self.assertTrue(issubclass(w[-1].category, UserWarning))
-                self.assertTrue('date' and 'required' in \
-                                        w[-1].message.message.lower())
-        else:
-                blockette.parseSEED(b010)
+        # suppress warnings
+        warnings.simplefilter("always")
+        blockette.parseSEED(b010)
+        warnings.resetwarnings()
         self.assertEquals(b010, blockette.getSEED())
 
     def test_compareBlockettes(self):
@@ -502,8 +483,8 @@ class ParserTestCase(unittest.TestCase):
         parser.read(path("bug165.dataless"))
         paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
         result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
-                  'poles': [(-981+1009j), (-981-1009j), (-3290+1263j),
-                            (-3290-1263j)],
+                  'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),
+                            (-3290 - 1263j)],
                   'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
                   'zeros': []}
         self.assertEqual(paz, result)
