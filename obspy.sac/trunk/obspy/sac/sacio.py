@@ -447,7 +447,7 @@ class SacIO(object):
         #### check if file exists
         try:
             #### open the file
-            f = open(fname, 'r')
+            f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file:" + fname)
         try:
@@ -517,7 +517,7 @@ class SacIO(object):
         except IOError:
             warnings.warn("No such file:" + fname, category=Warning)
         else:
-            f = open(fname, 'r+') # open file for modification
+            f = open(fname, 'rb+') # open file for modification
             f.seek(0, 0) # set pointer to the file beginning
             try:
                 # write the header
@@ -979,7 +979,7 @@ class SacIO(object):
         ### http://code.activestate.com/
         text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
         _null_trans = string.maketrans("", "")
-        s = open(filename).read(blocksize)
+        s = open(filename, 'rb').read(blocksize)
         if "\0" in s:
             return 0
 
