@@ -3,7 +3,7 @@
 """
 The SacIO test suite.
 """
-from obspy.core import Trace
+from obspy.core import Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, ReadSac, attach_paz
 import StringIO
@@ -225,7 +225,6 @@ class SacIOTestCase(unittest.TestCase):
     ###     # delete obspy.signal from all imported modules dict
     ###     #[sys.modules.pop(i) for i in \
     ###     #        sys.modules.keys() if 'obspy.signal' in i]
-    ###     #import ipdb; ipdb.set_trace()
     ###     self.assertRaises(SacError, t._get_dist_)
     ###     sys.path.extend(signal_path)
 
@@ -243,9 +242,8 @@ class SacIOTestCase(unittest.TestCase):
         tr = Trace()
         attach_paz(tr, fvelhz, torad=True, todisp=True)
         np.testing.assert_array_almost_equal(tr.stats.paz['zeros'][0],
-                                             -31.616988, decimal=6)
+                                             - 31.616988, decimal=6)
         self.assertEqual(len(tr.stats.paz['zeros']), 4)
-
 
     def test_sacpaz_from_dataless(self):
         ### The following dictionary is extracted from a datalessSEED
@@ -253,20 +251,37 @@ class SacIOTestCase(unittest.TestCase):
         pazdict = {'sensitivity': 2516580000.0,
                    'digitizer_gain': 1677720.0, 'seismometer_gain': 1500.0,
                    'zeros': [0j, 0j], 'gain': 59198800.0,
-                   'poles': [(-0.037010000000000001+0.037010000000000001j),
-                             (-0.037010000000000001-0.037010000000000001j),
-                             (-131+467.30000000000001j), (-131-467.30000000000001j),
-                             (-251.30000000000001+0j)]}
+                   'poles': [(-0.037010000000000001 + 0.037010000000000001j),
+                             (-0.037010000000000001 - 0.037010000000000001j),
+                             (-131 + 467.30000000000001j),
+                             (-131 - 467.30000000000001j),
+                             (-251.30000000000001 + 0j)]}
         tr = Trace()
         ### This file was extracted from the datalessSEED file using rdseed
-        pazfile = os.path.join(os.path.dirname(__file__),'data','SAC_PZs_NZ_HHZ_10')
+        pazfile = os.path.join(os.path.dirname(__file__),
+                               'data', 'SAC_PZs_NZ_HHZ_10')
         attach_paz(tr, pazfile, todisp=False)
-        sacconstant = pazdict['digitizer_gain']*pazdict['seismometer_gain']*pazdict['gain']
-        np.testing.assert_almost_equal(tr.stats.paz['gain']/1e17,sacconstant/1e17,decimal=6)
+        sacconstant = pazdict['digitizer_gain'] * \
+            pazdict['seismometer_gain'] * pazdict['gain']
+        np.testing.assert_almost_equal(tr.stats.paz['gain'] / 1e17,
+                                       sacconstant / 1e17, decimal=6)
         ### pole-zero files according to the SAC convention are in displacement
-        self.assertEqual(len(tr.stats.paz['zeros']),3)
-        
-        
+        self.assertEqual(len(tr.stats.paz['zeros']), 3)
+
+    def test_issue171(self):
+        """
+        Test for issue #171.
+        """
+        tr = read()[0]
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format="SAC")
+        trace = SacIO(tempfile)
+        trace.SetHvalue('stel', 91.0)
+        trace.WriteSacHeader(tempfile)
+        trace = SacIO(tempfile)
+        os.remove(tempfile)
+
+
 def suite():
     return unittest.makeSuite(SacIOTestCase, 'test')
 
