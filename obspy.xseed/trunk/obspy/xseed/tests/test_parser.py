@@ -431,10 +431,8 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns. The complicated structure is necessary.
         blockette = Blockette010()
-        # suppress warnings
-        warnings.simplefilter("always")
+        # XXX: does not warn
         blockette.parseSEED(b010)
-        warnings.resetwarnings()
         self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = "0100034 2.4082008,001~2038,001~~~~"
@@ -443,10 +441,8 @@ class ParserTestCase(unittest.TestCase):
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # non-strict warns
         blockette = Blockette010()
-        # suppress warnings
-        warnings.simplefilter("always")
+        # XXX: does not warn
         blockette.parseSEED(b010)
-        warnings.resetwarnings()
         self.assertEquals(b010, blockette.getSEED())
 
     def test_compareBlockettes(self):
