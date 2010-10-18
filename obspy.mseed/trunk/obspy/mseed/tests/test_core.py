@@ -702,13 +702,21 @@ class CoreTestCase(unittest.TestCase):
 
     def test_issue160(self):
         """
-        Reading head of old mseed files
+        Reading head of old fullseed file. Only the first 1024byte of the
+        original file are provided.
         """
         file = os.path.join(self.path, 'data',
-                            'RJOB.BW.EHZ.D.300806.0000.two_records')
-        tr1 = read(file)[0]
-        tr2 = read(file, headonly=True)[0]
-        self.assertEqual(tr1.stats, tr2.stats)
+                            'RJOB.BW.EHZ.D.300806.0000.fullseed')
+        tr_one = read(file)[0]
+        tr_two = read(file, headonly=True)[0]
+        ms = "AttribDict({'dataquality': 'D', 'record_length': 512, " + \
+             "'encoding': 'STEIM1', 'byteorder': '>'})"
+        for tr in tr_one, tr_two:
+            self.assertEqual('BW.RJOB..EHZ', tr.id)
+            self.assertEqual(ms, repr(tr.stats.mseed))
+            self.assertEqual(412, tr.stats.npts)
+            self.assertEqual(UTCDateTime(2006, 8, 30, 0, 0, 2, 815000),
+                             tr.stats.endtime)
 
 
 def suite():
