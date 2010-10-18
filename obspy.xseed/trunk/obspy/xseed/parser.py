@@ -487,6 +487,11 @@ class Parser(object):
                     station_id = "%s.%s" % (blockette.network_code,
                                             blockette.station_call_letters)
                     start = blockette.start_effective_date
+                    if start == "":
+                        msg = "Missing start effective date in Station " + \
+                              "Identifier Blockette (50) for station " + \
+                              "%s" % station_id
+                        raise SEEDParserException(msg)
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
                     id = "%s.%s.%s/%e/%e" % (station_id,
