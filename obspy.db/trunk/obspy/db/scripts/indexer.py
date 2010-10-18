@@ -150,7 +150,7 @@ Default path option is 'data=*.*'.""")
         help="The indexer will automatically skip paths or "
              "files starting with a dot. This option forces to "
              "parse all paths and files.")
-    parser.add_option("-1", "--run_once", action="store_false",
+    parser.add_option("-1", "--run_once", action="store_true",
         dest="run_once", default=False,
         help="The indexer will parse cycle through all given directories only "
              "once and quit afterwards.")

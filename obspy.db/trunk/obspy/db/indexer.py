@@ -190,8 +190,10 @@ class WaveformFileCrawler(object):
         """
         Resets the crawler parameters.
         """
-        # break if options run_once is set
-        if self.options.run_once:
+        # break if options run_once is set and a run was completed already
+        if self.options.run_once and \
+                getattr(self, 'first_run_complete', False):
+            self.log.debug('Crawler stopped by option run_once.')
             sys.exit()
             return
         self.log.debug('Crawler restarted.')
@@ -216,6 +218,7 @@ class WaveformFileCrawler(object):
                     self._delete(path)
         # logging
         self.log.debug("Crawling root '%s' ..." % self._root)
+        self.first_run_complete = True
 
     def _stepWalker(self):
         """
