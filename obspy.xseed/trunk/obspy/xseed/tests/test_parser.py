@@ -30,9 +30,43 @@ class ParserTestCase(unittest.TestCase):
                 ('dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS'))
 
-
     def tearDown(self):
         pass
+
+    def test_bug165(self):
+        """
+        Test cases related to #165:
+         - number of poles or zeros can be 0
+         - an unsupported response information somewhere in the metadata should
+           not automatically raise an Error, if the desired information can
+           still be retrieved
+
+        This test also tests if a warning is raised if no startime is given.
+        """
+        parser = Parser()
+        t = UTCDateTime("2010-01-01T00:00:00")
+        if hasattr(warnings, 'catch_warnings'): 
+            with warnings.catch_warnings(record=True) as w: 
+                warnings.simplefilter("always") 
+                # Trigger a warning. 
+                parser.read(path("bug165.dataless"))
+                self.assertEqual(len(w), 1) 
+                self.assertTrue(issubclass(w[-1].category, UserWarning)) 
+                self.assertTrue('date' and 'required' in \
+                                        w[-1].message.message.lower()) 
+        else: 
+            # Just raise the warning using Python 2.5. 
+            parser.read(path("bug165.dataless"))
+        paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
+        result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
+                  'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),
+                            (-3290 - 1263j)],
+                  'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
+                  'zeros': []}
+        self.assertEqual(paz, result)
+        self.assertRaises(SEEDParserException, parser.getPAZ,
+                          "NZ.DCZ.10.HHZ", t)
+
 
     def test_invalidStartHeader(self):
         """
@@ -420,31 +454,6 @@ class ParserTestCase(unittest.TestCase):
         _resp_list = sp2.getRESP()
         os.remove(tempfile)
 
-    def test_missingRequiredDateTimes(self):
-        """
-        A warning should be raised if a blockette misses a required date.
-        """
-        # blockette 10 - missing start time
-        b010 = "0100034 2.408~2038,001~2009,001~~~"
-        # strict raises an exception
-        blockette = Blockette010(strict=True)
-        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
-        # non-strict warns. The complicated structure is necessary.
-        blockette = Blockette010()
-        # XXX: does not warn
-        blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
-        # blockette 10 - missing volume time
-        b010 = "0100034 2.4082008,001~2038,001~~~~"
-        # strict raises an exception
-        blockette = Blockette010(strict=True)
-        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
-        # non-strict warns
-        blockette = Blockette010()
-        # XXX: does not warn
-        blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
-
     def test_compareBlockettes(self):
         """
         Tests the comparison of two blockettes.
@@ -466,26 +475,34 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
-    def test_bug165(self):
+    def test_missingRequiredDateTimes(self):
         """
-        Test cases related to #165:
-         - number of poles or zeros can be 0
-         - an unsupported response information somewhere in the metadata should
-           not automatically raise an Error, if the desired information can
-           still be retrieved
+        A warning should be raised if a blockette misses a required date.
         """
-        parser = Parser()
-        t = UTCDateTime("2010-01-01T00:00:00")
-        parser.read(path("bug165.dataless"))
-        paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
-        result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
-                  'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),
-                            (-3290 - 1263j)],
-                  'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
-                  'zeros': []}
-        self.assertEqual(paz, result)
-        self.assertRaises(SEEDParserException, parser.getPAZ,
-                          "NZ.DCZ.10.HHZ", t)
+        # blockette 10 - missing start time
+        b010 = "0100034 2.408~2038,001~2009,001~~~"
+        # strict raises an exception
+        blockette = Blockette010(strict=True)
+        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
+        # If strict is false, a warning is raised. This is tested in
+        # test_bug165 due to some issues with the warning being raised only
+        # once.
+        blockette = Blockette010()
+        blockette.parseSEED(b010)
+        self.assertEquals(b010, blockette.getSEED())
+
+        # blockette 10 - missing volume time
+        b010 = "0100034 2.4082008,001~2038,001~~~~"
+        # strict raises an exception
+        blockette = Blockette010(strict=True)
+        self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
+        # non-strict warns
+        blockette = Blockette010()
+        # The warning cannot be tested due to being issued only once.
+        # A similar case is tested in test_bug165.
+        blockette.parseSEED(b010)
+        self.assertEquals(b010, blockette.getSEED())
+
 
 
 def suite():
