@@ -155,10 +155,27 @@ class ClientTestCase(unittest.TestCase):
                                      endtime=dt + 1, instruments=True)
         self.assertTrue('BW' in result)
         self.assertTrue('BW.MANZ' in result)
-        self.assertTrue('BW.MANZ..EHE' in result) # only for instruments=True
+        self.assertTrue('BW.MANZ..EHE' in result)
         #5 - unknown network 00 via webdc.eu:18002
         self.assertRaises(ArcLinkException, client.getInventory, '00', '',
                           starttime=dt, endtime=dt + 1)
+#        #6 - history of instruments
+        start = UTCDateTime("1970-01-01 00:00:00")
+        end = UTCDateTime("2020-10-19 00:00:00")
+#        result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
+#                                     instruments=True)
+#        self.assertTrue('GE' in result)
+#        self.assertTrue('GE.SNAA' in result)
+#        self.assertTrue('GE.SNAA..BHZ' in result)
+#        self.assertEquals(len(result['GE.SNAA..BHZ']), 3)
+        #7 - get channel gain without PAZ
+        result = client.getInventory('BW', 'MANZ', '', 'EHE', start, end)
+        self.assertTrue('BW' in result)
+        self.assertTrue('BW.MANZ' in result)
+        self.assertTrue('BW.MANZ..EHE' in result)
+        self.assertEquals(len(result['BW.MANZ..EHE']), 1)
+        self.assertTrue('gain' in result['BW.MANZ..EHE'][0])
+        self.assertTrue('paz' not in result['BW.MANZ..EHE'][0])
 
     def test_getWaveformWithMetadata(self):
         """
@@ -445,7 +462,7 @@ class ClientTestCase(unittest.TestCase):
                'zeros': [0j, 0j] }
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
-        # Retrieve Data via Arclink
+        # Retrieve data via ArcLink
         client = Client(host="webdc.eu", port=18001)
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
@@ -463,7 +480,6 @@ class ClientTestCase(unittest.TestCase):
                           str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
-
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

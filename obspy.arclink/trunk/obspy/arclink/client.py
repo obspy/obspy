@@ -13,7 +13,7 @@ from copy import deepcopy
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString, \
-    deprecated, deprecated_keywords
+    deprecated_keywords
 from telnetlib import Telnet
 import os
 import sys
@@ -467,7 +467,8 @@ class Client(Telnet):
         data = {}
         if getPAZ:
             id = '.'.join([network, station, location, channel])
-            data['paz'] = result[id].paz
+            # HACK: returning first PAZ only for now
+            data['paz'] = result[id][0].paz
         if getCoordinates:
             id = '.'.join([network, station])
             data['coordinates'] = AttribDict()
@@ -558,12 +559,14 @@ class Client(Telnet):
             msg = 'getPAZ supports only a single channel, use getInventory' + \
                   ' instead'
             raise ArcLinkException(msg)
-        if id in result:
+        try:
             # XXX: why dict of instruments? Only one instrument is returned!
-            paz = result[id].paz
+            # HACK: returning first PAZ only for now
+            paz = result[id][0].paz
             return {paz.name: paz}
-        msg = 'Could not find PAZ for channel %s' % id
-        raise ArcLinkException(msg)
+        except:
+            msg = 'Could not find PAZ for channel %s' % id
+            raise ArcLinkException(msg)
 
     @deprecated_keywords(DEPRECATED_KEYWORDS)
     def saveResponse(self, filename, network, station, location, channel,
@@ -663,33 +666,33 @@ class Client(Telnet):
         # convert into dictionary
         data = AttribDict()
         for network in xml_doc.xpath('ns:network', namespaces={'ns':xml_ns}):
-            temp = AttribDict()
+            net = AttribDict()
             # strings
             for key in ['archive', 'code', 'description', 'institutions',
                         'net_class', 'region', 'type']:
-                temp[key] = network.get(key, '')
+                net[key] = network.get(key, '')
             # restricted
             if network.get('restricted', '') == 'false':
-                temp['restricted'] = False
+                net['restricted'] = False
             else:
-                temp['restricted'] = True
+                net['restricted'] = True
             # date / times
             try:
-                temp.start = UTCDateTime(network.get('start'))
+                net.start = UTCDateTime(network.get('start'))
             except:
-                temp.start = None
+                net.start = None
             try:
-                temp.end = UTCDateTime(network.get('end'))
+                net.end = UTCDateTime(network.get('end'))
             except:
-                temp.end = None
+                net.end = None
             # remark
             try:
-                temp.remark = network.xpath('ns:remark',
+                net.remark = network.xpath('ns:remark',
                     namespaces={'ns':xml_ns})[0].text or ''
             except:
-                temp.remark = ''
+                net.remark = ''
             # write network entries
-            data[temp.code] = temp
+            data[net.code] = net
             # stations
             for station in network.xpath('ns0:station',
                                          namespaces={'ns0':xml_ns}):
@@ -725,9 +728,7 @@ class Client(Telnet):
                 except:
                     sta.remark = ''
                 # write station entry
-                data[temp.code + '.' + sta.code] = sta
-                if not instruments:
-                    continue
+                data[net.code + '.' + sta.code] = sta
                 # instruments
                 for stream in station.xpath('ns:' + stream_ns,
                                             namespaces={'ns':xml_ns}):
@@ -741,9 +742,9 @@ class Client(Telnet):
                     except:
                         end = None
                     # check date/time boundaries
-                    if end and endtime > end:
+                    if start > endtime:
                         continue
-                    if starttime < start:
+                    if end and starttime > end:
                         continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
@@ -752,8 +753,24 @@ class Client(Telnet):
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:
                             seismometer_id = comp.get(seismometer_ns, None)
-                        if not seismometer_id:
+                        # channel id
+                        id = net.code + '.' + sta.code + '.' + \
+                            stream.get('loc_code' , '') + '.' + \
+                            stream.get('code' , '  ') + \
+                            comp.get('code', ' ').strip()
+                        # write channel entry
+                        if not id in data:
+                            data[id] = []
+                        temp = AttribDict()
+                        data[id].append(temp)
+                        # fetch gain
+                        try:
+                            temp['gain'] = float(comp.get('gain'))
+                        except:
+                            temp['gain'] = None
+                        if not instruments or not seismometer_id:
                             continue
+                        # PAZ
                         paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
                                                '[@' + name_ns + '="' + \
                                                seismometer_id + '"]/@response',
@@ -769,10 +786,6 @@ class Client(Telnet):
                                                 namespaces={'ns':xml_ns})
                         if not xml_paz:
                             continue
-                        id = temp.code + '.' + sta.code + '.' + \
-                            stream.get('loc_code' , '') + '.' + \
-                            stream.get('code' , '  ') + \
-                            comp.get('code', ' ').strip()
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
                         # sensitivity
@@ -781,14 +794,11 @@ class Client(Telnet):
                             paz['sensitivity'] = float(comp.get('gain'))
                         except:
                             paz['sensitivity'] = paz['gain']
-                        # write channel entry
-                        data[id] = AttribDict()
-                        data[id]['paz'] = paz
+                        temp['paz'] = paz
         return data
 
     @deprecated_keywords({'start_datetime':'starttime',
                           'end_datetime':'endtime'})
-    @deprecated
     def getNetworks(self, starttime, endtime):
         """
         Returns a dictionary of available networks within the given time span.
@@ -813,7 +823,6 @@ class Client(Telnet):
 
     @deprecated_keywords({'start_datetime':'starttime',
                           'end_datetime':'endtime', 'network_id':'network'})
-    @deprecated
     def getStations(self, starttime, endtime, network):
         """
         Returns a dictionary of available stations in the given network(s).
