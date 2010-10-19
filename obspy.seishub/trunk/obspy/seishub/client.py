@@ -710,8 +710,6 @@ class _StationMapperClient(_BaseRESTClient):
         base_node = res.station_control_header
         # search for nodes with correct channel and location code
         if channel or location:
-            xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel + "' and location_identifier='" + location + "']"
             # fetch next following response_poles_and_zeros node
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel + "' and location_identifier='" + location + \
