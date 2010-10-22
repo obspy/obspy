@@ -34,6 +34,7 @@ from matplotlib import mlab
 import matplotlib.pyplot as plt
 import math as M
 import numpy as np
+from obspy.core.util import deprecated_keywords
 
 
 def nearestPow2(x):
@@ -57,9 +58,9 @@ def nearestPow2(x):
     else:
         return b
 
-
+@deprecated_keywords({'axis':'axes'})
 def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
-                outfile=None, format=None, axis=None, dbscale=False,
+                outfile=None, format=None, axes=None, dbscale=False,
                 mult=8.0, cmap=None, zorder=None, title=None, show=True):
     """
     Computes and plots logarithmic spectrogram of the input data.
@@ -73,7 +74,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     :param outfile: String for the filename of output file, if None
                     interactive plotting is activated.
     :param format: Format of image to save
-    :param axis: Plot into given axis, this deactivates the format and
+    :param axes: Plot into given axes, this deactivates the format and
                  outfile option
     :param dbscale: If True 10 * log10 of color values is taken, if False
                     the sqrt is taken
@@ -121,11 +122,11 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     freq = freq[1:]
 
     
-    if not axis:
+    if not axes:
         fig = plt.figure()
         ax = fig.add_subplot(111)
     else:
-        ax = axis
+        ax = axes
 
     # calculate half bin width
     halfbin_time = (time[1] - time[0])/2.0
@@ -156,7 +157,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     ax.set_xlim(0, end)
     ax.grid(False)
 
-    if axis:
+    if axes:
         return ax
 
     ax.set_xlabel('Time [s]')
