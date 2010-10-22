@@ -60,7 +60,7 @@ def nearestPow2(x):
 
 def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
                 outfile=None, format=None, axis=None, dbscale=False,
-                mult=8.0, cmap=None, zorder=None, title=None):
+                mult=8.0, cmap=None, zorder=None, title=None, show=True):
     """
     Computes and plots logarithmic spectrogram of the input data.
     
@@ -79,6 +79,9 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
                     the sqrt is taken
     :param mult: Pad zeros to lengh mult * wlen. This will make the
                  spectrogram smoother. Available for matplotlib > 0.99.0
+    :type show: bool
+    :param show: Do not call `plt.show()` at end of routine. That way,
+            further modifications can be done to the figure before showing it.
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
@@ -167,5 +170,6 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         else:
             fig.savefig(outfile)
     else:
-        plt.show()
+        if show:
+            plt.show()
     return fig
