@@ -768,6 +768,15 @@ class Client(Telnet):
                             temp['gain'] = float(comp.get('gain'))
                         except:
                             temp['gain'] = None
+                        # date / times
+                        try:
+                            temp['starttime'] = UTCDateTime(comp.get('start'))
+                        except:
+                            temp['starttime'] = None
+                        try:
+                            temp['endtime'] = UTCDateTime(comp.get('end'))
+                        except:
+                            temp['endtime'] = None
                         if not instruments or not seismometer_id:
                             continue
                         # PAZ

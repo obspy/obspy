@@ -11,6 +11,7 @@ from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
 import os
 import unittest
+import operator
 
 
 class ClientTestCase(unittest.TestCase):
@@ -159,16 +160,9 @@ class ClientTestCase(unittest.TestCase):
         #5 - unknown network 00 via webdc.eu:18002
         self.assertRaises(ArcLinkException, client.getInventory, '00', '',
                           starttime=dt, endtime=dt + 1)
-#        #6 - history of instruments
+        #6 - get channel gain without PAZ
         start = UTCDateTime("1970-01-01 00:00:00")
         end = UTCDateTime("2020-10-19 00:00:00")
-#        result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
-#                                     instruments=True)
-#        self.assertTrue('GE' in result)
-#        self.assertTrue('GE.SNAA' in result)
-#        self.assertTrue('GE.SNAA..BHZ' in result)
-#        self.assertEquals(len(result['GE.SNAA..BHZ']), 3)
-        #7 - get channel gain without PAZ
         result = client.getInventory('BW', 'MANZ', '', 'EHE', start, end)
         self.assertTrue('BW' in result)
         self.assertTrue('BW.MANZ' in result)
@@ -176,6 +170,28 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(len(result['BW.MANZ..EHE']), 1)
         self.assertTrue('gain' in result['BW.MANZ..EHE'][0])
         self.assertTrue('paz' not in result['BW.MANZ..EHE'][0])
+        #7 - history of instruments
+        # GE.SNAA sometimes needs a while therefore we use command_delay=0.1
+        client = Client(command_delay=0.1)
+        result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
+                                     instruments=True)
+        self.assertTrue('GE' in result)
+        self.assertTrue('GE.SNAA' in result)
+        self.assertTrue('GE.SNAA..BHZ' in result)
+        self.assertEquals(len(result['GE.SNAA..BHZ']), 3)
+        # sort channel results
+        channel = result['GE.SNAA..BHZ']
+        channel = sorted(channel, key=operator.itemgetter('starttime'))
+        # check for required attributes
+        self.assertEquals(channel[0].starttime, UTCDateTime("1997-03-03"))
+        self.assertEquals(channel[0].endtime, UTCDateTime("1999-10-11"))
+        self.assertEquals(channel[0].gain, 596224500.0)
+        self.assertEquals(channel[1].starttime, UTCDateTime("1999-10-11"))
+        self.assertEquals(channel[1].endtime, UTCDateTime("2003-01-10"))
+        self.assertEquals(channel[1].gain, 596224500.0)
+        self.assertEquals(channel[2].starttime, UTCDateTime("2003-01-10"))
+        self.assertEquals(channel[2].endtime, None)
+        self.assertEquals(channel[2].gain, 588000000.0)
 
     def test_getWaveformWithMetadata(self):
         """
@@ -480,6 +496,7 @@ class ClientTestCase(unittest.TestCase):
                           str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
