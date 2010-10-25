@@ -21,6 +21,7 @@ from omniORB import CORBA
 from CosNaming import NameComponent, NamingContext
 from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream, AttribDict
+from obspy.core.util import deprecated_keywords
 from obspy.mseed.libmseed import LibMSEED
 from obspy.fissures.util import FissuresException, FissuresWarning, \
         poleZeroFilter2PAZ, utcdatetime2Fissures, use_first_and_raise_or_warn
@@ -29,6 +30,11 @@ import numpy as np
 import sys
 import warnings
 from copy import deepcopy
+
+
+DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
+                       'location_id':'location', 'channel_id':'channel',
+                       'start_datetime':'starttime', 'end_datetime':'endtime'}
 
 
 class Client(object):
@@ -126,9 +132,9 @@ class Client(object):
             msg = "Neither NetworkFinder nor DataCenter could be initialized."
             raise FissuresException(msg)
 
-
-    def getWaveform(self, network_id, station_id, location_id, channel_id,
-            start_datetime, end_datetime, getPAZ=False, getCoordinates=False):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getWaveform(self, network, station, location, channel, starttime,
+                    endtime, getPAZ=False, getCoordinates=False):
         """
         Get Waveform in an ObsPy stream object from Fissures / DHI.
 
@@ -147,14 +153,14 @@ class Client(object):
         GE.APE..SHN | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
         GE.APE..SHE | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
 
-        :param network_id: Network id, 2 char; e.g. "GE"
-        :param station_id: Station id, 5 char; e.g. "APE"
-        :param location_id: Location id, 2 char; e.g. "  "
-        :type channel_id: String, 3 char
-        :param channel_id: Channel id, e.g. "SHZ". "*" as third letter is
+        :param network: Network id, 2 char; e.g. "GE"
+        :param station: Station id, 5 char; e.g. "APE"
+        :param location: Location id, 2 char; e.g. "  "
+        :type channel: String, 3 char
+        :param channel: Channel id, e.g. "SHZ". "*" as third letter is
                 supported and requests "Z", "N", "E" components.
-        :param start_datetime: UTCDateTime object of starttime
-        :param end_datetime: UTCDateTime object of endtime
+        :param starttime: UTCDateTime object of starttime
+        :param endtime: UTCDateTime object of endtime
         :type getPAZ: Boolean
         :param getPAZ: Fetch PAZ information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
@@ -175,20 +181,20 @@ class Client(object):
 
         # intercept 3 letter channels with component wildcard
         # recursive call, quick&dirty and slow, but OK for the moment
-        if len(channel_id) == 3 and channel_id[2] in ["*", "?"]:
+        if len(channel) == 3 and channel[2] in ["*", "?"]:
             st = Stream()
-            for cha in (channel_id[:2] + comp for comp in ["Z", "N", "E"]):
-                # replace channel_id XXX a bit ugly:
-                if 'channel_id' in kwargs:
-                    kwargs.pop('channel_id')
-                st += self.getWaveform(channel_id=cha, **kwargs)
+            for cha in (channel[:2] + comp for comp in ["Z", "N", "E"]):
+                # replace channel XXX a bit ugly:
+                if 'channel' in kwargs:
+                    kwargs.pop('channel')
+                st += self.getWaveform(channel=cha, **kwargs)
             return st
 
         # get channel object
-        channels = self._getChannelObj(network_id, station_id, location_id,
-                channel_id)
+        channels = self._getChannelObj(network, station, location,
+                channel)
         # get seismogram object
-        seis = self._getSeisObj(channels, start_datetime, end_datetime)
+        seis = self._getSeisObj(channels, starttime, endtime)
         #
         # build up ObsPy stream object
         st = Stream()
@@ -241,19 +247,19 @@ class Client(object):
             tr.verify()
             st.append(tr)
             # XXX: merging?
-        st.trim(start_datetime, end_datetime)
+        st.trim(starttime, endtime)
         if getPAZ:
             for tr in st:
                 cha = tr.stats.channel
                 # XXX should add a check like metadata_check in seishub.client
-                data = self.getPAZ(network_id=network_id, station_id=station_id,
-                                   channel_id=cha, datetime=start_datetime)
+                data = self.getPAZ(network=network, station=station,
+                                   channel=cha, datetime=starttime)
                 tr.stats['paz'] = deepcopy(data)
         if getCoordinates:
             # XXX should add a check like metadata_check in seishub.client
-            data = self.getCoordinates(network_id=network_id,
-                                       station_id=station_id,
-                                       datetime=start_datetime)
+            data = self.getCoordinates(network=network,
+                                       station=station,
+                                       datetime=starttime)
             for tr in st:
                 tr.stats['coordinates'] = deepcopy(data)
         return st
@@ -261,7 +267,7 @@ class Client(object):
 
     def getNetworkIds(self):
         """
-        Return all available network_ids as list.
+        Return all available networks as list.
 
         :note: This takes a very long time.
         """
@@ -275,19 +281,20 @@ class Client(object):
         return net_list
 
 
-    def getStationIds(self, network_id=None):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getStationIds(self, network=None):
         """
         Return all available stations as list.
 
-        If no network_id is specified this may take a long time
+        If no network is specified this may take a long time
 
-        :param network_id: Limit stations to network_id
+        :param network: Limit stations to network
         """
         # Retrieve network informations
-        if network_id == None:
+        if network == None:
             networks = self.netFind.retrieve_all()
         else:
-            networks = self.netFind.retrieve_by_code(network_id)
+            networks = self.netFind.retrieve_by_code(network)
         station_list = []
         for network in networks:
             network = network._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
@@ -296,18 +303,19 @@ class Client(object):
                 station_list.append(station.id.station_code)
         return station_list
 
-    def getCoordinates(self, network_id, station_id, datetime):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getCoordinates(self, network, station, datetime):
         """
         Get Coordinates of a station.
         Still lacks a correct selection of metadata in time!
 
         >>> from obspy.fissures import Client
         >>> client = Client()
-        >>> client.getCoordinates(network_id="GR", station_id="GRA1",
+        >>> client.getCoordinates(network="GR", station="GRA1",
         ...                       datetime="2010-08-01")
         AttribDict({'latitude': 49.691886901855469, 'elevation': 499.5, 'longitude': 11.221719741821289})
         """
-        sta = self._getStationObj(network_id=network_id, station_id=station_id,
+        sta = self._getStationObj(network=network, station=station,
                                   datetime=datetime)
         coords = AttribDict()
         loc = sta.my_location
@@ -325,7 +333,8 @@ class Client(object):
         coords['longitude'] = loc.longitude
         return coords
 
-    def getPAZ(self, network_id, station_id, channel_id, datetime):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def getPAZ(self, network, station, channel, datetime):
         """
         Get Poles&Zeros, gain and sensitivity of instrument for given ids and
         datetime.
@@ -347,28 +356,28 @@ class Client(object):
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresUtil/src/edu/sc/seis/fissuresUtil2/sac/SacPoleZero.java?revision=16507&view=markup&sortby=log&sortdir=down&pathrev=16568
         http://www.seis.sc.edu/viewvc/seis/branches/IDL2.0/fissuresImpl/src/edu/iris/Fissures2/network/ResponseImpl.java?view=markup&sortby=date&sortdir=down&pathrev=16174
 
-        :param network_id: Network id, 2 char; e.g. "GE"
-        :param station_id: Station id, 5 char; e.g. "APE"
-        :type channel_id: String, 3 char
-        :param channel_id: Channel id, e.g. "SHZ", no wildcards.
+        :param network: Network id, 2 char; e.g. "GE"
+        :param station: Station id, 5 char; e.g. "APE"
+        :type channel: String, 3 char
+        :param channel: Channel id, e.g. "SHZ", no wildcards.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
                 compatible String
         :param datetime: datetime of response information
         :return: :class:`~obspy.core.util.AttribDict`
         """
-        if "*" in channel_id:
-            msg = "Wildcards not allowed in channel_id"
+        if "*" in channel:
+            msg = "Wildcards not allowed in channel"
             raise FissuresException(msg)
-        net = self.netFind.retrieve_by_code(network_id)
+        net = self.netFind.retrieve_by_code(network)
         net = use_first_and_raise_or_warn(net, "network")
         datetime = UTCDateTime(datetime).formatFissures()
         sta = [sta for sta in net.retrieve_stations() \
-               if sta.id.station_code == station_id \
+               if sta.id.station_code == station \
                and datetime > sta.effective_time.start_time.date_time \
                and datetime < sta.effective_time.end_time.date_time]
         sta = use_first_and_raise_or_warn(sta, "station")
         cha = [cha for cha in net.retrieve_for_station(sta.id) \
-               if cha.id.channel_code == channel_id]
+               if cha.id.channel_code == channel]
         cha = use_first_and_raise_or_warn(cha, "channel")
         datetime = utcdatetime2Fissures(datetime)
         inst = net.retrieve_instrumentation(cha.id, datetime)
@@ -417,32 +426,34 @@ class Client(object):
         return dns
 
 
-    def _getChannelObj(self, network_id, station_id, location_id, channel_id):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def _getChannelObj(self, network, station, location, channel):
         """
         Return Fissures channel object.
         
         Fissures channel object is requested from the clients network_dc.
         
-        :param network_id: Network id, 2 char; e.g. "GE"
-        :param station_id: Station id, 5 char; e.g. "APE"
-        :param location_id: Location id, 2 char; e.g. "  "
-        :param channel_id: Channel id, 3 char; e.g. "SHZ"
+        :param network: Network id, 2 char; e.g. "GE"
+        :param station: Station id, 5 char; e.g. "APE"
+        :param location: Location id, 2 char; e.g. "  "
+        :param channel: Channel id, 3 char; e.g. "SHZ"
         :return: Fissures channel object
         """
         # retrieve a network
-        net = self.netFind.retrieve_by_code(network_id)
+        net = self.netFind.retrieve_by_code(network)
         net = use_first_and_raise_or_warn(net, "network")
         net = net._narrow(Fissures.IfNetwork.ConcreteNetworkAccess)
         # retrieve channels from network
-        if location_id.strip() == "":
+        if location.strip() == "":
             # must be two empty spaces
-            location_id = "  "
+            location = "  "
         # Retrieve Channel object
         # XXX: wildcards not yet implemented
-        return net.retrieve_channels_by_code(station_id, location_id,
-                                             channel_id)
+        return net.retrieve_channels_by_code(station, location,
+                                             channel)
 
-    def _getSeisObj(self, channel_obj, start_datetime, end_datetime):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def _getSeisObj(self, channel_obj, starttime, endtime):
         """
         Return Fissures seismogram object.
         
@@ -450,38 +461,39 @@ class Client(object):
         network_dc. This actually contains the data.
         
         :param channel_obj: Fissures channel object
-        :param start_datetime: UTCDateTime object of starttime
-        :param end_datetime: UTCDateTime object of endtime
+        :param starttime: UTCDateTime object of starttime
+        :param endtime: UTCDateTime object of endtime
         :return: Fissures seismogram object
         """
         # Transform datetime into correct format
-        t1 = utcdatetime2Fissures(start_datetime)
-        t2 = utcdatetime2Fissures(end_datetime)
+        t1 = utcdatetime2Fissures(starttime)
+        t2 = utcdatetime2Fissures(endtime)
         # Form request for all channels
         request = [Fissures.IfSeismogramDC.RequestFilter(c.id, t1, t2) \
                    for c in channel_obj]
         # Retrieve Seismogram object
         return self.seisDC.retrieve_seismograms(request)
 
-    def _getStationObj(self, network_id, station_id, datetime):
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def _getStationObj(self, network, station, datetime):
         """
         Return Fissures station object.
         
         Fissures station object is requested from the clients network_dc.
         
-        :param network_id: Network id, 2 char; e.g. "GE"
-        :param station_id: Station id, 5 char; e.g. "APE"
+        :param network: Network id, 2 char; e.g. "GE"
+        :param station: Station id, 5 char; e.g. "APE"
         :type datetime: String (understood by
                 :class:`~obspy.core.datetime.DateTime`)
         :param datetime: Datetime to select station
         :return: Fissures channel object
         """
-        net = self.netFind.retrieve_by_code(network_id)
+        net = self.netFind.retrieve_by_code(network)
         net = use_first_and_raise_or_warn(net, "network")
-        # filter by station_id and by datetime (comparing datetime strings)
+        # filter by station and by datetime (comparing datetime strings)
         datetime = UTCDateTime(datetime).formatFissures()
         stations = [sta for sta in net.retrieve_stations() \
-                    if station_id == sta.id.station_code \
+                    if station == sta.id.station_code \
                     and datetime > sta.effective_time.start_time.date_time \
                     and datetime < sta.effective_time.end_time.date_time]
         return use_first_and_raise_or_warn(stations, "station")
