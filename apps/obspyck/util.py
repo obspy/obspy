@@ -300,7 +300,7 @@ def fetch_waveforms_with_metadata(options):
             net, sta_wildcard, loc, cha = id.split(".")
             stations_to_fetch = []
             if "?" in sta_wildcard or "*" in sta_wildcard:
-                for sta in sorted(client.waveform.getStationIds(network_id=net)):
+                for sta in sorted(client.waveform.getStationIds(network=net)):
                     if fnmatch.fnmatch(sta, sta_wildcard):
                         stations_to_fetch.append(sta)
             else:
@@ -350,9 +350,9 @@ def fetch_waveforms_with_metadata(options):
             try:
                 sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
-                st = client.getWaveform(network_id=net, station_id=sta,
-                                        location_id=loc, channel_id=cha,
-                                        start_datetime=t1, end_datetime=t2,
+                st = client.getWaveform(network=net, station=sta,
+                                        location=loc, channel=cha,
+                                        starttime=t1, endtime=t2,
                                         getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
@@ -383,9 +383,9 @@ def fetch_waveforms_with_metadata(options):
             try:
                 sys.stdout.write("\r%s ..." % net_sta.ljust(8))
                 sys.stdout.flush()
-                st = client.getWaveform(network_id=net, station_id=sta,
-                                        location_id=loc, channel_id=cha,
-                                        start_datetime=t1, end_datetime=t2,
+                st = client.getWaveform(network=net, station=sta,
+                                        location=loc, channel=cha,
+                                        starttime=t1, endtime=t2,
                                         getPAZ=True, getCoordinates=True)
                 sta_fetched.add(net_sta)
                 sys.stdout.write("\r%s fetched.\n" % net_sta.ljust(8))
