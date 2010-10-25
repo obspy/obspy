@@ -18,6 +18,7 @@ import inspect
 import warnings
 import glob
 import doctest
+from functools import wraps
 
 
 # defining ObsPy modules
@@ -393,6 +394,7 @@ def deprecated(func):
 
     It will result in a warning being emitted when the function is used.
     """
+    @wraps(func)
     def new_func(*args, **kwargs):
         if 'deprecated' in str(func.__doc__).lower():
             msg = func.__doc__
@@ -437,11 +439,13 @@ def interceptDict(func):
         - throw a DeprecationWarning
         - make the correct call
     """
+    @wraps(func)
     def new_func(*args, **kwargs):
         # function itself is first arg so len(args) == 3 means we got 2 args...
         if len(args) == 3 and isinstance(args[2], dict):
             msg = "Using a dictionary to pass on filter options will be " + \
-                  "removed in the future. Please specify all options as kwargs."
+                  "removed in the future. Please specify all options as " + \
+                  "kwargs."
             warnings.warn(msg, DeprecationWarning)
             kwargs = args[2]
             args = args[:-1]
