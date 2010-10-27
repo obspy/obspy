@@ -408,23 +408,22 @@ def deprecated(func):
     return new_func
 
 
-class deprecated_keywords:
-    def __init__(self, keywords):
-        self.keywords = keywords
-
-    def __call__(self, func):
+def deprecated_keywords(keywords):
+    def fdec(func):
         fname = func.func_name
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
+        @wraps(func)
         def echo_func(*args, **kwargs):
             for kw in kwargs.keys():
-                if kw in self.keywords:
-                    nkw = self.keywords[kw]
+                if kw in keywords:
+                    nkw = keywords[kw]
                     warnings.warn(msg % (kw, fname, nkw),
                                   category=DeprecationWarning)
                     kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
         return echo_func
+    return fdec
 
 
 def interceptDict(func):
