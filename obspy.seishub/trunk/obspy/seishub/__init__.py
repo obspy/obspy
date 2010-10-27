@@ -29,7 +29,7 @@ Advanced Examples
 -----------------
 
 >>> client.waveform.getNetworkIds()
-['BW', 'GR', 'NZ', 'CZ', '']
+['BW', 'GR', 'NZ', 'OE', 'CZ', '']
 
 >>> sta_ids = client.waveform.getStationIds(network_id='BW')
 >>> sta_ids.sort()
