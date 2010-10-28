@@ -398,7 +398,7 @@ class Stream(object):
         of each Trace's __str__ method.
         """
         # get longest id
-        id_length = max(len(tr.id) for tr in self)
+        id_length = self and max(len(tr.id) for tr in self) or 0
         out = str(len(self.traces)) + ' Trace(s) in Stream:\n'
         out = out + "\n".join([tr.__str__(id_length) for tr in self])
         return out
