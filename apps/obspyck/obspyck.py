@@ -1163,6 +1163,10 @@ class ObsPyck(QtGui.QMainWindow):
                 ydata = ev.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMinT estimation!
                 dict[key] = np.min(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                # special handling for GSE2 data: apply calibration
+                tr = st[self.axs.index(ev.inaxes)]
+                if tr.stats._format == "GSE2":
+                    dict[key] = dict[key] / (tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper)
                 # save time of magnitude minimum in seconds
                 tmp_magtime = cutoffSamples + np.argmin(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
                 tmp_magtime = tmp_magtime / samp_rate
@@ -1203,6 +1207,10 @@ class ObsPyck(QtGui.QMainWindow):
                 ydata = ev.inaxes.lines[0].get_ydata() #get the first line hoping that it is the seismogram!
                 cutoffSamples = xpos - MAG_PICKWINDOW #remember, how much samples there are before our small window! We have to add this number for our MagMaxT estimation!
                 dict[key] = np.max(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
+                # special handling for GSE2 data: apply calibration
+                tr = st[self.axs.index(ev.inaxes)]
+                if tr.stats._format == "GSE2":
+                    dict[key] = dict[key] / (tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper)
                 # save time of magnitude maximum in seconds
                 tmp_magtime = cutoffSamples + np.argmax(ydata[xpos-MAG_PICKWINDOW:xpos+MAG_PICKWINDOW])
                 tmp_magtime = tmp_magtime / samp_rate
@@ -2403,7 +2411,11 @@ class ObsPyck(QtGui.QMainWindow):
             # normalize with overall sensitivity and convert to nm/s
             # if not explicitly deactivated on command line
             if not self.options.nonormalization:
-                plts.append(ax.plot(sampletimes, tr.data / tr.stats.paz.sensitivity * 1e9, color='k', zorder=1000)[0])
+                # special handling for GSE2 data: apply calibration
+                calib = 1.0
+                if tr.stats._format == "GSE2":
+                    calib = tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper
+                plts.append(ax.plot(sampletimes, tr.data * 1e9 / tr.stats.paz.sensitivity / calib, color='k', zorder=1000)[0])
             else:
                 plts.append(ax.plot(sampletimes, tr.data, color='k', zorder=1000)[0])
             tr_id = "%s.%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.location, tr.stats.channel)
