@@ -4,7 +4,8 @@
 The Filter test suite.
 """
 
-from obspy.signal.util import xcorr, lib_name
+from obspy.signal.util import lib_name
+from obspy.signal import xcorr
 import ctypes as C
 import inspect
 import numpy as np
