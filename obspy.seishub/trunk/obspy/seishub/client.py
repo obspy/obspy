@@ -644,6 +644,10 @@ class _StationMapperClient(_BaseRESTClient):
                 kwargs[key] = value
 
         metadata = self.getList(**kwargs)
+        if not metadata:
+            msg = "No coordinates for station %s.%s at %s" % \
+                    (network, station, datetime)
+            raise Exception(msg)
         if len(metadata) > 1:
             warnings.warn("Received more than one metadata set. Using first.")
         metadata = metadata[0]
