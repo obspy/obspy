@@ -388,7 +388,7 @@ def _getPlugins(group, subgroup_name=None):
     return features
 
 
-def deprecated(func):
+def deprecated(func, warning_msg=None):
     """
     This is a decorator which can be used to mark functions as deprecated.
 
@@ -398,6 +398,8 @@ def deprecated(func):
     def new_func(*args, **kwargs):
         if 'deprecated' in str(func.__doc__).lower():
             msg = func.__doc__
+        elif warning_msg:
+            msg = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
         warnings.warn(msg, category=DeprecationWarning)
