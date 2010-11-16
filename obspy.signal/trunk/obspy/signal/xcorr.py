@@ -124,7 +124,6 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
 
-    import ipdb;ipdb.set_trace()
     corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
 
     for component in components:
