@@ -118,10 +118,10 @@ path. Multiple paths have to be separated with a comma, e.g.
 '/first/path=*.*,/second/path,/third/path=*.gse'.
 File patterns are given as space-separated list of wildcards after a equal
 sign, e.g.
-'/path=*.gse2 *.mseed;/second/path=*.*'.
+'/path=*.gse2 *.mseed,/second/path=*.*'.
 Feature plug-ins are given as space-separated list of plug-in names after a
-semicolon, e.g.
-'/path=*.mseed;feature1 feature2,/second/path;feature1'.
+colon, e.g.
+'/path=*.mseed:feature1 feature2,/second/path:feature1'.
 Be aware that features must be provided behind file patterns (if any)! There is
 no default feature enabled.
 Default path option is 'data=*.*'.""")
