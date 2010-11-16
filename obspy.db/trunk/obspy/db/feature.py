@@ -12,6 +12,17 @@ Feature generators for ObsPy Trace objects.
 from obspy.core.util import scoreatpercentile
 
 
+class BandpassPreviewFeature(object):
+    def __init__(self):
+        # for API doc
+        pass
+
+    def process(self, trace):
+        # applying bandpass on preview trace
+        trace.filter("bandpass", freqmin=0.1, freqmax=20.0)
+        return {}
+
+
 class MinMaxAmplitudeFeature(object):
     def __init__(self):
         # for API doc

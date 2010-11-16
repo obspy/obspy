@@ -59,6 +59,7 @@ setup(
     entry_points={
         'obspy.db.feature' : [
             'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
+            'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
         ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main'
