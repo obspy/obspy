@@ -362,7 +362,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getPlugins('obspy.db.features').iteritems():
+        for (key, ep) in _getPlugins('obspy.db.feature').iteritems():
             try:
                 # load plug-in
                 cls = ep.load()
