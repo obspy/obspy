@@ -80,7 +80,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         return shift.value, coe_p.value
 
 def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
-             full_xcorr=False):
+             full_xcorr=False, abs_max=True):
     """
     Calculates the cross correlation on each of the specified components
     separately, stacks them together and estimates the maximum and shift of
@@ -124,6 +124,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
 
+    import ipdb;ipdb.set_trace()
     corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
 
     for component in components:
@@ -134,14 +135,14 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
 
     corp /= len(components)
 
-    shift, value = xcorr_max(corp)
+    shift, value = xcorr_max(corp, abs_max=abs_max)
 
     if full_xcorr:
         return shift, value, corp
     else:
         return shift, value
 
-def xcorr_max(fct):
+def xcorr_max(fct, abs_max=True):
     """
     Return shift and value of maximum xcorr function
     
@@ -155,15 +156,23 @@ def xcorr_max(fct):
     >>> fct[60], fct[40] = 0.0, -1.0
     >>> xcorr_max(fct)
     (-10, -1.0)
+    >>> fct[60], fct[40] = 0.5, -1.0
+    >>> xcorr_max(fct, abs_max=True)
+    (-10, -1.0)
+    >>> xcorr_max(fct, abs_max=False)
+    (10, 0.5)
     
-    :param fct: numpy.ndarray
-        xcorr function e.g. returned bei xcorr
+    :type fct: numpy.ndarray
+    :param fct: xcorr function e.g. returned bei xcorr
+    :type abs_max: boolean
+    :param abs_max: determines if the absolute maximum should be used.
     :return: (shift, value) Shift and value of maximum xcorr
     """
     value = fct.max()
-    _min = fct.min()
-    if abs(_min) > abs(value):
-        value = _min
+    if abs_max:
+        _min = fct.min()
+        if abs(_min) > abs(value):
+            value = _min
 
     mid = (len(fct) - 1) / 2
     shift = np.where(fct == value)[0][0] - mid
