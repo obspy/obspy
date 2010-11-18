@@ -559,6 +559,21 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(stream2), 2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[3] in stream2)
+        # tests for wildcarded channel:
+        stream2 = stream.select(channel='B*')
+        self.assertEquals(len(stream2), 2)
+        self.assertTrue(stream[2] in stream2)
+        self.assertTrue(stream[3] in stream2)
+        stream2 = stream.select(channel='EH*')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[0] in stream2)
+        self.assertTrue(stream[1] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(channel='*Z')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[0] in stream2)
+        self.assertTrue(stream[2] in stream2)
+        self.assertTrue(stream[4] in stream2)
 
     def test_sort(self):
         """

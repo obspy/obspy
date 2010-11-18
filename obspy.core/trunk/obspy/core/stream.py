@@ -19,6 +19,7 @@ from pkg_resources import load_entry_point
 import copy
 import math
 import numpy as np
+import fnmatch
 import os
 import urllib2
 import warnings
@@ -1058,12 +1059,15 @@ class Stream(object):
                sampling_rate=None, npts=None, component=None):
         """
         Returns new Stream object only with these traces that match the given
-        stats criteria (e.g. all traces with channel="EHZ").
+        stats criteria (e.g. all traces with `channel="EHZ"`).
         All kwargs except for component are tested directly against the
         respective entry in the trace.stats dictionary.
         If a string for component is given (should be a single letter) it is
         tested (case insensitive) against the last letter of the
         trace.stats.channel entry.
+        `channel` may have the last one or two letters wildcarded
+        (e.g. `channel="EH*"`) to select all components with a common
+        band/instrument code.
 
         Caution: A new Stream object is returned but the traces it contains are
         just aliases to the traces of the original stream.
@@ -1086,7 +1090,7 @@ class Stream(object):
                 continue
             if location and location != trace.stats.location:
                 continue
-            if channel and channel != trace.stats.channel:
+            if channel and not fnmatch.fnmatch(trace.stats.channel, channel):
                 continue
             if sampling_rate and \
                float(sampling_rate) != trace.stats.sampling_rate:
