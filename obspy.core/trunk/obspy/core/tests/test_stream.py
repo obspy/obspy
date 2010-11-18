@@ -574,6 +574,21 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[4] in stream2)
+        # tests for other wildcard operations:
+        stream2 = stream.select(station='[XY]*')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[1] in stream2)
+        self.assertTrue(stream[3] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(station='[A-Y]*')
+        self.assertEquals(len(stream2), 3)
+        self.assertTrue(stream[1] in stream2)
+        self.assertTrue(stream[3] in stream2)
+        self.assertTrue(stream[4] in stream2)
+        stream2 = stream.select(station='[A-Y]??*', network='A?')
+        self.assertEquals(len(stream2), 1)
+        self.assertTrue(stream[4] in stream2)
+        
 
     def test_sort(self):
         """

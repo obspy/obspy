@@ -1068,6 +1068,8 @@ class Stream(object):
         `channel` may have the last one or two letters wildcarded
         (e.g. `channel="EH*"`) to select all components with a common
         band/instrument code.
+        All other selection criteria that accept strings (network, station,
+        location) may also contain Unix style widlcards (*, ?, ...).
 
         Caution: A new Stream object is returned but the traces it contains are
         just aliases to the traces of the original stream.
@@ -1077,18 +1079,18 @@ class Stream(object):
         # make given component letter uppercase (if e.g. "z" is given)
         if component:
             component = component.upper()
-            if channel and component != channel[-1]:
+            if channel and channel[-1] != "*" and component != channel[-1]:
                 msg = "Selection criteria for channel and component are " + \
                       "mutually exclusive!"
                 raise ValueError(msg)
         traces = []
         for trace in self:
             # skip trace if any given criterion is not matched
-            if network and network != trace.stats.network:
+            if network and not fnmatch.fnmatch(trace.stats.network, network):
                 continue
-            if station and station != trace.stats.station:
+            if station and not fnmatch.fnmatch(trace.stats.station, station):
                 continue
-            if location and location != trace.stats.location:
+            if location and not fnmatch.fnmatch(trace.stats.location, location):
                 continue
             if channel and not fnmatch.fnmatch(trace.stats.channel, channel):
                 continue
