@@ -1060,6 +1060,35 @@ class Stream(object):
         """
         Returns new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with `channel="EHZ"`).
+
+        Basic Usage
+        -----------
+        >>> st = read()
+        >>> print st
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        >>> st2 = st.select(station="R*")
+        >>> print st2
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        >>> st2 = st.select(component="Z")
+        >>> print st2
+        1 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        >>> st2 = st.select(network="CZ")
+        >>> print st2 # doctest: +NORMALIZE_WHITESPACE
+        0 Trace(s) in Stream:
+
+
+        Caution: A new Stream object is returned but the traces it contains are
+        just aliases to the traces of the original stream.
+
+        Does not copy the data but only passes a reference.
+
         All kwargs except for component are tested directly against the
         respective entry in the trace.stats dictionary.
         If a string for component is given (should be a single letter) it is
@@ -1070,11 +1099,6 @@ class Stream(object):
         band/instrument code.
         All other selection criteria that accept strings (network, station,
         location) may also contain Unix style widlcards (*, ?, ...).
-
-        Caution: A new Stream object is returned but the traces it contains are
-        just aliases to the traces of the original stream.
-
-        Does not copy the data but only passes a reference.
         """
         # make given component letter uppercase (if e.g. "z" is given)
         if component:
