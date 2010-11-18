@@ -31,7 +31,13 @@ class Website(object):
             info = station[2]
             lats.append(info['latitude'])
             longs.append(info['longitude'])
-        self.bounds = (min(longs), max(longs), min(lats), max(lats))
+        # XXX: Ugly hack only for Tobis Computer. Needs a real workaround but
+        # should work so far. Maybe change the order of loading the submodules
+        # during the startup phase?
+        try:
+            self.bounds = (min(longs), max(longs), min(lats), max(lats))
+        except ValueError:
+            self.bounds = (47.0, 49.0, 11.0, 12.0)
 
     def createHtml(self):
         html = self.upperPart + self.middlePart + self.lowerPart
