@@ -177,9 +177,9 @@ For more examples check out the `triggering page`_ in the `Tutorial`_. For
 automated use and network coincidence there are some example scripts in the
 `svn repository`_.
 
-.. _`triggering page`: http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/TriggerTutorial
-.. _`Tutorial`: https://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
-.. _`svn repository`: http://svn.geophysik.uni-muenchen.de/trac/obspy/browser/misc/sandbox/stalta
+.. _`triggering page`: http://www.obspy.org/wiki/TriggerTutorial
+.. _`Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
+.. _`svn repository`: http://www.obspy.org/browser/misc/sandbox/stalta
 
 **There are many more functions available (rotation, pazToFreqResp, 
 cpxtrace analysis, ...), please also check the tutorial.**

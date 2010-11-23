@@ -21,7 +21,7 @@ significantly by explicitly specifying the file format ("-f FORMAT"), otherwise
 the format is autodetected.
 
 See also the example in the Tutorial section:
-http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/ObspyTutorial
+http://www.obspy.org/wiki/ObspyTutorial
 """
 
 import sys

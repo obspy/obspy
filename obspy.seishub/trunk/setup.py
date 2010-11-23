@@ -53,8 +53,8 @@ setup(
         'obspy.mseed',
         'lxml',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.seishub/trunk#egg=obspy.seishub-dev",
+    download_url="https://svn.obspy.org" + \
+        "/obspy.seishub/trunk#egg=obspy.seishub-dev",
     test_suite="obspy.seishub.tests.suite",
     include_package_data=True,
 )

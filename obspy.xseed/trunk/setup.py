@@ -53,8 +53,7 @@ setup(
         'lxml',
         'obspy.core',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.xseed/trunk#egg=obspy.xseed-dev",
+    download_url="https://svn.obspy.org/obspy.xseed/trunk#egg=obspy.xseed-dev",
     include_package_data=True,
     test_suite="obspy.xseed.tests.suite",
     entry_points={

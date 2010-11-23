@@ -123,8 +123,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.mseed/trunk#egg=obspy.mseed-dev",
+    download_url="https://svn.obspy.org/obspy.mseed/trunk#egg=obspy.mseed-dev",
     ext_package='obspy.mseed.lib',
     ext_modules=[lib],
     include_package_data=True,

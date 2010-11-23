@@ -53,8 +53,7 @@ setup(
         'obspy.mseed',
         'sqlalchemy',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.db/trunk#egg=obspy.db-dev",
+    download_url="https://svn.obspy.org/obspy.db/trunk#egg=obspy.db-dev",
 #    test_suite="obspy.db.tests.suite",
     entry_points={
         'obspy.db.feature' : [

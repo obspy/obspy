@@ -51,8 +51,8 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.seisan/trunk#egg=obspy.seisan-dev",
+    download_url="https://svn.obspy.org" + \
+        "/obspy.seisan/trunk#egg=obspy.seisan-dev",
     include_package_data=True,
     test_suite="obspy.seisan.tests.suite",
     entry_points="""

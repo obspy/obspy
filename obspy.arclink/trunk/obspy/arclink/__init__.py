@@ -63,7 +63,7 @@ the script above is shown in the next picture.
 
 Video Tutorial
 --------------
-http://svn.geophysik.uni-muenchen.de/obspy/obspy.arclink/arclink.swf
+http://www.obspy.org/www/obspy.arclink/arclink.html
 
 Further Examples
 ----------------
@@ -124,7 +124,7 @@ Further Resources
 .. _IPGP:
         http://www.ipgp.fr
 .. _`ArcLink protocol`:
-        https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.arclink/trunk/docs/protocol.txt
+        https://svn.obspy.org/obspy.arclink/trunk/docs/protocol.txt
 .. _introduction:
         http://www.webdc.eu/webdc_sum.html
 .. _`ArcLink server`:

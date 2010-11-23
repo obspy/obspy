@@ -53,8 +53,8 @@ setup(
         'obspy.mseed',
         'lxml',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.arclink/trunk#egg=obspy.arclink-dev",
+    download_url="https://svn.obspy.org" + \
+        "/obspy.arclink/trunk#egg=obspy.arclink-dev",
     include_package_data=True,
     test_suite="obspy.arclink.tests.suite",
 )

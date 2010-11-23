@@ -56,8 +56,7 @@ setup(
     install_requires=[
         'numpy>1.0.0',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.core/trunk#egg=obspy.core-dev",
+    download_url="https://svn.obspy.org/obspy.core/trunk#egg=obspy.core-dev",
     include_package_data=True,
     test_suite="obspy.core.tests.suite",
     entry_points={

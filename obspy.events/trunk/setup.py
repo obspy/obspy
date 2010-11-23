@@ -52,7 +52,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.events/trunk#egg=obspy.events-dev",
+    download_url="https://svn.obspy.org" + \
+        "/obspy.events/trunk#egg=obspy.events-dev",
 #    test_suite="obspy.events.tests.suite",
 )

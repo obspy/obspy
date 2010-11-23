@@ -256,7 +256,7 @@ class Trace(object):
         # set some defaults if not set yet
         if header == None:
             # Default values: For detail see
-            # http://svn.geophysik.uni-muenchen.de/trac/obspy/wiki/\
+            # http://www.obspy.org/wiki/\
             # KnownIssues#DefaultParameterValuesinPython
             header = {}
         header.setdefault('npts', len(data))
