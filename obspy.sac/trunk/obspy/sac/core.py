@@ -40,7 +40,9 @@ sac_extra = [
     'iqual', 'isynth', 'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok',
     'lcalda', 'kevnm', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
     'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
-    'kdatrd', 'kinst',
+    'kdatrd', 'kinst', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
+    'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9', 'unused10',
+    'unused11', 'unused12'
 ]
 
 def isSAC(filename):

@@ -286,6 +286,24 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.delta, 0.01)
         self.assertEquals(st[0].stats.sampling_rate, 100.0)
 
+    def test_notUsedButGivenHeaders(self):
+        """
+        Test case for #188
+        """
+        tr1 = read(self.file)[0]
+        not_used = ['xminimum', 'xmaximum', 'yminimum', 'ymaximum',
+                    'unused6', 'unused7', 'unused8', 'unused9', 'unused10',
+                    'unused11', 'unused12']
+        for i, header_value in enumerate(not_used):
+            tr1.stats.sac[header_value] = i
+        sac_file = NamedTemporaryFile().name
+        tr1.write(sac_file, 'SAC')
+        tr2 = read(sac_file)[0]
+        for i, header_value in enumerate(not_used):
+            self.assertEquals(int(tr2.stats.sac[header_value]), i)
+        
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 

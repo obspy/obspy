@@ -208,7 +208,10 @@ class SacIO(object):
                       'user4': 44, 'user5': 45, 'user6': 46, 'user7': 47,
                       'user8': 48, 'user9': 49, 'dist': 50, 'az': 51,
                       'baz': 52, 'gcarc': 53, 'depmen': 56, 'cmpaz': 57,
-                      'cmpinc': 58}
+                      'cmpinc': 58, 'xminimum': 59, 'xmaximum': 60,
+                      'yminimum': 61, 'ymaximum': 62, 'unused6': 63,
+                      'unused7': 64, 'unused8': 65, 'unused9': 66,
+                      'unused10': 67, 'unused11': 68, 'unused12': 69}
 
         self.idict = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
                       'nzsec': 4, 'nzmsec': 5, 'nvhdr': 6, 'norid': 7,
