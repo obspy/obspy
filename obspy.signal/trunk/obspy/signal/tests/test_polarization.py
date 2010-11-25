@@ -105,7 +105,7 @@ class PolarizationTestCase(unittest.TestCase):
         """
         """
         pol = polarization.eigval(self.data_win_e, self.data_win_n,
-                                  self.data_win_z, self.norm)
+                                  self.data_win_z, self.fk, self.norm)
         rms = np.sqrt(np.sum((pol[0] - self.res[:, 34]) ** 2) /
                       np.sum(self.res[:, 34] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -121,6 +121,22 @@ class PolarizationTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((pol[4] - self.res[:, 42]) ** 2) /
                       np.sum(self.res[:, 42] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[5][:,0] - self.res[:, 37]) ** 2) /
+                      np.sum(self.res[:, 37] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[5][:,1] - self.res[:, 38]) ** 2) /
+                      np.sum(self.res[:, 38] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[5][:,2] - self.res[:, 39]) ** 2) /
+                      np.sum(self.res[:, 39] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[6] - self.res[:, 41]) ** 2) /
+                      np.sum(self.res[:, 41] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+        rms = np.sqrt(np.sum((pol[7] - self.res[:, 43]) ** 2) /
+                      np.sum(self.res[:, 43] ** 2))
+        self.assertEqual(rms < 1.0e-5, True)
+
 
 
 def suite():
