@@ -193,6 +193,22 @@ class WaveformFileCrawler(object):
         # break if options run_once is set and a run was completed already
         if self.options.run_once and \
                 getattr(self, 'first_run_complete', False):
+            # before shutting down make sure all queues are empty!
+            while self.output_queue or self.work_queue:
+                self.log.debug('Crawler stopped but waiting for empty queues to exit.')
+                if self.log_queue:
+                    self.log.debug('log_queue still has %s item(s)' % len(self.log_queue))
+                    # Fetch items from the log queue
+                    self._processLogQueue()
+                    continue
+                if self.output_queue:
+                    self.log.debug('output_queue still has %s item(s)' % len(self.output_queue))
+                    # try to finalize a single processed stream object from output queue
+                    self._processOutputQueue()
+                    continue
+                if self.work_queue:
+                    self.log.debug('work_queue still has %s items' % len(self.work_queue))
+                time.sleep(10)
             self.log.debug('Crawler stopped by option run_once.')
             sys.exit()
             return
@@ -324,6 +340,11 @@ class WaveformFileCrawler(object):
         # process a single file
         path = self._current_path
         filepath = os.path.join(path, file)
+        # option force-reindex set -> process file regardless if already in
+        # database or recent or whatever
+        if self.options.force_reindex:
+            self.input_queue[filepath] = (path, file, self.features)
+            return
         # get file stats
         try:
             stats = os.stat(filepath)

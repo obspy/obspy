@@ -163,6 +163,9 @@ Default path option is 'data=*.*'.""")
         help="Clean database from non-existing files or paths " + \
              "if activated, but will skip all paths marked as " + \
              "archived in the database.")
+    parser.add_option("--force-reindex", action="store_true",
+        dest="force_reindex", default=False,
+        help="Deletes and recreates existing index entry for every crawled file.")
     parser.add_option("--drop_database", action="store_true",
         dest="drop_database", default=False,
         help="Deletes and recreates the complete database at start up.")
