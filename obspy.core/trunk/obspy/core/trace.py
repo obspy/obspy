@@ -1254,7 +1254,7 @@ class Trace(object):
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
-        array([0, 4])
+        array([0, 4, 8])
 
         :param decimation_factor: integer factor by which the sampling rate is
             lowered by decimation.

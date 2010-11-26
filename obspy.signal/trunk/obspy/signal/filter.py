@@ -333,15 +333,6 @@ def integerDecimation(data, decimation_factor):
         msg = "Decimation_factor must be an integer!"
         raise TypeError(msg)
 
-    data = array(data)
-
-    # for reshaping the length must be a multiple of decimation factor
-    while len(data) % decimation_factor:
-        data = data[:-1]
-
-    length = len(data)
-    df = decimation_factor
-
     # reshape and only use every decimation_factor-th sample
-    data = data.reshape((length / df, df)).swapaxes(0, 1)[0]
+    data = array(data[::decimation_factor])
     return data
