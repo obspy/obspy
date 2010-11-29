@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import os
 import tempfile
+
 
 def NamedTemporaryFile(dir=None, suffix='.tmp'):
     """
@@ -7,7 +10,7 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
 
     This class will work also with Windows Vista's UAC.
 
-    Duplicated from obspy.core so that obspy.segy is independant from
+    Duplicated from obspy.core so that obspy.segy is independent from
     obspy.core.
 
     .. warning::

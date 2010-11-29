@@ -15,11 +15,13 @@ numpy array with the unpacked values.
 import numpy as np
 import sys
 
+
 BYTEORDER = sys.byteorder
+
 
 def unpack_4byte_IBM(file, count, endian='>'):
     """
-    Unpacks 4 byte IBM floating points. Will return data in double precission
+    Unpacks 4 byte IBM floating points. Will return data in double precision
     to minimize rounding errors.
     """
     # Read as 4 byte integer so bit shifting works.
@@ -34,15 +36,16 @@ def unpack_4byte_IBM(file, count, endian='>'):
     # See http://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
     # XXX: Might need check for values out of range:
     # http://bytes.com/topic/c/answers/221981-c-code-converting-ibm-370-floating-point-ieee-754-a
-    sign = np.bitwise_and(np.right_shift(data, 31),  0x01)
+    sign = np.bitwise_and(np.right_shift(data, 31), 0x01)
     exponent = np.bitwise_and(np.right_shift(data, 24), 0x7f)
     mantissa = np.bitwise_and(data, 0x00ffffff)
-    # Force double precission.
+    # Force double precision.
     mantissa = np.require(mantissa, 'float64')
     mantissa /= 0x1000000
-    # This should now also be double precission.
+    # This should now also be double precision.
     data = (1.0 - 2.0 * sign) * mantissa * 16.0 ** (exponent - 64.0)
     return data
+
 
 def unpack_4byte_Integer(file, count, endian='>'):
     """
@@ -59,6 +62,7 @@ def unpack_4byte_Integer(file, count, endian='>'):
         data = data.byteswap()
     return data
 
+
 def unpack_2byte_Integer(file, count, endian='>'):
     """
     Unpacks 2 byte integers.
@@ -74,11 +78,14 @@ def unpack_2byte_Integer(file, count, endian='>'):
         data = data.byteswap()
     return data
 
+
 def unpack_4byte_Fixed_point(file, count, endian='>'):
     raise NotImplementedError
 
+
 def unpack_4byte_IEEE(file, count, endian='>'):
     raise NotImplementedError
+
 
 def unpack_1byte_Integer(file, count, endian='>'):
     raise NotImplementedError

@@ -4,8 +4,8 @@ Defines the header structures and some other dictionaries needed for SEG Y read
 and write support.
 """
 
-from pack import *
-from unpack import *
+from obspy.segy import pack, unpack
+
 
 # The format of the 400 byte long binary file header.
 BINARY_FILE_HEADER_FORMAT = [
@@ -58,8 +58,7 @@ TRACE_HEADER_FORMAT = [
     [2, 'number_of_vertically_summed_traces_yielding_this_trace'],
     [2, 'number_of_horizontally_stacked_traces_yielding_this_trace'],
     [2, 'data_use'],
-    [4,
-     'distance_from_center_of_the_source_point_to_the_center_of_the_receiver_group'],
+    [4, 'distance_from_center_of_the_source_point_to_the_center_of_the_receiver_group'],
     [4, 'receiver_group_elevation'],
     [4, 'surface_elevation_at_source'],
     [4, 'source_depth_below_surface'],
@@ -160,23 +159,23 @@ TRACE_HEADER_FORMAT = [
 # Functions that unpack the chosen data format. The keys correspond to the
 # number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS = {
-    1: unpack_4byte_IBM,
-    2: unpack_4byte_Integer,
-    3: unpack_2byte_Integer,
-    4: unpack_4byte_Fixed_point,
-    5: unpack_4byte_IEEE,
-    8: unpack_1byte_Integer,
+    1: unpack.unpack_4byte_IBM,
+    2: unpack.unpack_4byte_Integer,
+    3: unpack.unpack_2byte_Integer,
+    4: unpack.unpack_4byte_Fixed_point,
+    5: unpack.unpack_4byte_IEEE,
+    8: unpack.unpack_1byte_Integer,
 }
 
 # Functions that pack the chosen data format. The keys correspond to the
 # number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS = {
-    1: pack_4byte_IBM,
-    2: pack_4byte_Integer,
-    3: pack_2byte_Integer,
-    4: pack_4byte_Fixed_point,
-    5: pack_4byte_IEEE,
-    8: pack_1byte_Integer,
+    1: pack.pack_4byte_IBM,
+    2: pack.pack_4byte_Integer,
+    3: pack.pack_2byte_Integer,
+    4: pack.pack_4byte_Fixed_point,
+    5: pack.pack_4byte_IEEE,
+    8: pack.pack_1byte_Integer,
 }
 
 # Size of one sample.

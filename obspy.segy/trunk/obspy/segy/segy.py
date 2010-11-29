@@ -12,12 +12,11 @@ Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
 
 from __future__ import with_statement
-
-import numpy as np
-from StringIO import StringIO
+from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
+    BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
+    TRACE_HEADER_FORMAT
 from struct import pack, unpack
-
-from header import *
+import numpy as np
 
 
 class SEGYError(Exception):
@@ -26,17 +25,20 @@ class SEGYError(Exception):
     """
     pass
 
+
 class SEGYTraceHeaderTooSmallError(SEGYError):
     """
     Raised if the trace header is not the required 240 byte long.
     """
     pass
 
+
 class SEGYWritingError(SEGYError):
     """
     Raised if the trace header is not the required 240 byte long.
     """
     pass
+
 
 class SEGYFile(object):
     """
@@ -55,7 +57,7 @@ class SEGYFile(object):
         """
         if file is None:
             self._createEmptySEGYFileObject()
-            # Set the endiannes to big.
+            # Set the endianness to big.
             if endian is None:
                 self.endian = ENDIAN['big']
             else:
@@ -95,7 +97,7 @@ class SEGYFile(object):
         Tries to automatically determine the endianness of the file at hand.
         """
         pos = self.file.tell()
-        # Jump to the datasample format code.
+        # Jump to the data sample format code.
         self.file.seek(3224, 1)
         format = unpack('>h', self.file.read(2))[0]
         # Check if valid.
@@ -128,15 +130,16 @@ class SEGYFile(object):
         """
         # The first 3200 byte are the textual header.
         textual_header = self.file.read(3200)
-        # The data can either be saved as plain ASCII or EBCDIC. The first character
-        # always is mostly 'C' and therefore used to check the encoding.
-        # Sometimes is it not C but also cannot be decoded from EBCDIC so it is
-        # treated as ASCII and all empty symbols are removed.
+        # The data can either be saved as plain ASCII or EBCDIC. The first
+        # character always is mostly 'C' and therefore used to check the
+        # encoding. Sometimes is it not C but also cannot be decoded from
+        # EBCDIC so it is treated as ASCII and all empty symbols are removed.
         if not self.textual_header_encoding:
             if textual_header[0] != 'C':
                 try:
-                    textual_header = textual_header.decode('EBCDIC-CP-BE').encode('ascii')
-                    # If this worked, the encoding is ebcdic.
+                    textual_header = \
+                        textual_header.decode('EBCDIC-CP-BE').encode('ascii')
+                    # If this worked, the encoding is EBCDIC.
                     self.textual_header_encoding = 'EBCDIC'
                 except UnicodeEncodeError:
                     textual_header = textual_header
@@ -146,7 +149,8 @@ class SEGYFile(object):
                 # Otherwise the encoding will also be ASCII.
                 self.textual_header_encoding = 'ASCII'
         elif self.textual_header_encoding.upper() == 'EBCDIC':
-            textual_header = textual_header.decode('EBCDIC-CP-BE').encode('ascii')
+            textual_header = \
+                textual_header.decode('EBCDIC-CP-BE').encode('ascii')
         # Finally set it.
         self.textual_file_header = textual_header
 
@@ -159,14 +163,13 @@ class SEGYFile(object):
         self._readTextualHeader()
         # The next 400 bytes are from the Binary File Header.
         binary_file_header = self.file.read(400)
-        self.binary_file_header = SEGYBinaryFileHeader(binary_file_header,
-                                                       self.endian)
+        bfh = SEGYBinaryFileHeader(binary_file_header, self.endian)
+        self.binary_file_header = bfh
         self.data_encoding = self.binary_file_header.data_sample_format_code
-        # If bytes 3506-3506 are not zero, an extended textual header follows which
-        # is not supported so far.
-        if self.binary_file_header.number_of_3200_byte_ext_file_header_records_following\
-                != 0:
-            msg = 'Extended textual headers are supported yet. ' +\
+        # If bytes 3506-3506 are not zero, an extended textual header follows
+        # which is not supported so far.
+        if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
+            msg = 'Extended textual headers are supported yet. ' + \
                    'Please contact the developers.'
             raise NotImplementedError(msg)
 
@@ -208,16 +211,17 @@ class SEGYFile(object):
             textual_header = self.textual_file_header
         # The length must not exceed 3200 byte.
         else:
-            msg = 'self.textual_file_header is not allowed to be longer ' +\
+            msg = 'self.textual_file_header is not allowed to be longer ' + \
                   'than 3200 bytes'
             raise SEGYWritingError(msg)
         if self.textual_header_encoding.upper() == 'ASCII':
             pass
         elif self.textual_header_encoding.upper() == 'EBCDIC':
-            textual_header = textual_header.decode('ascii').encode('EBCDIC-CP-BE') 
+            textual_header = \
+                textual_header.decode('ascii').encode('EBCDIC-CP-BE')
         # Should not happen.
         else:
-            msg = 'self.textual_header_encoding has to be either ASCII or ' +\
+            msg = 'self.textual_header_encoding has to be either ASCII or ' + \
                   'EBCDIC.'
             raise SEGYWritingError(msg)
         file.write(textual_header)
@@ -236,6 +240,7 @@ class SEGYFile(object):
                 self.traces.append(trace)
             except SEGYTraceHeaderTooSmallError:
                 break
+
 
 class SEGYBinaryFileHeader(object):
     """
@@ -271,11 +276,11 @@ class SEGYBinaryFileHeader(object):
                 format = '%sI' % self.endian
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
-            # The other value are the unassinged values. As it is unclear how
+            # The other value are the unassigned values. As it is unclear how
             # these are formated they will be stored as strings.
             elif name.startswith('unassigned'):
                 # These are only the unassigned fields.
-                format = 'h' * (length/2)
+                format = 'h' * (length / 2)
                 # Set the class attribute.
                 setattr(self, name, string)
             # Should not happen.
@@ -354,7 +359,7 @@ class SEGYTrace(object):
         trace_header = self.file.read(240)
         # Check if it is smaller than 240 byte.
         if len(trace_header) != 240:
-            msg =  'The trace header needs to be 240 bytes long'
+            msg = 'The trace header needs to be 240 bytes long'
             raise SEGYTraceHeaderTooSmallError(msg)
         self.header = SEGYTraceHeader(trace_header,
                                       endian=self.endian)
@@ -375,8 +380,6 @@ class SEGYTrace(object):
         DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[self.data_encoding](file, self.data,
                                                   endian=self.endian)
 
-
-
     def _createEmptyTrace(self):
         """
         Creates an empty trace with an empty header.
@@ -390,9 +393,9 @@ class SEGYTrace(object):
         """
         ret_val = 'Trace sequence number within line: %i\n' % \
                 self.header.trace_sequence_number_within_line
-        ret_val += '%i samples, dtype=%s, %.2f Hz' % (len(self.data), 
-                self.data.dtype, 1.0 /\
-                (self.header.sample_interval_in_ms_for_this_trace /\
+        ret_val += '%i samples, dtype=%s, %.2f Hz' % (len(self.data),
+                self.data.dtype, 1.0 / \
+                (self.header.sample_interval_in_ms_for_this_trace / \
                 float(1E6)))
         return ret_val
 
@@ -418,7 +421,7 @@ class SEGYTraceHeader(object):
             return
         # Check the length of the string,
         if len(header) != 240:
-            msg =  'The trace header needs to be 240 bytes long'
+            msg = 'The trace header needs to be 240 bytes long'
             raise SEGYTraceHeaderTooSmallError(msg)
         # Otherwise read the given file.
         self._readTraceHeader(header)
@@ -440,8 +443,8 @@ class SEGYTraceHeader(object):
             if length == 2:
                 format = '%sh' % self.endian
                 setattr(self, name, unpack(format, string)[0])
-            # Update: Seems to be correct. Two's complement integers seem to be the common
-            # way to store integer values.
+            # Update: Seems to be correct. Two's complement integers seem to be
+            # the common way to store integer values.
             elif length == 4:
                 format = '%sI' % self.endian
                 setattr(self, name, unpack(format, string)[0])
@@ -496,6 +499,7 @@ class SEGYTraceHeader(object):
         for field in TRACE_HEADER_FORMAT:
             setattr(self, field[1], 0)
 
+
 def read(file):
     """
     :param file: Open file like object or a string which will be assumed to be
@@ -508,6 +512,7 @@ def read(file):
             return _readSEGY(open_file)
     # Otherwise just read it.
     return _readSEGY(file)
+
 
 def _readSEGY(file):
     """

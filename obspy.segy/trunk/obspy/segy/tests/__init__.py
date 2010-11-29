@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import unittest
 from obspy.core.util import add_doctests, add_unittests
+import unittest
+
 
 MODULE_NAME = "obspy.segy"
+
 
 def suite():
     suite = unittest.TestSuite()

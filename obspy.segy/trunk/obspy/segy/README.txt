@@ -1,5 +1,5 @@
-package obspy.mseed
-===================
+package obspy.segy
+==================
 
 Copyright
 ---------
@@ -33,5 +33,5 @@ Overview
 
 Dependencies
 ------------
-    * obspy.core
+    * numpy
     * setuptools

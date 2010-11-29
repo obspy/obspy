@@ -9,11 +9,12 @@
 #---------------------------------------------------------------------
 """
 Functions that will all take a file pointer and the sample count and return a
-numpy array with the unpacked values.
+NumPy array with the unpacked values.
 """
 
 import numpy as np
 import sys
+
 
 BYTEORDER = sys.byteorder
 LOG2 = 0.3010299956639812
@@ -22,21 +23,21 @@ LOG2 = 0.3010299956639812
 class WrongDtypeException(Exception):
     pass
 
+
 def pack_4byte_IBM(file, data, endian='>'):
     """
     Unpacks 4 byte IBM floating points. This will only work if the host system
     internally uses little endian byteorders.
 
-    Internally utilizes double precission to minimze rounding errors.
+    Internally utilizes double precision to minimize rounding errors.
     """
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'float64' and data.dtype != 'float32':
         raise WrongDtypeException
     # Calculate the values. The theory is explained in
     # http://www.codeproject.com/KB/applications/libnumber.aspx
-    # Store the zeros. They will be readded later on.
-    zeros = np.where(data==0.0)
-    nzeros = np.where(data!=0.0)
+    # Store the zeros. They will be re-added later on.
+    zeros = np.where(data == 0.0)
 
     # Calculate the signs.
     signs = np.empty(len(data), dtype='uint8')
@@ -61,8 +62,6 @@ def pack_4byte_IBM(file, data, endian='>'):
         non_normalized = np.where(np.where(fraction, fraction, 1) < 0.0625)[0]
         if len(non_normalized) == 0:
             break
-        print non_normalized
-        import ipdb;ipdb.set_trace()
         fraction[non_normalized] *= 16
         exponent[non_normalized] -= 1
 
@@ -77,16 +76,18 @@ def pack_4byte_IBM(file, data, endian='>'):
     # Convert to unsigned long.
     fraction = np.require(fraction, 'uint64')
 
-    # Use 8 bit integers to be able to store every byte seperately.
+    # Use 8 bit integers to be able to store every byte separately.
     new_data = np.zeros(4 * len(data), 'uint8')
 
     # The first bit is the sign and the following 7 are the exponent.
     byte_0 = np.require(signs + exponent, 'uint8')
     # All following 24 bit are the fraction.
-    byte_1 = np.require(np.right_shift(np.bitwise_and(fraction, 0x00ff0000), 16), 'uint8')
-    byte_2 = np.require(np.right_shift(np.bitwise_and(fraction, 0x0000ff00), 8), 'uint8')
+    byte_1 = np.require(np.right_shift(np.bitwise_and(fraction, 0x00ff0000),
+                                       16), 'uint8')
+    byte_2 = np.require(np.right_shift(np.bitwise_and(fraction, 0x0000ff00),
+                                       8), 'uint8')
     byte_3 = np.require(np.bitwise_and(fraction, 0x000000ff), 'uint8')
-    
+
     # Depending on the endianness store the data different.
     # big endian.
     if endian == '>':
@@ -109,6 +110,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     # Write to file.
     file.write(new_data.tostring())
 
+
 def pack_4byte_Integer(file, data, endian='>'):
     """
     Unpacks 4 byte integers in big endian byteorder.
@@ -123,6 +125,7 @@ def pack_4byte_Integer(file, data, endian='>'):
         data = data.byteswap()
     # Write the file.
     file.write(data.tostring())
+
 
 def pack_2byte_Integer(file, data, endian='>'):
     """
@@ -139,11 +142,14 @@ def pack_2byte_Integer(file, data, endian='>'):
     # Write the file.
     file.write(data.tostring())
 
+
 def pack_4byte_Fixed_point(file, data, endian='>'):
     raise NotImplementedError
 
+
 def pack_4byte_IEEE(file, data, endian='>'):
     raise NotImplementedError
+
 
 def pack_1byte_Integer(file, data, endian='>'):
     raise NotImplementedError

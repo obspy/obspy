@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-The segy test suite.
+The obspy.segy test suite.
 """
 
 from __future__ import with_statement
-
+from StringIO import StringIO
+from obspy.segy import read
+from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
+    DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
+from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile
+from obspy.segy.util import NamedTemporaryFile
 import inspect
 import numpy as np
 import os
-from StringIO import StringIO
 import unittest
-
-from obspy.segy import read
-from obspy.segy.header import DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
-from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS
-from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile
-from obspy.segy.util import NamedTemporaryFile
 
 
 class SEGYTestCase(unittest.TestCase):
@@ -33,8 +31,8 @@ class SEGYTestCase(unittest.TestCase):
                            'data_sample_enc': 1, 'textual_header_enc': 'ASCII',
                            'sample_count': 2001, 'sample_size': 4,
                            'non_normalized_samples': [21, 52, 74, 89, 123,
-                            126, 128, 132, 136, 155, 213, 221,  222,  223,
-                            236,  244, 258, 266, 274, 281, 285, 286, 297, 298,
+                            126, 128, 132, 136, 155, 213, 221, 222, 223,
+                            236, 244, 258, 266, 274, 281, 285, 286, 297, 298,
                             299, 300, 301, 302, 318, 335, 340, 343, 346, 353,
                             362, 382, 387, 391, 393, 396, 399, 432, 434, 465,
                             466, 470, 473, 474, 481, 491, 494, 495, 507, 513,
@@ -72,7 +70,7 @@ class SEGYTestCase(unittest.TestCase):
                            'textual_header_enc': 'EBCDIC',
                            'sample_count': 512, 'sample_size': 4,
                            'non_normalized_samples': []}}
-        # The expected numpy dtypes for the various sample encodings.
+        # The expected NumPy dtypes for the various sample encodings.
         self.dtypes = {1: 'float64',
                        2: 'int32',
                        3: 'int16',
@@ -163,7 +161,6 @@ class SEGYTestCase(unittest.TestCase):
                     start = 2
                 # The first byte of the fraction.
                 first_fraction_byte_old = packed_data[start::4]
-                first_fraction_byte_new = new_packed_data[start::4]
                 # First get all zeros in the original data because zeros have
                 # to be treated differently.
                 zeros = np.where(data == 0)[0]
@@ -224,8 +221,8 @@ class SEGYTestCase(unittest.TestCase):
     def test_packAndUnpackIBMFloat(self):
         """
         Packing and unpacking IBM floating points might yield some inaccuracies
-        due to floating point rouding errors.
-        This test tests a large number of random floating poing numbers.
+        due to floating point rounding errors.
+        This test tests a large number of random floating point numbers.
         """
         # Some random seeds.
         seeds = [1234, 592, 459482, 6901, 0, 7083, 68349]
@@ -236,7 +233,7 @@ class SEGYTestCase(unittest.TestCase):
             np.random.seed(seed)
             data = 200000.0 * np.random.ranf(50000) - 100000.0
             # Convert to float64 in case native floats are different to be
-            # able to utilize double precission.
+            # able to utilize double precision.
             data = np.require(data, 'float64')
             # Loop over little and big endian.
             for endian in endians:
@@ -266,7 +263,7 @@ class SEGYTestCase(unittest.TestCase):
             np.random.seed(seed)
             data = 1E-5 * np.random.ranf(50000)
             # Convert to float64 in case native floats are different to be
-            # able to utilize double precission.
+            # able to utilize double precision.
             data = np.require(data, 'float64')
             # Loop over little and big endian.
             for endian in endians:
@@ -285,7 +282,7 @@ class SEGYTestCase(unittest.TestCase):
     def test_packAndUnpackIBMSpecialCases(self):
         """
         Tests the packing and unpacking of several powers of 16 which are
-        problematic because they need seperate handling in the algorithm.
+        problematic because they need separate handling in the algorithm.
         """
         endians = ['>', '<']
         # Create the first 10 powers of 16.
@@ -295,7 +292,7 @@ class SEGYTestCase(unittest.TestCase):
             data.append(-16 ** i)
         data = np.array(data)
         # Convert to float64 in case native floats are different to be
-        # able to utilize double precission.
+        # able to utilize double precision.
         data = np.require(data, 'float64')
         # Loop over little and big endian.
         for endian in endians:
@@ -344,7 +341,7 @@ class SEGYTestCase(unittest.TestCase):
             f = open(file, 'rb')
             org_header = f.read(3200)
             f.seek(0, 0)
-            # Init an empty SEGY object and set certain attributes.
+            # Initialize an empty SEGY object and set certain attributes.
             segy = SEGYFile()
             segy.endian = endian
             segy.file = f
@@ -393,9 +390,6 @@ class SEGYTestCase(unittest.TestCase):
         """
         for file, attribs in self.files.iteritems():
             file = os.path.join(self.path, file)
-            data_enc = attribs['data_sample_enc']
-            count = attribs['sample_count']
-            endian = attribs['endian']
             non_normalized_samples = attribs['non_normalized_samples']
             # Read the file.
             with open(file, 'rb') as f:
