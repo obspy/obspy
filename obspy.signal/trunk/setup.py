@@ -41,12 +41,13 @@ numpy_include_dir = os.path.join(os.path.dirname(np.core.__file__), 'include')
 
 if platform.system() == "Windows":
     # disable some warnings for MSVC
-    define_macros = [('_CRT_[SECURE_NO_WARNINGS', '1')]
+    macros = [('_CRT_SECURE_NO_WARNINGS', '1')]
 else:
-    define_macros = []
+    macros = []
 
 
 lib = MyExtension('libsignal',
+                  define_macros=macros,
                   include_dirs=[numpy_include_dir],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',
                            src + 'coordtrans.c', src + 'pk_mbaer.c',
