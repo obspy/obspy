@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 #coding=utf-8
-
-
+#-------------------------------------------------------------------
+# Filename: mopad.py
+#  Purpose: Moment tensor Plotting and Decomposition tool
+#   Author: Lars Krieger, Sebastian Heimann
+#    Email: lars.krieger@zmaw.de, sebastian.heimann@zmaw.de
+#
+# Copyright (C) 2010 Lars Krieger, Sebastian Heimann
+#---------------------------------------------------------------------
 """
 
 #######################################################################
