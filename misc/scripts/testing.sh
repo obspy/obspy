@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PACKAGES="core arclink fissures gse2 imaging mseed sac seisan seishub \
-signal wav xseed"
+signal wav xseed segy"
 
 for NAME in $PACKAGES; do
     cd ../..
