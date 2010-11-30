@@ -52,9 +52,9 @@ def pack_4byte_IBM(file, data, endian='>'):
     # Calculate the exponent for the IBM data format.
     exponent = np.require((np.log10(data) / LOG2) * 0.25 + 65, 'uint32')
 
-    # Now calculate the fraction using double precision.
-    fraction = np.require(data, 'float64') / \
-                   (16.0 ** (np.require(exponent, 'float64') - 64))
+    # Now calculate the fraction using single precision.
+    fraction = np.require(data, 'float32') / \
+                   (16.0 ** (np.require(exponent, 'float32') - 64))
 
     # Normalization.
     while True:

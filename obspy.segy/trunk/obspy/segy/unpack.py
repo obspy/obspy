@@ -39,12 +39,17 @@ def unpack_4byte_IBM(file, count, endian='>'):
     sign = np.bitwise_and(np.right_shift(data, 31), 0x01)
     exponent = np.bitwise_and(np.right_shift(data, 24), 0x7f)
     mantissa = np.bitwise_and(data, 0x00ffffff)
-    # Force double precision.
-    mantissa = np.require(mantissa, 'float64')
+    # Force single precision.
+    mantissa = np.require(mantissa, 'float32')
     mantissa /= 0x1000000
-    # This should now also be double precision.
-    data = (1.0 - 2.0 * sign) * mantissa * 16.0 ** (exponent - 64.0)
-    return data
+    # Do the following calculation in a weird way to avoid autocasting to
+    # float64.
+    # data = (1.0 - 2.0 * sign) * mantissa * 16.0 ** (exponent - 64.0)
+    sign *= -2.0
+    sign += 1.0
+    mantissa *= 16.0 ** (exponent - 64)
+    mantissa *= sign
+    return mantissa
 
 
 def unpack_4byte_Integer(file, count, endian='>'):

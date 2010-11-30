@@ -71,7 +71,7 @@ class SEGYTestCase(unittest.TestCase):
                            'sample_count': 512, 'sample_size': 4,
                            'non_normalized_samples': []}}
         # The expected NumPy dtypes for the various sample encodings.
-        self.dtypes = {1: 'float64',
+        self.dtypes = {1: 'float32',
                        2: 'int32',
                        3: 'int16',
                        5: 'float32'}
