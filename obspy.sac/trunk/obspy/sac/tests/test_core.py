@@ -44,7 +44,29 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              tr.data[0:10])
 
-    def test_readXYViaObspy(self):
+    def test_readwriteViaObspy(self):
+        """
+        Write/Read files via L{obspy.Stream}
+        """
+        tr = read(self.file, format='SAC')[0]
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format='SAC')
+        tr1 = read(tempfile)[0]
+        os.remove(tempfile)
+        self.assertTrue(tr == tr1)
+
+    def test_readXYwriteXYViaObspy(self):
+        """
+        Write/Read files via L{obspy.Stream}
+        """
+        tr = read(self.filexy, format='SACXY')[0]
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format='SACXY')
+        tr1 = read(tempfile)[0]
+        os.remove(tempfile)
+        self.assertTrue(tr == tr1)
+
+    def test_readwriteXYViaObspy(self):
         """
         Read files via L{obspy.Stream}
         """
