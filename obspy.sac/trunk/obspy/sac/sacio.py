@@ -392,16 +392,19 @@ class SacIO(object):
             self.hi[index] = int(value)
         elif key in self.sdict:
             index = self.sdict[key]
-            value = '%-8s' % value
+            if value:
+                value = '%-8s' % value
+            else:
+                value = '-12345  '
             if index == 0:
-                    self.hs[0] = value
+                self.hs[0] = value
             elif index == 1:
                 value1 = '%-8s' % value[0:8]
                 value2 = '%-8s' % value[8:16]
                 self.hs[1] = value1
                 self.hs[2] = value2
             else:
-                    self.hs[index + 1] = value
+                self.hs[index + 1] = value
         else:
             raise SacError("Cannot find header entry for: ", item)
 
@@ -652,6 +655,7 @@ class SacIO(object):
                 # because every string field has to be 8 characters long
                 # apart from the second field which is 16 characters long
                 # resulting in a total length of 192 characters
+                # XXX import ipdb;ipdb.set_trace()
                 for i in xrange(0, 24, 3):
                     self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                     f.readline() # strip the newline
@@ -754,9 +758,10 @@ class SacIO(object):
         else:
             try:
                 np.savetxt(f, np.reshape(self.hf, (14, 5)),
-                           fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g")
+                           fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
                 np.savetxt(f, np.reshape(self.hi, (8, 5)),
-                           fmt="%-8.6g %-8.6g %-8.6g %-8.6g %-8.6g")
+                           fmt="%10d%10d%10d%10d%10d")
+                # XXX import ipdb;ipdb.set_trace()
                 for i in xrange(0, 24, 3):
                     self.hs[i:i + 3].tofile(f)
                     f.write('\n')
@@ -767,7 +772,7 @@ class SacIO(object):
                     npts = self.GetHvalue('npts')
                     rows = npts / 5
                     np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
-                               fmt="%15.7g\t%15.7g\t%15.7g\t%15.7g\t%15.7g")
+                               fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
                     np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
                 except:
                     raise SacIOError("Can't write trace values:" + ofname)

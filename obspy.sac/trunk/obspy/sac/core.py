@@ -194,6 +194,7 @@ def readSACXY(filename, headonly=False, **kwargs):
         tr = Trace(header=header)
     else:
         tr = Trace(header=header, data=t.seis)
+    # XXX import ipdb;ipdb.set_trace()
     return Stream([tr])
 
 
@@ -223,6 +224,7 @@ def writeSACXY(stream, filename, **kwargs):
         except KeyError:
             b = 0.0
         # filling in SAC/sacio specific defaults
+        # XXX import ipdb;ipdb.set_trace()
         t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
                     starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
