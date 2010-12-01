@@ -3,6 +3,7 @@
 MSEED bindings to ObsPy core module.
 """
 
+import warnings
 from obspy.core import Stream, Trace
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed import LibMSEED
@@ -281,6 +282,10 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         header['encoding'] = enc
         # Fill the samplecnt attribute.
         header['samplecnt'] = len(trace.data)
-        trace_list.append([header, trace.data])
+        # Check if ndarray is contiguous (see #192, #193)
+        if not trace.data.flags.c_contiguous:
+            msg = "Detected non contiguous data array during ctypes call. Trying to fix array."
+            warnings.warn(msg)
+        trace_list.append([header, np.require(trace.data, requirements=('C_CONTIGUOUS',))])
     # Write resulting trace_list to Mini-SEED file.
     __libmseed__.writeMSTraces(trace_list, outfile=filename, **kwargs)
