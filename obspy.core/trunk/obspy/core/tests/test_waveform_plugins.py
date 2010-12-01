@@ -9,6 +9,7 @@ import os
 import threading
 import time
 import unittest
+import warnings
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -159,6 +160,32 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format == 'Q':
                 os.remove(outfile[:-4] + '.QBN')
                 os.remove(outfile[:-4])
+
+    def test_issue193_noncontiguous(self):
+        """
+        Test if non-contiguous array is written correctly.
+        """
+        warnings.filterwarnings("ignore", "Detected non contiguous data")
+        # test all plugins with both read and write method
+        formats_write = set(_getPlugins('obspy.plugin.waveform', 'writeFormat'))
+        formats_read = set(_getPlugins('obspy.plugin.waveform', 'readFormat'))
+        formats = set.intersection(formats_write, formats_read)
+        data = np.arange(10)
+        # make array non-contiguous
+        data = data[::2]
+        tr = Trace(data=data)
+        for format in formats:
+            tempfile = NamedTemporaryFile().name
+            tr.write(tempfile, format)
+            if format == "Q":
+                tempfile = tempfile + ".QHD"
+            tr_test = read(tempfile, format)[0]
+            # clean up
+            os.remove(tempfile)
+            if format == 'Q':
+                os.remove(tempfile[:-4] + '.QBN')
+                os.remove(tempfile[:-4])
+            np.testing.assert_array_equal(tr.data, tr_test.data)
 
 
 def suite():
