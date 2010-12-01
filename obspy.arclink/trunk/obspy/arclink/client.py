@@ -58,9 +58,9 @@ class Client(Telnet):
         A string containing the name of the institution of the requesting
         person (default is an 'Anonymous').
     debug : boolean, optional
-        Enables verbose output of the connection handling (default is False). 
+        Enables verbose output of the connection handling (default is False).
     command_delay : float, optional
-        Delay between each command send to the ArcLink server (default is 0). 
+        Delay between each command send to the ArcLink server (default is 0).
 
     Notes
     -----
@@ -201,9 +201,9 @@ class Client(Telnet):
         #     = DENIED - access to data denied for the user
         #     = CANCEL - processing cancelled (eg., by operator)
         #     = MESSAGE <any_string> - error message in case of WARN or
-        #           ERROR, but can be used regardless of status (the last 
+        #           ERROR, but can be used regardless of status (the last
         #           message is shown in STATUS response)
-        #     = SIZE <n> - data size. In case of volume, it must be the 
+        #     = SIZE <n> - data size. In case of volume, it must be the
         #           exact size of downloadable product.
         if 'status="NODATA"' in xml_doc:
             # no data
@@ -218,7 +218,7 @@ class Client(Telnet):
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
         elif '<line content' not in xml_doc:
-            # XXX: safeguard as long not all status messages are covered 
+            # XXX: safeguard as long not all status messages are covered
             self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No content')
@@ -266,11 +266,11 @@ class Client(Telnet):
             End date and time.
         format : ['FSEED' | 'MSEED'], optional
             Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED'). 
-            .. note:: 
+            volume (default is an 'MSEED').
+            .. note::
                 Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
-        compressed : boolean, optional 
+        compressed : boolean, optional
             Request compressed files from ArcLink server (default is True).
         """
         rtype = 'REQUEST WAVEFORM format=%s' % format
@@ -318,14 +318,14 @@ class Client(Telnet):
             End date and time.
         format : ['FSEED' | 'MSEED'], optional
             Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED'). 
-            .. note:: 
+            volume (default is an 'MSEED').
+            .. note::
                 Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
-        compressed : boolean, optional 
+        compressed : boolean, optional
             Request compressed files from ArcLink server (default is True).
         getPAZ : boolean
-            Fetch PAZ information and append to 
+            Fetch PAZ information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request.
         getCoordinates : boolean
@@ -422,7 +422,10 @@ class Client(Telnet):
             result[id] = []
             for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
                 temp = {}
-                temp['priority'] = int(node.get('priority'))
+                try:
+                    temp['priority'] = int(node.get('priority'))
+                except:
+                    temp['priority'] = -1
                 temp['start'] = UTCDateTime(node.get('start'))
                 if node.get('end'):
                     temp['end'] = UTCDateTime(node.get('end'))
@@ -591,8 +594,8 @@ class Client(Telnet):
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
         format : ['SEED'], optional
-            Output format. 
-            .. note:: 
+            Output format.
+            .. note::
                 Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
         """
@@ -798,7 +801,7 @@ class Client(Telnet):
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
                         # sensitivity
-                        # here we try to overwrites PAZ with component gain 
+                        # here we try to overwrites PAZ with component gain
                         try:
                             paz['sensitivity'] = float(comp.get('gain'))
                         except:
@@ -812,7 +815,7 @@ class Client(Telnet):
         """
         Returns a dictionary of available networks within the given time span.
 
-        .. note:: 
+        .. note::
             Currently the time span seems to be ignored by the ArcLink servers,
             therefore all possible networks are returned.
 
@@ -836,7 +839,7 @@ class Client(Telnet):
         """
         Returns a dictionary of available stations in the given network(s).
 
-        .. note:: 
+        .. note::
             Currently the time span seems to be ignored by the ArcLink servers,
             therefore all possible stations are returned.
 
