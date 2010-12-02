@@ -14,36 +14,6 @@ import string
 import struct
 
 
-# we put here everything but the time, they are going to stats.starttime
-# left SAC attributes, right trace attributes, see also
-# http://www.iris.edu/KB/questions/13/SAC+file+format 
-convert_dict = {
-    'npts': 'npts',
-    'delta': 'delta',
-    'kcmpnm': 'channel',
-    'kstnm': 'station',
-    'scale': 'calib',
-    'knetwk': 'network',
-    'khole': 'location'
-}
-
-# all the sac specific extras, the SAC reference time specific headers are
-# handled separately and are directly controlled by trace.stats.starttime.
-sac_extra = [
-    'depmin', 'depmax', 'odelta', 'o', 'a', 't0', 't1',
-    't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo',
-    'stel', 'stdp', 'evla', 'evlo', 'evdp', 'mag', 'user0', 'user1', 'user2',
-    'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'dist',
-    'az', 'baz', 'gcarc', 'depmen', 'cmpaz', 'cmpinc',
-    'nvhdr', 'norid', 'nevid', 'nwfid',
-    'iftype', 'idep', 'iztype', 'iinst', 'istreg', 'ievreg', 'ievtype',
-    'iqual', 'isynth', 'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok',
-    'lcalda', 'kevnm', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4',
-    'kt5', 'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
-    'kdatrd', 'kinst', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
-    'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9', 'unused10',
-    'unused11', 'unused12'
-]
 
 def isSAC(filename):
     """
@@ -161,40 +131,12 @@ def readSACXY(filename, headonly=False, **kwargs):
     else:
         t.ReadSacXY(filename)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    header = {}
+    header = t.get_obspy_header()
 
-    # convert common header types of the obspy trace object
-    for i, j in convert_dict.iteritems():
-        value = t.GetHvalue(i)
-        if isinstance(value, str):
-            value = value.strip()
-            if value == '-12345':
-                value = ''
-        # fix for issue #156
-        if i == 'delta':
-            header['sampling_rate'] = np.float32(1.0) / np.float32(t.hf[0])
-        else:
-            header[j] = value
-    if header['calib'] == -12345.0:
-        header['calib'] = 1.0
-    # assign extra header types of sac
-    header['sac'] = {}
-    for i in sac_extra:
-        header['sac'][i] = t.GetHvalue(i)
-    # convert time to UTCDateTime
-    header['starttime'] = t.starttime
-    # always add the begin time (if it's defined) to get the given
-    # SAC reference time, no matter which iztype is given
-    # note that the B and E times should not be in the sac_extra
-    # dictionary, as they would overwrite the t.fromarray which sets them
-    # according to the starttime, npts and delta.
-    header['sac']['b'] = float(t.GetHvalue('b'))
-    header['sac']['e'] = float(t.GetHvalue('e'))
     if headonly:
         tr = Trace(header=header)
     else:
         tr = Trace(header=header, data=t.seis)
-    # XXX import ipdb;ipdb.set_trace()
     return Stream([tr])
 
 
@@ -214,35 +156,13 @@ def writeSACXY(stream, filename, **kwargs):
         Alphanumeric SAC file to be written.
     """
     # Translate the common (renamed) entries
-    i = 0
     base, ext = os.path.splitext(filename)
-    for trace in stream:
-        t = SacIO()
-        # extracting relative SAC time as specified with b
-        try:
-            b = float(trace.stats['sac']['b'])
-        except KeyError:
-            b = 0.0
-        # filling in SAC/sacio specific defaults
-        # XXX import ipdb;ipdb.set_trace()
-        t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
-                    starttime=trace.stats.starttime)
-        # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
-            t.SetHvalue(_j, trace.stats[_k])
-        # overwriting up SAC specific values
-        # note that the SAC reference time values (including B and E) are
-        # not used in here any more, they are already set by t.fromarray
-        # and directly deduce from tr.starttime
-        for _i in sac_extra:
-            try:
-                t.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
-                pass
+    for i, trace in enumerate(stream):
+        t = SacIO(trace)
         if len(stream) != 1:
             filename = "%s%02d%s" % (base, i + 1, ext)
         t.WriteSacXY(filename)
-        i += 1
+    return
 
 
 def readSAC(filename, headonly=False, **kwargs):
@@ -274,35 +194,8 @@ def readSAC(filename, headonly=False, **kwargs):
     else:
         t.ReadSacFile(filename)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    header = {}
+    header = t.get_obspy_header()
 
-    # convert common header types of the ObsPy trace object
-    for i, j in convert_dict.iteritems():
-        value = t.GetHvalue(i)
-        if isinstance(value, str):
-            value = value.strip()
-            if value == '-12345':
-                value = ''
-        # fix for issue #156
-        if i == 'delta':
-            header['sampling_rate'] = np.float32(1.0) / np.float32(t.hf[0])
-        else:
-            header[j] = value
-    if header['calib'] == -12345.0:
-        header['calib'] = 1.0
-    # assign extra header types of SAC
-    header['sac'] = {}
-    for i in sac_extra:
-        header['sac'][i] = t.GetHvalue(i)
-    # convert time to UTCDateTime
-    header['starttime'] = t.starttime
-    # always add the begin time (if it's defined) to get the given
-    # SAC reference time, no matter which iztype is given
-    # note that the B and E times should not be in the sac_extra
-    # dictionary, as they would overwrite the t.fromarray which sets them
-    # according to the starttime, npts and delta.
-    header['sac']['b'] = float(t.GetHvalue('b'))
-    header['sac']['e'] = float(t.GetHvalue('e'))
     if headonly:
         tr = Trace(header=header)
     else:
@@ -326,31 +219,10 @@ def writeSAC(stream, filename, **kwargs):
         SAC file to be written.
     """
     # Translate the common (renamed) entries
-    i = 0
     base, ext = os.path.splitext(filename)
-    for trace in stream:
-        t = SacIO()
-        # extracting relative SAC time as specified with b
-        try:
-            b = float(trace.stats['sac']['b'])
-        except KeyError:
-            b = 0.0
-        # filling in SAC/sacio specific defaults
-        t.fromarray(trace.data, begin=b, delta=trace.stats.delta,
-                    starttime=trace.stats.starttime)
-        # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
-            t.SetHvalue(_j, trace.stats[_k])
-        # overwriting up SAC specific values
-        # note that the SAC reference time values (including B and E) are
-        # not used in here any more, they are already set by t.fromarray
-        # and directly deduce from tr.starttime
-        for _i in sac_extra:
-            try:
-                t.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
-                pass
+    for i, trace in enumerate(stream):
+        t = SacIO(trace)
         if len(stream) != 1:
             filename = "%s%02d%s" % (base, i + 1, ext)
         t.WriteSacBinary(filename)
-        i += 1
+    return

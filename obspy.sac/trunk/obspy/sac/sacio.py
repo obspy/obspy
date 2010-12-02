@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, Trace
 import numpy as np
 import obspy.core
 import os
@@ -15,13 +15,72 @@ import string
 import time
 import warnings
 
+# avoid import statement overhead
+signal = False
+
 """
 An object-oriented version of C. J. Ammon's SAC I/O module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
 
-# avoid import statement overhead
-signal = False
+
+# we put here everything but the time, they are going to stats.starttime
+# left SAC attributes, right trace attributes, see also
+# http://www.iris.edu/KB/questions/13/SAC+file+format 
+convert_dict = {'npts': 'npts',
+                'delta': 'delta',
+                'kcmpnm': 'channel',
+                'kstnm': 'station',
+                'scale': 'calib',
+                'knetwk': 'network',
+                'khole': 'location'}
+
+# all the sac specific extras, the SAC reference time specific headers are
+# handled separately and are directly controlled by trace.stats.starttime.
+SAC_EXTRA = ('depmin', 'depmax', 'odelta', 'o', 'a', 't0', 't1', 't2', 't3',
+             't4', 't5', 't6', 't7', 't8', 't9', 'f', 'stla', 'stlo', 'stel',
+             'stdp', 'evla', 'evlo', 'evdp', 'mag', 'user0', 'user1', 'user2',
+             'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9',
+             'dist', 'az', 'baz', 'gcarc', 'depmen', 'cmpaz', 'cmpinc',
+             'nvhdr', 'norid', 'nevid', 'nwfid', 'iftype', 'idep', 'iztype',
+             'iinst', 'istreg', 'ievreg', 'ievtype', 'iqual', 'isynth',
+             'imagtyp', 'imagsrc', 'leven', 'lpspol', 'lovrok', 'lcalda',
+             'kevnm', 'ko', 'ka', 'kt0', 'kt1', 'kt2', 'kt3', 'kt4', 'kt5',
+             'kt6', 'kt7', 'kt8', 'kt9', 'kf', 'kuser0', 'kuser1', 'kuser2',
+             'kdatrd', 'kinst', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
+             'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9',
+             'unused10', 'unused11', 'unused12')
+
+FDICT = {'delta': 0, 'depmin': 1, 'depmax': 2, 'scale': 3,
+         'odelta': 4, 'b': 5, 'e': 6, 'o': 7, 'a': 8, 'int1': 9,
+         't0': 10, 't1': 11, 't2': 12, 't3': 13, 't4': 14,
+         't5': 15, 't6': 16, 't7': 17, 't8': 18, 't9': 19,
+         'f': 20, 'stla': 31, 'stlo': 32, 'stel': 33, 'stdp': 34,
+         'evla': 35, 'evlo': 36, 'evdp': 38, 'mag': 39,
+         'user0': 40, 'user1': 41, 'user2': 42, 'user3': 43,
+         'user4': 44, 'user5': 45, 'user6': 46, 'user7': 47,
+         'user8': 48, 'user9': 49, 'dist': 50, 'az': 51,
+         'baz': 52, 'gcarc': 53, 'depmen': 56, 'cmpaz': 57,
+         'cmpinc': 58, 'xminimum': 59, 'xmaximum': 60,
+         'yminimum': 61, 'ymaximum': 62, 'unused6': 63,
+         'unused7': 64, 'unused8': 65, 'unused9': 66,
+         'unused10': 67, 'unused11': 68, 'unused12': 69}
+
+IDICT = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
+         'nzsec': 4, 'nzmsec': 5, 'nvhdr': 6, 'norid': 7,
+         'nevid': 8, 'npts': 9, 'nwfid': 11,
+         'iftype': 15, 'idep': 16, 'iztype': 17, 'iinst': 19,
+         'istreg': 20, 'ievreg': 21, 'ievtype': 22, 'iqual': 23,
+         'isynth': 24, 'imagtyp': 25, 'imagsrc': 26,
+         'leven': 35, 'lpspol': 36, 'lovrok': 37,
+         'lcalda': 38}
+
+SDICT = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
+         'kt0': 5, 'kt1': 6, 'kt2': 7, 'kt3': 8, 'kt4': 9,
+         'kt5': 10, 'kt6': 11, 'kt7': 12, 'kt8': 13,
+         'kt9': 14, 'kf': 15, 'kuser0': 16, 'kuser1': 17,
+         'kuser2': 18, 'kcmpnm': 19, 'knetwk': 20,
+         'kdatrd': 21, 'kinst': 22}
 
 
 class SacError(Exception):
@@ -198,55 +257,23 @@ class SacIO(object):
     """
 
     def __init__(self, filen=False, headonly=False, alpha=False):
-        self.fdict = {'delta': 0, 'depmin': 1, 'depmax': 2, 'scale': 3,
-                      'odelta': 4, 'b': 5, 'e': 6, 'o': 7, 'a': 8, 'int1': 9,
-                      't0': 10, 't1': 11, 't2': 12, 't3': 13, 't4': 14,
-                      't5': 15, 't6': 16, 't7': 17, 't8': 18, 't9': 19,
-                      'f': 20, 'stla': 31, 'stlo': 32, 'stel': 33, 'stdp': 34,
-                      'evla': 35, 'evlo': 36, 'evdp': 38, 'mag': 39,
-                      'user0': 40, 'user1': 41, 'user2': 42, 'user3': 43,
-                      'user4': 44, 'user5': 45, 'user6': 46, 'user7': 47,
-                      'user8': 48, 'user9': 49, 'dist': 50, 'az': 51,
-                      'baz': 52, 'gcarc': 53, 'depmen': 56, 'cmpaz': 57,
-                      'cmpinc': 58, 'xminimum': 59, 'xmaximum': 60,
-                      'yminimum': 61, 'ymaximum': 62, 'unused6': 63,
-                      'unused7': 64, 'unused8': 65, 'unused9': 66,
-                      'unused10': 67, 'unused11': 68, 'unused12': 69}
-
-        self.idict = {'nzyear': 0, 'nzjday': 1, 'nzhour': 2, 'nzmin': 3,
-                      'nzsec': 4, 'nzmsec': 5, 'nvhdr': 6, 'norid': 7,
-                      'nevid': 8, 'npts': 9, 'nwfid': 11,
-                      'iftype': 15, 'idep': 16, 'iztype': 17, 'iinst': 19,
-                      'istreg': 20, 'ievreg': 21, 'ievtype': 22, 'iqual': 23,
-                      'isynth': 24, 'imagtyp': 25, 'imagsrc': 26,
-                      'leven': 35, 'lpspol': 36, 'lovrok': 37,
-                      'lcalda': 38}
-
-        self.sdict = {'kstnm': 0, 'kevnm': 1, 'khole': 2, 'ko': 3, 'ka': 4,
-                      'kt0': 5, 'kt1': 6, 'kt2': 7, 'kt3': 8, 'kt4': 9,
-                      'kt5': 10, 'kt6': 11, 'kt7': 12, 'kt8': 13,
-                      'kt9': 14, 'kf': 15, 'kuser0': 16, 'kuser1': 17,
-                      'kuser2': 18, 'kcmpnm': 19, 'knetwk': 20,
-                      'kdatrd': 21, 'kinst': 22}
         self.byteorder = 'little'
         self.InitArrays()
-        self.headonly = headonly
-        if filen:
-            if alpha:
-                self.__call__(filen, alpha=True)
-            else:
-                self.__call__(filen)
-
-    def __call__(self, filename, alpha=False):
+        if not filen:
+            return
+        # parse Trace object if we get one
+        if isinstance(filen, Trace):
+            self.readTrace(filen)
+            return
         if alpha:
-            if self.headonly:
-                self.ReadSacXYHeader(filename)
+            if headonly:
+                self.ReadSacXYHeader(filen)
             else:
-                self.ReadSacXY(filename)
-        elif self.headonly:
-            self.ReadSacHeader(filename)
+                self.ReadSacXY(filen)
+        elif headonly:
+            self.ReadSacHeader(filen)
         else:
-            self.ReadSacFile(filename)
+            self.ReadSacFile(filen)
 
     def InitArrays(self):
         """
@@ -346,14 +373,14 @@ class SacIO(object):
 
         """
         key = item.lower() # convert the item to lower case
-        if key in self.fdict:
-            index = self.fdict[key]
+        if key in FDICT:
+            index = FDICT[key]
             return(self.hf[index])
-        elif key in self.idict:
-            index = self.idict[key]
+        elif key in IDICT:
+            index = IDICT[key]
             return(self.hi[index])
-        elif key in self.sdict:
-            index = self.sdict[key]
+        elif key in SDICT:
+            index = SDICT[key]
             if index == 0:
                 myarray = self.hs[0]
             elif index == 1:
@@ -384,14 +411,14 @@ class SacIO(object):
         """
         key = item.lower() # convert the item to lower case
         #
-        if key in self.fdict:
-            index = self.fdict[key]
+        if key in FDICT:
+            index = FDICT[key]
             self.hf[index] = float(value)
-        elif key in self.idict:
-            index = self.idict[key]
+        elif key in IDICT:
+            index = IDICT[key]
             self.hi[index] = int(value)
-        elif key in self.sdict:
-            index = self.sdict[key]
+        elif key in SDICT:
+            index = SDICT[key]
             if value:
                 value = '%-8s' % value
             else:
@@ -655,7 +682,6 @@ class SacIO(object):
                 # because every string field has to be 8 characters long
                 # apart from the second field which is 16 characters long
                 # resulting in a total length of 192 characters
-                # XXX import ipdb;ipdb.set_trace()
                 for i in xrange(0, 24, 3):
                     self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                     f.readline() # strip the newline
@@ -739,6 +765,34 @@ class SacIO(object):
             except SacError:
                 pass
 
+    def readTrace(self, trace):
+        """
+        Fill in SacIO object with data from obspy trace.
+        Warning: Currently only the case of a previously empty SacIO object is
+        safe!
+        """
+        # extracting relative SAC time as specified with b
+        try:
+            b = float(trace.stats['sac']['b'])
+        except KeyError:
+            b = 0.0
+        # filling in SAC/sacio specific defaults
+        self.fromarray(trace.data, begin=b, delta=trace.stats.delta,
+                       starttime=trace.stats.starttime)
+        # overwriting with ObsPy defaults
+        for _j, _k in convert_dict.iteritems():
+            self.SetHvalue(_j, trace.stats[_k])
+        # overwriting up SAC specific values
+        # note that the SAC reference time values (including B and E) are
+        # not used in here any more, they are already set by t.fromarray
+        # and directly deduce from tr.starttime
+        for _i in SAC_EXTRA:
+            try:
+                self.SetHvalue(_i, trace.stats.sac[_i])
+            except KeyError:
+                pass
+        return
+
     def WriteSacXY(self, ofname):
         """
         Write SAC XY file (ascii)
@@ -761,7 +815,6 @@ class SacIO(object):
                            fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
                 np.savetxt(f, np.reshape(self.hi, (8, 5)),
                            fmt="%10d%10d%10d%10d%10d")
-                # XXX import ipdb;ipdb.set_trace()
                 for i in xrange(0, 24, 3):
                     self.hs[i:i + 3].tofile(f)
                     f.write('\n')
@@ -1166,6 +1219,42 @@ class SacIO(object):
         True
         """
         return self.GetHvalue(hname)
+
+    def get_obspy_header(self):
+        """
+        Return dictionary that can be used as header in creating a new obspy
+        trace object.
+        Currently most likely will raise if no SAC file was read beforehand!
+        """
+        header = {}
+        # convert common header types of the ObsPy trace object
+        for i, j in convert_dict.iteritems():
+            value = self.GetHvalue(i)
+            if isinstance(value, str):
+                value = value.strip()
+                if value == '-12345':
+                    value = ''
+            # fix for issue #156
+            if i == 'delta':
+                header['sampling_rate'] = np.float32(1.0) / np.float32(self.hf[0])
+            else:
+                header[j] = value
+        if header['calib'] == -12345.0:
+            header['calib'] = 1.0
+        # assign extra header types of SAC
+        header['sac'] = {}
+        for i in SAC_EXTRA:
+            header['sac'][i] = self.GetHvalue(i)
+        # convert time to UTCDateTime
+        header['starttime'] = self.starttime
+        # always add the begin time (if it's defined) to get the given
+        # SAC reference time, no matter which iztype is given
+        # note that the B and E times should not be in the SAC_EXTRA
+        # dictionary, as they would overwrite the self.fromarray which sets them
+        # according to the starttime, npts and delta.
+        header['sac']['b'] = float(self.GetHvalue('b'))
+        header['sac']['e'] = float(self.GetHvalue('e'))
+        return header
 
 
 class ReadSac(SacIO):
