@@ -245,7 +245,7 @@ class SacIOTestCase(unittest.TestCase):
                                              - 31.616988, decimal=6)
         self.assertEqual(len(tr.stats.paz['zeros']), 4)
 
-    def test_attach_paz_with_comments(self):
+    def test_attach_paz_diff_order(self):
         pazfile = os.path.join(os.path.dirname(__file__),
                                'data', 'NZCRLZ_HHZ10.pz')
         tr = Trace()
