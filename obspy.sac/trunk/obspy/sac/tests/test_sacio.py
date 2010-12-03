@@ -245,6 +245,17 @@ class SacIOTestCase(unittest.TestCase):
                                              - 31.616988, decimal=6)
         self.assertEqual(len(tr.stats.paz['zeros']), 4)
 
+    def test_attach_paz_with_comments(self):
+        pazfile = os.path.join(os.path.dirname(__file__),
+                               'data', 'NZCRLZ_HHZ10.pz')
+        tr = Trace()
+        attach_paz(tr, pazfile)
+        np.testing.assert_array_almost_equal(tr.stats.paz['gain'],
+                                             7.4592e-2, decimal=6)
+        self.assertEqual(len(tr.stats.paz['zeros']), 5)
+        self.assertEqual(len(tr.stats.paz['poles']), 4)
+        
+       
     def test_sacpaz_from_dataless(self):
         ### The following dictionary is extracted from a datalessSEED
         ### file

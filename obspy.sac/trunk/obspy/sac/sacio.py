@@ -1335,7 +1335,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             for _k in xrange(noz):
                 line = paz_file.readline()
                 a = line.split()
-                if line.find('POLES') != -1:
+                if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or line.startswith('*') or not line:
                     while len(zeros) < noz:
                         zeros.append(complex(0, 0j))
                     break
@@ -1348,7 +1348,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             for _k in xrange(nop):
                 line = paz_file.readline()
                 a = line.split()
-                if line.find('CONSTANT') != -1:
+                if line.find('CONSTANT') != -1  or line.find('ZEROS') != -1 or line.startswith('*') or not line:
                     while len(poles) < nop:
                         poles.append(complex(0, 0j))
                     break
@@ -1359,7 +1359,6 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             # in the observatory this is the seismometer gain [muVolt/nm/s]
             # the A0_normalization_factor is hardcoded to 1.0
             constant = float(a[1])
-            break
     paz_file.close()
 
     ### To convert the velocity response to the displacement response,
