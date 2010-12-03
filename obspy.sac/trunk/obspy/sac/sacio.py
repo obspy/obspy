@@ -696,7 +696,7 @@ class SacIO(object):
             try:
                 self._get_date_()
             except SacError:
-                print 'Cannot determine date'
+                warnings.warn('Cannot determine date')
             if self.GetHvalue('lcalda'):
                 try:
                     self._get_dist_()
