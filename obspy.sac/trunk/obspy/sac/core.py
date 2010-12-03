@@ -130,7 +130,7 @@ def readSACXY(filename, headonly=False, **kwargs):
         t.ReadSacXYHeader(filename)
     else:
         t.ReadSacXY(filename)
-    # assign all header entries to a new dictionary compatible with an ObsPy
+    # assign all header entries to a new dictionary compatible with ObsPy
     header = t.get_obspy_header()
 
     if headonly:

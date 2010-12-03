@@ -696,7 +696,7 @@ class SacIO(object):
             try:
                 self._get_date_()
             except SacError:
-                pass
+                print 'Cannot determine date'
             if self.GetHvalue('lcalda'):
                 try:
                     self._get_dist_()
@@ -746,6 +746,7 @@ class SacIO(object):
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline() # strip the newline
+            print self.hf, self.hi, self.hs
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
@@ -1117,6 +1118,11 @@ class SacIO(object):
         except:
             try:
                 self.reftime = UTCDateTime(0.0)
+                b = float(self.GetHvalue('b'))
+                if b != -12345.0:
+                    self.starttime = self.reftime + b
+                else:
+                    self.starttime = self.reftime
                 self.endtime = self.reftime + \
                     self.GetHvalue('npts') * float(self.GetHvalue('delta'))
             except:
@@ -1222,9 +1228,9 @@ class SacIO(object):
 
     def get_obspy_header(self):
         """
-        Return dictionary that can be used as header in creating a new obspy
+        Return a dictionary that can be used as a header in creating a new obspy
         trace object.
-        Currently most likely will raise if no SAC file was read beforehand!
+        Currently most likely an Exception will be raised if no SAC file was read beforehand!
         """
         header = {}
         # convert common header types of the ObsPy trace object
