@@ -345,7 +345,7 @@ class SacIO(object):
         self.SetHvalue('npts', len(trace))
         self.SetHvalue('delta', delta)
         self.SetHvalue('b', begin)
-        self.SetHvalue('e', begin + len(trace) * delta)
+        self.SetHvalue('e', begin + (len(trace) - 1) * delta)
         self.SetHvalue('iztype', 9)
         self.SetHvalue('dist', distkm)
 
