@@ -53,6 +53,7 @@ class CoreTestCase(unittest.TestCase):
         tr.write(tempfile, format='SAC')
         tr1 = read(tempfile)[0]
         os.remove(tempfile)
+        #import ipdb;ipdb.set_trace()
         self.assertTrue(tr == tr1)
 
     def test_readXYwriteXYViaObspy(self):
@@ -64,6 +65,7 @@ class CoreTestCase(unittest.TestCase):
         tr.write(tempfile, format='SACXY')
         tr1 = read(tempfile)[0]
         os.remove(tempfile)
+        #import ipdb;ipdb.set_trace()
         self.assertTrue(tr == tr1)
 
     def test_readwriteXYViaObspy(self):
@@ -163,12 +165,13 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.get('nvhdr'), tr.stats.sac.get('nvhdr'))
         np.testing.assert_equal(tr.data, tr3.data)
 
-    def test_convertMseed2Sac(self):
+    def test_convert2Sac(self):
         """
         Test that an mseed file is correctly written to SAC.
         All the header variables which are tagged as required by
         http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
         are controlled in this test
+        also see http://www.iris.edu/software/sac/manual/file_format.html
         """
         # setUp is called before every test, not only once at the
         # beginning, that is we allocate the data just here
@@ -176,27 +179,28 @@ class CoreTestCase(unittest.TestCase):
         np.random.seed(815)
         head = {'network': 'NL', 'station': 'HGN', 'location': '00',
                 'channel': 'BHZ', 'calib': 1.0, 'sampling_rate': 40.0,
-                'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400),
-                'mseed': {'dataquality': 'R'}}
+                'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400)}
+                # XXX was never used: 'mseed': {'dataquality': 'R'}}
         data = np.random.randint(0, 5000, 11947).astype("int32")
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
         tmpfile = NamedTemporaryFile().name
         st.write(tmpfile, format="SAC")
         st2 = read(tmpfile, format="SAC")
+        # file must exist, we just created it
+        os.remove(tmpfile)
         # check all the required entries (see url in docstring)
+        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertEqual(st2[0].stats.npts, st[0].stats.npts)
         self.assertEqual(st2[0].stats.sac.nvhdr, 6)
         self.assertEqual(st2[0].stats.sac.b, 0.0)
         # compare with correct digit size (nachkommastellen)
-        self.assertAlmostEqual((0.0 + st[0].stats.npts * \
+        self.assertAlmostEqual((0.0 + (st[0].stats.npts - 1)  * \
                                st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
         self.assertEqual(st2[0].stats.sac.iftype, 1)
         self.assertEqual(st2[0].stats.sac.leven, 1)
         self.assertAlmostEqual(st2[0].stats.sampling_rate / \
                                st[0].stats.sampling_rate, 1.0)
-        # file must exist, we just created it
-        os.remove(tmpfile)
 
     def test_iztype11(self):
         # test that iztype 11 is read correctly
