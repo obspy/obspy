@@ -198,7 +198,7 @@ from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
 from util import utlGeoKm, utlLonLat
-from xcorr import xcorr, xcorr_3C
+from cross_correlation import xcorr, xcorr_3C
 from freqattributes import cfrequency, bwith, domperiod, logcep
 from hoctavbands import sonogram
 from polarization import eigval

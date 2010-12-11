@@ -189,9 +189,8 @@ def rdct(x, n=0):
 # XXX Making sure that the functions that got transferred to submodule xcorr.py
 # can still be imported from obspy.signal.util.
 # Showing a DeprecationWarning if they are used.
-_xcorr = __import__("obspy.signal.xcorr", fromlist="obspy")
-msg = "Deprecated import. Please import from 'obspy.signal.xcorr' or " + \
-      "directly from 'obspy.signal' instead."
+_xcorr = __import__("obspy.signal.cross_correlation", fromlist="obspy")
+msg = "Deprecated import. Please import directly from 'obspy.signal' instead."
 xcorr = deprecated(_xcorr.xcorr, msg)
 xcorr_3C = deprecated(_xcorr.xcorr_3C, msg)
 xcorr_max = deprecated(_xcorr.xcorr_max, msg)

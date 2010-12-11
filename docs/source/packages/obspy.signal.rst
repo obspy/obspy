@@ -31,7 +31,7 @@
         ~array_analysis.sonic
         ~util.utlGeoKm
         ~util.utlLonLat
-        ~util.xcorr
+        ~cross_correlation.xcorr
         ~trigger.zdetect
 
     .. comment to end block
@@ -53,3 +53,4 @@
         hoctavbands
         freqattributes
         array_analysis
+        cross_correlation
