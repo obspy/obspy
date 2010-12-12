@@ -325,6 +325,7 @@ class CoreTestCase(unittest.TestCase):
         sac_file = NamedTemporaryFile().name
         tr1.write(sac_file, 'SAC')
         tr2 = read(sac_file)[0]
+        os.remove(sac_file)
         for i, header_value in enumerate(not_used):
             self.assertEquals(int(tr2.stats.sac[header_value]), i)
         
