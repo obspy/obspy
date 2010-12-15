@@ -53,13 +53,12 @@ class CoreTestCase(unittest.TestCase):
         tr.write(tempfile, format='SAC')
         tr1 = read(tempfile)[0]
         os.remove(tempfile)
-        #import ipdb;ipdb.set_trace()
         np.testing.assert_array_equal(tr.data, tr1.data)
-        ## this tests failed because SAC calculates the seismogram's
-        ## mean value in single precision and python in double
-        ## precision resulting in different values. The following line
-        ## is therefore just a fix until we have come to a conclusive
-        ## solution how to handle the two different approaches
+        # this tests failed because SAC calculates the seismogram's
+        # mean value in single precision and python in double
+        # precision resulting in different values. The following line
+        # is therefore just a fix until we have come to a conclusive
+        # solution how to handle the two different approaches
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen'] 
         self.assertTrue(tr == tr1)
 
@@ -174,7 +173,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_convert2Sac(self):
         """
-        Test that an mseed file is correctly written to SAC.
+        Test that an obspy trace is correctly written to SAC.
         All the header variables which are tagged as required by
         http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
         are controlled in this test
@@ -187,7 +186,6 @@ class CoreTestCase(unittest.TestCase):
         head = {'network': 'NL', 'station': 'HGN', 'location': '00',
                 'channel': 'BHZ', 'calib': 1.0, 'sampling_rate': 40.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400)}
-                # XXX was never used: 'mseed': {'dataquality': 'R'}}
         data = np.random.randint(0, 5000, 11947).astype("int32")
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
@@ -200,9 +198,9 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertEqual(st2[0].stats.npts, st[0].stats.npts)
         self.assertEqual(st2[0].stats.sac.nvhdr, 6)
-        self.assertEqual(st2[0].stats.sac.b, 0.0)
+        self.assertAlmostEqual(st2[0].stats.sac.b, 0.000400)
         # compare with correct digit size (nachkommastellen)
-        self.assertAlmostEqual((0.0 + (st[0].stats.npts - 1)  * \
+        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1)  * \
                                st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
         self.assertEqual(st2[0].stats.sac.iftype, 1)
         self.assertEqual(st2[0].stats.sac.leven, 1)
@@ -336,6 +334,26 @@ class CoreTestCase(unittest.TestCase):
         for i, header_value in enumerate(not_used):
             self.assertEquals(int(tr2.stats.sac[header_value]), i)
         
+    def test_notUsedButGivenHeaders(self):
+        """
+        Test case for #194. Check that microseconds are written to
+        the SAC header b
+        """
+        np.random.seed(815)
+        head = {'network': 'NL', 'station': 'HGN', 'channel': 'BHZ', 
+                'sampling_rate': 200.0,
+                'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 999999)}
+        data = np.random.randint(0, 5000, 100).astype("int32")
+        st = Stream([Trace(header=head, data=data)])
+        # write them as SAC
+        tmpfile = NamedTemporaryFile().name
+        st.write(tmpfile, format="SAC")
+        st2 = read(tmpfile, format="SAC")
+        # file must exist, we just created it
+        os.remove(tmpfile)
+        # check all the required entries (see url in docstring)
+        self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
+        self.assertAlmostEqual(st2[0].stats.sac.b, 0.000999)
 
 
 def suite():

@@ -324,7 +324,12 @@ class SacIO(object):
             reftime = starttime
         else:
             reftime = starttime - begin
-        ### set a few values that are required to create a valid SAC-file
+        # if there are any micro-seconds, use begin to store them
+        micro_str = "%06d" % reftime.microsecond
+        millisecond = int(micro_str[:3])
+        if micro_str[3:] != '000':
+            begin += float('0.000%s' % micro_str[3:])
+        # set a few values that are required to create a valid SAC-file
         self.SetHvalue('int1', 2)
         self.SetHvalue('cmpaz', 0)
         self.SetHvalue('cmpinc', 0)
@@ -337,7 +342,7 @@ class SacIO(object):
         self.SetHvalue('nzhour', reftime.hour)
         self.SetHvalue('nzmin', reftime.minute)
         self.SetHvalue('nzsec', reftime.second)
-        self.SetHvalue('nzmsec', reftime.microsecond / 1e3)
+        self.SetHvalue('nzmsec', millisecond)
         self.SetHvalue('kcmpnm', 'Z')
         self.SetHvalue('evla', 0)
         self.SetHvalue('evlo', 0)
@@ -746,7 +751,6 @@ class SacIO(object):
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline() # strip the newline
-            print self.hf, self.hi, self.hs
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
