@@ -334,7 +334,7 @@ class CoreTestCase(unittest.TestCase):
         for i, header_value in enumerate(not_used):
             self.assertEquals(int(tr2.stats.sac[header_value]), i)
         
-    def test_notUsedButGivenHeaders(self):
+    def test_writingMicroSeconds(self):
         """
         Test case for #194. Check that microseconds are written to
         the SAC header b
