@@ -4,7 +4,8 @@
 The Rotate test suite.
 """
 
-from obspy.signal import rotate_NE_RT, gps2DistAzimuth
+from obspy.signal import rotate_NE_RT, gps2DistAzimuth, rotate_ZNE_LQT, \
+        rotate_LQT_ZNE
 import inspect
 import os
 import unittest
@@ -66,6 +67,36 @@ class RotateTestCase(unittest.TestCase):
             #show()
             #print "RMS misfit:",rms
             self.assertEqual(rms < 1.0e-5, True)
+
+    def test_rotate_ZNE_LQT(self):
+        """
+        Test 3-component rotation with some simple examples.
+        """
+        c = 0.5 * 3 ** 0.5
+        z, n, e = N.array([1., 2.4]), N.array([0.3, -0.7]), N.array([-0.2, 0.])
+        ba_inc_l_q_t = ((180, 0, z, n, -e),
+                        (0, 0, z, -n, e),
+                        (180, 90, n, -z, -e),
+                        (270, 0, z, e, n),
+                        (30, 30, z * c - n * c / 2 - e / 4,
+                         - z / 2 - n * c ** 2 - e * c / 2, - n / 2 + e * c),
+                        (180, 180, -z, -n, -e),
+                        (270, 270, -e, z, n))
+        for ba, inc, l, q, t in ba_inc_l_q_t:
+            l2, q2, t2 = rotate_ZNE_LQT(z, n, e, ba, inc)
+            z2, n2, e2 = rotate_LQT_ZNE(l, q, t, ba, inc)
+            # calculate normalized rms
+            rms  = N.sqrt(N.sum((l2 - l) ** 2) / N.sum(l ** 2))
+            rms += N.sqrt(N.sum((q2 - q) ** 2) / N.sum(q ** 2))
+            rms += N.sqrt(N.sum((t2 - t) ** 2) / N.sum(t ** 2))
+            rms /= 3.
+            rms2  = N.sqrt(N.sum((z2 - z) ** 2) / N.sum(z ** 2))
+            rms2 += N.sqrt(N.sum((n2 - n) ** 2) / N.sum(n ** 2))
+            rms2 += N.sqrt(N.sum((e2 - e) ** 2) / N.sum(e ** 2))
+            rms2 /= 3.            
+            self.assertEqual(rms < 1.0e-5, True)
+            self.assertEqual(rms2 < 1.0e-5, True)
+
 
     def test_gps2DistAzimuth(self):
         """

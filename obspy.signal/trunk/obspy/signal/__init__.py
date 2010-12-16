@@ -190,7 +190,7 @@ from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
 # import the depreciated ones
 from filter import bandpassZPHSH, bandstopZPHSH, lowpassZPHSH, highpassZPHSH
-from rotate import rotate_NE_RT, gps2DistAzimuth
+from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
         delayedStaLta, zdetect, triggerOnset, pkBaer, arPick
 from seismometer import PAZ_WOOD_ANDERSON
