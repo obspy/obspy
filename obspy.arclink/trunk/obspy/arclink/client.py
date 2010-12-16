@@ -78,7 +78,7 @@ class Client(Telnet):
     status_delay = 0.1
 
     def __init__(self, host="webdc.eu", port=18002, timeout=20,
-                 user="Anonymous", password="", institution="Anonymous",
+                 user="ObsPy client", password="", institution="Anonymous",
                  debug=False, command_delay=0):
         """
         """
@@ -86,6 +86,8 @@ class Client(Telnet):
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
+        self.init_host = host
+        self.init_port = port
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
@@ -139,14 +141,22 @@ class Client(Telnet):
                                  station=request_data[3],
                                  starttime=request_data[0],
                                  endtime=request_data[1])
+        # check if route for network and station combination exists
         id = request_data[2] + '.' + request_data[3]
         if id in routes.keys() and routes[id] == []:
-            # we are at the responsible ArcLink node
+            # we are at the responsible ArcLink node 
             return self._request(request_type, request_data)
+        # check if route for network exists
         id = request_data[2] + '.'
         if id not in routes.keys():
+            # retry first ArcLink node if host and port have been changed
+            if self.host != self.init_host and self.port != self.init_port:
+                self.host = self.init_host
+                self.port = self.init_port
+                return self._fetch(request_type, request_data, route)
             msg = 'Could not find route to %s.%s'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
+        # route for network id exists
         routes = routes[id]
         routes.sort(lambda x, y: cmp(x['priority'], y['priority']))
         for route in routes:
@@ -616,8 +626,6 @@ class Client(Telnet):
 
         Parameters
         ----------
-        filename : string
-            Name of the output file.
         network : string
             Network code, e.g. 'BW'.
         station : string
@@ -642,9 +650,8 @@ class Client(Telnet):
         rtype = 'REQUEST INVENTORY '
         if instruments:
             rtype += 'instruments=true '
-        # adding one second to start and end time to ensure right date times
-        rdata = [starttime, endtime, network, station, channel, location]
         # fetch plain XML document
+        rdata = [starttime, endtime, network, station, channel, location]
         result = self._fetch(rtype, rdata, route=route)
         # parse XML document
         xml_doc = etree.fromstring(result)
@@ -845,12 +852,12 @@ class Client(Telnet):
 
         Parameters
         ----------
-        network : string
-            Network code, e.g. 'BW'.
         starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             Start date and time.
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
+        network : string
+            Network code, e.g. 'BW'.
 
         Returns
         -------

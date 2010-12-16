@@ -193,6 +193,19 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(channel[2].endtime, None)
         self.assertEquals(channel[2].gain, 588000000.0)
 
+    def test_getInventoryTwice(self):
+        """
+        Requesting inventory data twice should not fail.
+        """
+        client = Client()
+        dt = UTCDateTime(2009, 1, 1)
+        # station
+        client.getInventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
+        client.getInventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
+        # network
+        client.getInventory('BW', starttime=dt, endtime=dt + 1)
+        client.getInventory('BW', starttime=dt, endtime=dt + 1)
+
     def test_getWaveformWithMetadata(self):
         """
         """
