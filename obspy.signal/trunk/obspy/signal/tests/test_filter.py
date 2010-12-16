@@ -10,7 +10,7 @@ import inspect
 import os
 import unittest
 import gzip
-import numpy as N
+import numpy as np
 
 
 class FilterTestCase(unittest.TestCase):
@@ -35,7 +35,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -47,11 +47,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_bandpass.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
-                     N.sum(data_pitsa ** 2))
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+                      np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_bandpassZPHSHVsPitsa(self):
@@ -69,7 +69,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -82,11 +82,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
-                     N.sum(data_pitsa[:-200] ** 2))
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+                      np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_lowpassVsPitsa(self):
@@ -99,7 +99,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -110,11 +110,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) /
-                     N.sum(data_pitsa ** 2))
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
+                      np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_lowpassZPHSHVsPitsa(self):
@@ -132,7 +132,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -144,11 +144,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
-                     N.sum(data_pitsa[:-200] ** 2))
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+                      np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_highpassVsPitsa(self):
@@ -161,7 +161,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -172,11 +172,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_highpass.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
-                     N.sum(data_pitsa ** 2))
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+                      np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_highpassZPHSHVsPitsa(self):
@@ -194,7 +194,7 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # parameters for the test
         samp_rate = 200.0
@@ -206,11 +206,11 @@ class FilterTestCase(unittest.TestCase):
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
-                     N.sum(data_pitsa[:-200] ** 2))
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+                      np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
     def test_envelopeVsPitsa(self):
@@ -221,18 +221,18 @@ class FilterTestCase(unittest.TestCase):
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
         f = gzip.open(file)
-        data = N.loadtxt(f)
+        data = np.loadtxt(f)
         f.close()
         # filter trace
         datcorr = envelope(data)
         # load pitsa file
         file = os.path.join(self.path, 'rjob_20051006_envelope.gz')
         f = gzip.open(file)
-        data_pitsa = N.loadtxt(f)
+        data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = N.sqrt(N.sum((datcorr - data_pitsa) ** 2) / \
-                     N.sum(data_pitsa ** 2))
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+                      np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
 
 

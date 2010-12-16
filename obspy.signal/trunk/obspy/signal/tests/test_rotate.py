@@ -10,7 +10,7 @@ import inspect
 import os
 import unittest
 import gzip
-import numpy as N
+import numpy as np
 
 
 class RotateTestCase(unittest.TestCase):
@@ -32,11 +32,11 @@ class RotateTestCase(unittest.TestCase):
         # load test files
         file = os.path.join(self.path, 'rjob_20051006_n.gz')
         f = gzip.open(file)
-        data_n = N.loadtxt(f)
+        data_n = np.loadtxt(f)
         f.close()
         file = os.path.join(self.path, 'rjob_20051006_e.gz')
         f = gzip.open(file)
-        data_e = N.loadtxt(f)
+        data_e = np.loadtxt(f)
         f.close()
         #test different angles, one from each sector
         for angle in [30, 115, 185, 305]:
@@ -45,17 +45,17 @@ class RotateTestCase(unittest.TestCase):
             # load pitsa files
             file = os.path.join(self.path, 'rjob_20051006_r_%sdeg.gz' % angle)
             f = gzip.open(file)
-            data_pitsa_r = N.loadtxt(f)
+            data_pitsa_r = np.loadtxt(f)
             f.close()
             file = os.path.join(self.path, 'rjob_20051006_t_%sdeg.gz' % angle)
             f = gzip.open(file)
-            data_pitsa_t = N.loadtxt(f)
+            data_pitsa_t = np.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = N.sqrt(N.sum((datcorr_r - data_pitsa_r) ** 2) /
-                         N.sum(data_pitsa_r ** 2))
-            rms += N.sqrt(N.sum((datcorr_t - data_pitsa_t) ** 2) /
-                          N.sum(data_pitsa_t ** 2))
+            rms = np.sqrt(np.sum((datcorr_r - data_pitsa_r) ** 2) /
+                          np.sum(data_pitsa_r ** 2))
+            rms += np.sqrt(np.sum((datcorr_t - data_pitsa_t) ** 2) /
+                           np.sum(data_pitsa_t ** 2))
             rms /= 2.0
             #from pylab import figure,plot,legend,show
             #figure()
@@ -73,7 +73,7 @@ class RotateTestCase(unittest.TestCase):
         Test 3-component rotation with some simple examples.
         """
         c = 0.5 * 3 ** 0.5
-        z, n, e = N.array([1., 2.4]), N.array([0.3, -0.7]), N.array([-0.2, 0.])
+        z, n, e = np.array([1., 2.4]), np.array([0.3, -0.7]), np.array([-0.2, 0.])
         ba_inc_l_q_t = ((180, 0, z, n, -e),
                         (0, 0, z, -n, e),
                         (180, 90, n, -z, -e),
@@ -86,13 +86,13 @@ class RotateTestCase(unittest.TestCase):
             l2, q2, t2 = rotate_ZNE_LQT(z, n, e, ba, inc)
             z2, n2, e2 = rotate_LQT_ZNE(l, q, t, ba, inc)
             # calculate normalized rms
-            rms  = N.sqrt(N.sum((l2 - l) ** 2) / N.sum(l ** 2))
-            rms += N.sqrt(N.sum((q2 - q) ** 2) / N.sum(q ** 2))
-            rms += N.sqrt(N.sum((t2 - t) ** 2) / N.sum(t ** 2))
+            rms  = np.sqrt(np.sum((l2 - l) ** 2) / np.sum(l ** 2))
+            rms += np.sqrt(np.sum((q2 - q) ** 2) / np.sum(q ** 2))
+            rms += np.sqrt(np.sum((t2 - t) ** 2) / np.sum(t ** 2))
             rms /= 3.
-            rms2  = N.sqrt(N.sum((z2 - z) ** 2) / N.sum(z ** 2))
-            rms2 += N.sqrt(N.sum((n2 - n) ** 2) / N.sum(n ** 2))
-            rms2 += N.sqrt(N.sum((e2 - e) ** 2) / N.sum(e ** 2))
+            rms2  = np.sqrt(np.sum((z2 - z) ** 2) / np.sum(z ** 2))
+            rms2 += np.sqrt(np.sum((n2 - n) ** 2) / np.sum(n ** 2))
+            rms2 += np.sqrt(np.sum((e2 - e) ** 2) / np.sum(e ** 2))
             rms2 /= 3.            
             self.assertEqual(rms < 1.0e-5, True)
             self.assertEqual(rms2 < 1.0e-5, True)
