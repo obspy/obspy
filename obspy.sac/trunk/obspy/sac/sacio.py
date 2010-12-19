@@ -325,10 +325,10 @@ class SacIO(object):
         else:
             reftime = starttime - begin
         # if there are any micro-seconds, use begin to store them
-        micro_str = "%06d" % reftime.microsecond
-        millisecond = int(micro_str[:3])
-        if micro_str[3:] != '000':
-            begin += float('0.000%s' % micro_str[3:])
+        millisecond = reftime.microsecond // 1000                # integer arithmetic
+        microsecond = (reftime.microsecond - millisecond * 1000) # integer arithmetic
+        if microsecond != 0:
+            begin += microsecond * 1e-6
         # set a few values that are required to create a valid SAC-file
         self.SetHvalue('int1', 2)
         self.SetHvalue('cmpaz', 0)
