@@ -170,7 +170,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
         formats_write = set(_getPlugins('obspy.plugin.waveform', 'writeFormat'))
         formats_read = set(_getPlugins('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
-        data = np.arange(10)
+        # mseed will raise exception for int64 data, thus use int32 only
+        data = np.arange(10, dtype='int32')
         # make array non-contiguous
         data = data[::2]
         tr = Trace(data=data)
