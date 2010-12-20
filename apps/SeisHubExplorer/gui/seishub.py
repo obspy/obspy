@@ -71,8 +71,20 @@ class Seishub(object):
                     (network, station, location, channel)
             print ' * from %s-%s' % (starttime, endtime)
             print ' * SeisHub Server = %s' % self.server
-        stream = self.client.waveform.getPreview(network, station, location, channel,
-                                      starttime, endtime)
+        try:
+            stream = self.client.waveform.getPreview(network, station,
+                                         location, channel, starttime, endtime)
+        # Catch the server errors and return None to indicate that no Stream
+        # could be retrieved.
+        except urllib2.HTTPError, e:
+            msg = '%s while trying to retrieve %s.%s.%s.%s' % (str(e),
+                           network, station, location, channel)
+            print msg
+            # Show the message in the Status Bar for 10 Seconds maximum.
+            self.env.st.showMessage(msg, 10000)
+            # Create an emtpy Stream object.
+            return None
+
         if self.env.debug:
             print ''
             print ' * Received from Seishub:'

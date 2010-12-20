@@ -213,7 +213,9 @@ class WaveformHandler(object):
         """
         stream = self.env.seishub.getPreview(network, station, location,
                  channel, starttime, endtime)
-        if not len(stream):
+        # None will be returned if some server error prevented the preview from
+        # getting retrieved. Also do not show empty Stream object.
+        if stream is None or not len(stream):
             return None
         # It will always return exactly one Trace. Make sure the data is in
         # float32.
