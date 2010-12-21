@@ -285,7 +285,8 @@ def logcep(data, fs, nc, p, n, w):
     :return z: Cepstral coefficients.
     """
     dataT = np.transpose(data)
-    fc = fftpack.fft(dataT, 256, 0)
+    nfft = util.nextpow2(dataT.shape[1]) 
+    fc = fftpack.fft(dataT, nfft, 0)
     f = fc[1:len(fc) / 2 + 1, :]
     m, a, b = logbankm(p, n, fs, w)
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))

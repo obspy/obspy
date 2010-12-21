@@ -67,7 +67,7 @@ def eigval(datax, datay, dataz, fk, normf=1):
     leigenv1 = leigenv1 / normf
     leigenv2 = leigenv2 / normf
     leigenv3 = leigenv3 / normf
-    
+   
     leigenv1_add = np.append(np.append([leigenv1[0]] * (np.size(fk) / 2),
            leigenv1), [leigenv1[np.size(leigenv1) - 1]] * (np.size(fk) / 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
