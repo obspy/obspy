@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from lxml.etree import Element, SubElement, parse as xmlparse
 from lxml.etree import tostring
+
 
 class ChannelListParser(object):
     """

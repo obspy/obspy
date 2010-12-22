@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from main_window import MainWindow
 from environment import Environment
 from waveforms import Waveforms

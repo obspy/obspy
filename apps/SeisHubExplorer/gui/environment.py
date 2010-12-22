@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore
 from obspy.core import UTCDateTime
 import os
@@ -6,6 +8,7 @@ from waveform_handler import WaveformHandler
 from channel_lists import ChannelListParser
 from event_db import EventDB
 from config import DBConfigParser
+
 
 class Environment(object):
     """
@@ -49,8 +52,8 @@ class Environment(object):
         # Set the maximum zoom level in seconds. Add +1 just to be sure it
         # works.
         # XXX: Not yet dynamically adjusted.
-        self.maximum_zoom_level = self.preview_delta * (self.detail+1)
-        
+        self.maximum_zoom_level = self.preview_delta * (self.detail + 1)
+
         # SQLite event database file.
         self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
                                                 'events.db'))

@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import with_statement
 
 from ConfigParser import RawConfigParser, DEFAULTSECT
 from obspy.core import UTCDateTime
 import os
 import sys
+
 
 class DBConfigParser(RawConfigParser):
     """
@@ -91,7 +94,7 @@ class DBConfigParser(RawConfigParser):
         # Read and set all values. Use a try/except construction for everything
         # to write them if they are not set.
         self.getOrSetDefault('Server', 'Seishub Server', 'seishub_server',
-                             'http://teide:8080',
+                             'http://teide.geophysik.uni-muenchen.de:8080',
                              comment='The address of the SeisHub server.')
         self.getOrSetDefault('Server', 'Password', 'seishub_password',
                              'dbviewer',
@@ -100,7 +103,7 @@ class DBConfigParser(RawConfigParser):
                              'dbviewer',
                              comment='The user for the SeisHub server.')
         self.getOrSetDefault('Server', 'Timeout', 'seishub_timeout',
-                             10, value_type = 'int',
+                             10, value_type='int',
                              comment='The timeout in seconds for the SeisHub server.')
         self.getOrSetDefault('Files and Directories', 'Cache Directory', 'cache_dir',
                  os.path.join(self.env.home_dir, 'cache'),
@@ -118,7 +121,7 @@ class DBConfigParser(RawConfigParser):
         self.env.endtime = self.parseTimes(self.env.endtime) + 86399
         # Debug mode.
         self.getOrSetDefault('General Settings', 'Debug', 'debug', False,
-                 value_type = 'boolean',
+                 value_type='boolean',
                  comment='Debugging messages True/False')
         # Force software rendering.
         comment = 'OpenGL is not supported on all machines and the program might crash right after the initial splash screen. Set this to True to enforce software rendering which is slower but works in any case.'
@@ -150,7 +153,7 @@ class DBConfigParser(RawConfigParser):
         self.getOrSetDefault('Picker',
                  'System call command',
                  'picker_command', 'obspyck.py -t $starttime$ -d $duration$ -i $channels$',
-                 comment= 'System call command for the picker, e.g. obspyck.py -t $starttime$ -d $duration$ -i $channels$ (everything enclosed in $ symbols will be replaced with the corresponding variable. Available are starttime, endtime, duration (in seconds), channels)')
+                 comment='System call command for the picker, e.g. obspyck.py -t $starttime$ -d $duration$ -i $channels$ (everything enclosed in $ symbols will be replaced with the corresponding variable. Available are starttime, endtime, duration (in seconds), channels)')
         self.getOrSetDefault('Picker', 'Time format', 'picker_strftime',
                  '%Y-%m-%dT%H:%M:%S',
                  comment='Format for start- and endtime in strftime notation.')

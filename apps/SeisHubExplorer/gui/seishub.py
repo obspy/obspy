@@ -1,17 +1,16 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from obspy.core import read, Stream, UTCDateTime
 from obspy.seishub import Client
+
 import base64
 import os
 import lxml
 from lxml.etree import parse
-from glob import glob
 import pickle
-import time
 import urllib2
 from StringIO import StringIO
+
 
 class Seishub(object):
     """
@@ -147,11 +146,11 @@ class Seishub(object):
             if not key:
                 continue
             self.networks[key] = {}
-            stations = self.client.waveform.getStationIds(network_id=key)
+            stations = self.client.waveform.getStationIds(network=key)
             station_count = len(stations)
             for _i, station in enumerate(stations):
                 msg = 'Loading Network[%i/%i]/Station[%i/%i]:  %s.%s' % (_j + 1,
-                             network_count, _i+1, station_count, key, station)
+                             network_count, _i + 1, station_count, key, station)
                 self.env.setSplash(msg)
                 if not station:
                     continue
@@ -175,12 +174,12 @@ class Seishub(object):
                 else:
                     self.networks[key][station]['info'] = {}
                 # Get locations.
-                locations = self.client.waveform.getLocationIds(network_id=key,
-                                                        station_id=station)
+                locations = self.client.waveform.getLocationIds(network=key,
+                                                            station=station)
                 for location in locations:
                     channels = self.client.waveform.getChannelIds(\
-                        network_id=key , station_id=station,
-                        location_id=location)
+                        network=key , station=station,
+                        location=location)
                     self.networks[key][station][location] = [channels]
         # Add current date to Dictionary.
         self.networks['Date'] = UTCDateTime()

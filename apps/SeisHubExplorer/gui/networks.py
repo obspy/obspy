@@ -1,6 +1,8 @@
-from PyQt4 import QtCore, QtGui, QtWebKit
-import os
+# -*- coding: utf-8 -*-
+
+from PyQt4 import QtCore, QtGui
 import pickle
+
 
 class TreeItem(object):
     """
@@ -141,13 +143,13 @@ class TreeModel(QtCore.QAbstractItemModel):
         item = index.internalPointer()
 
         if not index.isValid():
-	    return QtCore.QVariant()
+            return QtCore.QVariant()
 
         if role == QtCore.Qt.ToolTipRole:
             return QtCore.QVariant(item.tooltip())
 
         if role != QtCore.Qt.DisplayRole:
-	    return QtCore.QVariant()
+            return QtCore.QVariant()
 
         return QtCore.QVariant(item.data(index.column()))
 
@@ -257,7 +259,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                         ch_signal = st_child.child(st_child.childCount() - 1)
         # Also fill it with the channel lists.
         parent.appendChild(TreeItem(('Groups'), 'Plot serveral channels.', parent))
-        chan_lists  = parent.child(parent.childCount() - 1)
+        chan_lists = parent.child(parent.childCount() - 1)
         # Loop over every list.
         lists = self.env.channel_lists.keys()
         lists.sort()
@@ -268,7 +270,7 @@ class TreeModel(QtCore.QAbstractItemModel):
 
 class TreeSelector(QtGui.QItemSelectionModel):
     def __init__(self, model, *args, **kwargs):
-	# XXX: Kwargs not working.
+        # XXX: Kwargs not working.
         # super(TreeSelector, self).__init__(*args, **kwargs)
         # super(TreeSelector, self).__init__(model)
         QtGui.QItemSelectionModel.__init__(self, model)
@@ -298,5 +300,5 @@ class NetworkTree(QtGui.QTreeView):
         self.startup()
         # Reconnect the signals.
         QtCore.QObject.connect(self.nw_select_model,
-            QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
+            QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"), \
             self.env.main_window.waveforms.waveform_scene.add_channel)

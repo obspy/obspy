@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from lxml.etree import parse
 from obspy.core import UTCDateTime
 import os
 import sqlite3
+
 
 class EventDB(object):
     """
@@ -105,7 +108,7 @@ class EventDB(object):
             result_dicts.append(r_dict)
         return result_dicts
 
-    def getEventsInTimeSpan(self, starttime = None, endtime = None):
+    def getEventsInTimeSpan(self, starttime=None, endtime=None):
         """
         Returns the events.
         """
@@ -155,7 +158,7 @@ class EventDB(object):
             magnitude = 0.0
         return {'time': UTCDateTime(event[0]), 'latitude': float(event[1]),
                 'longitude': float(event[2]), 'depth': float(event[3]),
-                'magnitude': magnitude, 'magnitude_type': event[5], 
+                'magnitude': magnitude, 'magnitude_type': event[5],
                 'event_type': event[6]}
 
     def getFilesAndModification(self):

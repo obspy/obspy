@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore, QtGui
 
+
 class Picks(QtGui.QGroupBox):
-    def __init__(self, env, parent = None, *args, **kwargs):
+    def __init__(self, env, parent=None, *args, **kwargs):
         QtGui.QGroupBox.__init__(self, 'Picks')
         #super(Picks, self).__init__('Picks')
         self.env = env
@@ -27,7 +30,7 @@ class Picks(QtGui.QGroupBox):
         # Get events and picks from the database for the current timeframe.
         event_count, pick_count = self.env.db.getPickAndEventCount()
         # stats.
-        msg = '%i events with %i picks for the\nchosen timeframe.\n' %\
+        msg = '%i events with %i picks for the\nchosen timeframe.\n' % \
             (event_count, pick_count)
         self.pick_overview = QtGui.QLabel(msg)
         self.pick_overview.setWordWrap(True)
@@ -38,14 +41,14 @@ class Picks(QtGui.QGroupBox):
         # self.combo_box.currentIndexChanged.connect(self.indexChanged)
 	# Create slot.
 	#QtCore.SLOT("self.update(int)")
-	QtCore.QObject.connect(self.combo_box, QtCore.SIGNAL("currentIndexChanged(int)"),\
+	QtCore.QObject.connect(self.combo_box, QtCore.SIGNAL("currentIndexChanged(int)"), \
 			       self.indexChanged)
 
     def update(self):
         # Get events and picks from the database for the current timeframe.
         event_count, pick_count = self.env.db.getPickAndEventCount()
         # stats.
-        msg = '%i events with %i picks for the\nchosen timeframe.\n' %\
+        msg = '%i events with %i picks for the\nchosen timeframe.\n' % \
             (event_count, pick_count)
         self.pick_overview.setText(msg)
         # channels.
@@ -64,7 +67,7 @@ class Picks(QtGui.QGroupBox):
             item = QtGui.QTableWidgetItem(channel)
             item.setFlags(QtCore.Qt.ItemFlag(1))
             #item.setFlags(QtCore.Qt.ItemIsSelectable)
-            self.pick_channels.setItem(_i,0, item)
+            self.pick_channels.setItem(_i, 0, item)
         self.detailLayout.addWidget(self.pick_channels)
 
         self.overviewFrame.setLayout(self.overviewLayout)

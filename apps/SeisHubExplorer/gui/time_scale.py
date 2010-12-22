@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui, QtOpenGL
+from PyQt4 import QtGui
 
 from obspy.core import UTCDateTime
 from utils import MONTHS
+
 
 class TimeScale(QtGui.QGraphicsItemGroup):
     """
@@ -21,9 +21,9 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         self.subscale_height = 15
 
         # Define some colors.
-        self.color1 = QtGui.QColor(200,200,200,255)
-        self.color2 = QtGui.QColor(170,170,170,255)
-        self.bg_color = QtGui.QColor(200,220,200,255)
+        self.color1 = QtGui.QColor(200, 200, 200, 255)
+        self.color2 = QtGui.QColor(170, 170, 170, 255)
+        self.bg_color = QtGui.QColor(200, 220, 200, 255)
         self.event_color_automatic = QtGui.QColor(255, 0, 0, 155)
         self.event_color_manual = QtGui.QColor(0, 255, 0, 155)
         self.event_color_automatic_dark = QtGui.QColor(90, 0, 0, 255)
@@ -57,18 +57,18 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             x = event.x()
             y = event.y()
             rect = event.rect()
-            event.setRect(event.fraction*self.width - event.event_size/2, rect.y(), rect.width(), rect.height())
+            event.setRect(event.fraction * self.width - event.event_size / 2, rect.y(), rect.width(), rect.height())
         # Resize the scales.
         for box in self.year_boxes + self.month_boxes + self.day_boxes:
             rect = box.rect()
             start = box.start_frac * self.width
             end = box.end_frac * self.width
-            box.setRect(start, rect.y(), end-start, rect.height())
+            box.setRect(start, rect.y(), end - start, rect.height())
         # And move the labels.
         for label in self.year_labels + self.month_labels + self.day_labels:
             rect = label.boundingRect()
-            label.setX((label.start_frac + label.end_frac)/2.0 * self.width - \
-                       rect.width()/2.0)
+            label.setX((label.start_frac + label.end_frac) / 2.0 * self.width - \
+                       rect.width() / 2.0)
 
     def createTimeScale(self):
         """
@@ -81,20 +81,20 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         self.addToGroup(self.background)
         # Create the backgrounds for each subscale. The month just takes the
         # normal background color.
-        self.year_bg = QtGui.QGraphicsRectItem(-2000,0,4000,15)
+        self.year_bg = QtGui.QGraphicsRectItem(-2000, 0, 4000, 15)
         self.year_bg.setBrush(self.color2)
         self.year_bg.setZValue(-199)
         self.addToGroup(self.year_bg)
-        self.month_bg = QtGui.QGraphicsRectItem(-2000,15,4000,15)
+        self.month_bg = QtGui.QGraphicsRectItem(-2000, 15, 4000, 15)
         self.month_bg.setBrush(self.color1)
         self.month_bg.setZValue(-199)
         self.addToGroup(self.month_bg)
-        self.day_bg = QtGui.QGraphicsRectItem(-2000,30,4000,15)
+        self.day_bg = QtGui.QGraphicsRectItem(-2000, 30, 4000, 15)
         self.day_bg.setBrush(self.color2)
         self.day_bg.setZValue(-199)
         self.addToGroup(self.day_bg)
-        
-    def yearScale(self, top = True):
+
+    def yearScale(self, top=True):
         """
         Creates the subdivisions of the year scale.
         """
@@ -105,7 +105,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         time_range = float(endtime - starttime)
         # Pixel counts.
         start_x = 0
-        end_x =  self.width - start_x
+        end_x = self.width - start_x
         x_range = end_x - start_x
         start_y = 0
         end_y = self.subscale_height
@@ -117,7 +117,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         for _i, year in enumerate(years):
             # Some variables.
             start_of_year = UTCDateTime(year, 1, 1)
-            end_of_year = UTCDateTime(year+1, 1, 1)
+            end_of_year = UTCDateTime(year + 1, 1, 1)
             # Calculate boundaries.
             start_frac = (start_of_year - starttime) / time_range
             if start_frac < 0:
@@ -137,7 +137,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             end += start_x
             graph_width = (end_frac - start_frac) * x_range
             # Only draw every second box.
-            if _i%2:
+            if _i % 2:
                 year_box = QtGui.QGraphicsRectItem(start, start_y,
                             graph_width, y_range)
                 year_box.start_frac = start_frac
@@ -157,14 +157,14 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             # out a way to calculate it. The height of the rectangle is 16
             # while the year subscale height is only 15. But the text is still
             # positioned too high without the +2.
-            year_name.moveBy(((end_frac-start_frac)/2+start_frac)*self.width-\
-                            rect.width()/2, start_y + 2)
+            year_name.moveBy(((end_frac - start_frac) / 2 + start_frac) * self.width - \
+                            rect.width() / 2, start_y + 2)
             year_name.start_frac = start_frac
             year_name.end_frac = end_frac
             self.year_labels.append(year_name)
             self.addToGroup(year_name)
 
-    def monthScale(self, top = True):
+    def monthScale(self, top=True):
         """
         Creates the subdivisions of the month scale.
         """
@@ -175,7 +175,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         time_range = float(endtime - starttime)
         # Pixel counts.
         start_x = 0
-        end_x =  self.width
+        end_x = self.width
         x_range = end_x - start_x
         start_y = 15
         end_y = start_y + self.subscale_height
@@ -188,7 +188,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             years = endtime.year - starttime.year
             # If more than one year add twelve months per year.
             if years > 1:
-                months += 12 * (years -1)
+                months += 12 * (years - 1)
             # Get boundaries.
             months += (12 - starttime.month) + 1
             months += endtime.month
@@ -199,7 +199,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             # Get the year and month of the currently treated month.
             cur_month = starttime.month + month
             if cur_month > 12:
-                cur_year = starttime.year + ((cur_month -1)//12)
+                cur_year = starttime.year + ((cur_month - 1) // 12)
             else:
                 cur_year = starttime.year
             cur_month = cur_month % 12
@@ -208,7 +208,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
                 cur_month = 12
             # Some variables.
             start_of_month = UTCDateTime(cur_year, cur_month, 1)
-            if cur_month + 1> 12:
+            if cur_month + 1 > 12:
                 cur_month = 1
                 cur_year += 1
             else:
@@ -233,7 +233,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             end += start_x
             graph_width = (end_frac - start_frac) * x_range
             # Only draw every second box.
-            if not month%2:
+            if not month % 2:
                 month_box = QtGui.QGraphicsRectItem(start, start_y,
                             graph_width, y_range)
                 month_box.start_frac = start_frac
@@ -259,8 +259,8 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             # out a way to calculate it. The height of the rectangle is 16
             # while the year subscale height is only 15. But the text is still
             # positioned too high without the +2.
-            month_name.moveBy(((end_frac-start_frac)/2+start_frac)*self.width-\
-                            rect.width()/2, start_y + 2)
+            month_name.moveBy(((end_frac - start_frac) / 2 + start_frac) * self.width - \
+                            rect.width() / 2, start_y + 2)
             month_name.start_frac = start_frac
             month_name.end_frac = end_frac
             self.month_labels.append(month_name)
@@ -282,11 +282,11 @@ class TimeScale(QtGui.QGraphicsItemGroup):
                 magnitude = 1
             magnitude -= 1
             size_span = self.max_event_size - self.min_event_size
-            size = magnitude/float(4) * size_span + self.min_event_size
-            offset = (15 - size)/float(2)
+            size = magnitude / float(4) * size_span + self.min_event_size
+            offset = (15 - size) / float(2)
             time = event['origin_time']
-            frac = (time - starttime)/time_range
-            ev = QtGui.QGraphicsEllipseItem(frac*self.width - size/2, start_y + offset, size, size)
+            frac = (time - starttime) / time_range
+            ev = QtGui.QGraphicsEllipseItem(frac * self.width - size / 2, start_y + offset, size, size)
             ev.fraction = frac
             ev.event_size = size
             if event['event_type'] == 'manual':
@@ -304,7 +304,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             self.addToGroup(ev)
             self.events.append(ev)
 
-    def dayScale(self, top = True):
+    def dayScale(self, top=True):
         """
         Creates the subdivisions of the month scale.
         """
@@ -314,7 +314,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
         time_range = float(endtime - starttime)
         # Pixel counts.
         start_x = 0
-        end_x =  self.width
+        end_x = self.width
         x_range = end_x - start_x
         # Top or bottom year scale.
         start_y = 30
@@ -325,11 +325,11 @@ class TimeScale(QtGui.QGraphicsItemGroup):
                                     starttime.day)
         endtime_day = UTCDateTime(endtime.year, endtime.month,
                                     endtime.day)
-        days = int((endtime_day - starttime_day)/86400) + 1
-        days_count = range(days) 
+        days = int((endtime_day - starttime_day) / 86400) + 1
+        days_count = range(days)
         # Use the middle of the starting date to later calculate the current
         # day and account for leap seconds.
-        noon_of_start = UTCDateTime(starttime.year, starttime.month, 
+        noon_of_start = UTCDateTime(starttime.year, starttime.month,
                         starttime.day, 12, 0, 0)
         # Only draw if there are less or equal than 150 days.
         if days > 150:
@@ -359,7 +359,7 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             end += start_x
             graph_width = (end_frac - start_frac) * x_range
             # Only draw every second box.
-            if not day%2:
+            if not day % 2:
                 day_box = QtGui.QGraphicsRectItem(start, start_y,
                             graph_width, y_range)
                 day_box.start_frac = start_frac
@@ -380,8 +380,8 @@ class TimeScale(QtGui.QGraphicsItemGroup):
             # out a way to calculate it. The height of the rectangle is 16
             # while the year subscale height is only 15. But the text is still
             # positioned too high without the +2.
-            day_name.moveBy(((end_frac-start_frac)/2+start_frac)*self.width-\
-                            rect.width()/2, start_y + 2)
+            day_name.moveBy(((end_frac - start_frac) / 2 + start_frac) * self.width - \
+                            rect.width() / 2, start_y + 2)
             self.addToGroup(day_name)
             day_name.start_frac = start_frac
             day_name.end_frac = end_frac

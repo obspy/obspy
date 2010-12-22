@@ -1,4 +1,6 @@
-from PyQt4 import QtCore, QtGui, QtWebKit
+# -*- coding: utf-8 -*-
+
+from PyQt4 import QtCore, QtGui
 
 from obspy.core import UTCDateTime
 
@@ -11,6 +13,7 @@ from call_picker_dialog import CallPickerDialog
 from picks import Picks
 import utils
 import os
+
 
 class MainWindow(QtGui.QWidget):
     """
@@ -45,11 +48,11 @@ class MainWindow(QtGui.QWidget):
         font.setPointSize(9)
 
         # Add the waveform viewer.
-        self.waveforms = Waveforms(env = self.env)
+        self.waveforms = Waveforms(env=self.env)
         self.plotFrameLayout.addWidget(self.waveforms)
 
         # Add navigation widget.
-        self.navigation = NavigationBar(env = self.env)
+        self.navigation = NavigationBar(env=self.env)
         #self.plotControlLayout.addWidget(self.navigation)
         self.plotFrameLayout.addWidget(self.navigation)
         self.plotStatus.setFont(font)
@@ -57,21 +60,21 @@ class MainWindow(QtGui.QWidget):
 
         # Add the menu for the time_selection.
         times = QtGui.QGroupBox('Timeframe')
-        grid.addWidget(times, 0,8,1,2)
+        grid.addWidget(times, 0, 8, 1, 2)
         # Time frame layout.
         time_layout = QtGui.QGridLayout()
         # Labels.
         start_label = QtGui.QLabel('Starttime:')
-        time_layout.addWidget(start_label,0,0)
+        time_layout.addWidget(start_label, 0, 0)
         end_label = QtGui.QLabel('Endtime:')
-        time_layout.addWidget(end_label,1,0)
+        time_layout.addWidget(end_label, 1, 0)
         # Init date selector.
         self.start_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.starttime))
         self.start_date.setCalendarPopup(True)
-        time_layout.addWidget(self.start_date,0,1)
+        time_layout.addWidget(self.start_date, 0, 1)
         self.end_date = QtGui.QDateTimeEdit(utils.toQDateTime(self.env.endtime))
         self.end_date.setCalendarPopup(True)
-        time_layout.addWidget(self.end_date,1,1)
+        time_layout.addWidget(self.end_date, 1, 1)
         self.time_button = QtGui.QPushButton('Apply')
         time_layout.addWidget(self.time_button, 2, 1)
         times.setLayout(time_layout)
@@ -80,11 +83,11 @@ class MainWindow(QtGui.QWidget):
                                self.applyTimes)
 
         # Add the pick group box.
-        self.picks = Picks(env = self.env)
+        self.picks = Picks(env=self.env)
         grid.addWidget(self.picks, 1, 8, 1, 2)
         # Add the network tree.
 
-        self.nw_tree = NetworkTree(self.waveforms, env = self.env)
+        self.nw_tree = NetworkTree(self.waveforms, env=self.env)
         grid.addWidget(self.nw_tree, 2, 8, 9, 2)
 
         # Add the edit lists button.
@@ -119,13 +122,13 @@ class MainWindow(QtGui.QWidget):
                       starttime.strftime(self.env.picker_strftime))
         command = command.replace('$endtime$',
                       endtime.strftime(self.env.picker_strftime))
-        command = command.replace('$duration$', str(int(endtime-starttime)))
+        command = command.replace('$duration$', str(int(endtime - starttime)))
         # Get all channels.
         ids = []
         for waveform in self.waveforms.waveform_scene.waveforms:
             ids.append(waveform.stream[0].id)
         channels = self.env.channel_seperator.join(ids)
-        channels = self.env.channel_enclosure[0] + channels +\
+        channels = self.env.channel_enclosure[0] + channels + \
                    self.env.channel_enclosure[1]
         command = command.replace('$channels$', channels)
         dialog = CallPickerDialog(self.env, command)
@@ -150,8 +153,8 @@ class MainWindow(QtGui.QWidget):
             return
         # Do not zoom in more than possible to avoid resampling errors.
         if new_range < self.env.maximum_zoom_level:
-            half = self.env.maximum_zoom_level/2.0
-            middle = ns + new_range/2.0
+            half = self.env.maximum_zoom_level / 2.0
+            middle = ns + new_range / 2.0
             ns = middle - half
             ne = ns + self.env.maximum_zoom_level
         self.env.starttime = UTCDateTime(ns.year, ns.month, ns.day, ns.hour,
@@ -176,10 +179,11 @@ class MainWindow(QtGui.QWidget):
         self.nw_tree.startup()
 
         # Connect some slots.
-        QtCore.QObject.connect(self.nw_tree.nw_select_model, QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),\
-			       self.waveforms.waveform_scene.add_channel)
+        QtCore.QObject.connect(self.nw_tree.nw_select_model,
+                               QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"), \
+                               self.waveforms.waveform_scene.add_channel)
 
-        web = Website(env = self.env)
+        web = Website(env=self.env)
         web.startup()
         # Add a WebView to later display the map.
         file = open(os.path.join(self.env.temp_res_dir, 'map.html'))

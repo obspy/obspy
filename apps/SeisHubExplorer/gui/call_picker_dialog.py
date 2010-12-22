@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 
 import subprocess
+
 
 class CallPickerDialog(QtGui.QDialog):
     """
@@ -69,7 +69,7 @@ class CallPickerDialog(QtGui.QDialog):
         channels = list(set(channels))
         channels.sort()
         # Recreate the new wildcard command.
-        self.wildcard_command = self.command.split("'")[0] + "'%s'" %\
+        self.wildcard_command = self.command.split("'")[0] + "'%s'" % \
             ','.join(channels)
 
     def toggleChannelWildcards(self):
@@ -79,12 +79,12 @@ class CallPickerDialog(QtGui.QDialog):
         if self.wildcards_toggled:
             # Check if changed.
             if str(self.command_edit.text()) != self.wildcard_command:
-                msg =  20 * ' ' + 'Command changed!' + 20 * ' '
+                msg = 20 * ' ' + 'Command changed!' + 20 * ' '
                 info = 'All manual changes will be lost. Continue?'
                 box = QtGui.QMessageBox()
                 box.setText(msg)
                 box.setInformativeText(info)
-                box.setStandardButtons(QtGui.QMessageBox.No| QtGui.QMessageBox.Yes)
+                box.setStandardButtons(QtGui.QMessageBox.No | QtGui.QMessageBox.Yes)
                 ret_code = box.exec_()
                 if ret_code == QtGui.QMessageBox.No:
                     return
@@ -93,12 +93,12 @@ class CallPickerDialog(QtGui.QDialog):
         else:
             # Check if changed.
             if str(self.command_edit.text()) != self.command:
-                msg =  20 * ' ' + 'Command changed!' + 20 * ' '
+                msg = 20 * ' ' + 'Command changed!' + 20 * ' '
                 info = 'All manual changes will be lost. Continue?'
                 box = QtGui.QMessageBox()
                 box.setText(msg)
                 box.setInformativeText(info)
-                box.setStandardButtons(QtGui.QMessageBox.No| QtGui.QMessageBox.Yes)
+                box.setStandardButtons(QtGui.QMessageBox.No | QtGui.QMessageBox.Yes)
                 ret_code = box.exec_()
                 if ret_code == QtGui.QMessageBox.No:
                     return
@@ -133,5 +133,6 @@ class CallPickerDialog(QtGui.QDialog):
                                self.reject)
         QtCore.QObject.connect(self.ok_button, QtCore.SIGNAL("clicked()"),
                                self.accept)
-        QtCore.QObject.connect(self.channel_wildcards_button, QtCore.SIGNAL("clicked()"),
+        QtCore.QObject.connect(self.channel_wildcards_button,
+                               QtCore.SIGNAL("clicked()"),
                                self.toggleChannelWildcards)

@@ -1,15 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 
 from obspy.core import UTCDateTime
 
+
 class NavigationBar(QtGui.QFrame):
     """
     The navigation bar.
     """
-    def __init__(self, env, parent = None, *args, **kwargs):
+    def __init__(self, env, parent=None, *args, **kwargs):
         QtGui.QFrame.__init__(self)
         #super(NavigationBar, self).__init__()
         self.env = env
@@ -109,8 +109,8 @@ class NavigationBar(QtGui.QFrame):
         Zooms 50 percent back.
         """
         self.env.main_window.changeTimes(\
-                    self.env.starttime - 0.5*self.env.time_range,
-                    self.env.endtime - 0.5*self.env.time_range)
+                    self.env.starttime - 0.5 * self.env.time_range,
+                    self.env.endtime - 0.5 * self.env.time_range)
 
     def zoom_way_forward(self):
         """
@@ -125,8 +125,8 @@ class NavigationBar(QtGui.QFrame):
         Zooms 50 percent forward.
         """
         self.env.main_window.changeTimes(\
-                    self.env.starttime + 0.5*self.env.time_range,
-                    self.env.endtime + 0.5*self.env.time_range)
+                    self.env.starttime + 0.5 * self.env.time_range,
+                    self.env.endtime + 0.5 * self.env.time_range)
 
     def zoom_month(self):
         """
@@ -150,8 +150,8 @@ class NavigationBar(QtGui.QFrame):
         """
         middle = self.env.starttime + 0.5 * self.env.time_range
         middle = UTCDateTime(middle.year, middle.month, middle.day)
-        starttime = middle - 3*86400
-        endtime = middle + 4*86400 -1
+        starttime = middle - 3 * 86400
+        endtime = middle + 4 * 86400 - 1
         self.env.main_window.changeTimes(starttime, endtime)
 
     def zoom_today(self):
@@ -160,7 +160,7 @@ class NavigationBar(QtGui.QFrame):
         """
         now = UTCDateTime()
         starttime = UTCDateTime(now.year, now.month, now.day)
-        endtime = starttime + 86400 - 1 
+        endtime = starttime + 86400 - 1
         self.env.main_window.changeTimes(starttime, endtime)
 
     def zoom_last_week(self):
@@ -169,8 +169,8 @@ class NavigationBar(QtGui.QFrame):
         """
         now = UTCDateTime()
         starttime = UTCDateTime(now.year, now.month, now.day)
-        endtime = starttime + 86400 - 1 
-        starttime -= 6*86400
+        endtime = starttime + 86400 - 1
+        starttime -= 6 * 86400
         self.env.main_window.changeTimes(starttime, endtime)
 
     def zoom_last_month(self):
@@ -179,6 +179,6 @@ class NavigationBar(QtGui.QFrame):
         """
         now = UTCDateTime()
         starttime = UTCDateTime(now.year, now.month, now.day)
-        endtime = starttime + 86400 - 1 
-        starttime -= 31*86400
+        endtime = starttime + 86400 - 1
+        starttime -= 31 * 86400
         self.env.main_window.changeTimes(starttime, endtime)

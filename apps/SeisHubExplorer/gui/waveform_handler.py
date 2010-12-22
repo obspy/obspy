@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
@@ -5,6 +7,7 @@ from obspy.core.preview import mergePreviews, resamplePreview
 from numpy.ma import is_masked
 import pickle
 from copy import deepcopy
+
 
 class WaveformHandler(object):
     """
@@ -44,12 +47,12 @@ class WaveformHandler(object):
             self.waveforms[id]['empty'] = True
             data = np.empty(self.env.detail)
             data[:] = -1
-            trace = Trace(data = data)
-            self.waveforms[id]['minmax_stream'] = Stream(traces = [trace])
+            trace = Trace(data=data)
+            self.waveforms[id]['minmax_stream'] = Stream(traces=[trace])
             return self.waveforms[id]
         self.waveforms[id]['empty'] = False
         # Process the stream_object.
-        self.waveforms[id]['minmax_stream'] =\
+        self.waveforms[id]['minmax_stream'] = \
                 self.processStream(self.waveforms[id]['org_stream'])
         return self.waveforms[id]
 
@@ -60,7 +63,7 @@ class WaveformHandler(object):
         pixel = self.env.detail
         stream = deepcopy(stream)
         # Trim to times and pad with masked elements.
-        stream.trim(self.env.starttime, self.env.endtime, pad = True)
+        stream.trim(self.env.starttime, self.env.endtime, pad=True)
         # Set masked arrays to -1.
         if is_masked(stream[0].data):
             stream[0].data.fill_value = -1.0
@@ -78,7 +81,7 @@ class WaveformHandler(object):
         Gets the waveform. Loads it from the cache or requests it from SeisHub.
         """
         if self.env.debug and not self.env.seishub.online:
-            msg = 'No connection to SeisHub server. Only locally cached '+\
+            msg = 'No connection to SeisHub server. Only locally cached ' + \
                   'information is available.'
             print msg
         # Go through directory structure and create all necessary
@@ -133,7 +136,7 @@ class WaveformHandler(object):
             if missing_time_frames and self.env.seishub.online:
                 if self.env.debug:
                     print ' * Only partially cached file found for %s.%s.%s.%s.' \
-                          % (network, station, location, channel) +\
+                          % (network, station, location, channel) + \
                           ' Requesting the rest from SeisHub...'
                 stream += self.loadGaps(missing_time_frames, network, station,
                                         location, channel)
@@ -178,7 +181,8 @@ class WaveformHandler(object):
             temp[0].stats.preview = True
             start = temp[0].stats.starttime
             temp[0].stats.starttime = UTCDateTime(start.year, start.month,
-                                    start.day, start.hour, start.minute, start.second)
+                                                  start.day, start.hour,
+                                                  start.minute, start.second)
             # Convert to float32
             if len(temp):
                 streams.append(temp)
@@ -207,7 +211,7 @@ class WaveformHandler(object):
         return stream
 
     def getPreview(self, network, station, location, channel, station_path,
-                starttime = None, endtime = None):
+                starttime=None, endtime=None):
         """
         Actually get the file.
         """
@@ -223,7 +227,8 @@ class WaveformHandler(object):
         stream[0].stats.preview = True
         start = stream[0].stats.starttime
         stream[0].stats.starttime = UTCDateTime(start.year, start.month,
-                                start.day, start.hour, start.minute, start.second)
+                                                start.day, start.hour,
+                                                start.minute, start.second)
         # Pickle the stream object for future reference. Do not pickle it if it
         # is smaller than 200 samples. Just not worth the hassle.
         if stream[0].stats.npts > 200:

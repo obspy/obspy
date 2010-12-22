@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import os
+
 
 class Website(object):
     """
@@ -63,8 +66,8 @@ class Website(object):
                 self.stations.append([network, station, info])
 
     def createMiddle(self):
-        center_long = (self.bounds[0] + self.bounds[1])/2.0
-        center_lat = (self.bounds[2] + self.bounds[3])/2.0
+        center_long = (self.bounds[0] + self.bounds[1]) / 2.0
+        center_lat = (self.bounds[2] + self.bounds[3]) / 2.0
         part = 'map.setCenter(new GLatLng(%f, %f), 6);' % (center_lat,
                                                             center_long)
         part += 'map.setUIToDefault();'
@@ -94,9 +97,6 @@ class Website(object):
                                  {beck%i.openInfoWindowHtml(html%i)});
             map.addOverlay(beck%i);
             """ % (_i, long, lat, _i, path, station_name,
-                   elevation,station_id, _i, _i, _i,
+                   elevation, station_id, _i, _i, _i,
                     _i, _i, _i)
         self.middlePart = part
-
-                
-

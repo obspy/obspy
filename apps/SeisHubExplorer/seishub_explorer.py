@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore, QtGui, QtWebKit
 
-from gui import MainWindow, Environment, Website, Timers
+from gui import MainWindow, Environment, Timers
 import os
 import sys
 
@@ -15,7 +18,7 @@ class TabWidget(QtGui.QTabWidget):
 
 if __name__ == '__main__':
     # Init the environment.
-    env = Environment(debug = True)
+    env = Environment(debug=True)
     # Init QApplication.
     env.qApp = QtGui.QApplication(sys.argv)
 
@@ -28,9 +31,10 @@ if __name__ == '__main__':
     pixmap = QtGui.QPixmap(os.path.join(env.res_dir, 'splash.png'))
     env.splash = QtGui.QSplashScreen(pixmap)
     env.splash.show()
-    env.splash.showMessage('Init interface...', QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
-                   QtCore.Qt.black) 
-    # Force Qt to uodate outside of any event loop to display the splash
+    env.splash.showMessage('Init interface...',
+                           QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
+                           QtCore.Qt.black)
+    # Force Qt to update outside of any event loop to display the splash
     # screen.
     env.qApp.processEvents()
 
@@ -41,7 +45,7 @@ if __name__ == '__main__':
     tab = TabWidget()
 
     # Init the main tab and add it to the tabs-manager.
-    main_window = MainWindow(env = env)
+    main_window = MainWindow(env=env)
     tab.addTab(main_window, 'Main View')
 
     # Create the map tab that just displays a web page.
@@ -53,7 +57,7 @@ if __name__ == '__main__':
     env.station_browser = QtWebKit.QWebView()
     env.station_browser.show()
     tab.addTab(env.station_browser, 'Station Browser')
-    
+
     # Init Status bar.
     st = QtGui.QStatusBar()
     env.st = st
@@ -62,7 +66,7 @@ if __name__ == '__main__':
     # rich text if rich text should be used later on.
     env.server_status = QtGui.QLabel('<font color="#FF0000"></font>')
     st.addPermanentWidget(env.server_status)
-    # Seperator Label.
+    # Separator Label.
     env.seperator = QtGui.QLabel()
     # XXX: Not working with PyQt 4.4.
     #env.seperator.setFrameShape(5)
@@ -73,7 +77,7 @@ if __name__ == '__main__':
     st.addPermanentWidget(env.current_time)
 
     # Start the timers.
-    timers = Timers(env = env)
+    timers = Timers(env=env)
 
     window.setCentralWidget(tab)
     # Set the status bar.

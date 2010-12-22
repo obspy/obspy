@@ -1,16 +1,13 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
 from PyQt4.QtCore import Qt
 
 from fnmatch import fnmatch
-from random import randint
 from time import time
 
-from networks import TreeSelector
 from time_scale import TimeScale
-from utils import toQDateTime
+
 
 class PreviewPlot(QtGui.QGraphicsItemGroup):
     """
@@ -26,7 +23,7 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         self.x_start = self.hmargin - 1
         self.y_start = y_start
         self.plot_height = height
-        self.plot_width = width - 2*self.hmargin + 3
+        self.plot_width = width - 2 * self.hmargin + 3
         self.stream = stream
         self.scene = scene
         self.count = self.stream[0].stats.npts
@@ -37,7 +34,7 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         # Set the title of the plot.
         self.title = title
         # Set background color.
-        self.background_box.setBrush(QtGui.QColor(200,200,200,255))
+        self.background_box.setBrush(QtGui.QColor(200, 200, 200, 255))
         self.background_box.setZValue(-200)
         self.addToGroup(self.background_box)
         # Create button.
@@ -49,10 +46,10 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         self.button.setStyleSheet("border: 1px solid #000000;")
         self.button_in_scene = scene.addWidget(self.button)
         self.button_in_scene.setZValue(10)
-        step = self.plot_width/float(self.count)
+        step = self.plot_width / float(self.count)
 
         self.title_label = QtGui.QLabel(self.title)
-        self.title_label.move(15, self.y_start+3)
+        self.title_label.move(15, self.y_start + 3)
         self.title_in_scene = scene.addWidget(self.title_label)
         self.title_in_scene.setZValue(10)
 
@@ -68,24 +65,24 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
             print '==================================='
         if data_max != -1:
             # Middle of the graphic.
-            half_height = self.plot_height/2.0 - 0.5
+            half_height = self.plot_height / 2.0 - 0.5
             # Let the maximum be at half_height
             # The 0.5 is there because later we will add 0.5 to everything to
             # also show very small amplitudes.
-            factor = 1/data_max * (half_height - 0.5)
-            data[data>=0] *= factor
+            factor = 1 / data_max * (half_height - 0.5)
+            data[data >= 0] *= factor
             bottom = half_height - data
-            top = 2*data + 1
+            top = 2 * data + 1
             for _j in xrange(self.count):
                 if data[_j] < 0:
                     continue
-                self.bars.append(QtGui.QGraphicsRectItem(self.x_start + _j*step,
+                self.bars.append(QtGui.QGraphicsRectItem(self.x_start + _j * step,
                             y_start + bottom[_j], step, top[_j], self))
                 # Fill with black color and disable the pen.
-                self.bars[-1].setBrush(QtGui.QColor(0,0,0,255))
+                self.bars[-1].setBrush(QtGui.QColor(0, 0, 0, 255))
                 self.bars[-1].setPen(QtGui.QPen(QtCore.Qt.PenStyle(0)))
-                self.bars[-1].start_percentage =\
-                    (_j*step)/float(self.plot_width)
+                self.bars[-1].start_percentage = \
+                    (_j * step) / float(self.plot_width)
                 self.addToGroup(self.bars[-1])
         self.events = []
         # Plot events.
@@ -94,23 +91,23 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
             for pick in picks:
                 time = pick['time']
                 # The percent location in plot width of the pick.
-                percent = (time - self.env.starttime)/self.env.time_range
+                percent = (time - self.env.starttime) / self.env.time_range
                 x = percent * self.plot_width
                 line = QtGui.QGraphicsLineItem(self.x_start + x,
-                        self.y_start+1, self.x_start + x,
-                        self.y_start + self.plot_height -1, self)
+                        self.y_start + 1, self.x_start + x,
+                        self.y_start + self.plot_height - 1, self)
                 self.events.append(line)
                 if pick['event_type'] == 'automatic':
                     if 'p' in pick['phaseHint'].lower():
-                        line.setPen(QtGui.QColor(255,0,0,200))
+                        line.setPen(QtGui.QColor(255, 0, 0, 200))
                     else:
-                        line.setPen(QtGui.QColor(200,0,0,200))
+                        line.setPen(QtGui.QColor(200, 0, 0, 200))
                     line.setZValue(-100)
                 else:
                     if 'p' in pick['phaseHint'].lower():
-                        line.setPen(QtGui.QColor(0,255,0,200))
+                        line.setPen(QtGui.QColor(0, 255, 0, 200))
                     else:
-                        line.setPen(QtGui.QColor(0,200,0,200))
+                        line.setPen(QtGui.QColor(0, 200, 0, 200))
                     line.setZValue(-90)
                 # Set tool tip.
                 tip = '<b>%s</b><br>%s<br>Phase: %s, Polarity: %s' % \
@@ -150,14 +147,14 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
         """
         Resizes the single preview.
         """
-        self.plot_width = width - 2*self.hmargin + 3
+        self.plot_width = width - 2 * self.hmargin + 3
         box_rect = self.background_box.rect()
         self.background_box.setRect(box_rect.x(), box_rect.y(), self.plot_width,
                      self.plot_height)
         # Resize all bars. Slow but this does not have to be fast. Using
         # transformations also works and would be a cleaner solution but
         # scrolling transformated items is painfully slow.
-        step = self.plot_width/float(self.count)
+        step = self.plot_width / float(self.count)
         for _i, bar in enumerate(self.bars):
             rect = bar.rect()
             bar.setRect(self.x_start + bar.start_percentage * self.plot_width, rect.y(), step, rect.height())
@@ -166,8 +163,8 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
             for event in self.events:
                 x = event.percent * self.plot_width
                 event.setLine(self.x_start + x,
-                        self.y_start+1, self.x_start + x,
-                        self.y_start + self.plot_height -1)
+                        self.y_start + 1, self.x_start + x,
+                        self.y_start + self.plot_height - 1)
 
 class WaveformScene(QtGui.QGraphicsScene):
     """
@@ -221,21 +218,21 @@ class WaveformScene(QtGui.QGraphicsScene):
         rect = rect.normalized()
         self.selection_box = QtGui.QGraphicsRectItem(rect)
         self.selection_box.setZValue(1000000)
-        self.selection_box.setBrush(QtGui.QColor(0,0,0,20))
+        self.selection_box.setBrush(QtGui.QColor(0, 0, 0, 20))
         # XXX: This sometimes is not immediatly updates. Find out why!
         self.addItem(self.selection_box)
         self.selection_box.show()
         # Figure out the corresponding times.
         scene_width = self.sceneRect().width()
-        starttime = self.env.starttime + rect.x()/float(scene_width)*self.env.time_range
-        endtime = self.env.starttime + (rect.x() + rect.width())/float(scene_width)*self.env.time_range
+        starttime = self.env.starttime + rect.x() / float(scene_width) * self.env.time_range
+        endtime = self.env.starttime + (rect.x() + rect.width()) / float(scene_width) * self.env.time_range
         self.selection_box.starttime = starttime
         self.selection_box.endtime = endtime
         # Set the message.
         self.env.st.showMessage('%s - %s [%.1f minutes]' %
                                 (starttime.strftime('%Y-%m-%dT%H:%M'),
                                  endtime.strftime('%Y-%m-%dT%H:%M'),
-                                 (endtime-starttime)/60.0))
+                                 (endtime - starttime) / 60.0))
         self.env.main_window.waveforms.refreshOpenGL()
 
     def mouseReleaseEvent(self, event):
@@ -243,7 +240,7 @@ class WaveformScene(QtGui.QGraphicsScene):
         Fired every time the mouse is released.
         """
         if self.mouse_moved:
-            msg = 'Left click in selected area to zoom in, '+\
+            msg = 'Left click in selected area to zoom in, ' + \
                   'right click to send to picker.'
             self.env.main_window.plotStatus.setText(msg)
             self.mouse_moved = False
@@ -251,9 +248,9 @@ class WaveformScene(QtGui.QGraphicsScene):
         else:
             # Figure out whether or not the button is clicked in the box.
             if self.selection_box and \
-               self.start_mouse_pos.x()>self.selection_box.boundingRect().x()\
+               self.start_mouse_pos.x() > self.selection_box.boundingRect().x()\
                and\
-               self.start_mouse_pos.x()<(self.selection_box.boundingRect().x()+\
+               self.start_mouse_pos.x() < (self.selection_box.boundingRect().x() + \
                self.selection_box.boundingRect().width()):
                 # If the first mouse button is pressed, zoom in.
                 if event.button() == Qt.LeftButton:
@@ -277,10 +274,10 @@ class WaveformScene(QtGui.QGraphicsScene):
         scene_width = self.sceneRect().width()
         x_pos = mouse_event.scenePos().x()
         # Determine the time at the click.
-        middle_time = self.env.starttime + x_pos/float(scene_width)*self.env.time_range
+        middle_time = self.env.starttime + x_pos / float(scene_width) * self.env.time_range
         # Get the start-and endtimes.
-        starttime = middle_time - 0.5*self.env.maximum_zoom_level
-        endtime = middle_time + 0.5*self.env.maximum_zoom_level
+        starttime = middle_time - 0.5 * self.env.maximum_zoom_level
+        endtime = middle_time + 0.5 * self.env.maximum_zoom_level
         self.env.main_window.changeTimes(starttime, endtime)
 
     def startup(self):
@@ -339,8 +336,8 @@ class WaveformScene(QtGui.QGraphicsScene):
         self.waveforms.append(preview)
         # Manually update the scene Rectangle.
         count = len(self.waveforms)
-        height = (count+1)*self.vmargin + count*self.plot_height
-        self.setSceneRect(0,0,self.width(), height)
+        height = (count + 1) * self.vmargin + count * self.plot_height
+        self.setSceneRect(0, 0, self.width(), height)
 
     def removeFromWaveformList(self, title):
         """
@@ -352,9 +349,9 @@ class WaveformScene(QtGui.QGraphicsScene):
         # Shift all further traces.
         amount = (self.plot_height + self.vmargin)
         for _i, waveform in enumerate(self.waveforms):
-            if _i<index:
+            if _i < index:
                 continue
-            waveform.moveBy(0,-amount)
+            waveform.moveBy(0, -amount)
             waveform.button_in_scene.moveBy(0, -amount)
             waveform.title_in_scene.moveBy(0, -amount)
 
@@ -377,8 +374,8 @@ class WaveformScene(QtGui.QGraphicsScene):
             waveform.resize(width, height)
         # Manually update the scene Rectangle.
         count = len(self.waveforms)
-        height = (count+1)*self.vmargin + count*self.plot_height
-        self.setSceneRect(0,0,width, height)
+        height = (count + 1) * self.vmargin + count * self.plot_height
+        self.setSceneRect(0, 0, width, height)
 
     def setPlotStatus(self, msg):
         """
@@ -390,7 +387,7 @@ class WaveformScene(QtGui.QGraphicsScene):
         """
         Sets the plot status to its default value.
         """
-        msg = 'Drag to select a time frame. Doubleclick anywhere to zoom to '+\
+        msg = 'Drag to select a time frame. Doubleclick anywhere to zoom to ' + \
               'maximal zoom level.'
         self.env.main_window.plotStatus.setText(msg)
 
@@ -417,7 +414,7 @@ class TimescaleScene(QtGui.QGraphicsScene):
         if hasattr(self, 'time_scale'):
             self.time_scale.resize(self.view.width(), height)
         # Manually update the scene Rectangle.
-        self.setSceneRect(0,0,width, 60)
+        self.setSceneRect(0, 0, width, 60)
 
 class TimescaleView(QtGui.QGraphicsView):
     """
@@ -475,7 +472,7 @@ class Waveforms(QtGui.QFrame):
     A Frame that contains two view that will show the time scale and the
     waveforms.
     """
-    def __init__(self, env, parent = None, *args, **kwargs):
+    def __init__(self, env, parent=None, *args, **kwargs):
         QtGui.QFrame.__init__(self, parent)
         #super(Waveforms, self).__init__(parent)
         self.env = env

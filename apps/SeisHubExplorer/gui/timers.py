@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore
 from obspy.core import UTCDateTime
 
+
 class Timers(QtCore.QThread):
-    def __init__(self, env, parent = None, *args, **kwargs):
+    def __init__(self, env, parent=None, *args, **kwargs):
         QtCore.QThread.__init__(self, parent)
         #super(Timers, self).__init__(parent)
         self.env = env
@@ -15,7 +18,7 @@ class Timers(QtCore.QThread):
         self.env.seishub.ping()
         if self.env.seishub.online:
             msg += '<font color="#339966">connected</font>'
-        else:  
+        else:
             msg += '<font color="#FF0000">no connection</font>'
         self.env.server_status.setText(msg)
 
@@ -35,8 +38,8 @@ class Timers(QtCore.QThread):
         # XXX: New method not working with PyQt4
         # self.server_timer.timeout.connect(self.updateServerStatus)
         #QtCore.SLOT("self.updateServerStatus()")
-        QtCore.QObject.connect(self.server_timer, QtCore.SIGNAL("timeout()"),\
-                       self.updateServerStatus) 
+        QtCore.QObject.connect(self.server_timer, QtCore.SIGNAL("timeout()"), \
+                       self.updateServerStatus)
         # Call every ten second.
         self.server_timer.start(10000)
         # Setup time timer.
@@ -45,7 +48,7 @@ class Timers(QtCore.QThread):
         # XXX: New method not working with PyQt4
         # self.time_timer.timeout.connect(self.updateCurrentTime)
         #QtCore.SLOT("self.updateCurrentTime()")
-        QtCore.QObject.connect(self.time_timer, QtCore.SIGNAL("timeout()"),\
+        QtCore.QObject.connect(self.time_timer, QtCore.SIGNAL("timeout()"), \
                        self.updateCurrentTime)
 
         # Call every  second.

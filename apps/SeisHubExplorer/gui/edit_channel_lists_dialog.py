@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
 from StringIO import StringIO
+
 
 class EditChannelListsDialog(QtGui.QDialog):
     """
@@ -24,8 +24,8 @@ class EditChannelListsDialog(QtGui.QDialog):
         Constructs the interface.
         """
         # Set two colors.
-        self.red_color = QtGui.QColor(255,0,0,100)
-        self.green_color = QtGui.QColor(0,255,0,100)
+        self.red_color = QtGui.QColor(255, 0, 0, 100)
+        self.green_color = QtGui.QColor(0, 255, 0, 100)
         self.setWindowTitle('Edit Channel Groups')
         self.layout = QtGui.QVBoxLayout()
         self.setLayout(self.layout)
