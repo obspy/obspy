@@ -984,6 +984,8 @@ class Stream(object):
         For more info see :meth:`~obspy.core.trace.Trace.trim.`
 
         """
+        if not self:
+            return
         # select starttime/endtime fitting to a sample point of the first trace
         if nearest_sample:
             tr = self.traces[0]
