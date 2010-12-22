@@ -166,6 +166,7 @@ class PreviewPlot(QtGui.QGraphicsItemGroup):
                         self.y_start + 1, self.x_start + x,
                         self.y_start + self.plot_height - 1)
 
+
 class WaveformScene(QtGui.QGraphicsScene):
     """
     Scene that actually displays the waveforms.
@@ -294,6 +295,8 @@ class WaveformScene(QtGui.QGraphicsScene):
         """
         # This is the path and the type of the requested waveform.
         # e.g. ('BW', 'network') or ('BW.FURT..EHE', 'channel')
+        # XXX: Win32 crashes here
+        print new_sel.indexes()
         path = new_sel.indexes()[0].model().getFullPath(new_sel.indexes()[0])
         # Only plot channels.
         if path[1] != 'channel' and path[1] != 'channel_list':
@@ -391,6 +394,7 @@ class WaveformScene(QtGui.QGraphicsScene):
               'maximal zoom level.'
         self.env.main_window.plotStatus.setText(msg)
 
+
 class TimescaleScene(QtGui.QGraphicsScene):
     def __init__(self, env):
         QtGui.QGraphicsScene.__init__(self)
@@ -415,6 +419,7 @@ class TimescaleScene(QtGui.QGraphicsScene):
             self.time_scale.resize(self.view.width(), height)
         # Manually update the scene Rectangle.
         self.setSceneRect(0, 0, width, 60)
+
 
 class TimescaleView(QtGui.QGraphicsView):
     """
@@ -443,6 +448,7 @@ class TimescaleView(QtGui.QGraphicsView):
         # Finally resize the scene.
         self.scene.resize(size.width(), size.height())
 
+
 class WaveformView(QtGui.QGraphicsView):
     """
     View for the waveform.
@@ -466,6 +472,7 @@ class WaveformView(QtGui.QGraphicsView):
         size = event.size()
         # Finally resize the scene.
         self.scene.resize(size.width(), size.height())
+
 
 class Waveforms(QtGui.QFrame):
     """

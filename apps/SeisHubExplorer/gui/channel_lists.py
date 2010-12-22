@@ -10,7 +10,7 @@ class ChannelListParser(object):
     """
     def __init__(self, env):
         """
-        Standard init. It will outomatically read the channel_lists file and
+        Standard init. It will automatically read the channel_lists file and
         write its contents to the environment.
         """
         self.env = env

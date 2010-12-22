@@ -31,8 +31,8 @@ class Environment(object):
         self.config_file = os.path.join(self.home_dir, 'config.cfg')
 
         # Get the root directory of the application.
-        self.root_dir = os.path.split(os.path.abspath(\
-                             os.path.dirname(__file__)))[0]
+        self.root_dir = \
+            os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 
         # Resources directory.
         self.res_dir = os.path.join(self.root_dir, 'resources')
@@ -55,17 +55,18 @@ class Environment(object):
         self.maximum_zoom_level = self.preview_delta * (self.detail + 1)
 
         # SQLite event database file.
-        self.sqlite_db = kwargs.get('sqlite_db', os.path.join(self.cache_dir,
-                                                'events.db'))
+        self.sqlite_db = \
+            kwargs.get('sqlite_db', os.path.join(self.cache_dir, 'events.db'))
         self.css = os.path.join(self.res_dir, 'seishub.css')
         # The xml file with the stored lists.
-        self.channel_lists_xml = os.path.join(self.cache_dir,
-                                             'channel_lists.xml')
+        self.channel_lists_xml = \
+            os.path.join(self.cache_dir, 'channel_lists.xml')
         self.channel_lists = {}
         # Parse the Waveform List.
         self.channel_lists_parser = ChannelListParser(env=self)
         # Network index pickled dict.
-        self.network_index = os.path.join(self.cache_dir, 'networks_index.pickle')
+        self.network_index = \
+            os.path.join(self.cache_dir, 'networks_index.pickle')
 
         # Calculate the time range. This is needed a lot and therefore kept as
         # a variable.
@@ -97,6 +98,7 @@ class Environment(object):
         """
         Updates the splash screen.
         """
-        self.splash.showMessage(text, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
-                       QtCore.Qt.black)
+        self.splash.showMessage(text,
+                                QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom,
+                                QtCore.Qt.black)
         self.qApp.processEvents()

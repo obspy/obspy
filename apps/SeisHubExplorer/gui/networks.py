@@ -52,7 +52,6 @@ class TreeItem(object):
                     data['longitude'], data['elevation'])
         return msg
 
-
     def getFullPath(self):
         """
         Custom method to return the full path and the type of the item.
@@ -73,7 +72,7 @@ class TreeItem(object):
             path = '%s.%s' % (self.parentItem.data(0), self.data(0))
         elif self.type == 'channel':
             data = self.data(0)
-            # No seperate location handling. Is included in the channel data.
+            # No separate location handling. Is included in the channel data.
             if '.' in data:
                 path = '%s.%s.%s' % (self.parentItem.parentItem.data(0),
                                      self.parentItem.data(0), data)
@@ -96,6 +95,7 @@ class TreeItem(object):
 
         return 0
 
+
 class TreeModel(QtCore.QAbstractItemModel):
     """
     Implements the Tree Model.
@@ -107,7 +107,7 @@ class TreeModel(QtCore.QAbstractItemModel):
         QtCore.QAbstractItemModel.__init__(self, parent)
         #super(TreeModel, self).__init__(parent)
         self.env = env
-        # Lade Datensatz 
+        # load data set 
         f = open(filename, 'rb')
         try:
             self.networks = pickle.load(f)
@@ -258,7 +258,8 @@ class TreeModel(QtCore.QAbstractItemModel):
                         # Connect to signal.
                         ch_signal = st_child.child(st_child.childCount() - 1)
         # Also fill it with the channel lists.
-        parent.appendChild(TreeItem(('Groups'), 'Plot serveral channels.', parent))
+        parent.appendChild(TreeItem(('Groups'),
+                                    'Plot serveral channels.', parent))
         chan_lists = parent.child(parent.childCount() - 1)
         # Loop over every list.
         lists = self.env.channel_lists.keys()
@@ -268,14 +269,20 @@ class TreeModel(QtCore.QAbstractItemModel):
             tree_item.channel_group = True
             chan_lists.appendChild(tree_item)
 
+
 class TreeSelector(QtGui.QItemSelectionModel):
+    """
+    """
     def __init__(self, model, *args, **kwargs):
         # XXX: Kwargs not working.
         # super(TreeSelector, self).__init__(*args, **kwargs)
         # super(TreeSelector, self).__init__(model)
         QtGui.QItemSelectionModel.__init__(self, model)
 
+
 class NetworkTree(QtGui.QTreeView):
+    """
+    """
     def __init__(self, waveforms, env, parent=None, *args, **kwargs):
         QtGui.QTreeView.__init__(self, parent)
         #super(NetworkTree, self).__init__(parent)
@@ -300,5 +307,5 @@ class NetworkTree(QtGui.QTreeView):
         self.startup()
         # Reconnect the signals.
         QtCore.QObject.connect(self.nw_select_model,
-            QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"), \
+            QtCore.SIGNAL("selectionChanged(QItemSelection, QItemSelection)"),
             self.env.main_window.waveforms.waveform_scene.add_channel)
