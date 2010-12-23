@@ -40,8 +40,7 @@ information.
 Stats({'network': '', '_format': 'SEISAN', 'npts': 6000, 'station': 'KONO',
        'location': '0',
        'starttime': UTCDateTime(2001, 1, 13, 17, 45, 1, 999000),
-       'delta': 0.050000000000000003, 'calib': 1.0, 'sampling_rate': 20.0,
-       'channel': 'B0Z'})
+       'delta': 0.05, 'calib': 1.0, 'sampling_rate': 20.0, 'channel': 'B0Z'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 

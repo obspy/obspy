@@ -338,7 +338,7 @@ class UTCDateTime(datetime.datetime):
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getTimeStamp()
-        1222864235.0450201
+        1222864235.04502
 
         :rtype: float
         :return: Time stamp in seconds

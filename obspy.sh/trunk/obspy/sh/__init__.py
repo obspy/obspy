@@ -41,8 +41,7 @@ information.
 Stats({'network': '', '_format': 'SH_ASC', 'station': 'TEST', 'npts': 801,
        'sh': AttribDict({'COMMENT': 'TEST TRACE IN QFILE #1'}), 'location': '',
        'starttime': UTCDateTime(2009, 10, 1, 12, 46, 1),
-       'delta': 0.050000000000000003, 'calib': 1.5, 'sampling_rate': 20.0,
-       'channel': 'BHN'})
+       'delta': 0.05, 'calib': 1.5, 'sampling_rate': 20.0, 'channel': 'BHN'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
