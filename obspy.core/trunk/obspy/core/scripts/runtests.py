@@ -66,6 +66,29 @@ import warnings
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
 
 
+#XXX: start of ugly monkey patch for Python 2.7 
+# classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
+class _WritelnDecorator(object):
+    """
+    Used to decorate file-like objects with a handy 'writeln' method
+    """
+    def __init__(self,stream):
+        self.stream = stream
+
+    def __getattr__(self, attr):
+        if attr in ('stream', '__getstate__'):
+            raise AttributeError(attr)
+        return getattr(self.stream,attr)
+
+    def writeln(self, arg=None):
+        if arg:
+            self.write(arg)
+        self.write('\n') # text-mode streams translate to \r\n if needed
+
+unittest._WritelnDecorator = _WritelnDecorator
+#XXX: end of ugly monkey patch
+
+
 def _getSuites(verbosity=1, names=[]):
     """
     The ObsPy test suite.
