@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.seisan - SEIAN read support
+obspy.seisan - SEISAN read support
 =================================
 This module provides read support for SEISAN waveform files.
 
