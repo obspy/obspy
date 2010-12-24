@@ -336,9 +336,9 @@ class UTCDateTime(datetime.datetime):
         """
         Returns UTC timestamp in floating point seconds.
 
-        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 123456)
         >>> dt.getTimeStamp()
-        1222864235.04502
+        1222864235.123456
 
         :rtype: float
         :return: Time stamp in seconds
