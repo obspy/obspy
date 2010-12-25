@@ -37,11 +37,19 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': '', '_format': 'SH_ASC', 'station': 'TEST', 'npts': 801,
-       'sh': AttribDict({'COMMENT': 'TEST TRACE IN QFILE #1'}), 'location': '',
-       'starttime': UTCDateTime(2009, 10, 1, 12, 46, 1),
-       'delta': 0.05, 'calib': 1.5, 'sampling_rate': 20.0, 'channel': 'BHN'})
+>>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+             network: 
+             station: TEST
+            location: 
+             channel: BHN
+           starttime: 2009-10-01T12:46:01.000000Z
+             endtime: 2009-10-01T12:46:41.000000Z
+       sampling_rate: 20.0
+               delta: 0.05
+                npts: 801
+               calib: 1.5
+             _format: SH_ASC
+                  sh: AttribDict({'COMMENT': 'TEST TRACE IN QFILE #1'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 

@@ -36,11 +36,18 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> st[0].stats #doctest: +NORMALIZE_WHITESPACE
-Stats({'network': '', '_format': 'SEISAN', 'npts': 6000, 'station': 'KONO',
-       'location': '0',
-       'starttime': UTCDateTime(2001, 1, 13, 17, 45, 1, 999000),
-       'delta': 0.05, 'calib': 1.0, 'sampling_rate': 20.0, 'channel': 'B0Z'})
+>>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+             network: 
+             station: KONO
+            location: 0
+             channel: B0Z
+           starttime: 2001-01-13T17:45:01.999000Z
+             endtime: 2001-01-13T17:50:01.949000Z
+       sampling_rate: 20.0
+               delta: 0.05
+                npts: 6000
+               calib: 1.0
+             _format: SEISAN
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
