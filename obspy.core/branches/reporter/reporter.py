@@ -1,92 +1,127 @@
+# -*- coding: utf-8 -*-
 from StringIO import StringIO
 from daemon import Daemon
+from string import Template
 from xml.etree import ElementTree as etree
 import BaseHTTPServer
 import cgi
 import datetime
+import os
+import reporter
 import sqlite3
 import sys
 import time
+import urlparse
 
 
 HOST_NAME = 'localhost'
-PORT_NUMBER = 8080
-DB_NAME = "/home/barsch/opt/reporter/reporter.db"
+PORT_NUMBER = 8000
+
+# local path and files
+path = os.path.dirname(reporter.__file__)
+
+DB_NAME = os.path.join(path, "reporter.db")
+PID_FILE = os.path.join(path, "reporter.pid")
+
+# read static files
+temp_css = open(os.path.join(path, 'templates', 'reporter.css')).read()
+temp_index = open(os.path.join(path, 'templates', 'index.html')).read()
+temp_datarow = open(os.path.join(path, 'templates', 'datarow.html')).read()
+
+CREATE_SQL = """
+    CREATE TABLE report (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER,
+        tests INTEGER,
+        errors INTEGER,
+        modules INTEGER,
+        node TEXT,
+        system TEXT,
+        architecture TEXT,
+        version TEXT,
+        xml TEXT)
+"""
+
+INSERT_SQL = """
+    INSERT INTO report (timestamp, tests, errors, modules, system,
+        architecture, version, xml, node) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+"""
+
+SELECT_ALL_SQL = """
+    SELECT id, timestamp, tests, errors, modules, system, architecture,
+        version, xml, node 
+    FROM report
+    %s 
+    ORDER BY timestamp DESC LIMIT 20
+"""
+
+SELECT_SQL = """
+    SELECT id, timestamp, tests, errors, modules, system, architecture, 
+        version, xml, node
+    FROM report 
+    WHERE id=?
+"""
+
+SELECT_ARCHS_SQL = """
+    SELECT distinct(architecture)
+    FROM report
+    ORDER BY architecture
+"""
+
+SELECT_SYSTEMS_SQL = """
+    SELECT distinct(system)
+    FROM report
+    ORDER BY system
+"""
+
+SELECT_VERSIONS_SQL = """
+    SELECT distinct(version)
+    FROM report
+    ORDER BY version
+"""
 
 # create db connection
 conn = sqlite3.connect(DB_NAME)
 
 # create tables
 try:
-    conn.execute('''
-        CREATE TABLE report (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp INTEGER,
-            tests INTEGER,
-            errors INTEGER,
-            modules INTEGER,
-            system TEXT,
-            architecture TEXT,
-            version TEXT,
-            xml TEXT)
-    ''')
+    conn.execute(CREATE_SQL)
 except:
     pass
 
+# fetch default filter
+ARCHS = [i[0] for i in conn.execute(SELECT_ARCHS_SQL).fetchall()]
+VERSIONS = [i[0] for i in conn.execute(SELECT_VERSIONS_SQL).fetchall()]
+SYSTEMS = [i[0] for i in conn.execute(SELECT_SYSTEMS_SQL).fetchall()]
 
-
-INSERT_SQL = """
-    INSERT INTO report (timestamp, tests, errors, modules, system,
-        architecture, version, xml) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-"""
-
-SELECT_ALL_SQL = """
-    SELECT * FROM report ORDER BY timestamp DESC LIMIT 20
-"""
-
-SELECT_SQL = """
-    SELECT * FROM report WHERE id=?
-"""
 
 class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def _stylesheet(self):
         self.wfile.write("""
-        <style type='text/css'>
-          body {
-            font-family: Verdana; 
-            margin: 20px;
-          }
-          pre {
-            background-color:#EEEEEE;
-          }
-          th {
-            background-color:#EEEEEE;
-            margin: 0;
-            padding: 5px;
-            text-align: center;
-            border: 1px solid gray;
-          }
-          table {
-            border-collapse: collapse;
-            margin: 0;
-            padding: 0;
-          }
-          td {
-            text-align: center;
-            border: 1px solid gray;
-            margin: 0;
-            padding: 5px;
-          }
-          .error {
-            background-color: #FF0000;
-          }
-          .ok {
-            background-color: #00FF00;
-          }
-        </style>
-        """)
+        <style type='text/css'>%s</style>
+        """ % temp_css)
+    def _filter(self, id, items, qargs={}):
+        url = "/?filter&amp;"
+        for key, value in qargs.iteritems():
+            if key == id:
+                continue
+            url += '%s=%s&amp;' % (key, value)
+        out = '<ul class="filter">'
+        if id in qargs:
+            out += '  <li><a href="%s">all</a></li>' % (url)
+        else:
+            out += '  <li><b>all</b></li>'
+        for item in items:
+            out += "  <li>"
+            if id in qargs and item == qargs[id]:
+                out += "<b>%s</b>" % (item)
+            else:
+                out += '<a href="%s%s=%s">%s</a>' % (url, id, item, item)
+            out += "  </li>"
+        out += "</ul>"
+        return out
 
     def do_GET(self):
         """
@@ -97,7 +132,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 id = self.path[9:]
                 result = conn.execute(SELECT_SQL, (id,))
                 item = result.fetchone()
-            except:
+            except Exception, e:
+                print e
                 self.send_response(200)
                 return
             self.send_response(200)
@@ -106,11 +142,12 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(item[8])
         elif self.path.startswith('/?id='):
             try:
-                id = self.path[5:]
+                id = int(self.path[5:])
                 result = conn.execute(SELECT_SQL, (id,))
                 item = result.fetchone()
                 root = etree.parse(StringIO(item[8])).getroot()
-            except:
+            except Exception, e:
+                print e
                 self.send_response(200)
                 return
             self.send_response(200)
@@ -123,18 +160,18 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self._stylesheet()
             self.wfile.write("</head>")
             self.wfile.write("<body><h1>Report #%s</h1>" % id)
-            self.wfile.write("<p><a href='?'>Return to overview</a></p>")
+            self.wfile.write("<p><a href='?id=%d'>&lt;&lt;&lt;</a>" % (id - 1))
+            self.wfile.write(" <a href='?'>Return to overview</a>")
+            self.wfile.write(" <a href='?id=%d'>&gt;&gt;&gt;</a></p>" % (id + 1))
             self.wfile.write("<h2>Platform</h2>")
             self.wfile.write("<ul>")
             for item in root.find('platform')._children:
-                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag,
-                                                              item.text))
+                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag, item.text))
             self.wfile.write("</ul>")
             self.wfile.write("<h2>Dependencies</h2>\n")
             self.wfile.write("<ul>")
             for item in root.find('dependencies')._children:
-                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag,
-                                                              item.text))
+                self.wfile.write("<li><b>%s</b> : %s</li>" % (item.tag, item.text))
             self.wfile.write("</ul>")
             self.wfile.write("<h2>ObsPy</h2>\n")
             self.wfile.write("<table>\n")
@@ -149,24 +186,29 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for item in root.find('obspy')._children:
                 errcases = ""
                 self.wfile.write("  <tr>\n")
-                version = item.find('installed').text
+                version = item.findtext('installed')
                 self.wfile.write("    <td>obspy.%s</td>" % (item.tag))
                 self.wfile.write("    <td>%s</td>" % (version))
                 if item.find('tested') != None:
-                    tests = int(item.find('tests').text)
+                    tests = int(item.findtext('tests'))
                     errors = 0
                     for sitem in item.find('errors')._children:
-                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid,
-                                                                     errid)
-                        errlog += "<pre>%s</pre>" % sitem.text
-                        errcases += "<a href='#%d'>#%d</a> " % (errid,
-                                                                errid)
+                        temp = sitem.text
+                        temp = temp.replace('&' , '&amp;')
+                        temp = temp.replace('<' , '&lt;')
+                        temp = temp.replace('>' , '&gt;')
+                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid, errid)
+                        errlog += "<pre>%s</pre>" % temp
+                        errcases += "<a href='#%d'>#%d</a> " % (errid, errid)
                         errid += 1
                         errors += 1
                     for sitem in item.find('failures')._children:
-                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid,
-                                                                     errid)
-                        errlog += "<pre>%s</pre>" % sitem.text
+                        temp = sitem.text
+                        temp = temp.replace('&' , '&amp;')
+                        temp = temp.replace('<' , '&lt;')
+                        temp = temp.replace('>' , '&gt;')
+                        errlog += "<a name='%d'><h5>#%d</h5></a>" % (errid, errid)
+                        errlog += "<pre>%s</pre>" % temp
                         errcases += "<a href='#%d'>#%d</a> " % (errid, errid)
                         errors += 1
                         errid += 1
@@ -174,8 +216,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         color = "error"
                     else:
                         color = "ok"
-                    self.wfile.write("    <td class='%s'>%d of %d</td>" % \
-                                     (color, errors, tests))
+                    self.wfile.write("    <td class='%s'>%d of %d</td>" % (color, errors, tests))
                 else:
                     self.wfile.write("    <td>Not tested</td>\n")
                 self.wfile.write("<td>%s</td>" % (errcases))
@@ -183,57 +224,68 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("</table>\n")
             self.wfile.write(errlog)
             try:
-                log = root.find('install_log').text
-                self.wfile.write("<h2>Install Log</h2>")
-                self.wfile.write("<pre>%s</pre" % log)
-            except:
+                log = root.findtext('install_log')
+                log = unicode(log).encode("utf-8")
+                if log != 'None':
+                    self.wfile.write("<h2>Install Log</h2>")
+                    self.wfile.write("<pre>%s</pre" % log)
+            except Exception, e:
+                print e
                 pass
             self.wfile.write("</body></html>")
         else:
-            results = conn.execute(SELECT_ALL_SQL)
+            # parse query
+            query = urlparse.parse_qs(self.path)
+            # filter
+            filter = ''
+            qargs = {}
+            if 'system' in query and len(query['system']) == 1 and \
+               query['system'][0] in SYSTEMS:
+                qargs['system'] = query['system'][0]
+                filter += "AND system='%s' " % qargs['system']
+            if 'arch' in query and len(query['arch']) == 1 and \
+                query['arch'][0] in ARCHS:
+                    qargs['arch'] = query['arch'][0]
+                    filter += "AND architecture='%s' " % qargs['arch']
+            if 'version' in query and len(query['version']) == 1 and \
+               query['version'][0] in VERSIONS:
+                qargs['version'] = query['version'][0]
+                filter += "AND version='%s' " % qargs['version']
+            if filter:
+                filter = 'WHERE' + filter[3:]
+            # request data
+            results = conn.execute(SELECT_ALL_SQL % filter)
+            # write headers
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write("<html>")
-            self.wfile.write("<head>")
-            self.wfile.write("<title>Last 20 reports</title>")
-            self._stylesheet()
-            self.wfile.write("</head>")
-            self.wfile.write("<body><h1>Reports</h1>")
-            self.wfile.write('<table>')
-            self.wfile.write("<tr>")
-            self.wfile.write("<th>Timestamp</th>")
-            self.wfile.write("<th>Failures/Errors [# Modules]</th>")
-            self.wfile.write("<th>System</th>")
-            self.wfile.write("<th>Python Version</th>")
-            self.wfile.write("<th>XML</th>")
-            self.wfile.write("</tr>")
+            # write page
+            rows = ''
+            temp = Template(temp_datarow)
             for item in results:
-                self.wfile.write("<tr>")
-                dt = datetime.datetime.fromtimestamp(item[1])
-                self.wfile.write("<td>%s</td>" % dt)
-                errors = int(item[3])
-                tests = int(item[2])
-                if errors > 0:
-                    color = "#FF0000"
+                data = {}
+                data['id'] = item[0]
+                data['datetime'] = datetime.datetime.fromtimestamp(item[1])
+                data['tests'] = int(item[2])
+                data['errors'] = int(item[3])
+                data['modules'] = int(item[4])
+                data['system'] = item[5]
+                data['arch'] = item[6]
+                data['version'] = item[7]
+                data['node'] = item[9]
+                if int(item[3]):
+                    data['status'] = "error"
                 else:
-                    color = "#00FF00"
-                self.wfile.write("<td style='background-color:%s'>" % color)
-                self.wfile.write('%s of %s &nbsp; [%s]' % (item[3], item[2],
-                                                           item[4]))
-                self.wfile.write("</td>")
-                self.wfile.write("<td>%s (%s)</td>" % (item[5], item[6]))
-                self.wfile.write("<td>%s</td>" % item[7])
-                self.wfile.write("<td>")
-                self.wfile.write("[<a href='?id=%s'>" % item[0])
-                self.wfile.write("Error report</a>]")
-                self.wfile.write(" | ")
-                self.wfile.write("[<a href='?xml_id=%s'>" % item[0])
-                self.wfile.write("XML</a>]")
-                self.wfile.write("</td>")
-                self.wfile.write("</tr>")
-            self.wfile.write("</table>")
-            self.wfile.write("</body></html>")
+                    data['status'] = "ok"
+                rows += temp.safe_substitute(**data)
+            data = {}
+            data['CSS'] = temp_css
+            data['DATA'] = rows
+            data['FILTER_SYSTEM'] = self._filter('system', SYSTEMS, qargs)
+            data['FILTER_ARCH'] = self._filter('arch', ARCHS, qargs)
+            data['FILTER_VERSION'] = self._filter('version', VERSIONS, qargs)
+            out = Template(temp_index).safe_substitute(**data)
+            self.wfile.write(out)
 
     def do_POST(self):
         """
@@ -255,8 +307,10 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             system = form['system'].value
             python_version = form['python_version'].value
             architecture = form['architecture'].value
+            root = etree.parse(StringIO(xml_doc)).getroot()
+            node = root.findtext('platform/node')
             conn.execute(INSERT_SQL, (ts, tests, errors, modules, system,
-                                      architecture, python_version, xml_doc))
+                                      architecture, python_version, xml_doc, node))
             conn.commit()
         except Exception, e:
             self.send_response(500, str(e))
@@ -282,10 +336,12 @@ class MyDaemon(Daemon):
 
 
 if __name__ == "__main__":
-    daemon = MyDaemon('/home/barsch/opt/reporter/reporter.pid')
+    daemon = MyDaemon(PID_FILE)
     if len(sys.argv) == 2:
         if 'start' == sys.argv[1]:
             daemon.start()
+        elif 'debug' == sys.argv[1]:
+            run(1)
         elif 'stop' == sys.argv[1]:
             daemon.stop()
         elif 'restart' == sys.argv[1]:
@@ -295,5 +351,5 @@ if __name__ == "__main__":
             sys.exit(2)
         sys.exit(0)
     else:
-        print "usage: %s start|stop|restart" % sys.argv[0]
+        print "usage: %s start|stop|restart|debug" % sys.argv[0]
         sys.exit(2)
