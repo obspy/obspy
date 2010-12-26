@@ -6,7 +6,6 @@ The obspy.imaging.spectogram test suite.
 from obspy.core import UTCDateTime, Stream, Trace
 import time
 from obspy.imaging import spectrogram
-import inspect
 import numpy as np
 import os
 import unittest
@@ -23,8 +22,8 @@ class SpectrogramTestCase(unittest.TestCase):
     Test cases for spectrogram plotting.
     """
     def setUp(self):
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'output')
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'output')
 
     @skipIfAutomatedTest
     def test_Waveform(self):

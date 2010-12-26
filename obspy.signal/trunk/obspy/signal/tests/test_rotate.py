@@ -6,7 +6,6 @@ The Rotate test suite.
 
 from obspy.signal import rotate_NE_RT, gps2DistAzimuth, rotate_ZNE_LQT, \
         rotate_LQT_ZNE
-import inspect
 import os
 import unittest
 import gzip
@@ -19,11 +18,7 @@ class RotateTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_rotate_NE_RTVsPitsa(self):
         """
@@ -79,21 +74,21 @@ class RotateTestCase(unittest.TestCase):
                         (180, 90, n, -z, -e),
                         (270, 0, z, e, n),
                         (30, 30, z * c - n * c / 2 - e / 4,
-                         - z / 2 - n * c ** 2 - e * c / 2, - n / 2 + e * c),
+                         - z / 2 - n * c ** 2 - e * c / 2, -n / 2 + e * c),
                         (180, 180, -z, -n, -e),
                         (270, 270, -e, z, n))
         for ba, inc, l, q, t in ba_inc_l_q_t:
             l2, q2, t2 = rotate_ZNE_LQT(z, n, e, ba, inc)
             z2, n2, e2 = rotate_LQT_ZNE(l, q, t, ba, inc)
             # calculate normalized rms
-            rms  = np.sqrt(np.sum((l2 - l) ** 2) / np.sum(l ** 2))
+            rms = np.sqrt(np.sum((l2 - l) ** 2) / np.sum(l ** 2))
             rms += np.sqrt(np.sum((q2 - q) ** 2) / np.sum(q ** 2))
             rms += np.sqrt(np.sum((t2 - t) ** 2) / np.sum(t ** 2))
             rms /= 3.
-            rms2  = np.sqrt(np.sum((z2 - z) ** 2) / np.sum(z ** 2))
+            rms2 = np.sqrt(np.sum((z2 - z) ** 2) / np.sum(z ** 2))
             rms2 += np.sqrt(np.sum((n2 - n) ** 2) / np.sum(n ** 2))
             rms2 += np.sqrt(np.sum((e2 - e) ** 2) / np.sum(e ** 2))
-            rms2 /= 3.            
+            rms2 /= 3.
             self.assertEqual(rms < 1.0e-5, True)
             self.assertEqual(rms2 < 1.0e-5, True)
 

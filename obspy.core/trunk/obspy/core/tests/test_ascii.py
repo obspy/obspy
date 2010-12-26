@@ -2,7 +2,6 @@
 
 from obspy.core import UTCDateTime
 from obspy.core.ascii import readSLIST, readTSPAIR, isSLIST, isTSPAIR
-import inspect
 import numpy as np
 import os
 import unittest
@@ -13,7 +12,7 @@ class ASCIITestCase(unittest.TestCase):
     """
     def setUp(self):
         # Directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.path = os.path.dirname(__file__)
 
     def test_isSLISTFile(self):
         """

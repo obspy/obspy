@@ -6,7 +6,6 @@ The Filter test suite.
 
 from obspy.signal import bandpass, lowpass, highpass
 from obspy.signal.filter import envelope
-import inspect
 import os
 import unittest
 import gzip
@@ -19,11 +18,7 @@ class FilterTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_bandpassVsPitsa(self):
         """

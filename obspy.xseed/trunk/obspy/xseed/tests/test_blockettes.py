@@ -4,7 +4,6 @@ from glob import iglob
 from lxml import etree
 from obspy.xseed.blockette import Blockette054
 from obspy.xseed.blockette.blockette import BlocketteLengthException
-import inspect
 import os
 import sys
 import unittest
@@ -15,10 +14,8 @@ class BlocketteTestCase(unittest.TestCase):
     Test cases for all blockettes..
     """
     def setUp(self):
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-
-    def tearDown(self):
-        pass
+        # directory where the test files are located
+        self.path = os.path.dirname(__file__)
 
     def test_invalidBlocketteLength(self):
         """

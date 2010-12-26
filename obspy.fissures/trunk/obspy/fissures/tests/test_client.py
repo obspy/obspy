@@ -6,7 +6,6 @@ The DHI/Fissures client test suite.
 
 from obspy.core import UTCDateTime, read
 from obspy.fissures import Client
-import inspect
 import os
 import unittest
 import numpy as np
@@ -18,11 +17,7 @@ class ClientTestSuite(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(self.dir, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_getWavefrom(self):
         """
@@ -43,7 +38,7 @@ class ClientTestSuite(unittest.TestCase):
         self.assertEqual(501, len(tr.data))
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
-        st2.trim(starttime=t, endtime=t+10)
+        st2.trim(starttime=t, endtime=t + 10)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
 
     def test_getNetworkIds(self):

@@ -5,7 +5,6 @@ The obspy.imaging.waveform test suite.
 
 from copy import deepcopy
 from obspy.core import Stream, Trace, UTCDateTime
-import inspect
 import numpy as np
 import os
 import unittest
@@ -22,8 +21,8 @@ class WaveformTestCase(unittest.TestCase):
     Test cases for waveform plotting.
     """
     def setUp(self):
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'output')
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'output')
 
     def _createStream(self, starttime, endtime, sampling_rate):
         """

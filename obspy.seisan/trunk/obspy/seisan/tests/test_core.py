@@ -5,7 +5,6 @@ The seisan.core test suite.
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
-import inspect
 import numpy as np
 import os
 import unittest
@@ -17,11 +16,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(self.dir, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_getVersion(self):
         """

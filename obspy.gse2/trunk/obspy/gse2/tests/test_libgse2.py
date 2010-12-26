@@ -8,7 +8,6 @@ from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError
-import inspect
 import numpy as np
 import os
 import unittest
@@ -20,11 +19,7 @@ class LibGSE2TestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_read(self):
         """

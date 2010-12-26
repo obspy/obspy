@@ -10,7 +10,6 @@ from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
 from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile
 from obspy.segy.util import NamedTemporaryFile
-import inspect
 import numpy as np
 import os
 import unittest
@@ -22,7 +21,7 @@ class SEGYTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.dir = os.path.dirname(__file__)
         self.path = os.path.join(self.dir, 'data')
         # All the files and information about them. These files will be used in
         # most tests. data_sample_enc is the encoding of the data value and
@@ -75,9 +74,6 @@ class SEGYTestCase(unittest.TestCase):
                        2: 'int32',
                        3: 'int16',
                        5: 'float32'}
-
-    def tearDown(self):
-        pass
 
     def test_unpackSEGYData(self):
         """

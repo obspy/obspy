@@ -3,7 +3,6 @@
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ
-import inspect
 import numpy as np
 import os
 import unittest
@@ -14,10 +13,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # Directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-
-    def tearDown(self):
-        pass
+        self.path = os.path.dirname(__file__)
 
     def test_read101Traces(self):
         """

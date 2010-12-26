@@ -6,7 +6,6 @@ The audio wav.core test suite.
 
 from obspy.core import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
-import inspect
 import os
 import unittest
 import numpy as np
@@ -18,11 +17,8 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.file = os.path.join(self.path, 'data', '3cssan.near.8.1.RNON.wav')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.file = os.path.join(self.path, '3cssan.near.8.1.RNON.wav')
 
     def test_readViaObsPy(self):
         """
@@ -55,7 +51,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = np.array([111, 111, 111, 111, 111, 109, 106, 103, 103,
                              110, 121, 132, 139])
         testfile = NamedTemporaryFile().name
-        self.file = os.path.join(self.path, 'data', '3cssan.reg.8.1.RNON.wav')
+        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
         tr = read(self.file, format='WAV')[0]
         self.assertEqual(tr.stats.npts, 10599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)

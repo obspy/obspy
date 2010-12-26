@@ -13,7 +13,6 @@ from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS
 from obspy.mseed.libmseed import clibmseed, _MSStruct
 import copy
 import ctypes as C
-import inspect
 import numpy as np
 import os
 import random
@@ -28,16 +27,13 @@ class LibMSEEDTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.dir = os.path.dirname(__file__)
         self.path = os.path.join(self.dir, 'data')
         # mseed steim compression is big endian
         if sys.byteorder == 'little':
             self.swap = 1
         else:
             self.swap = 0
-
-    def tearDown(self):
-        pass
 
     def test_convertDatetime(self):
         """

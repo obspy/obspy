@@ -6,7 +6,6 @@ The polarization.core test suite.
 
 from obspy.signal import polarization, util
 from scipy import signal
-import inspect
 import numpy as np
 import os
 import unittest
@@ -20,8 +19,7 @@ class PolarizationTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
         file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
         f = open(file)
         self.res = np.loadtxt(f)
@@ -38,7 +36,7 @@ class PolarizationTestCase(unittest.TestCase):
         f = open(file)
         data_n = np.loadtxt(f)
         f.close()
-        #self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        #self.path = os.path.dirname(__file__)
         #self.res = N.loadtxt("3cssan.hy.1.MBGA_Z")
         #data = N.loadtxt("MBGA_Z.ASC")
         self.n = 256
@@ -121,13 +119,13 @@ class PolarizationTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((pol[4] - self.res[:, 42]) ** 2) /
                       np.sum(self.res[:, 42] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-        rms = np.sqrt(np.sum((pol[5][:,0] - self.res[:, 37]) ** 2) /
+        rms = np.sqrt(np.sum((pol[5][:, 0] - self.res[:, 37]) ** 2) /
                       np.sum(self.res[:, 37] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-        rms = np.sqrt(np.sum((pol[5][:,1] - self.res[:, 38]) ** 2) /
+        rms = np.sqrt(np.sum((pol[5][:, 1] - self.res[:, 38]) ** 2) /
                       np.sum(self.res[:, 38] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-        rms = np.sqrt(np.sum((pol[5][:,2] - self.res[:, 39]) ** 2) /
+        rms = np.sqrt(np.sum((pol[5][:, 2] - self.res[:, 39]) ** 2) /
                       np.sum(self.res[:, 39] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
         rms = np.sqrt(np.sum((pol[6] - self.res[:, 41]) ** 2) /

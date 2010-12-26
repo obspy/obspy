@@ -9,7 +9,6 @@ from obspy.signal.util import lib
 import numpy as np
 import unittest
 import os
-import inspect
 import gzip
 
 
@@ -19,15 +18,10 @@ class TriggerTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
         # random seed data
         np.random.seed(815)
         self.data = np.random.randn(int(1e5))
-        pass
-
-    def tearDown(self):
-        pass
 
     def test_recStaltaC(self):
         """

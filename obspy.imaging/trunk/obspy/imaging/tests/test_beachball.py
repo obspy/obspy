@@ -5,7 +5,6 @@ The obspy.imaging.beachball test suite.
 
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
-import inspect
 import os
 import unittest
 import matplotlib.pyplot as plt
@@ -22,8 +21,8 @@ class BeachballTestCase(unittest.TestCase):
     Test cases for beachball generation.
     """
     def setUp(self):
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'output')
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'output')
 
     @skipIfAutomatedTest
     def test_Beachball(self):

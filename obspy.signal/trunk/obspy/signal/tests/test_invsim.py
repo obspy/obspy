@@ -7,7 +7,6 @@ The InvSim test suite.
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
 import gzip
-import inspect
 import numpy as np
 import os
 import unittest
@@ -65,11 +64,7 @@ class InvSimTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_seisSimVsPitsa1(self):
         """
@@ -214,7 +209,7 @@ class InvSimTestCase(unittest.TestCase):
     # actually acting
     #def test_seisSimVsPitsa2(self):
     #    from obspy.mseed import test as tests_
-    #    path = os.path.dirname(inspect.getsourcefile(tests_))
+    #    path = os.path.dirname(__file__)
     #    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
     #    g = Trace()
     #    g.read(file,format='MSEED')

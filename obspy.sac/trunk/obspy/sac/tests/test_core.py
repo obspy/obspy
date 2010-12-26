@@ -7,7 +7,6 @@ from obspy.core import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO
 import copy
-import inspect
 import numpy as np
 import os
 import unittest
@@ -20,7 +19,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        self.path = os.path.dirname(__file__)
         self.file = os.path.join(self.path, 'data', 'test.sac')
         self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
@@ -59,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
         # precision resulting in different values. The following line
         # is therefore just a fix until we have come to a conclusive
         # solution how to handle the two different approaches
-        tr1.stats.sac['depmen'] = tr.stats.sac['depmen'] 
+        tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
         self.assertTrue(tr == tr1)
 
     def test_readXYwriteXYViaObspy(self):
@@ -200,7 +199,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.sac.nvhdr, 6)
         self.assertAlmostEqual(st2[0].stats.sac.b, 0.000400)
         # compare with correct digit size (nachkommastellen)
-        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1)  * \
+        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1) * \
                                st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
         self.assertEqual(st2[0].stats.sac.iftype, 1)
         self.assertEqual(st2[0].stats.sac.leven, 1)
@@ -333,14 +332,14 @@ class CoreTestCase(unittest.TestCase):
         os.remove(sac_file)
         for i, header_value in enumerate(not_used):
             self.assertEquals(int(tr2.stats.sac[header_value]), i)
-        
+
     def test_writingMicroSeconds(self):
         """
         Test case for #194. Check that microseconds are written to
         the SAC header b
         """
         np.random.seed(815)
-        head = {'network': 'NL', 'station': 'HGN', 'channel': 'BHZ', 
+        head = {'network': 'NL', 'station': 'HGN', 'channel': 'BHZ',
                 'sampling_rate': 200.0,
                 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 999999)}
         data = np.random.randint(0, 5000, 100).astype("int32")

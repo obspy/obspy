@@ -7,7 +7,6 @@ from obspy.mseed import LibMSEED
 from obspy.mseed.core import readMSEED, isMSEED
 from obspy.mseed.headers import ENCODINGS
 from obspy.mseed.libmseed import _MSStruct
-import inspect
 import numpy as np
 import os
 import platform
@@ -19,10 +18,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # Directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-
-    def tearDown(self):
-        pass
+        self.path = os.path.dirname(__file__)
 
     def test_readFileViaLibMSEED(self):
         """

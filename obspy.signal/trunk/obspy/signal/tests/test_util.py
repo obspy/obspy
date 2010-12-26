@@ -7,7 +7,6 @@ The Filter test suite.
 from obspy.signal.util import lib_name
 from obspy.signal import xcorr
 import ctypes as C
-import inspect
 import numpy as np
 import os
 import unittest
@@ -17,12 +16,6 @@ class UtilTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.signal.util}.
     """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_xcorr(self):
         """
         """
@@ -71,9 +64,9 @@ class UtilTestCase(unittest.TestCase):
         data2 = data1.copy()
 
         window_len = 100
-        corp = np.empty(2*window_len+1, dtype='float64')
+        corp = np.empty(2 * window_len + 1, dtype='float64')
 
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        path = os.path.dirname(__file__)
         name = os.path.join(path, os.pardir, 'lib', lib_name)
         lib = C.CDLL(name)
         #

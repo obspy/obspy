@@ -6,7 +6,6 @@ The hoctavbands.core test suite.
 
 from obspy.signal import hoctavbands, util
 from scipy import signal
-import inspect
 import numpy as np
 import os
 import unittest
@@ -20,8 +19,7 @@ class HoctavbandsTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
         file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
         f = open(file)
         self.res = np.loadtxt(f)
@@ -30,7 +28,7 @@ class HoctavbandsTestCase(unittest.TestCase):
         f = open(file)
         data = np.loadtxt(f)
         f.close()
-        #self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
+        #self.path = os.path.dirname(__file__)
         #self.res = np.loadtxt("3cssan.hy.1.MBGA_Z")
         #data = np.loadtxt("MBGA_Z.ASC")
         self.n = 256
@@ -86,9 +84,6 @@ class HoctavbandsTestCase(unittest.TestCase):
         #[43] dplan
         self.data_win, self.nwin, self.no_win = \
             util.enframe(data, signal.hamming(self.n), self.inc)
-
-    def tearDown(self):
-        pass
 
     def test_hoctavbands(self):
         """

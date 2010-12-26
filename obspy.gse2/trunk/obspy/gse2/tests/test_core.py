@@ -8,7 +8,6 @@ from obspy.core import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2.libgse2 import ChksumError
 import copy
-import inspect
 import numpy as np
 import os
 import unittest
@@ -20,10 +19,7 @@ class CoreTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.dirname(inspect.getsourcefile(self.__class__))
-
-    def tearDown(self):
-        pass
+        self.path = os.path.dirname(__file__)
 
     def test_readViaObsPy(self):
         """

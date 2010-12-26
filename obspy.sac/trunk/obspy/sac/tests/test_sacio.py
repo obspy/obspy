@@ -8,7 +8,6 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, ReadSac, attach_paz
 import StringIO
 import numpy as np
-import inspect
 import os
 import unittest
 
@@ -19,11 +18,7 @@ class SacIOTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        path = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(path, 'data')
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
 
     def test_Write(self):
         """
@@ -254,8 +249,8 @@ class SacIOTestCase(unittest.TestCase):
                                              7.4592e-2, decimal=6)
         self.assertEqual(len(tr.stats.paz['zeros']), 5)
         self.assertEqual(len(tr.stats.paz['poles']), 4)
-        
-       
+
+
     def test_sacpaz_from_dataless(self):
         ### The following dictionary is extracted from a datalessSEED
         ### file

@@ -13,7 +13,6 @@ from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
-import inspect
 import os
 import unittest
 import warnings
@@ -21,17 +20,14 @@ import gzip
 
 
 class ParserTestCase(unittest.TestCase):
-
+    """
+    """
     def setUp(self):
         # directory where the test files are located
-        self.dir = os.path.dirname(inspect.getsourcefile(self.__class__))
-        self.path = os.path.join(self.dir, 'data')
-        self.BW_SEED_files = (os.path.join(self.path, file) for file in
-                ('dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
-                 'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS'))
-
-    def tearDown(self):
-        pass
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.BW_SEED_files = [os.path.join(self.path, file) for file in
+                ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
+                 'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
     def test_bug165(self):
         """
@@ -45,16 +41,16 @@ class ParserTestCase(unittest.TestCase):
         """
         parser = Parser()
         t = UTCDateTime("2010-01-01T00:00:00")
-        if hasattr(warnings, 'catch_warnings'): 
-            with warnings.catch_warnings(record=True) as w: 
-                warnings.simplefilter("always") 
+        if hasattr(warnings, 'catch_warnings'):
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
                 # Trigger a warning. 
                 parser.read(path("bug165.dataless"))
-                self.assertEqual(len(w), 1) 
-                self.assertTrue(issubclass(w[-1].category, UserWarning)) 
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[-1].category, UserWarning))
                 self.assertTrue('date' and 'required' in \
-                                        w[-1].message.message.lower()) 
-        else: 
+                                        w[-1].message.message.lower())
+        else:
             # Just raise the warning using Python 2.5. 
             parser.read(path("bug165.dataless"))
         paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
