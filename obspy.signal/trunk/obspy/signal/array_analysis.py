@@ -1071,14 +1071,15 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     nkx = np.ceil((kxmax + kstep / 10. - kxmin) / kstep)
     nky = np.ceil((kymax + kstep / 10. - kymin) / kstep)
 
-    transff = np.zeros((nkx, nky))
+    transff = np.empty((nkx, nky))
 
     for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
-            for k in np.arange(len(coords)):
-                transff[i, j] += np.exp(complex(0.,
-                    coords[k, 0] * kx + coords[k, 1] * ky))
-            transff[i, j] = abs(transff[i, j]) ** 2
+            _sum = 0j
+            for k in xrange(len(coords)):
+                _sum += np.exp(complex(0., 
+                        coords[k, 0] * kx + coords[k, 1] * ky))
+            transff[i, j] = abs(_sum) ** 2
 
     transff /= transff.max()
     return transff
@@ -1123,16 +1124,17 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     nsy = np.ceil((symax + sstep / 10. - symin) / sstep)
     nf = np.ceil((fmax + fstep / 10. - fmin) / fstep)
 
-    transff = np.zeros((nsx, nsy))
+    transff = np.empty((nsx, nsy))
+    buff = np.zeros(nf)
 
     for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
         for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
-            buff = np.zeros(nf)
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
+                _sum = 0j
                 for l in np.arange(len(coords)):
-                    buff[k] += np.exp(complex(0., (coords[l, 0] * sx
+                    _sum += np.exp(complex(0., (coords[l, 0] * sx
                         + coords[l, 1] * sy) * 2 * np.pi * f))
-                buff[k] = abs(buff[k]) ** 2
+                buff[k] = abs(_sum) ** 2
             transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
 
     transff /= transff.max()
