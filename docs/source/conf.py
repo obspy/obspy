@@ -403,7 +403,18 @@ SphinxDocString._str_table = obspy_str_table
 #from sphinx.ext.autodoc import cut_lines
 # Attach this to the builder
 def setup(app):
-    pass
+    # numpydoc.py (0.4) adds a extra NumpyPythonDomain domain which causes
+    # an ``TypeError: adding ViewList to a non-ViewList`` for ``.. plot::``
+    # directives inside the docstrings of functions. Deactivate it
+    # NOTE: this is the second time numpydoc causes troubles, if there are
+    # any problems try the version shipped with matplotlibs sampledoc_tut
+    # as reference:
+    # https://matplotlib.svn.sourceforge.net/svnroot/matplotlib/\
+    # trunk/sampledoc_tut/sphinxext/numpydoc.py
+    try:
+        app.domains.pop('np')
+    except:
+        pass
     #app.connect('autodoc-process-docstring', cut_lines(2))
     #app.connect('autodoc-process-signature', mangle_signature)
     #app.connect('autodoc-process-docstring', process_inherited)
