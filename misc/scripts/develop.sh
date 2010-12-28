@@ -3,10 +3,10 @@
 PACKAGES="core gse2 mseed sac seisan sh wav xseed signal imaging arclink \
 seishub fissures db segy events"
 
-# Go from here to ObsPy root directory
+# go from here to ObsPy root directory
 cd ../..
 
-# Link all packages to python2.x/lib/site-packages/
+# link all packages to python2.x/lib/site-packages/
 for NAME in $PACKAGES; do
     cd obspy.$NAME/trunk
     rm -rf build
@@ -14,5 +14,5 @@ for NAME in $PACKAGES; do
     cd ../..
 done
 
-# Go back to scripts directory
+# go back to scripts directory
 cd misc/scripts
