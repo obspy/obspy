@@ -1,1 +1,2 @@
+include docs/api/*
 include obspy/segy/tests/data/*

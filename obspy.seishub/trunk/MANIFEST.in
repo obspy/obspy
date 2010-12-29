@@ -1,1 +1,2 @@
-#include obspy/seishub/tests/data/*
+include docs/api/*
+include obspy/seishub/tests/data/*

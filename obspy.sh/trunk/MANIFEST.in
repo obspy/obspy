@@ -1,1 +1,2 @@
 include obspy/sh/tests/data/*
+include docs/api/*

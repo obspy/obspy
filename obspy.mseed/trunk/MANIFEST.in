@@ -1,4 +1,5 @@
-prune docs
+prune docs/source/*
+include docs/api/*
 include obspy/mseed/tests/data/*
 include obspy/mseed/tests/data/encoding/*
 include obspy/mseed/tests/data/bizarre/*

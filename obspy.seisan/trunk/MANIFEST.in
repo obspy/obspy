@@ -1,2 +1,3 @@
-prune docs
+prune docs/other/*
+include docs/api/*
 include obspy/seisan/tests/data/*
