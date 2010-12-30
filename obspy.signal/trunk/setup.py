@@ -15,6 +15,7 @@ from setuptools.extension import Extension
 import numpy as np
 import os
 import platform
+import sys
 
 
 VERSION = open(os.path.join("obspy", "signal", "VERSION.txt")).read()
@@ -44,11 +45,12 @@ if platform.system() == "Windows":
     macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
 # create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libsignal-%s-%s-%s-py%s' % (platform.node(),
-                                        platform.platform(terse=1),
-                                        platform.architecture()[0],
-                                        python_version)
+if 'develop' in sys.argv:
+    lib_name = 'libsignal-%s-%s-%s-py%s' % (
+        platform.node(), platform.platform(terse=1),
+        platform.architecture()[0], '_'.join(platform.python_version_tuple()))
+else:
+    lib_name = 'libsignal'
 
 # setup C extension
 lib = MyExtension(lib_name,

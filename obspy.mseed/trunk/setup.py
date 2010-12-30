@@ -71,11 +71,12 @@ if platform.system() == "Windows":
             extra_compile_args.append("/fp:strict")
 
 # create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libmseed-%s-%s-%s-py%s' % (platform.node(),
-                                       platform.platform(terse=1),
-                                       platform.architecture()[0],
-                                       python_version)
+if 'develop' in sys.argv:
+    lib_name = 'libmseed-%s-%s-%s-py%s' % (
+        platform.node(), platform.platform(terse=1),
+        platform.architecture()[0], '_'.join(platform.python_version_tuple()))
+else:
+    lib_name = 'libmseed'
 
 # setup C extension
 lib = MyExtension(lib_name,

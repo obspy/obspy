@@ -10,23 +10,32 @@ import numpy as np
 
 
 # Import shared libmseed depending on the platform.
-# create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libmseed-%s-%s-%s-py%s' % (platform.node(),
-                                       platform.platform(terse=1),
-                                       platform.architecture()[0],
-                                       python_version)
+# create library names
+lib_names = [
+     # platform specific library name
+    'libmseed-%s-%s-%s-py%s' % (platform.node(), platform.platform(terse=1),
+                                platform.architecture()[0],
+                                '_'.join(platform.python_version_tuple())),
+     # fallback for pre-packaged libraries
+    'libmseed']
 # add correct file extension
 if  platform.system() == 'Windows':
-    lib_name += '.pyd'
+    lib_extension = '.pyd'
 else:
-    lib_name += '.so'
+    lib_extension = '.so'
 # initialize library
-try:
-    clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
-except Exception, e:
-    msg = 'Could not load shared library "%s" for obspy.mseed.\n\n %s'
-    raise ImportError(msg % (lib_name, str(e)))
+clibmseed = None
+for lib_name in lib_names:
+    try:
+        clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                        lib_name + lib_extension))
+    except Exception, e:
+        pass
+    else:
+        break
+if not clibmseed:
+    msg = 'Could not load shared library for obspy.mseed.\n\n %s' % (e)
+    raise ImportError(msg)
 
 
 # XXX: Do we still support Python 2.4 ????

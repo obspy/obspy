@@ -4,7 +4,7 @@
 The Filter test suite.
 """
 
-from obspy.signal.util import lib_name
+from obspy.signal.util import lib_name, lib_extension
 from obspy.signal import xcorr
 import ctypes as C
 import numpy as np
@@ -67,7 +67,7 @@ class UtilTestCase(unittest.TestCase):
         corp = np.empty(2 * window_len + 1, dtype='float64')
 
         path = os.path.dirname(__file__)
-        name = os.path.join(path, os.pardir, 'lib', lib_name)
+        name = os.path.join(path, os.pardir, 'lib', lib_name + lib_extension)
         lib = C.CDLL(name)
         #
         shift = C.c_int()

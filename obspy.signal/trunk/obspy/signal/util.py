@@ -18,23 +18,32 @@ import platform
 from obspy.core.util import deprecated
 
 # Import shared libsignal depending on the platform.
-# create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libsignal-%s-%s-%s-py%s' % (platform.node(),
-                                        platform.platform(terse=1),
-                                        platform.architecture()[0],
-                                        python_version)
+# create library names
+lib_names = [
+     # platform specific library name
+    'libsignal-%s-%s-%s-py%s' % (platform.node(), platform.platform(terse=1),
+                                 platform.architecture()[0],
+                                 '_'.join(platform.python_version_tuple())),
+     # fallback for pre-packaged libraries
+    'libsignal']
 # add correct file extension
 if  platform.system() == 'Windows':
-    lib_name += '.pyd'
+    lib_extension = '.pyd'
 else:
-    lib_name += '.so'
+    lib_extension = '.so'
 # initialize library
-try:
-    clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
-except Exception, e:
-    msg = 'Could not load shared library "%s" for obspy.signal.\n\n %s'
-    raise ImportError(msg % (lib_name, str(e)))
+clibsignal = None
+for lib_name in lib_names:
+    try:
+        clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                         lib_name + lib_extension))
+    except Exception, e:
+        pass
+    else:
+        break
+if not clibsignal:
+    msg = 'Could not load shared library for obspy.signal.\n\n %s' % (e)
+    raise ImportError(msg)
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):

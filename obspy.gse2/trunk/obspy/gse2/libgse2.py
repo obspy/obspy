@@ -31,24 +31,33 @@ from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific, deprecated
 
 
-# Import shared libgse2 depending on the platform.
-# create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libgse2-%s-%s-%s-py%s' % (platform.node(),
-                                      platform.platform(terse=1),
-                                      platform.architecture()[0],
-                                      python_version)
+# Import shared libgse2
+# create library names
+lib_names = [
+     # platform specific library name
+    'libgse2-%s-%s-%s-py%s' % (platform.node(), platform.platform(terse=1),
+                               platform.architecture()[0],
+                               '_'.join(platform.python_version_tuple())),
+     # fallback for pre-packaged libraries
+    'libgse2']
 # add correct file extension
 if  platform.system() == 'Windows':
-    lib_name += '.pyd'
+    lib_extension = '.pyd'
 else:
-    lib_name += '.so'
+    lib_extension = '.so'
 # initialize library
-try:
-    clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
-except Exception, e:
-    msg = 'Could not load shared library "%s" for obspy.gse2.\n\n %s'
-    raise ImportError(msg % (lib_name, str(e)))
+clibgse2 = None
+for lib_name in lib_names:
+    try:
+        clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                       lib_name + lib_extension))
+    except Exception, e:
+        pass
+    else:
+        break
+if not clibgse2:
+    msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (e)
+    raise ImportError(msg)
 
 
 class ChksumError(StandardError):

@@ -14,6 +14,7 @@ from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import os
 import platform
+import sys
 
 
 VERSION = open(os.path.join("obspy", "gse2", "VERSION.txt")).read()
@@ -41,11 +42,12 @@ if platform.system() == "Windows":
     macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
 # create library name
-python_version = '_'.join(platform.python_version_tuple())
-lib_name = 'libgse2-%s-%s-%s-py%s' % (platform.node(),
-                                      platform.platform(terse=1),
-                                      platform.architecture()[0],
-                                      python_version)
+if 'develop' in sys.argv:
+    lib_name = 'libgse2-%s-%s-%s-py%s' % (
+        platform.node(), platform.platform(terse=1),
+        platform.architecture()[0], '_'.join(platform.python_version_tuple()))
+else:
+    lib_name = 'libgse2'
 
 # setup C extension
 lib = MyExtension(lib_name,
