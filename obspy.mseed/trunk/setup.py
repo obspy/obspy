@@ -48,6 +48,11 @@ class MyExtension(Extension):
 macros = []
 extra_link_args = []
 extra_compile_args = []
+src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
+symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]
+           if s.strip() != '']
+
+# system specific settings
 if platform.system() == "Windows":
     macros.append(('WIN32', '1'))
     # disable some warnings for MSVC
@@ -65,11 +70,15 @@ if platform.system() == "Windows":
             # Workaround Win32 and MSVC - see issue #64 
             extra_compile_args.append("/fp:strict")
 
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libmseed-%s-%s-%s-py%s' % (platform.node(),
+                                       platform.platform(terse=1),
+                                       platform.architecture()[0],
+                                       python_version)
 
-src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
-symbols = [s.strip() for s in open(src + 'libmseed.def', 'r').readlines()[2:]
-           if s.strip() != '']
-lib = MyExtension('libmseed',
+# setup C extension
+lib = MyExtension(lib_name,
                   define_macros=macros,
                   libraries=[],
                   sources=[src + 'fileutils.c', src + 'genutils.c',

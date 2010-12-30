@@ -17,36 +17,24 @@ import os
 import platform
 from obspy.core.util import deprecated
 
-
-# Import shared libsignal library depending on the platform.
-# XXX: trying multiple names for now - should be removed
-if platform.system() == 'Windows':
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['libsignal.pyd', '_libsignal.win64.dll']
-    else:
-        lib_names = ['libsignal.pyd', '_libsignal.win32.dll']
-elif platform.system() == 'Darwin':
-    lib_names = ['libsignal.so', '_libsignal.dylib']
+# Import shared libsignal depending on the platform.
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libsignal-%s-%s-%s-py%s' % (platform.node(),
+                                        platform.platform(terse=1),
+                                        platform.architecture()[0],
+                                        python_version)
+# add correct file extension
+if  platform.system() == 'Windows':
+    lib_name += '.pyd'
 else:
-    # 32 and 64 bit UNIX
-    #XXX Check glibc version by platform.libc_ver()
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['libsignal.so', '_libsignal.lin64.so']
-    else:
-        lib_names = ['libsignal.so', '_libsignal.so']
-
+    lib_name += '.so'
 # initialize library
-lib = None
-for lib_name in lib_names:
-    try:
-        lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
-    except:
-        continue
-    else:
-        break
-if not lib:
-    msg = 'Could not load shared library "libsignal" for obspy.signal.'
-    raise ImportError(msg)
+try:
+    clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+except Exception, e:
+    msg = 'Could not load shared library "%s" for obspy.signal.\n\n %s'
+    raise ImportError(msg % (lib_name, str(e)))
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
@@ -67,14 +55,15 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     """
     # 2009-10-11 Moritz
 
-    lib.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
-                               C.POINTER(C.c_double), C.POINTER(C.c_double)]
-    lib.utl_geo_km.restype = C.c_void_p
+    clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
+                                      C.POINTER(C.c_double),
+                                      C.POINTER(C.c_double)]
+    clibsignal.utl_geo_km.restype = C.c_void_p
 
     x = C.c_double(lon)
     y = C.c_double(lat)
 
-    lib.utl_geo_km(orig_lon, orig_lat, 0.0, C.byref(x), C.byref(y))
+    clibsignal.utl_geo_km(orig_lon, orig_lat, 0.0, C.byref(x), C.byref(y))
     return x.value, y.value
 
 
@@ -96,14 +85,15 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     """
     # 2009-10-11 Moritz
 
-    lib.utl_lonlat.argtypes = [C.c_double, C.c_double, C.c_double, C.c_double,
-                               C.POINTER(C.c_double), C.POINTER(C.c_double)]
-    lib.utl_lonlat.restype = C.c_void_p
+    clibsignal.utl_lonlat.argtypes = [C.c_double, C.c_double, C.c_double,
+                                      C.c_double, C.POINTER(C.c_double),
+                                      C.POINTER(C.c_double)]
+    clibsignal.utl_lonlat.restype = C.c_void_p
 
     lon = C.c_double()
     lat = C.c_double()
 
-    lib.utl_lonlat(orig_lon, orig_lat, x, y, C.byref(lon), C.byref(lat))
+    clibsignal.utl_lonlat(orig_lon, orig_lat, x, y, C.byref(lon), C.byref(lat))
     return lon.value, lat.value
 
 

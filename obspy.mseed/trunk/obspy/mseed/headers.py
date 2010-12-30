@@ -9,41 +9,27 @@ import os
 import numpy as np
 
 
-# Import shared libmseed depending on the platform. 
-# Trying multiple libraries: 
-# First entry: library name generated via "python setup.py build"
-# Further entries: pre-generated libraries
-if platform.system() == 'Windows':
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['libmseed.pyd', '_libmseed.win64.dll']
-    else:
-        lib_names = ['libmseed.pyd', '_libmseed.win32.dll']
-elif platform.system() == 'Darwin':
-    lib_names = ['libmseed.so', '_libmseed.dylib']
+# Import shared libmseed depending on the platform.
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libmseed-%s-%s-%s-py%s' % (platform.node(),
+                                       platform.platform(terse=1),
+                                       platform.architecture()[0],
+                                       python_version)
+# add correct file extension
+if  platform.system() == 'Windows':
+    lib_name += '.pyd'
 else:
-    # 32 and 64 bit UNIX
-    #XXX Check glibc version by platform.libc_ver()
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['libmseed.so', '_libmseed.lin64.so']
-    else:
-        lib_names = ['libmseed.so', '_libmseed.so']
-
+    lib_name += '.so'
 # initialize library
-clibmseed = None
-for lib_name in lib_names:
-    try:
-        clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                        lib_name))
-    except Exception, e:
-        continue
-    else:
-        break
-if not clibmseed:
-    msg = 'Could not load shared library "libmseed" for obspy.mseed.' + \
-          '\n\n %s' % str(e)
-    raise ImportError(msg)
+try:
+    clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+except Exception, e:
+    msg = 'Could not load shared library "%s" for obspy.mseed.\n\n %s'
+    raise ImportError(msg % (lib_name, str(e)))
 
 
+# XXX: Do we still support Python 2.4 ????
 # Figure out Py_ssize_t (PEP 353).
 #
 # Py_ssize_t is only defined for Python 2.5 and above, so it defaults to

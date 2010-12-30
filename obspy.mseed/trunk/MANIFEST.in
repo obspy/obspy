@@ -1,4 +1,4 @@
-prune docs/source/*
+prune docs/other/*
 include docs/api/*
 include obspy/mseed/tests/data/*
 include obspy/mseed/tests/data/encoding/*

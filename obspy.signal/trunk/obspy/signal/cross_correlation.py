@@ -13,7 +13,7 @@ import ctypes as C
 import numpy as np
 
 from obspy.core import Trace, Stream
-from obspy.signal.util import lib
+from obspy.signal.util import clibsignal
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -55,13 +55,13 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
             tr = tr.data
 
     # 2009-10-11 Moritz
-    lib.X_corr.argtypes = [
+    clibsignal.X_corr.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int, C.c_int, C.c_int,
         C.POINTER(C.c_int), C.POINTER(C.c_double)]
-    lib.X_corr.restype = C.c_void_p
+    clibsignal.X_corr.restype = C.c_void_p
 
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
@@ -71,13 +71,14 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     shift = C.c_int()
     coe_p = C.c_double()
 
-    lib.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
-               C.byref(shift), C.byref(coe_p))
+    clibsignal.X_corr(tr1, tr2, corp, shift_len, len(tr1), len(tr2),
+                      C.byref(shift), C.byref(coe_p))
 
     if full_xcorr:
         return shift.value, coe_p.value, corp
     else:
         return shift.value, coe_p.value
+
 
 def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
              full_xcorr=False, abs_max=True):
@@ -140,6 +141,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
         return shift, value, corp
     else:
         return shift, value
+
 
 def xcorr_max(fct, abs_max=True):
     """

@@ -30,15 +30,25 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 macros = []
-if platform.system() == "Windows":
-    # disable some warnings for MSVC
-    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-
 src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
 symbols = [s.strip()
            for s in open(src + 'gse_functions.def', 'r').readlines()[2:]
            if s.strip() != '']
-lib = MyExtension('gse_functions',
+
+# system specific settings
+if platform.system() == "Windows":
+    # disable some warnings for MSVC
+    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
+
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libgse2-%s-%s-%s-py%s' % (platform.node(),
+                                      platform.platform(terse=1),
+                                      platform.architecture()[0],
+                                      python_version)
+
+# setup C extension
+lib = MyExtension(lib_name,
                   define_macros=macros,
                   libraries=[],
                   sources=[src + 'buf.c', src + 'gse_functions.c'],

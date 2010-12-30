@@ -31,22 +31,27 @@ class MyExtension(Extension):
         self.export_symbols = finallist(self.export_symbols)
 
 
+macros = []
 src = os.path.join('obspy', 'signal', 'src') + os.sep
 src_fft = os.path.join('obspy', 'signal', 'src', 'fft') + os.sep
+numpy_include_dir = os.path.join(os.path.dirname(np.core.__file__), 'include')
 symbols = [s.strip() for s in open(src + 'libsignal.def', 'r').readlines()[2:]
            if s.strip() != '']
 
-# try to find platform independently the suffix of fftpack_lite
-numpy_include_dir = os.path.join(os.path.dirname(np.core.__file__), 'include')
-
+# system specific settings
 if platform.system() == "Windows":
     # disable some warnings for MSVC
-    macros = [('_CRT_SECURE_NO_WARNINGS', '1')]
-else:
-    macros = []
+    macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
 
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libsignal-%s-%s-%s-py%s' % (platform.node(),
+                                        platform.platform(terse=1),
+                                        platform.architecture()[0],
+                                        python_version)
 
-lib = MyExtension('libsignal',
+# setup C extension
+lib = MyExtension(lib_name,
                   define_macros=macros,
                   include_dirs=[numpy_include_dir],
                   sources=[src + 'recstalta.c', src + 'xcorr.c',

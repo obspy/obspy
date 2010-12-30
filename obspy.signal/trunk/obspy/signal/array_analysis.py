@@ -21,9 +21,10 @@ import math
 import warnings
 import ctypes as C
 import numpy as np
-from obspy.signal.util import utlGeoKm, lib, nextpow2
+from obspy.signal.util import utlGeoKm, clibsignal, nextpow2
 from obspy.core import Stream
 from scipy.integrate import cumtrapz
+
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
@@ -617,14 +618,13 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
                          secret=<secret>)
     """
     import pp
-    np = numpy
 
     job_server = pp.Server(ppservers=ppservers, secret=secret)
     if verbose:
         print "Starting pp with", job_server.get_ncpus(), "workers"
     jobs = list()
-    job_len = (etime - stime)/njobs
-    
+    job_len = (etime - stime) / njobs
+
     for ts in np.arange(njobs):
         job_stime = stime + ts * job_len
         job_etime = stime + (ts + 1) * job_len + win_len
@@ -635,8 +635,9 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
             slm_x, sll_y, slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
             job_stime, job_etime, prewhiten, verbose, coordsys, timestamp),
             (sonic, bbfk, get_geometry, get_timeshift, get_spoint,
-            ndarray2ptr3D, cosine_taper), ('math', 'warnings', 'ctypes', 'numpy',
-            'obspy.signal.util', 'obspy.core', 'scipy.integrate'), globals=globals()))
+             ndarray2ptr3D, cosine_taper), ('math', 'warnings', 'ctypes',
+            'numpy', 'obspy.signal.util', 'obspy.core', 'scipy.integrate'),
+            globals=globals()))
 
     i = 0
     for job in jobs:
@@ -645,7 +646,7 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         else:
             ret = np.r_[ret, job()]
         i += 1
-    
+
     if verbose:
         job_server.print_stats()
 
@@ -797,11 +798,13 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     :type offset: int
     :param offset: The Offset which is counted upwards nwin for shifting array
     :type trace: ??
-    :param trace: The trace matrix, containing the time serious for various stations
+    :param trace: The trace matrix, containing the time serious for various
+        stations
     :type ntrace: float
     :param ntrace: ntrace vector
     :type stat_tshift_table: ??
-    :param stat_tshift_table: The time shift table for each station for the slowness grid
+    :param stat_tshift_table: The time shift table for each station for the
+        slowness grid
     :type flow: float
     :param flow: Lower frequency for fk
     :type fhigh: float
@@ -829,7 +832,7 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     """
     #XXX moritz: add a note where params are pointers
 
-    lib.bbfk.argtypes = [ \
+    clibsignal.bbfk.argtypes = [
         np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
         C.c_int,
         C.POINTER(C.c_void_p),
@@ -843,7 +846,7 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
         C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
         C.c_int,
     ]
-    lib.bbfk.restype = C.c_int
+    clibsignal.bbfk.restype = C.c_int
 
     # allocate output variables
     abspow = C.c_float()
@@ -851,11 +854,12 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     ix = C.c_int()
     iy = C.c_int()
 
-    errcode = lib.bbfk(spoint, offset, C.cast(trace, C.POINTER(C.c_void_p)),
-             ntrace, C.byref(stat_tshift_table), C.byref(abspow),
-             C.byref(power), C.byref(ix), C.byref(iy), flow, fhigh,
-             digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y,
-             nfft)
+    errcode = clibsignal.bbfk(spoint, offset,
+                              C.cast(trace, C.POINTER(C.c_void_p)), ntrace,
+                              C.byref(stat_tshift_table), C.byref(abspow),
+                              C.byref(power), C.byref(ix), C.byref(iy), flow,
+                              fhigh, digfreq, nsamp, nstat, prewhiten, grdpts_x,
+                              grdpts_y, nfft)
 
     if errcode == 0:
         pass
@@ -913,7 +917,8 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         center_lat = geometry[:, 1].mean()
         center_h = geometry[:, 2].mean()
         for i in np.arange(nstat):
-            x, y = utlGeoKm(center_lon, center_lat, geometry[i, 0], geometry[i, 1])
+            x, y = utlGeoKm(center_lon, center_lat, geometry[i, 0],
+                            geometry[i, 1])
             geometry[i, 0] = x
             geometry[i, 1] = y
             geometry[i, 2] -= center_h
@@ -943,14 +948,14 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     """
     nstat = len(geometry) #last index are center coordinates
 
-    time_shift_table = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
     for k in xrange(grdpts_x):
         sx = sll_x + k * sl_s
         for l in xrange(grdpts_y):
             sy = sll_y + l * sl_s
-            time_shift_table[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
+            time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
 
-    return time_shift_table
+    return time_shift_tbl
 
 
 def get_spoint(stream, stime, etime):
@@ -1023,18 +1028,17 @@ def cosine_taper(ndat, fraction=0.1):
     >>> print abs(tap - buf).max() < 1e-2
     True
     """
-    lib.cosine_taper.argtypes = [
-            np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-            C.c_int,
-            C.c_double]
-    lib.cosine_taper.restype = C.c_int
+    clibsignal.cosine_taper.argtypes = [
+        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
+        C.c_int, C.c_double]
+    clibsignal.cosine_taper.restype = C.c_int
     data = np.empty(ndat, dtype='float64')
     # the c extension tapers fraction from the beginning and the end,
     # therefore we half it
     # XXX: frac is never used
     #frac = C.c_double(fraction / 2.0)
 
-    errcode = lib.cosine_taper(data, ndat, fraction)
+    errcode = clibsignal.cosine_taper(data, ndat, fraction)
     if errcode != 0:
         raise Exception('bbfk: C-Extension returned error %d' % errcode)
     return data
@@ -1077,7 +1081,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             _sum = 0j
             for k in xrange(len(coords)):
-                _sum += np.exp(complex(0., 
+                _sum += np.exp(complex(0.,
                         coords[k, 0] * kx + coords[k, 1] * ky))
             transff[i, j] = abs(_sum) ** 2
 

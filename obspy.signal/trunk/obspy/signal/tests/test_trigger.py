@@ -5,7 +5,7 @@ The obspy.signal.trigger test suite.
 
 from ctypes import ArgumentError
 from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer, arPick
-from obspy.signal.util import lib
+from obspy.signal.util import clibsignal
 import numpy as np
 import unittest
 import os
@@ -51,9 +51,9 @@ class TriggerTestCase(unittest.TestCase):
         """
         ndat = 1
         charfct = np.empty(ndat, dtype='float64')
-        self.assertRaises(ArgumentError, lib.recstalta, [1], charfct,
+        self.assertRaises(ArgumentError, clibsignal.recstalta, [1], charfct,
                           ndat, 5, 10)
-        self.assertRaises(ArgumentError, lib.recstalta,
+        self.assertRaises(ArgumentError, clibsignal.recstalta,
                           np.array([1], dtype='int32'), charfct, ndat, 5, 10)
 
     def test_pkBaer(self):

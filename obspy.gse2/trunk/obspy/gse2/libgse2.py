@@ -31,36 +31,24 @@ from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific, deprecated
 
 
-# Import shared libmseed library depending on the platform.
-# XXX: trying multiple names for now - should be removed
-if platform.system() == 'Windows':
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['gse_functions.pyd', '_gse_functions.win64.dll']
-    else:
-        lib_names = ['gse_functions.pyd', '_gse_functions.win32.dll']
-elif platform.system() == 'Darwin':
-    lib_names = ['gse_functions.so', '_gse_functions.dylib']
-    # 32 and 64 bit UNIX
-    #XXX Check glibc version by platform.libc_ver()
+# Import shared libgse2 depending on the platform.
+# create library name
+python_version = '_'.join(platform.python_version_tuple())
+lib_name = 'libgse2-%s-%s-%s-py%s' % (platform.node(),
+                                      platform.platform(terse=1),
+                                      platform.architecture()[0],
+                                      python_version)
+# add correct file extension
+if  platform.system() == 'Windows':
+    lib_name += '.pyd'
 else:
-    if platform.architecture()[0] == '64bit':
-        lib_names = ['gse_functions.so', '_gse_functions.lin64.so']
-    else:
-        lib_names = ['gse_functions.so', '_gse_functions.so']
-
+    lib_name += '.so'
 # initialize library
-lib = None
-for lib_name in lib_names:
-    try:
-        lib = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                  lib_name))
-    except:
-        continue
-    else:
-        break
-if not lib:
-    msg = 'Could not load shared library "gse_functions" for obspy.gse2.'
-    raise ImportError(msg)
+try:
+    clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib', lib_name))
+except Exception, e:
+    msg = 'Could not load shared library "%s" for obspy.gse2.\n\n %s'
+    raise ImportError(msg % (lib_name, str(e)))
 
 
 class ChksumError(StandardError):
@@ -110,54 +98,54 @@ C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
 C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
 
 ## gse_functions read_header
-lib.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
-lib.read_header.restype = C.c_int
+clibgse2.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
+clibgse2.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
-lib.decomp_6b.argtypes = [c_file_p, C.c_int,
-                          np.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                 flags='C_CONTIGUOUS'), ]
-lib.decomp_6b.restype = C.c_int
+clibgse2.decomp_6b.argtypes = [
+    c_file_p, C.c_int,
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS')]
+clibgse2.decomp_6b.restype = C.c_int
 
 # gse_functions rem_2nd_diff
-lib.rem_2nd_diff.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                    flags='C_CONTIGUOUS'),
-                             C.c_int]
-lib.rem_2nd_diff.restype = C.c_int
+clibgse2.rem_2nd_diff.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int]
+clibgse2.rem_2nd_diff.restype = C.c_int
 
 # gse_functions check_sum
-lib.check_sum.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                 flags='C_CONTIGUOUS'),
-                          C.c_int, C.c_int32]
-lib.check_sum.restype = C.c_int # do not know why not C.c_int32
+clibgse2.check_sum.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int, C.c_int32]
+clibgse2.check_sum.restype = C.c_int # do not know why not C.c_int32
 
 # gse_functions buf_init
-lib.buf_init.argtypes = [C.c_void_p]
-lib.buf_init.restype = C.c_void_p
+clibgse2.buf_init.argtypes = [C.c_void_p]
+clibgse2.buf_init.restype = C.c_void_p
 
 # gse_functions diff_2nd
-lib.diff_2nd.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                flags='C_CONTIGUOUS'),
-                         C.c_int, C.c_int]
-lib.diff_2nd.restype = C.c_void_p
+clibgse2.diff_2nd.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int, C.c_int]
+clibgse2.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-lib.compress_6b.argtypes = [np.ctypeslib.ndpointer(dtype='int32', ndim=1,
-                                                   flags='C_CONTIGUOUS'),
-                            C.c_int]
-lib.compress_6b.restype = C.c_int
+clibgse2.compress_6b.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int]
+clibgse2.compress_6b.restype = C.c_int
 
 ## gse_functions write_header
-lib.write_header.argtypes = [c_file_p, C.POINTER(HEADER)]
-lib.write_header.restype = C.c_void_p
+clibgse2.write_header.argtypes = [c_file_p, C.POINTER(HEADER)]
+clibgse2.write_header.restype = C.c_void_p
 
 ## gse_functions buf_dump
-lib.buf_dump.argtypes = [c_file_p]
-lib.buf_dump.restype = C.c_void_p
+clibgse2.buf_dump.argtypes = [c_file_p]
+clibgse2.buf_dump.restype = C.c_void_p
 
 # gse_functions buf_free
-lib.buf_free.argtypes = [C.c_void_p]
-lib.buf_free.restype = C.c_void_p
+clibgse2.buf_free.argtypes = [C.c_void_p]
+clibgse2.buf_free.restype = C.c_void_p
 
 # module wide variable, can be imported by:
 # >>> from obspy.gse2 import gse2head
@@ -225,19 +213,18 @@ def read(f, verify_chksum=True):
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
-    errcode = lib.read_header(fp, C.pointer(head))
+    errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
     data = np.empty(head.n_samps, dtype='int32')
-    #import ipdb; ipdb.set_trace()
-    n = lib.decomp_6b(fp, head.n_samps, data)
+    n = clibgse2.decomp_6b(fp, head.n_samps, data)
     if n != head.n_samps:
         raise GSEUtiError("Mismatching length in lib.decomp_6b")
-    lib.rem_2nd_diff(data, head.n_samps)
+    clibgse2.rem_2nd_diff(data, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
         # calculate checksum from data, as in gse_driver.c line 60
-        chksum_data = abs(lib.check_sum(data, head.n_samps, C.c_int32()))
+        chksum_data = abs(clibgse2.check_sum(data, head.n_samps, C.c_int32()))
         # find checksum within file
         buf = f.readline()
         chksum_file = -1
@@ -305,10 +292,10 @@ def write(headdict, data, f, inplace=False):
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     n = len(data)
-    lib.buf_init(None)
+    clibgse2.buf_init(None)
     #
     chksum = C.c_int32()
-    chksum = abs(lib.check_sum(data, n, chksum))
+    chksum = abs(clibgse2.check_sum(data, n, chksum))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
@@ -316,8 +303,8 @@ def write(headdict, data, f, inplace=False):
         data = data.copy()
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
-    lib.diff_2nd(data, n, 0)
-    ierr = lib.compress_6b(data, n)
+    clibgse2.diff_2nd(data, n, 0)
+    ierr = clibgse2.compress_6b(data, n)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     # set some defaults if not available and convert header entries
     headdict.setdefault('datatype', 'CM6')
@@ -332,9 +319,9 @@ def write(headdict, data, f, inplace=False):
     # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, head)
-    lib.buf_dump(fp)
+    clibgse2.buf_dump(fp)
     f.write("CHK2 %8ld\n\n" % chksum)
-    lib.buf_free(None)
+    clibgse2.buf_free(None)
     del fp, head
 
 
@@ -353,7 +340,7 @@ def readHead(f):
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
-    lib.read_header(fp, C.pointer(head))
+    clibgse2.read_header(fp, C.pointer(head))
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
@@ -377,7 +364,7 @@ def getStartAndEndTime(f):
     """
     fp = C.pythonapi.PyFile_AsFile(f)
     head = HEADER()
-    lib.read_header(fp, C.pointer(head))
+    clibgse2.read_header(fp, C.pointer(head))
     seconds = int(head.t_sec)
     microseconds = int(1e6 * (head.t_sec - seconds))
     startdate = UTCDateTime(head.d_year, head.d_mon, head.d_day,

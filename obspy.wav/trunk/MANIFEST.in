@@ -1,2 +1,2 @@
-include obspy/wav/tests/data/*
 include docs/api/*
+include obspy/wav/tests/data/*

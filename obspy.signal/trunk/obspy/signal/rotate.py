@@ -45,6 +45,7 @@ def rotate_NE_RT(n, e, ba):
     t = e * cos((ba + 180) * 2 * pi / 360) - n * sin((ba + 180) * 2 * pi / 360)
     return r, t
 
+
 def rotate_ZNE_LQT(z, n, e, ba, inc):
     """
     Rotates all components of a seismogram.
@@ -75,10 +76,11 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
         raise ValueError("Inclination should be between 0 and 360 degrees!")
     ba *= 2 * pi / 360
     inc *= 2 * pi / 360
-    l =   z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
-    q = - z * sin(inc) - n * cos(inc) * cos(ba) - e * cos(inc) * sin(ba)
-    t = - n * sin(ba) + e * cos(ba)
+    l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
+    q = -z * sin(inc) - n * cos(inc) * cos(ba) - e * cos(inc) * sin(ba)
+    t = -n * sin(ba) + e * cos(ba)
     return l, q, t
+
 
 def rotate_LQT_ZNE(l, q, t, ba, inc):
     """
@@ -97,9 +99,10 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
     ba *= 2 * pi / 360
     inc *= 2 * pi / 360
     z = l * cos(inc) - q * sin(inc)
-    n = - l * sin(inc) * cos(ba) - q * cos(inc) * cos(ba) - t * sin(ba)
-    e = - l * sin(inc) * sin(ba) - q * cos(inc) * sin(ba) + t * cos(ba)
+    n = -l * sin(inc) * cos(ba) - q * cos(inc) * cos(ba) - t * sin(ba)
+    e = -l * sin(inc) * sin(ba) - q * cos(inc) * sin(ba) + t * cos(ba)
     return z, n, e
+
 
 def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """

@@ -1,2 +1,1 @@
-include obspy/imaging/tests/data/*
 include docs/api/*

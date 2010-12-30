@@ -19,6 +19,7 @@ Polarization Analysis
 import numpy as np
 from scipy import signal
 
+
 def eigval(datax, datay, dataz, fk, normf=1):
     """
     Polarization attributes of a signal:
@@ -57,7 +58,7 @@ def eigval(datax, datay, dataz, fk, normf=1):
         covmat[1][2] = covmat[2][1] = np.cov(dataz[i, :], datay[i, :],
                                              rowvar=False)[0, 1]
         covmat[2][2] = np.cov(dataz[i, :], rowvar=False)
-        eigvec,eigenval,v = (np.linalg.svd(covmat))
+        eigvec, eigenval, v = (np.linalg.svd(covmat))
         eigenv = np.sort(eigenval)
         leigenv1[i] = eigenv[0]
         leigenv2[i] = eigenv[1]
@@ -67,38 +68,38 @@ def eigval(datax, datay, dataz, fk, normf=1):
     leigenv1 = leigenv1 / normf
     leigenv2 = leigenv2 / normf
     leigenv3 = leigenv3 / normf
-   
+
     leigenv1_add = np.append(np.append([leigenv1[0]] * (np.size(fk) / 2),
            leigenv1), [leigenv1[np.size(leigenv1) - 1]] * (np.size(fk) / 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
-    dleigenv[:,0] = dleigenv1[len(fk)-1:]
+    dleigenv[:, 0] = dleigenv1[len(fk) - 1:]
     #dleigenv1 = dleigenv1[np.size(fk) / 2:(np.size(dleigenv1) - np.size(fk) /
     #        2)]
-    
+
     leigenv2_add = np.append(np.append([leigenv2[0]] * (np.size(fk) / 2),
            leigenv2), [leigenv2[np.size(leigenv2) - 1]] * (np.size(fk) / 2))
     dleigenv2 = signal.lfilter(fk, 1, leigenv2_add)
-    dleigenv[:,1] = dleigenv2[len(fk)-1:]
+    dleigenv[:, 1] = dleigenv2[len(fk) - 1:]
     #dleigenv2 = dleigenv2[np.size(fk) / 2:(np.size(dleigenv2) - np.size(fk) /
     #        2)]
-    
+
     leigenv3_add = np.append(np.append([leigenv3[0]] * (np.size(fk) / 2),
            leigenv3), [leigenv3[np.size(leigenv3) - 1]] * (np.size(fk) / 2))
     dleigenv3 = signal.lfilter(fk, 1, leigenv3_add)
-    dleigenv[:,2] = dleigenv3[len(fk)-1:]
+    dleigenv[:, 2] = dleigenv3[len(fk) - 1:]
     #dleigenv3 = dleigenv3[np.size(fk) / 2:(np.size(dleigenv3) - np.size(fk) /
     #        2)]
-    
+
     rect_add = np.append(np.append([rect[0]] * (np.size(fk) / 2),
            rect), [rect[np.size(rect) - 1]] * (np.size(fk) / 2))
     drect = signal.lfilter(fk, 1, rect_add)
-    drect = drect[len(fk)-1:]
+    drect = drect[len(fk) - 1:]
     #drect = drect[np.size(fk) / 2:(np.size(drect3) - np.size(fk) / 2)]
-    
+
     plan_add = np.append(np.append([plan[0]] * (np.size(fk) / 2),
            plan), [plan[np.size(plan) - 1]] * (np.size(fk) / 2))
     dplan = signal.lfilter(fk, 1, plan_add)
-    dplan = dplan[len(fk)-1:]
+    dplan = dplan[len(fk) - 1:]
     #dplan = dplan[np.size(fk) / 2:(np.size(dplan) - np.size(fk) / 2)]
 
     return leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect, dplan
