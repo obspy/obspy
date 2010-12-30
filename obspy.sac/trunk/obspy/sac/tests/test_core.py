@@ -70,7 +70,6 @@ class CoreTestCase(unittest.TestCase):
         tr.write(tempfile, format='SACXY')
         tr1 = read(tempfile)[0]
         os.remove(tempfile)
-        #import ipdb;ipdb.set_trace()
         self.assertTrue(tr == tr1)
 
     def test_readwriteXYViaObspy(self):
