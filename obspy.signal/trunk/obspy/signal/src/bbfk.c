@@ -144,6 +144,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
             return 1;
         }
         /* doing calloc is automatically zero-padding, too */
+        /* mimic realft, allocate an extra word/index in the array dimensions */
         window[j] = (double *)calloc(nfft+1, sizeof(double));
         memcpy((void *)(window[j]+1),(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
         /*************************************************/
@@ -158,10 +159,10 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
             window[j][n] -= mean;
             window[j][n] *= taper[n];
         }
-        //realft(window[j]-1,nfft/2,1);
+        /* mimic realft */
         rfftf(nfft, (double *)(window[j]+1), fftpack_work);
-        window[j][0] = window[j][1];
-        window[j][1] = 0.0;
+        window[j][0] = window[j][1]; /* mean of signal */
+        window[j][1] = window[j][nfft]; /* real part of nyquist frequency */
     }
     /* we free the taper buffer and the fft plan already! */
     free((void *)taper);
@@ -175,8 +176,9 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         for(w=wlow;w<=whigh;w++) {
             dpow = 0;
             for (j=0;j<nstat;j++) {
+                /* mimic realft, imaginary part is negativ in realft */
                 re = window[j][2*w];
-                im = window[j][2*w+1];
+                im = -window[j][2*w+1];
                 dpow += (float) (re*re+im*im);
             }
             denom += dpow;
