@@ -12,4 +12,4 @@ from obspy.core.util import _getVersionString
 
 __version__ = _getVersionString("obspy.segy")
 
-from segy import read as read
+from segy import readSEGY as readSEGY

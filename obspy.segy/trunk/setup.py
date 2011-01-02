@@ -58,4 +58,13 @@ setup(
         "/svn/obspy/obspy.segy/trunk#egg=obspy.segy-dev",
     test_suite="obspy.segy.tests.suite",
     include_package_data=True,
+    entry_points="""
+        [obspy.plugin.waveform]
+        SEGY = obspy.mseed.core
+
+        [obspy.plugin.waveform.SEGY]
+        isFormat = obspy.segy.core:isSEGY
+        readFormat = obspy.segy.core:readSEGY
+        writeFormat = obspy.segy.core:writeSEGY
+    """,
 )

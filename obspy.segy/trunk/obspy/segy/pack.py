@@ -26,10 +26,8 @@ class WrongDtypeException(Exception):
 
 def pack_4byte_IBM(file, data, endian='>'):
     """
-    Unpacks 4 byte IBM floating points. This will only work if the host system
+    Packs 4 byte IBM floating points. This will only work if the host system
     internally uses little endian byteorders.
-
-    Internally utilizes double precision to minimize rounding errors.
     """
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'float64' and data.dtype != 'float32':
@@ -113,7 +111,7 @@ def pack_4byte_IBM(file, data, endian='>'):
 
 def pack_4byte_Integer(file, data, endian='>'):
     """
-    Unpacks 4 byte integers in big endian byteorder.
+    Packs 4 byte integers.
     """
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'int32':
@@ -129,7 +127,7 @@ def pack_4byte_Integer(file, data, endian='>'):
 
 def pack_2byte_Integer(file, data, endian='>'):
     """
-    Unpacks 2 byte integers in big endian byteorder.
+    Packs 2 byte integers.
     """
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'int16':
@@ -148,8 +146,19 @@ def pack_4byte_Fixed_point(file, data, endian='>'):
 
 
 def pack_4byte_IEEE(file, data, endian='>'):
-    raise NotImplementedError
-
+    """
+    Packs 4 byte IEEE floating points.
+    """
+    # Check the dtype and raise exception otherwise!
+    if data.dtype != 'float32':
+        raise WrongDtypeException
+    if BYTEORDER == 'little' and endian == '>':
+        data = data.byteswap()
+    # Same the other way around.
+    if BYTEORDER == 'big' and endian == '<':
+        data = data.byteswap()
+    # Write the file.
+    file.write(data.tostring())
 
 def pack_1byte_Integer(file, data, endian='>'):
     raise NotImplementedError

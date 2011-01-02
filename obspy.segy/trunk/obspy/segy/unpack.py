@@ -89,7 +89,19 @@ def unpack_4byte_Fixed_point(file, count, endian='>'):
 
 
 def unpack_4byte_IEEE(file, count, endian='>'):
-    raise NotImplementedError
+    """
+    Unpacks 4 byte IEEE floating points.
+    """
+    # Read as 4 byte integer so bit shifting works.
+    data = np.fromstring(file.read(count * 4), dtype='float32')
+    # If the native byte order is little endian swap it if big endian is
+    # wanted.
+    if BYTEORDER == 'little' and endian == '>':
+        data = data.byteswap()
+    # Same the other way around.
+    if BYTEORDER == 'big' and endian == '<':
+        data = data.byteswap()
+    return data
 
 
 def unpack_1byte_Integer(file, count, endian='>'):

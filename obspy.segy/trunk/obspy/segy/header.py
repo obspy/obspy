@@ -188,8 +188,17 @@ DATA_SAMPLE_FORMAT_SAMPLE_SIZE = {
     8: 1,
 }
 
+# Map the data format sample code and the corresponding dtype.
+DATA_SAMPLE_FORMAT_CODE_DTYPE = {
+    1: 'float32',
+    2: 'int32',
+    3: 'int16',
+    5: 'float32'}
+
 # Map the endianness to bigger/smaller sign.
 ENDIAN = {
     'big': '>',
-    'little': '<'
+    'little': '<',
+    '>': '>',
+    '<': '<'
 }

@@ -391,7 +391,7 @@ class Stream(object):
 
     count = __len__
 
-    def __str__(self):
+    def __str__(self, extended=False):
         """
         __str__ method of obspy.Stream objects.
 
@@ -401,7 +401,13 @@ class Stream(object):
         # get longest id
         id_length = self and max(len(tr.id) for tr in self) or 0
         out = str(len(self.traces)) + ' Trace(s) in Stream:\n'
-        out = out + "\n".join([tr.__str__(id_length) for tr in self])
+        if len(self.traces) <= 20 or extended is True:
+            out = out + "\n".join([tr.__str__(id_length) for tr in self])
+        else:
+            out = out + "\n" + self.traces[0].__str__() + "\n" + \
+                    '...\n(%i other traces)\n...\n' % (len(self.traces) - \
+                    2) + self.traces[-1].__str__() + '\n\n[Use "print ' + \
+                    'Stream.__str__(extended=True)" to print all Traces]'
         return out
 
     def __eq__(self, other):

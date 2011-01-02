@@ -121,7 +121,7 @@ class SEGYFile(object):
         Creates an empty SEGYFile object.
         """
         self.textual_file_header = ''
-        self.binary_header = None
+        self.binary_file_header = None
         self.traces = []
 
     def _readTextualHeader(self):
@@ -151,6 +151,12 @@ class SEGYFile(object):
         elif self.textual_header_encoding.upper() == 'EBCDIC':
             textual_header = \
                 textual_header.decode('EBCDIC-CP-BE').encode('ascii')
+        elif self.textual_header_encoding.upper() != 'ASCII':
+            msg = """
+            The textual_header_encoding has to be either ASCII, EBCDIC or None
+            for autodetection. ASCII, EBCDIC or None for autodetection.
+            """.strip()
+            raise SEGYError(msg)
         # Finally set it.
         self.textual_file_header = textual_header
 
@@ -173,28 +179,32 @@ class SEGYFile(object):
                    'Please contact the developers.'
             raise NotImplementedError(msg)
 
-    def write(self, file):
+    def write(self, file, data_encoding=None, endian=None):
         """
         Write a SEG Y file to file which is either a file like object with a
         write method or a filename string.
+
+        If data_encoding or endian is set, these values will be enforced.
         """
         if not hasattr(file, 'write'):
             with open(file, 'wb') as file:
-                self._write(file)
+                self._write(file, data_encoding=data_encoding, endian=endian)
             return
-        self._write(file)
+        self._write(file, data_encoding=data_encoding, endian=endian)
 
-    def _write(self, file):
+    def _write(self, file, data_encoding=None, endian=None):
         """
         Writes SEG Y to a file like object.
+
+        If data_encoding or endian is set, these values will be enforced.
         """
         # Write the textual header.
         self._writeTextualHeader(file)
         # Write the binary header.
-        self.binary_file_header.write(file)
+        self.binary_file_header.write(file, endian=endian)
         # Write all traces.
         for trace in self.traces:
-            trace.write(file)
+            trace.write(file, data_encoding=data_encoding, endian=endian)
 
     def _writeTextualHeader(self, file):
         """
@@ -287,21 +297,23 @@ class SEGYBinaryFileHeader(object):
             else:
                 raise Exception
 
-    def write(self, file):
+    def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
         """
+        if endian is None:
+            endian = self.endian
         for item in BINARY_FILE_HEADER_FORMAT:
             length, name, _ = item
             # Unpack according to different lengths.
             if length == 2:
-                format = '%sh' % self.endian
+                format = '%sh' % endian
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%sI' % self.endian
+                format = '%sI' % endian
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # These are the two unassigned values in the binary file header.
@@ -311,7 +323,7 @@ class SEGYBinaryFileHeader(object):
             else:
                 raise Exception
 
-    def _createEmtpyBinaryFileHeader(self):
+    def _createEmptyBinaryFileHeader(self):
         """
         Just fills all necessary class attributes with zero.
         """
@@ -324,7 +336,7 @@ class SEGYTrace(object):
     """
     Convenience class that internally handles a single SEG Y trace.
     """
-    def __init__(self, file, data_encoding=4, endian='>'):
+    def __init__(self, file=None, data_encoding=4, endian='>'):
         """
         :param file: Open file like object with the file pointer of the
             beginning of a trace. If it is None, an empty trace will be
@@ -370,15 +382,22 @@ class SEGYTrace(object):
                         self.data_encoding](self.file, npts,
                         endian=self.endian)
 
-    def write(self, file):
+    def write(self, file, data_encoding=None, endian=None):
         """
         Writes the Trace to a file like object.
+
+        If endian or data_encoding is set, these values will be enforced.
+        Otherwise use the values of the SEGYTrace object.
         """
         # Write the header.
-        self.header.write(file)
+        self.header.write(file, endian=endian)
+        if data_encoding is None:
+            data_encoding = self.data_encoding
+        if endian is None:
+            endian = self.endian
         # Write the data.
-        DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[self.data_encoding](file, self.data,
-                                                  endian=self.endian)
+        DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_encoding](file, self.data,
+                                                  endian=endian)
 
     def _createEmptyTrace(self):
         """
@@ -457,20 +476,22 @@ class SEGYTraceHeader(object):
             else:
                 raise Exception
 
-    def write(self, file):
+    def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
         """
+        if endian is None:
+            endian = self.endian
         for item in TRACE_HEADER_FORMAT:
             length, name = item
             # Pack according to different lengths.
             if length == 2:
-                format = '%sh' % self.endian
+                format = '%sh' % endian
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%sI' % self.endian
+                format = '%sI' % endian
                 file.write(pack(format, getattr(self, name)))
             # Just the one unassigned field.
             elif length == 8:
@@ -500,22 +521,41 @@ class SEGYTraceHeader(object):
             setattr(self, field[1], 0)
 
 
-def read(file):
+def readSEGY(file, endian=None, textual_header_encoding=None):
     """
     :param file: Open file like object or a string which will be assumed to be
         a filename.
+    :param endian: String that determines the endianness of the file. Either
+        '>' for big endian or '<' for little endian. If it is None, obspy.segy
+        will try to autodetect the endianness. The endianness is always valid
+        for the whole file.
+    :param textual_header_encoding: The encoding of the textual header.
+        Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
+        be attempted.
     """
-    # Open the file if it is not file like object.
+    # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
         hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return _readSEGY(open_file)
+            return _readSEGY(open_file, endian=endian,
+                             textual_header_encoding=textual_header_encoding)
     # Otherwise just read it.
-    return _readSEGY(file)
+    return _readSEGY(file, endian=endian,
+                     textual_header_encoding=textual_header_encoding)
 
 
-def _readSEGY(file):
+def _readSEGY(file, endian=None, textual_header_encoding=None):
     """
-    Reads on open SEGY file.
+    Reads on open file object and returns a SEGYFile object.
+
+    :param file: Open file like object.
+    :param endian: String that determines the endianness of the file. Either
+        '>' for big endian or '<' for little endian. If it is None, obspy.segy
+        will try to autodetect the endianness. The endianness is always valid
+        for the whole file.
+    :param textual_header_encoding: The encoding of the textual header.
+        Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
+        be attempted.
     """
-    return SEGYFile(file)
+    return SEGYFile(file, endian=endian,
+                    textual_header_encoding=textual_header_encoding)
