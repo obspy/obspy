@@ -10,19 +10,17 @@ SEG Y bindings to ObsPy core module.
 """
 
 
-from obspy.core import Stream, Trace, UTCDateTime, Stats, AttribDict
+from obspy.core import Stream, Trace, UTCDateTime, AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
 from obspy.segy.segy import SEGYTrace
 from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
 from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE
 
-from StringIO import StringIO
-
 from copy import deepcopy
 import numpy as np
 from struct import unpack
-import os
+
 
 # Valid data format codes as specified in the SEGY rev1 manual.
 VALID_FORMATS = [1, 2, 3, 4, 5, 8]
@@ -53,22 +51,25 @@ def isSEGY(filename):
     try:
         temp = open(filename, 'rb')
         temp.seek(3216)
-        sample_interval = temp.read(2)
+        _sample_interval = temp.read(2)
         temp.seek(2, 1)
-        samples_per_trace = temp.read(2)
+        _samples_per_trace = temp.read(2)
         temp.seek(2, 1)
         data_format_code = temp.read(2)
         temp.close()
     except:
         return False
     # Unpack using big endian first and check if it is valid.
-    format = unpack('>h', data_format_code)[0]
+    try:
+        format = unpack('>h', data_format_code)[0]
+    except:
+        return False
     if format in VALID_FORMATS:
-        endian = '>'
+        _endian = '>'
     else:
         format = unpack('<h', data_format_code)[0]
         if format in VALID_FORMATS:
-            endian = '<'
+            _endian = '<'
         else:
             return False
     return True
@@ -172,7 +173,7 @@ def readSEGY(filename, endian=None, textual_header_encoding=None):
     return stream
 
 
-def writeSEGY(stream, filename, data_encoding=None, endian=None,
+def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
               textual_header_encoding=None):
     """
     Writes a SEGY file from given ObsPy Stream object.
@@ -209,7 +210,7 @@ def writeSEGY(stream, filename, data_encoding=None, endian=None,
         point numbers) will be used. Different data encodings for different
         traces are currently not supported because these will most likely not
         be readable by other software.
-    endian : string
+    byteorder : string
         Either '<' (little endian), '>' (big endian), or None
 
         If is None, it will either be the endianness of the first Trace or if
@@ -286,12 +287,12 @@ def writeSEGY(stream, filename, data_encoding=None, endian=None,
             raise SEGYCoreWritingError(msg)
 
     # Figure out endianness and the encoding of the textual file header.
-    if endian is None:
+    if byteorder is None:
         if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
                                                         'endian'):
-            endian = stream[0].stats.segy.endian
+            byteorder = stream[0].stats.segy.endian
         else:
-            endian = '>'
+            byteorder = '>'
     if textual_header_encoding is None:
         if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
                                             'textual_file_header_encoding'):
@@ -330,11 +331,11 @@ def writeSEGY(stream, filename, data_encoding=None, endian=None,
                         getattr(this_trace_header, item))
         # Set the data encoding and the endianness.
         new_trace.data_encoding = data_encoding
-        new_trace.endian = endian
+        new_trace.endian = byteorder
         # Add the trace to the SEGYFile object.
         segy_file.traces.append(new_trace)
     # Write the file
-    segy_file.write(filename, data_encoding=data_encoding, endian=endian)
+    segy_file.write(filename, data_encoding=data_encoding, endian=byteorder)
 
 
 def segy_trace__str__(self, *args, **kwargs):
