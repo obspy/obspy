@@ -9,12 +9,10 @@ from obspy.imaging import spectrogram
 import numpy as np
 import os
 import unittest
-
-
-def skipIfAutomatedTest(func):
-    if __name__ == '__main__':
-        return func
-    return
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf
 
 
 class SpectrogramTestCase(unittest.TestCase):
@@ -25,7 +23,7 @@ class SpectrogramTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'output')
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_Waveform(self):
         """
         Create waveform plotting examples in tests/output directory.

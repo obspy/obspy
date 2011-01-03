@@ -5,6 +5,18 @@ import datetime
 import copy
 import unittest
 import numpy as np
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf
+
+
+# some Python version don't support negative timestamps
+NO_NEGATIVE_TIMESTAMPS = False
+try:
+    UTCDateTime(-1)
+except:
+    NO_NEGATIVE_TIMESTAMPS = True
 
 
 class UTCDateTimeTestCase(unittest.TestCase):
@@ -277,21 +289,26 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEquals(end - start, 4)
         #3
         start = UTCDateTime(0)
-        end = UTCDateTime(-1000.5)
-        self.assertAlmostEquals(end - start, -1000.5)
-        #4
         td = datetime.timedelta(seconds=1)
         self.assertEquals(start - td, UTCDateTime(1969, 12, 31, 23, 59, 59))
-        #5
+        #4
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 000001)
         self.assertAlmostEquals(end - start, 0.000002)
 
+    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_negativeTimestamp(self):
         dt = UTCDateTime(-1000.1)
         self.assertEquals(str(dt), "1969-12-31T23:43:19.900000Z")
         self.assertEquals(dt.timestamp, -1000.1)
 
+    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
+    def test_subWithNegativeTimestamp(self):
+        start = UTCDateTime(0)
+        end = UTCDateTime(-1000.5)
+        self.assertAlmostEquals(end - start, -1000.5)
+
+    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_negativeUTCDateTime(self):
         #1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")

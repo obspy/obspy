@@ -10,15 +10,16 @@ Various additional utilities for ObsPy.
 """
 from pkg_resources import require, iter_entry_points
 import ctypes as C
+import doctest
+import functools
+import glob
+import inspect
 import numpy as np
 import os
 import sys
 import tempfile
-import inspect
+import unittest
 import warnings
-import glob
-import doctest
-from functools import wraps
 
 
 # defining ObsPy modules
@@ -394,7 +395,7 @@ def deprecated(func, warning_msg=None):
 
     It will result in a warning being emitted when the function is used.
     """
-    @wraps(func)
+    @functools.wraps(func)
     def new_func(*args, **kwargs):
         if 'deprecated' in str(func.__doc__).lower():
             msg = func.__doc__
@@ -414,7 +415,7 @@ def deprecated_keywords(keywords):
     def fdec(func):
         fname = func.func_name
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
-        @wraps(func)
+        @functools.wraps(func)
         def echo_func(*args, **kwargs):
             for kw in kwargs.keys():
                 if kw in keywords:
@@ -440,7 +441,7 @@ def interceptDict(func):
         - throw a DeprecationWarning
         - make the correct call
     """
-    @wraps(func)
+    @functools.wraps(func)
     def new_func(*args, **kwargs):
         # function itself is first arg so len(args) == 3 means we got 2 args...
         if len(args) == 3 and isinstance(args[2], dict):
@@ -526,6 +527,36 @@ def add_unittests(testsuite, module_name):
     for module_name in module_names:
         module = __import__(module_name, fromlist="obspy")
         testsuite.addTest(module.suite())
+
+
+def _id(obj):
+    return obj
+
+
+def skip(reason):
+    """
+    Unconditionally skip a test.
+    """
+    def decorator(test_item):
+        if not (isinstance(test_item, type) and issubclass(test_item, unittest.TestCase)):
+            @functools.wraps(test_item)
+            def skip_wrapper(*args, **kwargs):
+                return
+            test_item = skip_wrapper
+
+        test_item.__unittest_skip__ = True
+        test_item.__unittest_skip_why__ = reason
+        return test_item
+    return decorator
+
+
+def skipIf(condition, reason):
+    """
+    Skip a test if the condition is true.
+    """
+    if condition:
+        return skip(reason)
+    return _id
 
 
 if __name__ == '__main__':

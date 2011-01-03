@@ -8,12 +8,10 @@ from obspy.core import Stream, Trace, UTCDateTime
 import numpy as np
 import os
 import unittest
-
-
-def skipIfAutomatedTest(func):
-    if __name__ == '__main__':
-        return func
-    return
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf
 
 
 class WaveformTestCase(unittest.TestCase):
@@ -101,7 +99,7 @@ class WaveformTestCase(unittest.TestCase):
         st += self._createStream(start + 10, start + 20, 10.0)
         self.assertRaises(Exception, st.plot)
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotOneHourManySamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -115,7 +113,7 @@ class WaveformTestCase(unittest.TestCase):
         filename = 'OneHourManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotOneHourFewSamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -127,7 +125,7 @@ class WaveformTestCase(unittest.TestCase):
         filename = 'OneHourFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotSimpleGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -141,7 +139,7 @@ class WaveformTestCase(unittest.TestCase):
         filename = 'SimpleGapManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotSimpleGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -155,7 +153,7 @@ class WaveformTestCase(unittest.TestCase):
         filename = 'SimpleGapFewSamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotComplexGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -175,7 +173,7 @@ class WaveformTestCase(unittest.TestCase):
         filename = 'ComplexGapManySamples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_plotComplexGapFewSamples(self):
         """
         Plots three hours with a gap.

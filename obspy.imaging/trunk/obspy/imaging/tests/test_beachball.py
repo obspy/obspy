@@ -8,12 +8,10 @@ from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
 import os
 import unittest
 import matplotlib.pyplot as plt
-
-
-def skipIfAutomatedTest(func):
-    if __name__ == '__main__':
-        return func
-    return
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf
 
 
 class BeachballTestCase(unittest.TestCase):
@@ -24,7 +22,7 @@ class BeachballTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'output')
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_Beachball(self):
         """
         Create beachball examples in tests/output directory.
@@ -87,7 +85,7 @@ class BeachballTestCase(unittest.TestCase):
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-chile-mt.png'))
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_BeachBallOutputFormats(self):
         """
         Tests various output formats.
@@ -184,7 +182,7 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
-    @skipIfAutomatedTest
+    @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_Beach(self):
         """
         Tests to plot beachballs as collection into an existing axis

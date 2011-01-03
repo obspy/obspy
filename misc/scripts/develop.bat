@@ -15,7 +15,11 @@ cd ..\..
 cd obspy.%%M/trunk
 echo === obspy.%%M ===
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
-%PYTHON% setup.py -q build develop
+IF [%1]==[] (
+  %PYTHON% setup.py -q build develop
+) ELSE (
+  %PYTHON% setup.py -q build -c mingw32 develop
+)
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
 echo OK
 )
