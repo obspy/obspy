@@ -104,12 +104,6 @@ def readSEGY(filename, endian=None, textual_header_encoding=None):
     >>> from obspy.core import read # doctest: +SKIP
     >>> st = read("segy_file") # doctest: +SKIP
     """
-    # Monkey patch the __str__ method for the all Trace instances used in the
-    # following.
-    # XXX: Check if this is not messing anything up. Patching every single
-    # instance did not reliably work.
-    setattr(Trace, '__str__', segy_trace__str__)
-
     # Read file to the internal segy representation.
     segy_object = readSEGYrev1(filename, endian=endian,
                                textual_header_encoding=textual_header_encoding)
@@ -344,8 +338,12 @@ def segy_trace__str__(self, *args, **kwargs):
     have network, station, channel codes. It just prints the trace sequence
     number within the line.
     """
-    out = "%s" % ('Seq. No. in line: %4i' % \
+    try:
+        out = "%s" % ('Seq. No. in line: %4i' % \
              self.stats.segy.trace_header.trace_sequence_number_within_line)
+    except KeyError:
+        # fall back if for some reason the segy attribute does not exists
+        return getattr(Trace, '__original_str__')(self, *args, **kwargs)
     # output depending on delta or sampling rate bigger than one
     if self.stats.sampling_rate < 0.1:
         if hasattr(self.stats, 'preview')  and self.stats.preview:
@@ -369,3 +367,11 @@ def segy_trace__str__(self, *args, **kwargs):
     if np.ma.count_masked(self.data):
         out += ' (masked)'
     return out % (self.stats)
+
+
+# Monkey patch the __str__ method for the all Trace instances used in the
+# following.
+# XXX: Check if this is not messing anything up. Patching every single
+# instance did not reliably work.
+setattr(Trace, '__original_str__', Trace.__str__)
+setattr(Trace, '__str__', segy_trace__str__)
