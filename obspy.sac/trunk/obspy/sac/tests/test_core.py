@@ -311,7 +311,7 @@ class CoreTestCase(unittest.TestCase):
         sac_file = NamedTemporaryFile().name
         tr.write(sac_file, 'SACXY')
         st = read(sac_file)
-        #os.remove(sac_file)
+        os.remove(sac_file)
         self.assertEquals(st[0].stats.delta, 0.01)
         self.assertEquals(st[0].stats.sampling_rate, 100.0)
 

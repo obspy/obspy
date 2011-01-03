@@ -167,6 +167,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         for data_encoding in encodings:
             self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
                               data_encoding=data_encoding)
+        os.remove(out_file)
 
     def test_invalidDataEncodingRaises(self):
         """
@@ -179,6 +180,7 @@ class SEGYCoreTestCase(unittest.TestCase):
                           data_encoding=0)
         self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
                           data_encoding='')
+        os.remove(out_file)
 
     def test_enforcingTextualHeaderEncodingWhileWriting(self):
         """
@@ -200,7 +202,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st2[0].stats.segy.textual_file_header_encoding, 'EBCDIC')
+        self.assertEqual(st2[0].stats.segy.textual_file_header_encoding,
+                         'EBCDIC')
         # Do once again to enforce EBCDIC.
         writeSEGY(st1, out_file, textual_header_encoding='EBCDIC')
         st3 = readSEGY(out_file)
@@ -209,7 +212,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st3[0].stats.segy.textual_file_header_encoding, 'EBCDIC')
+        self.assertEqual(st3[0].stats.segy.textual_file_header_encoding,
+                         'EBCDIC')
         # Enforce ASCII
         writeSEGY(st1, out_file, textual_header_encoding='ASCII')
         st4 = readSEGY(out_file)
@@ -218,7 +222,8 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertFalse(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st4[0].stats.segy.textual_file_header_encoding, 'ASCII')
+        self.assertEqual(st4[0].stats.segy.textual_file_header_encoding,
+                         'ASCII')
 
     def test_enforcingEndiannessWhileReading(self):
         """
