@@ -1,18 +1,24 @@
-#!/bin/bash
+@echo off
+SETLOCAL
 
-PACKAGES="core gse2 mseed sac seisan sh wav xseed signal imaging arclink \
-seishub fissures db segy events"
+REM
+REM Run vcvars32.bat in VS2008 command line for 32 bit!
+REM Run vcvars64.bat in VS2008 command line for 64 bit!
+REM
 
-# go from here to ObsPy root directory
-cd ../..
+REM 
+REM Set your correct python interpreter here or just use virtualenv.
+set PYTHON=python
 
-# link all packages to python2.x/lib/site-packages/
-for NAME in $PACKAGES; do
-    cd obspy.$NAME/trunk
-    rm -rf build
-    python setup.py develop -N -U --verbose
-    cd ../..
-done
+FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy) DO (
+cd ..\..
+cd obspy.%%M/trunk
+echo === obspy.%%M ===
+%PYTHON% setup.py -q clean --all >NUL 2>NUL
+%PYTHON% setup.py -q build develop
+%PYTHON% setup.py -q clean --all >NUL 2>NUL
+echo OK
+)
 
-# go back to scripts directory
-cd misc/scripts
+cd ..\..
+cd misc\scripts
