@@ -125,7 +125,8 @@ def enframe(x, win, inc):
     if (nwin == 1):
         length = win
     else:
-        length = nextpow2(nwin)
+        #length = nextpow2(nwin)
+        length = nwin
     nf = int(fix((nx - length + inc) // inc))
     #f = np.zeros((nf, length))
     indf = inc * np.arange(nf)

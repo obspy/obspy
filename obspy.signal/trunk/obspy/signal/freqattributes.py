@@ -288,7 +288,7 @@ def logcep(data, fs, nc, p, n, w):
     nfft = util.nextpow2(dataT.shape[1]) 
     fc = fftpack.fft(dataT, nfft, 0)
     f = fc[1:len(fc) / 2 + 1, :]
-    m, a, b = logbankm(p, n, fs, w)
+    m, a, b = logbankm(p, nfft, fs, w)
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))
     pth = np.max(pw) * 1E-20
     ath = np.sqrt(pth)
