@@ -46,9 +46,9 @@ if platform.system() == "Windows":
 
 # create library name
 if 'develop' in sys.argv:
-    lib_name = 'libsignal-%s-%s-%s-py%s' % (
-        platform.node(), platform.platform(terse=1),
-        platform.architecture()[0], '_'.join(platform.python_version_tuple()))
+    lib_name = 'libsignal-%s-%s-py%s' % (
+        platform.system(), platform.architecture()[0],
+        ''.join(platform.python_version_tuple()[:2]))
 else:
     lib_name = 'libsignal'
 

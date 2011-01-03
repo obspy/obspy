@@ -35,9 +35,8 @@ from obspy.core.util import c_file_p, formatScientific, deprecated
 # create library names
 lib_names = [
      # platform specific library name
-    'libgse2-%s-%s-%s-py%s' % (platform.node(), platform.platform(terse=1),
-                               platform.architecture()[0],
-                               '_'.join(platform.python_version_tuple())),
+    'libgse2-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+                            ''.join(platform.python_version_tuple()[:2])),
      # fallback for pre-packaged libraries
     'libgse2']
 # add correct file extension

@@ -13,9 +13,8 @@ import numpy as np
 # create library names
 lib_names = [
      # platform specific library name
-    'libmseed-%s-%s-%s-py%s' % (platform.node(), platform.platform(terse=1),
-                                platform.architecture()[0],
-                                '_'.join(platform.python_version_tuple())),
+    'libmseed-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+                             ''.join(platform.python_version_tuple()[:2])),
      # fallback for pre-packaged libraries
     'libmseed']
 # add correct file extension
