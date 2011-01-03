@@ -85,12 +85,12 @@ class SEGYCoreTestCase(unittest.TestCase):
         os.remove(out_file)
         self.assertEqual(st2[0].stats.segy.endian, '>')
         # Do once again to enforce big endian.
-        writeSEGY(st1, out_file, endian='>')
+        writeSEGY(st1, out_file, byteorder='>')
         st3 = readSEGY(out_file)
         os.remove(out_file)
         self.assertEqual(st3[0].stats.segy.endian, '>')
         # Enforce little endian.
-        writeSEGY(st1, out_file, endian='<')
+        writeSEGY(st1, out_file, byteorder='<')
         st4 = readSEGY(out_file)
         os.remove(out_file)
         self.assertEqual(st4[0].stats.segy.endian, '<')
@@ -190,14 +190,14 @@ class SEGYCoreTestCase(unittest.TestCase):
         st1 = readSEGY(file)
         # Save the header to compare it later on.
         with open(file, 'rb') as f:
-            header =  f.read(3200)
+            header = f.read(3200)
         # First write should remain EBCDIC.
         out_file = NamedTemporaryFile().name
         writeSEGY(st1, out_file)
         st2 = readSEGY(out_file)
         # Compare header.
         with open(out_file, 'rb') as f:
-            new_header =  f.read(3200)
+            new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
         self.assertEqual(st2[0].stats.segy.textual_file_header_encoding, 'EBCDIC')
@@ -206,7 +206,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         st3 = readSEGY(out_file)
         # Compare header.
         with open(out_file, 'rb') as f:
-            new_header =  f.read(3200)
+            new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
         self.assertEqual(st3[0].stats.segy.textual_file_header_encoding, 'EBCDIC')
@@ -215,7 +215,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         st4 = readSEGY(out_file)
         # Compare header. Should not be equal this time.
         with open(out_file, 'rb') as f:
-            new_header =  f.read(3200)
+            new_header = f.read(3200)
         self.assertFalse(header == new_header)
         os.remove(out_file)
         self.assertEqual(st4[0].stats.segy.textual_file_header_encoding, 'ASCII')

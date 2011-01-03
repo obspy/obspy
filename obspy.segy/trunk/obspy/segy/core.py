@@ -340,7 +340,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
 
 def segy_trace__str__(self, *args, **kwargs):
     """
-    Monkey patch for the __str__ method of the Trace object. SEGY object to not
+    Monkey patch for the __str__ method of the Trace object. SEGY object do not
     have network, station, channel codes. It just prints the trace sequence
     number within the line.
     """
