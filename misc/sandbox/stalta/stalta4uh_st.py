@@ -12,8 +12,9 @@ matplotlib.use("AGG")
 import os
 import sys
 import glob
+import subprocess
 import numpy as np
-from obspy.core import read, UTCDateTime, Stream
+from obspy.core import read, UTCDateTime, Stream, AttribDict
 from obspy.signal import recStalta, triggerOnset, seisSim, cornFreq2Paz, bandpass
 from obspy.seishub import Client
 from matplotlib.mlab import detrend_linear as detrend
@@ -24,18 +25,20 @@ STATIONS = ("DHFO", "UH1", "UH2", "UH3", "UH4")
 CHANNEL = "EHZ"
 # search from 2h before now to 1h before now
 T1 = UTCDateTime() - (60 * 60 * 2)
-T2 = T1 + (60 * 60 * 1)
-LOW = 10.0 # bandpass low corner
-HIGH = 20.0 # bandpass high corner
-STA = 0.5 # length of sta in seconds
-LTA = 10 # length of lta in seconds
-ON = 3.5 # trigger on threshold
-OFF = 1 # trigger off threshold
-ALLOWANCE = 3 # time in seconds to extend trigger-off time
-MAXLEN = 10 # maximum trigger length in seconds
-MIN_STATIONS = 3 # minimum of coinciding stations for alert
-SUMMARY = "/scratch/uh_trigger.txt"
+T2 = T1 + (60 * 60 * 1) + 30
+PAR = dict(LOW=10.0, # bandpass low corner
+           HIGH=20.0, # bandpass high corner
+           STA=0.5, # length of sta in seconds
+           LTA=10, # length of lta in seconds
+           ON=3.5, # trigger on threshold
+           OFF=1, # trigger off threshold
+           ALLOWANCE=1, # time in seconds to extend trigger-off time
+           MAXLEN=10, # maximum trigger length in seconds
+           MIN_STATIONS=3) # minimum of coinciding stations for alert
+PAR = AttribDict(PAR)
+SUMMARY = "/scratch/uh_trigger/uh_trigger.txt"
 PLOTDIR = "/scratch/uh_trigger/"
+MAILTO = ("megies",)
 
 
 client = Client()
@@ -49,7 +52,7 @@ for station in STATIONS:
                                           T2 + 60, getPAZ=True,
                                           getCoordinates=True)
     except:
-        pass
+        continue
     st.extend(tmp)
 
 if not st:
@@ -59,6 +62,7 @@ summary = []
 summary.append("#" * 79)
 summary.append("######## %s  ---  %s ########" % (T1, T2))
 summary.append("#" * 79)
+summary.append(str(st))
 
 # preprocessing, backup original data for plotting at end
 st.merge(0)
@@ -67,18 +71,17 @@ for tr in st:
 st.simulate(paz_remove="self", paz_simulate=cornFreq2Paz(1.0), remove_sensitivity=False)
 st.sort()
 st_trigger = st.copy()
-st_trigger.filter("bandpass", freqmin=LOW, freqmax=HIGH, corners=1, zerophase=True)
+st_trigger.filter("bandpass", freqmin=PAR.LOW, freqmax=PAR.HIGH, corners=1, zerophase=True)
 st.trim(T1, T2)
 st_trigger.trim(T1, T2)
-st_trigger.trigger("recstalta", sta=STA, lta=LTA)
-summary.append(str(st))
+st_trigger.trigger("recstalta", sta=PAR.STA, lta=PAR.LTA)
 
 # do the triggering
 trigger_list = []
 for tr in st_trigger:
     tr.stats.channel = "recstalta"
-    max_len = MAXLEN * tr.stats.sampling_rate
-    trigger_sample_list = triggerOnset(tr.data, ON, OFF, max_len=max_len)
+    max_len = PAR.MAXLEN * tr.stats.sampling_rate
+    trigger_sample_list = triggerOnset(tr.data, PAR.ON, PAR.OFF, max_len=max_len)
     for on, off in trigger_sample_list:
          begin = tr.stats.starttime + float(on) / tr.stats.sampling_rate
          end = tr.stats.starttime + float(off) / tr.stats.sampling_rate
@@ -88,34 +91,43 @@ trigger_list.sort()
 # merge waveform and trigger stream for plotting
 # the normalizations are done because the triggers have a completely different
 # scale and would not be visible in the plot otherwise...
+st.filter("bandpass", freqmin=1.0, freqmax=20.0, corners=1, zerophase=True)
 st.normalize(global_max=False)
 st_trigger.normalize(global_max=True)
 st.extend(st_trigger)
 
 # coincidence part, work through sorted trigger list...
+mutt = ["mutt", "-s", "UH Alert  %s -- %s" % (T1, T2)]
 while len(trigger_list) > 1:
     on, off, sta = trigger_list[0]
-    stations = set()
-    stations.add(sta)
+    stations = []
+    stations.append(sta)
     for i in xrange(1, len(trigger_list)):
         tmp_on, tmp_off, tmp_sta = trigger_list[i]
-        if tmp_on < off + ALLOWANCE:
-            stations.add(tmp_sta)
+        if tmp_on < off + PAR.ALLOWANCE:
+            stations.append(tmp_sta)
             # allow sets of triggers that overlap only on subsets of all
             # stations (e.g. A overlaps with B and B overlaps with C => ABC)
             off = max(off, tmp_off)
         else:
             break
     # process event if enough stations reported it
-    if len(stations) >= MIN_STATIONS:
-        event = (UTCDateTime(on), off - on, tuple(stations))
+    if len(set(stations)) >= PAR.MIN_STATIONS:
+        event = (UTCDateTime(on), off - on, stations)
         summary.append("%s %04.1f %s" % event)
         tmp = st.slice(UTCDateTime(on), UTCDateTime(off))
-        tmp.plot(outfile="%s/%s.png" % (PLOTDIR, UTCDateTime(on)))
+        outfilename = "%s/%s.png" % (PLOTDIR, UTCDateTime(on))
+        tmp.plot(outfile=outfilename)
+        mutt += ("-a", outfilename)
     # shorten trigger_list and go on
     # index i marks the index of the next non-matching pick
     trigger_list = trigger_list[i:]
 
 summary = "\n".join(summary)
-print summary
+summary += "\n" + "\n".join(("%s=%s" % (k, v) for k, v in PAR.items()))
+#print summary
 open(SUMMARY, "at").write(summary + "\n")
+# send emails
+if MAILTO:
+    mutt += MAILTO
+    subprocess.Popen(mutt, stdin=subprocess.PIPE).communicate(summary)
