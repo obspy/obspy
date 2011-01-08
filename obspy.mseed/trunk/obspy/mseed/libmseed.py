@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Module for handling MiniSEED files.
+Lowlevel module internally used for handling MiniSEED files
 
 Contains wrappers for libmseed - The MiniSEED library. The C library is
 interfaced via Python ctypes. Currently only supports MiniSEED files with

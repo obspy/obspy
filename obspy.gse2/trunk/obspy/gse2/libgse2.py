@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2010 Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Read & Write Seismograms, Format GSE2.
+Lowlevel module internally used for handling GSE2 files
 
 Python wrappers for gse_functions - The GSE2 library of Stefan Stange.
 Currently CM6 compressed GSE2 files are supported, this should be
@@ -17,7 +17,7 @@ interfaced via python-ctypes.
 
 See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
-GNU Lesser General Public License, Version 3
+:license: GNU Lesser General Public License, Version 3
 (http://www.gnu.org/copyleft/lesser.html)
 """
 

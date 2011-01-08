@@ -103,6 +103,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
     TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
     SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
+    SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
     =======  ===================  ====================================
 
     Next to the :func:`~obspy.core.stream.read` function the
@@ -953,6 +954,7 @@ class Stream(object):
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
         Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
         SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
+        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.

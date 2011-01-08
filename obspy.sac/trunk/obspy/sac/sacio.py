@@ -7,6 +7,12 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
+"""
+Lowlevel module internally used for handling SAC files
+
+An object-oriented version of C. J. Ammon's SAC I/O module.
+:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+"""
 from obspy.core import UTCDateTime, Trace
 import numpy as np
 import obspy.core
@@ -17,12 +23,6 @@ import warnings
 
 # avoid import statement overhead
 signal = False
-
-"""
-An object-oriented version of C. J. Ammon's SAC I/O module.
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
-"""
-
 
 # we put here everything but the time, they are going to stats.starttime
 # left SAC attributes, right trace attributes, see also
