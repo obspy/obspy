@@ -277,7 +277,6 @@ def write(headdict, data, f, inplace=False):
                     values and make them therefore unusable
     :type headdict: Dictionary
     :param headdict: Header containing the following entries::
-
         'd_year': int,
         'd_mon': int,
         'd_mon': int,

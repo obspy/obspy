@@ -218,7 +218,7 @@ class SacIO(object):
                      = IQB2 (Quarry/mine blast with observed shot info-ripple
                      fired)
                      = IQMT (Quarry/mining-induced events:
-                             tremors and rockbursts)
+                     tremors and rockbursts)
                      = IEQ (Earthquake)
                      = IEQ1 (Earthquakes in a swarm or aftershock sequence)
                      = IEQ2 (Felt earthquake)
