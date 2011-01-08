@@ -1269,7 +1269,7 @@ class SacIO(object):
 
 class ReadSac(SacIO):
     """
-    DEPRECATED. Use :class:`~obspy.sac.SacIO` instead.
+    DEPRECATED. Use :class:`~obspy.sac.sacio.SacIO` instead.
     """
     def __init__(self, *args, **kwargs):
         warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning)
