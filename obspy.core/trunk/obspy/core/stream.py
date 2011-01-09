@@ -705,45 +705,53 @@ class Stream(object):
         can be given as a string encoding a float in the 0-1 range.
 
         :param outfile: Output file string. Also used to automatically
-            determine the output format. Currently supported is emf, eps, pdf,
-            png, ps, raw, rgba, svg and svgz output.
+            determine the output format. Currently supported are emf, eps, pdf,
+            png, ps, raw, rgba, svg and svgz output although this is depended
+            on the matplotlib backend used.
             Defaults to None.
         :param format: Format of the graph picture. If no format is given the
             outfile parameter will be used to try to automatically determine
             the output format. If no format is found it defaults to png output.
-            If no outfile is specified but a format is than a binary
+            If no outfile is specified but a format is, than a binary
             imagestring will be returned.
             Defaults to None.
-        :param size: Size tuple in pixel for the output file. This corresponds
-            to the resolution of the graph for vector formats.
-            Defaults to 800x200 pixels.
-        :param starttime: Starttime of the graph as a datetime object. If not
-            set the graph will be plotted from the beginning.
+        :param starttime: Starttime of the graph as a
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
+            the graph will be plotted from the beginning.
             Defaults to False.
-        :param endtime: Endtime of the graph as a datetime object. If not set
+        :param endtime: Enditime of the graph as a
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
             Defaults to False.
+        :param fig: Use an existing matplotlib figure instance.
+            Default to None.
+        :param automerge: If automerge is True, Traces with the same id will be
+            merged.
+            Defaults to True.
+        :param size: Size tuple in pixel for the output file. This corresponds
+            to the resolution of the graph for vector formats.
+            Defaults to 800x250(per channel) pixels.
         :param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to 100.
-        :param color: Color of the graph. If the supplied parameter is a
-            2-tuple containing two HTML hex string colors a gradient between
-            the two colors will be applied to the graph.
-            Defaults to 'red'.
-        :param bgcolor: Background color of the graph. If the supplied
-            parameter is a 2-tuple containing two HTML hex string colors a
-            gradient between the two colors will be applied to the background.
+        :param color: Color of the graph.
+            Defaults to 'black'.
+        :param bgcolor: Background color of the graph.
+            Defaults to 'white'.
+        :param face_color: Facecolor of the matplotlib canvas.
             Defaults to 'white'.
         :param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
             Defaults to False.
-        :param shadows: Adds a very basic drop shadow effect to the graph.
+        :param number_of_ticks: The number of ticks on the x-axis.
+            Defaults to 5.
+        :param tick_format: The way the time axis is formated.
+            Defaults to '%H:%M:%S'.
+        :param tick_rotation: Tick rotation in degrees.
+            Default to 0.
+        :param handle: Whether or not to return the matplotlib figure instance
+            after the plot has been created.
             Defaults to False.
-        :param minmaxlist: A list containing minimum, maximum and timestamp
-            values. If none is supplied it will be created automatically.
-            Useful for caching.
-            Defaults to False.
-        :param fig: Use an existing figure instance, default None
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
