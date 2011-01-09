@@ -13,3 +13,4 @@ from obspy.core.util import _getVersionString
 __version__ = _getVersionString("obspy.segy")
 
 from segy import readSEGY as readSEGY
+from segy import readSU as readSU

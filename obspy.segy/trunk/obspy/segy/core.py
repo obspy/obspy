@@ -8,17 +8,20 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import with_statement
 
 from obspy.core import Stream, Trace, UTCDateTime, AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
+from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
-from obspy.segy.segy import SEGYTrace
+from obspy.segy.segy import SEGYTrace, autodetectEndianAndSanityCheckSU
+from obspy.segy.segy import SUFile
 from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
 from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE
 
 from copy import deepcopy
 import numpy as np
+import os
 from struct import unpack
 
 
@@ -330,6 +333,155 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         segy_file.traces.append(new_trace)
     # Write the file
     segy_file.write(filename, data_encoding=data_encoding, endian=byteorder)
+
+
+def isSU(filename):
+    """
+    Checks whether or not the given file is a Seismic Unix file. This test is
+    rather shaky because there is no real identifier in a Seismic Unix file.
+    """
+    with open(filename, 'rb') as f:
+        stat = autodetectEndianAndSanityCheckSU(f)
+    if stat is False:
+        return False
+    else:
+        return True
+
+
+def readSU(filename, endian=None):
+    """
+    Reads a SU file and returns an ObsPy Stream object.
+
+    This function should NOT be called directly, it registers via the
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    Parameters
+    ----------
+    filename : string
+        SEG Y rev1 file to be read.
+    endian : string
+        Determines the endianness of the file. Either '>' for big endian or '<'
+        for little endian. If it is None, obspy.segy will try to autodetect the
+        endianness. The endianness is always valid for the whole file.
+
+    Returns
+    -------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("su_file") # doctest: +SKIP
+    """
+    # Read file to the internal segy representation.
+    su_object = readSUFile(filename, endian=endian)
+
+    # Create the stream object.
+    stream = Stream()
+
+    # Get the endianness from the first trace.
+    endian = su_object.traces[0].endian
+    # Loop over all traces.
+    for tr in su_object.traces:
+        # Create new Trace object for every segy trace and append to the Stream
+        # object.
+        trace = Trace()
+        stream.append(trace)
+        trace.data = tr.data
+        trace.stats.su = AttribDict()
+        # Add the trace header as a new attrib dictionary.
+        header = AttribDict()
+        for key, value in tr.header.__dict__.iteritems():
+            setattr(header, key, value)
+        trace.stats.su.trace_header = header
+        # Also set the endianness.
+        trace.stats.su.endian = endian
+        # The sampling rate should be set for every trace. It is a sample
+        # interval in microseconds. The only sanity check is that is should be
+        # larger than 0.
+        tr_header = trace.stats.su.trace_header
+        if tr_header.sample_interval_in_ms_for_this_trace > 0:
+            trace.stats.delta = \
+                    float(tr.header.sample_interval_in_ms_for_this_trace) / \
+                    1E6
+        # If the year is not zero, calculate the start time. The end time is
+        # then calculated from the start time and the sampling rate.
+        # 99 is often used as a placeholder.
+        if tr_header.year_data_recorded > 0 and \
+           tr_header.year_data_recorded != 99:
+            year = tr_header.year_data_recorded
+            julday = tr_header.day_of_year
+            hour = tr_header.hour_of_day
+            minute = tr_header.minute_of_hour
+            second = tr_header.second_of_minute
+            trace.stats.starttime = UTCDateTime(year=year, julday=julday,
+                                    hour=hour, minute=minute, second=second)
+    return stream
+
+
+def writeSU(stream, filename, byteorder=None):
+    """
+    Writes a SU file from given ObsPy Stream object.
+
+    This function should NOT be called directly, it registers via the ObsPy
+    :meth:`~obspy.core.stream.Stream.write` method of an ObsPy Stream object,
+    call this instead.
+
+    This function will automatically set the data encoding field of the binary
+    file header so the user does not need to worry about it.
+
+    Parameters
+    ----------
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+    filename : string
+        Name of SEGY file to be written.
+    byteorder : string
+        Either '<' (little endian), '>' (big endian), or None
+
+        If is None, it will either be the endianness of the first Trace or if
+        that is also not set, it will be big endian. A mix between little and
+        big endian for the headers and traces is currently not supported.
+    """
+    # Check that the dtype for every Trace is correct.
+    for trace in stream:
+        # Check the dtype.
+        if trace.data.dtype != 'float32':
+            msg = """
+            The dtype of the data is not float32.  You need to manually convert
+            the dtype. Please refer to the obspy.segy manual for more details.
+            """.strip()
+            raise SEGYCoreWritingError(msg)
+
+    # Figure out endianness and the encoding of the textual file header.
+    if byteorder is None:
+        if hasattr(stream[0].stats, 'su') and hasattr(stream[0].stats.su,
+                                                        'endian'):
+            byteorder = stream[0].stats.su.endian
+        else:
+            byteorder = '>'
+
+    # Loop over all Traces and create a SEGY File object.
+    su_file = SUFile()
+    # Add all traces.
+    for trace in stream:
+        new_trace = SEGYTrace()
+        new_trace.data = trace.data
+        this_trace_header = trace.stats.su.trace_header
+        new_trace_header = new_trace.header
+        # Again loop over all field of the trace header and if they exists, set
+        # them. Ignore all additional attributes.
+        for _, item in TRACE_HEADER_FORMAT:
+            if hasattr(this_trace_header, item):
+                setattr(new_trace_header, item,
+                        getattr(this_trace_header, item))
+        # Set the data encoding and the endianness.
+        new_trace.endian = byteorder
+        # Add the trace to the SEGYFile object.
+        su_file.traces.append(new_trace)
+    # Write the file
+    su_file.write(filename, endian=byteorder)
 
 
 def segy_trace__str__(self, *args, **kwargs):
