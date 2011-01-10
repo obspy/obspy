@@ -14,7 +14,7 @@ Routines to read and write SEG Y rev 1 encoded seismic data files.
 from __future__ import with_statement
 from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
-    TRACE_HEADER_FORMAT
+    TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE
 import numpy as np
 import os
 from struct import pack, unpack
@@ -30,6 +30,13 @@ class SEGYError(Exception):
 class SEGYTraceHeaderTooSmallError(SEGYError):
     """
     Raised if the trace header is not the required 240 byte long.
+    """
+    pass
+
+class SEGYTraceReadingError(SEGYError):
+    """
+    Raised if there is not enough data left in the file to unpack the data
+    according to the values read from the header.
     """
     pass
 
@@ -375,6 +382,19 @@ class SEGYTrace(object):
                                       endian=self.endian)
         # The number of samples in the current trace.
         npts = self.header.number_of_samples_in_this_trace
+        # Do a sanity check if there is enough data left.
+        pos = self.file.tell()
+        size = os.fstat(self.file.fileno())[6]
+        data_left = size - pos
+        data_needed = DATA_SAMPLE_FORMAT_SAMPLE_SIZE[self.data_encoding] * \
+                      npts
+        if npts < 1 or data_needed > data_left:
+            msg = """
+                  Too little data left in the file to unpack it according to
+                  its trace header. This is most likely either due to a wrong
+                  byteorder or a corrupt file.
+                  """.strip()
+            raise SEGYTraceReadingError(msg)
         # Unpack the data.
         self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[\
                         self.data_encoding](self.file, npts,

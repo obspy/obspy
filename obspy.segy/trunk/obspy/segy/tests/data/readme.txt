@@ -1,6 +1,6 @@
 Short list where the files are from.
 
-All files are cut so only the first trace appears.
+All files are cut so only the first trace appears to save disk space.
 
 
 SEG Y rev 1 files
@@ -37,3 +37,13 @@ Files from Christian Pelties
     => 4-byte, IBM floating point - little endian, EBCDIC header.
 
         planes.segy_first_trace
+
+
+Seismic Unix files
+==================
+
+Thomas.Forbriger@kit.edu
+------------------------
+    => 4-byte IEEE floating point - little endian
+
+        1.su_first_trace

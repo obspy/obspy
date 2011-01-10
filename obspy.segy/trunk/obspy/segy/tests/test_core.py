@@ -239,11 +239,11 @@ class SEGYCoreTestCase(unittest.TestCase):
         st1 = readSEGY(file)
         self.assertEqual(st1[0].stats.segy.endian, '>')
         # Doing the same with the right endianness should still work.
-        st2 = readSEGY(file, endian='>')
+        st2 = readSEGY(file, byteorder='>')
         self.assertEqual(st2[0].stats.segy.endian, '>')
         # The wrong endianness should yield an key error because the routine to
         # unpack the wrong data format code cannot be found.
-        self.assertRaises(KeyError, readSEGY, file, endian='<')
+        self.assertRaises(KeyError, readSEGY, file, byteorder='<')
 
     def test_readingUsingCore(self):
         """

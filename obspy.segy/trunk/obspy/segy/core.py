@@ -78,7 +78,7 @@ def isSEGY(filename):
     return True
 
 
-def readSEGY(filename, endian=None, textual_header_encoding=None):
+def readSEGY(filename, byteorder=None, textual_header_encoding=None):
     """
     Reads a SEGY file and returns an ObsPy Stream object.
 
@@ -108,7 +108,7 @@ def readSEGY(filename, endian=None, textual_header_encoding=None):
     >>> st = read("segy_file") # doctest: +SKIP
     """
     # Read file to the internal segy representation.
-    segy_object = readSEGYrev1(filename, endian=endian,
+    segy_object = readSEGYrev1(filename, endian=byteorder,
                                textual_header_encoding=textual_header_encoding)
 
     # Create the stream object.
@@ -348,7 +348,7 @@ def isSU(filename):
         return True
 
 
-def readSU(filename, endian=None):
+def readSU(filename, byteorder=None):
     """
     Reads a SU file and returns an ObsPy Stream object.
 
@@ -375,7 +375,7 @@ def readSU(filename, endian=None):
     >>> st = read("su_file") # doctest: +SKIP
     """
     # Read file to the internal segy representation.
-    su_object = readSUFile(filename, endian=endian)
+    su_object = readSUFile(filename, endian=byteorder)
 
     # Create the stream object.
     stream = Stream()
