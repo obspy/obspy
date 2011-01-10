@@ -5,12 +5,16 @@ The obspy.segy core test suite.
 
 from __future__ import with_statement
 import numpy as np
+from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
+from obspy.segy.core import SEGYSampleIntervalError
+from obspy.segy.core import isSU, readSU, writeSU
 from obspy.segy.segy import SEGYError
 from obspy.segy.segy import readSEGY as readSEGYInternal
 from obspy.segy.tests.header import FILES, DTYPES
 import os
+from struct import unpack
 import unittest
 
 
@@ -40,8 +44,26 @@ class SEGYCoreTestCase(unittest.TestCase):
         # not work. Just check certain files to ensure reproducibility.
         files = ['test_core.py', 'test_segy.py', '__init__.py']
         for file in files:
-            file = os.path.join(self.path, file)
+            file = os.path.join(self.dir, file)
             self.assertEqual(isSEGY(file), False)
+
+    def test_isSUFile(self):
+        """
+        Tests the isSU method.
+        """
+        # Test all SEG Y files in the test directory.
+        for file in self.files.keys():
+            file = os.path.join(self.path, file)
+            self.assertEqual(isSU(file), False)
+        # Also check all the other files in the test directory and they should
+        # not work. Just check certain files to ensure reproducibility.
+        files = ['test_core.py', 'test_segy.py', '__init__.py']
+        for file in files:
+            file = os.path.join(self.dir, file)
+            self.assertEqual(isSU(file), False)
+        # Check an actual Seismic Unix file.
+        file = os.path.join(self.path, '1.su_first_trace')
+        self.assertEqual(isSU(file), True)
 
     def test_enforcingTextualHeaderEncodingWhileReading(self):
         """
@@ -321,6 +343,157 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         self.assertRaises(SEGYError, readSEGY, file,
                           textual_header_encoding='BLUB')
+
+    def test_settingDeltaandSamplingRateinStats(self):
+        """
+        Just checks if the delta and sampling rate attributes are correctly
+        set.
+        Testing the delta value is enough because the stats attribute takes
+        care that delta/sampling rate always match.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        self.assertEqual(segy[0].stats.delta, 250E-6)
+        # The same with the Seismic Unix file.
+        file = os.path.join(self.path, '1.su_first_trace')
+        su = readSU(file)
+        self.assertEqual(su[0].stats.delta, 250E-6)
+
+    def test_writingNewSamplingRate(self):
+        """
+        Setting a new sample rate works.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        segy[0].stats.sampling_rate = 20
+        outfile = NamedTemporaryFile().name
+        writeSEGY(segy, outfile)
+        new_segy = readSEGY(outfile)
+        os.remove(outfile)
+        self.assertEqual(new_segy[0].stats.sampling_rate, 20)
+        # The same with the Seismic Unix file.
+        file = os.path.join(self.path, '1.su_first_trace')
+        su = readSU(file)
+
+    def test_readingDate(self):
+        """
+        Reads one file with a set date. The date has been read with SeisView 2
+        by the DMNG.
+        """
+        # Date as read by SeisView 2.
+        date = UTCDateTime(year=2005, julday=353, hour=15, minute=7, second=54)
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        self.assertEqual(date, segy[0].stats.starttime)
+        # The same with the Seismic Unix file.
+        file = os.path.join(self.path, '1.su_first_trace')
+        su = readSU(file)
+        self.assertEqual(date, su[0].stats.starttime)
+
+    def test_largeSampleRateIntervalRaises(self):
+        """
+        SEG Y supports a sample interval from 1 to 65535 microseconds in steps of 1
+        microsecond. Larger intervals cannot be supported due to the definition of
+        the SEG Y format. Therefore the smallest possible sampling rate is ~ 15.26
+        Hz.
+        """
+        outfile = NamedTemporaryFile().name
+        # Test for SEG Y.
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        # Set the largest possible delta value which should just work.
+        segy[0].stats.delta = 0.065535
+        writeSEGY(segy, outfile)
+        os.remove(outfile)
+        # Slightly larger should raise.
+        segy[0].stats.delta = 0.065536
+        self.assertRaises(SEGYSampleIntervalError, writeSEGY, segy, outfile)
+        # Same for SU.
+        file = os.path.join(self.path, '1.su_first_trace')
+        su = readSU(file)
+        # Set the largest possible delta value which should just work.
+        su[0].stats.delta = 0.065535
+        writeSU(su, outfile)
+        os.remove(outfile)
+        # Slightly larger should raise.
+        su[0].stats.delta = 0.065536
+        self.assertRaises(SEGYSampleIntervalError, writeSU, su, outfile)
+
+    def test_writingModifiedDate(self):
+        """
+        Tests if the date in Trace.stats.starttime is correctly written in SU
+        and SEGY files.
+        """
+        # Define new date!
+        new_date = UTCDateTime(2010, 7, 7, 2, 2, 2)
+        outfile = NamedTemporaryFile().name
+        # Test for SEGY.
+        file = os.path.join(self.path, 'example.y_first_trace')
+        segy = readSEGY(file)
+        segy[0].stats.starttime = new_date
+        writeSEGY(segy, outfile)
+        segy_new = readSEGY(outfile)
+        os.remove(outfile)
+        self.assertEqual(new_date, segy_new[0].stats.starttime)
+        # Test for SU.
+        file = os.path.join(self.path, '1.su_first_trace')
+        su = readSU(file)
+        su[0].stats.starttime = new_date
+        writeSU(su, outfile)
+        su_new = readSU(outfile)
+        os.remove(outfile)
+        self.assertEqual(new_date, su_new[0].stats.starttime)
+
+    def test_writingStarttimeTimestamp0(self):
+        """
+        If the starttime of the Trace is UTCDateTime(0) it will be interpreted
+        as a missing starttime is not written. Test if this holds True.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        # This file has a set date!
+        with open(file, 'rb') as f:
+            f.seek(3600 + 156, 0)
+            date_time = f.read(10)
+        year, julday, hour, minute, second = unpack('>5h', date_time)
+        self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
+                          second == 54], 5 * [True])
+        # Read and set zero time.
+        segy = readSEGY(file)
+        segy[0].stats.starttime = UTCDateTime(0)
+        outfile = NamedTemporaryFile().name
+        writeSEGY(segy, outfile)
+        # Check the new date.
+        with open(outfile, 'rb') as f:
+            f.seek(3600 + 156, 0)
+            date_time = f.read(10)
+        os.remove(outfile)
+        year, julday, hour, minute, second = unpack('>5h', date_time)
+        self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
+                          second == 0], 5 * [True])
+        # The same for SU.
+        file = os.path.join(self.path, '1.su_first_trace')
+        # This file has a set date!
+        with open(file, 'rb') as f:
+            f.seek(156, 0)
+            date_time = f.read(10)
+        year, julday, hour, minute, second = unpack('<5h', date_time)
+        self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
+                          second == 54], 5 * [True])
+        # Read and set zero time.
+        su = readSU(file)
+        su[0].stats.starttime = UTCDateTime(0)
+        outfile = NamedTemporaryFile().name
+        writeSU(su, outfile)
+        # Check the new date.
+        with open(outfile, 'rb') as f:
+            f.seek(156, 0)
+            date_time = f.read(10)
+        os.remove(outfile)
+        year, julday, hour, minute, second = unpack('<5h', date_time)
+        self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
+                          second == 0], 5 * [True])
+
+
 
 
 def suite():

@@ -14,7 +14,11 @@ import unittest
 
 class SUTestCase(unittest.TestCase):
     """
-    Test cases for SU reading and writing..
+    Test cases for SU reading and writing.
+
+    Since the Seismic Unix format is a subset of the SEG Y file format a lot of
+    the SEG Y tests cover certain aspects of the SU format and ensure that the
+    SU implementation is working correctly.
     """
     def setUp(self):
         # directory where the test files are located

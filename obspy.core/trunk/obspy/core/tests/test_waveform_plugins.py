@@ -43,8 +43,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
-            # XXX: skip SEGY for now as it needs some special headers
-            if 'SEGY' in format:
+            # XXX: skip SEGY and SU formats for now as they need some special
+            # headers.
+            if format in ['SEGY', 'SU']:
                 continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
@@ -113,8 +114,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
-            # XXX: skip SEGY for now as it needs some special headers
-            if 'SEGY' in format:
+            # XXX: skip SEGY and SU formats for now as they need some special
+            # headers.
+            if format in ['SEGY', 'SU']:
                 continue
 
             dt = np.dtype("int")
@@ -183,8 +185,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         data = data[::2]
         tr = Trace(data=data)
         for format in formats:
-            # XXX: skip SEGY for now as it needs some special headers
-            if 'SEGY' in format:
+            # XXX: skip SEGY and SU formats for now as they need some special
+            # headers.
+            if format in ['SEGY', 'SU']:
                 continue
             tempfile = NamedTemporaryFile().name
             tr.write(tempfile, format)

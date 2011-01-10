@@ -371,6 +371,163 @@ class SEGYTestCase(unittest.TestCase):
             # Test the identity.
             self.assertEqual(org_data, new_data)
 
+    def test_unpackBinaryFileHeader(self):
+        """
+        Compares some values of the binary header with values read with
+        SeisView 2 by the DMNG.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        header = segy.binary_file_header
+        # Compare the values.
+        self.assertEqual(header.job_identification_number, 0)
+        self.assertEqual(header.line_number, 0)
+        self.assertEqual(header.reel_number, 0)
+        self.assertEqual(header.number_of_data_traces_per_ensemble, 24)
+        self.assertEqual(header.number_of_auxiliary_traces_per_ensemble, 0)
+        self.assertEqual(header.sample_interval_in_microseconds, 250)
+        self.assertEqual( \
+            header.sample_interval_in_microseconds_of_original_field_recording,
+                         250)
+        self.assertEqual(header.number_of_samples_per_data_trace, 8000)
+        self.assertEqual( \
+          header.number_of_samples_per_data_trace_for_original_field_recording,
+                         8000)
+        self.assertEqual(header.data_sample_format_code, 2)
+        self.assertEqual(header.ensemble_fold, 0)
+        self.assertEqual(header.trace_sorting_code, 1)
+        self.assertEqual(header.vertical_sum_code, 0)
+        self.assertEqual(header.sweep_frequency_at_start, 0)
+        self.assertEqual(header.sweep_frequency_at_end, 0)
+        self.assertEqual(header.sweep_length, 0)
+        self.assertEqual(header.sweep_type_code, 0)
+        self.assertEqual(header.trace_number_of_sweep_channel, 0)
+        self.assertEqual(header.sweep_trace_taper_length_in_ms_at_start, 0)
+        self.assertEqual(header.sweep_trace_taper_length_in_ms_at_end, 0)
+        self.assertEqual(header.taper_type, 0)
+        self.assertEqual(header.correlated_data_traces, 0)
+        self.assertEqual(header.binary_gain_recovered, 0)
+        self.assertEqual(header.amplitude_recovery_method, 0)
+        self.assertEqual(header.measurement_system, 0)
+        self.assertEqual(header.impulse_signal_polarity, 0)
+        self.assertEqual(header.vibratory_polarity_code, 0)
+        self.assertEqual( \
+             header.number_of_3200_byte_ext_file_header_records_following,
+                         0)
+
+    def test_unpackTraceHeader(self):
+        """
+        Compares some values of the first trace header with values read with
+        SeisView 2 by the DMNG.
+        """
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        segy = readSEGY(file)
+        header = segy.traces[0].header
+        # Compare the values.
+        self.assertEqual(header.trace_sequence_number_within_line, 0)
+        self.assertEqual(header.trace_sequence_number_within_segy_file, 0)
+        self.assertEqual(header.original_field_record_number, 1)
+        self.assertEqual(header.trace_number_within_the_original_field_record,
+                        1)
+        self.assertEqual(header.energy_source_point_number, 0)
+        self.assertEqual(header.ensemble_number, 0)
+        self.assertEqual(header.trace_number_within_the_ensemble, 0)
+        self.assertEqual(header.trace_identification_code, 1)
+        self.assertEqual( \
+            header.number_of_vertically_summed_traces_yielding_this_trace,
+                         5)
+        self.assertEqual( \
+            header.number_of_horizontally_stacked_traces_yielding_this_trace,
+                         0)
+        self.assertEqual(header.data_use, 0)
+        self.assertEqual(getattr(header, 'distance_from_center_of_the_' + \
+            'source_point_to_the_center_of_the_receiver_group'), 0)
+        self.assertEqual(header.receiver_group_elevation, 0)
+        self.assertEqual(header.surface_elevation_at_source, 0)
+        self.assertEqual(header.source_depth_below_surface, 0)
+        self.assertEqual(header.datum_elevation_at_receiver_group, 0)
+        self.assertEqual(header.datum_elevation_at_source, 0)
+        self.assertEqual(header.water_depth_at_source, 0)
+        self.assertEqual(header.water_depth_at_group, 0)
+        self.assertEqual( \
+            header.scalar_to_be_applied_to_all_elevations_and_depths, -100)
+        self.assertEqual(header.scalar_to_be_applied_to_all_coordinates, -100)
+        self.assertEqual(header.source_coordinate_x, 0)
+        self.assertEqual(header.source_coordinate_y, 0)
+        self.assertEqual(header.group_coordinate_x, 300)
+        self.assertEqual(header.group_coordinate_y, 0)
+        self.assertEqual(header.coordinate_units, 0)
+        self.assertEqual(header.weathering_velocity, 0)
+        self.assertEqual(header.subweathering_velocity, 0)
+        self.assertEqual(header.uphole_time_at_source_in_ms, 0)
+        self.assertEqual(header.uphole_time_at_group_in_ms, 0)
+        self.assertEqual(header.source_static_correction_in_ms, 0)
+        self.assertEqual(header.group_static_correction_in_ms, 0)
+        self.assertEqual(header.total_static_applied_in_ms, 0)
+        self.assertEqual(header.lag_time_A, 0)
+        self.assertEqual(header.lag_time_B, 0)
+        self.assertEqual(header.delay_recording_time, -100)
+        self.assertEqual(header.mute_time_start_time_in_ms, 0)
+        self.assertEqual(header.mute_time_end_time_in_ms, 0)
+        self.assertEqual(header.number_of_samples_in_this_trace, 8000)
+        self.assertEqual(header.sample_interval_in_ms_for_this_trace, 250)
+        self.assertEqual(header.gain_type_of_field_instruments, 0)
+        self.assertEqual(header.instrument_gain_constant, 24)
+        self.assertEqual(header.instrument_early_or_initial_gain, 0)
+        self.assertEqual(header.correlated, 0)
+        self.assertEqual(header.sweep_frequency_at_start, 0)
+        self.assertEqual(header.sweep_frequency_at_end, 0)
+        self.assertEqual(header.sweep_length_in_ms, 0)
+        self.assertEqual(header.sweep_type, 0)
+        self.assertEqual(header.sweep_trace_taper_length_at_start_in_ms, 0)
+        self.assertEqual(header.sweep_trace_taper_length_at_end_in_ms, 0)
+        self.assertEqual(header.taper_type, 0)
+        self.assertEqual(header.alias_filter_frequency, 1666)
+        self.assertEqual(header.alias_filter_slope, 0)
+        self.assertEqual(header.notch_filter_frequency, 0)
+        self.assertEqual(header.notch_filter_slope, 0)
+        self.assertEqual(header.low_cut_frequency, 0)
+        self.assertEqual(header.high_cut_frequency, 0)
+        self.assertEqual(header.low_cut_slope, 0)
+        self.assertEqual(header.high_cut_slope, 0)
+        self.assertEqual(header.year_data_recorded, 2005)
+        self.assertEqual(header.day_of_year, 353)
+        self.assertEqual(header.hour_of_day, 15)
+        self.assertEqual(header.minute_of_hour, 7)
+        self.assertEqual(header.second_of_minute, 54)
+        self.assertEqual(header.time_basis_code, 0)
+        self.assertEqual(header.trace_weighting_factor, 0)
+        self.assertEqual( \
+            header.geophone_group_number_of_roll_switch_position_one, 2)
+        self.assertEqual(header.geophone_group_number_of_trace_number_one, 2)
+        self.assertEqual(header.geophone_group_number_of_last_trace, 0)
+        self.assertEqual(header.gap_size, 0)
+        self.assertEqual(header.over_travel_associated_with_taper, 0)
+        self.assertEqual( \
+            header.x_coordinate_of_ensemble_position_of_this_trace, 0)
+        self.assertEqual( \
+            header.y_coordinate_of_ensemble_position_of_this_trace, 0)
+        self.assertEqual( \
+            header.for_3d_poststack_data_this_field_is_for_in_line_number, 0)
+        self.assertEqual( \
+            header.for_3d_poststack_data_this_field_is_for_cross_line_number,
+                         0)
+        self.assertEqual(header.shotpoint_number, 0)
+        self.assertEqual( \
+            header.scalar_to_be_applied_to_the_shotpoint_number, 0)
+        self.assertEqual(header.trace_value_measurement_unit, 0)
+        self.assertEqual(header.transduction_constant_mantissa, 0)
+        self.assertEqual(header.transduction_constant_exponent, 0)
+        self.assertEqual(header.transduction_units, 0)
+        self.assertEqual(header.device_trace_identifier, 0)
+        self.assertEqual(header.scalar_to_be_applied_to_times, 0)
+        self.assertEqual(header.source_type_orientation, 0)
+        self.assertEqual(header.source_energy_direction_mantissa, 0)
+        self.assertEqual(header.source_energy_direction_exponent, 0)
+        self.assertEqual(header.source_measurement_mantissa, 0)
+        self.assertEqual(header.source_measurement_exponent, 0)
+        self.assertEqual(header.source_measurement_unit, 0)
+
 
 def rms(x, y):
     """

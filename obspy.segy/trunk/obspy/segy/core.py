@@ -29,9 +29,21 @@ from struct import unpack
 VALID_FORMATS = [1, 2, 3, 4, 5, 8]
 
 
+# This is the maximum possible interval between two samples due to the nature
+# of the SEG Y format.
+MAX_INTERVAL_IN_SECONDS = 0.065535
+
+
 class SEGYCoreWritingError(SEGYError):
     """
     Raised if the writing of the Stream object fails due to some reason.
+    """
+    pass
+
+
+class SEGYSampleIntervalError(SEGYError):
+    """
+    Raised if the interval between two samples is too large.
     """
     pass
 
@@ -182,6 +194,16 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     This function will automatically set the data encoding field of the binary
     file header so the user does not need to worry about it.
 
+    The starttime of every trace is not a required field in the SEG Y
+    specification. If the starttime of a trace is UTCDateTime(0) it will be
+    interpreted as a not-set starttime and no time is written to the trace
+    header. Every other time will be written.
+
+    SEG Y supports a sample interval from 1 to 65535 microseconds in steps of 1
+    microsecond. Larger intervals cannot be supported due to the definition of
+    the SEG Y format. Therefore the smallest possible sampling rate is ~ 15.26
+    Hz. Please keep that in mind.
+
     Parameters
     ----------
     stream : :class:`~obspy.core.stream.Stream`
@@ -282,6 +304,14 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             details.
             """.strip()
             raise SEGYCoreWritingError(msg)
+        # Check the sample interval.
+        if trace.stats.delta > MAX_INTERVAL_IN_SECONDS:
+            msg = """
+            SEG Y supports a maximum interval of %s seconds in between two
+            samples (trace.stats.delta value).
+            """.strip()
+            msg = msg % MAX_INTERVAL_IN_SECONDS
+            raise SEGYSampleIntervalError(msg)
 
     # Figure out endianness and the encoding of the textual file header.
     if byteorder is None:
@@ -322,10 +352,27 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
         # them. Ignore all additional attributes.
-        for _, item in TRACE_HEADER_FORMAT:
+        for _, item, _ in TRACE_HEADER_FORMAT:
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
+        starttime = trace.stats.starttime
+        # Set the date of the Trace if it is not UTCDateTime(0).
+        if starttime == UTCDateTime(0):
+            new_trace.header.year_data_recorded = 0
+            new_trace.header.day_of_year = 0
+            new_trace.header.hour_of_day = 0
+            new_trace.header.minute_of_hour = 0
+            new_trace.header.second_of_minute =  0
+        else:
+            new_trace.header.year_data_recorded = starttime.year
+            new_trace.header.day_of_year = starttime.julday
+            new_trace.header.hour_of_day = starttime.hour
+            new_trace.header.minute_of_hour = starttime.minute
+            new_trace.header.second_of_minute =  starttime.second
+        # Set the sampling rate.
+        new_trace.header.sample_interval_in_ms_for_this_trace = \
+            int(trace.stats.delta * 1E6)
         # Set the data encoding and the endianness.
         new_trace.data_encoding = data_encoding
         new_trace.endian = byteorder
@@ -453,6 +500,14 @@ def writeSU(stream, filename, byteorder=None):
             the dtype. Please refer to the obspy.segy manual for more details.
             """.strip()
             raise SEGYCoreWritingError(msg)
+        # Check the sample interval.
+        if trace.stats.delta > MAX_INTERVAL_IN_SECONDS:
+            msg = """
+            Seismic Unix supports a maximum interval of %s seconds in between two
+            samples (trace.stats.delta value).
+            """.strip()
+            msg = msg % MAX_INTERVAL_IN_SECONDS
+            raise SEGYSampleIntervalError(msg)
 
     # Figure out endianness and the encoding of the textual file header.
     if byteorder is None:
@@ -472,10 +527,24 @@ def writeSU(stream, filename, byteorder=None):
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
         # them. Ignore all additional attributes.
-        for _, item in TRACE_HEADER_FORMAT:
+        for _, item, _ in TRACE_HEADER_FORMAT:
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
+        starttime = trace.stats.starttime
+        # Set the date of the Trace if it is not UTCDateTime(0).
+        if starttime == UTCDateTime(0):
+            new_trace.header.year_data_recorded = 0
+            new_trace.header.day_of_year = 0
+            new_trace.header.hour_of_day = 0
+            new_trace.header.minute_of_hour = 0
+            new_trace.header.second_of_minute =  0
+        else:
+            new_trace.header.year_data_recorded = starttime.year
+            new_trace.header.day_of_year = starttime.julday
+            new_trace.header.hour_of_day = starttime.hour
+            new_trace.header.minute_of_hour = starttime.minute
+            new_trace.header.second_of_minute =  starttime.second
         # Set the data encoding and the endianness.
         new_trace.endian = byteorder
         # Add the trace to the SEGYFile object.

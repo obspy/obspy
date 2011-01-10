@@ -473,11 +473,15 @@ class SEGYTraceHeader(object):
         # Loop over all items in the TRACE_HEADER_FORMAT list which is supposed
         # to be in the correct order.
         for item in TRACE_HEADER_FORMAT:
-            length, name = item
+            length, name, special_format = item
             string = header[pos: pos + length]
             pos += length
+            # Use special format if necessary.
+            if special_format:
+                format = '%s%s' % (self.endian, special_format)
+                setattr(self, name, unpack(format, string)[0])
             # Unpack according to different lengths.
-            if length == 2:
+            elif length == 2:
                 format = '%sh' % self.endian
                 setattr(self, name, unpack(format, string)[0])
             # Update: Seems to be correct. Two's complement integers seem to be
@@ -501,9 +505,13 @@ class SEGYTraceHeader(object):
         if endian is None:
             endian = self.endian
         for item in TRACE_HEADER_FORMAT:
-            length, name = item
+            length, name, special_format = item
+            # Use special format if necessary.
+            if special_format:
+                format = '%s%s' % (endian, special_format)
+                file.write(pack(format, getattr(self, name)))
             # Pack according to different lengths.
-            if length == 2:
+            elif length == 2:
                 format = '%sh' % endian
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
