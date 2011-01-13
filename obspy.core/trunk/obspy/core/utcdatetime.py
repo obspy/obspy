@@ -578,6 +578,20 @@ class UTCDateTime(datetime.datetime):
             return temp + ":%02d" % (self.minute)
         return temp
 
+    def formatIRISWebService(self):
+        """
+        Returns string representation usable for the IRIS web services.
+
+        >>> dt = UTCDateTime(2008, 05, 27, 12, 30, 35, 45020)
+        >>> dt.formatIRISWebService()
+        '2008.05.27T12.30.35.045'
+
+        :return: string
+        """
+        return "%04d.%02d.%02dT%02d.%02d.%02d.%03d" % \
+                (self.year, self.month, self.day, self.hour, self.minute, self.second,
+                 self.microsecond // 1000)
+
 
 if __name__ == '__main__':
     import doctest
