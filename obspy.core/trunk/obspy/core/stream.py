@@ -195,8 +195,13 @@ def _read(filename, format=None, headonly=False, **kwargs):
         raise Exception(msg)
     format_ep = None
     if not format:
+        eps = formats_ep.values()
+        # put SEGY to the end as it conflicts with MSEED
+        if 'SEGY' in formats_ep:
+            eps = [v for k, v in formats_ep.iteritems() if k != 'SEGY']
+            eps.append(formats_ep.get('SEGY'))
         # detect format
-        for ep in formats_ep.values():
+        for ep in eps:
             try:
                 # search isFormat for given entry point
                 isFormat = load_entry_point(ep.dist.key,
