@@ -98,12 +98,16 @@ st.extend(st_trigger)
 
 # coincidence part, work through sorted trigger list...
 mutt = ["mutt", "-s", "UH Alert  %s -- %s" % (T1, T2)]
+last_off_time = 0
 while len(trigger_list) > 1:
     on, off, sta = trigger_list[0]
     stations = []
     stations.append(sta)
     for i in xrange(1, len(trigger_list)):
         tmp_on, tmp_off, tmp_sta = trigger_list[i]
+        # skip retriggering of already present station in current trigger
+        if tmp_sta in stations:
+            continue
         if tmp_on < off + PAR.ALLOWANCE:
             stations.append(tmp_sta)
             # allow sets of triggers that overlap only on subsets of all
@@ -113,15 +117,17 @@ while len(trigger_list) > 1:
             break
     # process event if enough stations reported it
     if len(set(stations)) >= PAR.MIN_STATIONS:
-        event = (UTCDateTime(on), off - on, stations)
-        summary.append("%s %04.1f %s" % event)
-        tmp = st.slice(UTCDateTime(on), UTCDateTime(off))
-        outfilename = "%s/%s.png" % (PLOTDIR, UTCDateTime(on))
-        tmp.plot(outfile=outfilename)
-        mutt += ("-a", outfilename)
+        if off != last_off_time:
+            event = (UTCDateTime(on), off - on, stations)
+            summary.append("%s %04.1f %s" % event)
+            tmp = st.slice(UTCDateTime(on), UTCDateTime(off))
+            outfilename = "%s/%s.png" % (PLOTDIR, UTCDateTime(on))
+            tmp.plot(outfile=outfilename)
+            mutt += ("-a", outfilename)
+            last_off_time = off
     # shorten trigger_list and go on
     # index i marks the index of the next non-matching pick
-    trigger_list = trigger_list[i:]
+    trigger_list = trigger_list[1:]
 
 summary = "\n".join(summary)
 summary += "\n" + "\n".join(("%s=%s" % (k, v) for k, v in PAR.items()))
