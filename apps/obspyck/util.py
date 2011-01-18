@@ -97,9 +97,9 @@ COMMANDLINE_OPTIONS = (
                 'help': "After fetching the streams run a merge "
                 "operation on every stream. If not done, streams with gaps "
                 "and therefore more traces per channel get discarded.\nTwo "
-                "methods are supported (see http://svn.geophysik.uni-muenchen"
-                ".de/obspy/docs/packages/auto/obspy.core.trace.Trace.__add__"
-                ".html for details)\n  \"safe\": overlaps are discarded "
+                "methods are supported (see http://docs.obspy.org/packages/"
+                "auto/obspy.core.trace.Trace.__add__.html  for details)\n  "
+                "\"safe\": overlaps are discarded "
                 "completely\n  \"overwrite\": the second trace is used for "
                 "overlapping parts of the trace"}),
         (("--arclink-ids",), {'dest': "arclink_ids", 'default': '',
@@ -634,7 +634,10 @@ def setup_external_programs(options):
         sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
                 cwd=prog_dict['dir'], env=prog_dict['env'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        returncode = sub.wait()
+        if system == "Darwin":
+            returncode = sub.returncode
+        else:
+            returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         return (msg, err, returncode)
@@ -656,7 +659,10 @@ def setup_external_programs(options):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         input = open(prog_dict['files']['control'], "rt").read()
         (msg, err) = sub.communicate(input)
-        returncode = sub.wait()
+        if system == "Darwin":
+            returncode = sub.returncode
+        else:
+            returncode = sub.wait()
         return (msg, err, returncode)
     prog_dict['Call'] = tmp
     # NLLoc ###############################################################
@@ -672,7 +678,10 @@ def setup_external_programs(options):
         sub = subprocess.Popen([prog_dict['files']['exe'], controlfilename],
                 cwd=prog_dict['dir'], env=prog_dict['env'], shell=SHELL,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        returncode = sub.wait()
+        if system == "Darwin":
+            returncode = sub.returncode
+        else:
+            returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         for pattern, key in [("nlloc.*.*.*.loc.scat", 'scatter'),
@@ -689,7 +698,10 @@ def setup_external_programs(options):
         sub = subprocess.Popen(prog_dict['files']['exe'], shell=SHELL,
                 cwd=prog_dict['dir'], env=prog_dict['env'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        returncode = sub.wait()
+        if system == "Darwin":
+            returncode = sub.returncode
+        else:
+            returncode = sub.wait()
         msg = "".join(sub.stdout.readlines())
         err = "".join(sub.stderr.readlines())
         return (msg, err, returncode)
