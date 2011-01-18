@@ -65,12 +65,18 @@ def isSEGY(filename):
     # 0.
     try:
         temp = open(filename, 'rb')
-        temp.seek(3216)
+        temp.seek(3212)
+        _number_of_data_traces = temp.read(2)
+        _number_of_auxiliary_traces = temp.read(2)
         _sample_interval = temp.read(2)
         temp.seek(2, 1)
         _samples_per_trace = temp.read(2)
         temp.seek(2, 1)
         data_format_code = temp.read(2)
+        temp.seek(3500, 0)
+        _format_number = temp.read(2)
+        _fixed_length = temp.read(2)
+        _extended_number = temp.read(2)
         temp.close()
     except:
         return False
@@ -81,12 +87,29 @@ def isSEGY(filename):
         return False
     if format in VALID_FORMATS:
         _endian = '>'
+    # It can only every be one. It is impossible for little and big endian to
+    # both yield a valid data sample format code because they are restricted to
+    # be between 1 and 8.
     else:
         format = unpack('<h', data_format_code)[0]
         if format in VALID_FORMATS:
             _endian = '<'
         else:
             return False
+    # Check if the sample interval and samples per Trace make sense.
+    _sample_interval = unpack('%sh' % _endian, _sample_interval)[0]
+    _samples_per_trace = unpack('%sh' % _endian, _samples_per_trace)[0]
+    _number_of_data_traces = unpack('%sh' % _endian, _number_of_data_traces)[0]
+    _number_of_auxiliary_traces = unpack('%sh' % _endian,
+                                         _number_of_auxiliary_traces)[0]
+    _format_number = unpack('%sh' % _endian, _format_number)[0]
+    _fixed_length = unpack('%sh' % _endian, _fixed_length)[0]
+    _extended_number = unpack('%sh' % _endian, _extended_number)[0]
+    # Make some sanity checks and return False if they fail.
+    if _sample_interval <= 0 or _samples_per_trace <= 0 \
+       or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
+       or _format_number < 0 or _fixed_length < 0 or _extended_number < 0:
+        return False
     return True
 
 
