@@ -1005,8 +1005,7 @@ class Stream(object):
         If nearest_sample=True the closest sample point of the first trace
         is the select, the remaining traces are trimmed according to that
         sample point.
-        For more info see :meth:`~obspy.core.trace.Trace.trim.`
-
+        For more info see :meth:`~obspy.core.trace.Trace.trim`.
         """
         if not self:
             return
