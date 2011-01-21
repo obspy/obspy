@@ -11,6 +11,7 @@ Module containing a UTC-based datetime class.
 from calendar import timegm
 import datetime
 import warnings
+from pytz import UTC
 
 
 class UTCDateTime(datetime.datetime):
@@ -353,13 +354,14 @@ class UTCDateTime(datetime.datetime):
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getDateTime()
-        datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
+        datetime.datetime(2008, 10, 1, 12, 30, 35, 45020, tzinfo=<UTC>)
 
         :rtype: :class:`datetime.datetime`
         :return: Python datetime object of current UTCDateTime object.
         """
         return datetime.datetime(self.year, self.month, self.day, self.hour,
-                                 self.minute, self.second, self.microsecond)
+                                 self.minute, self.second, self.microsecond,
+                                 UTC)
 
     datetime = property(getDateTime)
 

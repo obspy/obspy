@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import UTCDateTime
-import datetime
+from pytz import UTC
 import copy
-import unittest
+import datetime
 import numpy as np
+import unittest
 try:
     from unittest import skipIf
 except ImportError:
@@ -334,13 +335,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt.getDate(), datetime.date(1970, 1, 1))
         self.assertEquals(dt.getTime(), datetime.time(12, 23, 34, 456789))
         self.assertEquals(dt.getDateTime(),
-                          datetime.datetime(1970, 1, 1, 12, 23, 34, 456789))
+            datetime.datetime(1970, 1, 1, 12, 23, 34, 456789, UTC))
         self.assertAlmostEquals(dt.getTimeStamp(), 44614.456789)
         # as property
         self.assertEquals(dt.date, datetime.date(1970, 1, 1))
         self.assertEquals(dt.time, datetime.time(12, 23, 34, 456789))
         self.assertEquals(dt.datetime,
-                          datetime.datetime(1970, 1, 1, 12, 23, 34, 456789))
+            datetime.datetime(1970, 1, 1, 12, 23, 34, 456789, UTC))
         self.assertAlmostEquals(dt.timestamp, 44614.456789)
 
     def test_subAddFloat(self):
