@@ -10,7 +10,7 @@ IRIS web service client for ObsPy.
 """
 
 from obspy.core import UTCDateTime, read, Stream
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, BAND_CODE
 from urllib2 import HTTPError
 import os
 import sys
@@ -97,6 +97,14 @@ class Client(object):
         else:
             kwargs['loc'] = '--'
         kwargs['cha'] = str(channel)[0:3]
+        # try to be intelligent in start/endtime extension for fetching data
+        try:
+            t_extension = 2.0 / BAND_CODE[kwargs['cha'][0]]
+        except:
+            # use 1 second extension if no proper bandcode info
+            t_extension = 1.0
+        kwargs['start'] = UTCDateTime(starttime - t_extension).formatIRISWebService()
+        kwargs['end'] = UTCDateTime(endtime + t_extension).formatIRISWebService()
         kwargs['start'] = UTCDateTime(starttime - 1).formatIRISWebService()
         kwargs['end'] = UTCDateTime(endtime + 1).formatIRISWebService()
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
