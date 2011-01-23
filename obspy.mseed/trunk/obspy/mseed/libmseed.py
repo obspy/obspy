@@ -167,7 +167,7 @@ class LibMSEED(object):
         if len(header) != 7:
             return False
         # must start with 6 digits
-        if not header[0:6].isdigit:
+        if not header[0:6].isdigit():
             return False
         # Check for any valid control header types.
         if header[6] in ['D', 'R', 'Q', 'M']:

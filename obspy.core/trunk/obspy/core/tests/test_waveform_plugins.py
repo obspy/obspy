@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import glob
 from obspy.core import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
@@ -20,7 +21,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     def test_raiseOnEmptyFile(self):
         """
         Test case ensures that empty files do raise
-        warnings. 
+        warnings.
         """
         tmpfile = NamedTemporaryFile().name
         # generate empty file
@@ -104,6 +105,52 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         os.remove(outfile[:-4] + '.QBN')
                         os.remove(outfile[:-4])
 
+    def test_false_positives(self):
+        """
+        Tests all isFORMAT methods against all data test files from the other
+        modules for false positives.
+        """
+        formats_ep = _getPlugins('obspy.plugin.waveform',
+                                 'readFormat')
+        formats = formats_ep.values()
+        # Collect all false positives.
+        false_positives = []
+        # Big loop over every format.
+        for format in formats:
+            # search isFormat for given entry point
+            isFormat = load_entry_point(format.dist.key,
+                                        'obspy.plugin.waveform.' + format.name,
+                                        'isFormat')
+            module_path = os.path.join(os.path.join(format.dist.location,
+                    *format.dist.key.split('.')), 'tests', 'data')
+            # Get all the test directories.
+            paths = [os.path.join(os.path.join(f.dist.location,
+                    *f.dist.key.split('.')), 'tests', 'data') for f
+                     in formats]
+            # Remove the paths from the current module.
+            paths = [path for path in paths if path != module_path]
+            # Remove path if one module defines two file formats.
+            for path in paths:
+                # Collect all files found.
+                filelist = []
+                # Walk every path.
+                for directory, _, files in os.walk(path):
+                    filelist.extend([os.path.join(directory, _i) for _i in
+                                     files])
+                for file in filelist:
+                    if not os.path.isfile(file):
+                        continue
+                    if isFormat(file) != False:
+                        false_positives.append((format.name, file))
+        # Use try except to produce a meaningful error message.
+        try:
+            self.assertEqual(len(false_positives), 0)
+        except:
+            msg = 'False positives for isFormat:\n'
+            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in \
+                              false_positives])
+            raise Exception(msg)
+
     def test_read_thread_safe(self):
         """
         Tests for race conditions. Reading n_threads (currently 30) times
@@ -137,6 +184,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 outfile += '.QHD'
             n_threads = 10
             streams = []
+
             def test_function(streams):
                 st = read(outfile, format=format)
                 streams.append(st)
@@ -151,7 +199,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             while True:
                 if threading.activeCount() == 1:
                     break
-                # Avoid infinite loop and leave after 120 seconds 
+                # Avoid infinite loop and leave after 120 seconds
                 # such a long time is needed for debugging with valgrind
                 elif time.time() - start >= 120:
                     msg = 'Not all threads finished!'
@@ -176,7 +224,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
-        formats_write = set(_getPlugins('obspy.plugin.waveform', 'writeFormat'))
+        formats_write = set(_getPlugins('obspy.plugin.waveform',
+                                        'writeFormat'))
         formats_read = set(_getPlugins('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
