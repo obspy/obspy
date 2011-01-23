@@ -4,7 +4,7 @@ GSE2 bindings to ObsPy core module.
 """
 
 from obspy.core import Trace, UTCDateTime, Stream
-from obspy.gse2 import libgse2
+from obspy.gse2 import libgse2, libgse1
 import numpy as np
 
 
@@ -165,3 +165,73 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):
             raise Exception(msg)
         libgse2.write(header, trace.data, f, inplace)
     f.close()
+
+
+def isGSE1(filename):
+    """
+    Checks whether a file is GSE1 or not. Returns True or False.
+
+    Parameters
+    ----------
+    filename : string
+        GSE1 file to be checked.
+    """
+    # Open file.
+    try:
+        f = open(filename)
+        data = f.read(4)
+    except:
+        return False
+    f.close()
+    if data == 'WID1':
+        return True
+    return False
+
+
+def readGSE1(filename, headonly=False, verify_chksum=True, **kwargs):
+    """
+    Reads a GSE1 file and returns a Stream object.
+
+    GSE1 files containing multiple WID1 entries/traces are supported.
+    This function should NOT be called directly, it registers via the
+    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    Parameters
+    ----------
+    filename : string
+        GSE2 file to be read.
+    headonly : boolean, optional
+        If True read only head of GSE2 file.
+    verify_chksum : boolean, optional
+        If True verify Checksum and raise Exception if it is not correct.
+
+    Returns
+    -------
+    :class:`~obspy.core.stream.Stream`
+        Stream object containing header and data.
+
+    Example
+    -------
+    >>> from obspy.core import read # doctest: +SKIP
+    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
+    """
+    traces = []
+    # read GSE2 file
+    f = open(filename, 'rb')
+    for _k in xrange(10000): # avoid endless loop
+        pos = f.tell()
+        widi = f.readline()[0:4]
+        if widi == '': # end of file
+            break
+        elif widi != 'WID1':
+            continue
+        else: # valid gse1 part
+            f.seek(pos)
+            if headonly:
+                header = libgse1.readHead(f)
+                traces.append(Trace(header=new_header))
+            else:
+                header, data = libgse1.read(f, verify_chksum=verify_chksum)
+                traces.append(Trace(header=header, data=data))
+    f.close()
+    return Stream(traces=traces)

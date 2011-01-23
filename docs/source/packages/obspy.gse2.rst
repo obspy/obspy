@@ -11,3 +11,4 @@
 
         core
         libgse2
+        libgse1

@@ -209,6 +209,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 
 
+    def test_readGSE1ViaObsPy(self):
+        """
+        Read files via L{obspy.Trace}
+        """
+        gse1file = os.path.join(self.path, 'data', 'loc_STAU20031119011659.z')
+        testdata = [-818, -814, -798, -844, -806, -818, -800, -790, -818, -780,
+                    -816, -804, -796]
+        # read
+        st = read(gse1file, verify_checksum=False)
+        st.verify()
+        tr = st[0]
+        self.assertEqual(tr.stats['station'], 'LE0083')
+        self.assertEqual(tr.stats.npts, 3000)
+        self.assertAlmostEqual(tr.stats['sampling_rate'], 124.9999924)
+        self.assertEqual(tr.stats.get('channel'), '  Z')
+        self.assertAlmostEqual(tr.stats.get('calib'), 16.0000001)
+        self.assertEqual(str(tr.stats.starttime),
+                         '2003-11-19T01:16:59.990000Z')
+        self.assertEqual(tr.data[0:13].tolist(), testdata)
+        st.plot()
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 

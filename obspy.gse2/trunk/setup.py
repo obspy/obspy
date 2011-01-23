@@ -105,10 +105,15 @@ setup(
     entry_points="""
         [obspy.plugin.waveform]
         GSE2 = obspy.gse2.core
+        GSE1 = obspy.gse2.core
 
         [obspy.plugin.waveform.GSE2]
         isFormat = obspy.gse2.core:isGSE2
         readFormat = obspy.gse2.core:readGSE2
         writeFormat = obspy.gse2.core:writeGSE2
+
+        [obspy.plugin.waveform.GSE1]
+        isFormat = obspy.gse2.core:isGSE1
+        readFormat = obspy.gse2.core:readGSE1
     """,
 )

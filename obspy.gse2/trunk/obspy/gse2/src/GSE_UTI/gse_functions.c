@@ -212,13 +212,23 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   
   if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
   
-  					/* read until we encounter DAT2 */
-  while (isspace(cbuf[0]) || strncmp(cbuf,"DAT2",4)) {
-    if (fgets (cbuf,82,fop) == NULL) { 	printf ("decomp_6b: No DAT2 found!\n"); 
-    					return -1; } }
-  	
-  if (fgets (cbuf,82,fop) == NULL) 	/* read first char line */
-  	{printf ("decomp_6b: Whoops! No data after DAT2.\n"); return -1; }
+  while (1) {
+      /* read until we encounter DAT1 or DAT2 */
+      if (!(isspace(cbuf[0]) || strncmp(cbuf,"DAT2",4))) {
+          break;
+      }
+      else if (!(isspace(cbuf[0]) || strncmp(cbuf,"DAT1",4))) {
+          break;
+      }
+      /* print error if we reached the end of the file */
+      if (fgets (cbuf,82,fop) == NULL) {
+          printf ("decomp_6b: Neither DAT2 or DAT1 found!\n"); 
+          return -1;
+      }
+  }
+
+  if (fgets (cbuf,82,fop) == NULL) /* read first char line */
+  	{printf ("decomp_6b: Whoops! No data after DAT2 or DAT1.\n"); return -1; }
   for (i = 0; i < n_of_samples; i++)		/* loop over expected samples */
   {
   	ibuf += 1;
@@ -227,8 +237,8 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   		{printf ("decomp_6b: missing input line?\n"); return -1; }
       /* We need a space to be sure that CHK2 is not occuring in the middle
        * of the encoded string/buffer */
-  	  if (!(strncmp(cbuf,"CHK2 ",5)))
-  		{printf ("decomp_6b: CHK2 reached prematurely!\n"); return i; }
+  	  if (!(strncmp(cbuf,"CHK2 ",5)) || !(strncmp(cbuf,"CHK1 ", 5)))
+  		{printf ("decomp_6b: CHK2 or CHK1 reached prematurely!\n"); return i; }
   	  ibuf = 0;
   	}
 

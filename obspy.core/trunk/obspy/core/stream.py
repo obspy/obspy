@@ -30,7 +30,7 @@ def get_obspy_entry_points():
     Creates a sorted list of available entry points.
     """
     entry_names = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'SH_ASC', 'Q',
-                    'SLIST', 'TSPAIR', 'SEGY', 'SU', 'WAV']
+                    'SLIST', 'TSPAIR', 'SEGY', 'GSE1', 'SU', 'WAV']
     formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
     # NOTE: If no file format is installed, this will fail and therefore the
     # whole file can no longer be executed. However obspy.core.ascii is
@@ -136,6 +136,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
     SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
     SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
+    GSE1     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE1`
     =======  ===================  ====================================
 
     Next to the :func:`~obspy.core.stream.read` function the
