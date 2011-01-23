@@ -135,6 +135,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 filelist = []
                 # Walk every path.
                 for directory, _, files in os.walk(path):
+                    # Remove double entries from the .svn directories.
+                    if '.svn' in directory:
+                        continue
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
