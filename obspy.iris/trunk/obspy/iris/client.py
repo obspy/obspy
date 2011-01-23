@@ -241,7 +241,7 @@ class Client(object):
         return stream
 
     def availability(self, network="*", station="*", location="*", channel="*",
-                      starttime=UTCDateTime()-3600, endtime=UTCDateTime()-3700, output="bulk"):
+                      starttime=UTCDateTime()-(60*60*24*7), endtime=UTCDateTime()-(60*60*24*7)+10, output="bulk"):
         """
         Interface for `availability`-webservice of IRIS
         (http://www.iris.edu/ws/availability/).
