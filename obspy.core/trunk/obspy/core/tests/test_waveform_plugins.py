@@ -129,6 +129,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                      in formats]
             # Remove the paths from the current module.
             paths = [path for path in paths if path != module_path]
+            # Remove double paths because some modules can have two file
+            # formats.
+            paths = set(paths)
             # Remove path if one module defines two file formats.
             for path in paths:
                 # Collect all files found.
@@ -141,8 +144,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if not os.path.isfile(file):
-                        continue
                     if isFormat(file) != False:
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
