@@ -15,7 +15,7 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
     interceptDict
-from pkg_resources import load_entry_point
+from pkg_resources import load_entry_point, EntryPoint
 import copy
 import math
 import numpy as np
@@ -24,6 +24,37 @@ import os
 import urllib2
 import warnings
 
+
+def get_obspy_entry_points():
+    """
+    Creates a sorted list of available entry points.
+    """
+    entry_names = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'SH_ASC', 'Q',
+                    'SLIST', 'TSPAIR', 'SEGY', 'SU', 'WAV']
+    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
+    # NOTE: If no file format is installed, this will fail and therefore the
+    # whole file can no longer be executed. However obspy.core.ascii is
+    # always available.
+    if not formats_ep:
+        msg = "Your current ObsPy installation does not support any file " + \
+              "reading formats. Please update or extend your ObsPy " + \
+              "installation."
+        raise Exception(msg)
+    eps = formats_ep.values()
+    new_entries = []
+    names = [_i.name for _i in eps]
+    for entry in entry_names:
+        if not entry in names:
+            continue
+        new_entries.append(formats_ep[entry])
+        index = names.index(entry)
+        eps.pop(index)
+        names.pop(index)
+    new_entries.extend(eps)
+    # Create a dictionary from it.
+    return new_entries
+
+ENTRY_POINTS = get_obspy_entry_points()
 
 def read(pathname_or_url=None, format=None, headonly=False,
          nearest_sample=True, **kwargs):
@@ -186,20 +217,9 @@ def _read(filename, format=None, headonly=False, **kwargs):
     if not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
-    # Gets the available formats and the corresponding methods as entry points.
-    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
-    if not formats_ep:
-        msg = "Your current ObsPy installation does not support any file " + \
-              "reading formats. Please update or extend your ObsPy " + \
-              "installation."
-        raise Exception(msg)
     format_ep = None
     if not format:
-        eps = formats_ep.values()
-        # put SEGY to the end as it conflicts with MSEED
-        if 'SEGY' in formats_ep:
-            eps = [v for k, v in formats_ep.iteritems() if k != 'SEGY']
-            eps.append(formats_ep.get('SEGY'))
+        eps = ENTRY_POINTS
         # detect format
         for ep in eps:
             try:
@@ -218,8 +238,12 @@ def _read(filename, format=None, headonly=False, **kwargs):
     else:
         # format given via argument
         format = format.upper()
-        if format in formats_ep:
-            format_ep = formats_ep[format]
+        try:
+            format_ep = [_i for _i in ENTRY_POINTS if _i.name == format][0]
+        except IndexError:
+            msg = "Format is not supported. Supported Formats: "
+            raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
+
     # file format should be known by now
     try:
         # search readFormat for given entry point
@@ -228,7 +252,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                       format_ep.name, 'readFormat')
     except:
         msg = "Format is not supported. Supported Formats: "
-        raise TypeError(msg + ', '.join(formats_ep.keys()))
+        raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
     if headonly:
         stream = readFormat(filename, headonly=True, **kwargs)
     else:
