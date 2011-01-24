@@ -582,7 +582,7 @@ class UTCDateTime(datetime.datetime):
         """
         Returns string representation usable for the IRIS web services.
 
-        >>> dt = UTCDateTime(2008, 05, 27, 12, 30, 35, 45020)
+        >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
         >>> dt.formatIRISWebService()
         '2008.05.27T12.30.35.045'
 

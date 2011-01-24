@@ -23,10 +23,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
         warnings.
         """
         tmpfile = NamedTemporaryFile().name
-        # generate empty file
-        f = open(tmpfile, 'wb')
-        f.write("")
-        f.close()
+        # create empty file
+        open(tmpfile, 'wb').close()
         formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
         for ep in formats_ep.values():
             isFormat = load_entry_point(ep.dist.key,

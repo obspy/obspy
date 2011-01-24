@@ -75,7 +75,7 @@ class AttribDict(dict, object):
     >>> stats.station
     'ROTZ'
     >>> x = stats.keys()
-    >>> x.sort()
+    >>> x = sorted(x)
     >>> x[0:3]
     ['network', 'station']
 
