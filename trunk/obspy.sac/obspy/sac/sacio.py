@@ -868,21 +868,21 @@ class SacIO(object):
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
-            print label, value
+            print(label, value)
 
     def PrintFValue(self, label='=', value= -12345.0):
         """
         Convenience function for printing undefined float header values.
         """
         if value != -12345.0:
-            print '%s %.8g' % (label, value)
+            print('%s %.8g' % (label, value))
 
     def PrintSValue(self, label='=', value='-12345'):
         """
         Convenience function for printing undefined string header values.
         """
         if value.find('-12345') == -1:
-            print label, value
+            print(label, value)
 
     def ListStdValues(self): # h is a header list, s is a float list
         """
@@ -920,13 +920,13 @@ class SacIO(object):
             month = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mon
             date = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
-            print pattern % (month, date,
+            print(pattern % (month, date,
                              self.GetHvalue('nzyear'),
                              self.GetHvalue('nzjday'),
                              self.GetHvalue('nzhour'),
                              self.GetHvalue('nzmin'),
                              self.GetHvalue('nzsec'),
-                             self.GetHvalue('nzmsec'))
+                             self.GetHvalue('nzmsec')))
         except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
@@ -1152,11 +1152,11 @@ class SacIO(object):
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist_()
-        >>> print round(t.GetHvalue('dist'), 2)
+        >>> print(round(t.GetHvalue('dist'), 2))
         18486.53
-        >>> print round(t.GetHvalue('az'), 5)
+        >>> print(round(t.GetHvalue('az'), 5))
         65.65415
-        >>> print round(t.GetHvalue('baz'), 4)
+        >>> print(round(t.GetHvalue('baz'), 4))
         305.9755
 
         The original SAC-program calculates the distance assuming a
@@ -1323,7 +1323,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     ... -53.5979 -21.7494
     ... CONSTANT 2.16e18""")
     >>> attach_paz(tr, f,torad=True)
-    >>> print tr.stats.paz['zeros'][0]
+    >>> print(tr.stats.paz['zeros'][0])
     (-31.6169884657+0j)
     '''
 

@@ -20,7 +20,7 @@ Similiar to reading any other waveform data format using obspy.core:
 >>> st = read(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print st
+>>> print(st)
 1 Trace(s) in Stream:
 .STA..Q | 1978-07-18T08:00:10.000000Z - 1978-07-18T08:01:49.000000Z | 1.0 Hz, 100 samples
 
@@ -32,7 +32,7 @@ points). Additionally, when reading a SAC-file it will have one additional
 attribute, 'sac', which contains all SAC-specific attributes (SAC header
 values).
 
->>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
          network: 
          station: STA
         location: 

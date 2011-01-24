@@ -18,7 +18,7 @@ Basic Example
 >>> client = Client()
 >>> t = UTCDateTime('20090808120000')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
->>> print st
+>>> print(st)
 3 Trace(s) in Stream:
 BW.MANZ..EHZ | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
 BW.MANZ..EHN | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
@@ -43,7 +43,7 @@ Advanced Examples
 
 >>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
 ...                                  format='metadata')
->>> print res #doctest: +NORMALIZE_WHITESPACE
+>>> print(res) #doctest: +NORMALIZE_WHITESPACE
 <?xml version="1.0" encoding="utf-8"?>
 <metadata>
   <item title="Station Name">

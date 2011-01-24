@@ -91,7 +91,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     >>> from obspy.core import read
     >>> st = read()
-    >>> print st
+    >>> print(st)
     3 Trace(s) in Stream:
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
@@ -162,7 +162,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
         >>> from obspy.core import read  # doctest: +SKIP
         >>> st = read("loc_R*.z")  # doctest: +SKIP
-        >>> print st  # doctest: +SKIP
+        >>> print(st)  # doctest: +SKIP
         2 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
         .RNON..Z | 2004-06-09T20:05:59.849998Z - 2004-06-09T20:06:59.8449...
@@ -181,7 +181,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
         >>> from obspy.core import read
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z") \
             # doctest: +SKIP
-        >>> print st  # doctest: +ELLIPSIS +SKIP
+        >>> print(st)  # doctest: +ELLIPSIS +SKIP
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
     """
@@ -319,7 +319,7 @@ class Stream(object):
     >>> trace1 = Trace()
     >>> trace2 = Trace()
     >>> stream = Stream(traces=[trace1, trace2])
-    >>> print stream    #doctest: +ELLIPSIS
+    >>> print(stream)    #doctest: +ELLIPSIS
     2 Trace(s) in Stream:
     ...
 
@@ -398,7 +398,7 @@ class Stream(object):
         ...     channel = "EH" + component
         ...     tr = Trace(header={'station': 'TEST', 'channel': channel})
         ...     st.append(tr)
-        >>> print st
+        >>> print(st)
         9 Trace(s) in Stream:
         .TEST..EH1 | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
         .TEST..EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
@@ -413,7 +413,7 @@ class Stream(object):
         >>> for tr in st:
         ...     if tr.stats.channel[-1] not in ["Z", "N", "E"]:
         ...         st.remove(tr)
-        >>> print st
+        >>> print(st)
         4 Trace(s) in Stream:
         .TEST..EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
         .TEST..EHZ | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
@@ -445,8 +445,8 @@ class Stream(object):
         else:
             out = out + "\n" + self.traces[0].__str__() + "\n" + \
                     '...\n(%i other traces)\n...\n' % (len(self.traces) - \
-                    2) + self.traces[-1].__str__() + '\n\n[Use "print ' + \
-                    'Stream.__str__(extended=True)" to print all Traces]'
+                    2) + self.traces[-1].__str__() + '\n\n[Use "print(' + \
+                    'Stream.__str__(extended=True))" to print all Traces]'
         return out
 
     def __eq__(self, other):
@@ -871,9 +871,9 @@ class Stream(object):
         Total: 1 gap(s) and 0 overlap(s)
         """
         result = self.getGaps(**kwargs)
-        print "%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
                                                 'Next Sample', 'Delta',
-                                                'Samples')
+                                                'Samples'))
         gaps = 0
         overlaps = 0
         for r in result:
@@ -881,9 +881,9 @@ class Stream(object):
                 gaps += 1
             else:
                 overlaps += 1
-            print "%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
-                                                      r[4], r[5], r[6], r[7])
-        print "Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)
+            print("%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
+                                                      r[4], r[5], r[6], r[7]))
+        print("Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps))
 
     def remove(self, trace):
         """
@@ -898,14 +898,14 @@ class Stream(object):
 
         >>> from obspy.core import read
         >>> st = read()
-        >>> print st
+        >>> print(st)
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> for tr in st.select(component="E"):
         ...     st.remove(tr)
-        >>> print st
+        >>> print(st)
         2 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
@@ -1121,23 +1121,23 @@ class Stream(object):
         Basic Usage
         -----------
         >>> st = read()
-        >>> print st
+        >>> print(st)
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> st2 = st.select(station="R*")
-        >>> print st2
+        >>> print(st2)
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> st2 = st.select(component="Z")
-        >>> print st2
+        >>> print(st2)
         1 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> st2 = st.select(network="CZ")
-        >>> print st2 # doctest: +NORMALIZE_WHITESPACE
+        >>> print(st2) # doctest: +NORMALIZE_WHITESPACE
         0 Trace(s) in Stream:
 
 

@@ -438,7 +438,7 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     ... 0.0 0.0
     ... 0.4""")
     >>> attach_paz(tr, f)
-    >>> print round(tr.stats.paz.sensitivity, -4)
+    >>> print(round(tr.stats.paz.sensitivity, -4))
     671140000.0
     '''
     poles = []

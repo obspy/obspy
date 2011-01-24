@@ -100,7 +100,6 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
                           np.sum(data_pitsa ** 2))
-            #print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1.1e-05)
 
     def test_seisSimVsPitsa2(self):
@@ -136,9 +135,7 @@ class InvSimTestCase(unittest.TestCase):
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
                          np.sum(data_pitsa ** 2))
-            #print "RMS misfit %15s:" % id, rms
             self.assertTrue(rms < 1e-04)
-
 
     def test_SRLSeisSim(self):
         """
@@ -180,7 +177,6 @@ class InvSimTestCase(unittest.TestCase):
         corners=4)
         # test versus saved result
         np.testing.assert_array_almost_equal(res, srl_res)
-
 
     def test_estimateMagnitude(self):
         """

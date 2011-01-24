@@ -60,7 +60,6 @@ class RotateTestCase(unittest.TestCase):
             #plot(data_pitsa_t,label="T PITSA")
             #legend()
             #show()
-            #print "RMS misfit:",rms
             self.assertEqual(rms < 1.0e-5, True)
 
     def test_rotate_ZNE_LQT(self):

@@ -33,7 +33,7 @@ behavior of reading the file:
 
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print st
+>>> print(st)
 1 Trace(s) in Stream:
 .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
 
@@ -43,7 +43,7 @@ containing the usual information. When reading a GSE2 file it will have one
 additional attribute: 'gse2'. This attribute contains all GSE2 specific
 attributes:
 
->>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
          network: 
          station: RJOB
         location: 
@@ -60,7 +60,7 @@ attributes:
 
 The data are available via the data attribute.
 
->>> print st[0].data
+>>> print(st[0].data)
 [ 12 -10  16 ...,   8   0 -40]
 
 Writing

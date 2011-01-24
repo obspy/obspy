@@ -27,7 +27,7 @@ found at http://examples.obspy.org.
 >>> st = read(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print st
+>>> print(st)
 3 Trace(s) in Stream:
 .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
 .TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
@@ -37,7 +37,7 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
              network: 
              station: TEST
             location: 

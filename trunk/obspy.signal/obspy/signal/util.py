@@ -52,9 +52,11 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     >>> utlGeoKm(12.0, 48.0, 12.0, 48.0)
     (0.0, 0.0)
     >>> x, y = utlGeoKm(12.0, 48.0, 13.0, 49.0)
-    >>> print round(x,7), round(y,7)
-    73.9041417 111.1908262
-    
+    >>> print(round(x,7))
+    73.9041417
+    >>> print(round(y,7))
+    111.1908262
+
     :param orig_lon: Longitude of reference origin
     :param orig_lat: Latitude of reference origin
     :param lat: Latitude to calculate relative coordinate in km
@@ -82,9 +84,9 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     >>> utlLonLat(12.0, 48.0, 0.0, 0.0)
     (12.0, 48.0)
     >>> lon, lat = utlLonLat(12.0, 48.0, 73.904141685064957, 111.19082623047636)
-    >>> print lon, lat
-    13.0 49.0
-    
+    >>> print("%.4f, %.4f" % (lon, lat))
+    13.0000, 49.0000
+
     :param orig_lon: Longitude of reference origin
     :param orig_lat: Latitude of reference origin
     :param x: value [km] to calculate relative coordinate in degree

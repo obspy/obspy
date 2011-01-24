@@ -17,7 +17,7 @@ Similar to reading any other waveform data format using obspy.core:
 >>> from obspy.core import path
 >>> filename = path("3cssan.near.8.1.RNON.wav")
 >>> st = read(filename)
->>> print st
+>>> print(st)
 1 Trace(s) in Stream:
 ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
 
@@ -26,7 +26,7 @@ data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
 'st[0]' will have a stats attribute containing the essential meta information
 of the WAVE file.
 
->>> print st[0].stats
+>>> print(st[0].stats)
          network: 
          station: 
         location: 

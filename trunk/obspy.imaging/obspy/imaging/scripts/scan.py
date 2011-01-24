@@ -36,12 +36,12 @@ import numpy as np
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
     if ignore_links and os.path.islink(file):
-        print "Ignoring symlink:", file
+        print("Ignoring symlink: %s" % (file))
         return counter
     try:
         stream = read(file, format=format, headonly=True)
     except:
-        print "Can not read", file
+        print("Can not read %s" % (file))
         return counter
     s = "%s %s" % (counter, file)
     if verbose:
@@ -63,7 +63,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
                     verbose=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
-        print "Ignoring symlink:", path
+        print("Ignoring symlink: %s" % (path))
         return counter
     if os.path.isfile(path):
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter, format, verbose)
@@ -71,7 +71,7 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
         for file in (os.path.join(path, file) for file in os.listdir(path)):
             counter = recursive_parse(data_dict, samp_int_dict, file, counter, format, verbose, ignore_links)
     else:
-        print "Problem with filename/dirname:", path
+        print("Problem with filename/dirname: %s" % (path))
     return counter
 
 
@@ -132,7 +132,7 @@ def main():
                              options.verbose, options.ignore_links)
 
     if not data:
-        print "No waveform data found."
+        print("No waveform data found.")
         return
     #
     # Loop throught this dictionary

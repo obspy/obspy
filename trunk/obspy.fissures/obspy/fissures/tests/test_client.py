@@ -46,7 +46,7 @@ class ClientTestSuite(unittest.TestCase):
         Retrieve networks_ids from DHI
         """
         client = Client()
-        print "This will take a very long time"
+        print("This will take a very long time")
         ids = client.getNetworkIds()
         self.assertTrue('GE' in ids)
         self.assertTrue(len(ids) > 300)

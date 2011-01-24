@@ -576,7 +576,7 @@ class Parser(object):
             raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print "RECORD LENGTH:", self.record_length
+            print("RECORD LENGTH: %d" % (self.record_length))
         # Set all temporary attributes.
         self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
         # Jump back to beginning.
@@ -606,8 +606,8 @@ class Parser(object):
                     break
             if self.debug:
                 if not record_continuation:
-                    print "========"
-                print record[0:8]
+                    print("========")
+                print(record[0:8])
             record = data.read(self.record_length)
         # Use parse once again.
         self._parseMergedData(merged_data.strip(), record_type)

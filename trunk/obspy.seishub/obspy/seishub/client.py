@@ -66,7 +66,7 @@ class Client(object):
     >>> client = Client()
     >>>
     >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
-    >>> print st
+    >>> print(st)
     1 Trace(s) in Stream:
     .GP01..SHZ | 2009-09-03T00:00:00.000000Z - 2009-09-03T00:00:20.000000Z | 250.0 Hz, 5001 samples
     """

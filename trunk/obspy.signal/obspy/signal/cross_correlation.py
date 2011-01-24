@@ -24,8 +24,10 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     >>> tr1 = np.random.randn(10000).astype('float32')
     >>> tr2 = tr1.copy()
     >>> a, b = xcorr(tr1, tr2, 1000)
-    >>> print a, round(b, 7)
-    0 1.0
+    >>> a
+    0
+    >>> round(b, 7)
+    1.0
 
     ::
 

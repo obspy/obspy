@@ -143,11 +143,11 @@ class Client(object):
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
-        >>> print st
+        >>> print(st)
         1 Trace(s) in Stream:
         GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
         >>> st = client.getWaveform("GE", "APE", "", "SH*", t, t+600)
-        >>> print st
+        >>> print(st)
         3 Trace(s) in Stream:
         GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
         GE.APE..SHN | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples

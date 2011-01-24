@@ -312,7 +312,7 @@ def paz2AmpValueOfFreqResp(paz, freq):
                'zeros': [0 + 0j, 0 + 0j], \
                'gain': 0.4}
     >>> amp = paz2AmpValueOfFreqResp(paz, 1)
-    >>> print round(amp, 7)
+    >>> print(round(amp, 7))
     0.2830262
     """
     jw = complex(0, 2 * np.pi * freq) #angular frequency
@@ -343,7 +343,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                'gain': 1.0, \
                'sensitivity': 671140000.0}
     >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
-    >>> print round(mag, 6)
+    >>> print(round(mag, 6))
     2.165345
     """
     # Sensitivity is 2080 according to:

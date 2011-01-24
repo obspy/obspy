@@ -32,7 +32,7 @@ class Client(object):
     >>> client = Client()
     >>>
     >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 20)
-    >>> print st
+    >>> print(st)
     1 Trace(s) in Stream:
     IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:30:20.019538Z | 20.0 Hz, 401 samples
     """
@@ -142,7 +142,7 @@ class Client(object):
 
         st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
         return st
-        
+
 
     def dataselect(self, **kwargs):
         """
@@ -241,7 +241,7 @@ class Client(object):
         return stream
 
     def availability(self, network="*", station="*", location="*", channel="*",
-                      starttime=UTCDateTime()-(60*60*24*7), endtime=UTCDateTime()-(60*60*24*7)+10, output="bulk"):
+                      starttime=UTCDateTime() - (60 * 60 * 24 * 7), endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10, output="bulk"):
         """
         Interface for `availability`-webservice of IRIS
         (http://www.iris.edu/ws/availability/).

@@ -22,7 +22,7 @@ Similar to reading any other waveform data format using obspy.core:
 >>> st = read(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print st
+>>> print(st)
 1 Trace(s) in Stream:
 NL.HGN.00.BHZ | 2003-05-29T02:13:22.043400Z - 2003-05-29T02:18:20.693400Z | 40.0 Hz, 11947 samples
 
@@ -33,7 +33,7 @@ reading a Mini-SEED file it will have one additional attribute: 'mseed'. This
 attribute contains all Mini-SEED specific attributes which actually is just the
 dataquality.
 
->>> print st[0].stats #doctest: +NORMALIZE_WHITESPACE
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
          network: NL
          station: HGN
         location: 00
@@ -49,7 +49,7 @@ dataquality.
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 
->>> print st[0].data
+>>> print(st[0].data)
 [2787 2776 2774 ..., 2850 2853 2853]
 
 Writing

@@ -211,24 +211,24 @@ class ClientTestCase(unittest.TestCase):
                              'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
 
-    def untested(self):
-        """
-        """
-        client = self.client
-        t = UTCDateTime('20100310')
-        print client.waveform.getWaveform("BW", "HROE", "", "EHN", t, t + 1800)
-        t = UTCDateTime("2010-03-19 00:00:01")
-        print client.waveform.getWaveform("BW", "MANZ", "", "EHZ", t, t + 20)
-        data = client.station.getList(network='BW', station='MANZ')
-        print data
-        data = client.waveform.getLatency(network='BW', station='HROE')
-        print data
-        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
-                                          format='metadata')
-        print data
-        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
-                                          format='metadata')
-        print data
+#    def untested(self):
+#        """
+#        """
+#        client = self.client
+#        t = UTCDateTime('20100310')
+#        print client.waveform.getWaveform("BW", "HROE", "", "EHN", t, t + 1800)
+#        t = UTCDateTime("2010-03-19 00:00:01")
+#        print client.waveform.getWaveform("BW", "MANZ", "", "EHZ", t, t + 20)
+#        data = client.station.getList(network='BW', station='MANZ')
+#        print data
+#        data = client.waveform.getLatency(network='BW', station='HROE')
+#        print data
+#        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
+#                                          format='metadata')
+#        print data
+#        data = client.station.getResource('dataless.seed.BW_MANZ.xml',
+#                                          format='metadata')
+#        print data
 
 
 def suite():

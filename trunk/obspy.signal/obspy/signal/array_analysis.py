@@ -297,7 +297,6 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     if np.size(sigmau) == 1:
         # sigmau is a scalar.  Make all diag elements of Cu the same
         Cu = sigmau ** 2 * np.eye(3 * Nplus1)
-        #print 'sigmau is scalar'
     elif np.shape(sigmau) == (np.size(sigmau),):
         # sigmau is a row or column vector
         # check dimension is okay
@@ -305,11 +304,9 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
             raise ValueError('sigmau must have %s elements' % Na)
         junk = (np.c_[sigmau, sigmau, sigmau]) ** 2; # matrix of variances
         Cu = np.diag(np.reshape(junk[subarray, :], (3 * Nplus1)))
-        #print 'sigmau is vector'
     elif sigmau.shape == (Na, 3):
         Cu = np.diag(np.reshape(((sigmau[subarray, :])**2).transpose(), \
             (3 * Nplus1)))
-        #print 'sigmau is matrix'
     else:
         raise ValueError('sigmau has the wrong dimensions')
 
@@ -329,9 +326,6 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     if condition_number > 100:
         msg = 'Condition number is %s' % condition_number
         warnings.warn(msg)
-    #else:
-    #    print 'In array_rotation_strain, matrix condition number = ' + \
-    #        str(condition_number)
 
     # set up storage for vectors that will contain time series
     ts_wmag = np.NaN * np.empty(nt)
@@ -621,7 +615,7 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 
     job_server = pp.Server(ppservers=ppservers, secret=secret)
     if verbose:
-        print "Starting pp with", job_server.get_ncpus(), "workers"
+        print("Starting pp with", job_server.get_ncpus(), "workers")
     jobs = list()
     job_len = (etime - stime) / njobs
 
@@ -717,11 +711,11 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     geometry = get_geometry(stream, coordsys=coordsys, verbose=verbose)
 
     if verbose:
-        print "geometry:"
-        print geometry
-        print "stream contains following traces:"
-        print stream
-        print "stime = " + str(stime) + ", etime = " + str(etime)
+        print("geometry:")
+        print(geometry)
+        print("stream contains following traces:")
+        print(stream)
+        print("stime = " + str(stime) + ", etime = " + str(etime))
 
     time_shift_table_numpy = get_timeshift(geometry, sll_x, sll_y,
                                                     sl_s, grdpts_x, grdpts_y)
@@ -770,7 +764,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         if power > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, power, abspow, baz, slow]))
             if verbose:
-                print newstart, (newstart + (nsamp / df)), res[-1][1:]
+                print(newstart, (newstart + (nsamp / df)), res[-1][1:])
         if (newstart + (nsamp + nstep) / df) > etime:
             eotr = False
         offset += nstep
@@ -910,7 +904,7 @@ def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
         raise TypeError('only Stream or numpy.ndarray allowed')
 
     if verbose:
-        print "coordys = " + coordsys
+        print("coordys = " + coordsys)
 
     if coordsys == 'lonlat':
         center_lon = geometry[:, 0].mean()
@@ -1025,7 +1019,7 @@ def cosine_taper(ndat, fraction=0.1):
 
     >>> tap = cosine_taper(100, fraction=1.0)
     >>> buf = 0.5*(1+np.cos(np.linspace(np.pi, 3*np.pi, 100)))
-    >>> print abs(tap - buf).max() < 1e-2
+    >>> abs(tap - buf).max() < 1e-2
     True
     """
     clibsignal.cosine_taper.argtypes = [

@@ -103,13 +103,13 @@ class Client(Telnet):
             time.sleep(self.command_delay)
         Telnet.write(self, buffer + '\n')
         if self.debug:
-            print '>>> ' + buffer
+            print('>>> ' + buffer)
 
     def _readln(self, value=''):
         line = self.read_until(value + '\r\n', self.status_timeout)
         line = line.strip()
         if self.debug:
-            print '... ' + line
+            print('... ' + line)
         return line
 
     def _hello(self):
@@ -244,9 +244,9 @@ class Client(Telnet):
             raise Exception('Wrong length!')
         if self.debug:
             if data.startswith('<?xml'):
-                print data
+                print(data)
             else:
-                print "%d bytes of data read" % len(data)
+                print("%d bytes of data read" % len(data))
         self._writeln('PURGE %d' % req_id)
         self._bye()
         self.data = data

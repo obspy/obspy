@@ -72,13 +72,13 @@ class _WritelnDecorator(object):
     """
     Used to decorate file-like objects with a handy 'writeln' method
     """
-    def __init__(self,stream):
+    def __init__(self, stream):
         self.stream = stream
 
     def __getattr__(self, attr):
         if attr in ('stream', '__getstate__'):
             raise AttributeError(attr)
-        return getattr(self.stream,attr)
+        return getattr(self.stream, attr)
 
     def writeln(self, arg=None):
         if arg:
@@ -111,8 +111,8 @@ def _getSuites(verbosity=1, names=[]):
             suite.append(ut.loadTestsFromName(test, None))
         except Exception, e:
             if verbosity:
-                print e
-                print "Cannot import test suite for module obspy.%s" % name
+                print(e)
+                print("Cannot import test suite for module obspy.%s" % name)
         else:
             suites[name] = ut.suiteClass(suite)
     return suites
@@ -132,7 +132,7 @@ def _createReport(ttrs, timetaken, log, server):
         try:
             result['install_log'] = open(log, 'r').read()
         except:
-            print "Cannot open log file %s" % log
+            print("Cannot open log file %s" % log)
     # get ObsPy module versions
     result['obspy'] = {}
     tests = 0
@@ -229,10 +229,10 @@ def _createReport(ttrs, timetaken, log, server):
         response = conn.getresponse()
     # handle errors
     if response.status == 200:
-        print "Test report has been sent to %s." % (server)
+        print("Test report has been sent to %s." % (server))
     else:
-        print "Error: Could not sent a test report to %s." % (server)
-        print response.reason
+        print("Error: Could not sent a test report to %s." % (server))
+        print(response.reason)
 
 
 class _TextTestRunner:
