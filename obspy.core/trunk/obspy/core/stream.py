@@ -15,7 +15,7 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
     interceptDict
-from pkg_resources import load_entry_point, EntryPoint
+from pkg_resources import load_entry_point
 import copy
 import math
 import numpy as np
@@ -25,12 +25,15 @@ import urllib2
 import warnings
 
 
+WAVEFORM_AUTODETECTION = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'SH_ASC',
+                          'Q', 'SLIST', 'TSPAIR', 'SEGY', 'GSE1', 'SU', 'WAV']
+
+
 def get_obspy_entry_points():
     """
     Creates a sorted list of available entry points.
     """
-    entry_names = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'SH_ASC', 'Q',
-                    'SLIST', 'TSPAIR', 'SEGY', 'GSE1', 'SU', 'WAV']
+    # get all available entry points
     formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
     # NOTE: If no file format is installed, this will fail and therefore the
     # whole file can no longer be executed. However obspy.core.ascii is
@@ -41,20 +44,24 @@ def get_obspy_entry_points():
               "installation."
         raise Exception(msg)
     eps = formats_ep.values()
-    new_entries = []
     names = [_i.name for _i in eps]
-    for entry in entry_names:
+    # loop through known waveform plug-ins and add them to resulting list
+    new_entries = []
+    for entry in WAVEFORM_AUTODETECTION:
+        # skip plug-ins which are not installed
         if not entry in names:
             continue
         new_entries.append(formats_ep[entry])
         index = names.index(entry)
         eps.pop(index)
         names.pop(index)
+    # extend resulting list with any modules which are unknown
     new_entries.extend(eps)
-    # Create a dictionary from it.
+    # return list of entry points
     return new_entries
 
 ENTRY_POINTS = get_obspy_entry_points()
+
 
 def read(pathname_or_url=None, format=None, headonly=False,
          nearest_sample=True, **kwargs):

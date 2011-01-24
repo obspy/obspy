@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import glob
 from obspy.core import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
