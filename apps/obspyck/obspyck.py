@@ -519,6 +519,11 @@ class ObsPyck(QtGui.QMainWindow):
     def on_qToolButton_sendEvent_clicked(self, *args):
         if args:
             return
+        # if sysop event and information missing show error and abort upload
+        if self.widgets.qCheckBox_sysop.isChecked():
+            if not self.checkForCompleteEvent():
+                self.popupBadEventError()
+                return
         self.uploadSeisHub()
         self.checkForSysopEventDuplicates(self.T0, self.T1)
 
@@ -3580,6 +3585,47 @@ class ObsPyck(QtGui.QMainWindow):
             qMessageBox.setInformativeText(errlist)
             qMessageBox.setStandardButtons(QtGui.QMessageBox.Ok)
             qMessageBox.exec_()
+
+    def checkForCompleteEvent(self):
+        """
+        checks if the event has the necessary information a sysop event should
+        have::
+        
+          - datetime (origin time)
+          - longitude/latitude/depth
+          - magnitude
+          - used_p/used_s
+        """
+        keys_origin = ("Time", "Latitude", "Longitude", "Depth",
+                       "used P Count", "used S Count")
+        keys_magnitude = ("Magnitude",)
+        if not all([key in self.dictOrigin for key in keys_origin]):
+            return False
+        if not all([key in self.dictMagnitude for key in keys_magnitude]):
+            return False
+        return True
+
+    def popupBadEventError(self):
+        """
+        pop up an error window indicating that event information is missing
+        """
+        keys_origin = ("Time", "Latitude", "Longitude", "Depth",
+                       "used P Count", "used S Count")
+        keys_magnitude = ("Magnitude",)
+        missing = [key for key in keys_origin if key not in self.dictOrigin]
+        missing += [key for key in keys_magnitude if key not in self.dictMagnitude]
+        missing = "\n".join(missing)
+        err = "The sysop event to submit misses some mandatory information:"
+        print >> sys.stderr, err
+        print >> sys.stderr, missing
+        qMessageBox = QtGui.QMessageBox()
+        qMessageBox.setWindowIcon(QtGui.QIcon(QtGui.QPixmap("obspyck.gif")))
+        qMessageBox.setIcon(QtGui.QMessageBox.Critical)
+        qMessageBox.setWindowTitle("SysOp Event with Missing Information!")
+        qMessageBox.setText(err)
+        qMessageBox.setInformativeText(missing)
+        qMessageBox.setStandardButtons(QtGui.QMessageBox.Abort)
+        qMessageBox.exec_()
 
 
 def main():
