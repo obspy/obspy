@@ -358,7 +358,8 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     if errcode != 0:
         raise Exception("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
-    return pptime.value + 1, pfm.value
+    # pfm has to be decoded from byte to string 
+    return pptime.value + 1, pfm.value.decode('utf-8')
 
 
 def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,

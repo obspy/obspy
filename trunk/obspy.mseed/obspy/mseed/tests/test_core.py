@@ -531,7 +531,7 @@ class CoreTestCase(unittest.TestCase):
         # The timingquality contains values from 0 to 100 in random order.
         qual = np.arange(101, dtype='float32')
         read_qual = t_st[0].stats.mseed.timing_quality
-        read_qual.sort()
+        read_qual = sorted(read_qual)
         np.testing.assert_array_equal(qual, read_qual)
         # Check for quality flags.
         # The test file contains 18 records. The first record has no set bit,

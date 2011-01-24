@@ -188,9 +188,9 @@ class Stats(AttribDict):
                           'npts', 'calib']
         # determine longest key name for alignment of all items
         head = ["%16s: %s" % (key, dict_copy.pop(key)) \
-               for key in priorized_keys]
+                for key in priorized_keys]
         head.extend(["%16s: %s" % (key, dict_copy.pop(key)) \
-               for key in dict_copy.keys()])
+                     for key in dict_copy.keys()])
         return "\n".join(head)
 
     __setattr__ = __setitem__
@@ -738,7 +738,7 @@ class Trace(object):
             if delta < 0 and pad:
                 npts = abs(delta) + 10 # use this as a start
                 newstarttime = self.stats.starttime - npts / \
-                        self.stats.sampling_rate
+                        float(self.stats.sampling_rate)
                 newdelta = round((starttime - newstarttime) * \
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
@@ -1278,7 +1278,8 @@ class Trace(object):
 
         # do automatic lowpass filtering
         if not no_filter:
-            low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
+            low_corner = 0.4 * self.stats.sampling_rate / \
+                float(decimation_factor)
             self.filter('lowpass', {'freq': low_corner})
 
         # actual downsampling, as long as sampling_rate is a float we would not

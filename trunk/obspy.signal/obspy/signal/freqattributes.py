@@ -111,10 +111,10 @@ def cfrequency(data, fs, smoothie, fk):
             cfreq[i] = np.sqrt(np.sum(pow(freqaxis, 2) * Px) / (sum(Px)))
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
-        cfreq_add = np.append(np.append([cfreq[0]] * (np.size(fk) / 2), cfreq),
-                              [cfreq[np.size(cfreq) - 1]] * (np.size(fk) / 2))
+        cfreq_add = np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
+                              [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
-        dcfreq = dcfreq[np.size(fk) / 2:(np.size(dcfreq) - np.size(fk) / 2)]
+        dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
         return cfreq, dcfreq
     else:
         Px_wm = welch(data, np.hamming(len(data)), util.nextpow2(len(data)))
@@ -155,10 +155,10 @@ def bwith(data, fs, smoothie, fk):
             [mdist_ind, _mindist] = min(enumerate(minfc), key=itemgetter(1))
             bwith[i] = freqaxis[mdist_ind]
             i = i + 1
-        bwith_add = np.append(np.append([bwith[0]] * (np.size(fk) / 2), bwith),
-                              [bwith[np.size(bwith) - 1]] * (np.size(fk) / 2))
+        bwith_add = np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
+                              [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
         dbwith = signal.lfilter(fk, 1, bwith_add)
-        dbwith = dbwith[np.size(fk) / 2:(np.size(dbwith) - np.size(fk) / 2)]
+        dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
         bwith = util.smooth(bwith, smoothie)
         dbwith = util.smooth(dbwith, smoothie)
         return bwith, dbwith
@@ -201,11 +201,11 @@ def domperiod(data, fs, smoothie, fk):
             [mdist_ind, _mindist] = max(enumerate(abs(row)), key=itemgetter(1))
             dperiod[i] = freqaxis[mdist_ind]
             i = i + 1
-        dperiod_add = np.append(np.append([dperiod[0]] * (np.size(fk) / 2), \
-            dperiod), [dperiod[np.size(dperiod) - 1]] * (np.size(fk) / 2))
+        dperiod_add = np.append(np.append([dperiod[0]] * (np.size(fk) // 2), \
+            dperiod), [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2))
         ddperiod = signal.lfilter(fk, 1, dperiod_add)
         ddperiod = ddperiod[np.size(fk) / \
-            2:(np.size(ddperiod) - np.size(fk) / 2)]
+            2:(np.size(ddperiod) - np.size(fk) // 2)]
         dperiod = util.smooth(dperiod, smoothie)
         ddperiod = util.smooth(ddperiod, smoothie)
         return dperiod, ddperiod

@@ -82,10 +82,10 @@ def normEnvelope(data, fs, smoothie, fk):
             #A_win_add = append(append([row[0]]*(size(fk)/2),row),
             #                      [row[size(row)-1]]*(size(fk)/2))
             # Better, because faster, calculation of A_win_add
-            A_win_add = np.hstack(([row[0]] * (size(fk) / 2), row,
-                                  [row[size(row) - 1]] * (size(fk) / 2)))
+            A_win_add = np.hstack(([row[0]] * (size(fk) // 2), row,
+                                  [row[size(row) - 1]] * (size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
-            t = t[size(fk) / 2:(size(t) - size(fk) / 2)]
+            t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             for k in xrange(0, size(A_win_smooth)):
                 if (A_win_smooth[k] < 1):
                     A_win_smooth[k] = 1
@@ -102,19 +102,19 @@ def normEnvelope(data, fs, smoothie, fk):
             Anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
         #Anorm = util.smooth(Anorm,smoothie)
-        Anorm_add = np.append(np.append([Anorm[0]] * (size(fk) / 2), Anorm),
-                              [Anorm[size(Anorm) - 1]] * (size(fk) / 2))
+        Anorm_add = np.append(np.append([Anorm[0]] * (size(fk) // 2), Anorm),
+                              [Anorm[size(Anorm) - 1]] * (size(fk) // 2))
         dAnorm = signal.lfilter(fk, 1, Anorm_add)
-        dAnorm = dAnorm[size(fk) / 2:(size(dAnorm) - size(fk) / 2)]
+        dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
         return Anorm, dAnorm
     else:
         Anorm = np.zeros(1, dtype='float64')
         A_win_smooth = util.smooth(x[1], smoothie)
         # Differentiation of original signal, dA/dt
-        A_win_add = np.append(np.append([x[1][0]] * (size(fk) / 2), x[1]),
-                              [x[1][size(x[1]) - 1]] * (size(fk) / 2))
+        A_win_add = np.append(np.append([x[1][0]] * (size(fk) // 2), x[1]),
+                              [x[1][size(x[1]) - 1]] * (size(fk) // 2))
         t = signal.lfilter(fk, 1, A_win_add)
-        t = t[size(fk) / 2:(size(t) - size(fk) / 2)]
+        t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         for k in xrange(0, size(A_win_smooth)):
             if (A_win_smooth[k] < 1):
                 A_win_smooth[k] = 1
@@ -164,10 +164,10 @@ def centroid(data, fk):
                     centroid[i] = (float(k) + float(frac)) / float(size(row))
                     break
             i = i + 1
-        centroid_add = np.append(np.append([centroid[0]] * (size(fk) / 2), \
-            centroid), [centroid[size(centroid) - 1]] * (size(fk) / 2))
+        centroid_add = np.append(np.append([centroid[0]] * (size(fk) // 2), \
+            centroid), [centroid[size(centroid) - 1]] * (size(fk) // 2))
         dcentroid = signal.lfilter(fk, 1, centroid_add)
-        dcentroid = dcentroid[size(fk) / 2:(size(dcentroid) - size(fk) / 2)]
+        dcentroid = dcentroid[size(fk) // 2:(size(dcentroid) - size(fk) // 2)]
         return centroid, dcentroid
     else:
         centroid = np.zeros(1, dtype='float64')
@@ -206,35 +206,35 @@ def instFreq(data, fs, fk):
         for row in x[0]:
             f = np.real(row)
             h = np.imag(row)
-            f_add = np.append(np.append([f[0]] * (size(fk) / 2), f),
-                                  [f[size(f) - 1]] * (size(fk) / 2))
+            f_add = np.append(np.append([f[0]] * (size(fk) // 2), f),
+                                  [f[size(f) - 1]] * (size(fk) // 2))
             fd = signal.lfilter(fk, 1, f_add)
-            fd = fd[size(fk) / 2:(size(fd) - size(fk) / 2)]
-            h_add = np.append(np.append([h[0]] * (size(fk) / 2), h),
-                                  [h[size(h) - 1]] * (size(fk) / 2))
+            fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
+            h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
+                                  [h[size(h) - 1]] * (size(fk) // 2))
             hd = signal.lfilter(fk, 1, h_add)
-            hd = hd[size(fk) / 2:(size(hd) - size(fk) / 2)]
+            hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
             omega_win = abs(((f * hd - fd * h) / (f * f + h * h)) * \
                              fs / 2 / pi)
             omega[i] = np.median(omega_win)
             i = i + 1
-        omega_add = np.append(np.append([omega[0]] * (size(fk) / 2), omega),
-                              [omega[size(omega) - 1]] * (size(fk) / 2))
+        omega_add = np.append(np.append([omega[0]] * (size(fk) // 2), omega),
+                              [omega[size(omega) - 1]] * (size(fk) // 2))
         domega = signal.lfilter(fk, 1, omega_add)
-        domega = domega[size(fk) / 2:(size(domega) - size(fk) / 2)]
+        domega = domega[size(fk) // 2:(size(domega) - size(fk) // 2)]
         return omega, domega
     else:
         omega = np.zeros(size(x[0]), dtype='float64')
         f = np.real(x[0])
         h = np.imag(x[0])
-        f_add = np.append(np.append([f[0]] * (size(fk) / 2), f),
-                              [f[size(f) - 1]] * (size(fk) / 2))
+        f_add = np.append(np.append([f[0]] * (size(fk) // 2), f),
+                              [f[size(f) - 1]] * (size(fk) // 2))
         fd = signal.lfilter(fk, 1, f_add)
-        fd = fd[size(fk) / 2:(size(fd) - size(fk) / 2)]
-        h_add = np.append(np.append([h[0]] * (size(fk) / 2), h),
-                              [h[size(h) - 1]] * (size(fk) / 2))
+        fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
+        h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
+                              [h[size(h) - 1]] * (size(fk) // 2))
         hd = signal.lfilter(fk, 1, h_add)
-        hd = hd[size(fk) / 2:(size(hd) - size(fk) / 2)]
+        hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
         omega = abs(((f * hd - fd * h) / (f * f + h * h)) * fs / 2 / pi)
         return omega
 
@@ -259,23 +259,23 @@ def instBwith(data, fs, fk):
         sigma = np.zeros(x[1].shape[0], dtype='float64')
         i = 0
         for row in x[1]:
-            A_win_add = np.append(np.append([row[0]] * (size(fk) / 2), row),
-                                  [row[size(row) - 1]] * (size(fk) / 2))
+            A_win_add = np.append(np.append([row[0]] * (size(fk) // 2), row),
+                                  [row[size(row) - 1]] * (size(fk) // 2))
             t = signal.lfilter(fk, 1, A_win_add)
-            t = t[size(fk) / 2:(size(t) - size(fk) / 2)]
+            t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
             sigma[i] = np.median(sigma_win)
             i = i + 1
-        sigma_add = np.append(np.append([sigma[0]] * (size(fk) / 2), sigma),
-                          [sigma[size(sigma) - 1]] * (size(fk) / 2))
+        sigma_add = np.append(np.append([sigma[0]] * (size(fk) // 2), sigma),
+                          [sigma[size(sigma) - 1]] * (size(fk) // 2))
         dsigma = signal.lfilter(fk, 1, sigma_add)
-        dsigma = dsigma[size(fk) / 2:(size(dsigma) - size(fk) / 2)]
+        dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
         return sigma, dsigma
     else:
         sigma = np.zeros(size(x[0]), dtype='float64')
-        A_win_add = np.append(np.append([x[1][0]] * (size(fk) / 2), x[1]),
-                              [x[1][size(x[1]) - 1]] * (size(fk) / 2))
+        A_win_add = np.append(np.append([x[1][0]] * (size(fk) // 2), x[1]),
+                              [x[1][size(x[1]) - 1]] * (size(fk) // 2))
         t = signal.lfilter(fk, 1, A_win_add)
-        t = t[size(fk) / 2:(size(t) - size(fk) / 2)]
+        t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         sigma = abs((t * fs) / (x[1] * 2 * pi))
         return sigma
