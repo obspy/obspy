@@ -56,7 +56,7 @@ class Blockette(object):
         temp = 'Blockette %s: %s Blockette' % (self.blockette_id,
                     utils.toString(self.blockette_name)) + os.linesep
         keys = self.__dict__.keys()
-        keys.sort()
+        keys = sorted(keys)
         for key in keys:
             if key in utils.IGNORE_ATTR:
                 continue

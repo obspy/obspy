@@ -152,18 +152,18 @@ def xcorr_max(fct, abs_max=True):
     >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
     >>> xcorr_max(fct)
-    (0, -1.0)
+    (0.0, -1.0)
     >>> fct[50], fct[60] = 0.0, 1.0
     >>> xcorr_max(fct)
-    (10, 1.0)
+    (10.0, 1.0)
     >>> fct[60], fct[40] = 0.0, -1.0
     >>> xcorr_max(fct)
-    (-10, -1.0)
+    (-10.0, -1.0)
     >>> fct[60], fct[40] = 0.5, -1.0
     >>> xcorr_max(fct, abs_max=True)
-    (-10, -1.0)
+    (-10.0, -1.0)
     >>> xcorr_max(fct, abs_max=False)
-    (10, 0.5)
+    (10.0, 0.5)
     
     :type fct: numpy.ndarray
     :param fct: xcorr function e.g. returned bei xcorr
@@ -179,7 +179,7 @@ def xcorr_max(fct, abs_max=True):
 
     mid = (len(fct) - 1) / 2
     shift = np.where(fct == value)[0][0] - mid
-    return shift, value
+    return float(shift), float(value)
 
 
 if __name__ == '__main__':

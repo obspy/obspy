@@ -137,7 +137,7 @@ def main():
     #
     # Loop throught this dictionary
     ids = data.keys()
-    ids.sort()
+    ids = sorted(ids)
     for _i, _id in enumerate(ids):
         data[_id].sort()
         startend = np.array(data[_id])

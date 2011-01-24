@@ -32,13 +32,11 @@ Advanced Examples
 ['BW', 'GR', 'NZ', 'OE', 'CZ', '']
 
 >>> sta_ids = client.waveform.getStationIds(network_id='BW')
->>> sta_ids.sort()
->>> sta_ids #doctest: +ELLIPSIS
+>>> sorted(sta_ids)     #doctest: +ELLIPSIS
 ['ABRI', 'ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
 >>> cha_ids = client.waveform.getChannelIds(network_id='BW', station_id='MANZ')
->>> cha_ids.sort()
->>> cha_ids
+>>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
 
 >>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
@@ -73,8 +71,7 @@ Advanced Examples
 
 >>> paz = client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
->>> paz.sort()
->>> paz #doctest: +NORMALIZE_WHITESPACE
+>>> sorted(paz)    #doctest: +NORMALIZE_WHITESPACE
 [('gain', 60077000.0),
  ('poles', [(-0.037004000000000002+0.037016j),
             (-0.037004000000000002-0.037016j),
