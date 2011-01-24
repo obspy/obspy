@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy.core import UTCDateTime, Stream, Trace
 from obspy.core.stream import createDummyStream
 import numpy as np
 import pickle
@@ -372,131 +372,6 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
-    def test_filter(self):
-        """
-        Tests the filter method of the Stream object.
-
-        Basically three scenarios are tested (with differing filter options):
-        - filtering with in_place=False:
-            - is original stream unchanged?
-            - is data of filtered stream's traces the same as if done by hand
-            - is processing information present in filtered stream's traces
-        - filtering with in_place=True:
-            - is data of filtered stream's traces the same as if done by hand
-            - is processing information present in filtered stream's traces
-        - filtering with bad arguments passed to stream.filter():
-            - is a TypeError properly raised?
-            - after all bad filter calls, is the stream still unchanged?
-        """
-        try:
-            from obspy.signal import bandpass, bandstop, lowpass, highpass
-        except ImportError:
-            return
-        # streams to run tests on:
-        streams = [self.mseed_stream, self.gse2_stream]
-        # drop the longest trace of the first stream to save a second
-        streams[0].pop()
-        streams_bkp = deepcopy(streams)
-        # different sets of filters to run test on:
-        filters = [['bandpass', {'freqmin': 1., 'freqmax': 20.}],
-                   ['bandstop', {'freqmin': 5, 'freqmax': 15., 'corners': 6}],
-                   ['lowpass', {'freq': 30.5, 'zerophase': True}],
-                   ['highpass', {'freq': 2, 'corners': 2}]]
-        filter_map = {'bandpass': bandpass, 'bandstop': bandstop,
-                      'lowpass': lowpass, 'highpass': highpass}
-
-        # tests for in_place=True
-        for j, st in enumerate(streams):
-            st_bkp = streams_bkp[j]
-            for filt_type, filt_ops in filters:
-                st = deepcopy(streams_bkp[j])
-                st.filter(filt_type, filt_ops)
-                # test if all traces were filtered as expected
-                for i, tr in enumerate(st):
-                    data_filt = filter_map[filt_type](st_bkp[i].data,
-                            df=st_bkp[i].stats.sampling_rate, **filt_ops)
-                    np.testing.assert_array_equal(tr.data, data_filt)
-                    self.assertTrue('processing' in tr.stats)
-                    self.assertEqual(len(tr.stats.processing), 1)
-                    self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
-                            (filt_type, filt_ops))
-                st.filter(filt_type, filt_ops)
-                for i, tr in enumerate(st):
-                    self.assertTrue('processing' in tr.stats)
-                    self.assertEqual(len(tr.stats.processing), 2)
-                    for proc_info in tr.stats.processing:
-                        self.assertEqual(proc_info, "filter:%s:%s" % \
-                                (filt_type, filt_ops))
-
-        # some tests that should raise an Exception
-        st = streams[0]
-        st_bkp = streams_bkp[0]
-        bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
-                ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
-                ['bandstop', {}],
-                ['bandstop', [1, 2, 3, 4, 5]],
-                ['bandstop', None],
-                ['bandstop', 3],
-                ['bandstop', 'XXX'],
-                ['bandpass', {'freqmin': 5, 'corners': 6}],
-                ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
-        for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
-        bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
-        for filt_type, filt_ops in bad_filters:
-            self.assertRaises(ValueError, st.filter, filt_type, filt_ops)
-        # test if stream is unchanged after all these bad tests
-        for i, tr in enumerate(st):
-            np.testing.assert_array_equal(tr.data, st_bkp[i].data)
-            self.assertEqual(tr.stats, st_bkp[i].stats)
-
-    def test_simulate(self):
-        """
-        Tests if calling simulate of stream gives the same result as calling
-        simulate on every trace manually.
-        """
-        # skip test if obspy.signal is not installed
-        try:
-            import obspy.signal # @UnusedImport downsample() raises if
-                                # seisSim cannot be imported!
-        except ImportError:
-            return
-        st1 = read()
-        st2 = read()
-        paz_sts2 = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
-                              - 251.33 + 0j, -131.04 - 467.29j, -131.04 + 467.29j],
-                    'zeros': [0j, 0j],
-                    'gain': 60077000.0,
-                    'sensitivity': 2516778400.0}
-        paz_le3d1s = {'poles': [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j],
-                      'zeros': [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
-                      'gain': 0.4,
-                      'sensitivity': 1.0}
-        st1.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
-        for tr in st2:
-            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
-        self.assertEqual(st1, st2)
-
-    def test_downsample(self):
-        """
-        Tests if all traces in the stream object are handled as expected
-        by the downsample method on the trace object.
-        """
-        # skip test if obspy.signal is not installed
-        try:
-            import obspy.signal # @UnusedImport downsample() raises if
-                                # integerDecimation cannot be imported!
-        except ImportError:
-            return
-        # create test Stream
-        st = self.mseed_stream
-        st_bkp = st.copy()
-        # test if all traces are downsampled as expected
-        st.downsample(10, strict_length=False)
-        for i, tr in enumerate(st):
-            st_bkp[i].downsample(10, strict_length=False)
-            self.assertEqual(tr, st_bkp[i])
-
     def test_select(self):
         """
         Tests the select method of the Stream object.
@@ -588,7 +463,7 @@ class StreamTestCase(unittest.TestCase):
         stream2 = stream.select(station='[A-Y]??*', network='A?')
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
-        
+
 
     def test_sort(self):
         """

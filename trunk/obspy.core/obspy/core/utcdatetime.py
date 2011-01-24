@@ -589,8 +589,8 @@ class UTCDateTime(datetime.datetime):
         :return: string
         """
         return "%04d.%02d.%02dT%02d.%02d.%02d.%03d" % \
-                (self.year, self.month, self.day, self.hour, self.minute, self.second,
-                 self.microsecond // 1000)
+                (self.year, self.month, self.day, self.hour, self.minute,
+                 self.second, self.microsecond // 1000)
 
 
 if __name__ == '__main__':
