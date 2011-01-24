@@ -52,7 +52,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.obspy.org" + \
-        "/obspy.events/trunk#egg=obspy.events-dev",
+    download_url="https://svn.obspy.org/trunk" + \
+        "/obspy.events#egg=obspy.events-dev",
 #    test_suite="obspy.events.tests.suite",
 )

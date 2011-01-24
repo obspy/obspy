@@ -105,8 +105,8 @@ setup(
         'obspy.core',
         'scipy',
     ],
-    download_url="https://svn.obspy.org" + \
-        "/obspy.signal/trunk#egg=obspy.signal-dev",
+    download_url="https://svn.obspy.org/trunk" + \
+        "/obspy.signal#egg=obspy.signal-dev",
     ext_package='obspy.signal.lib',
     ext_modules=[lib],
     test_suite="obspy.signal.tests.suite",

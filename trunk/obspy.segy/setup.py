@@ -54,8 +54,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.geophysik.uni-muenchen.de" + \
-        "/svn/obspy/obspy.segy/trunk#egg=obspy.segy-dev",
+    download_url="https://svn.obspy.org/trunk/obspy.segy/#egg=obspy.segy-dev",
     test_suite="obspy.segy.tests.suite",
     include_package_data=True,
     entry_points="""

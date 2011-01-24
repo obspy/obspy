@@ -54,7 +54,7 @@ setup(
         'lxml',
     ],
     download_url="https://svn.obspy.org" + \
-        "/obspy.arclink/trunk#egg=obspy.arclink-dev",
+        "/trunk/obspy.arclink#egg=obspy.arclink-dev",
     include_package_data=True,
     test_suite="obspy.arclink.tests.suite",
 )

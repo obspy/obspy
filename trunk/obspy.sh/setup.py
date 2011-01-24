@@ -56,7 +56,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.obspy.org/obspy.sh/trunk#egg=obspy.sh-dev",
+    download_url="https://svn.obspy.org/trunk/obspy.sh#egg=obspy.sh-dev",
     test_suite="obspy.sh.tests.suite",
     include_package_data=True,
     entry_points="""

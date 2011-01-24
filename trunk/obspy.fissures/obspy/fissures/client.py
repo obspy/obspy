@@ -90,7 +90,7 @@ class Client(object):
         #
         self.mseed = LibMSEED()
         #
-        # Initialize CORBA object, see pdf in obspy.fissures/trunk/doc or
+        # Initialize CORBA object, see pdf in trunk/obspy.fissures/doc or
         # http://omniorb.sourceforge.net/omnipy3/omniORBpy/omniORBpy004.html
         # for available options
         args = ["-ORBgiopMaxMsgSize", "2097152",

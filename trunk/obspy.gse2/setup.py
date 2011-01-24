@@ -97,7 +97,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.obspy.org/obspy.gse2/trunk#egg=obspy.gse2-dev",
+    download_url="https://svn.obspy.org/trunk/obspy.gse2#egg=obspy.gse2-dev",
     ext_package='obspy.gse2.lib',
     ext_modules=[lib],
     include_package_data=True,

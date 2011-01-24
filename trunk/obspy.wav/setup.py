@@ -55,7 +55,7 @@ setup(
         'setuptools',
         'obspy.core',
     ],
-    download_url="https://svn.obspy.org/obspy.wav/trunk#egg=obspy.wav-dev",
+    download_url="https://svn.obspy.org/trunk/obspy.wav#egg=obspy.wav-dev",
     test_suite="obspy.wav.tests.suite",
     include_package_data=True,
     entry_points="""

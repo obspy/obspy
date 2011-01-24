@@ -66,8 +66,8 @@ setup(
         'obspy.core',
         #'matplotlib',
     ],
-    download_url="https://svn.obspy.org" + \
-        "/obspy.imaging/trunk#egg=obspy.imaging-dev",
+    download_url="https://svn.obspy.org/trunk" + \
+        "/obspy.imaging#egg=obspy.imaging-dev",
     include_package_data=True,
     test_suite="obspy.imaging.tests.suite",
     entry_points={
