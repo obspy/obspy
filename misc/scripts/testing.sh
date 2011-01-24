@@ -5,7 +5,7 @@ signal wav xseed segy"
 
 for NAME in $PACKAGES; do
     cd ../..
-    cd obspy.$NAME/trunk
+    cd trunk/obspy.$NAME
     echo === obspy.$NAME ===
     python setup.py -q clean --all >/dev/null
     python setup.py -q build

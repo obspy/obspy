@@ -12,7 +12,7 @@ set PYTHON=python
 
 FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy) DO (
 cd ..\..
-cd obspy.%%M/trunk
+cd trunk\obspy.%%M
 echo === obspy.%%M ===
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
 IF [%1]==[] (
