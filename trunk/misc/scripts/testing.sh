@@ -3,9 +3,10 @@
 PACKAGES="core arclink fissures gse2 imaging mseed sac seisan seishub \
 signal wav xseed segy"
 
+cd ../..
+
 for NAME in $PACKAGES; do
-    cd ../..
-    cd trunk/obspy.$NAME
+    cd obspy.$NAME
     echo === obspy.$NAME ===
     python setup.py -q clean --all >/dev/null
     python setup.py -q build
@@ -13,7 +14,7 @@ for NAME in $PACKAGES; do
     echo Hit enter to continue
     read # that's the pause
     python setup.py -q clean --all >/dev/null
+    cd ..
 done
 
-cd ../..
 cd misc/scripts

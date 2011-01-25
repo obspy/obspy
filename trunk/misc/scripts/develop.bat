@@ -9,10 +9,10 @@ REM
 REM 
 REM Set your correct python interpreter here or just use virtualenv.
 set PYTHON=python
+cd ..\..
 
 FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy) DO (
-cd ..\..
-cd trunk\obspy.%%M
+cd obspy.%%M
 echo === obspy.%%M ===
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
 IF [%1]==[] (
@@ -22,7 +22,7 @@ IF [%1]==[] (
 )
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
 echo OK
+cd ..
 )
 
-cd ..\..
 cd misc\scripts

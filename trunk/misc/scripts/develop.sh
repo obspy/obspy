@@ -8,10 +8,10 @@ cd ../..
 
 # link all packages to python2.x/lib/site-packages/
 for NAME in $PACKAGES; do
-    cd trunk/obspy.$NAME
+    cd obspy.$NAME
     rm -rf build
     python setup.py develop -N -U --verbose
-    cd ../..
+    cd ..
 done
 
 # go back to scripts directory
