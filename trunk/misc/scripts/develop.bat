@@ -6,9 +6,11 @@ REM Run vcvars32.bat in VS2008 command line for 32 bit!
 REM Run vcvars64.bat in VS2008 command line for 64 bit!
 REM
 
-REM 
+REM
 REM Set your correct python interpreter here or just use virtualenv.
 set PYTHON=python
+REM
+
 cd ..\..
 
 FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy) DO (
