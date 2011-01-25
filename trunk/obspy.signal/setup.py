@@ -26,7 +26,6 @@ from setuptools.extension import Extension
 import numpy as np
 import os
 import platform
-import shutil
 import sys
 
 
@@ -107,27 +106,32 @@ def setupLibSignal():
     return lib
 
 
-setup(
-    name=NAME,
-    version=VERSION,
-    description=DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
-    url=URL,
-    author=AUTHOR,
-    author_email=AUTHOR_EMAIL,
-    license=LICENSE,
-    platforms=PLATFORMS,
-    classifiers=CLASSIFIERS,
-    keywords=KEYWORDS,
-    packages=find_packages(exclude=['distribute_setup']),
-    namespace_packages=['obspy'],
-    zip_safe=ZIP_SAFE,
-    install_requires=INSTALL_REQUIRES,
-    download_url=DOWNLOAD_URL,
-    include_package_data=True,
-    test_suite="%s.tests.suite" % (NAME),
-    entry_points=ENTRY_POINTS,
-    ext_package='obspy.signal.lib',
-    ext_modules=[setupLibSignal()],
-    use_2to3=True,
-)
+def setupPackage():
+    setup(
+        name=NAME,
+        version=VERSION,
+        description=DESCRIPTION,
+        long_description=LONG_DESCRIPTION,
+        url=URL,
+        author=AUTHOR,
+        author_email=AUTHOR_EMAIL,
+        license=LICENSE,
+        platforms=PLATFORMS,
+        classifiers=CLASSIFIERS,
+        keywords=KEYWORDS,
+        packages=find_packages(exclude=['distribute_setup']),
+        namespace_packages=['obspy'],
+        zip_safe=ZIP_SAFE,
+        install_requires=INSTALL_REQUIRES,
+        download_url=DOWNLOAD_URL,
+        include_package_data=True,
+        test_suite="%s.tests.suite" % (NAME),
+        entry_points=ENTRY_POINTS,
+        ext_package='obspy.signal.lib',
+        ext_modules=[setupLibSignal()],
+        use_2to3=True,
+    )
+
+
+if __name__ == '__main__':
+    setupPackage()
