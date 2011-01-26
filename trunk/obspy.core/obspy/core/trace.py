@@ -227,10 +227,17 @@ class Trace(object):
 
     Parameters
     ----------
-    data : `numpy.array` or `ma.masked_array`
+    data : numpy.array or ma.masked_array
         NumPy array of data samples
     header : dict or :class:`~obspy.core.trace.Stats`
         Dictionary containing header fields
+
+    Attributes
+    ----------
+    id : str
+        A SEED compatible identifier of the trace.
+    stats : :class:`~obspy.core.trace.Stats`
+        A container for additional header information of the trace.
 
     Supported Operations
     --------------------
@@ -442,7 +449,7 @@ class Trace(object):
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
             If set to -1 all overlapping samples are interpolated.
-        sanity_checks: boolean, optional
+        sanity_checks : boolean, optional
             Enables some sanity checks before merging traces (default is True).
 
         Notes

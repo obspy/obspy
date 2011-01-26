@@ -57,10 +57,18 @@ def readWAV(filename, headonly=False, **kwargs):
     filename : string
         Name of WAV file to read.
 
-    Example
+    Returns
     -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("wav_file") # doctest: +SKIP
+    stream : :class:`~obspy.core.stream.Stream`
+        A ObsPy Stream object.
+
+    Basic Usage
+    -----------
+    >>> from obspy.core import read
+    >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
+    >>> print(st)
+    1 Trace(s) in Stream:
+    ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
     """
     # read WAV file
     fh = wave.open(filename, 'rb')

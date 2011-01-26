@@ -25,8 +25,8 @@ import urllib2
 import warnings
 
 
-WAVEFORM_AUTODETECTION = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'SH_ASC',
-                          'Q', 'SLIST', 'TSPAIR', 'SEGY', 'GSE1', 'SU', 'WAV']
+WAVEFORM_AUTODETECTION = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
+                          'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU', 'WAV']
 
 
 def get_obspy_entry_points():
@@ -116,14 +116,16 @@ def read(pathname_or_url=None, format=None, headonly=False,
         Specify the end time to read.
     nearest_sample : bool, optional
         Only applied if `starttime` or `endtime` is given. Select nearest
-        sample or the one containing the specified time. For more info, see
-        :meth:`~obspy.core.trace.Trace.trim.`
+        sample or the one containing the specified time.
+        For more info, see :meth:`~obspy.core.trace.Trace.trim`.
 
     Notes
     -----
     Additional ObsPy modules extend the functionality of the
     :func:`~obspy.core.stream.read` function. The following table summarizes
-    all known formats currently available for ObsPy.
+    all known formats currently available for ObsPy. The table order also 
+    reflects the order of the autodetection routine if not format option is
+    specified.
 
     Please refer to the linked function call of each module for any extra
     options available at the import stage.
@@ -132,18 +134,18 @@ def read(pathname_or_url=None, format=None, headonly=False,
     Format   Required Module      Linked Function Call
     =======  ===================  ====================================
     MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
-    GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
     SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
-    SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.readSACXY`
+    GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
     SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
-    WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
+    SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.readSACXY`
+    GSE1     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE1`
     Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
     SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
-    TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
     SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
+    TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
     SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
     SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
-    GSE1     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE1`
+    WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
     =======  ===================  ====================================
 
     Next to the :func:`~obspy.core.stream.read` function the
@@ -999,16 +1001,19 @@ class Stream(object):
         =======  ===================  ====================================
         Format   Required Module      Linked Function Call
         =======  ===================  ====================================
-        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
-        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
-        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
-        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
-        SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.writeSEISAN`
-        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
-        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
-        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
-        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
+        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
+        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
+        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
+        SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
+        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.readSACXY`
+        GSE1     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE1`
+        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
+        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
+        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
+        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
+        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
+        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
+        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.
@@ -1623,33 +1628,32 @@ class Stream(object):
         """
         Returns a deepcopy of the stream.
 
-        Example
+        Examples
         -------
+        1. Make a Trace and copy it
 
-        Make a Trace and copy it:
+            >>> from obspy.core import read
+            >>> st = read()
+            >>> st2 = st.copy()
 
-        >>> from obspy.core import read
-        >>> st = read()
-        >>> st2 = st.copy()
+            The two objects are not the same:
 
-        The two objects are not the same:
+            >>> st2 is st
+            False
 
-        >>> st2 is st
-        False
+            But they have equal data (before applying further processing):
 
-        But they have equal data (before applying further processing):
+            >>> st2 == st
+            True
 
-        >>> st2 == st
-        True
+        2. The following example shows how to make an alias but not copy the
+        data. Any changes on ``st3`` would also change the contents of ``st``.
 
-        The following example shows how to make an alias but not copy the data.
-        Any changes on ``st3`` would also change the contents of ``st``.
-
-        >>> st3 = st
-        >>> st3 is st
-        True
-        >>> st3 == st
-        True
+            >>> st3 = st
+            >>> st3 is st
+            True
+            >>> st3 == st
+            True
 
         :return: Copy of stream.
         """

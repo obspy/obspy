@@ -17,11 +17,11 @@ the names of all available test cases.
 
 Examples
 --------
-(1) Run all tests::
+(1) Run all tests on command line::
 
         obspy-runtests
 
-    or
+    or via Python interpreter
 
     >>> import obspy.core
     >>> obspy.core.runTests()  # DOCTEST: +SKIP
@@ -43,7 +43,7 @@ Examples
 
         obspy-runtests mseed
 
-(4) Run a certain test case::
+(4) Run a specific test case::
 
         obspy-runtests obspy.core.tests.test_stats.StatsTestCase.test_init
 

@@ -64,7 +64,6 @@ def isASC(filename):
 
     Parameters
     ----------
-
     filename : string
         Name of the ASC file to be checked.
     """
@@ -98,10 +97,17 @@ def readASC(filename, headonly=False):
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("seisan_file") # doctest: +SKIP
+    Basic Usage
+    -----------
+    >>> from obspy.core import read
+    >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
+    >>> st    #doctest: +ELLIPSIS
+    <obspy.core.stream.Stream object at 0x...>
+    >>> print(st)
+    3 Trace(s) in Stream:
+    .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
+    .TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
+    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - 2010-01-01T01:01:45.999000Z | 100.0 Hz, 4001 samples
     """
     fh = open(filename, 'rt')
     # read file and split text into channels
@@ -229,7 +235,6 @@ def isQ(filename):
 
     Parameters
     ----------
-
     filename : string
         Name of the Q file to be checked.
     """
@@ -279,10 +284,17 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("Q_file") # doctest: +SKIP
+    Basic Usage
+    -----------
+    >>> from obspy.core import read
+    >>> st = read("/path/to/QFILE-TEST.QHD")
+    >>> st    #doctest: +ELLIPSIS
+    <obspy.core.stream.Stream object at 0x...>
+    >>> print(st)
+    3 Trace(s) in Stream:
+    .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
+    .TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
+    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - 2010-01-01T01:01:45.999000Z | 100.0 Hz, 4001 samples
     """
     if not headonly:
         if not data_directory:
@@ -466,6 +478,14 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
 
 
 def toUTCDateTime(value):
+    """
+    Converts time string used within Seismic Hanlder into a UTCDateTime.
+
+    Example
+    -------
+    >>> toUTCDateTime(' 2-JAN-2008_03:04:05.123')
+    UTCDateTime(2008, 1, 2, 3, 4, 5, 123000)
+    """
     date, time = value.split('_')
     day, month, year = date.split('-')
     hour, mins, secs = time.split(':')
@@ -479,7 +499,22 @@ def toUTCDateTime(value):
 
 
 def fromUTCDateTime(dt):
+    """
+    Converts UTCDateTime object into a time string used within Seismic Handler.
+
+    Example
+    -------
+    >>> from obspy.core import UTCDateTime
+    >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
+    >>> fromUTCDateTime(dt)
+    ' 2-JAN-2008_03:04:05.123'
+    """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                         dt.minute, dt.second, dt.microsecond / 1000)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
