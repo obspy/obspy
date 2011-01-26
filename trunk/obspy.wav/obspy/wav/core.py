@@ -10,11 +10,11 @@
 """ 
 WAV bindings to ObsPy core module.
 
-This module contains python functions for transforming seismograms to audio
-WAV files.
-
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from obspy.core import Trace, Stream
@@ -95,15 +95,17 @@ def readWAV(filename, headonly=False, **kwargs):
 def writeWAV(stream_object, filename, framerate=7000, **kwargs):
     """
     Write audio WAV file. The seismogram is squeezed to audible frequencies.
-    
-    The resulting WAV sound file is as a result really short. The data
-    are written uncompressed as signed 4byte integers.
+
+    The generated WAV sound file is as a result really short. The data
+    are written uncompressed as signed 4-byte integers.
+
     This function should NOT be called directly, it registers via the
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
-    
-    :note: The attributes self.stats.npts = number of samples and
-           self.data = array of data samples are required
+
+    .. note::
+        The attributes `self.stats.npts` (number of samples) and
+        `self.data` (array of data samples) are required
 
     Parameters
     ----------

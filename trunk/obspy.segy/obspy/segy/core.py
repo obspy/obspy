@@ -21,13 +21,11 @@ from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE
 
 from copy import deepcopy
 import numpy as np
-import os
 from struct import unpack
 
 
 # Valid data format codes as specified in the SEGY rev1 manual.
 VALID_FORMATS = [1, 2, 3, 4, 5, 8]
-
 
 # This is the maximum possible interval between two samples due to the nature
 # of the SEG Y format.
@@ -137,10 +135,15 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None):
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("segy_file") # doctest: +SKIP
+    Basic Usage
+    -----------
+    >>> from obspy.core import read
+    >>> st = read("/path/to/00001034.sgy_first_trace")
+    >>> st #doctest: +ELLIPSIS
+    <obspy.core.stream.Stream object at 0x...>
+    >>> print(st)
+    1 Trace(s) in Stream:
+    Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - 2009-06-22T14:47:41.000000Z | 500.0 Hz, 2001 samples
     """
     # Read file to the internal segy representation.
     segy_object = readSEGYrev1(filename, endian=byteorder,
@@ -386,13 +389,13 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             new_trace.header.day_of_year = 0
             new_trace.header.hour_of_day = 0
             new_trace.header.minute_of_hour = 0
-            new_trace.header.second_of_minute =  0
+            new_trace.header.second_of_minute = 0
         else:
             new_trace.header.year_data_recorded = starttime.year
             new_trace.header.day_of_year = starttime.julday
             new_trace.header.hour_of_day = starttime.hour
             new_trace.header.minute_of_hour = starttime.minute
-            new_trace.header.second_of_minute =  starttime.second
+            new_trace.header.second_of_minute = starttime.second
         # Set the sampling rate.
         new_trace.header.sample_interval_in_ms_for_this_trace = \
             int(trace.stats.delta * 1E6)
@@ -439,10 +442,15 @@ def readSU(filename, byteorder=None):
     stream : :class:`~obspy.core.stream.Stream`
         A ObsPy Stream object.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("su_file") # doctest: +SKIP
+    Basic Usage
+    -----------
+    >>> from obspy.core import read
+    >>> st = read("/path/to/1.su_first_trace")
+    >>> st #doctest: +ELLIPSIS
+    <obspy.core.stream.Stream object at 0x...>
+    >>> print(st)
+    1 Trace(s) in Stream:
+    ... | 2005-12-19T15:07:54.000000Z - 2005-12-19T15:07:55.999750Z | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
     su_object = readSUFile(filename, endian=byteorder)
@@ -561,13 +569,13 @@ def writeSU(stream, filename, byteorder=None):
             new_trace.header.day_of_year = 0
             new_trace.header.hour_of_day = 0
             new_trace.header.minute_of_hour = 0
-            new_trace.header.second_of_minute =  0
+            new_trace.header.second_of_minute = 0
         else:
             new_trace.header.year_data_recorded = starttime.year
             new_trace.header.day_of_year = starttime.julday
             new_trace.header.hour_of_day = starttime.hour
             new_trace.header.minute_of_hour = starttime.minute
-            new_trace.header.second_of_minute =  starttime.second
+            new_trace.header.second_of_minute = starttime.second
         # Set the data encoding and the endianness.
         new_trace.endian = byteorder
         # Add the trace to the SEGYFile object.
@@ -611,6 +619,11 @@ def segy_trace__str__(self, *args, **kwargs):
     if np.ma.count_masked(self.data):
         out += ' (masked)'
     return out % (self.stats)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
 
 
 # Monkey patch the __str__ method for the all Trace instances used in the

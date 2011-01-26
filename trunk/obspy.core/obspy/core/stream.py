@@ -124,7 +124,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     Additional ObsPy modules extend the functionality of the
     :func:`~obspy.core.stream.read` function. The following table summarizes
     all known formats currently available for ObsPy. The table order also 
-    reflects the order of the autodetection routine if not format option is
+    reflects the order of the autodetection routine if no format option is
     specified.
 
     Please refer to the linked function call of each module for any extra

@@ -479,7 +479,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='='):
 
 def toUTCDateTime(value):
     """
-    Converts time string used within Seismic Hanlder into a UTCDateTime.
+    Converts time string used within Seismic Handler into a UTCDateTime.
 
     Example
     -------

@@ -3,35 +3,28 @@ package obspy.segy
 
 Copyright
 ---------
-    GNU General Public License (GPL)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
-
-    Copyright (c) 2010 by:
-        * Lion Krischer
+Copyright (c) 2010-2011 by:
+    * Lion Krischer
 
 
 Overview
 --------
-    obspy.segy - Read & write seismograms, Format SEG Y rev 1
+SEG Y and SU read and write support for ObsPy.
 
-    For more information visit http://www.obspy.org.
+The obspy.segy package contains methods in order to read and write seismogram
+files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * numpy
-    * setuptools
+* numpy
