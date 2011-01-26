@@ -293,7 +293,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(start - td, UTCDateTime(1969, 12, 31, 23, 59, 59))
         #4
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
-        end = UTCDateTime(2000, 1, 1, 0, 0, 1, 000001)
+        end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
         self.assertAlmostEquals(end - start, 0.000002)
 
     @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')

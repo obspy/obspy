@@ -3,27 +3,34 @@ package obspy.signal
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2009-2010 by:
-        * Tobias Megies
-        * Moritz Beyreuther
-        * Yannik Behr
-        * Conny Hammer
+Copyright (c) 2009-2011 by:
+    * Tobias Megies
+    * Moritz Beyreuther
+    * Yannik Behr
+    * Conny Hammer
 
 
 Overview
 --------
-    obspy.signal - Python signal processing routines for seismology.
+Signal processing routines for ObsPy.
 
-    Capabilities include filtering, triggering, rotation, instrument
-    correction and coordinate transformations.
+The obspy.signal package contains signal processing routines for seismology.
+Capabilities include filtering, triggering, rotation, instrument correction and
+coordinate transformations.
 
-    For more information visit http://www.obspy.org.
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * scipy
-    * obspy.core
-    * setuptools
+* distribute
+* obspy.core
+* scipy

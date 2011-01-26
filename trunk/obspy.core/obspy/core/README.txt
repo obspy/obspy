@@ -3,26 +3,33 @@ package obspy.core
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2009-2010 by:
-        * Moritz Beyreuther
-        * Lion Krischer
-        * Robert Barsch
-        * Tobias Megies
+Copyright (c) 2009-2011 by:
+    * Moritz Beyreuther
+    * Lion Krischer
+    * Robert Barsch
+    * Tobias Megies
 
 
 Overview
 --------
-    obspy.core - Core classes of ObsPy: Python for Seismological Observatories
+ObsPy - a Python framework for seismological observatories.
 
-    This class contains common methods and classes for ObsPy. It includes
-    UTCDateTime, Stats, Stream and Trace classes and methods for reading 
-    seismograms.
+The obspy.core package contains common methods and classes for ObsPy required by
+all other ObsPy packages. It includes the UTCDateTime, Stats, Stream and Trace
+classes and methods for reading and writing seismograms.
 
-    For more information visit http://www.obspy.org.
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * numpy
+* distribute
+* numpy

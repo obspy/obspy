@@ -6,7 +6,7 @@
 #           Lion Krischer
 #    Email: barsch@lmu.de
 #
-# Copyright (C) 2008-2010 Robert Barsch, Moritz Beyreuther, Lion Krischer
+# Copyright (C) 2008-2011 Robert Barsch, Moritz Beyreuther, Lion Krischer
 #---------------------------------------------------------------------
 """
 obspy.core - Core classes of ObsPy
@@ -75,6 +75,7 @@ from obspy.core.scripts.runtests import runTests
 
 
 __version__ = _getVersionString("obspy.core")
+
 
 if __name__ == '__main__':
     import doctest
