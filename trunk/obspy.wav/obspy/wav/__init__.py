@@ -1,30 +1,33 @@
 """
-obspy.wav - WAVE (audio) read and write support
-===============================================
-Python method in order to read and write seismograms to WAV audio files. The
-data are squeezed to audible frequencies.
+obspy.wav - WAV(audio) read and write support for ObsPy
+=======================================================
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+The obspy.wav package contains methods in order to read and write seismogram
+files in the WAV(audio) format. The data are squeezed to audible frequencies.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
-Similar to reading any other waveform data format using obspy.core:
-
-(Lines 2&3 are just to get the absolute path of our test data)
+Importing WAV files is done similar to reading any other waveform data
+format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
+the :mod:`obspy.core` module. Examples seismograms files may be found at
+http://examples.obspy.org.
 
 >>> from obspy.core import read
->>> from obspy.core import path
->>> filename = path("3cssan.near.8.1.RNON.wav")
->>> st = read(filename)
+>>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
 >>> print(st)
 1 Trace(s) in Stream:
 ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
 
-The format will be determined automatically. As WAVE-files can contain only one
+The format will be determined automatically. As WAV files can contain only one
 data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
 'st[0]' will have a stats attribute containing the essential meta information
-of the WAVE file.
+of the WAV file.
 
 >>> print(st[0].stats)
          network: 
@@ -51,7 +54,7 @@ is also straight forward.
 >>> st.write('myfile.wave', format='WAV', framerate=7000) #doctest: +SKIP
 
 The framerate specifies the framerate to which the seismogram should be
-squeezed. Using the original sampling_rate results in an WAVE file with
+squeezed. Using the original sampling_rate results in an WAV file with
 frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
@@ -60,3 +63,8 @@ from obspy.core.util import _getVersionString
 
 
 __version__ = _getVersionString("obspy.wav")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -1,10 +1,10 @@
 """
-obspy.sh - SH read and write support
-====================================
-This modules provides facilities to:
+obspy.sh - Q and ASC (Seismic Handler) read and write support for ObsPy
+=======================================================================
 
-* Import and export seismogram files in the Q format.
-* Import and export seismogram files in the ASC format.
+The obspy.sh package contains methods in order to read and write seismogram
+files in the Q and ASC format used by the Seismic Handler software package
+(http://www.seismic-handler.org).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -16,15 +16,11 @@ Reading
 -------
 Importing Q or ASC files is done similar to reading any other waveform data
 format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
-the :mod:`obspy.core` module. Test files for the following examples may be
-found at http://examples.obspy.org.
-
-(Lines 2&3 are just to get the absolute path of our test data)
+the :mod:`obspy.core` module. Examples seismograms files may be found at
+http://examples.obspy.org.
 
 >>> from obspy.core import read
->>> from obspy.core import path
->>> filename = path("QFILE-TEST-ASC.ASC")
->>> st = read(filename)
+>>> st = read("/path/to/QFILE-TEST-ASC.ASC")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st)
@@ -72,3 +68,8 @@ from obspy.core.util import _getVersionString
 
 
 __version__ = _getVersionString("obspy.sh")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
