@@ -13,7 +13,6 @@ import ctypes as C
 import doctest
 import functools
 import glob
-import inspect
 import numpy as np
 import os
 import sys
@@ -324,8 +323,7 @@ def path(testfile):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
-            dir = os.path.dirname(inspect.getsourcefile(mod))
-            file = os.path.join(dir, "data", testfile)
+            file = os.path.join(mod.__path__[0], "data", testfile)
             if os.path.isfile(file):
                 return file
         except ImportError:
