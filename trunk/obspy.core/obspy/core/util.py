@@ -21,8 +21,7 @@ import unittest
 import warnings
 
 
-# defining ObsPy modules
-# currently used by runtests and the path function
+# defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy']
 ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
@@ -305,7 +304,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     return temp
 
 
-def path(testfile):
+def getExampleFile(testfile):
     """
     Function to find the absolute path of a test data file
 
@@ -482,19 +481,8 @@ def add_doctests(testsuite, module_name):
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([MODULE_NAME, name]) for name in names)
     for module_name in module_names:
-        # try/except here can silently skip not executed tests due to e.g. bad
-        # doctest option syntax, see [1887] (" #SKIP" instead of " +SKIP").
-        # An option would be to try and only catch that particular error but
-        # first let's see if we can omit the try/except completely as files
-        # without doctests seem not to make problems.
-        #try:
-            module = __import__(module_name, fromlist="obspy")
-            testsuite.addTest(doctest.DocTestSuite(module))
-        #except Exception, e:
-        #    if "doctest" in str(e) and "invalid" in str(e):
-        #        raise e
-        #    warnings.warn(str(e))
-        #    pass
+        module = __import__(module_name, fromlist="obspy")
+        testsuite.addTest(doctest.DocTestSuite(module))
 
 
 def add_unittests(testsuite, module_name):
@@ -527,10 +515,6 @@ def add_unittests(testsuite, module_name):
         testsuite.addTest(module.suite())
 
 
-def _id(obj):
-    return obj
-
-
 def skip(reason):
     """
     Unconditionally skip a test.
@@ -554,7 +538,14 @@ def skipIf(condition, reason):
     """
     if condition:
         return skip(reason)
+    def _id(obj):
+        return obj
     return _id
+
+
+@deprecated
+def path(testfile):
+    return getExampleFile(testfile)
 
 
 if __name__ == '__main__':

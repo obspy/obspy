@@ -3,22 +3,30 @@ package obspy.xseed
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2009-2010 by:
-        * Robert Barsch
-        * Lion Krischner
+Copyright (c) 2009-2011 by:
+    * Robert Barsch
+    * Lion Krischner
 
 
 Overview
 --------
-    obspy.xseed - Tool to convert between Dataless SEED and XML-SEED files.
+Dataless SEED, RESP and XML-SEED read and write support for ObsPy.
 
-    For more information visit http://www.obspy.org.
+The obspy.xseed package contains methods in order to read, write and convert
+seismological meta data files in the Dataless SEED, RESP and XML-SEED format.
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * lxml
-    * setuptools
-    * obspy.core
+* obspy.core
+* lxml

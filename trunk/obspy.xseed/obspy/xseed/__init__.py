@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.xseed: Tool to convert between Dataless SEED and XML-SEED files
-=====================================================================
+obspy.xseed: Dataless SEED, RESP and XML-SEED read and write support for ObsPy
+==============================================================================
 XML-SEED was introduced by Tsuboi, Tromp and Komatitsch (2004), it is a XML
 representation of Dataless SEED. This module contains converters from Dataless
 SEED to XML-SEED and vice versa as well as a converter from Dataless SEED to
@@ -18,13 +18,8 @@ response requests.
 Allocate a Parser object and read/write
 ---------------------------------------
 
-(Lines 2&3 are just to get the absolute path of our test data)
-
 >>> from obspy.xseed import Parser
->>> from obspy.core import path
->>> filename = path("dataless.seed.BW_FURT")
-
->>> sp = Parser(filename)
+>>> sp = Parser("/path/to/dataless.seed.BW_FURT")
 >>> sp.writeXSEED("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
 
 The lines above will convert Dataless SEED, e.g.::
@@ -83,3 +78,8 @@ from obspy.xseed.parser import Parser
 
 
 __version__ = _getVersionString("obspy.xseed")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

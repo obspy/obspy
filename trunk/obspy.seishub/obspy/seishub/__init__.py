@@ -2,6 +2,8 @@
 """
 obspy.seishub - SeisHub database client for ObsPy
 =================================================
+The obspy.seishub package contains a client for the seismological database
+SeisHub (http://www.seishub.org).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

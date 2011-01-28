@@ -14,6 +14,7 @@ from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
 from obspy.core import UTCDateTime
+from obspy.core.util import getExampleFile
 import math
 import os
 import warnings
@@ -126,6 +127,13 @@ class Parser(object):
             self.__init__()
         # try to transform everything into StringIO object
         if isinstance(data, basestring):
+            # if it starts with /path/to/ try to search in examples
+            if data.startswith('/path/to/'):
+                try:
+                    data = getExampleFile(data[9:])
+                except:
+                    # otherwise just try to read the given /path/to folder
+                    pass
             if "://" in data:
                 # some URL
                 data = urllib2.urlopen(data).read()

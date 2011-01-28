@@ -14,7 +14,7 @@ from glob import iglob
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
-    interceptDict, path
+    interceptDict, getExampleFile
 from pkg_resources import load_entry_point
 import copy
 import math
@@ -193,7 +193,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     # if pathname starts with /path/to/ try to search in examples
     if pathname_or_url.startswith('/path/to/'):
         try:
-            pathname_or_url = path(pathname_or_url[9:])
+            pathname_or_url = getExampleFile(pathname_or_url[9:])
         except:
             # otherwise just try to read the given /path/to folder
             pass

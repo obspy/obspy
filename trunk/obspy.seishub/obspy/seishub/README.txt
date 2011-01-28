@@ -3,23 +3,30 @@ package obspy.seishub
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2009-2010 by:
-        * Robert Barsch
+Copyright (c) 2009-2011 by:
+    * Robert Barsch
 
 
 Overview
 --------
-    obspy.seishub - SeisHub database client for ObsPy.
+SeisHub database client for ObsPy.
 
-    For more information visit http://www.obspy.org.
+The obspy.seishub package contains a client for the seismological database
+SeisHub (http://www.seishub.org).
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * lxml
-    * obspy.core
-    * obspy.mseed
-    * matplotlib
-    * setuptools
+* obspy.core
+* obspy.mseed
+* lxml
