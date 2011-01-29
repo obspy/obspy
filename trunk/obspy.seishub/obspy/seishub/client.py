@@ -769,7 +769,7 @@ class _EventMapperClient(_BaseRESTClient):
     package = 'seismology'
     resourcetype = 'event'
 
-    def getList(self, limit=None, offset=None, localization_method=None,
+    def getList(self, limit=None, offset=None, localisation_method=None,
                 account=None, user=None, min_datetime=None, max_datetime=None,
                 first_pick=None, last_pick=None, min_latitude=None,
                 max_latitude=None, min_longitude=None, max_longitude=None,
