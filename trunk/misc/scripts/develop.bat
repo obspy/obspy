@@ -13,7 +13,7 @@ REM
 
 cd ..\..
 
-FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy) DO (
+FOR %%M IN (core mseed gse2 signal imaging arclink fissures sac seisan seishub wav xseed sh segy events iris) DO (
 cd obspy.%%M
 echo === obspy.%%M ===
 %PYTHON% setup.py -q clean --all >NUL 2>NUL

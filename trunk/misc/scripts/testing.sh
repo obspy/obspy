@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PACKAGES="core arclink fissures gse2 imaging mseed sac seisan seishub \
-signal wav xseed segy"
+signal wav xseed segy events iris"
 
 cd ../..
 
