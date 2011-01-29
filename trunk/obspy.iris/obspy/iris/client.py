@@ -204,7 +204,10 @@ class Client(object):
         Parameters
         ----------
         bulk : string
-            List of channels to fetch as returned by :meth:`~obspy.iris.client.Client.availability`
+            List of channels to fetch as returned by
+            :meth:`~obspy.iris.client.Client.availability`.
+            Can be a filename with a text file in bulkdataselect compatible
+            format or a string in the same format.
         quality : 'D', 'R', 'Q', 'M' or 'B', optional
             MiniSEED data quality indicator. M and B (default) are treated the
             same and indicate best available. If M or B are selected, the
@@ -215,6 +218,9 @@ class Client(object):
             :class:`~obspy.core.stream.Stream`
         """
         url = '/bulkdataselect/query'
+        # check for file
+        if os.path.isfile(bulk):
+            bulk = open(bulk).read()
         # quality parameter is optional
         if quality:
             bulk = "quality %s\n" % quality.upper() + bulk
