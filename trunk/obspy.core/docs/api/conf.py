@@ -40,7 +40,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'ObsPy'
-copyright = '2009-2010, ObsPy Development Team'
+copyright = '2009-2011, ObsPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
