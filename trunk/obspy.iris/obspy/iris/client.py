@@ -89,6 +89,27 @@ class Client(object):
         Wildcards are allowed for `network`, `station`, `location` and
         `channel`.
 
+        Example
+        -------
+
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ",
+        ...                         "2010-02-27T06:30:00.000",
+        ...                         "2010-02-27T10:30:00.000")
+        >>> print st
+        1 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:30:00.019538Z | 20.0 Hz, 288001 samples
+
+        >>> st = client.getWaveform("TA", "A25A", "", "BH*",
+        ...                         "2010-084T00:00:00", "2010-084T00:30:00")
+        >>> print st
+        3 Trace(s) in Stream:
+        TA.A25A..BHE | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
+        TA.A25A..BHN | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
+        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
+
+
         Parameters
         ----------
         network : string
@@ -149,6 +170,20 @@ class Client(object):
         Interface for `dataselect`-webservice of IRIS
         (http://www.iris.edu/ws/dataselect/).
         Single channel request, no wildcards allowed.
+        This webservice can be used via
+        :meth:`~obspy.iris.client.Client.getWaveform`.
+
+        Example
+        -------
+
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> st = client.dataselect(network="IU", station="ANMO", location="00",
+        ...         channel="BHZ", starttime="2010-02-27T06:30:00.000",
+        ...         endtime="2010-02-27T10:30:00.000")
+        >>> print st
+        1 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:29:59.969538Z | 20.0 Hz, 288000 samples
 
         Parameters
         ----------
@@ -201,6 +236,33 @@ class Client(object):
         Interface for `bulkdataselect`-webservice of IRIS
         (http://www.iris.edu/ws/bulkdataselect/).
 
+        Simple requests with wildcards can be performed via
+        :meth:`~obspy.iris.client.Client.getWaveform`. The list with channels
+        can also be generated using :meth:`~obspy.iris.client.Client.availability`.
+
+        Example
+        -------
+        
+        >>> from obspy.iris import Client
+        >>> client = Client()
+
+        >>> requests = []
+        >>> requests.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")
+        >>> requests.append("TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00")
+        >>> requests.append("TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00")
+        >>> requests = "\\n".join(requests) # use only a single backslash!
+        >>> print requests
+        TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00
+        TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00
+        TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00
+
+        >>> st = client.bulkdataselect(requests)
+        >>> print st
+        3 Trace(s) in Stream:
+        TA.A25A..BHE | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
+        TA.A25A..BHN | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
+        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
+        
         Parameters
         ----------
         bulk : string
@@ -253,6 +315,40 @@ class Client(object):
         (http://www.iris.edu/ws/availability/).
         Returns list of available channels that can be requested using the
         `bulkdataselect`-webservice.
+
+        Example
+        -------
+        
+        >>> from obspy.iris import Client
+        >>> client = Client()
+
+        >>> response = client.availability(network="IU", station="B*",
+        ...         channel="BH*", starttime="2010-02-27T06:30:00",
+        ...         endtime="2010-02-27T06:40:00")
+        >>> print response
+        IU BBSR 00 BH1 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BBSR 00 BH2 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BBSR 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BBSR 10 BHE 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BBSR 10 BHN 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BBSR 10 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BILL 00 BHE 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BILL 00 BHN 2010-02-27T06:30:00 2010-02-27T06:40:00
+        IU BILL 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
+        <BLANKLINE>
+
+        >>> st = client.bulkdataselect(response)
+        >>> print st
+        9 Trace(s) in Stream:
+        IU.BBSR.00.BH1 | 2010-02-27T06:30:00.019536Z - 2010-02-27T06:39:59.994536Z | 40.0 Hz, 24000 samples
+        IU.BBSR.00.BH2 | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
+        IU.BBSR.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
+        IU.BBSR.10.BHE | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
+        IU.BBSR.10.BHN | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
+        IU.BBSR.10.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
+        IU.BILL.00.BHE | 2010-02-27T06:30:00.036324Z - 2010-02-27T06:39:59.986324Z | 20.0 Hz, 12000 samples
+        IU.BILL.00.BHN | 2010-02-27T06:30:00.036324Z - 2010-02-27T06:39:59.986324Z | 20.0 Hz, 12000 samples
+        IU.BILL.00.BHZ | 2010-02-27T06:30:00.036324Z - 2010-02-27T06:39:59.986324Z | 20.0 Hz, 12000 samples
 
         Parameters
         ----------
