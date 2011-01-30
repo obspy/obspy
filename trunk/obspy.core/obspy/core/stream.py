@@ -1629,7 +1629,7 @@ class Stream(object):
         Returns a deepcopy of the stream.
 
         Examples
-        -------
+        --------
         1. Make a Trace and copy it
 
             >>> from obspy.core import read
