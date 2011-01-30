@@ -25,7 +25,7 @@ import urllib2
 import warnings
 
 
-WAVEFORM_AUTODETECTION = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
+WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                           'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU', 'WAV']
 
 
@@ -47,7 +47,7 @@ def get_obspy_entry_points():
     names = [_i.name for _i in eps]
     # loop through known waveform plug-ins and add them to resulting list
     new_entries = []
-    for entry in WAVEFORM_AUTODETECTION:
+    for entry in WAVEFORM_PREFERRED_ORDER:
         # skip plug-ins which are not installed
         if not entry in names:
             continue

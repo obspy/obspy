@@ -24,7 +24,7 @@ import warnings
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy']
-ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub']
+ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub', 'iris']
 
 
 _sys_is_le = sys.byteorder == 'little'
