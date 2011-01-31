@@ -36,6 +36,15 @@ DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
                        'location_id':'location', 'channel_id':'channel',
                        'start_datetime':'starttime', 'end_datetime':'endtime'}
 
+MAG_TYPES = {'lg': "edu.iris.Fissures/MagType/LG",
+             'mb': "edu.iris.Fissures/MagType/mb",
+             'mbmle': "edu.iris.Fissures/MagType/mbmle",
+             'ml': "edu.iris.Fissures/MagType/ML",
+             'mo': "edu.iris.Fissures/MagType/MO",
+             'ms': "edu.iris.Fissures/MagType/Ms",
+             'msmle': "edu.iris.Fissures/MagType/msmle",
+             'mw': "edu.iris.Fissures/MagType/MW"}
+
 
 class Client(object):
     """
@@ -71,13 +80,21 @@ class Client(object):
     #
     def __init__(self, network_dc=("/edu/iris/dmc", "IRIS_NetworkDC"),
                  seismogram_dc=("/edu/iris/dmc", "IRIS_DataCenter"),
-                 name_service="dmc.iris.washington.edu:6371/NameService",
+                 event_dc=("/edu/iris/dmc", "IRIS_EventDC"),
+                 # XXX
+                 # 2011-02-01: default iris dmc not working
+                 # see http://www.iris.washington.edu/pipermail/dhi-servers/2011-January/001927.html
+                 # replace with following line again if its working...
+                 # XXX
+                 #name_service="dmc.iris.washington.edu:6371/NameService",
+                 name_service="dhiserv.iris.washington.edu:6371/NameService",
                  debug=False):
         """
         Initialize Fissures/DHI client. 
         
         :param network_dc: Tuple containing dns and NetworkDC name.
         :param seismogram_dc: Tuple containing dns and DataCenter name.
+        :param event_dc: Tuple containing dns and EventDC name.
         :param name_service: String containing the name service.
         :param debug:  Enables verbose output of the connection handling
                 (default is False).
@@ -111,6 +128,7 @@ class Client(object):
         # network and seismogram cosnaming
         self.net_name = self._composeName(network_dc, 'NetworkDC')
         self.seis_name = self._composeName(seismogram_dc, 'DataCenter')
+        self.ev_name = self._composeName(event_dc, 'EventDC')
         # resolve network finder
         try:
             netDC = self.rootContext.resolve(self.net_name)
@@ -120,6 +138,15 @@ class Client(object):
         except:
             msg = "Initialization of NetworkFinder failed."
             warnings.warn(msg, FissuresWarning)
+        # resolve event finder
+        try:
+            evDC = self.rootContext.resolve(self.ev_name)
+            evDC = evDC._narrow(Fissures.IfEvent.EventDC)
+            evFind = evDC._get_a_finder()
+            self.evFind = evFind._narrow(Fissures.IfEvent.EventFinder)
+        except:
+            msg = "Initialization of EventFinder failed."
+            warnings.warn(msg, FissuresWarning)
         # resolve seismogram DataCenter
         try:
             seisDC = self.rootContext.resolve(self.seis_name)
@@ -128,8 +155,8 @@ class Client(object):
             msg = "Initialization of seismogram DataCenter failed."
             warnings.warn(msg, FissuresWarning)
         # if both failed, client instance is useless, so raise
-        if not self.netFind and not self.seisDC:
-            msg = "Neither NetworkFinder nor DataCenter could be initialized."
+        if not self.netFind and not self.seisDC and not self.evFind:
+            msg = "Neither NetworkFinder nor DataCenter nor EventFinder could be initialized."
             raise FissuresException(msg)
 
     @deprecated_keywords(DEPRECATED_KEYWORDS)
@@ -393,6 +420,84 @@ class Client(object):
         paz['gain'] = norm_fac
         paz['sensitivity'] = resp.the_sensitivity.sensitivity_factor
         return paz
+
+    def getEvents(self, area_type, min_depth, max_depth, min_datetime,
+                  max_datetime, min_magnitude, max_magnitude,
+                  magnitude_types=[], catalogs=[], contributors=[],
+                  max_results=500, **kwargs):
+        """
+        NOTE: THIS METHOD IS NOT WORKING AT THE MOMENT.
+        
+        :type area_type: String
+        :param area_type: One of "global", "box" or "circle". Additional kwargs
+                need to be specified for "box" ('min_latitude', 'max_latitude',
+                'min_longitude', 'max_longitude') and for "circle" ('latitude',
+                'longitude', 'min_distance', 'max_distance').
+        :param min_depth: Minimum depth of events in kilometers
+        :param max_depth: Maximum depth of events in kilometers
+        :type min_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+                UTCDateTime-compatible String
+        :param min_datetime: Minimum origin time of events
+        :type max_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime` or
+                UTCDateTime-compatible String
+        :param max_datetime: Maximum origin time of events
+        :param min_magnitude: Minimum magnitude of events
+        :param max_magnitude: Minimum magnitude of events
+        :type magnitude_types: List of Strings
+        :param magnitude_types: Magnitude types to retrieve (defaults to all).
+                Valid values are:
+                "ml", "mb", "mo", "ms", "mw", "mbmle", "msmle", "lg"
+        :type catalogs: List of Strings
+        :param catalogs: Catalogs to retrieve events from
+        :type contributors: List of Strings
+        :param contributors: Contributors to retrieve events from
+        """
+        raise NotImplementedError()
+        # construct Fissures area object
+        if area_type == "global":
+            area = Fissures.GlobalArea()
+        elif area_type == "box":
+            try:
+                area = Fissures.BoxArea(min_latitude=kwargs['min_latitude'],
+                                        max_latitude=kwargs['max_latitude'],
+                                        min_longitude=kwargs['min_longitude'],
+                                        max_longitude=kwargs['max_longitude'])
+            except KeyError, e:
+                raise FissuresException(str(e))
+        elif area_type == "circle":
+            try:
+                area = Fissures.PointDistanceArea(latitude=kwargs['latitude'],
+                        longitude=kwargs['longitude'],
+                        min_distance=kwargs['min_distance'],
+                        max_distance=kwargs['max_distance'])
+            except KeyError, e:
+                raise FissuresException(str(e))
+        # construct depth range
+        min_depth = Fissures.Quantity(min_depth * 1000, Fissures.METER)
+        max_depth = Fissures.Quantity(max_depth * 1000, Fissures.METER)
+        # construct time range
+        min_datetime = utcdatetime2Fissures(UTCDateTime(min_datetime))
+        max_datetime = utcdatetime2Fissures(UTCDateTime(max_datetime))
+        time_range = Fissures.TimeRange(min_datetime, max_datetime)
+        # map given magnitude types
+        magnitude_types = [MAG_TYPES[mt.lower()] for mt in magnitude_types]
+        # ensure floats for magnitudes
+        min_magnitude = float(min_magnitude)
+        max_magnitude = float(max_magnitude)
+        # query EventFinder
+        catalogs = self.evFind.known_catalogs()
+        contributors = self.evFind.known_contributors()
+        #max_results = Fissures.IfEvent.EventSeqIter()
+        import ipdb;ipdb.set_trace()
+        # XXX strange: the idl definition seems to take 11 arguments, the last
+        # XXX one being a EventSeqIterHolder but the python translation only
+        # XXX takes 10 arguments and then raises an idl bad type error.
+        # XXX Unfortunately there seems to be no further information which
+        # XXX argument has a wrong type, even when stepping through it in ipd.
+        events = self.evFind.query_events(area, min_depth, max_depth,
+                time_range, magnitude_types, min_magnitude, max_magnitude,
+                catalogs, contributors, max_results)
+        return events
 
 
     def _composeName(self, dc, interface):
