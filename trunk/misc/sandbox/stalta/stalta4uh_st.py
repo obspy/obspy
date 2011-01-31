@@ -44,6 +44,7 @@ MAILTO = ("megies",)
 client = Client()
 
 st = Stream()
+num_stations = 0
 for station in STATIONS:
     try:
         # we request 60s more at start and end and cut them off later to avoid
@@ -54,6 +55,7 @@ for station in STATIONS:
     except:
         continue
     st.extend(tmp)
+    num_stations += 1
 
 if not st:
     pass # XXX print/mail warning
@@ -120,8 +122,8 @@ while len(trigger_list) > 1:
         if off != last_off_time:
             event = (UTCDateTime(on), off - on, stations)
             summary.append("%s %04.1f %s" % event)
-            tmp = st.slice(UTCDateTime(on), UTCDateTime(off))
-            outfilename = "%s/%s.png" % (PLOTDIR, UTCDateTime(on))
+            tmp = st.slice(UTCDateTime(on) - 1, UTCDateTime(off))
+            outfilename = "%s/%s_%.1f_%s-%s_%s.png" % (PLOTDIR, UTCDateTime(on), off - on, len(stations), num_stations, "-".join(stations))
             tmp.plot(outfile=outfilename)
             mutt += ("-a", outfilename)
             last_off_time = off
