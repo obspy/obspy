@@ -44,6 +44,14 @@ MAG_TYPES = {'lg': "edu.iris.Fissures/MagType/LG",
              'ms': "edu.iris.Fissures/MagType/Ms",
              'msmle': "edu.iris.Fissures/MagType/msmle",
              'mw': "edu.iris.Fissures/MagType/MW"}
+#MAG_TYPES = {'lg': "Fissures.LG_MAG_TYPE",
+#             'mb': "Fissures.MB_MAG_TYPE",
+#             'mbmle': "Fissures.MBMLE_MAG_TYPE",
+#             'ml': "Fissures.ML_MAG_TYPE",
+#             'mo': "Fissures.MO_MAG_TYPE",
+#             'ms': "Fissures.MS_MAG_TYPE",
+#             'msmle': "Fissures.MSMLE_MAG_TYPE",
+#             'mw': "Fissures.MW_MAG_TYPE"}
 
 
 class Client(object):
@@ -482,22 +490,23 @@ class Client(object):
         # map given magnitude types
         magnitude_types = [MAG_TYPES[mt.lower()] for mt in magnitude_types]
         # ensure floats for magnitudes
-        min_magnitude = float(min_magnitude)
-        max_magnitude = float(max_magnitude)
+        #min_magnitude = float(min_magnitude)
+        #max_magnitude = float(max_magnitude)
         # query EventFinder
         catalogs = self.evFind.known_catalogs()
         contributors = self.evFind.known_contributors()
-        #max_results = Fissures.IfEvent.EventSeqIter()
-        import ipdb;ipdb.set_trace()
+        #import ipdb;ipdb.set_trace()
         # XXX strange: the idl definition seems to take 11 arguments, the last
         # XXX one being a EventSeqIterHolder but the python translation only
         # XXX takes 10 arguments and then raises an idl bad type error.
+        # XXX Actually this seems to be ok, in Python the last argument ends
+        # XXX up on the return side as an additional return variable.
         # XXX Unfortunately there seems to be no further information which
         # XXX argument has a wrong type, even when stepping through it in ipd.
-        events = self.evFind.query_events(area, min_depth, max_depth,
+        (events, event_iter) = self.evFind.query_events(area, min_depth, max_depth,
                 time_range, magnitude_types, min_magnitude, max_magnitude,
                 catalogs, contributors, max_results)
-        return events
+        return events, event_iter
 
 
     def _composeName(self, dc, interface):
