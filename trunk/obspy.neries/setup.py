@@ -51,6 +51,7 @@ setup(
         'setuptools',
         'obspy.core',
         'lxml',
+        'json',
     ],
     download_url="https://svn.obspy.org/trunk/obspy.neries#egg=obspy.neries-dev",
     include_package_data=True,
