@@ -865,5 +865,7 @@ class Client(Telnet):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        return [value for key, value in data.items() \
-                if key.startswith(network + '.')]
+        stations = [value for key, value in data.items() \
+                    if key.startswith(network + '.') \
+                    and "code" in value]
+        return stations
