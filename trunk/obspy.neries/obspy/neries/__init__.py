@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.orfeus - ORFEUS web service request client for ObsPy
+obspy.neries - NERIES web service request client for ObsPy
 ========================================================
 
 :copyright:
@@ -14,4 +14,4 @@ from obspy.core.util import _getVersionString
 from client import Client
 
 
-__version__ = _getVersionString("obspy.orfeus")
+__version__ = _getVersionString("obspy.neries")

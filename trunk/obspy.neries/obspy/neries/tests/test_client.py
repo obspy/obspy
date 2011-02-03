@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.orfeus.client test suite.
+The obspy.neries.client test suite.
 """
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.orfeus import Client
+from obspy.neries import Client
 import unittest
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.orfeus.client.Client.
+    Test cases for obspy.neries.client.Client.
     """
     def setUp(self):
         self.client = Client()

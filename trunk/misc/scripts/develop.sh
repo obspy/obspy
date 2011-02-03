@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PACKAGES="core gse2 mseed sac seisan sh wav xseed signal imaging arclink \
-seishub fissures db segy events iris orfeus"
+seishub fissures db segy events iris neries"
 
 # go from here to ObsPy root directory
 cd ../..

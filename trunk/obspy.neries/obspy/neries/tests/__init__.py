@@ -4,7 +4,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.orfeus"
+MODULE_NAME = "obspy.neries"
 
 
 def suite():

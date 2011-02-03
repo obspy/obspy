@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ORFEUS web service client for ObsPy.
+NERIES web service client for ObsPy.
 
 See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
 
@@ -38,12 +38,12 @@ MAP_INVERSE['magtype'] = "magnitude_type"
 
 class Client(object):
     """
-    ORFEUS web service request client.
+    NERIES web service request client.
 
     Examples
     --------
 
-    >>> from obspy.orfeus import Client
+    >>> from obspy.neries import Client
     """
     def __init__(self, base_url="http://www.seismicportal.eu",
                  user="", password="", timeout=10):
@@ -82,7 +82,7 @@ class Client(object):
         Example
         -------
 
-        >>> from obspy.orfeus import Client
+        >>> from obspy.neries import Client
         >>> client = Client()
         >>> events = client.getEvents(min_datetime="2004-12-01",
         ...                           max_datetime="2005-01-01",

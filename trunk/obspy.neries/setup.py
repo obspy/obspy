@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.orfeus installer
+obspy.neries installer
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -14,15 +14,15 @@ from setuptools import find_packages, setup
 import os
 
 
-VERSION = open(os.path.join("obspy", "orfeus", "VERSION.txt")).read()
+VERSION = open(os.path.join("obspy", "neries", "VERSION.txt")).read()
 
 
 setup(
-    name='obspy.orfeus',
+    name='obspy.neries',
     version=VERSION,
-    description="Provides tools for accessing various ORFEUS web services.",
+    description="Provides tools for accessing various NERIES web services.",
     long_description="""
-    obspy.orfeus - Provides tools for accessing various ORFEUS web services.
+    obspy.neries - Provides tools for accessing various NERIES web services.
 
     For more information visit http://www.obspy.org.
     """,
@@ -43,7 +43,7 @@ setup(
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Physics',
     ],
-    keywords=['ObsPy', 'seismology', 'ORFEUS', 'Waveform', 'events', 'earthquakes'],
+    keywords=['ObsPy', 'seismology', 'NERIES', 'Waveform', 'events', 'earthquakes'],
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=False,
@@ -52,8 +52,8 @@ setup(
         'obspy.core',
         'lxml',
     ],
-    download_url="https://svn.obspy.org/trunk/obspy.orfeus#egg=obspy.orfeus-dev",
+    download_url="https://svn.obspy.org/trunk/obspy.neries#egg=obspy.neries-dev",
     include_package_data=True,
-    test_suite="obspy.orfeus.tests.suite",
+    test_suite="obspy.neries.tests.suite",
     entry_points={},
 )

@@ -1,4 +1,4 @@
-package obspy.orfeus
+package obspy.neries
 ==================
 
 Copyright
@@ -13,7 +13,7 @@ Copyright
 
 Overview
 --------
-    obspy.orfeus - Provides tools for accessing various ORFEUS web services.
+    obspy.neries - Provides tools for accessing various NERIES web services.
 
     For more information visit http://www.obspy.org.
 
