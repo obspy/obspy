@@ -13,4 +13,5 @@ easy_install -N -U obspy.xseed==dev
 easy_install -N -U obspy.fissures==dev
 easy_install -N -U obspy.segy==dev
 easy_install -N -U obspy.events==dev
-easy_install -N -U obspy.segy==dev
+easy_install -N -U obspy.iris==dev
+easy_install -N -U obspy.orfeus==dev
