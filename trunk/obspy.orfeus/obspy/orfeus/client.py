@@ -26,7 +26,7 @@ MAP = {'min_datetime': "dateMin", 'max_datetime': "dateMax",
        'min_depth': "depthMin", 'max_depth': "depthMax",
        'min_magnitude': "magMin", 'max_magnitude': "magMax",
        'magnitude_type': "magType", 'author': "auth",
-       'result_limit': "limit", 'sort_by': "sort", 'sort_direction': "dir",
+       'max_results': "limit", 'sort_by': "sort", 'sort_direction': "dir",
        'format': "format", 'datetime': "datetime", 'depth': "depth",
        'flynn_region': "flynn_region", 'latitude': "lat",
        'longitude': "lon", 'magnitude': "mag", 'origin_id': "orid",
@@ -72,7 +72,7 @@ class Client(object):
             min_longitude=None, max_longitude=None, min_latitude=None,
             max_latitude=None, min_depth=None, max_depth=None,
             min_magnitude=None, max_magnitude=None, magnitude_type=None,
-            author=None, sort_by="datetime", sort_direction="ASC", result_limit=100,
+            author=None, sort_by="datetime", sort_direction="ASC", max_results=100,
             format="list", **kwargs):
         """
         Gets a list of events.
@@ -127,7 +127,7 @@ class Client(object):
             Magnitude scale type. Example: "mw", "mb".
         author : str, optional
             Origin author. Example: "CSEM", "LDG", ...
-        result_limit : int (maximum: 2500)
+        max_results : int (maximum: 2500)
             Maximum number of returned results.
         sort_by : str
             Field to sort by. Options: "datetime", "magnitude", "flynn_region",
