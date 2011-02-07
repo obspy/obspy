@@ -11,13 +11,13 @@ See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import UTCDateTime
-from urllib2 import HTTPError
-import os
 import sys
 import urllib
 import urllib2
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 
 MAP = {'min_datetime': "dateMin", 'max_datetime': "dateMax",
@@ -36,14 +36,10 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
+
 class Client(object):
     """
     NERIES web service request client.
-
-    Examples
-    --------
-
-    >>> from obspy.neries import Client
     """
     def __init__(self, base_url="http://www.seismicportal.eu",
                  user="", password="", timeout=10):
@@ -69,11 +65,11 @@ class Client(object):
         return doc
 
     def getEvents(self, min_datetime=None, max_datetime=None,
-            min_longitude=None, max_longitude=None, min_latitude=None,
-            max_latitude=None, min_depth=None, max_depth=None,
-            min_magnitude=None, max_magnitude=None, magnitude_type=None,
-            author=None, sort_by="datetime", sort_direction="ASC", max_results=100,
-            format="list", **kwargs):
+                  min_longitude=None, max_longitude=None, min_latitude=None,
+                  max_latitude=None, min_depth=None, max_depth=None,
+                  min_magnitude=None, max_magnitude=None, magnitude_type=None,
+                  author=None, sort_by="datetime", sort_direction="ASC",
+                  max_results=100, format="list", **kwargs):
         """
         Gets a list of events.
 
@@ -81,7 +77,6 @@ class Client(object):
 
         Example
         -------
-
         >>> from obspy.neries import Client
         >>> client = Client()
         >>> events = client.getEvents(min_datetime="2004-12-01",
@@ -99,7 +94,6 @@ class Client(object):
         
         Parameters
         ----------
-
         min_datetime : str, optional
             Earliest date and time for search.
             ISO 8601-formatted, in UTC: yyyy-MM-dd['T'HH:mm:ss].
@@ -165,11 +159,12 @@ class Client(object):
         results = response.read()
 
         if format == "list":
-            results = json.read(results)
+            results = json.loads(results)
             events = []
             float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
             for result in results['unids']:
-                event = dict([(MAP_INVERSE[k], v) for k, v in result.iteritems()])
+                event = dict([(MAP_INVERSE[k], v)
+                              for k, v in result.iteritems()])
                 for k in float_keys:
                     event[k] = float(event[k])
                 event['magnitude_type'] = event['magnitude_type'].lower()

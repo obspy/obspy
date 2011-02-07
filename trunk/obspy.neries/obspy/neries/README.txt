@@ -3,22 +3,35 @@ package obspy.neries
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2009-2010 by:
-        * Tobias Megies
-        * Lion Krischer
-        * Robert Barsch
+Copyright (c) 2010-2011 by:
+    * Tobias Megies
+    * Lion Krischer
+    * Robert Barsch
 
 
 Overview
 --------
-    obspy.neries - Provides tools for accessing various NERIES web services.
+NERIES web service client for ObsPy.
 
-    For more information visit http://www.obspy.org.
+The obspy.neries package contains a client for the Seismic Data Portal which was
+developed under the European Commission-funded NERIES project. The Portal
+provides a single point of access to diverse, distributed European earthquake
+data provided in a unique joint initiative by observatories and research
+institutes in and around Europe.
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * obspy.core
-    * lxml
+* obspy.core
+* lxml
+* simplejson (for Python < 2.6)
