@@ -3,23 +3,31 @@ package obspy.db
 
 Copyright
 ---------
-    GNU Lesser General Public License, Version 3 (LGPLv3)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    Copyright (c) 2010 by:
-        * Robert Barsch
+Copyright (c) 2010-2011 by:
+    * Robert Barsch
 
 
 Overview
 --------
-    obspy.db - A waveform database for ObsPy.
+A seismic waveform indexer and database for ObsPy.
 
-    This class contains a simple waveform database.
+The obspy.db package contains a waveform indexer collecting metadata from a
+file based waveform archive and storing in into a standard SQL database.
+Supported waveform formats depend on installed ObsPy packages.
 
-    For more information visit http://www.obspy.org.
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+project is to facilitate rapid application development for seismology. 
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * obspy.core
-    * obspy.mseed
-    * sqlalchemy
+* obspy.core
+* obspy.mseed
+* sqlalchemy
