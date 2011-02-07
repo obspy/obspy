@@ -714,6 +714,22 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(UTCDateTime(2006, 8, 30, 0, 0, 2, 815000),
                              tr.stats.endtime)
 
+    def test_issue217(self):
+        """
+        Reading a MiniSEED file without sequence numbers and a record length
+        of 1024.
+        """
+        file = os.path.join(self.path, 'data',
+                            'reclen_1024_without_sequence_numbers.mseed')
+        tr = read(file)[0]
+        ms = "AttribDict({'dataquality': 'D', 'record_length': 1024, " + \
+             "'encoding': 'STEIM1', 'byteorder': '>'})"
+        self.assertEqual('XX.STF1..HHN', tr.id)
+        self.assertEqual(ms, repr(tr.stats.mseed))
+        self.assertEqual(932, tr.stats.npts)
+        self.assertEqual(UTCDateTime(2007, 5, 31, 22, 45, 46, 720000),
+                         tr.stats.endtime)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

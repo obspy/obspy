@@ -166,8 +166,9 @@ class LibMSEED(object):
         # File has less than 7 characters
         if len(header) != 7:
             return False
-        # must start with 6 digits
-        if not header[0:6].isdigit():
+        # Sequence number must contains a single number or be empty 
+        seqnr = header[0:6].replace('\x00', ' ').strip()
+        if not seqnr.isdigit() and seqnr != '':
             return False
         # Check for any valid control header types.
         if header[6] in ['D', 'R', 'Q', 'M']:
@@ -334,8 +335,8 @@ class LibMSEED(object):
         except:
             pass
 
-    def readMSTraces(self, filename, reclen=-1, timetol=-1,
-                     sampratetol=-1, dataflag=1, skipnotdata=1,
+    def readMSTraces(self, filename, reclen= -1, timetol= -1,
+                     sampratetol= -1, dataflag=1, skipnotdata=1,
                      dataquality=1, verbose=0, starttime=None,
                      endtime=None):
         """
@@ -475,8 +476,8 @@ class LibMSEED(object):
         if isinstance(f, file): # necessary for Python 2.5.2 BUG otherwise!
             f.close()
 
-    def readFileToTraceGroup(self, filename, reclen=-1, timetol=-1,
-                             sampratetol=-1, dataflag=1, skipnotdata=1,
+    def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
+                             sampratetol= -1, dataflag=1, skipnotdata=1,
                              dataquality=1, verbose=0, starttime=None,
                              endtime=None):
         """
@@ -545,8 +546,8 @@ class LibMSEED(object):
         del ms # for valgrind
         return starttime, endtime
 
-    def readMSHeader(self, filename, reclen=-1, timetol=-1,
-                     sampratetol=-1, dataflag=1, skipnotdata=1,
+    def readMSHeader(self, filename, reclen= -1, timetol= -1,
+                     sampratetol= -1, dataflag=1, skipnotdata=1,
                      dataquality=1, verbose=0, starttime=None,
                      endtime=None):
         """
