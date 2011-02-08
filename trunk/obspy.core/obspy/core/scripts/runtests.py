@@ -93,10 +93,10 @@ def _getSuites(verbosity=1, names=[], all=False):
     """
     The ObsPy test suite.
     """
-    if names == []:
+    if all:
+        names = ALL_MODULES
+    elif names == []:
         names = DEFAULT_MODULES
-    elif all:
-        name = ALL_MODULES
     # Construct the test suite from the given names. Modules
     # need not be imported before in this case
     suites = {}
