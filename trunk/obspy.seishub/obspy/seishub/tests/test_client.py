@@ -52,7 +52,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(events), 4)
 
     def test_getNetworkIds(self):
-        items = ['BW', 'CZ', 'GR', 'NZ']
+        items = ['KT', 'BW', 'CZ', 'GR', 'NZ']
         data = self.client.waveform.getNetworkIds()
         for item in items:
             self.assertTrue(item in data)
@@ -63,27 +63,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(time, float))
 
     def test_getStationIds(self):
-        #1 - all stations
-        items = ['ABRI', 'BGLD', 'BW01', 'CRLZ', 'DHFO', 'FUR', 'FURT', 'GRC1',
-                 'HROE', 'MANZ', 'MASC', 'MGBB', 'MKON', 'MROB', 'MSBB',
-                 'MZEK', 'NKC', 'NORI', 'NZG0', 'OBER', 'PART', 'RJOB', 'RLAS',
-                 'RMOA', 'RNHA', 'RNON', 'ROTZ', 'RTAK', 'RTBE', 'RTEA',
-                 'RTFA', 'RTKA', 'RTLI', 'RTPA', 'RTPI', 'RTSA', 'RTSH',
-                 'RTSL', 'RTSP', 'RTSW', 'RTZA', 'RWMO', 'UH1', 'UH2', 'VIEL',
-                  'WET', 'WETR', 'ZUGS']
+        #1 - some selected stations
+        stations = ['FUR', 'FURT', 'ROTZ', 'RTAK', 'MANZ', 'WET']
         data = self.client.waveform.getStationIds()
-        for item in items:
-            self.assertTrue(item in data)
+        for station in stations:
+            self.assertTrue(station in data)
         #2 - all stations of network BW
-        items = ['ABRI', 'BGLD', 'BW01', 'DHFO', 'FURT', 'HROE', 'MANZ',
-                 'MASC', 'MGBB', 'MKON', 'MROB', 'MSBB', 'MZEK', 'NORI',
-                 'NZG0', 'OBER', 'PART', 'RJOB', 'RLAS', 'RMOA', 'RNHA',
-                 'RNON', 'ROTZ', 'RTAK', 'RTBE', 'RTEA', 'RTFA', 'RTKA',
-                 'RTLI', 'RTPA', 'RTPI', 'RTSA', 'RTSH', 'RTSL', 'RTSP',
-                 'RTSW', 'RTZA', 'RWMO', 'UH1', 'UH2', 'VIEL', 'WETR', 'ZUGS']
+        stations = ['FURT', 'ROTZ', 'RTAK', 'MANZ']
         data = self.client.waveform.getStationIds(network='BW')
-        for item in items:
-            self.assertTrue(item in data)
+        for station in stations:
+            self.assertTrue(station in data)
 
     def test_getLocationIds(self):
         #1 - all locations

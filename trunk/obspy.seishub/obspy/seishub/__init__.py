@@ -17,25 +17,24 @@ Basic Example
 >>> from obspy.seishub import Client
 >>> from obspy.core import UTCDateTime
 
->>> client = Client()
->>> t = UTCDateTime('20090808120000')
+>>> client = Client(timeout=20)
+>>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
 >>> print(st)
 3 Trace(s) in Stream:
-BW.MANZ..EHZ | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
-BW.MANZ..EHN | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
-BW.MANZ..EHE | 2009-08-08T12:00:00.000000Z - 2009-08-08T12:00:20.000000Z | 200.0 Hz, 4001 samples
-
+BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
+BW.MANZ..EHN | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
+BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
 
 Advanced Examples
 -----------------
 
->>> client.waveform.getNetworkIds()
-['BW', 'GR', 'NZ', 'OE', 'CZ', '']
+>>> client.waveform.getNetworkIds()     #doctest: +ELLIPSIS
+['KT', 'BW', 'NZ', 'GR', ...]
 
 >>> sta_ids = client.waveform.getStationIds(network_id='BW')
 >>> sorted(sta_ids)     #doctest: +ELLIPSIS
-['ABRI', 'ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
+['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
 >>> cha_ids = client.waveform.getChannelIds(network_id='BW', station_id='MANZ')
 >>> sorted(cha_ids)
@@ -75,11 +74,8 @@ Advanced Examples
 >>> paz = paz.items()
 >>> sorted(paz)    #doctest: +NORMALIZE_WHITESPACE
 [('gain', 60077000.0),
- ('poles', [(-0.037004000000000002+0.037016j),
-            (-0.037004000000000002-0.037016j),
-            (-251.33000000000001+0j),
-            (-131.03999999999999-467.29000000000002j),
-            (-131.03999999999999+467.29000000000002j)]),
+ ('poles', [(-0.037004+0.037016j), (-0.037004-0.037016j), (-251.33+0j),
+            (-131.04-467.29j), (-131.04+467.29j)]),
  ('sensitivity', 2516800000.0),
  ('zeros', [0j, 0j])]
 """
@@ -89,3 +85,8 @@ from obspy.seishub.client import Client
 
 
 __version__ = _getVersionString("obspy.seishub")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -178,7 +178,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('GE' in result)
         self.assertTrue('GE.SNAA' in result)
         self.assertTrue('GE.SNAA..BHZ' in result)
-        self.assertEquals(len(result['GE.SNAA..BHZ']), 3)
+        self.assertEquals(len(result['GE.SNAA..BHZ']), 4)
         # sort channel results
         channel = result['GE.SNAA..BHZ']
         channel = sorted(channel, key=operator.itemgetter('starttime'))
