@@ -89,12 +89,14 @@ unittest._WritelnDecorator = _WritelnDecorator
 #XXX: end of ugly monkey patch
 
 
-def _getSuites(verbosity=1, names=[]):
+def _getSuites(verbosity=1, names=[], all=False):
     """
     The ObsPy test suite.
     """
     if names == []:
         names = DEFAULT_MODULES
+    elif all:
+        name = ALL_MODULES
     # Construct the test suite from the given names. Modules
     # need not be imported before in this case
     suites = {}
@@ -286,7 +288,7 @@ class _TextTestRunner:
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
-             server="tests.obspy.org"):
+             server="tests.obspy.org", all=False):
     """
     This function executes ObsPy test suites.
 
@@ -305,7 +307,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     server : string, optional
         Report server URL (default is "tests.obspy.org").
     """
-    suites = _getSuites(verbosity, tests)
+    suites = _getSuites(verbosity, tests, all)
     ttr, timetaken = _TextTestRunner(verbosity=verbosity).run(suites)
     if report:
         _createReport(ttr, timetaken, log, server)
@@ -333,6 +335,9 @@ def main():
     parser.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
+    parser.add_option("--all", default=False,
+                      action="store_true", dest="all",
+                      help="include tests which require a network connection")
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
@@ -351,7 +356,8 @@ def main():
         report = False
     if 'OBSPY_REPORT_SERVER' in os.environ.keys():
         options.server = os.environ['OBSPY_REPORT_SERVER']
-    runTests(verbosity, parser.largs, report, options.log, options.server)
+    runTests(verbosity, parser.largs, report, options.log, options.server,
+             options.all)
 
 
 if __name__ == "__main__":
