@@ -15,7 +15,7 @@ import sys
 import urllib
 import urllib2
 try:
-    from json
+    import json
     if not getattr(json, "loads", None):
         json.loads = json.read
 except ImportError:
