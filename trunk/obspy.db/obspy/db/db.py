@@ -15,7 +15,7 @@ Base = declarative_base()
 
 class WaveformPath(Base):
     __tablename__ = 'default_waveform_paths'
-    __table_args__ = (UniqueConstraint('path'))
+    __table_args__ = (UniqueConstraint('path'),)
 
     id = Column(Integer, primary_key=True)
     path = Column(String, nullable=False, index=True)
@@ -33,7 +33,7 @@ class WaveformPath(Base):
 
 class WaveformFile(Base):
     __tablename__ = 'default_waveform_files'
-    __table_args__ = (UniqueConstraint('file', 'path_id'))
+    __table_args__ = (UniqueConstraint('file', 'path_id'),)
 
     id = Column(Integer, primary_key=True)
     file = Column(String, nullable=False, index=True)
@@ -58,7 +58,7 @@ class WaveformFile(Base):
 class WaveformChannel(Base):
     __tablename__ = 'default_waveform_channels'
     __table_args__ = (UniqueConstraint('network', 'station', 'location',
-                                       'channel', 'file_id'))
+                                       'channel', 'file_id'),)
 
     id = Column(Integer, primary_key=True)
     file_id = Column(Integer, ForeignKey('default_waveform_files.id'),
@@ -138,7 +138,7 @@ class WaveformGaps(Base):
 
 class WaveformFeatures(Base):
     __tablename__ = 'default_waveform_features'
-    __table_args__ = (UniqueConstraint('channel_id', 'key'))
+    __table_args__ = (UniqueConstraint('channel_id', 'key'),)
 
     id = Column(Integer, primary_key=True)
     channel_id = Column(Integer, ForeignKey('default_waveform_channels.id'),
