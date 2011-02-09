@@ -442,9 +442,11 @@ class Trace(object):
         method : [ 0 | 1 ], optional
             Method to handle overlaps of traces (default is 0). See the
             table given in the notes section below for further details.
-        fill_value : int or float, optional
+        fill_value : int or float or 'latest', optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.
+            If the keyword 'latest' is provided it will use the latest value
+            before the gap.
         interpolation_samples : int, optional
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
@@ -508,11 +510,17 @@ class Trace(object):
                     Trace 2:         FFFF
                     1 + 2  : AAAA----FFFF
                 
-                Traces with gaps and given fill value: ``fill_value=0``::
+                Traces with gaps and given ``fill_value=0``::
                 
                     Trace 1: AAAA        
                     Trace 2:         FFFF
                     1 + 2  : AAAA0000FFFF
+
+                Traces with gaps and given ``fill_value='latest'``::
+                
+                    Trace 1: ABCD        
+                    Trace 2:         FFFF
+                    1 + 2  : ABCDDDDDFFFF
         ======  ===============================================================
         """
         if sanity_checks:
@@ -537,6 +545,9 @@ class Trace(object):
         else:
             rt = self
             lt = trace
+        # check whether to use the latest value to fill a gap
+        if fill_value == "latest":
+            fill_value = lt.data[-1]
         sr = self.stats.sampling_rate
         delta = int(math.floor(round((rt.stats.starttime - \
                                       lt.stats.endtime) * sr, 7))) - 1

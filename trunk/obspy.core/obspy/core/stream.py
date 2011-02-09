@@ -1259,9 +1259,11 @@ class Stream(object):
         method : [ 0 | 1 ], optional
             Methodology to handle overlaps of traces (default is 0).
             See :meth:`obspy.core.trace.Trace.__add__` for details
-        fill_value : int or float, optional
+        fill_value : int or float or 'latest', optional
             Fill value for gaps (default is None). Traces will be converted to
-            NumPy masked arrays if no value is given and gaps are present.
+            NumPy masked arrays if no value is given and gaps are present. If
+            the keyword 'latest' is provided it will use the latest value
+            before the gap.
         interpolation_samples : int, optional
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
