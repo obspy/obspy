@@ -122,20 +122,20 @@ class ClientTestCase(unittest.TestCase):
         # multiple channels / MiniSEED
         t1 = UTCDateTime('20080101')
         t2 = UTCDateTime('20080201')
-        st = self.client.waveform.getPreview("BW", "*", "", "EHZ", t1, t2)
-        self.assertEqual(len(st), 18)
+        st = self.client.waveform.getPreview("BW", "M*", "", "EHZ", t1, t2)
+        self.assertEqual(len(st), 4)
         self.assertEqual(st[0].stats.network, 'BW')
         self.assertEqual(st[0].stats.channel, 'EHZ')
         self.assertEqual(st[0].stats.delta, 30.0)
         # single channel / GSE2
-        t1 = UTCDateTime('20070101')
+        t1 = UTCDateTime('20090101')
         t2 = UTCDateTime('20100101')
         st = self.client.waveform.getPreview("BW", "RTLI", "", "EHN", t1, t2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, 'BW.RTLI..EHN')
         self.assertEqual(st[0].stats.delta, 30.0)
-        self.assertEqual(len(st[0]), 365679)
-        self.assertEqual(st[0].stats.npts, 365679)
+        self.assertEqual(len(st[0]), 205642)
+        self.assertEqual(st[0].stats.npts, 205642)
 
     def test_getPreviewByIds(self):
         # multiple channels / MiniSEED
