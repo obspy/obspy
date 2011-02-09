@@ -15,7 +15,9 @@ import sys
 import urllib
 import urllib2
 try:
-    import json
+    from json
+    if not getattr(json, "loads", None):
+        json.loads = json.read
 except ImportError:
     import simplejson as json
 
@@ -159,10 +161,7 @@ class Client(object):
         results = response.read()
 
         if format == "list":
-            try:
-                results = json.loads(results)
-            except AttributeError:
-                results = json.read(results)
+            results = json.loads(results)
             events = []
             float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
             for result in results['unids']:
