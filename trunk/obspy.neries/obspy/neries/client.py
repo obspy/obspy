@@ -159,7 +159,10 @@ class Client(object):
         results = response.read()
 
         if format == "list":
-            results = json.loads(results)
+            try:
+                results = json.loads(results)
+            except AttributeError:
+                results = json.read(results)
             events = []
             float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
             for result in results['unids']:
