@@ -215,6 +215,16 @@ class InvSimTestCase(unittest.TestCase):
     #    samp_rate = 200.0
 
     def test_SacInstCorrection(self):
+        # SAC recommends to taper the transfer function if a pure
+        # deconvolution is done instead of simulating a different
+        # instrument. This test checks the difference between the
+        # result from removing the instrument response using SAC or
+        # ObsPy. Visual inspection shows that the traces are pretty
+        # much identical but differences remain (rms ~ 0.042). Haven't
+        # found the cause for those, yet. One possible reason is the
+        # floating point arithmetic of SAC vs. the double precission
+        # arithmetic of Python. However differences still seem to be
+        # too big for that.
         pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
         sacf = os.path.join(self.path, 'KARC.LHZ.SAC')
         testsacf = os.path.join(self.path,'KARC_corrected.sac')
