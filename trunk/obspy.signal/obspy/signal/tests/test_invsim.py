@@ -4,8 +4,10 @@
 The InvSim test suite.
 """
 
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core import Stream, Trace, UTCDateTime,read
 from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
+from obspy.sac import attach_paz
+from obspy.core.util import NamedTemporaryFile
 import gzip
 import numpy as np
 import os
@@ -212,6 +214,49 @@ class InvSimTestCase(unittest.TestCase):
     #    # paz of test file
     #    samp_rate = 200.0
 
+    def test_SacInstCorrection(self):
+        pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
+        sacf = os.path.join(self.path, 'KARC.LHZ.SAC')
+        testsacf = os.path.join(self.path,'KARC_corrected.sac')
+        tempfile = NamedTemporaryFile().name
+        plow = 160.
+        phigh = 4.
+        fl1=1.0/(plow+0.0625*plow)
+        fl2=1.0/plow
+        fl3=1.0/phigh
+        fl4=1.0/(phigh-0.25*phigh)
+        #Uncomment the following to run the sac-commands
+        #that created the testing file
+        #if 1:
+        #    import subprocess as sp
+        #    p = sp.Popen('sac',shell=True,stdin=sp.PIPE)
+        #    cd1 = p.stdin
+        #    print >>cd1, "r %s"%sacf
+        #    print >>cd1, "rmean"
+        #    print >>cd1, "rtrend"
+        #    print >>cd1, "taper type cosine width 0.03"
+        #    print >>cd1, "transfer from polezero subtype %s to none freqlimits\
+        #    %f %f %f %f"%(pzf,fl1,fl2,fl3,fl4)
+        #    print >>cd1, "w over ./data/KARC_corrected.sac"
+        #    print >>cd1, "quit"
+        #    cd1.close()
+        #    p.wait()
+
+        tr = read(sacf,'SAC')[0]
+        attach_paz(tr,pzf,tovel=False)
+        tr.data = seisSim(tr.data,tr.stats.sampling_rate,paz_remove=tr.stats.paz,
+                          remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4))
+        tr.write(tempfile,format='SAC')
+        tr2 = read(testsacf,'SAC')[0]
+        #import pylab as plt
+        #plt.plot(tr.data)
+        #plt.plot(tr2.data)
+        #plt.show()
+        rms = np.sqrt(np.sum((tr.data - tr2.data) ** 2) / \
+                      np.sum(tr2.data ** 2))
+        self.assertTrue(rms<0.0421)
+        os.remove(tempfile)
+        
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')
