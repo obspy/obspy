@@ -25,7 +25,7 @@ import warnings
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy']
 ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub', 'iris',
-                                 'neries']
+                                 'neries', 'db']
 
 
 _sys_is_le = sys.byteorder == 'little'
