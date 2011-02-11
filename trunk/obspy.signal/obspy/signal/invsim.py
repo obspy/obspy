@@ -171,7 +171,7 @@ def specInv(spec, wlev):
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=False, simulate_sensitivity=False,
             water_level=600.0, zero_mean=True, taper=True,
-            taper_fraction=0.05,pre_filt=None, **kwargs):
+            taper_fraction=0.05, pre_filt=None, **kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -216,6 +216,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
     :param taper_fraction: Typer fraction of cosine taper to use
+    :type pre_filt: XXX
+    :param pre_filt: XXX
     :return: The corrected data are returned as numpy.ndarray float64
             array. float64 is chosen to avoid numerical instabilities.
     
@@ -279,16 +281,18 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if paz_remove:
         freq_response, freqs = pazToFreqResp(paz_remove['poles'], paz_remove['zeros'],
                                             paz_remove['gain'], delta, nfft, freq=True)
-        if pre_filt is not None:
+        if pre_filt:
             #### make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
-            idx0 = np.where((freqs>=fl1) & (freqs<fl2))
-            idx1 = np.where((freqs>=fl2) & (freqs<=fl3))
-            idx2 = np.where((freqs>fl3)  & (freqs<=fl4))
+            idx0 = np.where((freqs >= fl1) & (freqs < fl2))
+            idx1 = np.where((freqs >= fl2) & (freqs <= fl3))
+            idx2 = np.where((freqs > fl3)  & (freqs <= fl4))
             cos_win = np.zeros(freqs.size)
-            cos_win[idx0] = 0.5*(1-np.cos((np.pi*(fl1-freqs[idx0]))/(fl2-fl1)))
+            cos_win[idx0] = 0.5 * \
+                    (1 - np.cos((np.pi * (fl1 - freqs[idx0])) / (fl2-fl1)))
             cos_win[idx1] = 1.0
-            cos_win[idx2] = 0.5*(1+np.cos((np.pi*(fl3-freqs[idx2]))/(fl4-fl3)))
+            cos_win[idx2] = 0.5 * \
+                    (1 + np.cos((np.pi * (fl3 - freqs[idx2])) / (fl4-fl3)))
             data *= cos_win
         specInv(freq_response, water_level)
         data *= np.conj(freq_response)
