@@ -176,12 +176,17 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     Simulate/Correct seismometer.
 
     This function works in the frequency domain, where nfft is the next power 
-    of len(data) to avoid warp around effects during convolution. The inverse 
+    of len(data) to avoid wrap around effects during convolution. The inverse 
     of the frequency response of the seismometer (``paz_remove``) is
     convolved with the spectrum of the data and with the frequency response
     of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
     taken before simulation. The data must be detrended (e.g.) zero mean
-    before hand. If paz_simulate=None only the instrument correction is done.
+    beforehand. If paz_simulate=None only the instrument correction is done.
+    In the latter case, a broadband filter can be applied to the data trace using
+    pre_filt. This restricts the signal to the valid frequency band and thereby
+    avoids artefacts due to amplification of frequencies outside of the
+    instrument's passband (for a detailed discussion see
+    *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers). 
 
     :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
