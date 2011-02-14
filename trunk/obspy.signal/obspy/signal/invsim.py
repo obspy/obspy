@@ -216,8 +216,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param taper: If true a cosine taper is applied.
     :type taper_fraction: Float
     :param taper_fraction: Typer fraction of cosine taper to use
-    :type pre_filt: XXX
-    :param pre_filt: XXX
+    :type pre_filt: List or tuple of floats
+    :param pre_filt: Apply a bandpass filter to the data trace before deconvolution.
+    The list or tuple defines the four corner frequencies (f1,f2,f3,f4) of a cosine
+    taper which is one between f2 and f3 and tapers to zero for f1 < f < f2 and f3 < f < f4. 
     :return: The corrected data are returned as numpy.ndarray float64
             array. float64 is chosen to avoid numerical instabilities.
     
