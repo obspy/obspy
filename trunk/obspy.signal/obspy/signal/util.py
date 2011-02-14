@@ -122,6 +122,18 @@ def nextpow2(i):
 
 
 def enframe(x, win, inc):
+    """
+    Splits the vector up into (overlapping) frames beginning at increments
+    of inc. Each frame is multiplied by the window win().
+    The length of the frames is given by the length of the window win().
+    The centre of frame I is x((I-1)*inc+(length(win)+1)/2) for I=1,2,...
+
+    :param x: signal to split in frames
+    :param win: window multiplied to each frame, length determines frame length
+    :param inc: increment to shift frames, in samples
+    :return f: output matrix, each frame occupies one row
+    :return length, no_win: length of each frame in samples, number of frames  
+    """
     nx = len(x)
     nwin = len(win)
     if (nwin == 1):
@@ -144,6 +156,13 @@ def enframe(x, win, inc):
 
 
 def smooth(x, smoothie):
+    """
+    Smoothes a given signal by computing a central moving average.
+
+    :param x: signal to smooth
+    :param smoothie: number of past/future values to calculate moving average
+    :return out: smoothed signal
+    """
     suma = np.zeros(np.size(x))
     if smoothie > 1:
         if (len(x) > 1 and len(x) < np.size(x)):
@@ -174,6 +193,14 @@ def smooth(x, smoothie):
 
 
 def rdct(x, n=0):
+    """
+    Computes discrete cosine transform of given signal.
+    Signal is truncated/padded to length n.
+
+    :params x: signal to compute discrete cosine transform
+    :params n: window length (default: signal length)
+    :return y: discrete cosine transform  
+    """
     m, k = x.shape
     if (n == 0):
         n = m
