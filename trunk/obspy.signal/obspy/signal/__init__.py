@@ -179,7 +179,7 @@ automated use and network coincidence there are some example scripts in the
 
 .. _`triggering page`: http://www.obspy.org/wiki/TriggerTutorial
 .. _`Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
-.. _`svn repository`: http://www.obspy.org/browser/misc/sandbox/stalta
+.. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
 
 **There are many more functions available (rotation, pazToFreqResp, 
 cpxtrace analysis, ...), please also check the tutorial.**
