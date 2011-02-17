@@ -10,7 +10,7 @@ Module for handling ObsPy Stream objects.
 """
 
 from StringIO import StringIO
-from glob import iglob
+from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
@@ -213,7 +213,13 @@ def read(pathname_or_url=None, format=None, headonly=False,
         for file in iglob(pathname):
             st.extend(_read(file, format, headonly, **kwargs).traces)
         if len(st) == 0:
-            raise Exception("Cannot open file/files", pathname)
+            # try to give more specific information why the stream is empty
+            if has_magic(pathname) and not glob(pathname):
+                raise Exception("No file matching file pattern: %s" % pathname)
+            elif not has_magic(pathname) and not os.path.isfile(pathname):
+                raise IOError(2, "No such file or directory", pathname)
+            else:
+                raise Exception("Cannot open file/files: %s" % pathname)
     # Trim if times are given.
     starttime = kwargs.get('starttime')
     endtime = kwargs.get('endtime')
