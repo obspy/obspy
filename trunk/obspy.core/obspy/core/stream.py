@@ -562,7 +562,7 @@ class Stream(object):
 
         :return: Trace objects
         """
-        self.traces[index] = trace
+        self.traces.__setitem__(index, trace)
 
     def __getitem__(self, index):
         """
@@ -570,7 +570,10 @@ class Stream(object):
 
         :return: Trace objects
         """
-        return self.traces[index]
+        if isinstance(index, slice):
+            return self.__class__(traces=self.traces.__getitem__(index))
+        else:
+            return self.traces.__getitem__(index)
 
     def __delitem__(self, index):
         """
@@ -578,13 +581,14 @@ class Stream(object):
         """
         return self.traces.__delitem__(index)
 
-    def __getslice__(self, i, j):
+    def __getslice__(self, i, j, k=1):
         """
         __getslice__ method of obspy.Stream objects.
 
         :return: Stream object
         """
-        return self.__class__(traces=self.traces[i:j])
+        # see also http://docs.python.org/reference/datamodel.html
+        return self.__class__(traces=self.traces[max(0, i):max(0, j):k])
 
     def append(self, trace):
         """

@@ -325,6 +325,22 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(new_stream[0].stats, stream[1].stats)
         self.assertEqual(new_stream[1].stats, stream[2].stats)
 
+    def test_slice2(self):
+        """
+        Slicing using a step should return Stream objects. 
+        """
+        tr1 = Trace()
+        tr2 = Trace()
+        tr3 = Trace()
+        tr4 = Trace()
+        tr5 = Trace()
+        st = Stream([tr1, tr2, tr3, tr4, tr5])
+        self.assertEqual(st[0:6].traces, [tr1, tr2, tr3, tr4, tr5])
+        self.assertEqual(st[0:6:1].traces, [tr1, tr2, tr3, tr4, tr5])
+        self.assertEqual(st[0:6:2].traces, [tr1, tr3, tr5])
+        self.assertEqual(st[1:6:2].traces, [tr2, tr4])
+        self.assertEqual(st[1:6:6].traces, [tr2])
+
     def test_pop2(self):
         """
         Test the pop method of the Stream object.
