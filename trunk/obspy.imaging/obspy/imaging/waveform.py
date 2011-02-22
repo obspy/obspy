@@ -407,7 +407,7 @@ class WaveformPlotting(object):
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
-        
+
     def __plotMinMax(self, trace, ax, *args, **kwargs):
         """
         Plots the data using a min/max approach that calculated the minimum and
@@ -543,12 +543,18 @@ class WaveformPlotting(object):
             min_range = mean - max_distance
             max_range = mean + max_distance
             # Set the location of the ticks.
-            ticks = [mean - 1.0 * max_distance, mean - 0.75 * max_distance,
+            ticks = [mean - 0.75 * max_distance,
                      mean - 0.5 * max_distance, mean - 0.25 * max_distance,
                      mean, mean + 0.25 * max_distance, mean + 0.5 * max_distance,
-                     mean + 0.75 *max_distance, mean + 1.0 *max_distance]
-            ax.set_yticks([round(_j, -1) for _j in ticks])
-            ax.set_yticklabels(ax.get_yticks(), fontsize='small')
+                     mean + 0.75 * max_distance]
+            ax.set_yticks(ticks)
+            # Setup format of the major ticks
+            if max(ticks) - min(ticks) > 10:
+                fmt = '%d'
+            else:
+                fmt = '%.2g'
+            ax.set_yticklabels([fmt % t for t in ax.get_yticks()],
+                               fontsize='small')
             # Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='left',
                       fontsize='small', verticalalignment='center')
