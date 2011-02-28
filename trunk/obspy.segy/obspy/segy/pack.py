@@ -34,8 +34,6 @@ def pack_4byte_IBM(file, data, endian='>'):
         raise WrongDtypeException
     # Calculate the values. The theory is explained in
     # http://www.codeproject.com/KB/applications/libnumber.aspx
-    # Store the zeros. They will be re-added later on.
-    zeros = np.where(data == 0.0)
 
     # Calculate the signs.
     signs = np.empty(len(data), dtype='uint8')
@@ -47,8 +45,13 @@ def pack_4byte_IBM(file, data, endian='>'):
     # Make absolute values.
     data = np.abs(data)
 
+    # Store the zeros and add an offset for numerical stability,
+    # they will be set to zero later on again
+    zeros = np.where(data == 0.0)
+    data[zeros] += 1e-32
+
     # Calculate the exponent for the IBM data format.
-    exponent = np.require((np.log10(data) / LOG2) * 0.25 + 65, 'uint32')
+    exponent = ((np.log10(data) / LOG2) * 0.25 + 65).astype('uint32')
 
     # Now calculate the fraction using single precision.
     fraction = np.require(data, 'float32') / \
