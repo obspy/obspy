@@ -273,7 +273,12 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
             id, sampletype, dtype = ENCODINGS[enc]
             # Check if supported data type
             if trace.data.dtype.type != dtype:
-                msg = "Data type for encoding %s must be of %s" % (id, dtype)
+                msg = """
+                    Data type for encoding %s must be of %s not of %s.
+                    Use an appropriate encoding for %s, or change your data
+                    type to %s""" % (id, dtype, trace.data.dtype.type,
+                                     trace.data.dtype.type, 
+                                     trace.data.dtype.type)
                 raise Exception(msg)
         # INT16 needs INT32 data type
         if enc == 1:
