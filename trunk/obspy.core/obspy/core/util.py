@@ -105,6 +105,16 @@ class AttribDict(dict, object):
         super(AttribDict, self).__delattr__(name)
         return super(AttribDict, self).__delitem__(name)
 
+    def pop(self, name, default={}):
+        value = super(AttribDict, self).pop(name, default)
+        del self.__dict__[name]
+        return value
+
+    def popitem(self):
+        (name, value) = super(AttribDict, self).popitem()
+        super(AttribDict, self).__delattr__(name)
+        return (name, value)
+
     def __getstate__(self):
         return self.__dict__
 
