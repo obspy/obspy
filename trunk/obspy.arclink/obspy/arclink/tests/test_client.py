@@ -190,7 +190,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(channel[1].endtime, UTCDateTime("2003-01-10"))
         self.assertEquals(channel[1].gain, 596224500.0)
         self.assertEquals(channel[2].starttime, UTCDateTime("2003-01-10"))
-        self.assertEquals(channel[2].endtime, None)
+        self.assertEquals(channel[2].endtime, UTCDateTime(2011, 1, 15, 9, 56))
         self.assertEquals(channel[2].gain, 588000000.0)
 
     def test_getInventoryTwice(self):
