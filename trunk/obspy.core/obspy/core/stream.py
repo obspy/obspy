@@ -252,7 +252,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                             'isFormat')
             except ImportError, e:
                 # verbose error handling/parsing
-                msg = "Cannot load module %s:" % ep.dist.key
+                msg = "Cannot load module %s:\n%s" % (ep.dist.key, str(e))
                 warnings.warn(msg, category=ImportWarning)
                 continue
             if isFormat(filename):
