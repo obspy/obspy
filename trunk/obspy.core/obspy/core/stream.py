@@ -1671,6 +1671,63 @@ class Stream(object):
         """
         return copy.deepcopy(self)
 
+    def _cleanup(self):
+        """
+        Merge consistent trace objects but leave everything else alone.
+
+        This can mean traces with matching header that are directly adjacent or
+        are contained/equal traces with exactly the same waveform data.
+        """
+        # check sampling rates and dtypes
+        self._mergeChecks()
+        # order matters!
+        self.sort(keys=['network', 'station', 'location', 'channel',
+                        'starttime', 'endtime'])
+        # build up dictionary with lists of traces with same ids
+        traces_dict = {}
+        # using pop() and try-except saves memory
+        try:
+            while True:
+                trace = self.traces.pop(0)
+                id = trace.getId()
+                # add trace to respective list or create that list
+                try:
+                    traces_dict[id].append(trace)
+                except:
+                    traces_dict[id] = [trace]
+        except IndexError:
+            pass
+        # clear traces of current stream
+        self.traces = []
+        # loop through ids
+        for id in traces_dict.keys():
+            trace_list = traces_dict[id]
+            cur_trace = trace_list.pop(0)
+            # work through all traces of same id
+            while trace_list:
+                trace = trace_list.pop(0)
+                # we have some common parts: check if consistent
+                if trace.stats.starttime <= cur_trace.stats.endtime:
+                    # check if common time slice [t1 --> t2] is equal:
+                    t1 = trace.stats.starttime
+                    t2 = cur_trace.stats.endtime
+                    # if consistent: add them together
+                    if cur_trace.slice(t1, t2) == trace.slice(t1, t2):
+                        cur_trace += trace
+                    # if not consistent: leave them alone
+                    else:
+                        self.traces.append(cur_trace)
+                        cur_trace = trace
+                # traces are perfectly adjacent: add them together
+                elif trace.stats.starttime == cur_trace.stats.endtime + cur_trace.stats.delta:
+                    cur_trace += trace
+                # no common parts (gap):
+                # leave traces alone and add current to list
+                else:
+                    self.traces.append(cur_trace)
+                    cur_trace = trace
+            self.traces.append(cur_trace)
+
 
 def createDummyStream(stream_string):
     """
