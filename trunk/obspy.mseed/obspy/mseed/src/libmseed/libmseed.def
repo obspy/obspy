@@ -1,5 +1,6 @@
 LIBRARY libmseed.dll
 EXPORTS
+   msr_parse
    msr_unpack
    msr_pack
    msr_pack_header
@@ -17,6 +18,8 @@ EXPORTS
    msr_srcname
    msr_print
    msr_host_latency
+   ms_detect
+   ms_parse_raw
    mst_init
    mst_free
    mst_initgroup
@@ -43,9 +46,18 @@ EXPORTS
    mstl_printgaplist
    ms_readmsr
    ms_readmsr_r
+   ms_readmsr_main
    ms_readtraces
-   ms_find_reclen
+   ms_readtraces_timewin
+   ms_readtraces_selection
+   ms_readtracelist
+   ms_readtracelist_timewin
+   ms_readtracelist_selection
+   msr_writemseed
+   mst_writemseed
+   mst_writemseedgroup
    ms_recsrcname
+   ms_splitsrcname
    ms_strncpclean
    ms_strncpopen
    ms_doy2md
@@ -61,6 +73,7 @@ EXPORTS
    ms_time2hptime
    ms_seedtimestr2hptime
    ms_timestr2hptime
+   ms_nomsamprate
    ms_genfactmult
    ms_ratapprox
    ms_bigendianhost
@@ -90,4 +103,3 @@ EXPORTS
    ms_gswap8a
    msr_unpack_steim2
    msr_unpack_steim1
-   ms_readtraces_window

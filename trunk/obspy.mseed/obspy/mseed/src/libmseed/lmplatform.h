@@ -18,7 +18,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2010.006
+ * modified: 2010.304
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -98,7 +98,7 @@ extern "C" {
   #include <string.h>
   #include <ctype.h>
 
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(WIN64)
   #define LMP_WIN32 1
 
   #include <windows.h>
@@ -108,11 +108,15 @@ extern "C" {
   #include <sys/types.h>
   #include <ctype.h>
 
-  #define snprintf _snprintf
-  #define vsnprintf _vsnprintf
-  #define strcasecmp _stricmp
-  #define strncasecmp _strnicmp
-  #define strtoull _strtoui64
+  #if defined(_MSC_VER)
+    #define snprintf _snprintf
+    #define vsnprintf _vsnprintf
+    #define strcasecmp _stricmp
+    #define strncasecmp _strnicmp
+    #define strtoull _strtoui64
+    #define strdup _strdup
+    #define fileno _fileno
+  #endif
 
   typedef signed char int8_t;
   typedef unsigned char uint8_t;

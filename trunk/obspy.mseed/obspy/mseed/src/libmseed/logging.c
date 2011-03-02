@@ -6,7 +6,7 @@
  * Chad Trabant
  * IRIS Data Management Center
  *
- * modified: 2008.171
+ * modified: 2010.253
  ***************************************************************************/
 
 #include <stdio.h>
@@ -242,7 +242,13 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
   int retvalue = 0;
   int presize;
   const char *format;
-
+  
+  if ( ! logp )
+    {
+      fprintf(stderr, "ms_log_main() called without specifying log parameters");
+      return -1;
+    }
+  
   message[0] = '\0';
 
   format = va_arg (*varlist, const char *);

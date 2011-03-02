@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2010.047
+ * modified: 2011.055
  ***************************************************************************/
 
 #include <stdio.h>
@@ -301,11 +301,11 @@ mstl_addmsr ( MSTraceList *mstl, MSRecord *msr, flag dataquality,
   else
     {
       /* Calculate high-precision sample period */
-      hpdelta = ( msr->samprate ) ? (HPTMODULUS / msr->samprate) : 0.0;
+      hpdelta = (hptime_t) (( msr->samprate ) ? (HPTMODULUS / msr->samprate) : 0.0);
       
       /* Calculate high-precision time tolerance */
       if ( timetol == -1.0 )
-	hptimetol = 0.5 * hpdelta;   /* Default time tolerance is 1/2 sample period */
+	hptimetol = (hptime_t) (0.5 * hpdelta);   /* Default time tolerance is 1/2 sample period */
       else if ( timetol >= 0.0 )
 	hptimetol = (hptime_t) (timetol * HPTMODULUS);
       
@@ -669,7 +669,7 @@ mstl_addmsrtoseg (MSTraceSeg *seg, MSRecord *msr, hptime_t endtime, flag whence)
   
   if ( ! seg || ! msr )
     return 0;
-  
+
   /* Allocate more memory for data samples if included */
   if ( msr->datasamples && msr->numsamples > 0 )
     {
@@ -691,6 +691,8 @@ mstl_addmsrtoseg (MSTraceSeg *seg, MSRecord *msr, hptime_t endtime, flag whence)
 	  ms_log (2, "mstl_addmsrtoseg(): Error allocating memory\n");
 	  return 0;
 	}
+      
+      seg->datasamples = newdatasamples;
     }
   
   /* Add coverage to end of segment */
@@ -774,6 +776,8 @@ mstl_addsegtoseg (MSTraceSeg *seg1, MSTraceSeg *seg2)
 	  ms_log (2, "mstl_addsegtoseg(): Error allocating memory\n");
 	  return 0;
 	}
+      
+      seg1->datasamples = newdatasamples;
     }
   
   /* Add seg2 coverage to end of seg1 */

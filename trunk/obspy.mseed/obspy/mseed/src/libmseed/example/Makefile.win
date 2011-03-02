@@ -10,6 +10,7 @@ NODEBUG=1
 !include <ntwin32.mak>
 
 INCS = /I..
+OPTS = -D_CRT_SECURE_NO_WARNINGS
 LIBS = ../libmseed.lib
 BINS = msrepack.exe msview.exe
 
@@ -17,14 +18,14 @@ cflags = $(cflags) -DWIN32
 
 all: $(BINS)
 
-msrepack.exe:	msrepack.obj
-	link.exe /nologo /out:msrepack $(LIBS) msrepack.obj
+msrepack.exe: msrepack.obj
+	link.exe /nologo /out:msrepack.exe $(LIBS) msrepack.obj
 
-msview.exe:	msview.obj
-	link.exe /nologo /out:msview $(LIBS) msview.obj
+msview.exe: msview.obj
+	link.exe /nologo /out:msview.exe $(LIBS) msview.obj
 
 .c.obj:
-   $(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $<
+	$(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $(OPTS) $<
 
 # Clean-up directives
 clean:

@@ -17,13 +17,11 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2006.082
+ * modified: 2010.304
  ***************************************************************************/
 
 /* Define _LARGEFILE_SOURCE to get ftello/fseeko on some systems (Linux) */
 #define _LARGEFILE_SOURCE 1
-
-#include <errno.h>
 
 #include "lmplatform.h"
 
@@ -64,3 +62,4 @@ lmp_fseeko (FILE *stream, off_t offset, int whence)
   
 #endif
 }  /* End of lmp_fseeko() */
+

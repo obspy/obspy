@@ -492,12 +492,12 @@ ms_printselections ( Selections *selections )
 	  if ( selecttime->starttime != HPTERROR )
 	    ms_hptime2seedtimestr (selecttime->starttime, starttime, 1);
 	  else
-	    strncpy (starttime, "No start time", sizeof(starttime-1));
+	    strncpy (starttime, "No start time", sizeof(starttime)-1);
 	  
 	  if ( selecttime->endtime != HPTERROR )
 	    ms_hptime2seedtimestr (selecttime->endtime, endtime, 1);
 	  else
-	    strncpy (endtime, "No end time", sizeof(endtime-1));
+	    strncpy (endtime, "No end time", sizeof(endtime)-1);
 	  
 	  ms_log (0, "  %30s  %30s\n", starttime, endtime);
 	  

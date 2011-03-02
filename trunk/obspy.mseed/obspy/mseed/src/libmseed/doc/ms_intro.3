@@ -1,4 +1,4 @@
-.TH MS_INTRO 3 2007/08/16
+.TH MS_INTRO 3 2010/11/02
 .SH NAME
 Introduction to libmseed
 
@@ -542,6 +542,9 @@ main() {
                        1, &psamples, 1, verbose, NULL);
 
   ms_log (0, "Packed %d samples into %d records\n", psamples, precords);
+
+  /* Disconnect datasamples pointer, otherwise mst_free() will free it */
+  mst->datasamples = NULL;
 
   mst_free (&mst);
 }

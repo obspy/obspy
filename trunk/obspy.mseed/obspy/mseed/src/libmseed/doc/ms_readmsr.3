@@ -1,4 +1,4 @@
-.TH MS_READMSR 3 2008/11/22 "Libmseed API"
+.TH MS_READMSR 3 2011/01/06 "Libmseed API"
 .SH DESCRIPTION
 Read Mini-SEED data from files
 
@@ -19,10 +19,32 @@ Read Mini-SEED data from files
 .BI "                    flag " dataquality ", flag " skipnotdata ","
 .BI "                    flag " dataflag ", flag " verbose " );"
 
-.BI "int \fBms_readtracelist\fP ( MSTraceList **ppmstl, char *" msfile ", int " reclen ", "
+.BI "int \fBms_readtraces_timewin\fP ( MSTraceGroup **ppmstg, char *" msfile ","
+.BI "                    int " reclen ",  double " timetol ", double " sampratetol ","
+.BI "                    hptime_t " starttime ", hptime_t " endtime ","
+.BI "                    flag " dataquality ", flag " skipnotdata ","
+.BI "                    flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtraces_selection\fP ( MSTraceGroup **ppmstg, char *" msfile ","
+.BI "                    int " reclen ",  double " timetol ", double " sampratetol ","
+.BI "                    Selections *" selections ", flag " dataquality ","
+.BI "                    flag " skipnotdata ", flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist\fP ( MSTraceList **ppmstl, char *" msfile ", int " reclen ","
 .BI "                       double " timetol ", double " sampratetol ","
 .BI "                       flag " dataquality ", flag " skipnotdata ","
 .BI "                       flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist_timewin\fP ( MSTraceList **ppmstl, char *" msfile ","
+.BI "                       int " reclen ", double " timetol ", double " sampratetol ","
+.BI "                       hptime_t " starttime ", hptime_t " endtime ","
+.BI "                       flag " dataquality ", flag " skipnotdata ","
+.BI "                       flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist_selection\fP ( MSTraceList **ppmstl, char *" msfile ","
+.BI "                       int " reclen ", double " timetol ", double " sampratetol ","
+.BI "                       Selections *" selections ", flag " dataquality ","
+.BI "                       flag " skipnotdata ", flag " dataflag ", flag " verbose " );"
 .fi
 
 .SH DESCRIPTION
@@ -40,16 +62,11 @@ reading parameters in a MSFileParam struct.  A pointer to this struct
 must be supplied by the caller (\fIppmsfp\fP), memory will be
 allocated on the initial call if the pointer is NULL.
 
-If \fIreclen\fP is 0 the length of the first record is automatically
-detected, all subsequent records are then expected to have the same
-length as the first.  If \fIreclen\fP is negative the length of every
-record is automatically detected.  For record length auto detection
-records are first searched for a Blockette 1000 and if none is found a
-read-ahead method is used: a little more (48 bytes) of data is read
-from the file and checked for a fixed section data header (the
-existence of the next record or end-of-file implying the length of the
-current record).  This read-ahead detection method is done for each
-valid record length from 256 up to 8192 bytes in length.
+If \fIreclen\fP is 0 or negative the length of every record is
+automatically detected.  For auto length detection records are first
+searched for a Blockette 1000 and if none is found a search is
+conducted for the next valid record header (the existence of the next
+record or end-of-file implying the length of the current record).
 
 If the \fIfpos\fP pointer is not NULL the value will be set to the
 file position (offset from the beginning in bytes) from where the
@@ -59,7 +76,9 @@ interpreted as the (positive) offset in the file at which to begin
 reading data; this feauture does not work with packed files.
 
 If the \fIlast\fP pointer is not NULL the value will be set to 1 when
-the last record in the file is being returned, otherwise it will be 0.
+the record at the end of the file is being returned, otherwise it will
+be 0.  This indicator will not be set when the last valid record in
+the file is followed by padding.
 
 If the \fIskipnotdata\fP flag is true (not 0) any data chunks read
 that do not have valid data record indicators (i.e. D, R, or Q) will
@@ -73,7 +92,7 @@ call it one last time with \fImsfile\fP set to NULL.  This will close
 the file and cleanup allocated memory.
 
 If \fBms_readmsr\fP or \fBms_readmsr_r\fP are called with a different
-file than the one they currently has open they will close the
+file than the one they currently have open they will close the
 currently open file, open the new file and print an error message.
 Properly coded applications should reset the function when the end of
 file has been reached as described above and not rely on this
@@ -93,6 +112,18 @@ automatically.  The MSTraceGroup or MSTraceList structures may already
 contain entries and will be added to by these routines.  These
 routines are thread safe.
 
+The \fBms_readtraces_timewin\fP and \fBms_readtracelist_timewin\fP
+routines perform the same function as \fBms_readtraces\fP and
+\fBms_readtracelist\fP but will limit the data to records containing
+samples between the specified \fIstarttime\fP and \fIendtime\fP.
+
+The \fBms_readtraces_selection\fP and \fBms_readtracelist_selection\fP
+routines perform the same function as \fBms_readtraces\fP and
+\fBms_readtracelist\fP but will limit the data to records that match
+the specified \fIselections\fP.  Selections include criteria for
+source name and time window parameters, see \fBms_selection(3)\fP for
+more information.
+
 .SH RETURN VALUES
 On the sucessful read and parsing of a record \fBms_readmsr\fP and
 \fBms_readmsr_r\fP return MS_NOERROR and populate the MSRecord struct
@@ -107,10 +138,9 @@ error code (defined in libmseed.h)
 
 .SH PACKED FILES
 \fBms_readmsr\fP, \fBms_readtraces\fP and \fBms_readtracelist\fP will
-read packed Mini-SEED files, but only when the record length is being
-autodetected.  Packed Mini-SEED is the indexed archive format used
-internally at the IRIS Data Management Center and probably not used
-anywhere else.
+read packed Mini-SEED files.  Packed Mini-SEED is the indexed archive
+format used internally at the IRIS Data Management Center and probably
+not used anywhere else.
 
 .SH EXAMPLE
 Skeleton code for reading a file with \fBms_readmsr(3)\fP:

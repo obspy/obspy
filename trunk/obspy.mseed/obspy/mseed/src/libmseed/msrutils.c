@@ -308,7 +308,7 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
       
       if ( cur_blkt->blkt_type == 100 && msr->Blkt100 )
 	{
-	  msr->Blkt100->samprate = msr->samprate;
+	  msr->Blkt100->samprate = (float)msr->samprate;
 	  offset += sizeof (struct blkt_100_s);
 	}
       else if ( cur_blkt->blkt_type == 1000 && msr->Blkt1000 )
@@ -587,7 +587,7 @@ msr_endtime (MSRecord *msr)
     return HPTERROR;
 
   if ( msr->samprate > 0.0 && msr->samplecnt > 0 )
-    span = ((double) (msr->samplecnt - 1) / msr->samprate * HPTMODULUS) + 0.5;
+    span = (hptime_t)(((double) (msr->samplecnt - 1) / msr->samprate * HPTMODULUS) + 0.5);
   
   return (msr->starttime + span);
 } /* End of msr_endtime() */

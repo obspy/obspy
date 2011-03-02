@@ -13,7 +13,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2009.201
+ * modified: 2011.056
  ***************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -679,9 +679,11 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
 	{
 	  dswapflag = 0;
 	  
+	  /* If BE host and LE data need swapping */
 	  if ( bigendianhost && msr->byteorder == 0 )
 	    dswapflag = 1;
-	  else if ( !bigendianhost && msr->byteorder == 1 )
+	  /* If LE host and BE data (or bad byte order value) need swapping */
+	  else if ( !bigendianhost && msr->byteorder > 0 )
 	    dswapflag = 1;
 	}
       else if ( unpackdatabyteorder >= 0 )
@@ -954,7 +956,7 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
 /************************************************************************
  *  check_environment:
  *
- *  Check environment variables and set global variables approriately.
+ *  Check environment variables and set global variables appropriately.
  *  
  *  Return 0 on success and -1 on error.
  ************************************************************************/

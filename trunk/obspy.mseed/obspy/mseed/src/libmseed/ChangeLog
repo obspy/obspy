@@ -1,3 +1,89 @@
+2011.056: 2.6
+	- Fix handling of sample data in internal MSTraceList routines.
+	- Cleanup WIN32 defines, make MSVC and Open Watcom play nicely.
+	- Default data byte order to big endian when blockette 1000 contains
+	invalid byte order value, previously defaulted to host byte order.
+
+2011.042: 
+	- Update libmseed.def to match current libmseed.h declaractions.
+	- Cleanup to avoid MSVC warnings.
+
+2011.039: 2.6rc4
+	- Do not return MS_NOTSEED when no records read from packed file.
+	- Update user guide to include note about MSTraceLists and change
+	the miniSEED creation example to use mst_writemseed().
+
+2011.036: 2.6rc3
+	- Fix parsing of records without blockette 1000, use pack headers
+	and end-of-file to determine implied record lengths.
+
+2011.032: 2.6rc2
+	- Fix handling of truncated records, partial reads at EOF.
+	- Fix offset tracking when reading from stdin.
+
+2011.006: 2.6rc1
+	- Add convience routines to only read selected records from a file:
+	   ms_readtracegroup_timewin()
+	   ms_readtracegroup_selection()
+	   ms_readtracelist_timewin()
+	   ms_readtracelist_selection()
+	- Add convience routines to write Mini-SEED data to specified file:
+	   msr_writemseed()
+	   mst_writemseed()
+	   mst_writemseedgroup().
+	- Fix bug when either mst_pack() or mst_packgroup() was called with
+	a NULL packedsamples pointer.
+	- Fix bugs when (re)initializing read buffer.
+	- Fix return of file position in ms_readmsr_main()..
+	
+2010.365:
+	- Add internal ms_gmtime_r() to replace call to system gmtime_r(). The
+	internal version handles dates beyond year 2038 and avoids the system
+	call.  Tested with years up to 5000.
+
+2010.363:
+	- Add parseutils.c source file.
+	- Add msr_parse() to detect & unpack a record in a memory buffer.
+	- Add ms_detect() to check a memory buffer for a record.
+
+	- Rewrite ms_readmsr_main() to use msr_parse() and reduce I/O by
+	using a double-buffer to increase the average read size and other
+	simplifications and optimizations.
+
+	The internal read buffer size is MAXRECLEN as defined in libmseed.h.
+	Each file parameter structure used, including the global default,
+	will allocate a buffer of this size.  For specialized applications
+	requiring low memory use the MAXRECLEN, current 1 MB, can be reduced.
+
+	- Change ms_readmsr_main() to interpret reclen <= 0 as a request
+	for autodetection of each record, a value of 0 no longer means all
+	records are the same length as the first record.
+	- Remove ms_find_reclen() function, replacement is ms_detect().
+	- Move ms_parse_raw() into parseutils.c.
+	- Change year sanity check to allow range 1800 to 5000.
+	- Use 64-bit values in hptime calculation to correctly handle years
+	beyond 2038.
+	- The "last" record indicator argument to the ms_readmsr() family
+	is considered deprecated and will probably be removed in future
+	releases.  New programs should not use this functionality, it does
+	not, and will never, work in cases where there is more than
+	MINRECLEN padding after the last valid record in a file.
+
+2010.304:
+	- Use gmtime_r() to avoid the non-thread-safe system gmtime() function.
+	- Define gmtime_r() for WIN32 and WIN64 in terms of gmtime() which is
+	thread-safe under WIN32.
+	- Add define for WIN64 even though WIN32 is probably defined for 64-bit.
+
+2010.291:
+	- Add check for spaces as valid characters in sequence numbers.
+
+2010.253:
+	- Add check for log parameters in ms_log_main().
+
+2010.129:
+	- Fix small priting bug in diagnostic ms_printselections().
+
 2010.068: 2.5.1
 	- Allow file name for ms_readselectionfile() to be "-" and read
 	stdin as a special case.

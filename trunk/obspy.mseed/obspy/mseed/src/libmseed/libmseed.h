@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.5.1"
-#define LIBMSEED_RELEASE "2010.068"
+#define LIBMSEED_VERSION "2.6"
+#define LIBMSEED_RELEASE "2011.056"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -85,7 +85,7 @@ extern "C" {
  * if the memory contains a valid record.
  * 
  * Offset = Value
- * [0-5]  = Digits or NULL, SEED sequence number
+ * [0-5]  = Digits, spaces or NULL, SEED sequence number
  *     6  = Data record quality indicator
  *     7  = Space or NULL [not valid SEED]
  *     24 = Start hour (0-23)
@@ -95,17 +95,18 @@ extern "C" {
  * Usage:
  *   MS_ISVALIDHEADER ((char *)X)  X buffer must contain at least 27 bytes
  */
-#define MS_ISVALIDHEADER(X) ((isdigit ((unsigned char) *(X)) || !*(X) ) &&     \
-			     (isdigit ((unsigned char) *(X+1)) || !*(X+1) ) && \
-			     (isdigit ((unsigned char) *(X+2)) || !*(X+2) ) && \
-			     (isdigit ((unsigned char) *(X+3)) || !*(X+3) ) && \
-			     (isdigit ((unsigned char) *(X+4)) || !*(X+4) ) && \
-			     (isdigit ((unsigned char) *(X+5)) || !*(X+5) ) && \
-			     MS_ISDATAINDICATOR(*(X+6)) &&                     \
-			     (*(X+7) == ' ' || *(X+7) == '\0') &&              \
-			     (int)(*(X+24)) >= 0 && (int)(*(X+24)) <= 23 &&    \
-			     (int)(*(X+25)) >= 0 && (int)(*(X+25)) <= 59 &&    \
-			     (int)(*(X+26)) >= 0 && (int)(*(X+26)) <= 60)
+#define MS_ISVALIDHEADER(X) (                                           \
+  (isdigit ((unsigned char) *(X)) || *(X) == ' ' || !*(X) ) &&		\
+  (isdigit ((unsigned char) *(X+1)) || *(X+1) == ' ' || !*(X+1) ) &&	\
+  (isdigit ((unsigned char) *(X+2)) || *(X+2) == ' ' || !*(X+2) ) &&	\
+  (isdigit ((unsigned char) *(X+3)) || *(X+3) == ' ' || !*(X+3) ) &&	\
+  (isdigit ((unsigned char) *(X+4)) || *(X+4) == ' ' || !*(X+4) ) &&	\
+  (isdigit ((unsigned char) *(X+5)) || *(X+5) == ' ' || !*(X+5) ) &&	\
+  MS_ISDATAINDICATOR(*(X+6)) &&						\
+  (*(X+7) == ' ' || *(X+7) == '\0') &&					\
+  (int)(*(X+24)) >= 0 && (int)(*(X+24)) <= 23 &&			\
+  (int)(*(X+25)) >= 0 && (int)(*(X+25)) <= 59 &&			\
+  (int)(*(X+26)) >= 0 && (int)(*(X+26)) <= 60)
 
 /* Macro to test memory for a blank/noise SEED data record signature
  * by checking for a valid SEED sequence number and padding characters
@@ -506,6 +507,9 @@ extern int unpackencodingfallback;
 #define MS_UNPACKENCODINGFALLBACK(X) (unpackencodingfallback = X);
 
 /* Mini-SEED record related functions */
+extern int           msr_parse (char *record, int recbuflen, MSRecord **ppmsr, int reclen,
+				flag dataflag, flag verbose);
+
 extern int           msr_unpack (char *record, int reclen, MSRecord **ppmsr,
 				 flag dataflag, flag verbose);
 
@@ -529,6 +533,9 @@ extern hptime_t      msr_endtime (MSRecord *msr);
 extern char*         msr_srcname (MSRecord *msr, char *srcname, flag quality);
 extern void          msr_print (MSRecord *msr, flag details);
 extern double        msr_host_latency (MSRecord *msr);
+
+extern int           ms_detect (const char *record, int recbuflen);
+extern int           ms_parse_raw (char *record, int maxreclen, flag details, flag swapflag);
 
 
 /* MSTrace related functions */
@@ -581,13 +588,14 @@ extern void          mstl_printgaplist (MSTraceList *mstl, flag timeformat,
 typedef struct MSFileParam_s
 {
   FILE *fp;
-  char *rawrec;
   char  filename[512];
-  int   autodet;
+  char *rawrec;
   int   readlen;
+  int   readoffset;
   int   packtype;
   off_t packhdroffset;
   off_t filepos;
+  off_t filesize;
   int   recordcount;
 } MSFileParam;
 
@@ -599,10 +607,23 @@ extern int      ms_readmsr_main (MSFileParam **ppmsfp, MSRecord **ppmsr, char *m
 				 off_t *fpos, int *last, flag skipnotdata, flag dataflag, Selections *selections, flag verbose);
 extern int      ms_readtraces (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
 			       flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
+extern int      ms_readtraces_timewin (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+				       hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
+extern int      ms_readtraces_selection (MSTraceGroup **ppmstg, char *msfile, int reclen, double timetol, double sampratetol,
+					 Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
 extern int      ms_readtracelist (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
 				  flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
-extern int      ms_find_reclen (const char *recbuf, int recbuflen, FILE *fileptr);
+extern int      ms_readtracelist_timewin (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+					  hptime_t starttime, hptime_t endtime, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
+extern int      ms_readtracelist_selection (MSTraceList **ppmstl, char *msfile, int reclen, double timetol, double sampratetol,
+					    Selections *selections, flag dataquality, flag skipnotdata, flag dataflag, flag verbose);
 
+extern int      msr_writemseed ( MSRecord *msr, char *msfile, flag overwrite, int reclen,
+				 flag encoding, flag byteorder, flag verbose );
+extern int      mst_writemseed ( MSTrace *mst, char *msfile, flag overwrite, int reclen,
+				 flag encoding, flag byteorder, flag verbose );
+extern int      mst_writemseedgroup ( MSTraceGroup *mstg, char *msfile, flag overwrite,
+				      int reclen, flag encoding, flag byteorder, flag verbose );
 
 /* General use functions */
 extern char*    ms_recsrcname (char *record, char *srcname, flag quality);
@@ -627,7 +648,6 @@ extern int      ms_genfactmult (double samprate, int16_t *factor, int16_t *multi
 extern int      ms_ratapprox (double real, int *num, int *den, int maxval, double precision);
 extern int      ms_bigendianhost ();
 extern double   ms_dabs (double val);
-extern int      ms_parse_raw (char *record, int maxreclen, flag details, flag swapflag);
 
 
 /* Lookup functions */
