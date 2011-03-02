@@ -54,12 +54,13 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     LQT (eg. ray coordinate system, rigth-handed). The rotation angles are
     given as the back-azimuth and inclination.
     
-    The transformation consists of 3 steps:
-    1. mirroring of E-component at ZN plain: ZNE -> ZNW
-    2. negative rotation of coordinate system around Z-axis with angle ba + 180:
-       ZNW -> ZRT
-    3. positive rotation of coordinate system around T-axis with angle inc:
-       ZRT -> LQT
+    The transformation consists of 3 steps::
+
+        1. mirroring of E-component at ZN plain: ZNE -> ZNW
+        2. negative rotation of coordinate system around Z-axis with angle ba + 180:
+           ZNW -> ZRT
+        3. positive rotation of coordinate system around T-axis with angle inc:
+           ZRT -> LQT
 
     :param z: Data of the Z component of the seismogram.
     :param n: Data of the North component of the seismogram.
