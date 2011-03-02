@@ -1291,7 +1291,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     http://www.iris.edu/software/sac/commands/transfer.html. For a
     useful discussion on polezero files and transfer functions in
     general see:
-    http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf
+    http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf.
     Also bear in mind that according to the SAC convention for
     pole-zero files CONSTANT is defined as:
     digitizer_gain*seismometer_gain*A0. This means that it does not
@@ -1300,8 +1300,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
     Attaches to a trace a paz AttribDict containing poles zeros and gain.
 
-    :param tr: An ObsPy trace object containing the calib and gse2 calper
-            attributes
+    :param tr: An ObsPy trace object 
     :param paz_file: path to pazfile or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero
@@ -1396,7 +1395,115 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         zeros = tmp
         tmp = [p * 2. * np.pi for p in poles]
         poles = tmp
-        constant *= (2. * np.pi) ** 3
+        # When extracting RESP files and SAC_PZ files
+        # from a dataless SEED using the rdseed program
+        # where the former is in Hz and the latter in radians,
+        # there gains seem to be unaffected by this.
+        # According to this document:
+        # http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf
+        # the gain should also be converted when changing from
+        # hertz to radians or vice versa. However, the rdseed programs
+        # does not do this. I'm not entirely sure at this stage which one is
+        # correct or if I have missed something. I've therefore decided
+        # to leave it out for now, in order to stay compatible with the
+        # rdseed program and the SAC program.
+        #constant *= (2. * np.pi) ** 3
+
+    ### convert poles, zeros and gain in radian to Hertz
+    if tohz:
+        for i, z in enumerate(zeros):
+            if abs(z) > 0.0:
+                zeros[i] /= 2 * np.pi
+        for i, p in enumerate(poles):
+            if abs(p) > 0.0:
+                poles[i] /= 2 * np.pi
+        #constant /= (2. * np.pi) ** 3
+
+    # fill up ObsPy Poles and Zeros AttribDict
+    # In SAC pole-zero files CONSTANT is defined as:
+    # digitizer_gain*seismometer_gain*A0
+
+    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz.seismometer_gain = 1.0
+    tr.stats.paz.digitizer_gain = 1.0
+    tr.stats.paz.poles = poles
+    tr.stats.paz.zeros = zeros
+    tr.stats.paz.gain = constant
+
+def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
+               tohz=False):
+    """
+    Extract key instrument response information from a RESP file, which
+    can be extracted from a dataless SEED volume by, for example, using
+    the script obspy-dataless2resp or the rdseed program. At the moment,
+    you have to determine yourself if the given response is for velocity
+    or displacement and if the values are given in rad or Hz. This is
+    still experimental code (see also documentation for obspy.sac.attach_paz function).
+    
+    Attaches to a trace a paz AttribDict containing poles, zeros, and gain.
+
+    :param tr: An ObsPy trace object 
+    :param resp_file: path to RESP-file or file pointer
+    :param todisp: change a velocity transfer function to a displacement
+                   transfer function by adding another zero
+    :param tovel: change a displacement transfer function to a velocity
+                  transfer function by removing one 0,0j zero
+    :param torad: change to radians
+    :param tohz: change to Hertz
+
+    >>> tr = obspy.core.Trace()
+    >>> respfile = os.path.join(os.path.dirname(__file__),'tests','data','RESP.NZ.CRLZ.10.HHZ')
+    >>> attach_resp(tr,respfile,torad=True,todisp=False)
+    >>> print tr.stats.paz.keys()
+    ['zeros', 'seismometer_gain', 'poles', 'digitizer_gain', 'gain']
+    >>> print tr.stats.paz.poles
+    [(-0.15931644664884559+0.15931644664884559j), (-0.15931644664884559-0.15931644664884559j), (-314.15926535897933+202.31856689118268j), (-314.15926535897933-202.31856689118268j)]
+    """
+    if isinstance(resp_file, str):
+        resp_file = open(resp_file, 'r')
+        
+    zeros_pat = r'B053F10-13'
+    poles_pat = r'B053F15-18'
+    a0_pat = r'B053F07'
+    sens_pat = r'B058F04'
+    poles = []
+    zeros = []
+    while True:
+        line = resp_file.readline()
+        if not line: break
+        if line.startswith(a0_pat):
+            a0 = float(line.split(':')[1])
+        if line.startswith(sens_pat):
+            sens = float(line.split(':')[1])
+        if line.startswith(poles_pat):
+            tmp = line.split()
+            poles.append(complex(float(tmp[2]),float(tmp[3])))
+        if line.startswith(zeros_pat):
+            tmp = line.split()
+            zeros.append(complex(float(tmp[2]),float(tmp[3])))
+    constant = a0*sens
+
+    if torad:
+        tmp = [z * 2. * np.pi for z in zeros]
+        zeros = tmp
+        tmp = [p * 2. * np.pi for p in poles]
+        poles = tmp
+
+    if todisp:
+        zeros.append(complex(0, 0j))
+
+    ### To convert the displacement response to the velocity response,
+    ### division with jw is used. This is equivalent to one less zero
+    ### in the pole-zero representation
+    if tovel:
+        for i, zero in enumerate(list(zeros)):
+            if zero == complex(0, 0j):
+                zeros.pop(i)
+                found_zero = True
+                break
+        if not found_zero:
+            raise Exception("Could not remove (0,0j) zero to change \
+            displacement response to velocity response")
 
     ### convert poles, zeros and gain in radian to Hertz
     if tohz:
@@ -1413,11 +1520,12 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     # digitizer_gain*seismometer_gain*A0
 
     tr.stats.paz = obspy.core.AttribDict()
-    tr.stats.paz.seismometer_gain = 1.0
+    tr.stats.paz.seismometer_gain = sens
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.gain = constant
+    
 
 if __name__ == "__main__":
     import doctest
