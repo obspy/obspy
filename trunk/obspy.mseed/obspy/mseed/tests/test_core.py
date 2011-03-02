@@ -431,7 +431,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeWrongEncoding(self):
         """
-        Tests to write a floating point mseed file with incoding STEIM1.
+        Tests to write a floating point mseed file with encoding STEIM1.
         An exception should be raised.
         """
         file = os.path.join(self.path, "data", \
@@ -584,7 +584,7 @@ class CoreTestCase(unittest.TestCase):
         write it in here.
         """
         tempfile = NamedTemporaryFile().name
-        np.random.seed(800) # make test reproduceable
+        np.random.seed(800) # make test reproducable
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location':'A',

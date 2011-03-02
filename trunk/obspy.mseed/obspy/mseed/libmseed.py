@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Lowlevel module internally used for handling MiniSEED files
+Low-level module internally used for handling MiniSEED files
 
 Contains wrappers for libmseed - The MiniSEED library. The C library is
 interfaced via Python ctypes. Currently only supports MiniSEED files with
@@ -32,8 +32,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 
-Seletected examples of Methods in obspy.mseed.libmseed
-------------------------------------------------------
+Selected examples of Methods in obspy.mseed.libmseed
+----------------------------------------------------
 All of the following methods can only be accessed with an instance of the
 libmseed class.
 
@@ -184,7 +184,7 @@ class LibMSEED(object):
             if fp.read(3) in ['010', '008']:
                 break
             # the next for bytes are the record length
-            # as we are currently at postion 7 (fp.read(3) fp.read(4))
+            # as we are currently at position 7 (fp.read(3) fp.read(4))
             # we need to subtract this first before we seek
             # to the appropriate position
             try:
@@ -222,20 +222,20 @@ class LibMSEED(object):
         
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
-        containing the data values as a numpy array.
+        containing the data values as a NumPy array.
 
         :param filename: Name of MiniSEED file.
         :param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
         :param quality: Read quality information or not. Defaults to false.
         """
-        # Open file handler neccessary for reading quality informations.
+        # Open file handler necessary for reading quality informations.
         if quality:
             file = open(filename, 'rb')
-        # Initialise list that will contain all traces, first dummy entry
+        # Initialize list that will contain all traces, first dummy entry
         # will be removed at the end again
         trace_list = [[{'endtime':0}, np.array([])]]
-        # Init quality informations.
+        # Initialize quality informations.
         if quality:
             trace_list[-1][0]['timing_quality'] = []
             trace_list[-1][0]['data_quality_flags'] = [0] * 8
@@ -268,7 +268,7 @@ class LibMSEED(object):
             delta = HPTMODULUS / float(header['samprate'])
             header['endtime'] = long(header['starttime'] + delta * \
                                       (header['numsamples'] - 1))
-            # Access data directly as numpy array.
+            # Access data directly as NumPy array.
             data = self._ctypesArray2NumpyArray(chain.datasamples,
                                                 chain.numsamples,
                                                 chain.sampletype)
@@ -292,7 +292,7 @@ class LibMSEED(object):
                 trace_list[-1] = [trace_list[-1][0],
                                   np.concatenate(trace_list[-1][1:])]
                 trace_list.append([header, data])
-                # Init quality informations.
+                # Initialize quality informations.
                 if quality:
                     trace_list[-1][0]['timing_quality'] = []
                     trace_list[-1][0]['data_quality_flags'] = [0] * 8
@@ -345,7 +345,7 @@ class LibMSEED(object):
         
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
-        containing the data values as a numpy array.
+        containing the data values as a NumPy array.
 
         :param filename: Name of MiniSEED file.
         :param reclen: Directly to the readFileToTraceGroup method.
@@ -373,7 +373,7 @@ class LibMSEED(object):
         # Loop over traces and append to trace_list.
         for i in xrange(numtraces):
             header = self._convertMSTToDict(chain)
-            # Access data directly as numpy array.
+            # Access data directly as NumPy array.
             data = self._ctypesArray2NumpyArray(chain.datasamples,
                                                 chain.numsamples,
                                                 chain.sampletype)
@@ -392,7 +392,7 @@ class LibMSEED(object):
     def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding= -1,
                       byteorder= -1, flush= -1, verbose=0):
         """
-        Write Miniseed file from trace_list
+        Write MiniSEED file from trace_list
         
         :param trace_list: List containing header informations and data.
         :param outfile: Name of the output file
@@ -507,10 +507,9 @@ class LibMSEED(object):
             starttime = long(starttime.timestamp * HPTMODULUS + 0.5)
             endtime = long(endtime.timestamp * HPTMODULUS + 0.5)
             # Uses libmseed to read the file and populate the MSTraceGroup
-            errcode = clibmseed.ms_readtraces_window(
+            errcode = clibmseed.ms_readtraces_timewin(
                 C.pointer(mstg), filename, reclen, timetol, sampratetol,
-                dataquality, skipnotdata, dataflag, verbose, starttime,
-                endtime)
+                starttime, endtime, dataquality, skipnotdata, dataflag, verbose)
             if errcode != 0:
                 raise Exception("Error in ms_readtraces")
         else:
@@ -893,7 +892,7 @@ class LibMSEED(object):
     def _ctypesArray2NumpyArray(self, buffer, buffer_elements, sampletype):
         """
         Takes a Ctypes array and its length and type and returns it as a
-        numpy array.
+        NumPy array.
         
         This works by reference and no data is copied.
         
@@ -901,11 +900,11 @@ class LibMSEED(object):
         :param buffer_elements: length of the whole buffer
         :param sampletype: type of sample, on of "a", "i", "f", "d"
         """
-        # Allocate numpy array to move memory to
+        # Allocate NumPy array to move memory to
         numpy_array = np.empty(buffer_elements, dtype=sampletype)
         datptr = numpy_array.ctypes.get_data()
-        # Manually copy the contents of the C malloced memory area to
-        # the address of the previously created numpy array
+        # Manually copy the contents of the C allocated memory area to
+        # the address of the previously created NumPy array
         C.memmove(datptr, buffer, buffer_elements * SAMPLESIZES[sampletype])
         return numpy_array
 
@@ -989,8 +988,7 @@ class LibMSEED(object):
         pos = f.tell()
         f.seek(0)
         rec_buffer = f.read(512)
-        info['record_length'] = \
-           clibmseed.ms_find_reclen(rec_buffer, 512, None)
+        info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
         # Calculate Number of Records
         info['number_of_records'] = long(info['filesize'] // \
                                          info['record_length'])
@@ -1011,18 +1009,18 @@ class LibMSEED(object):
         
         :param trace: Trace.
         """
-        # Init MSTraceGroup
+        # Initialize MSTraceGroup
         mstg = clibmseed.mst_initgroup(None)
         # Set numtraces.
         mstg.contents.numtraces = 1
         # Define starting point of the MSTG structure and the same as a string.
-        # Init MSTrace object and connect with group
+        # Initialize MSTrace object and connect with group
         mstg.contents.traces = clibmseed.mst_init(None)
         chain = mstg.contents.traces
         # fetch encoding options
         sampletype = trace[0]['sampletype']
         c_dtype = DATATYPES[sampletype]
-        # Create variable with the number of sampels in this trace for
+        # Create variable with the number of samples in this trace for
         # faster future access.
         npts = trace[0]['numsamples']
         # Write header in MSTrace structure
@@ -1042,9 +1040,9 @@ class LibMSEED(object):
         # Swap if wrong byte order
         if trace[1].dtype.byteorder != "=":
             trace[1] = trace[1].byteswap()
-        # Pointer to the Numpy data buffer.
+        # Pointer to the NumPy data buffer.
         datptr = trace[1].ctypes.get_data()
-        # Manually move the contents of the numpy data buffer to the
+        # Manually move the contents of the NumPy data buffer to the
         # address of the previously created memory area.
         C.memmove(chain.contents.datasamples, datptr, datasize)
         return mstg
@@ -1097,7 +1095,7 @@ class _MSStruct(object):
 
     def tell(self):
         """
-        Analogue to file.tell().
+        Analog to file.tell().
         """
         return self.f.tell()
 

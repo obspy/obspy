@@ -83,7 +83,7 @@ lib = MyExtension(lib_name,
                            src + 'traceutils.c', src + 'tracelist.c',
                            src + 'unpack.c', src + 'unpackdata.c',
                            src + 'selection.c', src + 'logging.c',
-                           src + 'fileutils_addon.c'],
+                           src + 'parseutils.c'],
                   export_symbols=symbols,
                   extra_link_args=extra_link_args,
                   extra_compile_args=extra_compile_args)

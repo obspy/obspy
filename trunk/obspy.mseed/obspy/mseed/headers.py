@@ -378,15 +378,15 @@ class MSFileParam_s(C.Structure):
     pass
 
 MSFileParam_s._fields_ = [
-  #('fp', C.POINTER(C.C.c_int)),
   ('fp', C.POINTER(Py_ssize_t)),
-  ('rawrec', C.c_char_p),
   ('filename', C.c_char * 512),
-  ('autodet', C.c_int),
+  ('rawrec', C.c_char_p),
   ('readlen', C.c_int),
+  ('readoffset', C.c_int),
   ('packtype', C.c_int),
   ('packhdroffset', C.c_long),
   ('filepos', C.c_long),
+  ('filesize', C.c_long),
   ('recordcount', C.c_int),
 ]
 MSFileParam = MSFileParam_s
@@ -438,11 +438,11 @@ clibmseed.ms_readtraces.argtypes = [
     C.c_double, C.c_short, C.c_short, C.c_short, C.c_short]
 clibmseed.ms_readtraces.restype = C.c_int
 
-clibmseed.ms_readtraces_window.argtypes = [
+clibmseed.ms_readtraces_timewin.argtypes = [
     C.POINTER(C.POINTER(MSTraceGroup)), C.c_char_p, C.c_int, C.c_double,
-    C.c_double, C.c_short, C.c_short, C.c_short, C.c_short, C.c_int64,
-    C.c_int64]
-clibmseed.ms_readtraces_window.restype = C.c_int
+    C.c_double, C.c_int64, C.c_int64, C.c_short, C.c_short, C.c_short,
+    C.c_short]
+clibmseed.ms_readtraces_timewin.restype = C.c_int
 
 clibmseed.msr_starttime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_starttime.restype = C.c_int64
@@ -450,8 +450,8 @@ clibmseed.msr_starttime.restype = C.c_int64
 clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
-clibmseed.ms_find_reclen.argtypes = [C.c_char_p, C.c_int, C.POINTER(C.c_int)]
-clibmseed.ms_find_reclen.restype = C.c_int
+clibmseed.ms_detect.argtypes = [C.c_char_p, C.c_int]
+clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
         C.c_int, C.c_int,

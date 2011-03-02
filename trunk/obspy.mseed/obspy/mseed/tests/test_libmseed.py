@@ -474,7 +474,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
         self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
         self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
-        self.assertRaises(ArgumentError, cl.ms_find_reclen, *args[:4])
+        self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
         args.append(1) # 10 argument function
         self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
         args = ['hallo'] # one argument functions
@@ -512,7 +512,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = LibMSEED()
         steim2_file = os.path.join(self.path, 'steim2.mseed')
         data_string = open(steim2_file, 'rb').read()[128:] #128 Bytes header
-        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap, verbose=0)
+        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap,
+                                   verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim2_file)[0][1]
         np.testing.assert_array_equal(data, data_record)
 
@@ -525,7 +526,8 @@ class LibMSEEDTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path,
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         data_string = open(steim1_file, 'rb').read()[64:] #64 Bytes header
-        data = mseed.unpack_steim1(data_string, 412, swapflag=self.swap, verbose=0)
+        data = mseed.unpack_steim1(data_string, 412, swapflag=self.swap,
+                                   verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
         np.testing.assert_array_equal(data, data_record)
 
@@ -538,13 +540,14 @@ class LibMSEEDTestCase(unittest.TestCase):
         file = os.path.join(self.path, "brokenlastrecord.mseed")
         # independent reading of the data
         data_string = open(file, 'rb').read()[128:] #128 Bytes header
-        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap, verbose=0)
-        # test readMSTracesViaRecords
-        data_record1 = mseed.readMSTracesViaRecords(file)[0][1]
-        np.testing.assert_array_equal(data, data_record1)
+        data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap,
+                                   verbose=0)
         # test readMSTraces
         data_record2 = mseed.readMSTraces(file)[0][1]
         np.testing.assert_array_equal(data, data_record2)
+        # test readMSTracesViaRecords
+        data_record1 = mseed.readMSTracesViaRecords(file)[0][1]
+        np.testing.assert_array_equal(data, data_record1)
 
     def test_oneSampleOverlap(self):
         """
