@@ -1294,6 +1294,51 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
 
+    def test_cleanup(self):
+        """
+        Test case for merging traces in the stream with method=-1. This only
+        should merge traces that are exactly the same or contained and exactly
+        the same or directly adjacent.
+        """
+        tr1 = self.mseed_stream[0]
+        t1 = tr1.stats.starttime
+        t2 = tr1.stats.endtime
+        dt = t2 - t1
+        delta = tr1.stats.delta
+        # traces that should be merged
+        ### contained traces
+        tr2 = tr1.slice(t1, t1 + dt / 3)
+        tr3 = tr1.copy()
+        tr4 = tr1.slice(t1 + dt / 4, t2 - dt / 4)
+        ### adjacent traces
+        tr5 = tr1.copy()
+        tr5.stats.starttime = t2
+        tr6 = tr1.copy()
+        tr6.stats.starttime = t1 - dt
+        # test mergeable traces
+        for tr in [tr2, tr3, tr4, tr5, tr6]:
+            trA = tr1.copy()
+            trB = tr
+            st = Stream([trA, trB])
+            st._cleanup()
+            self.assertTrue(st == Stream([tr1]))
+        # traces that should not be merged
+        tr7 = tr1.copy()
+        tr7.sampling_rate *= 2
+        tr8 = tr1.copy()
+        tr8.station = "AA"
+        tr9 = tr1.copy()
+        tr9.stats.starttime = t2 + 10 * delta
+        # test non-mergeable traces
+        for tr in [tr7, tr8, tr9]:
+            trA = tr1.copy()
+            trB = tr
+            st = Stream([trA, trB])
+            st._cleanup()
+            self.assertTrue(st == Stream([trA, trB]))
+        # additional cases that need to be covered:
+        #  - partly overlapping traces that match in the overlapping part
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
