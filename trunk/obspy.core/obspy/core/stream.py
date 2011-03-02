@@ -1266,9 +1266,11 @@ class Stream(object):
 
         Parameters
         ----------
-        method : [ 0 | 1 ], optional
+        method : [ -1 | 0 | 1 ], optional
             Methodology to handle overlaps of traces (default is 0).
-            See :meth:`obspy.core.trace.Trace.__add__` for details
+            See :meth:`obspy.core.trace.Trace.__add__` for details on methods 0
+            and 1, see :meth:`obspy.core.stream.Stream._cleanup` for details on
+            method -1.
         fill_value : int or float or 'latest', optional
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present. If
@@ -1279,6 +1281,10 @@ class Stream(object):
             are used to interpolate between overlapping traces (default is 0).
             If set to -1 all overlapping samples are interpolated.
         """
+        if method == -1:
+            self._cleanup()
+            return
+
         # check sampling rates and dtypes
         self._mergeChecks()
         # order matters!
@@ -1676,10 +1682,69 @@ class Stream(object):
         Merge consistent trace objects but leave everything else alone.
 
         This can mean traces with matching header that are directly adjacent or
-        are contained/equal traces with exactly the same waveform data.
+        are contained/equal/overlapping traces with exactly the same waveform
+        data in the overlapping part.
+
+        Notes
+        -----
+        Traces with overlapping data parts that do not match are not merged::
+        
+            before:
+            Trace 1: AAAAAAAA
+            Trace 2:     BBBBBBBB
+            
+            after:
+            Trace 1: AAAAAAAA
+            Trace 2:     BBBBBBBB
+        
+        Traces with overlapping data parts that do match are merged::
+        
+            before:
+            Trace 1: AAAAAAAA
+            Trace 2:     AAAABBBB
+            
+            after:
+            Trace 1: AAAAAAAABBBB
+
+        Contained traces are handled the same way.
+        If common data does not match, nothing is done::
+        
+            before:
+            Trace 1: AAAAAAAAAAAA
+            Trace 2:     BBBB
+            
+            after:
+            Trace 1: AAAAAAAAAAAA
+            Trace 2:     BBBB
+        
+        If the common data part matches they are merged::
+        
+            before:
+            Trace 1: AAAAAAAAAAAA
+            Trace 2:     AAAA
+            
+            after:
+            Trace 1: AAAAAAAAAAAA
+       
+        Directly adjacent traces are merged::
+        
+            before:
+            Trace 1: AAAAAAA
+            Trace 2:        BBBBB
+
+            after:
+            Trace 1: AAAAAAABBBBB
+
         """
         # check sampling rates and dtypes
-        self._mergeChecks()
+        try:
+            self._mergeChecks()
+        except Exception, e:
+            if "Can't merge traces with same ids but" in str(e):
+                msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
+                      "with same id detected. Doing nothing."
+                warnings.warn(msg)
+                return
         # order matters!
         self.sort(keys=['network', 'station', 'location', 'channel',
                         'starttime', 'endtime'])
@@ -1710,7 +1775,7 @@ class Stream(object):
                 if trace.stats.starttime <= cur_trace.stats.endtime:
                     # check if common time slice [t1 --> t2] is equal:
                     t1 = trace.stats.starttime
-                    t2 = cur_trace.stats.endtime
+                    t2 = min(cur_trace.stats.endtime, trace.stats.endtime)
                     # if consistent: add them together
                     if cur_trace.slice(t1, t2) == trace.slice(t1, t2):
                         cur_trace += trace

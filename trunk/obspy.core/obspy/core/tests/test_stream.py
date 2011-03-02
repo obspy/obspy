@@ -1301,43 +1301,79 @@ class StreamTestCase(unittest.TestCase):
         the same or directly adjacent.
         """
         tr1 = self.mseed_stream[0]
-        t1 = tr1.stats.starttime
-        t2 = tr1.stats.endtime
-        dt = t2 - t1
+        start = tr1.stats.starttime
+        end = tr1.stats.endtime
+        dt = end - start
         delta = tr1.stats.delta
-        # traces that should be merged
-        ### contained traces
-        tr2 = tr1.slice(t1, t1 + dt / 3)
+
+        # test traces that should be merged:
+        ### contained traces with compatible data
+        tr2 = tr1.slice(start, start + dt / 3)
         tr3 = tr1.copy()
-        tr4 = tr1.slice(t1 + dt / 4, t2 - dt / 4)
+        tr4 = tr1.slice(start + dt / 4, end - dt / 4)
         ### adjacent traces
         tr5 = tr1.copy()
-        tr5.stats.starttime = t2
+        tr5.stats.starttime = end + delta
         tr6 = tr1.copy()
-        tr6.stats.starttime = t1 - dt
-        # test mergeable traces
-        for tr in [tr2, tr3, tr4, tr5, tr6]:
+        tr6.stats.starttime = start - dt - delta
+        ### create overlapping traces with compatible data
+        trO1 = tr1.copy()
+        trO1.trim(starttime=start + 2 * delta)
+        trO1.data = np.concatenate([trO1.data, np.arange(5)])
+        trO2 = tr1.copy()
+        trO2.trim(endtime=end - 2 * delta)
+        trO2.data = np.concatenate([np.arange(5), trO2.data])
+        trO2.stats.starttime -= 5 * delta
+        # test mergeable traces (contained ones)
+        for trB in [tr2, tr3, tr4]:
             trA = tr1.copy()
-            trB = tr
             st = Stream([trA, trB])
             st._cleanup()
             self.assertTrue(st == Stream([tr1]))
-        # traces that should not be merged
-        tr7 = tr1.copy()
-        tr7.sampling_rate *= 2
-        tr8 = tr1.copy()
-        tr8.station = "AA"
-        tr9 = tr1.copy()
-        tr9.stats.starttime = t2 + 10 * delta
-        # test non-mergeable traces
-        for tr in [tr7, tr8, tr9]:
+            self.assertTrue(type(st[0].data) == np.ndarray)
+        # test mergeable traces (adjacent ones)
+        for trB in [tr5, tr6]:
             trA = tr1.copy()
-            trB = tr
+            st = Stream([trA, trB])
+            st._cleanup()
+            self.assertTrue(len(st) == 1)
+            self.assertTrue(type(st[0].data) == np.ndarray)
+            st_result = Stream([tr1, trB])
+            st_result.merge()
+            self.assertTrue(st == st_result)
+        # test mergeable traces (overlapping ones)
+        for trB in [trO1, trO2]:
+            trA = tr1.copy()
+            st = Stream([trA, trB])
+            st._cleanup()
+            self.assertTrue(len(st) == 1)
+            self.assertTrue(type(st[0].data) == np.ndarray)
+            st_result = Stream([tr1, trB])
+            st_result.merge()
+            self.assertTrue(st == st_result)
+
+        # test traces that should not be merged
+        tr7 = tr1.copy()
+        tr7.stats.sampling_rate *= 2
+        tr8 = tr1.copy()
+        tr8.stats.station = "AA"
+        tr9 = tr1.copy()
+        tr9.stats.starttime = end + 10 * delta
+        # test some weird gaps near to one sample:
+        tr10 = tr1.copy()
+        tr10.stats.starttime = end + 0.5 * delta
+        tr11 = tr1.copy()
+        tr11.stats.starttime = end + 0.1 * delta
+        tr12 = tr1.copy()
+        tr12.stats.starttime = end + 0.8 * delta
+        tr13 = tr1.copy()
+        tr13.stats.starttime = end + 1.2 * delta
+        # test non-mergeable traces
+        for trB in [tr7, tr8, tr9, tr10, tr11, tr12, tr13]:
+            trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
             self.assertTrue(st == Stream([trA, trB]))
-        # additional cases that need to be covered:
-        #  - partly overlapping traces that match in the overlapping part
 
 
 def suite():
