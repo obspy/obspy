@@ -4,6 +4,7 @@
 The Rotate test suite.
 """
 
+from __future__ import with_statement
 from obspy.signal import rotate_NE_RT, gps2DistAzimuth, rotate_ZNE_LQT, \
         rotate_LQT_ZNE
 import os
@@ -61,6 +62,53 @@ class RotateTestCase(unittest.TestCase):
             #legend()
             #show()
             self.assertEqual(rms < 1.0e-5, True)
+
+    def test_rotate_ZNE_LQTVsPitsa(self):
+        """
+        Test LQT component rotation against PITSA.
+        """
+        # load test files
+        file = os.path.join(self.path, 'rjob_20051006.gz')
+        data_z = np.loadtxt(gzip.open(file))
+        file = os.path.join(self.path, 'rjob_20051006_n.gz')
+        data_n = np.loadtxt(gzip.open(file))
+        file = os.path.join(self.path, 'rjob_20051006_e.gz')
+        data_e = np.loadtxt(gzip.open(file))
+        # test different backazimuth/incidence combinations
+        for ba, inci in ((60, 130), (210, 60)):
+            # rotate traces
+            data_l, data_q, data_t = rotate_ZNE_LQT(data_z, data_n, data_e, ba, inci)
+            # load pitsa files
+            file = os.path.join(self.path, 'rjob_20051006_l_%sba_%sinc.gz' % (ba, inci))
+            data_pitsa_l = np.loadtxt(gzip.open(file))
+            file = os.path.join(self.path, 'rjob_20051006_q_%sba_%sinc.gz' % (ba, inci))
+            data_pitsa_q = np.loadtxt(gzip.open(file))
+            file = os.path.join(self.path, 'rjob_20051006_t_%sba_%sinc.gz' % (ba, inci))
+            data_pitsa_t = np.loadtxt(gzip.open(file))
+            # calculate normalized rms
+            rms = np.sqrt(np.sum((data_l - data_pitsa_l) ** 2) /
+                          np.sum(data_pitsa_l ** 2))
+            rms += np.sqrt(np.sum((data_q - data_pitsa_q) ** 2) /
+                          np.sum(data_pitsa_q ** 2))
+            rms += np.sqrt(np.sum((data_t - data_pitsa_t) ** 2) /
+                          np.sum(data_pitsa_t ** 2))
+            rms /= 3.0
+            #from matplotlib.pyplot import figure,plot,legend,show, subplot
+            #figure()
+            #subplot(311)
+            #plot(data_l,label="L ObsPy")
+            #plot(data_pitsa_l,label="L PITSA")
+            #legend()
+            #subplot(312)
+            #plot(data_q,label="Q ObsPy")
+            #plot(data_pitsa_q,label="Q PITSA")
+            #legend()
+            #subplot(313)
+            #plot(data_t,label="T ObsPy")
+            #plot(data_pitsa_t,label="T PITSA")
+            #legend()
+            #show()
+            self.assertTrue(rms < 1.0e-5)
 
     def test_rotate_ZNE_LQT(self):
         """
