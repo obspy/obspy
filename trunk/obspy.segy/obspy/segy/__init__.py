@@ -42,7 +42,7 @@ information.
                delta: 0.002
                 npts: 2001
                calib: 1.0
-                segy: AttribDict({'textual_file_header': 'C 1 Instrument:  ...})
+                segy: AttribDict({'trace_header': ...})
              _format: SEGY
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
@@ -50,6 +50,27 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 >>> st[0].data #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 array([ -2.84501867e-11,  -5.32782846e-11,  -1.13144355e-10, ...,
         -4.55348870e-10,  -8.47760084e-10,  -7.45420170e-10], dtype=float32)
+
+
+The above way of reading a file will become very slow and memory intensive for
+a large number of traces due to the huge number of objects created.
+
+Use the internal reading method which is much faster and yields a structure
+similar to the standard ObsPy Stream/Trace structure:
+
+>>> from obspy.segy import readSEGY #doctest: +SKIP
+>>> segy = readSEGY("/path/to/00001034.sgy_first_trace") #doctest: +SKIP
+>>> segy #doctest: +SKIP
+<obspy.segy.segy.SEGYFile object at 0x...>
+>>> print(segy) #doctest: +SKIP
+1 traces in the SEG Y structure.
+
+The traces are a list stored in segy.traces. The trace header values are stored
+in the traces attributes. They are just the raw SEGY attributes.
+
+By default these values will not be unpacked and thus will not show up in
+ipython's tab completion. See the header.py file for a list of all available
+trace header attributes. They will be unpacked on the fly.
 
 Writing
 -------
@@ -63,8 +84,8 @@ or
 """
 
 from obspy.core.util import _getVersionString
-from segy import readSEGY as readSEGY
-from segy import readSU as readSU
+from segy import readSEGY
+from segy import readSU
 
 
 __version__ = _getVersionString("obspy.segy")

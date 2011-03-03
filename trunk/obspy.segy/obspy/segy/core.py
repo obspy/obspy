@@ -15,9 +15,10 @@ from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
 from obspy.segy.segy import SEGYTrace, autodetectEndianAndSanityCheckSU
-from obspy.segy.segy import SUFile
+from obspy.segy.segy import SUFile, SEGYTraceHeader
 from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
-from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE
+from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE, TRACE_HEADER_KEYS
+from obspy.segy.util import unpack_header_value
 
 from copy import deepcopy
 import numpy as np
@@ -111,7 +112,8 @@ def isSEGY(filename):
     return True
 
 
-def readSEGY(filename, byteorder=None, textual_header_encoding=None):
+def readSEGY(filename, byteorder=None, textual_header_encoding=None,
+             unpack_trace_headers=False):
     """
     Reads a SEGY file and returns an ObsPy Stream object.
 
@@ -129,6 +131,14 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None):
     textual_header_encoding :
         The encoding of the textual header.  Either 'EBCDIC', 'ASCII' or None.
         If it is None, autodetection will be attempted.
+    unpack_trace_headers : bool
+        Determines whether or not all trace header values will be unpacked
+        during reading. If False it will greatly enhance performance and
+        especially memory usage with large files. The header values can still
+        be accessed and will be calculated on the fly but tab completion will
+        no longer work. Look in the headers.py for a list of all possible trace
+        header values.
+        Defaults to False.
 
     Returns
     -------
@@ -147,13 +157,13 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None):
     """
     # Read file to the internal segy representation.
     segy_object = readSEGYrev1(filename, endian=byteorder,
-                               textual_header_encoding=textual_header_encoding)
-
+                               textual_header_encoding=textual_header_encoding,
+                               unpack_headers=unpack_trace_headers)
     # Create the stream object.
     stream = Stream()
-    # SEGY has several file headers that apply to all traces. Currently every
-    # header will be written to every single Trace and writing will be
-    # supported only if the headers are identical for every Trace.
+    # SEGY has several file headers that apply to all traces. They will be
+    # stored in Stream.stats.
+    stream.stats = AttribDict()
     # Get the textual file header.
     textual_file_header = segy_object.textual_file_header
     # The binary file header will be a new AttribDict
@@ -164,6 +174,15 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None):
     data_encoding = segy_object.traces[0].data_encoding
     endian = segy_object.traces[0].endian
     textual_file_header_encoding = segy_object.textual_header_encoding.upper()
+    # Add the file wide headers.
+    stream.stats.textual_file_header = textual_file_header
+    stream.stats.binary_file_header = binary_file_header
+    # Also set the data encoding, endianness and the encoding of the
+    # textual_file_header.
+    stream.stats.data_encoding = data_encoding
+    stream.stats.endian = endian
+    stream.stats.textual_file_header_encoding = \
+        textual_file_header_encoding
     # Loop over all traces.
     for tr in segy_object.traces:
         # Create new Trace object for every segy trace and append to the Stream
@@ -172,21 +191,17 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None):
         stream.append(trace)
         trace.data = tr.data
         trace.stats.segy = AttribDict()
-        # Add the trace header as a new attrib dictionary.
-        header = AttribDict()
-        for key, value in tr.header.__dict__.iteritems():
-            setattr(header, key, value)
+        # If all values will be unpacked create a normal dictionary.
+        if unpack_trace_headers:
+            # Add the trace header as a new attrib dictionary.
+            header = AttribDict()
+            for key, value in tr.header.__dict__.iteritems():
+                setattr(header, key, value)
+        # Otherwise use the LazyTraceHeaderAttribDict.
+        else:
+            # Add the trace header as a new lazy attrib dictionary.
+            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header, tr.header.endian)
         trace.stats.segy.trace_header = header
-        # Add copies of the file wide headers. Deepcopies are necessary because
-        # a change in one part of the header should only affect that one Trace.
-        trace.stats.segy.textual_file_header = deepcopy(textual_file_header)
-        trace.stats.segy.binary_file_header = deepcopy(binary_file_header)
-        # Also set the data encoding, endianness and the encoding of the
-        # textual_file_header.
-        trace.stats.segy.data_encoding = data_encoding
-        trace.stats.segy.endian = endian
-        trace.stats.segy.textual_file_header_encoding = \
-            textual_file_header_encoding
         # The sampling rate should be set for every trace. It is a sample
         # interval in microseconds. The only sanity check is that is should be
         # larger than 0.
@@ -274,53 +289,29 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         raise SEGYCoreWritingError(msg)
     # Figure out the data encoding if it is not set.
     if data_encoding is None:
-        if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
-                                                        'data_encoding'):
-            data_encoding = stream[0].stats.segy.data_encoding
-        if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
-                                                        'binary_file_header'):
+        if hasattr(stream, 'stats') and hasattr(stream.stats, 'data_encoding'):
+            data_encoding = stream.stats.data_encoding
+        if hasattr(stream, 'stats') and hasattr(stream.stats,
+                                              'binary_file_header'):
             data_encoding = \
-            stream[0].stats.segy.binary_file_header.data_sample_format_code
+                stream.stats.binary_file_header.data_sample_format_code
         else:
             data_encoding = 1
+    if not hasattr(stream, 'stats') or \
+       not hasattr(stream.stats, 'textual_file_header') or \
+       not hasattr(stream.stats, 'binary_file_header'):
+        msg = """
+        Stream.stats.textual_file_header and
+        Stream.stats.binary_file_header need to exists.
+
+        Please refer to the ObsPy documentation for further information.
+        """.strip()
+        raise SEGYCoreWritingError(msg)
     # Valid dtype for the data encoding. If None is given the encoding of the
     # first trace is used.
     valid_dtype = DATA_SAMPLE_FORMAT_CODE_DTYPE[data_encoding]
-    # Check that the textual file header and the binary file header exist for
-    # each Trace and that they are identical for each Trace. Also makes sure
-    # that the dtype is for every Trace is correct.
+    # Makes sure that the dtype is for every Trace is correct.
     for trace in stream:
-        if not hasattr(trace.stats, 'segy') or \
-           not hasattr(trace.stats.segy, 'textual_file_header') or \
-           not hasattr(trace.stats.segy, 'binary_file_header'):
-            msg = """
-            Trace.stats.segy.textual_file_header and
-            Trace.stats.segy.binary_file_header need to exists for every Trace
-            to be able to write SEGY.
-
-            Please refer to the ObsPy documentation for further information.
-            """.strip()
-            raise SEGYCoreWritingError(msg)
-        # Check if all textual headers are identical.
-        if trace.stats.segy.textual_file_header != \
-           stream[0].stats.segy.textual_file_header:
-            msg = """
-            The Trace.stats.segy.textual_header needs to be identical for every
-            Trace in the Stream object to be able to write SEGY.
-
-            Please refer to the ObsPy documentation for further information.
-            """.strip()
-            raise SEGYCoreWritingError(msg)
-        # Some for the binary file headers.
-        if trace.stats.segy.binary_file_header != \
-           stream[0].stats.segy.binary_file_header:
-            msg = """
-            The Trace.stats.segy.textual_header needs to be identical for every
-            Trace in the Stream object to be able to write SEGY.
-
-            Please refer to the ObsPy documentation for further information.
-            """.strip()
-            raise SEGYCoreWritingError(msg)
         # Check the dtype.
         if trace.data.dtype != valid_dtype:
             msg = """
@@ -341,27 +332,26 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
 
     # Figure out endianness and the encoding of the textual file header.
     if byteorder is None:
-        if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
-                                                        'endian'):
-            byteorder = stream[0].stats.segy.endian
+        if hasattr(stream, 'stats') and hasattr(stream.stats, 'endian'):
+            byteorder = stream.stats.endian
         else:
             byteorder = '>'
     if textual_header_encoding is None:
-        if hasattr(stream[0].stats, 'segy') and hasattr(stream[0].stats.segy,
+        if hasattr(stream, 'stats') and hasattr(stream.stats,
                                             'textual_file_header_encoding'):
             textual_header_encoding = \
-                stream[0].stats.segy.textual_file_header_encoding
+                stream.stats.textual_file_header_encoding
         else:
             textual_header_encoding = 'ASCII'
 
     # Loop over all Traces and create a SEGY File object.
     segy_file = SEGYFile()
     # Set the file wide headers.
-    segy_file.textual_file_header = stream[0].stats.segy.textual_file_header
+    segy_file.textual_file_header = stream.stats.textual_file_header
     segy_file.textual_header_encoding = \
             textual_header_encoding
     binary_header = SEGYBinaryFileHeader()
-    this_binary_header = stream[0].stats.segy.binary_file_header
+    this_binary_header = stream.stats.binary_file_header
     # Loop over all items and if they exists set them. Ignore all other
     # attributes.
     for _, item, _ in BINARY_FILE_HEADER_FORMAT:
@@ -378,7 +368,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
         # them. Ignore all additional attributes.
-        for _, item, _ in TRACE_HEADER_FORMAT:
+        for _, item, _, _ in TRACE_HEADER_FORMAT:
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
@@ -421,7 +411,7 @@ def isSU(filename):
         return True
 
 
-def readSU(filename, byteorder=None):
+def readSU(filename, byteorder=None, unpack_trace_headers=False):
     """
     Reads a SU file and returns an ObsPy Stream object.
 
@@ -436,6 +426,14 @@ def readSU(filename, byteorder=None):
         Determines the endianness of the file. Either '>' for big endian or '<'
         for little endian. If it is None, obspy.segy will try to autodetect the
         endianness. The endianness is always valid for the whole file.
+    unpack_trace_headers : bool
+        Determines whether or not all trace header values will be unpacked
+        during reading. If False it will greatly enhance performance and
+        especially memory usage with large files. The header values can still
+        be accessed and will be calculated on the fly but tab completion will
+        no longer work. Look in the headers.py for a list of all possible trace
+        header values.
+        Defaults to False.
 
     Returns
     -------
@@ -453,7 +451,8 @@ def readSU(filename, byteorder=None):
     ... | 2005-12-19T15:07:54.000000Z - 2005-12-19T15:07:55.999750Z | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
-    su_object = readSUFile(filename, endian=byteorder)
+    su_object = readSUFile(filename, endian=byteorder,
+                           unpack_headers=unpack_trace_headers)
 
     # Create the stream object.
     stream = Stream()
@@ -468,10 +467,16 @@ def readSU(filename, byteorder=None):
         stream.append(trace)
         trace.data = tr.data
         trace.stats.su = AttribDict()
-        # Add the trace header as a new attrib dictionary.
-        header = AttribDict()
-        for key, value in tr.header.__dict__.iteritems():
-            setattr(header, key, value)
+        # If all values will be unpacked create a normal dictionary.
+        if unpack_trace_headers:
+            # Add the trace header as a new attrib dictionary.
+            header = AttribDict()
+            for key, value in tr.header.__dict__.iteritems():
+                setattr(header, key, value)
+        # Otherwise use the LazyTraceHeaderAttribDict.
+        else:
+            # Add the trace header as a new lazy attrib dictionary.
+            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header, tr.header.endian)
         trace.stats.su.trace_header = header
         # Also set the endianness.
         trace.stats.su.endian = endian
@@ -558,7 +563,7 @@ def writeSU(stream, filename, byteorder=None):
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
         # them. Ignore all additional attributes.
-        for _, item, _ in TRACE_HEADER_FORMAT:
+        for _, item, _, _ in TRACE_HEADER_FORMAT:
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
@@ -619,6 +624,47 @@ def segy_trace__str__(self, *args, **kwargs):
     if np.ma.count_masked(self.data):
         out += ' (masked)'
     return out % (self.stats)
+
+class LazyTraceHeaderAttribDict(AttribDict):
+    """
+    This version of AttribDict will unpack the Header values on the fly. This
+    saves a huge amount of memory. The disadvantage is that it is no more
+    possible to use tab completion in e.g. ipython.
+
+    This version is used for the SEGY/SU trace headers.
+    """
+    readonly = []
+
+    def __init__(self, unpacked_header, unpacked_header_endian, data={}):
+        dict.__init__(data)
+        self.update(data)
+        self.__dict__['unpacked_header'] = unpacked_header
+        self.__dict__['endian'] = unpacked_header_endian
+
+    def __getitem__(self, name):
+        # Return if already set.
+        if name in self.__dict__:
+            if name in self.readonly:
+                return self.__dict__[name]
+            return super(AttribDict, self).__getitem__(name)
+        # Otherwise try to unpack them.
+        try:
+            index = TRACE_HEADER_KEYS.index(name)
+        # If not found raise an attribute error.
+        except ValueError:
+            msg = "'%s' object has no attribute '%s'" % \
+                (self.__class__.__name__, name)
+            raise AttributeError(msg)
+        # Unpack the one value and set the class attribute so it will does not
+        # have to unpacked again if accessed in the future.
+        length, name, special_format, start = TRACE_HEADER_FORMAT[index]
+        string = self.__dict__['unpacked_header'][start: start + length]
+        attribute = unpack_header_value(self.__dict__['endian'], string,
+                                        length, special_format)
+        setattr(self, name, attribute)
+        return attribute
+
+    __getattr__ = __getitem__
 
 
 if __name__ == '__main__':

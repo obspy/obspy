@@ -74,22 +74,22 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1[0].stats.segy.textual_file_header[3:21] \
+        self.assertTrue(st1.stats.textual_file_header[3:21] \
                         == 'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
-        self.assertEqual(st1[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
-        self.assertFalse(st2[0].stats.segy.textual_file_header[3:21] \
+        self.assertFalse(st2.stats.textual_file_header[3:21] \
                         == 'CLIENT: LITHOPROBE')
-        self.assertEqual(st2[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
         # Autodection should also write the textual file header encoding to the
         # stats dictionary.
         st3 = readSEGY(file)
-        self.assertEqual(st3[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
 
     def test_enforcingEndiannessWhileWriting(self):
@@ -105,17 +105,17 @@ class SEGYCoreTestCase(unittest.TestCase):
         writeSEGY(st1, out_file)
         st2 = readSEGY(out_file)
         os.remove(out_file)
-        self.assertEqual(st2[0].stats.segy.endian, '>')
+        self.assertEqual(st2.stats.endian, '>')
         # Do once again to enforce big endian.
         writeSEGY(st1, out_file, byteorder='>')
         st3 = readSEGY(out_file)
         os.remove(out_file)
-        self.assertEqual(st3[0].stats.segy.endian, '>')
+        self.assertEqual(st3.stats.endian, '>')
         # Enforce little endian.
         writeSEGY(st1, out_file, byteorder='<')
         st4 = readSEGY(out_file)
         os.remove(out_file)
-        self.assertEqual(st4[0].stats.segy.endian, '<')
+        self.assertEqual(st4.stats.endian, '<')
 
     def test_settingDataEncodingWorks(self):
         """
@@ -224,7 +224,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st2[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
         writeSEGY(st1, out_file, textual_header_encoding='EBCDIC')
@@ -234,7 +234,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertTrue(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st3[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Enforce ASCII
         writeSEGY(st1, out_file, textual_header_encoding='ASCII')
@@ -244,7 +244,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             new_header = f.read(3200)
         self.assertFalse(header == new_header)
         os.remove(out_file)
-        self.assertEqual(st4[0].stats.segy.textual_file_header_encoding,
+        self.assertEqual(st4.stats.textual_file_header_encoding,
                          'ASCII')
 
     def test_enforcingEndiannessWhileReading(self):
@@ -259,10 +259,10 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # This should work and write big endian to the stats dictionary.
         st1 = readSEGY(file)
-        self.assertEqual(st1[0].stats.segy.endian, '>')
+        self.assertEqual(st1.stats.endian, '>')
         # Doing the same with the right endianness should still work.
         st2 = readSEGY(file, byteorder='>')
-        self.assertEqual(st2[0].stats.segy.endian, '>')
+        self.assertEqual(st2.stats.endian, '>')
         # The wrong endianness should yield an key error because the routine to
         # unpack the wrong data format code cannot be found.
         self.assertRaises(KeyError, readSEGY, file, byteorder='<')
@@ -288,19 +288,19 @@ class SEGYCoreTestCase(unittest.TestCase):
             np.testing.assert_array_equal(segy_file.traces[0].data, st[0].data)
             # Textual header.
             self.assertEqual(segy_file.textual_file_header,
-                             st[0].stats.segy.textual_file_header)
+                             st.stats.textual_file_header)
             # Textual_header_encoding.
             self.assertEqual(segy_file.textual_header_encoding,
-                             st[0].stats.segy.textual_file_header_encoding)
+                             st.stats.textual_file_header_encoding)
             # Endianness.
-            self.assertEqual(segy_file.endian, st[0].stats.segy.endian)
+            self.assertEqual(segy_file.endian, st.stats.endian)
             # Data encoding.
             self.assertEqual(segy_file.data_encoding,
-                             st[0].stats.segy.data_encoding)
+                             st.stats.data_encoding)
             # Test the file and trace binary headers.
             for key, value in \
                     segy_file.binary_file_header.__dict__.iteritems():
-                self.assertEqual(getattr(st[0].stats.segy.binary_file_header,
+                self.assertEqual(getattr(st.stats.binary_file_header,
                                  key), value)
             for key, value in \
                     segy_file.traces[0].header.__dict__.iteritems():

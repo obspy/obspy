@@ -15,10 +15,13 @@ NumPy array with the unpacked values.
 import numpy as np
 import sys
 
-
-BYTEORDER = sys.byteorder
 LOG2 = 0.3010299956639812
-
+# Get the system byteorder.
+BYTEORDER = sys.byteorder
+if BYTEORDER == 'little':
+    BYTEORDER = '<'
+else:
+    BYTEORDER = '>'
 
 class WrongDtypeException(Exception):
     pass
@@ -119,10 +122,8 @@ def pack_4byte_Integer(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'int32':
         raise WrongDtypeException
-    if BYTEORDER == 'little' and endian == '>':
-        data = data.byteswap()
-    # Same the other way around.
-    if BYTEORDER == 'big' and endian == '<':
+    # Swap the byteorder if necessary.
+    if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
     file.write(data.tostring())
@@ -135,10 +136,8 @@ def pack_2byte_Integer(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'int16':
         raise WrongDtypeException
-    if BYTEORDER == 'little' and endian == '>':
-        data = data.byteswap()
-    # Same the other way around.
-    if BYTEORDER == 'big' and endian == '<':
+    # Swap the byteorder if necessary.
+    if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
     file.write(data.tostring())
@@ -155,10 +154,8 @@ def pack_4byte_IEEE(file, data, endian='>'):
     # Check the dtype and raise exception otherwise!
     if data.dtype != 'float32':
         raise WrongDtypeException
-    if BYTEORDER == 'little' and endian == '>':
-        data = data.byteswap()
-    # Same the other way around.
-    if BYTEORDER == 'big' and endian == '<':
+    # Swap the byteorder if necessary.
+    if BYTEORDER != endian:
         data = data.byteswap()
     # Write the file.
     file.write(data.tostring())
