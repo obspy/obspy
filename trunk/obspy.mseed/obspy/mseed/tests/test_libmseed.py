@@ -210,7 +210,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         Writes, reads and compares files created via libmseed.
         
         This uses all possible encodings, record lengths and the byte order 
-        options. A reencoded SEED file should still have the same values 
+        options. A re-encoded SEED file should still have the same values 
         regardless of write options.
         Note: Test currently only tests the first trace
         """
@@ -246,7 +246,7 @@ class LibMSEEDTestCase(unittest.TestCase):
 
     def test_readingFileformatInformation(self):
         """
-        Tests the reading of Mini-SEED fileformat information.
+        Tests the reading of Mini-SEED file format information.
         """
         # Build encoding strings.
         encoding_strings = {}
@@ -490,7 +490,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         Tests readSingleRecordtoMSR against start and endtimes.
 
-        Reference start and entimes are optained from the tracegroup.
+        Reference start and endtimes are obtained from the tracegroup.
         Both cases, with and without ms_p argument are tested.
         """
         filename = os.path.join(self.path,
@@ -592,7 +592,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         trace_list = mseed.readMSTraces(tempfile, verbose=1)
         # using readMSTracesViaRecords
         trace_list2 = mseed.readMSTracesViaRecords(tempfile, verbose=1)
-        # read via obspy
+        # read via ObsPy
         st2 = read(tempfile)
         os.remove(tempfile)
         # test results
