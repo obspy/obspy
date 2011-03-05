@@ -209,7 +209,7 @@ def _createReport(ttrs, timetaken, log, server):
             if isinstance(value, dict):
                 child = etree.SubElement(doc, key)
                 _dict2xml(child, value)
-            elif value:
+            elif value is not None:
                 etree.SubElement(doc, key).text = str(value)
             else:
                 etree.SubElement(doc, key)
