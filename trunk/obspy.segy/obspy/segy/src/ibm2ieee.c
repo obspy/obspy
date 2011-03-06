@@ -28,7 +28,7 @@ void ibm2ieee(float *ibm, int len) {
 	 */
 	ibm[i] = (((( (*(int*)&ibm[i]) >> 31) & 0x01) * (-2)) + 1) *
 	         ((float)((*(int*)&ibm[i]) & 0x00ffffff) / 0x1000000) *
-		 (pow(16, (( (*(int*)&ibm[i]) >> 24) & 0x7f) - 64));
+		 ((float)pow(16, (( (*(int*)&ibm[i]) >> 24) & 0x7f) - 64));
     }
     return;
 }
