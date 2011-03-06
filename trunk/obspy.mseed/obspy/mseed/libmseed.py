@@ -247,7 +247,7 @@ class LibMSEED(object):
             if bytes == '':
                 del ms # for valgrind
                 return ''
-            ms.f.seek(bytes[0])
+            ms.offset = bytes[0]
             end_byte = bytes[0] + bytes[1]
         else:
             end_byte = os.path.getsize(filename)
@@ -255,7 +255,7 @@ class LibMSEED(object):
         last_msrid = None
         while True:
             if quality:
-                filepos = ms.tell()
+                filepos = ms.offset
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
                               raise_flag=False)
@@ -300,7 +300,7 @@ class LibMSEED(object):
                          tq=trace_list[-1][0]['timing_quality'],
                          dq=trace_list[-1][0]['data_quality_flags'])
             last_msrid = msrid
-            if ms.f.tell() >= end_byte:
+            if ms.offset >= end_byte:
                 break
         # Finish up loop, concatenate last trace_list
         trace_list[-1] = [trace_list[-1][0],
@@ -540,7 +540,7 @@ class LibMSEED(object):
         ms = _MSStruct(filename)
         starttime = ms.getStart()
         # Get the endtime
-        ms.f.seek(ms.filePosFromRecNum(record_number= -1))
+        ms.offset = ms.filePosFromRecNum(record_number= -1)
         endtime = ms.getEnd()
         del ms # for valgrind
         return starttime, endtime
@@ -589,15 +589,15 @@ class LibMSEED(object):
         file format is can find.
         """
         # Create _MSStruct instance to read the file.
-        msr = _MSStruct(filename, filepointer=True)
-        chain = msr.msr.contents
+        ms = _MSStruct(filename)
+        chain = ms.msr.contents
         # Read all interesting attributes.
         attribs = ['byteorder', 'encoding', 'reclen']
         info = {}
         for attr in attribs:
             info[attr] = getattr(chain, attr)
         # Will delete C pointers and structures.
-        del msr
+        del ms
         return info
 
     def getDataQualityFlagsCount(self, filename):
@@ -686,7 +686,7 @@ class LibMSEED(object):
         """
         # Get some information about the file.
         fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
-        ms = _MSStruct(filename, filepointer=False)
+        ms = _MSStruct(filename)
         # Create Timing Quality list.
         data = []
         # Loop over each record
@@ -751,7 +751,7 @@ class LibMSEED(object):
         info = ms.fileinfo()
         start = ms.getStart()
         pos = (info['number_of_records'] - 1) * info['record_length']
-        ms.f.seek(pos)
+        ms.offset = pos
         end = ms.getEnd()
         # Set the start time.
         if not starttime or starttime <= start:
@@ -777,10 +777,10 @@ class LibMSEED(object):
             elif start_record > nr - 1:
                 start_record = nr - 1
                 break
-            ms.f.seek(start_record * info['record_length'])
+            ms.offset = start_record * info['record_length']
             stime = ms.getStart()
             # Calculate last covered record.
-            ms.f.seek(30, 1)
+            ms.offset = ms.offset + 30
             # Calculate sample rate.
             sample_rate = ms.msr.contents.samprate
             npts = ms.msr.contents.samplecnt
@@ -810,10 +810,10 @@ class LibMSEED(object):
             elif end_record > nr - 1:
                 end_record = nr - 1
                 break
-            ms.f.seek(end_record * info['record_length'])
+            ms.offset = end_record * info['record_length']
             stime = ms.getStart()
             # Calculate last covered record.
-            ms.f.seek(30, 1)
+            ms.offset = ms.offset + 30
             # Calculate sample rate.
             sample_rate = ms.msr.contents.samprate
             npts = ms.msr.contents.samplecnt
@@ -1058,32 +1058,20 @@ class _MSStruct(object):
     :ivar msr: MSRecord
     :ivar msf: MSFileparam
     :ivar file: filename
-    :ivar f: Python file pointer to MSFileparam file pointer
+    :ivar offset: Current offset
 
     :param filename: file to attach to
     :param filepointer: attach filepointer f to object
     """
-    def __init__(self, filename, filepointer=True):
+    def __init__(self, filename):
         # Initialize MSRecord structure
         self.msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         self.msf = C.POINTER(MSFileParam)() # null pointer
         self.file = filename
-        if filepointer:
-            self.read(-1, 0, 1, 0)
-            self.f = self.filePointer()
-
-    def filePointer(self, byte=0):
-        """
-        Add Python file pointer attribute self.f to local class
-        
-        :param byte: Seek file pointer to specific byte
-        """
-        # allocate file pointer, we need this to cut with start and endtime
-        mf = C.pointer(MSFileParam.from_address(C.addressof(self.msf)))
-        f = PyFile_FromFile(mf.contents.fp.contents.value,
-                            str(self.file), 'rb', _PyFile_callback)
-        f.seek(byte)
-        return f
+        # dummy read once, to avoid null pointer in ms.msf for e.g.
+        # ms.offset
+        self.read(-1, 0, 1, 0)
+        self.offset = 0
 
     def getEnd(self):
         """
@@ -1092,12 +1080,6 @@ class _MSStruct(object):
         self.read(-1, 0, 1, 0)
         dtime = clibmseed.msr_endtime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
-
-    def tell(self):
-        """
-        Analog to file.tell().
-        """
-        return self.f.tell()
 
     def getStart(self):
         """
@@ -1111,7 +1093,7 @@ class _MSStruct(object):
         """
         For details see libmseed._getMSFileInfo
         """
-        self.info = LibMSEED()._getMSFileInfo(self.f, self.file)
+        self.info = LibMSEED()._getMSFileInfo(open(self.file, 'rb'), self.file)
         return self.info
 
     def filePosFromRecNum(self, record_number=0):
@@ -1168,3 +1150,12 @@ class _MSStruct(object):
         """
         clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
                                None, -1, None, None, 0, 0, 0)
+
+    def setOffset(self, value):
+        self.msf.contents.readoffset = C.c_int(value)
+
+    def getOffset(self):
+        return self.msf.contents.readoffset
+
+    offset = property(getOffset, setOffset)
+

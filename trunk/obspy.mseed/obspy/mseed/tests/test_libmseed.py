@@ -498,8 +498,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         start, end = [1199145599915000L, 1199145620510000L]
         # start and endtime
         ms = _MSStruct(filename)
+        ms.read(-1, 0, 1, 0)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
-        ms.f.seek(ms.filePosFromRecNum(-1))
+        ms.offset = ms.filePosFromRecNum(-1)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
         del ms # for valgrind

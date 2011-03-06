@@ -498,7 +498,7 @@ class CoreTestCase(unittest.TestCase):
                 # Read just the first record to check encoding. The sampletype
                 # should follow from the encoding. But libmseed seems not to
                 # read the sampletype when reading a file.
-                ms = _MSStruct(cur_file, filepointer=False)
+                ms = _MSStruct(cur_file)
                 ms.read(-1, 0, 1, 0)
                 # Check values.
                 self.assertEqual(getattr(ms.msr.contents, 'encoding'),
