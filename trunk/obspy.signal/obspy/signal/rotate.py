@@ -57,9 +57,9 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     The transformation consists of 3 steps::
 
         1. mirroring of E-component at ZN plain: ZNE -> ZNW
-        2. negative rotation of coordinate system around Z-axis with angle ba + 180:
+        2. negative rotation of coordinate system around Z-axis with angle ba:
            ZNW -> ZRT
-        3. positive rotation of coordinate system around T-axis with angle inc:
+        3. negative rotation of coordinate system around T-axis with angle inc:
            ZRT -> LQT
 
     :param z: Data of the Z component of the seismogram.
@@ -78,8 +78,8 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     ba *= 2 * pi / 360
     inc *= 2 * pi / 360
     l = z * cos(inc) - n * sin(inc) * cos(ba) - e * sin(inc) * sin(ba)
-    q = -z * sin(inc) - n * cos(inc) * cos(ba) - e * cos(inc) * sin(ba)
-    t = -n * sin(ba) + e * cos(ba)
+    q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
+    t = n * sin(ba) - e * cos(ba)
     return l, q, t
 
 
@@ -99,9 +99,9 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
         raise ValueError("Inclination should be between 0 and 360 degrees!")
     ba *= 2 * pi / 360
     inc *= 2 * pi / 360
-    z = l * cos(inc) - q * sin(inc)
-    n = -l * sin(inc) * cos(ba) - q * cos(inc) * cos(ba) - t * sin(ba)
-    e = -l * sin(inc) * sin(ba) - q * cos(inc) * sin(ba) + t * cos(ba)
+    z = l * cos(inc) + q * sin(inc)
+    n = -l * sin(inc) * cos(ba) + q * cos(inc) * cos(ba) + t * sin(ba)
+    e = -l * sin(inc) * sin(ba) + q * cos(inc) * sin(ba) - t * cos(ba)
     return z, n, e
 
 

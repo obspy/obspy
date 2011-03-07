@@ -65,7 +65,7 @@ class RotateTestCase(unittest.TestCase):
 
     def test_rotate_ZNE_LQTVsPitsa(self):
         """
-        Test LQT component rotation against PITSA.
+        Test LQT component rotation against PITSA. Test back-rotation.
         """
         # load test files
         file = os.path.join(self.path, 'rjob_20051006.gz')
@@ -77,13 +77,20 @@ class RotateTestCase(unittest.TestCase):
         # test different backazimuth/incidence combinations
         for ba, inci in ((60, 130), (210, 60)):
             # rotate traces
-            data_l, data_q, data_t = rotate_ZNE_LQT(data_z, data_n, data_e, ba, inci)
+            data_l, data_q, data_t = rotate_ZNE_LQT(data_z, data_n, data_e,
+                                                    ba, inci)
+            # rotate traces back to ZNE
+            data_back_z, data_back_n, data_back_e = \
+                rotate_LQT_ZNE(data_l, data_q, data_t, ba, inci)
             # load pitsa files
-            file = os.path.join(self.path, 'rjob_20051006_l_%sba_%sinc.gz' % (ba, inci))
+            file = os.path.join(self.path, 'rjob_20051006_l_%sba_%sinc.gz'
+                                % (ba, inci))
             data_pitsa_l = np.loadtxt(gzip.open(file))
-            file = os.path.join(self.path, 'rjob_20051006_q_%sba_%sinc.gz' % (ba, inci))
+            file = os.path.join(self.path, 'rjob_20051006_q_%sba_%sinc.gz'
+                                % (ba, inci))
             data_pitsa_q = np.loadtxt(gzip.open(file))
-            file = os.path.join(self.path, 'rjob_20051006_t_%sba_%sinc.gz' % (ba, inci))
+            file = os.path.join(self.path, 'rjob_20051006_t_%sba_%sinc.gz'
+                                % (ba, inci))
             data_pitsa_t = np.loadtxt(gzip.open(file))
             # calculate normalized rms
             rms = np.sqrt(np.sum((data_l - data_pitsa_l) ** 2) /
@@ -93,6 +100,13 @@ class RotateTestCase(unittest.TestCase):
             rms += np.sqrt(np.sum((data_t - data_pitsa_t) ** 2) /
                           np.sum(data_pitsa_t ** 2))
             rms /= 3.0
+            rms2 = np.sqrt(np.sum((data_z - data_back_z) ** 2) /
+                          np.sum(data_z ** 2))
+            rms2 += np.sqrt(np.sum((data_n - data_back_n) ** 2) /
+                          np.sum(data_n ** 2))
+            rms2 += np.sqrt(np.sum((data_e - data_back_e) ** 2) /
+                          np.sum(data_e ** 2))
+            rms2 /= 3.0
             #from matplotlib.pyplot import figure,plot,legend,show, subplot
             #figure()
             #subplot(311)
@@ -109,36 +123,7 @@ class RotateTestCase(unittest.TestCase):
             #legend()
             #show()
             self.assertTrue(rms < 1.0e-5)
-
-    def test_rotate_ZNE_LQT(self):
-        """
-        Test 3-component rotation with some simple examples.
-        """
-        c = 0.5 * 3 ** 0.5
-        z, n, e = np.array([1., 2.4]), np.array([0.3, -0.7]), np.array([-0.2, 0.])
-        ba_inc_l_q_t = ((180, 0, z, n, -e),
-                        (0, 0, z, -n, e),
-                        (180, 90, n, -z, -e),
-                        (270, 0, z, e, n),
-                        (30, 30, z * c - n * c / 2 - e / 4,
-                         - z / 2 - n * c ** 2 - e * c / 2, -n / 2 + e * c),
-                        (180, 180, -z, -n, -e),
-                        (270, 270, -e, z, n))
-        for ba, inc, l, q, t in ba_inc_l_q_t:
-            l2, q2, t2 = rotate_ZNE_LQT(z, n, e, ba, inc)
-            z2, n2, e2 = rotate_LQT_ZNE(l, q, t, ba, inc)
-            # calculate normalized rms
-            rms = np.sqrt(np.sum((l2 - l) ** 2) / np.sum(l ** 2))
-            rms += np.sqrt(np.sum((q2 - q) ** 2) / np.sum(q ** 2))
-            rms += np.sqrt(np.sum((t2 - t) ** 2) / np.sum(t ** 2))
-            rms /= 3.
-            rms2 = np.sqrt(np.sum((z2 - z) ** 2) / np.sum(z ** 2))
-            rms2 += np.sqrt(np.sum((n2 - n) ** 2) / np.sum(n ** 2))
-            rms2 += np.sqrt(np.sum((e2 - e) ** 2) / np.sum(e ** 2))
-            rms2 /= 3.
-            self.assertEqual(rms < 1.0e-5, True)
-            self.assertEqual(rms2 < 1.0e-5, True)
-
+            self.assertTrue(rms2 < 1.0e-5)
 
     def test_gps2DistAzimuth(self):
         """
