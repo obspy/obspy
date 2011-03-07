@@ -99,9 +99,10 @@ def cfrequency(data, fs, smoothie, fk):
     :return dcfreq: Time derivative of center frequency, only returned if
          data are windowed.
     """
-    freq = np.arange(0, float(fs) - 1. / (util.nextpow2(data.shape[1]) / float(fs)),
-                                 1. / (util.nextpow2(data.shape[1]) / float(fs)))
-    freqaxis = freq[0:len(freq) / 2 + 1]
+    nfft = util.nextpow2(data.shape[1])
+    freq = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
+                          1. / float(nfft / float(fs)))
+    freqaxis = freq[0:nfft / 2 ]
     cfreq = np.zeros(data.shape[0])
     if (np.size(data.shape) > 1):
         i = 0
