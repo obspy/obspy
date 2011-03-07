@@ -647,6 +647,7 @@ class LibMSEED(object):
             for _j in xrange(8):
                 if (data_quality_flags & (1 << _j)) != 0:
                     quality_count[_j] += 1
+        mseedfile.close()
         return quality_count
 
     def getTimingQuality(self, filename, first_record=True,
@@ -685,8 +686,10 @@ class LibMSEED(object):
             is automatically detected. Defaults to -1.
         """
         # Get some information about the file.
-        fileinfo = self._getMSFileInfo(open(filename, 'rb'), filename)
-        ms = _MSStruct(filename)
+        fp = open(filename, 'rb')
+        fileinfo = self._getMSFileInfo(fp, filename)
+        fp.close()
+        ms = _MSStruct(filename, init_msrmsf=False)
         # Create Timing Quality list.
         data = []
         # Loop over each record
@@ -1061,17 +1064,21 @@ class _MSStruct(object):
     :ivar offset: Current offset
 
     :param filename: file to attach to
-    :param filepointer: attach filepointer f to object
+    :param init_msrmsf: initialize msr and msf structure
+        by a first pass of read. Setting this option to
+        false will result in errors when setting e.g.
+        the offset before a call to read
     """
-    def __init__(self, filename):
+    def __init__(self, filename, init_msrmsf=True):
         # Initialize MSRecord structure
         self.msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         self.msf = C.POINTER(MSFileParam)() # null pointer
         self.file = filename
         # dummy read once, to avoid null pointer in ms.msf for e.g.
         # ms.offset
-        self.read(-1, 0, 1, 0)
-        self.offset = 0
+        if init_msrmsf:
+            self.read(-1, 0, 1, 0)
+            self.offset = 0
 
     def getEnd(self):
         """
@@ -1093,7 +1100,9 @@ class _MSStruct(object):
         """
         For details see libmseed._getMSFileInfo
         """
-        self.info = LibMSEED()._getMSFileInfo(open(self.file, 'rb'), self.file)
+        fp = open(self.file, 'rb')
+        self.info = LibMSEED()._getMSFileInfo(fp, self.file)
+        fp.close()
         return self.info
 
     def filePosFromRecNum(self, record_number=0):
@@ -1155,7 +1164,7 @@ class _MSStruct(object):
         self.msf.contents.readoffset = C.c_int(value)
 
     def getOffset(self):
-        return self.msf.contents.readoffset
+        return int(self.msf.contents.readoffset)
 
     offset = property(getOffset, setOffset)
 

@@ -497,7 +497,7 @@ class LibMSEEDTestCase(unittest.TestCase):
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         start, end = [1199145599915000L, 1199145620510000L]
         # start and endtime
-        ms = _MSStruct(filename)
+        ms = _MSStruct(filename, init_msrmsf=False)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
         ms.offset = ms.filePosFromRecNum(-1)
