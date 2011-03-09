@@ -22,7 +22,7 @@ from obspy.core.util import deprecated
 lib_names = [
      # platform specific library name
     'libsignal-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
-                              ''.join(platform.python_version_tuple()[:2])),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libsignal']
 # add correct file extension

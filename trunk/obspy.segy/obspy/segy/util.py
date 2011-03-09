@@ -8,7 +8,7 @@ from struct import unpack
 lib_names = [
      # platform specific library name
     'libsegy-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
-                              ''.join(platform.python_version_tuple()[:2])),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libsegy']
 # add correct file extension

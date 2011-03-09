@@ -45,7 +45,7 @@ if platform.system() == "Windows":
 if 'develop' in sys.argv:
     lib_name = 'libgse2-%s-%s-py%s' % (
         platform.system(), platform.architecture()[0],
-        ''.join(platform.python_version_tuple()[:2]))
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
 else:
     lib_name = 'libgse2'
 

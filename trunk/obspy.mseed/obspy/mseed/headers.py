@@ -14,7 +14,7 @@ import numpy as np
 lib_names = [
      # platform specific library name
     'libmseed-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
-                             ''.join(platform.python_version_tuple()[:2])),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libmseed']
 # add correct file extension
