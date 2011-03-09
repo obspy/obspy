@@ -121,18 +121,6 @@ def _getSuites(verbosity=1, names=[], all=False):
     return suites
 
 
-def CDATA(text=None):
-    """
-    A CDATA element factory function that uses the function itself as the tag
-    (based on the Comment factory function in the ElementTree implementation).
-    
-    http://code.activestate.com/recipes/576536-elementtree-cdata-support/
-    """
-    element = etree.Element(CDATA)
-    element.text = text
-    return element
-
-
 def _createReport(ttrs, timetaken, log, server):
     # import additional libraries here to speed up normal tests
     import httplib
@@ -144,7 +132,7 @@ def _createReport(ttrs, timetaken, log, server):
     result['timetaken'] = timetaken
     if log:
         try:
-            result['install_log'] = CDATA(open(log, 'r').read())
+            result['install_log'] = '<![CDATA[' + open(log, 'r').read() + ']]>'
         except:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
