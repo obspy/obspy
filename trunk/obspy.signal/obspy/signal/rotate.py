@@ -2,10 +2,10 @@
 #-------------------------------------------------------------------
 # Filename: rotate.py
 #  Purpose: Various Seismogram Rotation Functions
-#   Author: Tobias Megies
+#   Author: Tobias Megies, Tom Richter
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2009 Tobias Megies
+# Copyright (C) 2009-2011 Tobias Megies, Tom Richter
 #---------------------------------------------------------------------
 """
 Various Seismogram Rotation Functions

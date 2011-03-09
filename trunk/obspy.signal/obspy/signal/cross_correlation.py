@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+#--------------------------------------------------------------------
+# Filename: cross_correlation.py
+#   Author: Moritz Beyreuther, Tobias Megies
+#    Email: megies@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2008-2010 Moritz Beyreuther, Tobias Megies
+#-------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
 
