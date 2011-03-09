@@ -476,13 +476,20 @@ clibmseed.mst_packgroup.argtypes = [ C.POINTER(MSTraceGroup),
 clibmseed.mst_packgroup.restype = C.c_int
 
 clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord), C.POINTER(C.c_char),
-                                        C.c_int, C.c_int, C.c_int]
+                                       C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
+
+clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
+                                C.POINTER(C.POINTER(MSRecord)),
+                                C.c_int, C.c_int, C.c_int]
+clibmseed.msr_parse.restype = C.c_int
+
 
 PyFile_FromFile = C.pythonapi.PyFile_FromFile
 PyFile_FromFile.argtypes = [
     Py_ssize_t, C.c_char_p, C.c_char_p, C.CFUNCTYPE(C.c_int, Py_ssize_t)]
 PyFile_FromFile.restype = C.py_object
+
 
 # Python callback functions for C
 def __PyFile_callback(f):

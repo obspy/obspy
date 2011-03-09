@@ -9,7 +9,7 @@ from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
-from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS
+from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS, MSRecord
 from obspy.mseed.libmseed import clibmseed, _MSStruct
 import copy
 import ctypes as C
@@ -600,6 +600,36 @@ class LibMSEEDTestCase(unittest.TestCase):
         np.testing.assert_array_equal(data, st2[0].data)
         np.testing.assert_array_equal(data, trace_list[0][1])
         np.testing.assert_array_equal(data, trace_list2[0][1])
+
+
+    def test_msrParse(self):
+        """
+        Demonstrates how to actually read an msr_record from an
+        Python object similar to StringIO. It can be usefull when directly
+        transferring or receiving MiniSEED records from the web a database
+        etc. The core code of this test is extracted from libmseed.py line
+        266. If implementing this functinality, probably the best way is
+        therefore to use the readMSTracesViaRecords function.
+        """
+        msr = clibmseed.msr_init(C.POINTER(MSRecord)())
+        msfile = os.path.join(self.path,
+                              'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        pyobj = np.fromfile(msfile, dtype='b')
+        
+        errcode = clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
+                                      len(pyobj), C.pointer(msr), -1, 1, 1)
+        self.assertEquals(errcode, 0)
+        chain = msr.contents
+        header = LibMSEED()._convertMSRToDict(chain)
+        delta = HPTMODULUS / float(header['samprate'])
+        header['endtime'] = long(header['starttime'] + delta * \
+                                  (header['numsamples'] - 1))
+        # Access data directly as NumPy array.
+        data = LibMSEED()._ctypesArray2NumpyArray(chain.datasamples,
+                                                  chain.numsamples,
+                                                  chain.sampletype)
+        st = read(msfile)
+        np.testing.assert_array_equal(data, st[0].data[:len(data)])
 
 
 def suite():
