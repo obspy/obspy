@@ -340,6 +340,13 @@ class WaveformFileCrawler(object):
         # process a single file
         path = self._current_path
         filepath = os.path.join(path, file)
+        # get file stats
+        try:
+            stats = os.stat(filepath)
+            mtime = int(stats.st_mtime)
+        except Exception, e:
+            self.log.error(str(e))
+            return
         # check if recent
         if self.options.recent:
             # skip older files
@@ -353,13 +360,6 @@ class WaveformFileCrawler(object):
         # database or recent or whatever
         if self.options.force_reindex:
             self.input_queue[filepath] = (path, file, self.features)
-            return
-        # get file stats
-        try:
-            stats = os.stat(filepath)
-            mtime = int(stats.st_mtime)
-        except Exception, e:
-            self.log.error(str(e))
             return
         # compare with database entries
         if file not in self._db_files.keys():
