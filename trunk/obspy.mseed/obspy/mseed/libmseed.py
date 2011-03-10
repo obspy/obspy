@@ -138,6 +138,9 @@ import numpy as np
 import warnings
 import os
 
+# as defined in libmseed.h
+MS_ENDOFFILE = 1
+MS_NOERROR = 0
 
 class LibMSEED(object):
     """
@@ -259,10 +262,12 @@ class LibMSEED(object):
             # Directly call ms_readmsr_r
             errcode = ms.read(reclen, skipnotdata, dataflag, verbose,
                               raise_flag=False)
-            if errcode != 0:
-                warnings.warn("Either broken last record in mseed file " +
-                              "%s or error in ms_readmsr_r" % filename)
-                break
+            if errcode != MS_NOERROR:
+                if errcode == MS_ENDOFFILE:
+                    msg = "Broken last record in mseed file %s" % filename
+                    warnings.warn(msg)
+                    break
+                raise Exception("Error %d in ms_readmsr_r" % errcode)
             chain = ms.msr.contents
             header = self._convertMSRToDict(chain)
             delta = HPTMODULUS / float(header['samprate'])
@@ -510,15 +515,15 @@ class LibMSEED(object):
             errcode = clibmseed.ms_readtraces_timewin(
                 C.pointer(mstg), filename, reclen, timetol, sampratetol,
                 starttime, endtime, dataquality, skipnotdata, dataflag, verbose)
-            if errcode != 0:
-                raise Exception("Error in ms_readtraces")
+            if errcode != MS_NOERROR:
+                raise Exception("Error %d in ms_readtraces" % errcode)
         else:
             # Uses libmseed to read the file and populate the MSTraceGroup
             errcode = clibmseed.ms_readtraces(
                 C.pointer(mstg), filename, reclen, timetol, sampratetol,
                 dataquality, skipnotdata, dataflag, verbose)
-            if errcode != 0:
-                raise Exception("Error in ms_readtraces")
+            if errcode != MS_NOERROR:
+                raise Exception("Error %d in ms_readtraces" % errcode)
         return mstg
 
     def getStartAndEndTime(self, filename):
@@ -1148,17 +1153,19 @@ class _MSStruct(object):
                                          C.pointer(self.msr),
                                          self.file, reclen, None, None,
                                          skipnotdata, dataflag, verbose)
-        if raise_flag and errcode != 0:
-            raise Exception("Error in ms_readmsr_r")
-        else:
-            return errcode
+        if raise_flag:
+            if errcode != MS_NOERROR:
+                raise Exception("Error %d in ms_readmsr_r" % errcode)
+        return errcode
 
     def __del__(self):
         """
         Method for deallocating MSFileParam and MSRecord structure.
         """
-        clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
-                               None, -1, None, None, 0, 0, 0)
+        errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
+                                         None, -1, None, None, 0, 0, 0)
+        if errcode != MS_NOERROR:
+            raise Exception("Error %d in ms_readmsr_r" % errcode)
 
     def setOffset(self, value):
         self.msf.contents.readoffset = C.c_int(value)
