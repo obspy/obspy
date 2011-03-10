@@ -340,6 +340,15 @@ class WaveformFileCrawler(object):
         # process a single file
         path = self._current_path
         filepath = os.path.join(path, file)
+        # check if recent
+        if self.options.recent:
+            # skip older files
+            if time.time() - mtime > 60 * 60 * self.options.recent:
+                try:
+                    db_file_mtime = self._db_files.pop(file)
+                except:
+                    pass
+                return
         # option force-reindex set -> process file regardless if already in
         # database or recent or whatever
         if self.options.force_reindex:
@@ -352,15 +361,6 @@ class WaveformFileCrawler(object):
         except Exception, e:
             self.log.error(str(e))
             return
-        # check if recent
-        if self.options.recent:
-            # skip older files
-            if time.time() - mtime > 60 * 60 * self.options.recent:
-                try:
-                    db_file_mtime = self._db_files.pop(file)
-                except:
-                    pass
-                return
         # compare with database entries
         if file not in self._db_files.keys():
             # file does not exists in database -> add file
