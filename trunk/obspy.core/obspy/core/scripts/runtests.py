@@ -127,12 +127,13 @@ def _createReport(ttrs, timetaken, log, server):
     import urllib
     from urlparse import urlparse
     import platform
+    from xml.sax.saxutils import escape
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
     result['timetaken'] = timetaken
     if log:
         try:
-            result['install_log'] = '<![CDATA[' + open(log, 'r').read() + ']]>'
+            result['install_log'] = escape(open(log, 'r').read())
         except:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
