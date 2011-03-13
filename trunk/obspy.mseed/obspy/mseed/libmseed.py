@@ -130,7 +130,7 @@ from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
         PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES, \
-        blkt_1001_s
+        blkt_1001_s, Py_ssize_t
 from struct import unpack
 import ctypes as C
 import math
@@ -1079,6 +1079,10 @@ class _MSStruct(object):
         self.msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         self.msf = C.POINTER(MSFileParam)() # null pointer
         self.file = filename
+        # only necessary for python2.5, for > python2.6 None can
+        # be used as NULL pointer
+        self.fpos = C.POINTER(Py_ssize_t)() # null pointer
+        self.last = C.POINTER(C.c_int)()    # null pointer
         # dummy read once, to avoid null pointer in ms.msf for e.g.
         # ms.offset
         if init_msrmsf:
@@ -1151,8 +1155,9 @@ class _MSStruct(object):
         """
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf),
                                          C.pointer(self.msr),
-                                         self.file, reclen, None, None,
-                                         skipnotdata, dataflag, verbose)
+                                         self.file, reclen, self.fpos,
+                                         self.last, skipnotdata, dataflag,
+                                         verbose)
         if raise_flag:
             if errcode != MS_NOERROR:
                 raise Exception("Error %d in ms_readmsr_r" % errcode)
@@ -1163,7 +1168,8 @@ class _MSStruct(object):
         Method for deallocating MSFileParam and MSRecord structure.
         """
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf), C.pointer(self.msr),
-                                         None, -1, None, None, 0, 0, 0)
+                                         C.c_char_p(), # null pointer
+                                         -1, self.fpos, self.last, 0, 0, 0)
         if errcode != MS_NOERROR:
             raise Exception("Error %d in ms_readmsr_r" % errcode)
 
