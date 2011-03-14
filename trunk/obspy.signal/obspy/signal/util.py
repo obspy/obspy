@@ -214,6 +214,24 @@ def rdct(x, n=0):
         return y
 
 
+def az2baz2az(angle):
+    """
+    Helper function to convert from azimuth to backazimuth or from backazimuth
+    to azimuth.
+
+    :type angle: float or int
+    :param angle: azimuth or backazimuth value in degrees between 0 and 360.
+    :return: corresponding backazimuth or azimuth value in degrees.
+    """
+    if 0 <= angle <= 180:
+        new_angle = angle + 180
+    elif 180 < angle <= 360:
+        new_angle = angle - 180
+    else:
+        raise ValueError("Input (back)azimuth out of bounds: %s" % angle)
+    return new_angle
+
+
 # XXX Making sure that the functions that got transferred to submodule xcorr.py
 # can still be imported from obspy.signal.util.
 # Showing a DeprecationWarning if they are used.
