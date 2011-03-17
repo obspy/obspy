@@ -1,9 +1,9 @@
-This is the Debian GNU prepackaged version of obspy.sac, which was
-written by Yannik Behr and Moritz Beyreuther.
+This is the Debian GNU prepackaged version of obspy.neries, which was
+written Tobias Megies, Lion Krischer and Robert Barsch.
 
 This package was debianized by Moritz Beyreuther. The source for
 this release was taken from:
-https://svn.obspy.org/trunk/obspy.sac
+https://svn.obspy.org/trunk/obspy.neries
 
 Program Copyright (C) 2009,2011 The ObsPy Development Team <devs@obspy.org>.
 

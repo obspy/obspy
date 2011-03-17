@@ -1,6 +1,5 @@
-python-obspy-wav (0.3.3-1) unstable; urgency=low
+python-obspy-iris (0.4.7-1) unstable; urgency=low
 
   * Initial version
-  * clean
 
  -- Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>  Wed, 16 Mar 2011 07:13:16 +0100

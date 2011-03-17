@@ -3,9 +3,9 @@ written by Robert Barsch.
 
 This package was debianized by Moritz Beyreuther. The source for
 this release was taken from:
-https://svn.geophysik.uni-muenchen.de/svn/obspy/obspy.sh/trunk
+https://svn.obspy.org/trunk/obspy.sh
 
-Program Copyright (C) 2009,2010 The ObsPy Development Team <devs@obspy.org>.
+Program Copyright (C) 2009,2011 The ObsPy Development Team <devs@obspy.org>.
 
 Copyright:
 

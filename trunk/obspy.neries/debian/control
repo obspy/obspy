@@ -1,0 +1,30 @@
+Source: python-obspy-neries
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 0.4.7
+Vcs-Svn: https://svn.obspy.org/trunk/obspy.neries
+Vcs-Browser: https://svn.obspy.org/trunk/obspy.neries
+Homepage: http://www.obspy.org
+
+Package: python-obspy-neries
+Architecture: all
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6), python-lxml (>= 2.1), python-simplejson (>=1.9),
+ python-obspy-core
+Description: NERIES web service client for ObsPy
+ .
+ The obspy.neries package contains a client for the Seismic Data Portal
+ (http://www.seismicportal.eu) which was developed under the European
+ Commission-funded NERIES project. The Portal provides a single point of access
+ to diverse, distributed European earthquake data provided in a unique joint
+ initiative by observatories and research institutes in and around Europe.
+ .
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats and
+ seismological signal processing routines which allow the manipulation of
+ seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+ project is to facilitate rapid application development for seismology. 
+ .
+ For more information visit http://www.obspy.org.

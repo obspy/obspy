@@ -1,0 +1,26 @@
+Source: python-obspy-iris
+Section: python
+Priority: extra
+Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 0.4.7
+Vcs-Svn: https://svn.obspy.org/trunk/obspy.iris
+Vcs-Browser: https://svn.obspy.org/trunk/obspy.iris
+Homepage: http://www.obspy.org
+
+Package: python-obspy-iris
+Architecture: all
+Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
+ python-setuptools (> 0.6), python-lxml (>= 2.1), python-obspy-core, python-obspy-mseed
+Description: IRIS web service client for ObsPy
+ .
+ The obspy.iris package contains a client for the DMC Web Services provided by
+ IRIS (http://www.iris.edu/ws/). 
+ .
+ ObsPy is an open-source project dedicated to provide a Python framework for
+ processing seismological data. It provides parsers for common file formats and
+ seismological signal processing routines which allow the manipulation of
+ seismological time series (see  Beyreuther et. al. 2010). The goal of the ObsPy
+ project is to facilitate rapid application development for seismology. 
+ .
+ For more information visit http://www.obspy.org.

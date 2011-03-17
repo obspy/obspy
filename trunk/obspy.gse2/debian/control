@@ -3,9 +3,9 @@ Section: python
 Priority: extra
 Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
 Build-Depends: debhelper (>= 5), gcc
-Standards-Version: 0.3.4
-Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.gse2/trunk
-Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.gse2/trunk
+Standards-Version: 0.4.7
+Vcs-Svn: https://svn.obspy.org/trunk/obspy.gse2
+Vcs-Browser: https://svn.obspy.org/trunk/obspy.gse2
 Homepage: http://www.obspy.org
 
 Package: python-obspy-gse2

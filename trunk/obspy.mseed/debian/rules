@@ -6,6 +6,7 @@
 binary: binary-stamp
 binary-stamp:
 	dh binary --until dh_shlibdeps
-	find $(CURDIR)/debian -path "*/src" -type d -exec rm {} \;
+	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
 	dh binary --after dh_shlibdeps
 	touch binary-stamp

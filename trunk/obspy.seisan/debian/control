@@ -3,9 +3,9 @@ Section: python
 Priority: extra
 Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 0.3.3
-Vcs-Svn: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.seisan/trunk
-Vcs-Browser: https://svn.geophysik.uni-muenchen.de/svn/trunk/obspy.seisan/trunk
+Standards-Version: 0.4.7
+Vcs-Svn: https://svn.obspy.org/trunk/obspy.seisan
+Vcs-Browser: https://svn.obspy.org/trunk/obspy.seisan
 Homepage: http://www.obspy.org
 
 Package: python-obspy-seisan
