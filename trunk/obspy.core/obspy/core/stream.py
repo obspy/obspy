@@ -9,12 +9,11 @@ Module for handling ObsPy Stream objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from StringIO import StringIO
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
-    interceptDict, getExampleFile
+    interceptDict, getExampleFile, getEntryPoints
 from pkg_resources import load_entry_point
 import copy
 import math
@@ -25,42 +24,7 @@ import urllib2
 import warnings
 
 
-WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                          'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU', 'WAV']
-
-
-def get_obspy_entry_points():
-    """
-    Creates a sorted list of available entry points.
-    """
-    # get all available entry points
-    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
-    # NOTE: If no file format is installed, this will fail and therefore the
-    # whole file can no longer be executed. However obspy.core.ascii is
-    # always available.
-    if not formats_ep:
-        msg = "Your current ObsPy installation does not support any file " + \
-              "reading formats. Please update or extend your ObsPy " + \
-              "installation."
-        raise Exception(msg)
-    eps = formats_ep.values()
-    names = [_i.name for _i in eps]
-    # loop through known waveform plug-ins and add them to resulting list
-    new_entries = []
-    for entry in WAVEFORM_PREFERRED_ORDER:
-        # skip plug-ins which are not installed
-        if not entry in names:
-            continue
-        new_entries.append(formats_ep[entry])
-        index = names.index(entry)
-        eps.pop(index)
-        names.pop(index)
-    # extend resulting list with any modules which are unknown
-    new_entries.extend(eps)
-    # return list of entry points
-    return new_entries
-
-ENTRY_POINTS = get_obspy_entry_points()
+ENTRY_POINTS = getEntryPoints()
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
@@ -1284,7 +1248,6 @@ class Stream(object):
         if method == -1:
             self._cleanup()
             return
-
         # check sampling rates and dtypes
         self._mergeChecks()
         # order matters!
@@ -1792,47 +1755,6 @@ class Stream(object):
                     self.traces.append(cur_trace)
                     cur_trace = trace
             self.traces.append(cur_trace)
-
-
-def createDummyStream(stream_string):
-    """
-    Creates a dummy stream object from the output of the print method of any
-    Stream or Trace object.
-
-    If the __str__ method of the Stream or Trace objects changes, than this
-    method has to be adjusted too.
-    """
-    stream_io = StringIO(stream_string)
-    traces = []
-    for line in stream_io:
-        line = line.strip()
-        # Skip first line.
-        if not line or 'Stream' in line:
-            continue
-        items = line.split(' ')
-        items = [item for item in items if len(item) > 1]
-        # Map them.
-        try:
-            id = items[0]
-            network, station, location, channel = id.split('.')
-            starttime = UTCDateTime(items[1])
-            endtime = UTCDateTime(items[2])
-            npts = int(items[5])
-        except:
-            continue
-        tr = Trace(data=np.random.ranf(npts))
-        tr.stats.network = network
-        tr.stats.station = station
-        tr.stats.location = location
-        tr.stats.channel = channel
-        tr.stats.starttime = starttime
-        delta = (endtime - starttime) / (npts - 1)
-        tr.stats.delta = delta
-        # Set as a preview Trace if it is a preview.
-        if '[preview]' in line:
-            tr.stats.preview = True
-        traces.append(tr)
-    return Stream(traces=traces)
 
 
 if __name__ == '__main__':

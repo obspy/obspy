@@ -27,6 +27,10 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
 ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub', 'iris',
                                  'neries', 'db']
 
+# default order of automatic format detection
+WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
+                            'WAV']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -557,6 +561,38 @@ def skipIf(condition, reason):
 @deprecated
 def path(testfile):
     return getExampleFile(testfile)
+
+
+def getEntryPoints():
+    """
+    Creates a sorted list of available entry points.
+    """
+    # get all available entry points
+    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
+    # NOTE: If no file format is installed, this will fail and therefore the
+    # whole file can no longer be executed. However obspy.core.ascii is
+    # always available.
+    if not formats_ep:
+        msg = "Your current ObsPy installation does not support any file " + \
+              "reading formats. Please update or extend your ObsPy " + \
+              "installation."
+        raise Exception(msg)
+    eps = formats_ep.values()
+    names = [_i.name for _i in eps]
+    # loop through known waveform plug-ins and add them to resulting list
+    new_entries = []
+    for entry in WAVEFORM_PREFERRED_ORDER:
+        # skip plug-ins which are not installed
+        if not entry in names:
+            continue
+        new_entries.append(formats_ep[entry])
+        index = names.index(entry)
+        eps.pop(index)
+        names.pop(index)
+    # extend resulting list with any modules which are unknown
+    new_entries.extend(eps)
+    # return list of entry points
+    return new_entries
 
 
 if __name__ == '__main__':
