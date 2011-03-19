@@ -18,7 +18,8 @@ export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 DEBDIR=`pwd`/packages
 DIR=`pwd`/../..
-rm -rf $DEBDIR
+# deactivate, else each time all packages are removed
+#rm -rf $DEBDIR
 mkdir -p $DEBDIR
 
 
@@ -57,7 +58,10 @@ for MODULE in $MODULES; do
     # distribute is not packed for python2.5 in Debain
     # Note: the space before distribute is essential
     if [ "$MODULE" = "obspy.core" ]; then
-       ex setup.py <<< "g/ distribute_setup/d|:wq"
+       ex setup.py << EOL
+g/ distribute_setup/d
+wq
+EOL
     fi
     # remove untracked files
     svn cleanup .
@@ -68,7 +72,10 @@ for MODULE in $MODULES; do
     DEBVERSION=1
     #dch --newversion ${VERSION}-$DEBVERSION "New release" 
     # update also Standards-Version: 0.3.3
-    ex debian/control <<< "g/Standards-Version/s/[0-9.]\+/$VERSION/|:wq"
+    ex debian/control << EOF
+g/Standards-Version/s/[0-9.]\+/$VERSION/
+wq
+EOF
     # build the package
     fakeroot ./debian/rules clean build binary
     mv ../python-${MODULE/./-}_*.deb $DEBDIR
