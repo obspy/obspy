@@ -102,3 +102,9 @@ for MODULE in $MODULES; do
     echo $PACKAGE
     lintian -i $PACKAGE
 done
+
+#
+# generating meta info
+#
+echo 'Generating package meta info Packages.gz'
+dpkg-scanpackages $DEBDIR /dev/null | gzip > $DEBDIR/Packages.gz
