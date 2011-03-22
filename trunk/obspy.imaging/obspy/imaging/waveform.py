@@ -788,8 +788,16 @@ def _plot_list(streams):
 
     # go through stream and compile unique lists of ids
     comp_ids = list(set([tr.stats.channel[-1] for tr in st]))
-    sta_ids = list(set(["%s.%s" % (tr.stats.network, tr.stats.station)
-                        for tr in st]))
+    # sort component ids
+    for comp in ["Z", "N", "E", "R", "T", "L", "Q", "T"][::-1]:
+        try:
+            comp_ids.remove(comp)
+            comp_ids.insert(0, comp)
+        except:
+            pass
+    sta_ids = ["%s.%s.%s" % (tr.stats.network, tr.stats.station,
+               tr.stats.location) for tr in st]
+    sta_ids = list(set(sta_ids))
     num_plots = len(comp_ids)
     num_lines = len(sta_ids)
 
@@ -811,7 +819,8 @@ def _plot_list(streams):
     # plot every trace with respective color in respective subplot
     for tr in st:
         comp_id = tr.stats.channel[-1]
-        sta_id = "%s.%s" % (tr.stats.network, tr.stats.station)
+        sta_id = "%s.%s.%s" % (tr.stats.network, tr.stats.station,
+                               tr.stats.location)
         start = date2num(tr.stats.starttime)
         end = date2num(tr.stats.endtime)
         time = np.linspace(start, end, tr.stats.npts)
