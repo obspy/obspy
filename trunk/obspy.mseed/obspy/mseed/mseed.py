@@ -80,12 +80,13 @@ Selections._fields_ = [
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
     C.POINTER(MSTraceList),
-    np.ctypeslib.ndpointer(dtype='int8', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.POINTER(Selections)
     ]
 
 clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
+clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
 HPTERROR = -2145916800000000L
 
@@ -157,9 +158,9 @@ def readMSEED(mseed_object, selection=None):
     # If its a filename just read it.
     if type(mseed_object) is str:
         # Read to numpy array which is used as a buffer.
-        buffer = np.fromfile(mseed_object, dtype='int8')
+        buffer = np.fromfile(mseed_object, dtype='b')
     elif hasattr(mseed_object, 'read'):
-        buffer = np.fromstring(mseed_object.read(), dtype='int8')
+        buffer = np.fromstring(mseed_object.read(), dtype='b')
 
     buflen = len(buffer)
 
@@ -226,4 +227,5 @@ def readMSEED(mseed_object, selection=None):
             this_trace = this_trace.next.contents
         except ValueError:
             break
+    clibmseed.mstl_free(C.pointer(mstl), C.c_int(1))
     return Stream(traces=traces)
