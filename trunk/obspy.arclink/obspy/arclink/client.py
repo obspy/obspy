@@ -620,7 +620,10 @@ class Client(Telnet):
     @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=False, route=True):
+                     instruments=False, route=True, sensortype='',
+                     min_latitude=None, max_latitude=None,
+                     min_longitude=None, max_longitude=None,
+                     restricted=None, permanent=None):
         """
         Returns inventory data.
 
@@ -642,6 +645,22 @@ class Client(Telnet):
             Include instrument data (default is False).
         route : boolean, optional
             Enables ArcLink routing (default is True).
+        sensortype : string, optional
+            Limit streams to those using specific sensor types: "VBB", 
+            "BB", "SM", "OBS", etc. Can be also a combination like "VBB+BB+SM".
+        min_latitude : float, optional
+            Minimum latitude
+        max_latitude : float, optional
+            Maximum latitude
+        min_longitude : float, optional
+            Minimum longitude
+        max_longitude : float, optional
+            Maximum longitude
+        permanent : boolean, optional
+            Requesting only permanent or temporary networks respectively.
+        restricted : boolean, optional
+            Requesting only networks/stations/streams that have restricted or
+            open data respectively.
 
         Returns
         -------
@@ -651,7 +670,27 @@ class Client(Telnet):
         if instruments:
             rtype += 'instruments=true '
         # fetch plain XML document
-        rdata = [starttime, endtime, network, station, channel, location]
+        rdata = [starttime, endtime, network, station, channel, location, '.']
+        # optional constraints
+        if restricted is True:
+            rdata.append('restricted=true')
+        elif restricted is False:
+            rdata.append('restricted=false')
+        if permanent is True:
+            rdata.append('permanent=true')
+        elif permanent is False:
+            rdata.append('permanent=false')
+        if sensortype != '':
+            rdata.append('sensortype=%s' % sensortype)
+        if min_latitude:
+            rdata.append('latmin=%f' % min_latitude)
+        if max_latitude:
+            rdata.append('latmax=%f' % max_latitude)
+        if min_longitude:
+            rdata.append('lonmin=%f' % min_longitude)
+        if max_longitude:
+            rdata.append('lonmax=%f' % max_longitude)
+        # fetch data
         result = self._fetch(rtype, rdata, route=route)
         # parse XML document
         xml_doc = etree.fromstring(result)
