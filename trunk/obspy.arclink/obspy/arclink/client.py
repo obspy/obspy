@@ -97,6 +97,8 @@ class Client(Telnet):
         self.debug = False
         self._hello()
         self.debug = debug
+        if self.debug:
+            print('\nConnected to %s:%d' % (self.host, self.port))
 
     def _writeln(self, buffer):
         if self.command_delay:
@@ -153,6 +155,8 @@ class Client(Telnet):
             if self.host != self.init_host and self.port != self.init_port:
                 self.host = self.init_host
                 self.port = self.init_port
+                if self.debug:
+                    print('\nRequesting %s:%d' % (self.host, self.port))
                 return self._fetch(request_type, request_data, route)
             msg = 'Could not find route to %s.%s'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
@@ -162,6 +166,8 @@ class Client(Telnet):
         for route in routes:
             self.host = route['host']
             self.port = route['port']
+            if self.debug:
+                print('\nRequesting %s:%d' % (self.host, self.port))
             # only use timeout from python2.6
             if sys.hexversion < 0x020600F0:
                 self.open(self.host, self.port)
@@ -219,7 +225,7 @@ class Client(Telnet):
             # no data
             self._writeln('PURGE %d' % req_id)
             self._bye()
-            raise ArcLinkException('No data (e.g. wrong route)')
+            raise ArcLinkException('No data available')
         elif 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
             # error or no data
             self._writeln('PURGE %d' % req_id)
