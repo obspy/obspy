@@ -206,6 +206,18 @@ class ClientTestCase(unittest.TestCase):
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
 
+    def test_getInventory2(self):
+        """
+        Bugfix for location and channel codes for new inventory schema
+        """
+        client = Client()
+        # new schema
+        inventory = client.getInventory('G', 'UNM')
+        self.assertTrue('G.UNM.00.BHZ' in inventory)
+        # old schema
+        inventory = client.getInventory('BW', 'MANZ')
+        self.assertTrue('BW.MANZ..EHZ' in inventory)
+
     def test_getWaveformWithMetadata(self):
         """
         """

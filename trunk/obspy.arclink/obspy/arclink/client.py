@@ -691,7 +691,11 @@ class Client(Telnet):
         if max_longitude:
             rdata.append('lonmax=%f' % max_longitude)
         # fetch data
-        result = self._fetch(rtype, rdata, route=route)
+        if network == '*':
+            # set route to False if not network id is given
+            result = self._fetch(rtype, rdata, route=False)
+        else:
+            result = self._fetch(rtype, rdata, route=route)
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
@@ -803,10 +807,16 @@ class Client(Telnet):
                         else:
                             seismometer_id = comp.get(seismometer_ns, None)
                         # channel id
-                        id = net.code + '.' + sta.code + '.' + \
-                            stream.get('loc_code' , '') + '.' + \
-                            stream.get('code' , '  ') + \
-                            comp.get('code', ' ').strip()
+                        if xml_ns == INVENTORY_NS_0_2:
+                            # channel code is split into two attributes
+                            id = '.'.join([net.code, sta.code,
+                                           stream.get('loc_code' , ''),
+                                           stream.get('code' , '  ') + \
+                                           comp.get('code', ' ')])
+                        else:
+                            id = '.'.join([net.code, sta.code,
+                                           stream.get('code' , ''),
+                                           comp.get('code', '')])
                         # write channel entry
                         if not id in data:
                             data[id] = []
