@@ -204,7 +204,7 @@ class Client(Telnet):
             self._writeln('STATUS %d' % req_id)
             xml_doc = self._readln()
             if 'ready="true"' in xml_doc:
-                self.read_until('\r\n')
+                self.read_until('\r\n', self.status_timeout)
                 break
             time.sleep(self.status_delay)
         # check for errors
