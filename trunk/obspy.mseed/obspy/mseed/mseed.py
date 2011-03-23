@@ -1,4 +1,5 @@
 import ctypes as C
+from math import log
 import numpy as np
 
 from obspy.core import Stream, Trace, UTCDateTime
@@ -82,7 +83,10 @@ clibmseed.readMSEEDBuffer.argtypes = [
     C.POINTER(MSTraceList),
     np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
-    C.POINTER(Selections)
+    C.POINTER(Selections),
+    C.c_int,
+    C.c_int,
+    C.c_int
     ]
 
 clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
@@ -125,7 +129,7 @@ def _convertDatetimeToMSTime(dt):
     return int(dt.timestamp * HPTMODULUS)
 
 
-def readMSEED(mseed_object, selection=None):
+def readMSEED(mseed_object, selection=None, unpack_data=True, reclen=None):
     """
     Takes a file like object that contains binary MiniSEED data and returns an
     obspy.core.Stream object.
@@ -142,6 +146,10 @@ def readMSEED(mseed_object, selection=None):
         selection['sourcename'] has to have the structure
         'network.station.location.channel' and can contain globbing characters.
         Defaults to None
+    :param unpack_data: Determines whether or not to unpack the data or just
+        read the headers.
+    :param reclen: If it is None, it will be automatically determined for every
+        record. If it is known, just set it to the record length in bytes.
 
     Example usage
     =============
@@ -155,6 +163,16 @@ def readMSEED(mseed_object, selection=None):
                     'sourcename': 'BW.*.*.EHZ'}
     >> st = readMSEED(f, selection)
     """
+    # Parse the unpack_data and reclen flags.
+    if unpack_data:
+        unpack_data = 1
+    else:
+        unpack_data = 0
+    if not reclen:
+        reclen = -1
+    else:
+        reclen = int(log(reclen, 2))
+
     # If its a filename just read it.
     if type(mseed_object) is str:
         # Read to numpy array which is used as a buffer.
@@ -193,7 +211,8 @@ def readMSEED(mseed_object, selection=None):
         else:
             selections.srcname = '*'
 
-    clibmseed.readMSEEDBuffer(mstl, buffer, buflen, selections)
+    clibmseed.readMSEEDBuffer(mstl, buffer, buflen, selections, unpack_data,
+                              reclen, 0)
 
     traces = []
     # Loop over all traces.
