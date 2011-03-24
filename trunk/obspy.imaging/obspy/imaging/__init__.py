@@ -68,7 +68,7 @@ There are also a convenience method for :class:`~obspy.core.stream.Stream`/
     from obspy.core import read
     st = read()
     tr = st[0]
-    spectrogram(tr.data, tr.stats.sampling_rate)
+    spectrogram(tr.data, tr.stats.sampling_rate, sphinx=True)
 
 For more info see :func:`~obspy.imaging.spectrogram.spectrogram`.
 

@@ -801,7 +801,7 @@ class Stream(object):
 
             from obspy.core import read
             st = read()
-            st.spectrogram()
+            st.spectrogram(sphinx=True)
         """
         spec_list = []
         for tr in self:

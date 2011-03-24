@@ -678,14 +678,14 @@ class Trace(object):
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.spectrogram(log=True) # doctest: +SKIP
+        >>> tr.spectrogram() # doctest: +SKIP
 
         .. plot::
 
             from obspy.core import read
             st = read()
             tr = st[0]
-            tr.spectrogram(log=True)
+            tr.spectrogram(sphinx=True)
         """
         try:
             from obspy.imaging.spectrogram import spectrogram as spec

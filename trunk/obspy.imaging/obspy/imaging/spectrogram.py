@@ -61,7 +61,8 @@ def nearestPow2(x):
 @deprecated_keywords({'axis':'axes'})
 def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
                 outfile=None, format=None, axes=None, dbscale=False,
-                mult=8.0, cmap=None, zorder=None, title=None, show=True):
+                mult=8.0, cmap=None, zorder=None, title=None, show=True,
+                sphinx=False):
     """
     Computes and plots logarithmic spectrogram of the input data.
     
@@ -83,6 +84,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way,
             further modifications can be done to the figure before showing it.
+    :param sphinx: Internal flag used for API doc generation, default False
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
@@ -165,7 +167,8 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     if title:
         ax.set_title(title)
     
-    plt.draw()
+    if not sphinx:
+        plt.draw()
     if outfile:
         if format:
             fig.savefig(outfile, format=format)
