@@ -100,6 +100,18 @@ example above.
     >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
     ...                     t, t + 20, format='FSEED') #doctest: +SKIP
 
+(4) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory data.
+
+    >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
+    ...                           permanent=True, min_longitude=12, 
+    ...                           max_longitude=12.2) #doctest: +SKIP
+    >>> inv.keys() #doctest: +SKIP
+    ['BW.MROB', 'BW.MANZ..EHZ', 'BW', 'BW.MANZ', 'BW.MROB..EHZ']
+    >>> inv['BW'] #doctest: +SKIP
+    AttribDict({'description': 'BayernNetz', 'region': 'Germany', 'archive': ...
+    >>> inv['BW.MROB'] #doctest: +SKIP
+    AttribDict({'code': 'MROB', 'description': 'Rosenbuehl, Bavaria', 'start'...
+
 Further Resources
 -----------------
 * `ArcLink protocol`_ specifications
