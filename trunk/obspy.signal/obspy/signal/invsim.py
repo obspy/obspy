@@ -26,6 +26,14 @@ import util
 import warnings
 
 
+# Sensitivity is 2080 according to:
+# P. Bormann: New Manual of Seismological Observatory Practice
+# IASPEI Chapter 3, page 24
+# (PITSA has 2800)
+WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
+                'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
+
+
 def cosTaper(npts, p=0.1):
     """
     Cosine Taper.
@@ -349,42 +357,77 @@ def paz2AmpValueOfFreqResp(paz, freq):
 def estimateMagnitude(paz, amplitude, timespan, h_dist):
     """
     Estimates local magnitude from poles and zeros of given instrument, the
-    peak to peak amplitude and the period in which it is measured
+    peak to peak amplitude and the time span from peak to peak.
+    Readings on two components can be used in magnitude estimation by providing
+    lists for ``paz``, ``amplitude`` and ``timespan``.
+
+    Notes
+    -----
 
     Magnitude estimation according to Bakun & Joyner, 1984, Eq. (3) page 1835.
     Bakun, W. H. and W. B. Joyner: The Ml scale in central California,
     Bull. Seismol. Soc. Am., 74, 1827-1843, 1984
 
-    :param paz: PAZ of the instrument [m/s]
-    :param amplitude: Peak to peak amplitude [counts]
-    :param timespan: Timespan of peak to peak amplitude [s]
-    :param h_dist: Hypocentral distance [km]
+    Basic Usage
+    -----------
 
-    >>> paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j], \
-               'zeros': [0 + 0j, 0 + 0j, 0 + 0j], \
-               'gain': 1.0, \
-               'sensitivity': 671140000.0}
+    >>> paz = {'poles': [-4.444+4.444j, -4.444-4.444j, -1.083+0j], \
+               'zeros': [0+0j, 0+0j, 0+0j], \
+               'gain': 1.0, 'sensitivity': 671140000.0}
     >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
     >>> print(round(mag, 6))
     2.165345
+    >>> mag = estimateMagnitude([paz, paz], [3.34e6, 5e6], [0.065, 0.1], 0.255)
+    >>> print(round(mag, 6))
+    2.386788
+
+    :param paz: PAZ of the instrument [m/s] or list of the same
+    :param amplitude: Peak to peak amplitude [counts] or list of the same
+    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
+    :param h_dist: Hypocentral distance [km]
+    :returns: Estimated local magnitude Ml
     """
-    # Sensitivity is 2080 according to:
-    # P. Bormann: New Manual of Seismological Observatory Practice
-    # IASPEI Chapter 3, page 24
-    woodander = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
-                 'zeros': [0 + 0j],
-                 'gain': 1.0,
-                 'sensitivity': 2080} #iaspei, pitsa has 2800
+    # convert input to lists
+    if not isinstance(paz, list) and not isinstance(paz, tuple):
+        paz = [paz]
+    if not isinstance(amplitude, list) and not isinstance(amplitude, tuple):
+        amplitude = [amplitude]
+    if not isinstance(timespan, list) and not isinstance(timespan, tuple):
+        timespan = [timespan]
+    # convert every input amplitude to Wood Anderson and calculate the mean
+    wa_ampl_mean = 0.0
+    count = 0
+    for paz, amplitude, timespan in zip(paz, amplitude, timespan):
+        wa_ampl_mean += estimateWoodAndersonAmplitude(paz, amplitude, timespan)
+        count += 1
+    wa_ampl_mean /= count
+    # mean of input amplitudes (if more than one) should be used in final
+    # magnitude estimation (usually N and E components)
+    magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
+                0.00301 * (h_dist - 100.0) + 3.0
+    return magnitude
+
+def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
+    """
+    Convert amplitude in counts measured of instrument with given Poles and Zeros
+    information for use in :func:`estimateMagnitude`.
+    Amplitude should be measured as full peak to peak amplitude, timespan as
+    difference of the two readings.
+
+    :param paz: PAZ of the instrument [m/s] or list of the same
+    :param amplitude: Peak to peak amplitude [counts] or list of the same
+    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
+    :returns: Simulated zero to peak displacement amplitude on Wood Anderson
+            seismometer [mm] for use in local magnitude estimation.
+    """
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     freq = 1.0 / (2 * timespan)
     wa_ampl = amplitude / 2.0 #half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
-    wa_ampl *= paz2AmpValueOfFreqResp(woodander, freq) * \
-        woodander['sensitivity']
+    wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
+            WOODANDERSON['sensitivity']
     wa_ampl *= 1000 #convert to mm
-    magnitude = np.log10(wa_ampl) + np.log10(h_dist / 100.0) + \
-                0.00301 * (h_dist - 100.0) + 3.0
-    return magnitude
+    return wa_ampl
 
 
 if __name__ == '__main__':
