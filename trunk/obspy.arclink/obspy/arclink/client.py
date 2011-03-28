@@ -110,6 +110,8 @@ class Client(Telnet):
     def _readln(self, value=''):
         line = self.read_until(value + '\r\n', self.status_timeout)
         line = line.strip()
+        if value not in line:
+            print "TIMEOUT!!! %s" % value
         if self.debug:
             print('... ' + line)
         return line
@@ -194,9 +196,14 @@ class Client(Telnet):
         self._readln('OK')
         self._writeln('STATUS')
         while 1:
+            status = self._readln()
             try:
-                req_id = int(self._readln())
+                req_id = int(status)
             except:
+                if 'ERROR' in status:
+                    self._bye()
+                    msg = 'ArcLink server seems to have a hiccup - please retry'
+                    raise ArcLinkException(msg)
                 pass
             else:
                 break
@@ -221,7 +228,14 @@ class Client(Telnet):
         #           message is shown in STATUS response)
         #     = SIZE <n> - data size. In case of volume, it must be the
         #           exact size of downloadable product.
-        if 'status="NODATA"' in xml_doc:
+        if 'status="DENIED"' in xml_doc:
+            # denied
+            self._writeln('PURGE %d' % req_id)
+            self._bye()
+            # parse XML for reason
+            xml_doc = objectify.fromstring(xml_doc[:-3])
+            raise ArcLinkException(xml_doc.request.volume.line.get('message'))
+        elif 'status="NODATA"' in xml_doc:
             # no data
             self._writeln('PURGE %d' % req_id)
             self._bye()
