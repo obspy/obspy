@@ -591,7 +591,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
 def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabhour', njobs=2,
+          verbose=False, coordsys='lonlat', timestamp='mlabday', njobs=2,
           ppservers=(), secret='verysecret'):
     """
     Parrallelized Version of sonic. EXPERIMENTAL!
@@ -649,7 +649,7 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabhour'):
+          verbose=False, coordsys='lonlat', timestamp='mlabday'):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis
 
@@ -688,10 +688,11 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
     :type timestamp: string
-    :param timestamp: valid values: 'julsec' and 'mlabhour'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabhour'
-        returns the timestamp in hours since '0001-01-01T00:00:00' as
-        needed for matplotlib date plotting
+    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
+        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
+        returns the timestamp in days (decimals represent hours, minutes
+        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
+        date plotting (see e.g. matplotlibs num2date)
     :return: numpy.ndarray of timestamp, relative power, absolute power,
         backazimut, slowness
     """
@@ -773,11 +774,15 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     res = np.array(res)
     if timestamp == 'julsec':
         pass
-    elif timestamp == 'mlabhour':
+    elif timestamp == 'mlabday':
         # 719162 == hours between 1970 and 0001
         res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+    elif timestamp == 'mlabhour':
+        msg = "Deprecated, use 'mlabday' instead"
+        warnings.warn(msg, DeprecationWarning)
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
     else:
-        msg = "Option timestamp must be one of 'julsec', or 'mlabhour'"
+        msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
     return np.array(res)
 
