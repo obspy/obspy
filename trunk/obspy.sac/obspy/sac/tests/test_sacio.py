@@ -323,6 +323,7 @@ class SacIOTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((amp1 - amp2) ** 2) / \
                       np.sum(amp2 ** 2))
         self.assertTrue(rms < 2.02e-06)
+        self.assertTrue(tr1.stats.paz.t_shift,0.4022344)
         # The following plots the comparison between the
         # two frequency response functions.
         #import pylab as plt

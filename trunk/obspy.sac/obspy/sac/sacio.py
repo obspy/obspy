@@ -1466,6 +1466,8 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     poles_pat = r'B053F15-18'
     a0_pat = r'B053F07'
     sens_pat = r'B058F04'
+    t_shift_pat = r'B057F08'
+    t_shift = 0.0
     poles = []
     zeros = []
     while True:
@@ -1481,6 +1483,8 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         if line.startswith(zeros_pat):
             tmp = line.split()
             zeros.append(complex(float(tmp[2]),float(tmp[3])))
+        if line.startswith(t_shift_pat):
+            t_shift += float(line.split(':')[1])
     constant = a0*sens
 
     if torad:
@@ -1525,7 +1529,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.gain = constant
-    
+    tr.stats.paz.t_shift = t_shift
 
 if __name__ == "__main__":
     import doctest
