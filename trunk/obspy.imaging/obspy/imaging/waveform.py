@@ -200,7 +200,7 @@ class WaveformPlotting(object):
         """
         Plot the Traces showing one graph per Trace.
 
-        Plots the whole time series for 400000 points and less. For more
+        Plots the whole time series for self.max_npts points and less. For more
         points it plots minmax values.
         """
         stream_new = []
@@ -262,7 +262,7 @@ class WaveformPlotting(object):
                                       axisbg=self.background_color)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
-            if (self.endtime - self.starttime) * sampling_rate > 400000:
+            if (self.endtime - self.starttime) * sampling_rate > self.max_npts:
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
