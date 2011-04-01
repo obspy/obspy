@@ -27,10 +27,9 @@ class Client(object):
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
-    >>>
-    >>> t = UTCDateTime("2010-02-27T06:30:00.000")
     >>> client = Client()
-    >>>
+       
+    >>> t = UTCDateTime("2010-02-27T06:30:00.000")
     >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 20)
     >>> print(st)
     1 Trace(s) in Stream:
@@ -93,16 +92,19 @@ class Client(object):
         -------
 
         >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
         >>> client = Client()
-        >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ",
-        ...                         "2010-02-27T06:30:00.000",
-        ...                         "2010-02-27T10:30:00.000")
+           
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t1, t2)
         >>> print st
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:30:00.019538Z | 20.0 Hz, 288001 samples
 
-        >>> st = client.getWaveform("TA", "A25A", "", "BH*",
-        ...                         "2010-084T00:00:00", "2010-084T00:30:00")
+        >>> t1 = UTCDateTime("2010-084T00:00:00")
+        >>> t2 = UTCDateTime("2010-084T00:30:00")
+        >>> st = client.getWaveform("TA", "A25A", "", "BH*", t1, t2)
         >>> print st
         3 Trace(s) in Stream:
         TA.A25A..BHE | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
@@ -147,8 +149,8 @@ class Client(object):
         except:
             # use 1 second extension if no proper bandcode info
             t_extension = 1.0
-        kwargs['starttime'] = (UTCDateTime(starttime) - t_extension).formatIRISWebService()
-        kwargs['endtime'] = (UTCDateTime(endtime) + t_extension).formatIRISWebService()
+        kwargs['starttime'] = UTCDateTime(starttime) - t_extension
+        kwargs['endtime'] = UTCDateTime(endtime) + t_extension
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
             kwargs['quality'] = str(quality).upper()
 
@@ -177,10 +179,13 @@ class Client(object):
         -------
 
         >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
         >>> client = Client()
+           
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
         >>> st = client.dataselect(network="IU", station="ANMO", location="00",
-        ...         channel="BHZ", starttime="2010-02-27T06:30:00.000",
-        ...         endtime="2010-02-27T10:30:00.000")
+        ...         channel="BHZ", starttime=t1, endtime=t2)
         >>> print st
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:29:59.969538Z | 20.0 Hz, 288000 samples
@@ -208,8 +213,19 @@ class Client(object):
         -------
             :class:`~obspy.core.stream.Stream`
         """
-        url = '/dataselect/query'
+        # convert UTCDateTime to string for query
+        try:
+            kwargs['starttime'] = \
+                    UTCDateTime(kwargs['starttime']).formatIRISWebService()
+        except KeyError:
+            pass
+        try:
+            kwargs['endtime'] = \
+                    UTCDateTime(kwargs['endtime']).formatIRISWebService()
+        except KeyError:
+            pass
         # build up query
+        url = '/dataselect/query'
         try:
             data = self._fetch(url, **kwargs)
         except HTTPError:
@@ -244,6 +260,7 @@ class Client(object):
         -------
         
         >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
         >>> client = Client()
 
         >>> requests = []
@@ -320,11 +337,13 @@ class Client(object):
         -------
         
         >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
         >>> client = Client()
-
+           
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00")
+        >>> t2 = UTCDateTime("2010-02-27T06:40:00")
         >>> response = client.availability(network="IU", station="B*",
-        ...         channel="BH*", starttime="2010-02-27T06:30:00",
-        ...         endtime="2010-02-27T06:40:00")
+        ...         channel="BH*", starttime=t1, endtime=t2)
         >>> print response
         IU BBSR 00 BH1 2010-02-27T06:30:00 2010-02-27T06:40:00
         IU BBSR 00 BH2 2010-02-27T06:30:00 2010-02-27T06:40:00
