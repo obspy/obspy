@@ -69,7 +69,7 @@ class Client(Telnet):
     Public servers:
       * WebDC servers: webdc.eu:18001, webdc:18002
 
-    Further mirrors listed at webdc.eu (restricted access only):
+    Further mirrors listed at webdc.eu (partly restricted access only):
       * ODC Server:  bhlsa03.knmi.nl:18001
       * INGV Server: eida.rm.ingv.it:18001
       * IPGP Server: geosrt2.ipgp.fr:18001
@@ -187,14 +187,13 @@ class Client(Telnet):
     def _request(self, request_type, request_data):
         self._hello()
         self._writeln(request_type)
+        self._readln('OK')
         # create request string
         out = (request_data[0] - 1).formatArcLink() + ' '
         out += (request_data[1] + 1).formatArcLink() + ' '
         out += ' '.join([str(i) for i in request_data[2:]])
         self._writeln(out)
         self._writeln('END')
-        self._readln('OK')
-        self._writeln('STATUS')
         while 1:
             status = self._readln()
             try:
@@ -202,8 +201,7 @@ class Client(Telnet):
             except:
                 if 'ERROR' in status:
                     self._bye()
-                    msg = 'ArcLink server seems to have a hiccup - please retry'
-                    raise ArcLinkException(msg)
+                    raise ArcLinkException('Error in request')
                 pass
             else:
                 break
@@ -228,20 +226,23 @@ class Client(Telnet):
         #           message is shown in STATUS response)
         #     = SIZE <n> - data size. In case of volume, it must be the
         #           exact size of downloadable product.
-        if 'status="DENIED"' in xml_doc:
-            # denied
-            self._writeln('PURGE %d' % req_id)
-            self._bye()
-            # parse XML for reason
-            xml_doc = objectify.fromstring(xml_doc[:-3])
-            raise ArcLinkException(xml_doc.request.volume.line.get('message'))
-        elif 'status="NODATA"' in xml_doc:
-            # no data
+        for err_code in ['DENIED', 'CANCELLED', 'CANCEL', 'ERROR']:
+            err_str = 'status="%s"' % (err_code)
+            if err_str in xml_doc:
+                # cleanup
+                self._writeln('PURGE %d' % req_id)
+                self._bye()
+                # parse XML for reason
+                xml_doc = objectify.fromstring(xml_doc[:-3])
+                msg = xml_doc.request.volume.line.get('message')
+                raise ArcLinkException("%s %s" % (err_code, msg))
+        if 'status="NODATA"' in xml_doc:
+            # cleanup
             self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No data available')
         elif 'id="NODATA"' in xml_doc or 'id="ERROR"' in xml_doc:
-            # error or no data
+            # cleanup
             self._writeln('PURGE %d' % req_id)
             self._bye()
             # parse XML for error message
@@ -271,59 +272,6 @@ class Client(Telnet):
         self._bye()
         self.data = data
         return data
-
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
-    def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED", compressed=True):
-        """
-        Writes a retrieved waveform directly into a file.
-
-        Parameters
-        ----------
-        filename : string
-            Name of the output file.
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        format : ['FSEED' | 'MSEED'], optional
-            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED').
-            .. note::
-                Format 'XSEED' is documented, but not yet implemented in
-                ArcLink.
-        compressed : boolean, optional
-            Request compressed files from ArcLink server (default is True).
-        """
-        rtype = 'REQUEST WAVEFORM format=%s' % format
-        if compressed:
-            try:
-                import bz2
-            except:
-                compressed = False
-            else:
-                rtype += " compression=bzip2"
-        # adding one second to start and end time to ensure right date times
-        rdata = [starttime, endtime, network, station, channel, location]
-        data = self._fetch(rtype, rdata)
-        if data and compressed:
-            data = bz2.decompress(data)
-        # create file handler if a file name is given
-        if isinstance(filename, basestring):
-            fh = open(filename, "wb")
-        else:
-            fh = filename
-        fh.write(data)
-        if isinstance(filename, basestring):
-            fh.close()
 
     @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getWaveform(self, network, station, location, channel, starttime,
@@ -405,6 +353,66 @@ class Client(Telnet):
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
+    @deprecated_keywords(DEPRECATED_KEYWORDS)
+    def saveWaveform(self, filename, network, station, location, channel,
+                     starttime, endtime, format="MSEED", compressed=True):
+        """
+        Writes a retrieved waveform directly into a file.
+
+        This method ensures the storage of the unmodified waveform data
+        delivered by the ArcLink server, e.g. preserving the record based
+        quality flags of MiniSEED files which would be neglected reading it
+        with obspy.mseed.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['FSEED' | 'MSEED'], optional
+            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
+            volume (default is an 'MSEED').
+            .. note::
+                Format 'XSEED' is documented, but not yet implemented in
+                ArcLink.
+        compressed : boolean, optional
+            Request compressed files from ArcLink server (default is True).
+        """
+        # request type
+        rtype = 'REQUEST WAVEFORM format=%s' % format
+        if compressed:
+            try:
+                import bz2
+            except:
+                compressed = False
+            else:
+                rtype += " compression=bzip2"
+        # request data
+        rdata = [starttime, endtime, network, station, channel, location]
+        # fetch waveform
+        data = self._fetch(rtype, rdata)
+        if data and compressed:
+            data = bz2.decompress(data)
+        # create file handler if a file name is given
+        if isinstance(filename, basestring):
+            fh = open(filename, "wb")
+        else:
+            fh = filename
+        fh.write(data)
+        if isinstance(filename, basestring):
+            fh.close()
+
     @deprecated_keywords({'network_id':'network', 'station_id':'station',
                           'start_datetime':'starttime',
                           'end_datetime':'endtime'})
@@ -427,8 +435,9 @@ class Client(Telnet):
         -------
             Dictionary of host names.
         """
+        # request type
         rtype = 'REQUEST ROUTING '
-        # adding one second to start and end time to ensure right date times
+        # request data
         rdata = [starttime, endtime, network, station]
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=False)
@@ -464,6 +473,58 @@ class Client(Telnet):
                 temp['host'] = node.get('address').split(':')[0].strip()
                 temp['port'] = int(node.get('address').split(':')[1].strip())
                 result[id].append(temp)
+        return result
+
+    def getQC(self, network, station, location, channel, starttime,
+              endtime, parameters='*', outages=True, logs=True):
+        """
+        Retrieve QC information of ArcLink streams.
+
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'BW'.
+        station : string
+            Station code, e.g. 'MANZ'.
+        location : string
+            Location code, e.g. '01'.
+        channel : string
+            Channel code, e.g. 'EHE'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        parameters : str, optional
+            Comma-separated list of QC parameters. The following QC parameters
+            are implemented in the present version: availability, delay, 
+            gaps count, gaps interval, gaps length, latency, offset, 
+            overlaps count, overlaps interval, overlaps length, rms, 
+            spikes amplitude, spikes count, spikes interval, timing quality
+            (default is '*' for all parameters).
+        outages : boolean, optional
+            Include list of outages (default is True).
+        logs : boolean, optional
+            Include log messages (default is True).
+
+        Returns
+        -------
+            XML document as string.
+        """
+        # request type
+        rtype = 'REQUEST QC'
+        if outages is True:
+            rtype += ' outages=true'
+        else:
+            rtype += ' outages=false'
+        if logs is True:
+            rtype += ' logs=false'
+        else:
+            rtype += ' logs=false'
+        rtype += ' parameters=%s' % (parameters)
+        # request data
+        rdata = [starttime, endtime, network, station]
+        # fetch plain XML document
+        result = self._fetch(rtype, rdata, route=False)
         return result
 
     @deprecated_keywords(DEPRECATED_KEYWORDS)
@@ -629,9 +690,11 @@ class Client(Telnet):
                 Format 'XSEED' is documented, but not yet implemented in
                 ArcLink.
         """
+        # request type
         rtype = 'REQUEST RESPONSE format=%s' % format
-        # adding one second to start and end time to ensure right date times
+        # request data
         rdata = [starttime, endtime, network, station, channel, location]
+        # fetch dataless
         data = self._fetch(rtype, rdata)
         fh = open(filename, "wb")
         fh.write(data)
@@ -686,12 +749,12 @@ class Client(Telnet):
         -------
             Dictionary of inventory information.
         """
+        # request type
         rtype = 'REQUEST INVENTORY '
         if instruments:
             rtype += 'instruments=true '
-        # fetch plain XML document
+        # request data
         rdata = [starttime, endtime, network, station, channel, location, '.']
-        # optional constraints
         if restricted is True:
             rdata.append('restricted=true')
         elif restricted is False:
@@ -710,7 +773,7 @@ class Client(Telnet):
             rdata.append('lonmin=%f' % min_longitude)
         if max_longitude:
             rdata.append('lonmax=%f' % max_longitude)
-        # fetch data
+        # fetch plain XML document
         if network == '*':
             # set route to False if not network id is given
             result = self._fetch(rtype, rdata, route=False)

@@ -114,7 +114,10 @@ example above.
 
 Further Resources
 -----------------
-* `ArcLink protocol`_ specifications
+* ArcLink protocol specifications
+  * http://www.seiscomp3.org/wiki/doc/applications/arclink
+  * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
+  * https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
 * Short introduction_ to the ArcLink protocol
 * Latest `ArcLink server`_ package
 * SeismoLink_: a SOAP Web Service on top of the ArcLink network
@@ -135,8 +138,6 @@ Further Resources
         http://www.gfz-potsdam.de
 .. _IPGP:
         http://www.ipgp.fr
-.. _`ArcLink protocol`:
-        https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
 .. _introduction:
         http://www.webdc.eu/webdc_sum.html
 .. _`ArcLink server`:
