@@ -1455,7 +1455,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     >>> respfile = os.path.join(os.path.dirname(__file__),'tests','data','RESP.NZ.CRLZ.10.HHZ')
     >>> attach_resp(tr,respfile,torad=True,todisp=False)
     >>> print tr.stats.paz.keys()
-    ['zeros', 'seismometer_gain', 'poles', 'digitizer_gain', 'gain']
+    ['digitizer_gain', 'seismometer_gain', 'zeros', 'gain', 't_shift', 'poles']
     >>> print tr.stats.paz.poles
     [(-0.15931644664884559+0.15931644664884559j), (-0.15931644664884559-0.15931644664884559j), (-314.15926535897933+202.31856689118268j), (-314.15926535897933-202.31856689118268j)]
     """
