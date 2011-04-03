@@ -189,6 +189,7 @@ class Client(Telnet):
         self._writeln(request_type)
         self._readln('OK')
         # create request string
+        # adding one second to start and end time to ensure right date times
         out = (request_data[0] - 1).formatArcLink() + ' '
         out += (request_data[1] + 1).formatArcLink() + ' '
         out += ' '.join([str(i) for i in request_data[2:]])
