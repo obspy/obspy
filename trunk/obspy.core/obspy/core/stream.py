@@ -1099,7 +1099,7 @@ class Stream(object):
         return self.__class__(traces=traces)
 
     def select(self, network=None, station=None, location=None, channel=None,
-               sampling_rate=None, npts=None, component=None):
+               sampling_rate=None, npts=None, component=None, id=None):
         """
         Returns new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with `channel="EHZ"`).
@@ -1118,6 +1118,10 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+        >>> st2 = st.select(id="BW.RJOB..EHZ")
+        >>> print(st2)
+        1 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> st2 = st.select(component="Z")
         >>> print(st2)
         1 Trace(s) in Stream:
@@ -1153,6 +1157,8 @@ class Stream(object):
         traces = []
         for trace in self:
             # skip trace if any given criterion is not matched
+            if id and not fnmatch.fnmatch(trace.id, id):
+                continue
             if network and not fnmatch.fnmatch(trace.stats.network, network):
                 continue
             if station and not fnmatch.fnmatch(trace.stats.station, station):
