@@ -57,6 +57,17 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     :return: (index, value, fct) index of maximum xcorr value and the value
         itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
+
+    :note: As shift_len gets higher the window supporting the cross
+           correlation actually gets smaller. So with shift_len=0 you get
+           the correlation coefficient of both traces as a whole without
+           any shift applied. As the xcorr function works in time domain
+           and does not zero pad at all, with higher shifts allowed the
+           window of support gets smaller so that the moving windows
+           shifted against each other do not run out of the timeseries
+           bounds at high time shifts. Of course there are other
+           possibilities to do cross correlations e.g. in frequency
+           domain.
     """
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
