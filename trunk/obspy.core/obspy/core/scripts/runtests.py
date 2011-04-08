@@ -54,6 +54,8 @@ Examples
     >>> obspy.core.runTests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 """
 
+import matplotlib
+matplotlib.use("AGG")
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
 from optparse import OptionParser
 from xml.etree import ElementTree as etree
