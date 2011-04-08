@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ArcLink client.
+ArcLink/WebDC client for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -12,8 +12,7 @@ ArcLink client.
 from copy import deepcopy
 from lxml import objectify, etree
 from obspy.core import read, Stream, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString, \
-    deprecated_keywords
+from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from telnetlib import Telnet
 import os
 import sys
@@ -24,11 +23,6 @@ ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
 ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
 INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
-
-
-DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
-                       'location_id':'location', 'channel_id':'channel',
-                       'start_datetime':'starttime', 'end_datetime':'endtime'}
 
 
 class ArcLinkException(Exception):
@@ -274,7 +268,6 @@ class Client(Telnet):
         self.data = data
         return data
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, format="MSEED", compressed=True, getPAZ=False,
                     getCoordinates=False):
@@ -354,7 +347,6 @@ class Client(Telnet):
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def saveWaveform(self, filename, network, station, location, channel,
                      starttime, endtime, format="MSEED", compressed=True):
         """
@@ -414,9 +406,6 @@ class Client(Telnet):
         if isinstance(filename, basestring):
             fh.close()
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station',
-                          'start_datetime':'starttime',
-                          'end_datetime':'endtime'})
     def getRouting(self, network, station, starttime, endtime):
         """
         Get responsible host addresses for given network/stations from ArcLink.
@@ -528,7 +517,6 @@ class Client(Telnet):
         result = self._fetch(rtype, rdata, route=False)
         return result
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getMetadata(self, network, station, location, channel, starttime,
                     endtime, getPAZ=True, getCoordinates=True):
         """
@@ -621,7 +609,6 @@ class Client(Telnet):
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getPAZ(self, network, station, location, channel, starttime, endtime):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
@@ -663,7 +650,6 @@ class Client(Telnet):
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='SEED'):
         """
@@ -701,7 +687,6 @@ class Client(Telnet):
         fh.write(data)
         fh.close()
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
                      instruments=False, route=True, sensortype='',
@@ -949,8 +934,6 @@ class Client(Telnet):
                         temp['paz'] = paz
         return data
 
-    @deprecated_keywords({'start_datetime':'starttime',
-                          'end_datetime':'endtime'})
     def getNetworks(self, starttime, endtime):
         """
         Returns a dictionary of available networks within the given time span.
@@ -973,8 +956,6 @@ class Client(Telnet):
         return self.getInventory(network='*', starttime=starttime,
                                  endtime=endtime, route=False)
 
-    @deprecated_keywords({'start_datetime':'starttime',
-                          'end_datetime':'endtime', 'network_id':'network'})
     def getStations(self, starttime, endtime, network):
         """
         Returns a dictionary of available stations in the given network(s).
