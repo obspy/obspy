@@ -373,7 +373,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         self.assertEqual(new_segy[0].stats.sampling_rate, 20)
         # The same with the Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
-        su = readSU(file)
+        _su = readSU(file)
 
     def test_readingDate(self):
         """

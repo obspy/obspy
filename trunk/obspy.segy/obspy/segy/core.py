@@ -15,12 +15,11 @@ from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
 from obspy.segy.segy import SEGYTrace, autodetectEndianAndSanityCheckSU
-from obspy.segy.segy import SUFile, SEGYTraceHeader
+from obspy.segy.segy import SUFile
 from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
 from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
 
-from copy import deepcopy
 import numpy as np
 from struct import unpack
 

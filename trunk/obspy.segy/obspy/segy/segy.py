@@ -816,8 +816,8 @@ def autodetectEndianAndSanityCheckSU(file):
     # and every data value 4 byte long.
     elif (size % 4) != 0:
         return False
-    trace_seq_in_line = file.read(4)
-    trace_seq_in_segy = file.read(4)
+    _trace_seq_in_line = file.read(4)
+    _trace_seq_in_segy = file.read(4)
     # Jump to the number of samples field in the trace header.
     file.seek(114, 0)
     sample_count = file.read(2)

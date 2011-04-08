@@ -128,15 +128,14 @@ Parameters:
 
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from obspy.mseed.headers import MSFileParam, _PyFile_callback, clibmseed, \
-        PyFile_FromFile, HPTMODULUS, MSRecord, FRAME, DATATYPES, SAMPLESIZES, \
-        blkt_1001_s
+from obspy.mseed.headers import MSFileParam, clibmseed, HPTMODULUS, MSRecord, \
+    FRAME, DATATYPES, SAMPLESIZES, blkt_1001_s
 from struct import unpack
 import ctypes as C
 import math
 import numpy as np
-import warnings
 import os
+import warnings
 
 # as defined in libmseed.h
 MS_ENDOFFILE = 1

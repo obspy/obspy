@@ -25,7 +25,6 @@ from obspy.core.util import deprecated_keywords
 from obspy.mseed.libmseed import LibMSEED
 from obspy.fissures.util import FissuresException, FissuresWarning, \
         poleZeroFilter2PAZ, utcdatetime2Fissures, use_first_and_raise_or_warn
-import math
 import numpy as np
 import sys
 import warnings
