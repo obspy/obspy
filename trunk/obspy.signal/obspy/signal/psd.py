@@ -327,6 +327,9 @@ class PPSD():
         # leave out first entry (offset)
         spec = spec[1:]
 
+        # working with the periods not frequencies later so reverse spectrum
+        spec = spec[::-1]
+
         # fft rescaling?!?
         # siehe Buttkus: Spektralanalyse und... S.185 Gl. (9.94)
         spec *= 2.0 * self.delta
