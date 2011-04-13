@@ -1296,9 +1296,8 @@ class Trace(object):
 
         # do automatic lowpass filtering
         if not no_filter:
-            low_corner = 0.4 * self.stats.sampling_rate / \
-                float(decimation_factor)
-            self.filter('lowpass', {'freq': low_corner})
+            low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
+            self.filter('lowpass', freq=low_corner)
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure

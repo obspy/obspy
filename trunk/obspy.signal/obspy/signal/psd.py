@@ -90,6 +90,34 @@ class PPSD():
         USGS Open File Report 93-322
         http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
 
+    Basic Usage
+    -----------
+
+    >>> from obspy.core import read
+    >>> from obspy.signal import PPSD
+
+    >>> st = read()
+    >>> tr = st.select(channel="EHZ")[0]
+    >>> paz = {'gain': 60077000.0, 
+    ...        'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+    ...                  -251.33+0j, -131.04-467.29j, -131.04+467.29j],
+    ...        'sensitivity': 2516778400.0,
+    ...        'zeros': [0j, 0j]}
+
+    >>> ppsd = PPSD(tr.stats, paz)
+    >>> print ppsd.id
+    BW.RJOB..EHZ
+    >>> print ppsd.times
+    []
+
+    Now we could add data to the probabilistic psd and plot it like..
+
+    >>> ppsd.add(st) # doctest: +SKIP
+    >>> print ppsd.times # doctest: +SKIP
+    >>> ppsd.plot() # doctest: +SKIP
+
+    .. but the example stream is too short and does not contain enough data.
+
     """
     def __init__(self, stats, paz=None):
         """
@@ -419,3 +447,8 @@ class PPSD():
             plt.savefig(filename)
         else:
             plt.show()
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
