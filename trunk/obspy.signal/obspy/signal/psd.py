@@ -18,19 +18,19 @@ Various Routines Related to Spectral Estimation
 """
 
 from __future__ import with_statement
+import os
 import warnings
 import pickle
 import math
+import bisect
 import numpy as np
 from matplotlib import mlab
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator, FormatStrFormatter
+from matplotlib.ticker import FormatStrFormatter
 from matplotlib.colors import LinearSegmentedColormap
-from obspy.core import read, UTCDateTime, Trace, Stream
-from obspy.seishub import Client
-from obspy.signal import cosTaper, pazToFreqResp, specInv
+from obspy.core import Trace, Stream
+from obspy.signal import cosTaper #, pazToFreqResp, specInv
 from obspy.signal.util import nearestPow2
-from obspy.xseed import Parser
 
 
 # build colormap as done in paper by mcnamara
@@ -56,6 +56,10 @@ CDICT = {'red': ((0.0,  1.0, 1.0),
                   (0.8,  0.0, 0.0),
                   (1.0,  0.0, 0.0))}
 CM_MCNAMARA = LinearSegmentedColormap('mcnamara', CDICT, 1024)
+NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
+                                "data", "noise_models.npz")
+PSD_LENGTH = 3600 # psds are calculated on 1h long segments
+PSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
 
 
 def fft_taper(data):
@@ -67,12 +71,27 @@ def fft_taper(data):
     data *= cosTaper(len(data), 0.2)
     return data
 
+
 class PPSD():
     """
-    Class containing information for probabilistic power spectral densities
-    for one unique trace id and sampling rate.
+    Class to compile probabilistic power spectral densities for one combination
+    of network/station/location/channel/sampling_rate.
+    Calculations are based on the routine used by::
+
+        Daniel E. McNamara and Raymond P. Buland
+        Ambient noise levels in the continental United States
+        Bulletin of the Seismological Society of America,
+        (August 2004), 94(4):1517-1527
+
+    For information on high/low noise models see::
+
+        Jon Peterson
+        Observations and modeling of seismic background noise
+        USGS Open File Report 93-322
+        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+
     """
-    def __init__(self, stats, paz=None, fromfile=None):
+    def __init__(self, stats, paz=None):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -92,7 +111,7 @@ class PPSD():
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
         # trace length for one hour piece
-        self.len = int(self.sampling_rate * 3600)
+        self.len = int(self.sampling_rate * PSD_LENGTH)
         # set paz either from kwarg or try to get it from stats
         self.paz = paz
         if self.paz is None:
@@ -114,46 +133,54 @@ class PPSD():
         self.nlap = int(0.75 * self.nfft)
         self.times = []
         self.hist_stack = None
-        #self.__setup_bins()
+        self.__setup_bins()
 
-    #def __setup_bins(self):
-    #    """
-    #    Makes an initial dummy psd and thus sets up the bins and all the rest
-    #    """
-    #    dummy = np.empty(self.len)
-    #    spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
-    #                          detrend=None, window=None, noverlap=self.nlap)
+    def __setup_bins(self):
+        """
+        Makes an initial dummy psd and thus sets up the bins and all the rest.
+        Should be able to do it without a dummy psd..
+        """
+        dummy = np.empty(self.len)
+        spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate, noverlap=self.nlap)
 
-    #    # leave out first entry (offset)
-    #    freq = freq[1:]
+        # leave out first entry (offset)
+        freq = freq[1:]
 
-    #    # XXX mcnamara etal do no frequency binning but instead a octave scaled geometric mean afterwards
-    #    # XXX period_bins = np.logspace(math.log10(1.0/freq[-1]), math.log10(1.0/freq[1]), 301, endpoint=True)
-    #    # XXX spec_bins = np.linspace(-200, -50, 151, endpoint=True)
-    #    # XXX hist, xedges, yedges = np.histogram2d(1.0/freq, spec, bins=(period_bins, spec_bins))
+        # XXX mcnamara etal do no frequency binning but instead a octave scaled geometric mean afterwards
+        # XXX period_bins = np.logspace(math.log10(1.0/freq[-1]), math.log10(1.0/freq[1]), 301, endpoint=True)
+        # XXX spec_bins = np.linspace(-200, -50, 151, endpoint=True)
+        # XXX hist, xedges, yedges = np.histogram2d(1.0/freq, spec, bins=(period_bins, spec_bins))
 
-    #    # XXX XXX XXX
-    #    per = 1.0 / freq[::-1]
-    #    # calculate left/rigth edge of first period bin, width of bin is one octave
-    #    per_left = per[0] / 2
-    #    per_right = 2 * per_left
-    #    # calculate center period of first period bin
-    #    per_center = math.sqrt(per_left * per_right)
-    #    # calculate mean of all spectral values in the first bin
-    #    per_octaves = [per_center]
-    #    # we move through the period range at 1/8 octave steps
-    #    factor_eighth_octave = 2**0.125
-    #    # do this for the whole period range and append the values to our lists
-    #    while per_right < per[-1]:
-    #        per_left *= factor_eighth_octave
-    #        per_right = 2 * per_left
-    #        per_center = math.sqrt(per_left * per_right)
-    #        per_octaves.append(per_center)
-    #    per_octaves = np.array(per_octaves)
+        # XXX XXX XXX
+        per = 1.0 / freq[::-1]
+        self.freq = freq
+        self.per = per
+        # calculate left/rigth edge of first period bin, width of bin is one octave
+        per_left = per[0] / 2
+        per_right = 2 * per_left
+        # calculate center period of first period bin
+        per_center = math.sqrt(per_left * per_right)
+        # calculate mean of all spectral values in the first bin
+        per_octaves_left = [per_left]
+        per_octaves_right = [per_right]
+        per_octaves = [per_center]
+        # we move through the period range at 1/8 octave steps
+        factor_eighth_octave = 2**0.125
+        # do this for the whole period range and append the values to our lists
+        while per_right < per[-1]:
+            per_left *= factor_eighth_octave
+            per_right = 2 * per_left
+            per_center = math.sqrt(per_left * per_right)
+            per_octaves_left.append(per_left)
+            per_octaves_right.append(per_right)
+            per_octaves.append(per_center)
+        self.per_octaves_left = np.array(per_octaves_left)
+        self.per_octaves_right = np.array(per_octaves_right)
+        self.per_octaves = np.array(per_octaves)
 
-    #    self.period_bins = per_octaves
-    #    # set up the binning for the db scale
-    #    self.spec_bins = np.linspace(-200, -50, 301, endpoint=True)
+        self.period_bins = per_octaves
+        # set up the binning for the db scale
+        self.spec_bins = np.linspace(-200, -50, 301, endpoint=True)
 
     def __sanity_check(self, trace):
         """
@@ -166,10 +193,34 @@ class PPSD():
             return False
         return True
 
+    def __insert_time(self, utcdatetime):
+        """
+        Inserts the given UTCDateTime at the right position in the list keeping
+        the order intact.
+        """
+        bisect.insort(self.times, utcdatetime)
+
+    def __check_time_present(self, utcdatetime):
+        """
+        Checks if the given UTCDateTime is already part of the current PPSD
+        instance. That is, checks if from utcdatetime to utcdatetime plus 1
+        hour there is already data in the PPSD.
+        Returns True if adding an one hour piece starting at the given time
+        would result in an overlap of the ppsd data base, False if it is OK to
+        insert this piece of data.
+        """
+        index1 = bisect.bisect_left(self.times, utcdatetime)
+        index2 = bisect.bisect_right(self.times, utcdatetime + PSD_LENGTH)
+        if index1 != index2:
+            return True
+        else:
+            return False
+
     def add(self, stream):
         """
         Process all traces with compatible information and add their spectral
         estimates to the histogram containg the probabilistic psd.
+        Also ensures that no piece of data is inserted twice.
 
         :type stream: :class:`~obspy.core.stream.Stream` or
                 :class:`~obspy.core.trace.Trace`
@@ -186,26 +237,34 @@ class PPSD():
         for tr in traces:
             # the following check should not be necessary due to the select()..
             if not self.__sanity_check(tr):
-                msg = "Skipping uncompatible trace."
+                msg = "Skipping incompatible trace."
                 warnings.warn(msg)
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + 3600 < t2:
+            if self.__check_time_present(t1):
+                msg = "Time seems to be covered already, skipping trace."
+                warnings.warn(msg)
+                continue
+            while t1 + PSD_LENGTH < t2:
                 # throw warnings if trace length is different than one hour..!?!
-                slice = tr.slice(t1, t1 + 3600)
+                slice = tr.slice(t1, t1 + PSD_LENGTH)
                 # XXX not good, should be working in place somehow
                 # XXX how to do it with the padding, though?
                 self.__process(slice)
-                t1 += 1800 # advance half an hour
+                t1 += PSD_STRIDE # advance half an hour
 
             # enforce time limits, pad zeros if gaps
-            #tr.trim(t, t+3600, pad=True)
+            #tr.trim(t, t+PSD_LENGTH, pad=True)
             
     def __process(self, tr):
         """
         Processes a one-hour segment of data and adds the information to the
-        PPSD histogram.
+        PPSD histogram. If Trace is compatible (station, channel, ...) has to
+        checked beforehand.
+
+        :type tr: :class:`~obspy.core.trace.Trace`
+        :param tr: Compatible Trace with
         """
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
@@ -266,7 +325,6 @@ class PPSD():
         #XXX spec *= freq_response
 
         # leave out first entry (offset)
-        freq = freq[1:]
         spec = spec[1:]
 
         # fft rescaling?!?
@@ -287,34 +345,15 @@ class PPSD():
 
         # XXX this should be done only one during __init__
         # XXX XXX XXX
-        per = 1.0 / freq[::-1]
-        spec = spec[::-1]
-        # calculate left/rigth edge of first period bin, width of bin is one octave
-        per_left = per[0] / 2
-        per_right = 2 * per_left
-        # calculate center period of first period bin
-        per_center = math.sqrt(per_left * per_right)
-        # calculate mean of all spectral values in the first bin
-        spec_center = spec[(per_left <= per) & (per <= per_right)].mean()
-        spec_octaves = [spec_center]
-        per_octaves = [per_center]
-        # we move through the period range at 1/8 octave steps
-        factor_eighth_octave = 2**0.125
+        spec_octaves = []
         # do this for the whole period range and append the values to our lists
-        while per_right < per[-1]:
-            per_left *= factor_eighth_octave
-            per_right = 2 * per_left
-            per_center = math.sqrt(per_left * per_right)
-            spec_center = spec[(per_left <= per) & (per <= per_right)].mean()
+        for per_left, per_right in zip(self.per_octaves_left, self.per_octaves_right):
+            #print per_left, per_right
+            spec_center = spec[(per_left <= self.per) & (self.per <= per_right)].mean()
             spec_octaves.append(spec_center)
-            per_octaves.append(per_center)
         spec_octaves = np.array(spec_octaves)
-        per_octaves = np.array(per_octaves)
 
-        period_bins = per_octaves
-        # set up the binning for the db scale
-        spec_bins = np.linspace(-200, -50, 301, endpoint=True)
-        hist, self.xedges, self.yedges = np.histogram2d(per_octaves, spec_octaves, bins=(period_bins, spec_bins))
+        hist, self.xedges, self.yedges = np.histogram2d(self.per_octaves, spec_octaves, bins=(self.period_bins, self.spec_bins))
         # XXX XXX XXX
 
         try:
@@ -324,25 +363,27 @@ class PPSD():
         except TypeError:
             # only during first run initialize stack with first histogram
             self.hist_stack = hist
-        self.times.append(tr.stats.starttime)
-
-    #def print_times(self):
-    #    print self.times
-
-    #def print_hist(self):
-    #    print self.hist_stack
+        self.__insert_time(tr.stats.starttime)
 
     def save(self, filename):
         """
         Saves PPSD instance as a pickled file that can be loaded again using
         pickle.load(filename).
+
+        :type filename: str
+        :param filename: Name of output file with pickled PPSD object
         """
         with open(filename, "w") as file:
             pickle.dump(self, file)
 
-    def plot(self):
+    def plot(self, filename=None):
         """
         Plot the 2D histogram of the current PPSD.
+        If a filename is specified the plot is saved to this file, otherwise
+        a plot window is shown.
+
+        :type filename: str (optional)
+        :param filename: Name of output file
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times)
@@ -352,12 +393,12 @@ class PPSD():
         ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=CM_MCNAMARA)
         cb = plt.colorbar(ppsd)
 
-        #data = np.load("noise_model/noise_models.npz")
-        #model_periods = data['model_periods']
-        #high_noise = data['high_noise']
-        #low_noise = data['low_noise']
-        #ax.plot(model_periods, high_noise, '0.4', linewidth=2)
-        #ax.plot(model_periods, low_noise, '0.4', linewidth=2)
+        data = np.load(NOISE_MODEL_FILE)
+        model_periods = data['model_periods']
+        high_noise = data['high_noise']
+        low_noise = data['low_noise']
+        ax.plot(model_periods, high_noise, '0.4', linewidth=2)
+        ax.plot(model_periods, low_noise, '0.4', linewidth=2)
 
         color_limits = (0, 30)
         ppsd.set_clim(*color_limits)
@@ -370,4 +411,8 @@ class PPSD():
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 
         ax.set_title(self.id)
-        plt.show()
+        plt.draw()
+        if filename is not None:
+            plt.savefig(filename)
+        else:
+            plt.show()
