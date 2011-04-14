@@ -65,7 +65,7 @@ class Parser(object):
         """
         Initializes the SEED parser.
 
-        :param data: Filename, XSEED/SEED string, file pointer or StringIO
+        :param data: Filename, URL, XSEED/SEED string, file pointer or StringIO
         :type debug: Boolean.
         :param debug: Enables a verbose debug log during parsing of SEED file.
         :type strict: Boolean.
@@ -119,8 +119,8 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, Basestring or StringIO object.
-        :param data: Filename or XSEED/SEED string as file pointer or StringIO.
+        :type data: Filename, URL, Basestring or StringIO object.
+        :param data: Filename, URL or XSEED/SEED string as file pointer or StringIO.
         """
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
