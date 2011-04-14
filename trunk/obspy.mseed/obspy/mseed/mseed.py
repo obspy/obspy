@@ -6,6 +6,7 @@ from obspy.core import Stream, Trace, UTCDateTime
 from obspy.mseed.headers import clibmseed, SAMPLESIZES, HPTMODULUS
 
 
+DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
 # XXX: Put all the definitions in the header file.
 #####################################
 # Define the C structures.
@@ -74,26 +75,70 @@ Selections._fields_ = [
     ('next', C.POINTER(Selections))
     ]
 
+
+# Container for a continuous linked list of records.
+class ContinuousSegment(C.Structure):
+    pass
+ContinuousSegment._fields_ = [
+    ('starttime', C.c_longlong),
+    ('endtime', C.c_longlong),
+    ('samprate', C.c_double),
+    ('sampletype', C.c_char),
+    ('hpdelta', C.c_longlong),
+    ('samplecnt', C.c_int),
+    ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type 'sampletype'
+    ('firstRecord', C.c_void_p),
+    ('lastRecord', C.c_void_p),
+    ('next', C.POINTER(ContinuousSegment)),
+    ('previous', C.POINTER(ContinuousSegment))
+    ]
+
+
+
+
+
+# A container for continuous segments with the same id
+class LinkedIDList(C.Structure):
+    pass
+LinkedIDList._fields_ = [
+    ('network', C.c_char * 11),       # Network designation, NULL terminated
+    ('station', C.c_char * 11),       # Station designation, NULL terminated
+    ('location', C.c_char * 11),      # Location designation, NULL terminated
+    ('channel', C.c_char * 11),       # Channel designation, NULL terminated
+    ('dataquality', C.c_char),        # Data quality indicator
+    ('firstSegment',  C.POINTER(ContinuousSegment)), # Pointer to first of list of segments
+    ('lastSegment',  C.POINTER(ContinuousSegment)),  # Pointer to last of list of segments
+    ('next',  C.POINTER(LinkedIDList)),              # Pointer to next id
+    ('previous',  C.POINTER(LinkedIDList)),          # Pointer to previous id
+    ('last',  C.POINTER(LinkedIDList))              # Pointer to the last id
+    ]
+
+
 #####################################
 # Done with the C structures defintions.
 #####################################
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
-    C.POINTER(MSTraceList),
     np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.POINTER(Selections),
     C.c_int,
     C.c_int,
-    C.c_int
+    C.c_int,
+    C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)
     ]
+
+clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
 
 clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
 clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
-HPTERROR = -2145916800000000L
+clibmseed.lil_init.restype = C.POINTER(LinkedIDList)
 
+clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
+
+HPTERROR = -2145916800000000L
 
 def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
     """
@@ -182,8 +227,6 @@ def readMSEED(mseed_object, selection=None, unpack_data=True, reclen=None):
 
     buflen = len(buffer)
 
-    # Create the MSTraceList structure and read the buffer to the structure.
-    mstl = clibmseed.mstl_init(None)
     # If no selection is given pass None to the C function.
     if not selection:
         selections = None
@@ -211,40 +254,55 @@ def readMSEED(mseed_object, selection=None, unpack_data=True, reclen=None):
         else:
             selections.srcname = '*'
 
-    clibmseed.readMSEEDBuffer(mstl, buffer, buflen, selections, unpack_data,
-                              reclen, 0)
+    all_data = []
+    # Use a callback function to allocate the memory and keep track of the
+    # data.
+    def allocate_data(samplecount, sampletype):
+        data = np.empty(samplecount, dtype=DATATYPES[sampletype])
+        all_data.append(data)
+        return data.ctypes.data
+    # Define Python callback function for use in C function. Return a long so
+    # it hopefully works on 32 and 64 bit systems.
+    allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
+
+    lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
+                              reclen, 0, allocData)
+
+    # XXX: Check if the freeing works.
+    del selections
 
     traces = []
-    # Loop over all traces.
-    trace_count = mstl.contents.numtraces
+    try:
+        currentID = lil.contents
     # Return stream if not traces are found.
-    if not trace_count:
+    except ValueError:
         return Stream()
-    this_trace = mstl.contents.traces.contents
-    for _i in xrange(trace_count):
+
+    while True:
         # Init header with the essential information once.
-        header = {'network': this_trace.network,
-                  'station': this_trace.station,
-                  'location': this_trace.location,
-                  'channel': this_trace.channel,
-                  'mseed': {'dataquality': this_trace.dataquality}}
-        # Loop over all segments. Every segment will be a new trace.
-        this_segment = this_trace.first.contents
-        for _j in xrange(this_trace.numsegments):
-            header['sampling_rate'] = this_segment.samprate
-            header['starttime'] = _convertMSTimeToDatetime(this_segment.starttime)
-            data = _ctypesArray2NumpyArray(this_segment.datasamples,
-                                           this_segment.numsamples,
-                                           this_segment.sampletype)
+        header = {'network': currentID.network,
+                  'station': currentID.station,
+                  'location': currentID.location,
+                  'channel': currentID.channel,
+                  'mseed': {'dataquality': currentID.dataquality}}
+        # Loop over segments.
+        currentSegment = currentID.firstSegment.contents
+        while True:
+            header['sampling_rate'] = currentSegment.samprate
+            header['starttime'] = _convertMSTimeToDatetime(currentSegment.starttime)
+            # The data always will be in sequential order.
+            data = all_data.pop(0)
             traces.append(Trace(header=header, data=data))
             # A Null pointer access results in a ValueError
             try:
-                this_segment = this_segment.next.contents
+                currentSegment = currentSegment.next.contents
             except ValueError:
                 break
         try:
-            this_trace = this_trace.next.contents
+            currentID = currentID.next.contents
         except ValueError:
             break
-    clibmseed.mstl_free(C.pointer(mstl), C.c_int(1))
+
+    clibmseed.lil_free(lil)
+    del lil
     return Stream(traces=traces)
