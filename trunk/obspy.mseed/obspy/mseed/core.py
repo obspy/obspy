@@ -251,6 +251,16 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         if not isinstance(trace.data, np.ndarray):
             msg = "Unsupported data type %s" % type(trace.data)
             raise Exception(msg)
+        # if encoding in stats.mseed does not match data.dtype reset encoding
+        # flag and try to autodetect encoding
+        if hasattr(stats, 'mseed') and hasattr(stats.mseed, 'encoding'):
+            if stats.mseed.encoding != ENCODINGS[encoding][0] or \
+               trace.data.dtype.type != ENCODINGS[encoding][2]:
+                msg = 'input encoding %s does not match output encoding %s or\n' \
+                      'input data type %s does not match output data type %s!\n' \
+                      'trying to autodetect...'%(stats.mseed.encoding, ENCODINGS[encoding][0], trace.data.dtype.type, ENCODINGS[encoding][2])
+                warnings.warn(msg)
+                encoding = -1
         # automatically detect format if no global encoding is given
         if encoding == -1:
             if trace.data.dtype.type == np.dtype("int32"):
