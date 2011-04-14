@@ -28,23 +28,49 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
         self.assertEquals(len(stream), 3)
         for trace in stream:
-            self.assertEquals(trace.stats.starttime, start)
-            self.assertEquals(trace.stats.endtime, end)
+            self.assertTrue(trace.stats.starttime <= start)
+            self.assertTrue(trace.stats.endtime >= end)
             self.assertEquals(trace.stats.network, 'BW')
             self.assertEquals(trace.stats.station, 'MANZ')
+            self.assertEquals(trace.stats.location, '')
+            self.assertEquals(trace.stats.channel[0:2], 'EH')
         # example 2
-#        client = Client()
-#        start = UTCDateTime("2008-12-31T23:59:50.495000Z")
-#        end = start + 100
-#        stream2 = client.getWaveform('GE', 'APE', '', 'BHE', start, end)
-#        self.assertEquals(len(stream2), 1)
-#        trace2 = stream2[0]
-#        self.assertEquals(trace2.stats.starttime, start)
-#        self.assertEquals(trace2.stats.endtime, end)
-#        self.assertEquals(trace2.stats.network, 'GE')
-#        self.assertEquals(trace2.stats.station, 'APE')
-#        self.assertEquals(trace2.stats.location, '')
-#        self.assertEquals(trace2.stats.channel, 'BHE')
+        client = Client()
+        start = UTCDateTime("2010-12-31T23:59:50.495000Z")
+        end = start + 100
+        stream = client.getWaveform('GE', 'APE', '', 'BHE', start, end)
+        self.assertEquals(len(stream), 1)
+        trace = stream[0]
+        self.assertTrue(trace.stats.starttime <= start)
+        self.assertTrue(trace.stats.endtime >= end)
+        self.assertEquals(trace.stats.network, 'GE')
+        self.assertEquals(trace.stats.station, 'APE')
+        self.assertEquals(trace.stats.location, '')
+        self.assertEquals(trace.stats.channel, 'BHE')
+
+    def test_getWaveformNoRouting(self):
+        """
+        Tests routing parameter of getWaveform method.
+        """
+        #1 - requesting BW data w/o routing on webdc.eu
+        client = Client()
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
+                          '', 'EH*', start, end, route=False)
+        #2 - requesting BW data w/o routing directly from BW ArcLink node
+        client = Client(host='erde.geophysik.uni-muenchen.de', port=18001)
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
+                                    route=False)
+        for trace in stream:
+            self.assertTrue(trace.stats.starttime <= start)
+            self.assertTrue(trace.stats.endtime >= end)
+            self.assertEquals(trace.stats.network, 'BW')
+            self.assertEquals(trace.stats.station, 'MANZ')
+            self.assertEquals(trace.stats.location, '')
+            self.assertEquals(trace.stats.channel[0:2], 'EH')
 
     def test_delayedRequest(self):
         """ 

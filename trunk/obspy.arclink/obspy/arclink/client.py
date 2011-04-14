@@ -270,7 +270,7 @@ class Client(Telnet):
 
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, format="MSEED", compressed=True, getPAZ=False,
-                    getCoordinates=False):
+                    getCoordinates=False, route=True):
         """
         Retrieve waveform via ArcLink and returns an ObsPy Stream object.
 
@@ -304,6 +304,8 @@ class Client(Telnet):
             Fetch coordinate information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request.
+        route : boolean, optional
+            Enables ArcLink routing (default is True).
 
         Returns
         -------
@@ -311,7 +313,8 @@ class Client(Telnet):
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf, network, station, location, channel, starttime,
-                          endtime, format=format, compressed=compressed)
+                          endtime, format=format, compressed=compressed,
+                          route=route)
         # read stream using obspy.mseed
         tf.seek(0)
         try:
@@ -334,7 +337,8 @@ class Client(Telnet):
                 # XXX should add a check like metadata_check in seishub.client
                 metadata = self.getMetadata(network, station, location, cha,
                                             starttime, endtime, getPAZ=getPAZ,
-                                            getCoordinates=getCoordinates)
+                                            getCoordinates=getCoordinates,
+                                            route=route)
                 tr.stats['paz'] = deepcopy(metadata['paz'])
         if getCoordinates:
             # reuse metadata fetched for PAZ or else fetch it
@@ -342,13 +346,15 @@ class Client(Telnet):
             if not metadata:
                 metadata = self.getMetadata(network, station, location, cha,
                                             starttime, endtime, getPAZ=getPAZ,
-                                            getCoordinates=getCoordinates)
+                                            getCoordinates=getCoordinates,
+                                            route=route)
             for tr in stream:
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED", compressed=True):
+                     starttime, endtime, format="MSEED", compressed=True, 
+                     route=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -381,6 +387,8 @@ class Client(Telnet):
                 ArcLink.
         compressed : boolean, optional
             Request compressed files from ArcLink server (default is True).
+        route : boolean, optional
+            Enables ArcLink routing (default is True).
         """
         # request type
         rtype = 'REQUEST WAVEFORM format=%s' % format
@@ -394,7 +402,7 @@ class Client(Telnet):
         # request data
         rdata = [starttime, endtime, network, station, channel, location]
         # fetch waveform
-        data = self._fetch(rtype, rdata)
+        data = self._fetch(rtype, rdata, route=route)
         if data and compressed:
             data = bz2.decompress(data)
         # create file handler if a file name is given
@@ -518,7 +526,7 @@ class Client(Telnet):
         return result
 
     def getMetadata(self, network, station, location, channel, starttime,
-                    endtime, getPAZ=True, getCoordinates=True):
+                    endtime, getPAZ=True, getCoordinates=True, route=True):
         """
         Returns metadata (PAZ and Coordinates).
 
@@ -536,6 +544,8 @@ class Client(Telnet):
             Start date and time.
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
+        route : boolean, optional
+            Enables ArcLink routing (default is True).
 
         Returns
         -------
@@ -546,7 +556,7 @@ class Client(Telnet):
         result = self.getInventory(network=network, station=station,
                                    location=location, channel=channel,
                                    starttime=starttime, endtime=endtime,
-                                   instruments=True)
+                                   instruments=True, route=route)
         data = {}
         if getPAZ:
             id = '.'.join([network, station, location, channel])
