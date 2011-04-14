@@ -26,6 +26,7 @@ import bisect
 import numpy as np
 from matplotlib import mlab
 import matplotlib.pyplot as plt
+from matplotlib.dates import date2num
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.colors import LinearSegmentedColormap
 from obspy.core import Trace, Stream
@@ -118,6 +119,9 @@ class PPSD():
 
     .. but the example stream is too short and does not contain enough data.
 
+    For a real world example see the `ObsPy Tutorial`_.
+
+    .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """
     def __init__(self, stats, paz=None):
         """
@@ -254,7 +258,11 @@ class PPSD():
                 :class:`~obspy.core.trace.Trace`
         :param stream: Stream or trace with data that should be added to the
                 probabilistic psd histogram.
+        :returns: True if appropriate data were found and the ppsd statistics
+                were changed, False otherwise.
         """
+        # return later if any changes were applied to the ppsd statistics
+        changed = False
         # prepare the list of traces to go through
         if isinstance(stream, Trace):
             stream = Stream([stream])
@@ -270,20 +278,25 @@ class PPSD():
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            if self.__check_time_present(t1):
-                msg = "Time seems to be covered already, skipping trace."
-                warnings.warn(msg)
-                continue
             while t1 + PSD_LENGTH < t2:
-                # throw warnings if trace length is different than one hour..!?!
-                slice = tr.slice(t1, t1 + PSD_LENGTH)
-                # XXX not good, should be working in place somehow
-                # XXX how to do it with the padding, though?
-                self.__process(slice)
+                if self.__check_time_present(t1):
+                    msg = "Already covered time spans detected (e.g. %s), " + \
+                          "skipping these slices."
+                    msg = msg % t1
+                    warnings.warn(msg)
+                else:
+                    # throw warnings if trace length is different than one hour..!?!
+                    slice = tr.slice(t1, t1 + PSD_LENGTH)
+                    # XXX not good, should be working in place somehow
+                    # XXX how to do it with the padding, though?
+                    self.__process(slice)
+                    self.__insert_time(t1)
+                    changed = True
                 t1 += PSD_STRIDE # advance half an hour
 
             # enforce time limits, pad zeros if gaps
             #tr.trim(t, t+PSD_LENGTH, pad=True)
+        return changed
             
     def __process(self, tr):
         """
@@ -394,7 +407,6 @@ class PPSD():
         except TypeError:
             # only during first run initialize stack with first histogram
             self.hist_stack = hist
-        self.__insert_time(tr.stats.starttime)
 
     def save(self, filename):
         """
@@ -407,7 +419,7 @@ class PPSD():
         with open(filename, "w") as file:
             pickle.dump(self, file)
 
-    def plot(self, filename=None):
+    def plot(self, filename=None, show_coverage=True):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -415,14 +427,24 @@ class PPSD():
 
         :type filename: str (optional)
         :param filename: Name of output file
+        :type show_coverage: bool (optional)
+        :param show_coverage: Enable/disable second axes with representation of
+                data coverage time intervals.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times)
         
         fig = plt.figure()
-        ax = fig.add_subplot(111)
+
+        if show_coverage:
+            ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
+            ax2 = fig.add_axes([0.15, 0.17, 0.7, 0.04])
+        else:
+            ax = fig.add_subplot(111)
+
         ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=CM_MCNAMARA)
-        cb = plt.colorbar(ppsd)
+        cb = plt.colorbar(ppsd, ax=ax)
+        cb.set_label("[%]")
 
         data = np.load(NOISE_MODEL_FILE)
         model_periods = data['model_periods']
@@ -440,13 +462,66 @@ class PPSD():
         ax.set_xlabel('Period [s]') 
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+        title = "%s   %s -- %s  (%i segments)"
+        title = title % (self.id, self.times[0].date, self.times[-1].date,
+                         len(self.times))
+        ax.set_title(title)
 
-        ax.set_title(self.id)
+        if show_coverage:
+            self.__plot_coverage(ax2)
+            # emulating fig.autofmt_xdate():
+            for label in ax2.get_xticklabels():
+                label.set_ha("right")
+                label.set_rotation(30)
+
         plt.draw()
         if filename is not None:
             plt.savefig(filename)
+            plt.close()
         else:
             plt.show()
+
+    def plot_coverage(self, filename=None):
+        """
+        Plot the data coverage of the histogram of the current PPSD.
+        If a filename is specified the plot is saved to this file, otherwise
+        a plot window is shown.
+
+        :type filename: str (optional)
+        :param filename: Name of output file
+        """
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        self.__plot_coverage(ax)
+        fig.autofmt_xdate()
+        title = "%s   %s -- %s  (%i segments)"
+        title = title % (self.id, self.times[0].date, self.times[-1].date,
+                         len(self.times))
+        ax.set_title(title)
+
+        plt.draw()
+        if filename is not None:
+            plt.savefig(filename)
+            plt.close()
+        else:
+            plt.show()
+
+    def __plot_coverage(self, ax):
+        """
+        Helper function to plot coverage into given axes.
+        """
+        fig = ax.figure
+        ax.clear()
+        ax.xaxis_date()
+        ax.set_yticks([])
+
+        starts = [date2num(t.datetime) for t in self.times]
+        ends = [date2num((t+3600).datetime) for t in self.times]
+        for start, end in zip(starts, ends):
+            ax.axvspan(start, end, alpha=0.5)
+        
+        ax.autoscale_view()
 
 
 if __name__ == '__main__':
