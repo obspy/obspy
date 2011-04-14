@@ -353,7 +353,7 @@ class Client(Telnet):
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED", compressed=True, 
+                     starttime, endtime, format="MSEED", compressed=True,
                      route=True):
         """
         Writes a retrieved waveform directly into a file.
@@ -478,6 +478,9 @@ class Client(Telnet):
         """
         Retrieve QC information of ArcLink streams.
 
+        .. note::
+            Requesting QC is documented but seems not to work at the moment. 
+
         Parameters
         ----------
         network : string
@@ -520,7 +523,7 @@ class Client(Telnet):
             rtype += ' logs=false'
         rtype += ' parameters=%s' % (parameters)
         # request data
-        rdata = [starttime, endtime, network, station]
+        rdata = [starttime, endtime, network, station, channel, location]
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=False)
         return result
