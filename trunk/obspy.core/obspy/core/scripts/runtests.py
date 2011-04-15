@@ -54,11 +54,6 @@ Examples
     >>> obspy.core.runTests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 """
 
-try:
-    import matplotlib
-    matplotlib.use("AGG")
-except ImportError:
-    pass
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
 from optparse import OptionParser
 from xml.etree import ElementTree as etree
@@ -320,6 +315,12 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
 
 
 def main():
+    try:
+        import matplotlib
+        matplotlib.use("AGG")
+    except ImportError:
+        msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
+        warnings.warn(msg)
     usage = "USAGE: %prog [options] modules\n\n" + \
             "\n".join(__doc__.split("\n")[3:])
     parser = OptionParser(usage.strip())
