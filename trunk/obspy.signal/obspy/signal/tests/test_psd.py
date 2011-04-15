@@ -28,11 +28,11 @@ class PSDTestCase(unittest.TestCase):
         """
         # load test file
         file_mseed = os.path.join(self.path,
-                'BW.KW1..EHZ.D.2011.090_downsampled')
+                'BW.KW1._.EHZ.D.2011.090_downsampled')
         file_histogram = os.path.join(self.path,
-                'BW.KW1..EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
+                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
         file_binning = os.path.join(self.path,
-                'BW.KW1..EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
+                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
         st = read(file_mseed)
         tr = st[0]
