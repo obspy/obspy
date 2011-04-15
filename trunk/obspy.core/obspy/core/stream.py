@@ -1242,7 +1242,7 @@ class Stream(object):
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present. If
             the keyword 'latest' is provided it will use the latest value
-            before the gap.
+            before the gap. Not used for `method=-1`.
         interpolation_samples : int, optional
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
