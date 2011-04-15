@@ -123,7 +123,7 @@ class PPSD():
 
     .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """
-    def __init__(self, stats, paz=None):
+    def __init__(self, stats, paz=None, merge_method=0):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -134,6 +134,13 @@ class PPSD():
         :type paz: dict (optional)
         :param paz: Response information of instrument. If not specified the
                 information is supposed to be present as stats.paz.
+        :type merge_method: int (optional)
+        :param merge_method: Merging method to use. McNamara&Buland merge gappy
+                traces by filling with zeros. This results in a clearly
+                identifiable outlier psd line in the PPSD visualization. Select
+                `merge_method=-1` for not filling gaps with zeros which might
+                result in some data segments shorter than 1 hour not used in
+                the PPSD.
         """
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
@@ -148,6 +155,7 @@ class PPSD():
         self.paz = paz
         if self.paz is None:
             self.paz = stats.paz
+        self.merge_method = merge_method
         #if paz is None:
         #    try:
         #        paz = tr.stats.paz
@@ -163,7 +171,10 @@ class PPSD():
         # mcnamara uses always 13 segments per hour trimming to nfft
         # we leave the psd routine alone and use as many segments as possible
         self.nlap = int(0.75 * self.nfft)
-        self.times = []
+        self.times_used = []
+        self.times = self.times_used
+        self.times_data = []
+        self.times_gaps = []
         self.hist_stack = None
         self.__setup_bins()
 
@@ -218,6 +229,8 @@ class PPSD():
         """
         Checks if trace is compatible for use in the current PPSD instance.
         Returns True if trace can be used or False if not.
+
+        :type trace: :class:`~obspy.core.trace.Trace`
         """
         if trace.id != self.id:
             return False
@@ -225,12 +238,32 @@ class PPSD():
             return False
         return True
 
-    def __insert_time(self, utcdatetime):
+    def __insert_used_time(self, utcdatetime):
         """
         Inserts the given UTCDateTime at the right position in the list keeping
         the order intact.
+
+        :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        bisect.insort(self.times, utcdatetime)
+        bisect.insort(self.times_used, utcdatetime)
+
+    def __insert_gap_times(self, stream):
+        """
+        Gets gap information of stream and adds the encountered gaps to the gap
+        list of the PPSD instance.
+
+        :type stream: :class:`~obspy.core.stream.Stream`
+        """
+        self.times_gaps += [[gap[4], gap[5]] for gap in stream.getGaps()]
+
+    def __insert_data_times(self, stream):
+        """
+        Gets gap information of stream and adds the encountered gaps to the gap
+        list of the PPSD instance.
+
+        :type stream: :class:`~obspy.core.stream.Stream`
+        """
+        self.times_data += [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
 
     def __check_time_present(self, utcdatetime):
         """
@@ -241,14 +274,14 @@ class PPSD():
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self.times, utcdatetime)
-        index2 = bisect.bisect_right(self.times, utcdatetime + PSD_LENGTH)
+        index1 = bisect.bisect_left(self.times_used, utcdatetime)
+        index2 = bisect.bisect_right(self.times_used, utcdatetime + PSD_LENGTH)
         if index1 != index2:
             return True
         else:
             return False
 
-    def add(self, stream):
+    def add(self, stream, verbose=False):
         """
         Process all traces with compatible information and add their spectral
         estimates to the histogram containg the probabilistic psd.
@@ -266,11 +299,16 @@ class PPSD():
         # prepare the list of traces to go through
         if isinstance(stream, Trace):
             stream = Stream([stream])
-        stream.merge(-1)
-        traces = stream.select(id=self.id,
-                               sampling_rate=self.sampling_rate).traces
+        # select appropriate traces
+        stream = stream.select(id=self.id,
+                               sampling_rate=self.sampling_rate)
+        # save information on available data and gaps
+        self.__insert_data_times(stream)
+        self.__insert_gap_times(stream)
+        # merge depending on merge_method set during __init__
+        stream.merge(self.merge_method, fill_value=0)
 
-        for tr in traces:
+        for tr in stream:
             # the following check should not be necessary due to the select()..
             if not self.__sanity_check(tr):
                 msg = "Skipping incompatible trace."
@@ -278,7 +316,7 @@ class PPSD():
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + PSD_LENGTH < t2:
+            while t1 + PSD_LENGTH <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
                           "skipping these slices."
@@ -290,7 +328,9 @@ class PPSD():
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     self.__process(slice)
-                    self.__insert_time(t1)
+                    self.__insert_used_time(t1)
+                    if verbose:
+                        print t1
                     changed = True
                 t1 += PSD_STRIDE # advance half an hour
 
@@ -432,7 +472,7 @@ class PPSD():
                 data coverage time intervals.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
-        hist_stack = self.hist_stack * 100.0 / len(self.times)
+        hist_stack = self.hist_stack * 100.0 / len(self.times_used)
         
         fig = plt.figure()
 
@@ -463,8 +503,8 @@ class PPSD():
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times[0].date, self.times[-1].date,
-                         len(self.times))
+        title = title % (self.id, self.times_used[0].date, self.times_used[-1].date,
+                         len(self.times_used))
         ax.set_title(title)
 
         if show_coverage:
@@ -474,6 +514,7 @@ class PPSD():
                 label.set_ha("right")
                 label.set_rotation(30)
 
+        import ipdb;ipdb.set_trace()
         plt.draw()
         if filename is not None:
             plt.savefig(filename)
@@ -496,8 +537,8 @@ class PPSD():
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times[0].date, self.times[-1].date,
-                         len(self.times))
+        title = title % (self.id, self.times_used[0].date, self.times_used[-1].date,
+                         len(self.times_used))
         ax.set_title(title)
 
         plt.draw()
@@ -515,11 +556,22 @@ class PPSD():
         ax.clear()
         ax.xaxis_date()
         ax.set_yticks([])
-
-        starts = [date2num(t.datetime) for t in self.times]
-        ends = [date2num((t+3600).datetime) for t in self.times]
+        
+        # plot data coverage
+        starts = [date2num(t.datetime) for t in self.times_used]
+        ends = [date2num((t+3600).datetime) for t in self.times_used]
         for start, end in zip(starts, ends):
-            ax.axvspan(start, end, alpha=0.5)
+            ax.axvspan(start, end, 0, 0.7, alpha=0.5)
+        # plot data
+        for start, end in self.times_data:
+            start = date2num(start.datetime)
+            end = date2num(end.datetime)
+            ax.axvspan(start, end, 0.7, 1, facecolor="g")
+        # plot gaps
+        for start, end in self.times_gaps:
+            start = date2num(start.datetime)
+            end = date2num(end.datetime)
+            ax.axvspan(start, end, 0.7, 1, facecolor="r")
         
         ax.autoscale_view()
 
