@@ -25,6 +25,7 @@
         ~filter.lowpass
         ~invsim.pazToFreqResp
         ~trigger.pkBaer
+        ~psd.PPSD
         ~trigger.recStalta
         ~rotate.rotate_NE_RT
         ~invsim.seisSim
@@ -54,3 +55,4 @@
         freqattributes
         array_analysis
         cross_correlation
+        psd
