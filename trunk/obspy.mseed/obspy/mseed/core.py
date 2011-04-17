@@ -29,7 +29,7 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
               readMSInfo=True, reclen=-1, quality=False, **kwargs):
     """
     Reads a given Mini-SEED file and returns an Stream object.
-    
+
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
@@ -105,10 +105,10 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
         old_header = _i[0]
         header = {}
         # Create a dictionary to specify how to convert keys.
-        convert_dict = {'station': 'station', 'sampling_rate':'samprate',
+        convert_dict = {'station': 'station', 'sampling_rate': 'samprate',
                         'npts': 'numsamples', 'network': 'network',
                         'location': 'location', 'channel': 'channel',
-                        'starttime' : 'starttime', 'endtime' : 'endtime'}
+                        'starttime': 'starttime', 'endtime': 'endtime'}
         # Convert header.
         for _j, _k in convert_dict.iteritems():
             header[_j] = old_header[_k]
@@ -162,15 +162,15 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         between (and including) 8 to 20. -1 defaults to 4096
     encoding : int or string, optional
         Should be set to one of the following supported
-        Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3), 
-        FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default 
+        Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3),
+        FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default
         data types a marked with an asterisk. Currently INT24 (2) is not
         supported due to lacking NumPy support.
     byteorder : [ 0 or '<' | '1 or '>' | -1], optional
         Must be either 0 or '<' for LSBF or little-endian, 1 or
         '>' for MBF or big-endian. -1 defaults to big-endian (1)
     flush : int, optional
-        If it is not zero all of the data will be packed into 
+        If it is not zero all of the data will be packed into
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
     verbose : int, optional
@@ -190,17 +190,29 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking numpy support.
     encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
-    if encoding is None and hasattr(stats, 'mseed') and hasattr(stats.mseed, 'encoding'):
-        encoding = stats.mseed.encoding
-    if encoding is None:
-        encoding = -1
-    elif isinstance(encoding, int) and encoding in ENCODINGS:
-        encoding = encoding
-    elif isinstance(encoding, basestring) and encoding in encoding_strings:
-        encoding = encoding_strings[encoding]
-    else:
-        msg = 'Invalid encoding %s. Valid encodings: %s'
-        raise ValueError(msg % (encoding, encoding_strings))
+
+    # If the encoding is enforced validate it and check if all data has the
+    # correct dtype.
+    if encoding is not None:
+        if isinstance(encoding, int) and encoding in ENCODINGS:
+            encoding = encoding
+        elif encoding and isinstance(encoding, basestring) and encoding in encoding_strings:
+            encoding = encoding_strings[encoding]
+        else:
+            msg = 'Invalid encoding %s. Valid encodings: %s'
+            raise ValueError(msg % (encoding, encoding_strings))
+        # Check if the dtype for all traces is compatible with the enforced
+        # encoding.
+        dtypes = [tr.data.dtype for tr in stream]
+        id, _, dtype = ENCODINGS[encoding]
+        if len(dtypes) != 1 or dtypes[0].type != dtype:
+            msg = """
+                Wrong dtype of the data of one or more Traces for encoding %s.
+                Please change the dtype of your data or use an appropriate
+                encoding. See the obspy.mseed documentation for more information.
+                """ % id
+            raise Exception(msg)
+
     # translate byteorder
     if 'byteorder' in kwargs.keys() and kwargs['byteorder'] not in [0, 1, -1]:
         if kwargs['byteorder'] == '=':
@@ -223,7 +235,7 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
     __libmseed__ = LibMSEED()
     traces = stream.traces
     trace_list = []
-    convert_dict = {'station': 'station', 'samprate':'sampling_rate',
+    convert_dict = {'station': 'station', 'samprate': 'sampling_rate',
                     'numsamples': 'npts', 'network': 'network',
                     'location': 'location', 'channel': 'channel',
                     'starttime': 'starttime', 'endtime': 'endtime'}
@@ -251,45 +263,48 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         if not isinstance(trace.data, np.ndarray):
             msg = "Unsupported data type %s" % type(trace.data)
             raise Exception(msg)
-        # if encoding in stats.mseed does not match data.dtype reset encoding
-        # flag and try to autodetect encoding
-        if hasattr(stats, 'mseed') and hasattr(stats.mseed, 'encoding'):
-            if stats.mseed.encoding != ENCODINGS[encoding][0] or \
-               trace.data.dtype.type != ENCODINGS[encoding][2]:
-                msg = 'input encoding %s does not match output encoding %s or\n' \
-                      'input data type %s does not match output data type %s!\n' \
-                      'trying to autodetect...'%(stats.mseed.encoding, ENCODINGS[encoding][0], trace.data.dtype.type, ENCODINGS[encoding][2])
-                warnings.warn(msg)
-                encoding = -1
-        # automatically detect format if no global encoding is given
-        if encoding == -1:
-            if trace.data.dtype.type == np.dtype("int32"):
-                enc = 11
-            elif trace.data.dtype.type == np.dtype("float32"):
-                enc = 4
-            elif trace.data.dtype.type == np.dtype("float64"):
-                enc = 5
-            elif trace.data.dtype.type == np.dtype("int16"):
-                enc = 1
-            elif trace.data.dtype.type == np.dtype('|S1').type:
-                enc = 0
-            else:
-                msg = "Unsupported data type %s" % trace.data.dtype
-                raise Exception(msg)
-            _, sampletype, _ = ENCODINGS[enc]
+
+        enc = None
+        if encoding is None:
+            if hasattr(trace.stats, 'mseed') and \
+                    hasattr(trace.stats.mseed, 'encoding'):
+                mseed_encoding = stats.mseed.encoding
+                # Check if the encoding is valid.
+                if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
+                    enc = mseed_encoding
+                elif isinstance(mseed_encoding, basestring) and \
+                        mseed_encoding in encoding_strings:
+                    enc = encoding_strings[mseed_encoding]
+                else:
+                    msg = 'Invalid encoding %s in ' + \
+                          'stream[0].stats.mseed.encoding. Valid encodings: %s'
+                    raise ValueError(msg % (mseed_encoding, encoding_strings))
+                # Check if the encoding matches the data's dtype.
+                if trace.data.dtype.type != ENCODINGS[enc][2]:
+                    msg = 'The encoding specified in ' + \
+                          'trace.stats.mseed.encoding does not match the ' + \
+                          'dtype of the data.\nA suitable encoding will ' + \
+                          'be chosen.'
+                    warnings.warn(msg, UserWarning)
+            # automatically detect encoding if no encoding is given.
+            if enc is None:
+                if trace.data.dtype.type == np.dtype("int32"):
+                    enc = 11
+                elif trace.data.dtype.type == np.dtype("float32"):
+                    enc = 4
+                elif trace.data.dtype.type == np.dtype("float64"):
+                    enc = 5
+                elif trace.data.dtype.type == np.dtype("int16"):
+                    enc = 1
+                elif trace.data.dtype.type == np.dtype('|S1').type:
+                    enc = 0
+                else:
+                    msg = "Unsupported data type %s" % trace.data.dtype
+                    raise Exception(msg)
         else:
-            # global encoding given
             enc = encoding
-            id, sampletype, dtype = ENCODINGS[enc]
-            # Check if supported data type
-            if trace.data.dtype.type != dtype:
-                msg = """
-                    Data type for encoding %s must be of %s not of %s.
-                    Use an appropriate encoding for %s, or change your data
-                    type to %s""" % (id, dtype, trace.data.dtype.type,
-                                     trace.data.dtype.type, 
-                                     trace.data.dtype.type)
-                raise Exception(msg)
+
+        id, sampletype, dtype = ENCODINGS[enc]
         # INT16 needs INT32 data type
         if enc == 1:
             trace.data = trace.data.astype(np.int32)
@@ -299,8 +314,10 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         header['samplecnt'] = len(trace.data)
         # Check if ndarray is contiguous (see #192, #193)
         if not trace.data.flags.c_contiguous:
-            msg = "Detected non contiguous data array during ctypes call. Trying to fix array."
+            msg = "Detected non contiguous data array during ctypes call. " \
+                  "Trying to fix array."
             warnings.warn(msg)
-        trace_list.append([header, np.require(trace.data, requirements=('C_CONTIGUOUS',))])
+        trace_list.append([header, np.require(trace.data,
+                                              requirements=('C_CONTIGUOUS',))])
     # Write resulting trace_list to Mini-SEED file.
     __libmseed__.writeMSTraces(trace_list, outfile=filename, **kwargs)

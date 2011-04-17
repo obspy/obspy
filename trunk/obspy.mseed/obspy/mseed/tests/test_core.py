@@ -11,6 +11,7 @@ import numpy as np
 import os
 import platform
 import unittest
+import warnings
 
 
 class CoreTestCase(unittest.TestCase):
@@ -431,7 +432,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeWrongEncoding(self):
         """
-        Tests to write a floating point mseed file with encoding STEIM1.
+        Test to write a floating point mseed file with encoding STEIM1.
         An exception should be raised.
         """
         file = os.path.join(self.path, "data", \
@@ -441,10 +442,45 @@ class CoreTestCase(unittest.TestCase):
         st = read(file)
         st[0].data = st[0].data.astype('float32') + .5
         # Type is not consistent float32 cannot be compressed with STEIM1,
-        # therefor an exception must be raised.
+        # therefore a exception should be raised.
         self.assertRaises(Exception, st.write, tempfile, format="MSEED",
-                          encoding=10, reclen=256, byteorder=0)
+                encoding=10)
         os.remove(tempfile)
+
+    def test_writeWrongEncodingViaMseedStats(self):
+        """
+        Test to write a floating point mseed file with encoding STEIM1 with the
+        encoding set in stats.mseed.encoding.
+        This will just raise a warning.
+        """
+        file = os.path.join(self.path, "data", \
+                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        tempfile = NamedTemporaryFile().name
+        # Read the data and convert them to float
+        st = read(file)
+        st[0].data = st[0].data.astype('float32') + .5
+        # Type is not consistent float32 cannot be compressed with STEIM1,
+        # therefore a warning should be raised.
+        self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
+        warnings.simplefilter('error', UserWarning)
+        self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
+        warnings.filters.pop(0)
+        os.remove(tempfile)
+
+    def test_enforceSteim2WithSteim1asEncoding(self):
+        """
+        This tests whether the encoding kwarg overwrites the encoding in
+        trace.stats.mseed.encoding.
+        """
+        file = os.path.join(self.path, "data", \
+                            "BW.BGLD.__.EHE.D.2008.001.first_record")
+        st = read(file)
+        self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
+        tempfile = NamedTemporaryFile().name
+        st.write(tempfile, format='MSEED', encoding='STEIM2')
+        st2 = read(tempfile)
+        os.remove(tempfile)
+        self.assertEqual(st2[0].stats.mseed.encoding, 'STEIM2')
 
     def test_filesFromLibmseed(self):
         """
