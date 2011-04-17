@@ -104,3 +104,9 @@ EXPORTS
    msr_unpack_steim2
    msr_unpack_steim1
    readMSEEDBuffer
+   lil_init
+   lrl_free
+   seg_free
+   lil_free
+
+
