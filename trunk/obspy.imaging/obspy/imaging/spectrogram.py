@@ -96,15 +96,15 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
     #XXX add condition for too many windows => calculation takes for ever
-    nfft = int(nearestPow2(wlen*samp_rate)) 
-    if nfft > npts: 
-        nfft = int(nearestPow2(npts / 8.0)) 
-                               
-    mult = int(nearestPow2(mult)) 
+    nfft = int(nearestPow2(wlen * samp_rate))
+    if nfft > npts:
+        nfft = int(nearestPow2(npts / 8.0))
+
+    mult = int(nearestPow2(mult))
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
-    end = npts/samp_rate
+    end = npts / samp_rate
 
     # Here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
@@ -112,7 +112,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     if matplotlib.__version__ >= '0.99.0':
         spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
-                                              pad_to=mult*nfft, noverlap=nlap)
+                                              pad_to=mult * nfft, noverlap=nlap)
     else:
         spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                                 NFFT=nfft, noverlap=nlap)
@@ -120,10 +120,10 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     if dbscale:
         spectrogram = 10 * np.log10(spectrogram[1:, :])
     else:
-        spectrogram = np.sqrt(spectrogram[1:,:])
+        spectrogram = np.sqrt(spectrogram[1:, :])
     freq = freq[1:]
 
-    
+
     if not axes:
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -131,8 +131,8 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         ax = axes
 
     # calculate half bin width
-    halfbin_time = (time[1] - time[0])/2.0
-    halfbin_freq = (freq[1] - freq[0])/2.0
+    halfbin_time = (time[1] - time[0]) / 2.0
+    halfbin_freq = (freq[1] - freq[0]) / 2.0
 
     if log:
         # pcolor expects one bin more at the right end
@@ -166,9 +166,13 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     ax.set_ylabel('Frequency [Hz]')
     if title:
         ax.set_title(title)
-    
+
     if not sphinx:
+        # ignoring all NumPy warnings during plot
+        temp = np.geterr()
+        np.seterr(all='ignore')
         plt.draw()
+        np.seterr(**temp)
     if outfile:
         if format:
             fig.savefig(outfile, format=format)
