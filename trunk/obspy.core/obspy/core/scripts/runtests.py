@@ -348,7 +348,7 @@ def main():
     if options.verbose:
         verbosity = 2
         # show all numpy warnings
-        np.seterr(all='print')
+        np.seterr(all='raise')
     elif options.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
