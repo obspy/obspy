@@ -935,7 +935,7 @@ class Stream(object):
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=False)
 
-    def write(self, filename, format="", **kwargs):
+    def write(self, filename, format, **kwargs):
         """
         Saves stream into a file.
 
@@ -997,11 +997,6 @@ class Stream(object):
         format = format.upper()
         # Gets all available formats and the corresponding entry points.
         formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')
-        if not format:
-            msg = "Please provide a output format. Supported Formats: "
-            msg = msg + ', '.join(formats_ep.keys())
-            warnings.warn(msg, category=SyntaxWarning)
-            return
         try:
             # search writeFormat for given entry point
             ep = formats_ep[format]
