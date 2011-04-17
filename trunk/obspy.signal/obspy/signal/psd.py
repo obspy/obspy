@@ -24,15 +24,14 @@ import pickle
 import math
 import bisect
 import numpy as np
-from matplotlib import mlab
-import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.colors import LinearSegmentedColormap
 from obspy.core import Trace, Stream
 from obspy.signal import cosTaper #, pazToFreqResp, specInv
 from obspy.signal.util import nearestPow2
 
+# helper variable to control if matplotlib was imported already. this is done
+# only in PPSD. avoids import statement overhead and error if matplotlib is not
+# installed
+mlab = None
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0,  1.0, 1.0),
@@ -56,7 +55,6 @@ CDICT = {'red': ((0.0,  1.0, 1.0),
                   (0.6,  0.0, 0.0),
                   (0.8,  0.0, 0.0),
                   (1.0,  0.0, 0.0))}
-CM_MCNAMARA = LinearSegmentedColormap('mcnamara', CDICT, 1024)
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 PSD_LENGTH = 3600 # psds are calculated on 1h long segments
@@ -142,6 +140,9 @@ class PPSD():
                 result in some data segments shorter than 1 hour not used in
                 the PPSD.
         """
+        # import matplotlib stuff, no official dependency for obspy.signal
+        if mlab is None:
+            self.__import_matplotlib()
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
         self.station = stats.station
@@ -177,6 +178,20 @@ class PPSD():
         self.times_gaps = []
         self.hist_stack = None
         self.__setup_bins()
+        self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
+
+    def __import_matplotlib(self):
+        """
+        Import matplotlib routines. These are no official dependency of
+        obspy.signal so an import error should really only be raised if PPSD
+        is used which relies on matplotlib (for psd and plotting).
+        """
+        global mlab, plt, date2num, FormatStrFormatter, LinearSegmentedColormap
+        from matplotlib import mlab
+        import matplotlib.pyplot as plt
+        from matplotlib.dates import date2num
+        from matplotlib.ticker import FormatStrFormatter
+        from matplotlib.colors import LinearSegmentedColormap
 
     def __setup_bins(self):
         """
@@ -482,7 +497,7 @@ class PPSD():
         else:
             ax = fig.add_subplot(111)
 
-        ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=CM_MCNAMARA)
+        ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
         cb = plt.colorbar(ppsd, ax=ax)
         cb.set_label("[%]")
 
