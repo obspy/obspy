@@ -17,9 +17,7 @@ Similar to reading any other waveform data format using obspy.core:
 (Lines 2&3 are just to get the absolute path of our test data)
 
 >>> from obspy.core import read
->>> from obspy.core import path
->>> filename = path("test.mseed")
->>> st = read(filename)
+>>> st = read("/path/to/test.mseed")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st)
@@ -92,3 +90,8 @@ from obspy.mseed.libmseed import LibMSEED
 
 
 __version__ = _getVersionString("obspy.mseed")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

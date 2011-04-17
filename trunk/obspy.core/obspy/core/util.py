@@ -558,11 +558,6 @@ def skipIf(condition, reason):
     return _id
 
 
-@deprecated
-def path(testfile):
-    return getExampleFile(testfile)
-
-
 def getEntryPoints():
     """
     Creates a sorted list of available entry points.

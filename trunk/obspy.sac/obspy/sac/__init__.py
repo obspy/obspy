@@ -15,9 +15,7 @@ Similiar to reading any other waveform data format using obspy.core:
 (Lines 2&3 are just to get the path to our test data)
 
 >>> from obspy.core import read
->>> from obspy.core import path
->>> filename = path('test.sac')
->>> st = read(filename)
+>>> st = read('/path/to/test.sac')
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st)
@@ -63,3 +61,8 @@ from obspy.core.util import _getVersionString
 from sacio import SacIO, SacError, SacIOError, ReadSac, attach_paz, attach_resp
 
 __version__ = _getVersionString("obspy.sac")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

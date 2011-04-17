@@ -5,7 +5,7 @@ from __future__ import with_statement
 
 from StringIO import StringIO
 from lxml import etree
-from obspy.core.util import NamedTemporaryFile, path
+from obspy.core.util import NamedTemporaryFile
 from obspy.core import UTCDateTime
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
@@ -40,19 +40,20 @@ class ParserTestCase(unittest.TestCase):
         This test also tests if a warning is raised if no startime is given.
         """
         parser = Parser()
+        file = os.path.join(self.path, "bug165.dataless")
         t = UTCDateTime("2010-01-01T00:00:00")
         if hasattr(warnings, 'catch_warnings'):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 # Trigger a warning. 
-                parser.read(path("bug165.dataless"))
+                parser.read(file)
                 self.assertEqual(len(w), 1)
                 self.assertTrue(issubclass(w[-1].category, UserWarning))
                 self.assertTrue('date' and 'required' in \
                                         w[-1].message.message.lower())
         else:
             # Just raise the warning using Python 2.5. 
-            parser.read(path("bug165.dataless"))
+            parser.read(file)
         paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
         result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
                   'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),

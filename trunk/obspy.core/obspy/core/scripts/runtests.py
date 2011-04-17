@@ -62,6 +62,7 @@ import sys
 import time
 import unittest
 import warnings
+import numpy as np
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
@@ -327,9 +328,6 @@ def main():
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
                       help="verbose mode")
-    parser.add_option("-w", "--warn", default=False,
-                      action="store_true", dest="warn",
-                      help="show Warnings")
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
@@ -349,12 +347,18 @@ def main():
     # set correct verbosity level
     if options.verbose:
         verbosity = 2
+        # show all numpy warnings
+        np.seterr(all='print')
     elif options.quiet:
         verbosity = 0
+        # ignore user and deprecation warnings
+        warnings.simplefilter("ignore", DeprecationWarning)
+        warnings.simplefilter("ignore", UserWarning)
     else:
         verbosity = 1
-    if not options.warn:
-        warnings.simplefilter("ignore", DeprecationWarning)
+        # show all NumPy warnings
+        np.seterr(all='print')
+        # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
     # check for send report option or environmental settings
     if options.report or 'OBSPY_REPORT' in os.environ.keys():

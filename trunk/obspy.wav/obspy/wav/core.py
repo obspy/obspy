@@ -130,3 +130,8 @@ def writeWAV(stream_object, filename, framerate=7000, **kwargs):
         w.writeframes(trace.data.tostring())
         w.close()
         i += 1
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -58,8 +58,8 @@ Parameters:
 
 (The first lines are just to get the absolute path of the test file)
 
->>> from obspy.core import path
->>> filename = path("test.mseed")
+>>> from obspy.core.util import getExampleFile
+>>> filename = getExampleFile("test.mseed")
 >>> mseed.isMSEED(filename)
 True
 
@@ -92,7 +92,7 @@ Parameters:
 
 (The first line are just to get the absolute path of the test file)
 
->>> filename = path("qualityflags.mseed")
+>>> filename = getExampleFile("qualityflags.mseed")
 >>> mseed.getDataQualityFlagsCount(filename)
 [9, 8, 7, 6, 5, 4, 3, 2]
 
@@ -120,7 +120,7 @@ Parameters:
 
 (The first line are just to get the absolute path of the test file)
 
->>> filename = path("timingquality.mseed")
+>>> filename = getExampleFile("timingquality.mseed")
 >>> mseed.getTimingQuality(filename) #doctest: +NORMALIZE_WHITESPACE
 {'min': 0.0, 'max': 100.0, 'average': 50.0, 'median': 50.0,
  'upper_quantile': 75.0, 'lower_quantile': 25.0}
@@ -1174,3 +1174,7 @@ class _MSStruct(object):
 
     offset = property(getOffset, setOffset)
 
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

@@ -19,9 +19,7 @@ Similiar to reading any other waveform data format using obspy.core:
 (Lines 2&3 are just to get the absolute path of our test data)
 
 >>> from obspy.core import read
->>> from obspy.core import path
->>> filename = path("loc_RJOB20050831023349.z")
->>> st = read(filename)
+>>> st = read("/path/to/loc_RJOB20050831023349.z")
 
 You can also specify the following keyword arguments that change the
 behavior of reading the file:
@@ -74,3 +72,8 @@ from obspy.core.util import _getVersionString
 
 
 __version__ = _getVersionString("obspy.gse2")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
