@@ -24,6 +24,12 @@ import pickle
 import math
 import bisect
 import numpy as np
+import matplotlib
+from matplotlib import mlab
+import matplotlib.pyplot as plt
+from matplotlib.dates import date2num
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib.colors import LinearSegmentedColormap
 from obspy.core import Trace, Stream
 from obspy.signal import cosTaper #, pazToFreqResp, specInv
 from obspy.signal.util import nearestPow2
@@ -32,6 +38,8 @@ from obspy.signal.util import nearestPow2
 # only in PPSD. avoids import statement overhead and error if matplotlib is not
 # installed
 mlab = None
+
+MATPLOTLIB_VERSION = map(int, matplotlib.__version__.split("."))
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0,  1.0, 1.0),
@@ -426,9 +434,20 @@ class PPSD():
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
 
-        # fft rescaling?!?
-        # siehe Buttkus: Spektralanalyse und... S.185 Gl. (9.94)
-        spec *= 2.0 * self.delta
+        # fft rescaling
+        # see Buttkus: Spektralanalyse und... S.185 Gl. (9.94)
+        # scaling behavior of matplotlib.mlab.psd changes with version 0.98.4!
+        # see: 
+        #   - http://matplotlib.sourceforge.net/
+        #            users/whats_new.html#psd-amplitude-scaling
+        #   - http://matplotlib.sourceforge.net/_static/CHANGELOG
+        #     (entries on 2009-05-18 and 2008-11-11)
+        #   - http://matplotlib.svn.sourceforge.net/
+        #            viewvc/matplotlib?view=revision&revision=6518
+        #   - http://matplotlib.sourceforge.net/
+        #            api/api_changes.html#changes-for-0-98-x
+        if MATPLOTLIB_VERSION < [0, 98, 4]:
+            spec *= 2.0 * self.delta
 
         #spec = spec*(freq**2)
         #specs[i, :] = np.log10(spec[1:, :]) * 10
@@ -529,7 +548,6 @@ class PPSD():
                 label.set_ha("right")
                 label.set_rotation(30)
 
-        import ipdb;ipdb.set_trace()
         plt.draw()
         if filename is not None:
             plt.savefig(filename)
