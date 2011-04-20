@@ -68,6 +68,11 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
            bounds at high time shifts. Of course there are other
            possibilities to do cross correlations e.g. in frequency
            domain.
+           Also see exchange in `ObsPy-users mailing list`_ and in this
+           `ticket`_.
+
+    .. _`ObsPy-users mailing list`: http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html
+    .. _`ticket`: https://obspy.org/ticket/249
     """
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
