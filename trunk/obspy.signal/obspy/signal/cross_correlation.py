@@ -79,6 +79,16 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         if isinstance(tr, Trace):
             tr = tr.data
 
+    # check if shift_len parameter is in an acceptable range.
+    # if not the underlying c code tampers with shift_len and uses shift_len/2
+    # instead. we want to avoid this silent automagic and raise an error in the
+    # python layer right here.
+    # see ticket #249 and src/xcorr.c lines 43-57
+    if min(len(tr1), len(tr2)) - 2 * shift_len <= 0:
+        msg = "shift_len too large. The underlying C code would silently use " \
+              "shift_len/2 which we want to avoid."
+        raise ValueError(msg)
+
     # 2009-10-11 Moritz
     clibsignal.X_corr.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
