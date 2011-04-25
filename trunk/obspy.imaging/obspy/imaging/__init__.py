@@ -77,15 +77,20 @@ Beachballs
 Draws a beach ball diagram of an earthquake focal mechanism.
 
 :note: ObsPy ships to engines for beachball generation.
-       :mod:`~obspy.imaging.beachball` is based on the GMT (global mapping
-       tool) and Matlab implementation, which has known limitations due to
-       the original implementation. :mod:`~obspy.imaging.mopad_wrapper` is
-       based the mopad implementation, which is more correct, however it
-       consumes much more time. The functions inside these two modules
-       share mostly the same arguments. The following examples will also
-       work with mopad by using ``from obspy.imaging.mopad_wrapper import
-       Beachball2 as Beachball'' and ``from obspy.imaging.mopad_wrapper
-       import Beach2 as Beach'' respectively.
+       :mod:`~obspy.imaging.beachball` is based on the ps_meca of GMT_
+       (generic mapping tool) and an Matlab script written by Oliver Boyd
+       (see olboyd_), which have known limitations.
+       :mod:`~obspy.imaging.mopad_wrapper` is based the mopad
+       implementation, which is more correct, however it consumes much more
+       time. The functions inside these two modules share mostly the same
+       arguments. The following examples will also work with mopad by using
+       ``from obspy.imaging.mopad_wrapper import Beachball2 as Beachball''
+       and ``from obspy.imaging.mopad_wrapper import Beach2 as Beach''
+       respectively.
+
+.. _Olboyd: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+.. _GMT: ps_meca program from the Generic Mapping Tools (GMT) see:
+              http://gmt.soest.hawaii.edu 
 
 The focal mechanism can be given by 3 (strike, dip, and rake) components. The
 strike is of the first plane, clockwise relative to north. The dip is of the
