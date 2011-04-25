@@ -76,6 +76,17 @@ Beachballs
 ----------
 Draws a beach ball diagram of an earthquake focal mechanism.
 
+:note: ObsPy ships to engines for beachball generation.
+       :mod:`~obspy.imaging.beachball` is based on the GMT (global mapping
+       tool) and Matlab implementation, which has known limitations due to
+       the original implementation. :mod:`~obspy.imaging.mopad_wrapper` is
+       based the mopad implementation, which is more correct, however it
+       consumes much more time. The functions inside these two modules
+       share mostly the same arguments. The following examples will also
+       work with mopad by using ``from obspy.imaging.mopad_wrapper import
+       Beachball2 as Beachball'' and ``from obspy.imaging.mopad_wrapper
+       import Beach2 as Beach'' respectively.
+
 The focal mechanism can be given by 3 (strike, dip, and rake) components. The
 strike is of the first plane, clockwise relative to north. The dip is of the
 first plane, defined clockwise and perpendicular to strike, relative to
@@ -109,7 +120,8 @@ the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
     mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
     Beachball(mt)
 
-For more info see :func:`~obspy.imaging.beachball.Beachball`.
+For more info see :func:`~obspy.imaging.beachball.Beachball` and
+:func:`~obspy.imaging.mopad_wrapper.Beachball2`.
 
 
 Plot the beach ball as matplotlib collection into an existing plot.
@@ -150,7 +162,8 @@ Plot the beach ball as matplotlib collection into an existing plot.
     ax.set_xlim((-120, 120))
     ax.set_ylim((-20, 120))
 
-For more info see :func:`~obspy.imaging.beachball.Beach`.
+For more info see :func:`~obspy.imaging.beachball.Beach` and
+:func:`~obspy.imaging.mopad_wrapper.Beach2`.
 
 
 Saving plots into files

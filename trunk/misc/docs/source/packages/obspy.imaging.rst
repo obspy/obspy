@@ -24,3 +24,4 @@
         spectrogram
         beachball
         waveform
+        mopad_wrapper

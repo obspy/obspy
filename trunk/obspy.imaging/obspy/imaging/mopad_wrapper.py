@@ -19,10 +19,10 @@ from matplotlib.path import Path
 from mopad import BeachBall as mopad_BeachBall
 from mopad import MomentTensor as mopad_MomentTensor
 from mopad import epsilon
+from obspy.imaging.beachball import xy2patch
 
 
 # seems the base system we (gmt) are using is called "USE" in mopad
-MOPAD_BASIS = "USE"
 KWARG_MAP = {'size': ['plot_size', 'plot_aux_plot_size'],
              'linewidth': ['plot_nodalline_width', 'plot_outerline_width'],
              'facecolor': ['plot_tension_colour'],
@@ -58,12 +58,12 @@ KWARG_MAP = {'size': ['plot_size', 'plot_aux_plot_size'],
 # 'plot_total_alpha': 0.5}
 
 
-def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+def Beach2(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=80, nofill=False,
-          zorder=100):
+          zorder=100, mopad_basis='USE'):
     """
     Return a beach ball as a collection which can be connected to an
-    current matplotlib axes instance (ax.add_collection).
+    current matplotlib axes instance (ax.add_collection). Based on mopad.
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
@@ -90,9 +90,12 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
                    first.
+    :param mopad_basis: The system which may be chosen as
+            'NED','USE','NWU', or 'XYZ'. USE mimics the obspy Beachball
+            behaviour
     """
     # initialize beachball
-    mt = mopad_MomentTensor(fm, MOPAD_BASIS)
+    mt = mopad_MomentTensor(fm, mopad_basis)
     bb = mopad_BeachBall(mt, npoints=size)
     bb._setup_BB(unit_circle=False)
     
@@ -100,8 +103,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     res = width/2.0
     neg_nodalline = bb._nodalline_negative_final_US
     pos_nodalline = bb._nodalline_positive_final_US
-    tension_colour = bb._plot_tension_colour
-    pressure_colour = bb._plot_pressure_colour
+    tension_colour = facecolor
+    pressure_colour = bgcolor
 
     # based on mopads _setup_plot_US() function
     # collect patches for the selection
@@ -158,11 +161,12 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return collection
 
 
-def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
+def Beachball2(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
               bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
-              format=None, nofill=False, fig=None):
+              format=None, nofill=False, fig=None, mopad_basis='USE'):
     """
-    Draws a beach ball diagram of an earthquake focal mechanism. 
+    Draws a beach ball diagram of an earthquake focal mechanism. Based on
+    mopad.
     
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
@@ -193,7 +197,7 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
     # use nofill kwarg
 
 
-    mt = mopad_MomentTensor(fm, MOPAD_BASIS)
+    mt = mopad_MomentTensor(fm, mopad_basis)
     bb = mopad_BeachBall(mt)
 
     # show plot in a window
@@ -209,65 +213,3 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
             if not mopad_kwargs['plot_outfile'].endswith(mopad_kwargs['plot_outfile_format']):
                 mopad_kwargs['plot_outfile'] += "." + mopad_kwargs['plot_outfile_format']
         bb.save_BB(mopad_kwargs)
-
- 
-def xy2patch(x, y, res, xy): 
-    # transform into the Path coordinate system  
-    x = x * res + xy[0] 
-    y = y * res + xy[1] 
-    verts = zip(x.tolist(), y.tolist()) 
-    codes = [Path.MOVETO] 
-    codes.extend([Path.LINETO]*(len(x)-2)) 
-    codes.append(Path.CLOSEPOLY) 
-    path = Path(verts, codes)  
-    return patches.PathPatch(path) 
-
-
-if __name__ == '__main__':
-    """
-    """
-    mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
-          [274, 13, 55],
-          [130, 79, 98],
-          [264.98, 45.00, -159.99],
-          [160.55, 76.00, -46.78],
-          [1.45, -6.60, 5.14, -2.67, -3.16, 1.36],
-          [235, 80, 35],
-          [138, 56, 168],
-          [1, 1, 1, 0, 0, 0],
-          [-1, -1, -1, 0, 0, 0],
-          [1, -2, 1, 0, 0, 0],
-          [1, -1, 0, 0, 0, 0],
-          [1, -1, 0, 0, 0, -1],
-          [179, 55, -78],
-          [10, 42.5, 90],
-          [10, 42.5, 92],
-          [150, 87, 1],
-          [0.99, -2.00, 1.01, 0.92, 0.48, 0.15],
-          [5.24, -6.77, 1.53, 0.81, 1.49, -0.05],
-          [16.578, -7.987, -8.592, -5.515, -29.732, 7.517],
-          [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
-          [150, 87, 1]]
-
-
-    # Initialize figure
-    fig = plt.figure(1, figsize=(3, 3), dpi=100)
-    ax = fig.add_subplot(111, aspect='equal')
-
-    # Plot the stations or borders
-    ax.plot([-100, -100, 100, 100], [-100, 100, -100, 100], 'rv')
-
-    x = -100
-    y = -100
-    for i, t in enumerate(mt):
-        # add the beachball (a collection of two patches) to the axis
-        ax.add_collection(Beach(t, size=100, width=30, xy=(x, y),
-                                linewidth=.6))
-        x += 50
-        if (i + 1) % 5 == 0:
-            x = -100
-            y += 50
-
-    # Set the x and y limits and save the output
-    ax.axis([-120, 120, -120, 120])
-    plt.show()
