@@ -454,7 +454,7 @@ class SacIO(object):
                                "length of trace inconsistent!")
         if fsize:
             st = os.stat(name) #file's size = st[6]
-            sizecheck = st[6] - (632 + 4 * npts)
+            sizecheck = st[6] - (632 + 4 * int(npts))
             # size check info
             if sizecheck != 0:
                 msg = "File-size and theoretical size are inconsistent: %s\n" \
