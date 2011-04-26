@@ -58,7 +58,7 @@ KWARG_MAP = {'size': ['plot_size', 'plot_aux_plot_size'],
 # 'plot_total_alpha': 0.5}
 
 
-def Beach2(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=80, nofill=False,
           zorder=100, mopad_basis='USE'):
     """
@@ -161,7 +161,7 @@ def Beach2(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return collection
 
 
-def Beachball2(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
+def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
               bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
               format=None, nofill=False, fig=None, mopad_basis='USE'):
     """

@@ -3,7 +3,7 @@
 The obspy.imaging.mopad test suite.
 """
 
-from obspy.imaging.mopad_wrapper import Beach2
+from obspy.imaging.mopad_wrapper import Beach
 import os
 import unittest
 import matplotlib.pyplot as plt
@@ -65,7 +65,7 @@ class MopadTestCase(unittest.TestCase):
         y = -100
         for i, t in enumerate(mt):
             # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(Beach2(t, size=100, width=30, xy=(x, y),
+            ax.add_collection(Beach(t, size=100, width=30, xy=(x, y),
                                     linewidth=.6))
             x += 50
             if (i + 1) % 5 == 0:

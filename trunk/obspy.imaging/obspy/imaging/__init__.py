@@ -84,8 +84,8 @@ Draws a beach ball diagram of an earthquake focal mechanism.
        implementation, which is more correct, however it consumes much more
        time. The functions inside these two modules share mostly the same
        arguments. The following examples will also work with mopad by using
-       ``from obspy.imaging.mopad_wrapper import Beachball2 as Beachball''
-       and ``from obspy.imaging.mopad_wrapper import Beach2 as Beach''
+       ``from obspy.imaging.mopad_wrapper import Beachball``
+       and ``from obspy.imaging.mopad_wrapper import Beach``
        respectively.
 
 .. _Olboyd: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
@@ -126,7 +126,7 @@ the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
     Beachball(mt)
 
 For more info see :func:`~obspy.imaging.beachball.Beachball` and
-:func:`~obspy.imaging.mopad_wrapper.Beachball2`.
+:func:`~obspy.imaging.mopad_wrapper.Beachball`.
 
 
 Plot the beach ball as matplotlib collection into an existing plot.
@@ -168,7 +168,7 @@ Plot the beach ball as matplotlib collection into an existing plot.
     ax.set_ylim((-20, 120))
 
 For more info see :func:`~obspy.imaging.beachball.Beach` and
-:func:`~obspy.imaging.mopad_wrapper.Beach2`.
+:func:`~obspy.imaging.mopad_wrapper.Beach`.
 
 
 Saving plots into files
