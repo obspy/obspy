@@ -9,6 +9,8 @@
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
 #---------------------------------------------------------------------
 """
+USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
+
 ::
 
     #######################################################################

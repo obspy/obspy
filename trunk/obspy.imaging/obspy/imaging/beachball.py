@@ -5,13 +5,11 @@
 #   Author: Robert Barsch
 #    Email: barsch@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Robert Barsch
+# Copyright (C) 2008-2011 Robert Barsch
 #---------------------------------------------------------------------
 
 """
-obspy.imaging.beachball 
-
-Draws a beach ball diagram of an earthquake focal mechanism.
+Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
