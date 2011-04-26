@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2011 ObsPy Development Team
 #-----------------------------------------------
 """
-ObsPy bindings to mopad
+ObsPy bindings/wrapper to the mopad beachball generator
 """
 
 import warnings
@@ -79,7 +79,9 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
         opposite to strike (right-lateral). 
     :param size: Controls the number of interpolation points for the
-        curves. Minimum is automatically set to 100.
+        curves. Defaults to 80, note that this and especially smaller
+        values might produce artifacts, however it makes the plotting much
+        faster. Use 360 for full resolution and no artifacts.
     :param facecolor: Color to use for quadrants of tension; can be a string, e.g. 
         'r', 'b' or three component color vector, [R G B].
     :param edgecolor: Color of the edges.
@@ -100,18 +102,22 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     bb._setup_BB(unit_circle=False)
     
     # extract the coordinates and colors of the lines
-    res = width/2.0
+    radius = width/2.0
     neg_nodalline = bb._nodalline_negative_final_US
     pos_nodalline = bb._nodalline_positive_final_US
     tension_colour = facecolor
     pressure_colour = bgcolor
 
+    if nofill:
+        tension_colour = 'none'
+        pressure_colour = 'none'
+
     # based on mopads _setup_plot_US() function
     # collect patches for the selection
     coll = [None, None, None]
-    coll[0] = patches.Circle(xy, radius=res)
-    coll[1] = xy2patch(neg_nodalline[0,:], neg_nodalline[1,:], res, xy)
-    coll[2] = xy2patch(pos_nodalline[0,:], pos_nodalline[1,:], res, xy)
+    coll[0] = patches.Circle(xy, radius=radius)
+    coll[1] = xy2patch(neg_nodalline[0,:], neg_nodalline[1,:], radius, xy)
+    coll[2] = xy2patch(pos_nodalline[0,:], pos_nodalline[1,:], radius, xy)
 
     # set the color of the three parts
     fc = [None, None, None]

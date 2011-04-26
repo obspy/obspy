@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding=utf-8
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: mopad.py
 #  Purpose: Moment tensor Plotting and Decomposition tool
@@ -9,55 +9,58 @@
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
 #---------------------------------------------------------------------
 """
+::
 
-#######################################################################
-#########################   MoPaD  ####################################
-
-######### Moment tensor Plotting and Decomposition tool #############
-#######################################################################
-
-Multi method tool for: 
-
-- Plotting and saving of focal sphere diagrams ('Beachballs').
-
-- Decomposition and Conversion of seismic moment tensors.
-
-- Generating coordinates, describing a focal sphere diagram, to be
-piped into GMT's psxy (Useful where psmeca or pscoupe fail.)
-
-#######################################################################
-
-Version  0.7
-
-#######################################################################
-
-Copyright (C) 2010
-Lars Krieger & Sebastian Heimann
-
-Contact
-lars.krieger@zmaw.de  &  sebastian.heimann@zmaw.de
-
-#######################################################################
-
-License:
-
-GNU Lesser General Public License, Version 3
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation; either version 3
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
-
+    #######################################################################
+    #########################   MoPaD  ####################################
+    
+    ######### Moment tensor Plotting and Decomposition tool #############
+    #######################################################################
+    
+    Multi method tool for: 
+    
+    - Plotting and saving of focal sphere diagrams ('Beachballs').
+    
+    - Decomposition and Conversion of seismic moment tensors.
+    
+    - Generating coordinates, describing a focal sphere diagram, to be
+      piped into GMT's psxy (Useful where psmeca or pscoupe fail.)
+    
+    For more help, please run ``python mopad.py --help``.
+    
+    
+    #######################################################################
+    
+    Version  0.7
+    
+    #######################################################################
+    
+    Copyright (C) 2010
+    Lars Krieger & Sebastian Heimann
+    
+    Contact
+    lars.krieger@zmaw.de  &  sebastian.heimann@zmaw.de
+    
+    #######################################################################
+    
+    License:
+    
+    GNU Lesser General Public License, Version 3
+    
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public License
+    as published by the Free Software Foundation; either version 3
+    of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU Lesser General Public License for more details.
+    
+    You should have received a copy of the GNU Lesser General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+    02110-1301, USA.
 """
 
 

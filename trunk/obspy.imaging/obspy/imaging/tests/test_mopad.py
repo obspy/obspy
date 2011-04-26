@@ -65,7 +65,7 @@ class MopadTestCase(unittest.TestCase):
         y = -100
         for i, t in enumerate(mt):
             # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(Beach(t, size=100, width=30, xy=(x, y),
+            ax.add_collection(Beach(t, size=40, width=30, xy=(x, y),
                                     linewidth=.6))
             x += 50
             if (i + 1) % 5 == 0:

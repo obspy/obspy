@@ -76,11 +76,11 @@ Beachballs
 ----------
 Draws a beach ball diagram of an earthquake focal mechanism.
 
-:note: ObsPy ships to engines for beachball generation.
+:note: ObsPy ships two engines for beachball generation.
        :mod:`~obspy.imaging.beachball` is based on the ps_meca of GMT_
-       (generic mapping tool) and an Matlab script written by Oliver Boyd
+       (generic mapping tool) and a Matlab script written by Oliver Boyd
        (see olboyd_), which have known limitations.
-       :mod:`~obspy.imaging.mopad_wrapper` is based the mopad
+       :mod:`~obspy.imaging.mopad_wrapper` is based on the mopad
        implementation, which is more correct, however it consumes much more
        time. The functions inside these two modules share mostly the same
        arguments. The following examples will also work with mopad by using

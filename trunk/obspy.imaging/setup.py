@@ -57,7 +57,7 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
     ],
     keywords=['ObsPy', 'seismology', 'imaging', 'beachball',
-              'focal mechanism', 'waveform', 'spectogram'],
+              'focal mechanism', 'waveform', 'spectogram', 'mopad'],
     packages=find_packages(),
     namespace_packages=['obspy'],
     zip_safe=False,
