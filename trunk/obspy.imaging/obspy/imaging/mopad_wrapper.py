@@ -92,7 +92,7 @@ def Beach2(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
                    first.
     :param mopad_basis: The system which may be chosen as
             'NED' (North, East Down), 'USE' (Up, South, East), 'NWU' (North,
-            West, Up) or 'XYZ'. 'USE' mimics the obspy Beachball behaviou.
+            West, Up) or 'XYZ'. 'USE' mimics the obspy Beachball behaviour.
     """
     # initialize beachball
     mt = mopad_MomentTensor(fm, mopad_basis)
