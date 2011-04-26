@@ -73,7 +73,8 @@ setup(
     entry_points={
         'console_scripts': [
             'obspy-scan = obspy.imaging.scripts.scan:main',
-            'obspy-plot = obspy.imaging.scripts.plot:main'
+            'obspy-plot = obspy.imaging.scripts.plot:main',
+            'obspy-mopad = obspy.imaging.scripts.mopad:main'
         ],
     },
 )

@@ -16,9 +16,9 @@ import numpy as np
 from matplotlib import pyplot as plt, patches
 from matplotlib.collections import PatchCollection
 from matplotlib.path import Path
-from mopad import BeachBall as mopad_BeachBall
-from mopad import MomentTensor as mopad_MomentTensor
-from mopad import epsilon
+from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
+from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
+from obspy.imaging.scripts.mopad import epsilon
 from obspy.imaging.beachball import xy2patch
 
 

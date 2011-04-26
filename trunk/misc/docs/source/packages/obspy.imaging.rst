@@ -12,6 +12,7 @@
 
         scripts.scan
         scripts.plot
+        scripts.mopad
 
     .. comment to end block
 
