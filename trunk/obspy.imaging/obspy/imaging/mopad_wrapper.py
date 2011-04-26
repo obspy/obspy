@@ -91,8 +91,8 @@ def Beach2(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param zorder: Set zorder. Artists with lower zorder values are drawn
                    first.
     :param mopad_basis: The system which may be chosen as
-            'NED','USE','NWU', or 'XYZ'. USE mimics the obspy Beachball
-            behaviour
+            'NED' (North, East Down), 'USE' (Up, South, East), 'NWU' (North,
+            West, Up) or 'XYZ'. 'USE' mimics the obspy Beachball behaviou.
     """
     # initialize beachball
     mt = mopad_MomentTensor(fm, mopad_basis)
