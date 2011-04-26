@@ -114,6 +114,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         |     known as areal strain) (eEE+eNN) as a function of time
         | **sigmadh:** scalar, standard deviation of horizontal dilatation
         |     (areal strain) 
+        | **ts_e:** (array, dimension nt x 3 x 3) - strain tensor
         | **ts_s:** (array, length nt) -  maximum strain 
         |     ( .5*(max eigval of e - min eigval of e) as a 
         |     function of time, where e is the 3x3 strain tensor
@@ -341,6 +342,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     ts_M = np.NaN * np.empty(nt)
     ts_data = np.NaN * np.empty((nt, 3 * N))
     ts_ptilde = np.NaN * np.empty((nt, 6))
+    ts_e = np.NaN * np.empty((nt, 3, 3))
 
     # other matrices
     udif = np.NaN * np.empty((3, N))
@@ -494,6 +496,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # calculate strain tensors
         # Fung eqn 5.1 p 97 gives dui = (eij-wij)*dxj
         e = .5 * (U + U.T)
+        ts_e[itime] = e
 
         # Three components of the rotation vector omega (=w here)
         w = np.NaN * np.empty(3)
@@ -580,6 +583,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     out['ts_pred'] = ts_pred
     out['ts_misfit'] = ts_misfit
     out['ts_M'] = ts_M
+    out['ts_e'] = ts_e
 
     out['ts_ptilde'] = ts_ptilde
     out['Cp'] = Cp
