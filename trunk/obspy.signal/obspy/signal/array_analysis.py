@@ -329,23 +329,27 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         warnings.warn(msg)
 
     # set up storage for vectors that will contain time series
-    ts_wmag = np.NaN * np.empty(nt)
-    ts_w1 = np.NaN * np.empty(nt)
-    ts_w2 = np.NaN * np.empty(nt)
-    ts_w3 = np.NaN * np.empty(nt)
-    ts_tilt = np.NaN * np.empty(nt)
-    ts_dh = np.NaN * np.empty(nt)
-    ts_sh = np.NaN * np.empty(nt)
-    ts_s = np.NaN * np.empty(nt)
-    ts_pred = np.NaN * np.empty((nt, 3 * N))
-    ts_misfit = np.NaN * np.empty((nt, 3 * N))
-    ts_M = np.NaN * np.empty(nt)
-    ts_data = np.NaN * np.empty((nt, 3 * N))
-    ts_ptilde = np.NaN * np.empty((nt, 6))
+    ts_wmag = np.empty(nt)
+    ts_w1 = np.empty(nt)
+    ts_w2 = np.empty(nt)
+    ts_w3 = np.empty(nt)
+    ts_tilt = np.empty(nt)
+    ts_dh = np.empty(nt)
+    ts_sh = np.empty(nt)
+    ts_s = np.empty(nt)
+    ts_pred = np.empty((nt, 3 * N))
+    ts_misfit = np.empty((nt, 3 * N))
+    ts_M = np.empty(nt)
+    ts_data = np.empty((nt, 3 * N))
+    ts_ptilde = np.empty((nt, 6))
+    for array in (ts_wmag, ts_w1, ts_w2, ts_w3, ts_tilt, ts_dh, ts_sh, ts_s,
+                  ts_pred, ts_misfit, ts_M, ts_data, ts_ptilde):
+        array.fill(np.NaN)
     ts_e = np.NaN * np.empty((nt, 3, 3))
 
     # other matrices
-    udif = np.NaN * np.empty((3, N))
+    udif = np.empty((3, N))
+    udif.fill(np.NaN)
 
 
     #---------------------------------------------------------------
@@ -476,7 +480,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # calculate summed length of misfits (residual displacements)
         misfit_sq = misfit ** 2
         misfit_sq = np.reshape(misfit_sq, (N, 3)).T
-        misfit_sumsq = np.NaN * np.empty(N)
+        misfit_sumsq = np.empty(N)
+        misfit_sumsq.fill(np.NaN)
         for i in xrange(N):
             misfit_sumsq[i] = misfit_sq[:, i].sum()
         misfit_len = np.sum(np.sqrt(misfit_sumsq))
@@ -499,7 +504,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         ts_e[itime] = e
 
         # Three components of the rotation vector omega (=w here)
-        w = np.NaN * np.empty(3)
+        w = np.empty(3)
+        w.fill(np.NaN)
         w[0] = -ptilde[5]
         w[1] = ptilde[2]
         w[2] = .5 * (ptilde[3] - ptilde[1])
