@@ -202,7 +202,7 @@ from cross_correlation import xcorr, xcorr_3C
 from freqattributes import cfrequency, bwith, domperiod, logcep
 from hoctavbands import sonogram
 from polarization import eigval
-from psd import PPSD
+from psd import psd, PPSD
 
 
 __version__ = _getVersionString("obspy.signal")

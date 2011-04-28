@@ -26,6 +26,7 @@
         ~invsim.pazToFreqResp
         ~trigger.pkBaer
         ~psd.PPSD
+        ~psd.psd
         ~trigger.recStalta
         ~rotate.rotate_NE_RT
         ~invsim.seisSim

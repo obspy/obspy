@@ -24,22 +24,38 @@ import pickle
 import math
 import bisect
 import numpy as np
-import matplotlib
-from matplotlib import mlab
-import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.colors import LinearSegmentedColormap
 from obspy.core import Trace, Stream
-from obspy.signal import cosTaper #, pazToFreqResp, specInv
+from obspy.signal import cosTaper
 from obspy.signal.util import nearestPow2
 
-# helper variable to control if matplotlib was imported already. this is done
-# only in PPSD. avoids import statement overhead and error if matplotlib is not
-# installed
-mlab = None
+try:
+    # Import matplotlib routines. These are no official dependency of
+    # obspy.signal so an import error should really only be raised if any
+    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
+    import matplotlib
+    from matplotlib import mlab
+    import matplotlib.pyplot as plt
+    from matplotlib.dates import date2num
+    from matplotlib.ticker import FormatStrFormatter
+    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.mlab import detrend_none, window_hanning
+    MATPLOTLIB_VERSION = map(int, matplotlib.__version__.split("."))
+except ImportError:
+    # if matplotlib is not present be silent about it and only raise the
+    # ImportError if matplotlib actually is used (currently in psd() and
+    # PPSD())
+    MATPLOTLIB_VERSION = None
+    msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
+            "is no dependency of obspy.signal it is however necessary for a " \
+            "few routines. Please install matplotlib in order to be able " \
+            "to use e.g. psd() or PPSD()."
+    # set up two dummy functions. this makes it possible to make the docstring
+    # of psd() look like it should with two functions as default values for
+    # kwargs although matplotlib might not be present and the routines
+    # therefore not usable
+    def detrend_none(): pass
+    def window_hanning(): pass
 
-MATPLOTLIB_VERSION = map(int, matplotlib.__version__.split("."))
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0,  1.0, 1.0),
@@ -65,8 +81,65 @@ CDICT = {'red': ((0.0,  1.0, 1.0),
                   (1.0,  0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-PSD_LENGTH = 3600 # psds are calculated on 1h long segments
-PSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
+PPSD_LENGTH = 3600 # psds are calculated on 1h long segments
+PPSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
+
+
+def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning, noverlap=0):
+    """
+    Wrapper for `matplotlib.mlab.psd`.
+
+    Always returns a onesided psd (positive frequencies only), corrects for
+    this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
+    by dividing with sampling rate.
+    
+    This wrapper is intended to intercept changes in `mlab.psd`'s default
+    behavior which changes with matplotlib version 0.98.4:
+    
+      - http://matplotlib.sourceforge.net/
+                users/whats_new.html#psd-amplitude-scaling
+      - http://matplotlib.sourceforge.net/_static/CHANGELOG
+                (entries on 2009-05-18 and 2008-11-11)
+      - http://matplotlib.svn.sourceforge.net/
+                viewvc/matplotlib?view=revision&revision=6518
+      - http://matplotlib.sourceforge.net/
+                api/api_changes.html#changes-for-0-98-x
+
+    :note:
+        For details on all arguments see `matplotlib.mlab.psd`_.
+
+    .. _`matplotlib.mlab.psd`: http://matplotlib.sourceforge.net/api/mlab_api.html#matplotlib.mlab.psd
+    """
+    # check if matplotlib is available, no official dependency for obspy.signal
+    if MATPLOTLIB_VERSION is None:
+        raise ImportError(msg_matplotlib_ImportError)
+
+    # check matplotlib version
+    elif MATPLOTLIB_VERSION >= [0, 98, 4]:
+        new_matplotlib = True
+    else:
+        new_matplotlib = False
+    # build up kwargs that do not change with version 0.98.4
+    kwargs = {}
+    kwargs['NFFT'] = NFFT
+    kwargs['Fs'] = Fs
+    kwargs['detrend'] = detrend
+    kwargs['window'] = window
+    kwargs['noverlap'] = noverlap
+    # add additional kwargs to control behavior for matplotlib versions higher
+    # than 0.98.4. These settings make sure that the scaling is already done
+    # during the following psd call for newer matplotlib versions.
+    if new_matplotlib:
+        kwargs['pad_to'] = None
+        kwargs['sides'] = 'onesided'
+        kwargs['scale_by_freq'] = True
+    # do the actual call to mlab.psd
+    Pxx, freqs = mlab.psd(x, **kwargs)
+    # do scaling manually for old matplotlib versions
+    if not new_matplotlib:
+        Pxx = Pxx / Fs
+        Pxx[1:-1] = Pxx[1:-1] * 2.0
+    return Pxx, freqs
 
 
 def fft_taper(data):
@@ -148,9 +221,11 @@ class PPSD():
                 result in some data segments shorter than 1 hour not used in
                 the PPSD.
         """
-        # import matplotlib stuff, no official dependency for obspy.signal
-        if mlab is None:
-            self.__import_matplotlib()
+        # check if matplotlib is available, no official dependency for
+        # obspy.signal
+        if MATPLOTLIB_VERSION is None:
+            raise ImportError(msg_matplotlib_ImportError)
+
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
         self.station = stats.station
@@ -159,7 +234,7 @@ class PPSD():
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
         # trace length for one hour piece
-        self.len = int(self.sampling_rate * PSD_LENGTH)
+        self.len = int(self.sampling_rate * PPSD_LENGTH)
         # set paz either from kwarg or try to get it from stats
         self.paz = paz
         if self.paz is None:
@@ -187,19 +262,6 @@ class PPSD():
         self.hist_stack = None
         self.__setup_bins()
         self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
-
-    def __import_matplotlib(self):
-        """
-        Import matplotlib routines. These are no official dependency of
-        obspy.signal so an import error should really only be raised if PPSD
-        is used which relies on matplotlib (for psd and plotting).
-        """
-        global mlab, plt, date2num, FormatStrFormatter, LinearSegmentedColormap
-        from matplotlib import mlab
-        import matplotlib.pyplot as plt
-        from matplotlib.dates import date2num
-        from matplotlib.ticker import FormatStrFormatter
-        from matplotlib.colors import LinearSegmentedColormap
 
     def __setup_bins(self):
         """
@@ -298,7 +360,7 @@ class PPSD():
         insert this piece of data.
         """
         index1 = bisect.bisect_left(self.times_used, utcdatetime)
-        index2 = bisect.bisect_right(self.times_used, utcdatetime + PSD_LENGTH)
+        index2 = bisect.bisect_right(self.times_used, utcdatetime + PPSD_LENGTH)
         if index1 != index2:
             return True
         else:
@@ -339,7 +401,7 @@ class PPSD():
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + PSD_LENGTH <= t2:
+            while t1 + PPSD_LENGTH <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
                           "skipping these slices."
@@ -347,7 +409,7 @@ class PPSD():
                     warnings.warn(msg)
                 else:
                     # throw warnings if trace length is different than one hour..!?!
-                    slice = tr.slice(t1, t1 + PSD_LENGTH)
+                    slice = tr.slice(t1, t1 + PPSD_LENGTH)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     self.__process(slice)
@@ -355,10 +417,10 @@ class PPSD():
                     if verbose:
                         print t1
                     changed = True
-                t1 += PSD_STRIDE # advance half an hour
+                t1 += PPSD_STRIDE # advance half an hour
 
             # enforce time limits, pad zeros if gaps
-            #tr.trim(t, t+PSD_LENGTH, pad=True)
+            #tr.trim(t, t+PPSD_LENGTH, pad=True)
         return changed
             
     def __process(self, tr):
@@ -402,9 +464,11 @@ class PPSD():
         # XXX     print "omitting masked array"
         # XXX     continue
 
-        spec, freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
-                              detrend=mlab.detrend_linear, window=fft_taper,
-                              noverlap=self.nlap)
+        # use our own wrapper for mlab.psd to have consistent results on all
+        # matplotlib versions
+        spec, freq = psd(tr.data, self.nfft, self.sampling_rate,
+                         detrend=mlab.detrend_linear, window=fft_taper,
+                         noverlap=self.nlap)
 
         # convert to acceleration
         #try:
@@ -433,21 +497,6 @@ class PPSD():
 
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
-
-        # fft rescaling
-        # see Buttkus: Spektralanalyse und... S.185 Gl. (9.94)
-        # scaling behavior of matplotlib.mlab.psd changes with version 0.98.4!
-        # see: 
-        #   - http://matplotlib.sourceforge.net/
-        #            users/whats_new.html#psd-amplitude-scaling
-        #   - http://matplotlib.sourceforge.net/_static/CHANGELOG
-        #     (entries on 2009-05-18 and 2008-11-11)
-        #   - http://matplotlib.svn.sourceforge.net/
-        #            viewvc/matplotlib?view=revision&revision=6518
-        #   - http://matplotlib.sourceforge.net/
-        #            api/api_changes.html#changes-for-0-98-x
-        if MATPLOTLIB_VERSION < [0, 98, 4]:
-            spec *= 2.0 * self.delta
 
         #spec = spec*(freq**2)
         #specs[i, :] = np.log10(spec[1:, :]) * 10
@@ -592,7 +641,7 @@ class PPSD():
         
         # plot data coverage
         starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t+3600).datetime) for t in self.times_used]
+        ends = [date2num((t+PPSD_LENGTH).datetime) for t in self.times_used]
         for start, end in zip(starts, ends):
             ax.axvspan(start, end, 0, 0.7, alpha=0.5)
         # plot data
