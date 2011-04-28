@@ -120,6 +120,18 @@ def nextpow2(i):
     buf = M.ceil(M.log(i) / M.log(2))
     return int(M.pow(2, buf))
 
+def prevpow2(i):
+    """
+    Find the previous power of two
+
+    >>> prevpow2(5)
+    4
+    >>> prevpow2(250)
+    128
+    """
+    # do not use numpy here, math is much faster for single values
+    return int(M.pow(2, M.floor(M.log(i, 2))))
+
 def nearestPow2(x):
     """
     Finds the nearest integer that is a power of 2.

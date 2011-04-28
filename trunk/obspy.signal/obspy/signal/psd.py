@@ -26,7 +26,7 @@ import bisect
 import numpy as np
 from obspy.core import Trace, Stream
 from obspy.signal import cosTaper
-from obspy.signal.util import nearestPow2
+from obspy.signal.util import prevpow2
 
 try:
     # Import matplotlib routines. These are no official dependency of
@@ -81,6 +81,7 @@ CDICT = {'red': ((0.0,  1.0, 1.0),
                   (1.0,  0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
+# do not change these variables, otherwise results may differ from PQLX!
 PPSD_LENGTH = 3600 # psds are calculated on 1h long segments
 PPSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
 
@@ -247,13 +248,17 @@ class PPSD():
         #        msg = "No paz provided and no paz information found " + \
         #              "in trace.stats.paz"
         #        raise Exception(msg)
-        # setup some other values for the spectral estimates
-        #self.trace_length = len(tr)
-        # mcnamara: 2**15 sec at 40Hz ~ 2**18 points
-        self.nfft = 2**15 * 40 / 2
-        self.nfft = int(nearestPow2(self.nfft))
-        # mcnamara uses always 13 segments per hour trimming to nfft
-        # we leave the psd routine alone and use as many segments as possible
+        # nfft is determined mimicing the fft setup in McNamara&Buland paper:
+        # (they take 13 segments overlapping 75% and truncate to next lower
+        #  power of 2)
+        #  - take number of points of whole ppsd segment (currently 1 hour)
+        self.nfft = PPSD_LENGTH * self.sampling_rate
+        #  - make 13 single segments overlapping by 75%
+        #    (1 full segment length + 25% * 12 full segment lengths)
+        self.nfft = self.nfft / 4.0
+        #  - go to next smaller power of 2 for nfft
+        self.nfft = prevpow2(self.nfft)
+        #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
         self.times_used = []
         self.times = self.times_used
@@ -274,12 +279,6 @@ class PPSD():
         # leave out first entry (offset)
         freq = freq[1:]
 
-        # XXX mcnamara etal do no frequency binning but instead a octave scaled geometric mean afterwards
-        # XXX period_bins = np.logspace(math.log10(1.0/freq[-1]), math.log10(1.0/freq[1]), 301, endpoint=True)
-        # XXX spec_bins = np.linspace(-200, -50, 151, endpoint=True)
-        # XXX hist, xedges, yedges = np.histogram2d(1.0/freq, spec, bins=(period_bins, spec_bins))
-
-        # XXX XXX XXX
         per = 1.0 / freq[::-1]
         self.freq = freq
         self.per = per
@@ -450,19 +449,15 @@ class PPSD():
         except AttributeError:
             pass
 
-        # restitution
-        # XXX mcnamara apply the correction at the end in freq-domain,
-        # XXX does it make a difference?
-        # XXX probably should be done earlier on bigger junk of data?!?!
+        # restitution:
+        # mcnamara apply the correction at the end in freq-domain,
+        # does it make a difference?
+        # probably should be done earlier on bigger junk of data?!
         tr.simulate(paz_remove=self.paz, remove_sensitivity=True,
                     paz_simulate=None, simulate_sensitivity=False)
 
-        # XXX try to go to acceleration:
+        # go to acceleration:
         tr.data = np.gradient(tr.data, self.delta)
-
-        # XXX if isinstance(tr.data, np.ma.MaskedArray):
-        # XXX     print "omitting masked array"
-        # XXX     continue
 
         # use our own wrapper for mlab.psd to have consistent results on all
         # matplotlib versions
@@ -498,30 +493,18 @@ class PPSD():
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
 
-        #spec = spec*(freq**2)
-        #specs[i, :] = np.log10(spec[1:, :]) * 10
-        # XXX by roberto: what does it do? -> acceleration?
-        # XXX spec *= (freq**2)
+        # go to dB
         spec = np.log10(spec)
         spec *= 10
 
-        # XXX mcnamara etal do no frequency binning but instead a octave scaled geometric mean afterwards
-        # XXX period_bins = np.logspace(math.log10(1.0/freq[-1]), math.log10(1.0/freq[1]), 301, endpoint=True)
-        # XXX spec_bins = np.linspace(-200, -50, 151, endpoint=True)
-        # XXX hist, xedges, yedges = np.histogram2d(1.0/freq, spec, bins=(period_bins, spec_bins))
-
-        # XXX this should be done only one during __init__
-        # XXX XXX XXX
         spec_octaves = []
         # do this for the whole period range and append the values to our lists
         for per_left, per_right in zip(self.per_octaves_left, self.per_octaves_right):
-            #print per_left, per_right
             spec_center = spec[(per_left <= self.per) & (self.per <= per_right)].mean()
             spec_octaves.append(spec_center)
         spec_octaves = np.array(spec_octaves)
 
         hist, self.xedges, self.yedges = np.histogram2d(self.per_octaves, spec_octaves, bins=(self.period_bins, self.spec_bins))
-        # XXX XXX XXX
 
         try:
             # we have to make sure manually that the bins are always the same!
