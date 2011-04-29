@@ -88,7 +88,7 @@ PPSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning, noverlap=0):
     """
-    Wrapper for `matplotlib.mlab.psd`.
+    Wrapper for `matplotlib.mlab.psd`_.
 
     Always returns a onesided psd (positive frequencies only), corrects for
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
@@ -108,6 +108,14 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning, noverlap
 
     :note:
         For details on all arguments see `matplotlib.mlab.psd`_.
+
+    :note:
+        When using `window=welch_taper` (`obspy.signal.psd.welch_taper`) and
+        `detrend=detrend_linear` (`matplotlib.mlab.detrend_linear`) the psd
+        function delivers practically the same results as PITSA.
+        Only DC and the first 3-4 lowest non-DC frequencies deviate very
+        slightly. In contrast to PITSA, this routine also returns the psd value
+        at the Nyquist frequency and therefore is one frequency sample longer.
 
     .. _`matplotlib.mlab.psd`: http://matplotlib.sourceforge.net/api/mlab_api.html#matplotlib.mlab.psd
     """
@@ -151,6 +159,43 @@ def fft_taper(data):
     """
     data *= cosTaper(len(data), 0.2)
     return data
+
+def welch_taper(data):
+    """
+    Applies a welch window to data. See
+    :func:`~obspy.signal.psd.welch_window`.
+    Caution: inplace operation, so data should be float.
+    """
+    data *= welch_window(len(data))
+    return data
+
+def welch_window(N):
+    """
+    Return a welch window for data of length N.
+    Routine is checked against PITSA for both even and odd values, but not for
+    strange values like N<5.
+    See e.g.:
+    http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
+    """
+    n = math.ceil(N / 2.0)
+    taper_left = np.arange(n, dtype=np.float64)
+    taper_left = 1 - np.power(taper_left / n, 2)
+    # first/last sample is zero by definition
+    if N % 2 == 0:
+        # even number of samples: two ones in the middle, perfectly symmetric
+        taper_right = taper_left
+    else:
+        # odd number of samples: still two ones in the middle, however, not
+        # perfectly symmetric anymore. right side is shorter by one sample
+        nn = n - 1
+        taper_right = np.arange(nn, dtype=np.float64)
+        taper_right = 1 - np.power(taper_right / nn, 2)
+    taper_left = taper_left[::-1]
+    # first/last sample is zero by definition
+    taper_left[0] = 0.0
+    taper_right[-1] = 0.0
+    taper = np.concatenate((taper_left, taper_right))
+    return taper
 
 
 class PPSD():

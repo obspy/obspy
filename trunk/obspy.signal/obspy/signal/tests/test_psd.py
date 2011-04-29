@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The PSD test suite.
+The psd test suite.
 """
 
 from __future__ import with_statement
@@ -9,16 +9,78 @@ import os
 import unittest
 import numpy as np
 from obspy.core import read
-from obspy.signal import PPSD
+from obspy.signal import PPSD, psd
+from obspy.signal.psd import welch_window, welch_taper
+from matplotlib.mlab import detrend_linear
 
 
-class PSDTestCase(unittest.TestCase):
+class PsdTestCase(unittest.TestCase):
     """
-    Test cases for PSD.
+    Test cases for psd.
     """
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def test_obspy_psd_vs_pitsa(self):
+        """
+        Test to compare results of PITSA's psd routine to the
+        `matplotlib.mlab.psd`_ routine wrapped in :func:`obspy.signal.psd.psd`.
+        The test works on 8192 samples long gaussian noise with a standard
+        deviation of 0.1 generated with PITSA, sampling rate for processing in
+        PITSA was 100.0 Hz, length of nfft 512 samples. The overlap in PITSA
+        cannot be controlled directly, instead only the number of overlapping
+        segments can be specified.  Therefore the test works with zero overlap
+        to have full control over the data segments used in the psd.
+        It seems that PITSA has one frequency entry more, i.e. the psd is one
+        point longer. I dont know were this can come from, for now this last
+        sample in the psd is ignored.
+
+        .. _`matplotlib.mlab.psd`: http://matplotlib.sourceforge.net/api/mlab_api.html#matplotlib.mlab.psd
+        """
+        SAMPLING_RATE = 100.0
+        NFFT = 512
+        NOVERLAP = 0
+        file_noise = os.path.join(self.path, "pitsa_noise.npy")
+        fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
+        file_psd_pitsa = os.path.join(self.path, fn_psd_pitsa)
+
+        noise = np.load(file_noise)
+        # in principle to mimic PITSA's results detrend should be specified as
+        # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
+        psd_obspy, f = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
+                           window=welch_taper, noverlap=NOVERLAP)
+        psd_pitsa = np.load(file_psd_pitsa)
+
+        # mlab's psd routine returns Nyquist frequency as last entry, PITSA
+        # seems to omit it and returns a psd one frequency sample shorter.
+        psd_obspy = psd_obspy[:-1]
+
+        # test results. first couple of frequencies match not as exactly as all
+        # the rest, test them separately with a little more allowance..
+        np.testing.assert_array_almost_equal(psd_obspy[:3], psd_pitsa[:3],
+                                             decimal=4)
+        np.testing.assert_array_almost_equal(psd_obspy[1:5], psd_pitsa[1:5],
+                                             decimal=5)
+        np.testing.assert_array_almost_equal(psd_obspy[5:], psd_pitsa[5:],
+                                             decimal=6)
+
+
+    def test_welch_window_vs_pitsa(self):
+        """
+        Test that the helper function to generate the welch window delivers the
+        same results as PITSA's routine.
+        Testing both even and odd values for length of window.
+        Not testing strange cases like length <5, though.
+        """
+        file_welch_even = os.path.join(self.path, "pitsa_welch_window_512.npy")
+        file_welch_odd = os.path.join(self.path, "pitsa_welch_window_513.npy")
+
+        for file, N in zip((file_welch_even, file_welch_odd), (512, 513)):
+            window_pitsa = np.load(file)
+            window_obspy = welch_window(N)
+            np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
+
 
     def test_PPSD(self):
         """
@@ -60,7 +122,7 @@ class PSDTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(PSDTestCase, 'test')
+    return unittest.makeSuite(PsdTestCase, 'test')
 
 
 if __name__ == '__main__':
