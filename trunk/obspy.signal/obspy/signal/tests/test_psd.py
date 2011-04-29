@@ -108,8 +108,8 @@ class PsdTestCase(unittest.TestCase):
         # read results and compare
         result_hist = np.load(file_histogram)
         self.assertEqual(len(ppsd.times), 4)
-        self.assertEqual(ppsd.nfft, 524288)
-        self.assertEqual(ppsd.nlap, 393216)
+        self.assertEqual(ppsd.nfft, 65536)
+        self.assertEqual(ppsd.nlap, 49152)
         np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
         # add the same data a second time (which should do nothing at all) and
         # test again
