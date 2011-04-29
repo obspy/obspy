@@ -13,13 +13,19 @@ extern "C" {
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
   #include <limits.h>
   #include <sys/malloc.h>
+#elif defined(_WIN64)
+  // must be executed before _WIN32 as the
+  // _WIN32 is also set to true on 64bit windows
+  // http://stackoverflow.com/questions/1647930/is-it-possible-to-check-whether-you-are-building-for-64-bit-with-microsoft-c-comp
+  #include <limits.h>
+  #include <malloc.h>
+  #include "runtimelink.c"
 #elif defined(_WIN32)
   #include <limits.h>
   #include <malloc.h>
 #else
   #include <limits.h>
   #include <malloc.h>
-  #include "runtimelink.c"
 #endif
 
 
