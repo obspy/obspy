@@ -617,7 +617,8 @@ class PPSD():
         with open(filename, "w") as file:
             pickle.dump(self, file)
 
-    def plot(self, filename=None, show_coverage=True):
+    def plot(self, filename=None, show_coverage=True, show_histogram=True,
+             show_percentiles=False, percentiles=[0, 25, 50, 75, 100]):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -628,6 +629,13 @@ class PPSD():
         :type show_coverage: bool (optional)
         :param show_coverage: Enable/disable second axes with representation of
                 data coverage time intervals.
+        :type show_percentiles: bool (optional)
+        :param show_percentiles: Enable/disable plotting of approximated
+                percentiles. These are calculated from the binned histogram and
+                are not the exact percentiles.
+        :type percentiles: list of ints
+        :param percentiles: percentiles to show if plotting of percentiles is
+                selected.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
@@ -640,9 +648,38 @@ class PPSD():
         else:
             ax = fig.add_subplot(111)
 
-        ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
-        cb = plt.colorbar(ppsd, ax=ax)
-        cb.set_label("[%]")
+        if show_histogram:
+            ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
+            cb = plt.colorbar(ppsd, ax=ax)
+            cb.set_label("[%]")
+
+        if show_percentiles:
+            # XXX powers = np.mean((self.spec_bins[:-1], self.spec_bins[1:]),
+            # XXX                  axis=0)
+            periods = np.mean((self.period_bins[:-1], self.period_bins[1:]),
+                              axis=0)
+            # sum up the columns to cumulative entries
+            hist = self.hist_stack.cumsum(axis=1)
+            # normalize every column with its overall number of entries
+            # (can vary from the number of self.times because of values outside
+            #  the histogram db ranges)
+            norm = hist[:, -1].copy()
+            # avoid zero division
+            norm[norm == 0] = 1
+            hist = (hist.T / norm).T
+            # for every period look up the approximate place of the percentiles
+            for percentile in percentiles:
+                # go to percent
+                percentile = percentile / 100.0
+                if percentile == 0:
+                    side = "right"
+                else:
+                    side = "left"
+                percentile_values = [col.searchsorted(percentile, side=side) \
+                                     for col in hist]
+                # map to power db values
+                percentile_values = self.spec_bins[percentile_values]
+                ax.plot(periods, percentile_values, color="black")
 
         data = np.load(NOISE_MODEL_FILE)
         model_periods = data['model_periods']
