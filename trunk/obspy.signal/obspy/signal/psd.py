@@ -618,7 +618,8 @@ class PPSD():
             pickle.dump(self, file)
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
-             show_percentiles=False, percentiles=[0, 25, 50, 75, 100]):
+             show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
+             show_noise_models=True):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -636,6 +637,8 @@ class PPSD():
         :type percentiles: list of ints
         :param percentiles: percentiles to show if plotting of percentiles is
                 selected.
+        :type show_noise_models: bool (optional)
+        :param show_noise_models: Enable/disable plotting of noise models.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
@@ -652,6 +655,9 @@ class PPSD():
             ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
+            color_limits = (0, 30)
+            ppsd.set_clim(*color_limits)
+            cb.set_clim(*color_limits)
 
         if show_percentiles:
             # XXX powers = np.mean((self.spec_bins[:-1], self.spec_bins[1:]),
@@ -681,16 +687,14 @@ class PPSD():
                 percentile_values = self.spec_bins[percentile_values]
                 ax.plot(periods, percentile_values, color="black")
 
-        data = np.load(NOISE_MODEL_FILE)
-        model_periods = data['model_periods']
-        high_noise = data['high_noise']
-        low_noise = data['low_noise']
-        ax.plot(model_periods, high_noise, '0.4', linewidth=2)
-        ax.plot(model_periods, low_noise, '0.4', linewidth=2)
+        if show_noise_models:
+            data = np.load(NOISE_MODEL_FILE)
+            model_periods = data['model_periods']
+            high_noise = data['high_noise']
+            low_noise = data['low_noise']
+            ax.plot(model_periods, high_noise, '0.4', linewidth=2)
+            ax.plot(model_periods, low_noise, '0.4', linewidth=2)
 
-        color_limits = (0, 30)
-        ppsd.set_clim(*color_limits)
-        cb.set_clim(*color_limits)
         ax.semilogx()
         ax.set_xlim(0.01, 179)
         ax.set_ylim(-200, -50)
