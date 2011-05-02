@@ -244,26 +244,54 @@ class PPSD():
 
     .. but the example stream is too short and does not contain enough data.
 
+    And/or we could save the ppsd data in a pickled file..
+
+    >>> ppsd.save("myfile.pkl") # doctest: +SKIP
+
+    .. that later can be loaded again using the `pickle` module in the Python
+    Standard Library, e.g. to add more data or plot it again.
+
+    >>> import pickle
+    >>> ppsd = pickle.load("myfile.pkl") # doctest: +SKIP
+
     For a real world example see the `ObsPy Tutorial`_.
+
+    :note: It is safer (but a bit slower) to provide a
+           :class:`~obspy.xseed.parser.Parser` instance with information from
+           e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
     .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """
-    def __init__(self, stats, paz=None, merge_method=0):
+    def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
         estimates.
+        The necessary instrument response information can be provided in two
+        ways:
+
+        * Providing an `obspy.xseed` :class:`~obspy.xseed.parser.Parser`,
+          e.g. containing metadata from a Dataless SEED file. This is the safer
+          way but it might a bit slower because for every processed time
+          segment the response information is extracted from the parser.
+        * Providing a dictionary containing poles and zeros information. Be
+          aware that this leads to wrong results if the instrument's response
+          is changing with data added to the PPSD. Use with caution!
         
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
         :type paz: dict (optional)
         :param paz: Response information of instrument. If not specified the
                 information is supposed to be present as stats.paz.
-        :type merge_method: int (optional)
-        :param merge_method: Merging method to use. McNamara&Buland merge gappy
+        :type parser: :class:`obspy.xseed.parser.Parser` (optional)
+        :param parser: Parser instance with response information (e.g. read
+                from a Dataless SEED volume)
+        :type skip_on_gaps: Boolean (optional)
+        :param skip_on_gaps: Determines whether time segments with gaps should
+                be skipped entirely. McNamara & Buland merge gappy
                 traces by filling with zeros. This results in a clearly
                 identifiable outlier psd line in the PPSD visualization. Select
-                `merge_method=-1` for not filling gaps with zeros which might
+                `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than 1 hour not used in
                 the PPSD.
         """
@@ -271,6 +299,11 @@ class PPSD():
         # obspy.signal
         if MATPLOTLIB_VERSION is None:
             raise ImportError(msg_matplotlib_ImportError)
+
+        if paz is not None and parser is not None:
+            msg = "Both paz and parser specified. Using parser object for " \
+                  "metadata."
+            warnings.warn(msg)
 
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
@@ -283,16 +316,11 @@ class PPSD():
         self.len = int(self.sampling_rate * PPSD_LENGTH)
         # set paz either from kwarg or try to get it from stats
         self.paz = paz
-        if self.paz is None:
-            self.paz = stats.paz
-        self.merge_method = merge_method
-        #if paz is None:
-        #    try:
-        #        paz = tr.stats.paz
-        #    except:
-        #        msg = "No paz provided and no paz information found " + \
-        #              "in trace.stats.paz"
-        #        raise Exception(msg)
+        self.parser = parser
+        if skip_on_gaps:
+            self.merge_method = -1
+        else:
+            self.merge_method = 0
         # nfft is determined mimicing the fft setup in McNamara&Buland paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
@@ -434,7 +462,7 @@ class PPSD():
         # save information on available data and gaps
         self.__insert_data_times(stream)
         self.__insert_gap_times(stream)
-        # merge depending on merge_method set during __init__
+        # merge depending on skip_on_gaps set during __init__
         stream.merge(self.merge_method, fill_value=0)
 
         for tr in stream:
@@ -456,11 +484,12 @@ class PPSD():
                     slice = tr.slice(t1, t1 + PPSD_LENGTH)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
-                    self.__process(slice)
-                    self.__insert_used_time(t1)
-                    if verbose:
-                        print t1
-                    changed = True
+                    success = self.__process(slice)
+                    if success:
+                        self.__insert_used_time(t1)
+                        if verbose:
+                            print t1
+                        changed = True
                 t1 += PPSD_STRIDE # advance half an hour
 
             # enforce time limits, pad zeros if gaps
@@ -475,6 +504,8 @@ class PPSD():
 
         :type tr: :class:`~obspy.core.trace.Trace`
         :param tr: Compatible Trace with
+        :returns: True if segment was successfully added to histogram, False
+                otherwise.
         """
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
@@ -484,7 +515,7 @@ class PPSD():
             msg = "Got an non-one-hour piece of data to process. Skipping"
             warnings.warn(msg)
             print len(tr), self.len
-            return
+            return False
         # being paranoid, only necessary if in-place operations would follow
         tr.data = tr.data.astype("float64")
         # if trace has a masked array we fill in zeros
@@ -494,11 +525,26 @@ class PPSD():
         except AttributeError:
             pass
 
+        # get instrument response preferably from parser object
+        try:
+            paz = self.parser.getPAZ(self.id)
+        except Exception, e:
+            if self.parser is not None:
+                msg = "Error getting response from parser:\n%s: %s\n" \
+                      "Trying to fall back to static paz."
+                msg = msg % (e.__class__.__name__, e.message)
+                warnings.warn(msg)
+            paz = self.paz
+        if paz is None:
+            msg = "Missing poles and zeros information for response " \
+                  "removal. Skipping time segment(s)."
+            warnings.warn(msg)
+            return False
         # restitution:
         # mcnamara apply the correction at the end in freq-domain,
         # does it make a difference?
         # probably should be done earlier on bigger junk of data?!
-        tr.simulate(paz_remove=self.paz, remove_sensitivity=True,
+        tr.simulate(paz_remove=paz, remove_sensitivity=True,
                     paz_simulate=None, simulate_sensitivity=False)
 
         # go to acceleration:
@@ -558,6 +604,7 @@ class PPSD():
         except TypeError:
             # only during first run initialize stack with first histogram
             self.hist_stack = hist
+        return True
 
     def save(self, filename):
         """
