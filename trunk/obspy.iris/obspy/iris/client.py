@@ -195,10 +195,8 @@ class Client(object):
             Start date and time.
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
-        format : ['RESP'], optional
+        format : 'RESP' or 'StationXML', optional
             Output format.
-            .. note::
-                Currently only the SEED RESP format is supported.
         """
         kwargs = {}
         kwargs['network'] = str(network)[0:2]
@@ -210,7 +208,10 @@ class Client(object):
         kwargs['channel'] = str(channel)[0:3]
         kwargs['starttime'] = UTCDateTime(starttime)
         kwargs['endtime'] = UTCDateTime(endtime)
-        data = self.resp(**kwargs)
+        if format == 'StationXML':
+            data = self.station(level='resp', **kwargs)
+        else:
+            data = self.resp(**kwargs)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
@@ -218,8 +219,6 @@ class Client(object):
     def resp(self, **kwargs):
         """
         Interface for `resp`-webservice of IRIS (http://www.iris.edu/ws/resp/).
-
-        Single channel request, no wildcards allowed.
 
         Example
         -------
@@ -274,6 +273,52 @@ class Client(object):
             pass
         # build up query
         url = '/resp/query'
+        try:
+            data = self._fetch(url, **kwargs)
+        except HTTPError:
+            raise Exception("No response data available")
+        return data
+
+    def station(self, **kwargs):
+        """
+        Interface for `station`-webservice of IRIS
+        (http://www.iris.edu/ws/station/).
+
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'IU'.
+        station : string
+            Station code, e.g. 'ANMO'.
+        location : string
+            Location code, e.g. '00', wildcards allowed.
+        channel : string
+            Channel code, e.g. 'BHZ', wildcards allowed.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        level : 'net', 'sta', 'chan', or 'resp', optional
+            Specify whether to include channel/response metadata or not.
+
+        Returns
+        -------
+            StationXML file as string.
+        """
+        # convert UTCDateTime to string for query
+        try:
+            starttime = UTCDateTime(kwargs['starttime']).date
+        except KeyError:
+            pass
+        try:
+            endtime = UTCDateTime(kwargs['endtime']).date
+        except KeyError:
+            pass
+        kwargs.pop('starttime')
+        kwargs.pop('endtime')
+        kwargs['timewindow'] = '%s,%s' % (starttime, endtime)
+        # build up query
+        url = '/station/query'
         try:
             data = self._fetch(url, **kwargs)
         except HTTPError:

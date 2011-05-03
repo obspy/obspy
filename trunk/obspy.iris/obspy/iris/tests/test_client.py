@@ -46,17 +46,24 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         start = UTCDateTime("2005-001T00:00:00")
         end = UTCDateTime("2008-001T00:00:00")
-        #1 - single channel
+        #1 - RESP, single channel
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
         tempfile = NamedTemporaryFile().name
         client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
-        #2 - multiple channels
+        #2 - RESP, multiple channels
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._._')
         tempfile = NamedTemporaryFile().name
         client.saveResponse(tempfile, "IU", "ANMO", "*", "*", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
+        os.remove(tempfile)
+        #3 - StationXML, single channel
+        tempfile = NamedTemporaryFile().name
+        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end,
+                            format="StationXML")
+        data = open(tempfile).read()
+        self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
         os.remove(tempfile)
 
 
