@@ -527,13 +527,14 @@ class PPSD():
 
         # get instrument response preferably from parser object
         try:
-            paz = self.parser.getPAZ(self.id)
+            paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
         except Exception, e:
             if self.parser is not None:
                 msg = "Error getting response from parser:\n%s: %s\n" \
-                      "Trying to fall back to static paz."
+                      "Skipping time segment(s)."
                 msg = msg % (e.__class__.__name__, e.message)
                 warnings.warn(msg)
+                return False
             paz = self.paz
         if paz is None:
             msg = "Missing poles and zeros information for response " \
