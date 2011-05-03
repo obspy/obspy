@@ -4,14 +4,21 @@ The obspy.iris.client test suite.
 """
 
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import NamedTemporaryFile
 from obspy.iris import Client
+import os
 import unittest
+import filecmp
 
 
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.iris.client.Client.
     """
+    def setUp(self):
+        # Directory where the test files are located
+        self.path = os.path.dirname(__file__)
+
     def test_getWaveform(self):
         """
         Testing simple waveform request method.
@@ -31,6 +38,26 @@ class ClientTestCase(unittest.TestCase):
         #2 - no data raises an exception
         self.assertRaises(Exception, client.getWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
+
+    def test_saveResponse(self):
+        """
+        Fetches and stores response information as SEED RESP file.
+        """
+        client = Client()
+        start = UTCDateTime("2005-001T00:00:00")
+        end = UTCDateTime("2008-001T00:00:00")
+        #1 - single channel
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
+        tempfile = NamedTemporaryFile().name
+        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
+        self.assertTrue(filecmp.cmp(origfile, tempfile))
+        os.remove(tempfile)
+        #2 - multiple channels
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._._')
+        tempfile = NamedTemporaryFile().name
+        client.saveResponse(tempfile, "IU", "ANMO", "*", "*", start, end)
+        self.assertTrue(filecmp.cmp(origfile, tempfile))
+        os.remove(tempfile)
 
 
 def suite():

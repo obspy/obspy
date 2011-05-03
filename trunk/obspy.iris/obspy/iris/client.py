@@ -36,9 +36,10 @@ class Client(object):
     IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:30:20.019538Z | 20.0 Hz, 401 samples
     """
     def __init__(self, base_url="http://www.iris.edu/ws",
-                 user="", password="", timeout=10):
+                 user="", password="", timeout=10, debug=False):
         self.base_url = base_url
         self.timeout = timeout
+        self.debug = debug
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -50,6 +51,8 @@ class Client(object):
     def _fetch(self, url, **params):
         # replace special characters 
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
+        if self.debug:
+            print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             response = urllib2.urlopen(remoteaddr)
@@ -143,7 +146,8 @@ class Client(object):
         else:
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)[0:3]
-        # try to be intelligent in starttime/endtime extension for fetching data
+        # try to be intelligent in starttime/endtime extension for fetching
+        # data
         try:
             t_extension = 2.0 / BAND_CODE[kwargs['channel'][0]]
         except:
@@ -155,9 +159,13 @@ class Client(object):
             kwargs['quality'] = str(quality).upper()
 
         # single channel request, go via `dataselect`-webservice
-        if all([val.isalnum() for val in (kwargs['network'], kwargs['station'], kwargs['location'], kwargs['channel'])]):
+        if all([val.isalnum() for val in (kwargs['network'],
+                                          kwargs['station'],
+                                          kwargs['location'],
+                                          kwargs['channel'])]):
             st = self.dataselect(**kwargs)
-        # wildcarded channel request, go via `availability`+`bulkdataselect`-webservices
+        # wildcarded channel request, go via `availability` and
+        # `bulkdataselect`-webservices
         else:
             quality = kwargs.pop("quality", "")
             bulk = self.availability(**kwargs)
@@ -166,6 +174,111 @@ class Client(object):
         st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
         return st
 
+    def saveResponse(self, filename, network, station, location, channel,
+                     starttime, endtime, format='RESP'):
+        """
+        Writes a response information into a file.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the output file.
+        network : string
+            Network code, e.g. 'IU'.
+        station : string
+            Station code, e.g. 'ANMO'.
+        location : string
+            Location code, e.g. '00' or '*'.
+        channel : string
+            Channel code, e.g. 'BHZ' or 'B*'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        format : ['RESP'], optional
+            Output format.
+            .. note::
+                Currently only the SEED RESP format is supported.
+        """
+        kwargs = {}
+        kwargs['network'] = str(network)[0:2]
+        kwargs['station'] = str(station)[0:5]
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)[0:3]
+        kwargs['starttime'] = UTCDateTime(starttime)
+        kwargs['endtime'] = UTCDateTime(endtime)
+        data = self.resp(**kwargs)
+        fh = open(filename, "wb")
+        fh.write(data)
+        fh.close()
+
+    def resp(self, **kwargs):
+        """
+        Interface for `resp`-webservice of IRIS (http://www.iris.edu/ws/resp/).
+
+        Single channel request, no wildcards allowed.
+
+        Example
+        -------
+
+        >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client()
+           
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        >>> data = client.resp(network="IU", station="ANMO", location="00",
+        ...                    channel="BHZ", starttime=t1, endtime=t2)
+        >>> print data   # doctest: +ELLIPSIS
+        #
+        ###################################################################################
+        #
+        B050F03     Station:     ANMO
+        B050F16     Network:     IU
+        B052F03     Location:    00
+        B052F04     Channel:     BHZ
+        ...
+
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'IU'.
+        station : string
+            Station code, e.g. 'ANMO'.
+        location : string
+            Location code, e.g. '00', wildcards allowed.
+        channel : string
+            Channel code, e.g. 'BHZ', wildcards allowed.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+
+        Returns
+        -------
+            SEED RESP file as string.
+        """
+        # convert UTCDateTime to string for query
+        try:
+            kwargs['starttime'] = \
+                UTCDateTime(kwargs['starttime']).formatIRISWebService()
+        except KeyError:
+            pass
+        try:
+            kwargs['endtime'] = \
+                UTCDateTime(kwargs['endtime']).formatIRISWebService()
+        except KeyError:
+            pass
+        # build up query
+        url = '/resp/query'
+        try:
+            data = self._fetch(url, **kwargs)
+        except HTTPError:
+            raise Exception("No response data available")
+        return data
 
     def dataselect(self, **kwargs):
         """
@@ -181,11 +294,11 @@ class Client(object):
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-           
+
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
         >>> st = client.dataselect(network="IU", station="ANMO", location="00",
-        ...         channel="BHZ", starttime=t1, endtime=t2)
+        ...                        channel="BHZ", starttime=t1, endtime=t2)
         >>> print st
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:29:59.969538Z | 20.0 Hz, 288000 samples
@@ -254,7 +367,8 @@ class Client(object):
 
         Simple requests with wildcards can be performed via
         :meth:`~obspy.iris.client.Client.getWaveform`. The list with channels
-        can also be generated using :meth:`~obspy.iris.client.Client.availability`.
+        can also be generated using
+        :meth:`~obspy.iris.client.Client.availability`.
 
         Example
         -------
@@ -325,8 +439,10 @@ class Client(object):
             pass
         return stream
 
-    def availability(self, network="*", station="*", location="*", channel="*",
-                      starttime=UTCDateTime() - (60 * 60 * 24 * 7), endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10, output="bulk"):
+    def availability(self, network="*", station="*", location="*",
+                     channel="*", starttime=UTCDateTime() - (60 * 60 * 24 * 7),
+                     endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
+                     output="bulk"):
         """
         Interface for `availability`-webservice of IRIS
         (http://www.iris.edu/ws/availability/).
