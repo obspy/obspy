@@ -346,7 +346,7 @@ class PPSD():
         Makes an initial dummy psd and thus sets up the bins and all the rest.
         Should be able to do it without a dummy psd..
         """
-        dummy = np.empty(self.len)
+        dummy = np.ones(self.len)
         spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate, noverlap=self.nlap)
 
         # leave out first entry (offset)
