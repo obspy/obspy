@@ -760,17 +760,17 @@ class PPSD():
         starts = [date2num(t.datetime) for t in self.times_used]
         ends = [date2num((t+PPSD_LENGTH).datetime) for t in self.times_used]
         for start, end in zip(starts, ends):
-            ax.axvspan(start, end, 0, 0.7, alpha=0.5)
+            ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
         # plot data
         for start, end in self.times_data:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="g")
+            ax.axvspan(start, end, 0.7, 1, facecolor="g", lw=0)
         # plot gaps
         for start, end in self.times_gaps:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="r")
+            ax.axvspan(start, end, 0.7, 1, facecolor="r", lw=0)
         
         ax.autoscale_view()
 
