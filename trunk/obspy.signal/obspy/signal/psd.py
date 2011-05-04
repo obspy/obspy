@@ -262,7 +262,8 @@ class PPSD():
 
     .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """
-    def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False):
+    def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
+                 is_rotationrate=False):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -294,6 +295,8 @@ class PPSD():
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than 1 hour not used in
                 the PPSD.
+        :type is_rotationrate: Boolean (optional)
+        :param is_rotationrate: ...
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -312,6 +315,7 @@ class PPSD():
         self.channel = stats.channel
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
+        self.is_rotationrate = is_rotationrate
         # trace length for one hour piece
         self.len = int(self.sampling_rate * PPSD_LENGTH)
         # set paz either from kwarg or try to get it from stats
@@ -503,7 +507,7 @@ class PPSD():
         checked beforehand.
 
         :type tr: :class:`~obspy.core.trace.Trace`
-        :param tr: Compatible Trace with
+        :param tr: Compatible Trace with data of one PPSD segment
         :returns: True if segment was successfully added to histogram, False
                 otherwise.
         """
@@ -544,12 +548,19 @@ class PPSD():
         # restitution:
         # mcnamara apply the correction at the end in freq-domain,
         # does it make a difference?
-        # probably should be done earlier on bigger junk of data?!
-        tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                    paz_simulate=None, simulate_sensitivity=False)
+        # probably should be done earlier on bigger chunk of data?!
+        if self.is_rotationrate:
+            # in case of rotational data just remove sensitivity
+            tr.data /= paz['sensitivity']
+        else:
+            tr.simulate(paz_remove=paz, remove_sensitivity=True,
+                        paz_simulate=None, simulate_sensitivity=False)
 
-        # go to acceleration:
-        tr.data = np.gradient(tr.data, self.delta)
+        # go to acceleration, do nothing for rotational data:
+        if self.is_rotationrate:
+            pass
+        else:
+            tr.data = np.gradient(tr.data, self.delta)
 
         # use our own wrapper for mlab.psd to have consistent results on all
         # matplotlib versions
