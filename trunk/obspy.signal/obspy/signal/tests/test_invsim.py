@@ -4,7 +4,7 @@
 The InvSim test suite.
 """
 
-from obspy.core import Stream, Trace, UTCDateTime,read
+from obspy.core import Stream, Trace, UTCDateTime
 from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
 from obspy.sac import attach_paz
 from obspy.core.util import NamedTemporaryFile
@@ -222,13 +222,12 @@ class InvSimTestCase(unittest.TestCase):
         # ObsPy. Visual inspection shows that the traces are pretty
         # much identical but differences remain (rms ~ 0.042). Haven't
         # found the cause for those, yet. One possible reason is the
-        # floating point arithmetic of SAC vs. the double precission
+        # floating point arithmetic of SAC vs. the double precision
         # arithmetic of Python. However differences still seem to be
         # too big for that.
         pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
-        sacf = os.path.join(self.path, 'KARC.LHZ.SAC')
-        testsacf = os.path.join(self.path,'KARC_corrected.sac')
-        tempfile = NamedTemporaryFile().name
+        sacf = os.path.join(self.path, 'KARC.LHZ.SAC.asc.gz')
+        testsacf = os.path.join(self.path,'KARC_corrected.sac.asc.gz')
         plow = 160.
         phigh = 4.
         fl1=1.0/(plow+0.0625*plow)
@@ -252,12 +251,25 @@ class InvSimTestCase(unittest.TestCase):
         #    cd1.close()
         #    p.wait()
 
-        tr = read(sacf,'SAC')[0]
+        data = np.loadtxt(sacf)
+        stats = {'network': 'KA', 'delta': 0.99999988079072466,
+                 'station': 'KARC', 'location': 'S1',
+                 'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
+                 'npts': 86399, 'calib': 1.00868e+09,
+                 'sampling_rate': 1.0000001192092896, 'channel': 'BHZ'}
+        tr = Trace(data, stats)
+
         attach_paz(tr,pzf,tovel=False)
         tr.data = seisSim(tr.data,tr.stats.sampling_rate,paz_remove=tr.stats.paz,
                           remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4))
-        tr.write(tempfile,format='SAC')
-        tr2 = read(testsacf,'SAC')[0]
+        data = np.loadtxt(testsacf)
+        stats = {'network': 'KA', 'delta': 0.99999988079072466,
+                 'station': 'KARC', 'location': 'S1',
+                 'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
+                 'npts': 86399, 'calib': 1.0,
+                 'sampling_rate': 1.0000001192092896, 'channel': 'BHZ'}
+        tr2 = Trace(data, stats)
+
         #import pylab as plt
         #plt.plot(tr.data)
         #plt.plot(tr2.data)
@@ -265,7 +277,6 @@ class InvSimTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((tr.data - tr2.data) ** 2) / \
                       np.sum(tr2.data ** 2))
         self.assertTrue(rms<0.0421)
-        os.remove(tempfile)
         
 
 def suite():

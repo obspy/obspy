@@ -8,7 +8,7 @@ from __future__ import with_statement
 import os
 import unittest
 import numpy as np
-from obspy.core import read
+from obspy.core import Trace, Stream, UTCDateTime
 from obspy.signal import PPSD, psd
 from obspy.signal.psd import welch_window, welch_taper
 from matplotlib.mlab import detrend_linear
@@ -89,15 +89,29 @@ class PsdTestCase(unittest.TestCase):
         of testing.
         """
         # load test file
-        file_mseed = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled')
+        file_data = os.path.join(self.path,
+                'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
         file_histogram = os.path.join(self.path,
                 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
         file_binning = os.path.join(self.path,
                 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
-        st = read(file_mseed)
-        tr = st[0]
+        data = np.loadtxt(file_data)
+        stats = {'_format': 'MSEED',
+                 'calib': 1.0,
+                 'channel': 'EHZ',
+                 'delta': 0.01,
+                 'endtime': UTCDateTime(2011, 3, 31, 2, 36, 0, 180000),
+                 'location': '',
+                 'mseed': {'dataquality': 'D', 'record_length': 512,
+                           'encoding': 'STEIM2', 'byteorder': '>'},
+                 'network': 'BW',
+                 'npts': 936001,
+                 'sampling_rate': 100.0,
+                 'starttime': UTCDateTime(2011, 3, 31, 0, 0, 0, 180000),
+                 'station': 'KW1'}
+        tr = Trace(data, stats)
+        st = Stream([tr])
         paz = {'gain': 60077000.0,
                'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
                          (-251.33+0j), (-131.04-467.29j), (-131.04+467.29j)],
