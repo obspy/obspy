@@ -263,7 +263,7 @@ class PPSD():
     .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
-                 is_rotationrate=False):
+                 is_rotational_data=False):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -278,6 +278,15 @@ class PPSD():
         * Providing a dictionary containing poles and zeros information. Be
           aware that this leads to wrong results if the instrument's response
           is changing with data added to the PPSD. Use with caution!
+
+        :note: When using `is_rotational_data=True` the applied processing
+               steps are changed. Differentiation of data (converting velocity
+               to acceleration data) will be omitted and a flat instrument
+               response is assumed, leaving away response removal and only
+               dividing by `paz['sensitivity']` specified in the provided `paz`
+               dictionary (other keys do not have to be present then). For
+               scaling factors that are usually multiplied to the data remember
+               to use the inverse as `paz['sensitivity']`.
         
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
@@ -295,8 +304,9 @@ class PPSD():
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than 1 hour not used in
                 the PPSD.
-        :type is_rotationrate: Boolean (optional)
-        :param is_rotationrate: ...
+        :type is_rotational_data: Boolean (optional)
+        :param is_rotational_data: If set to True adapt processing of data to
+                rotational data. See note for details. 
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -315,7 +325,7 @@ class PPSD():
         self.channel = stats.channel
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
-        self.is_rotationrate = is_rotationrate
+        self.is_rotational_data = is_rotational_data
         # trace length for one hour piece
         self.len = int(self.sampling_rate * PPSD_LENGTH)
         # set paz either from kwarg or try to get it from stats
@@ -549,7 +559,7 @@ class PPSD():
         # mcnamara apply the correction at the end in freq-domain,
         # does it make a difference?
         # probably should be done earlier on bigger chunk of data?!
-        if self.is_rotationrate:
+        if self.is_rotational_data:
             # in case of rotational data just remove sensitivity
             tr.data /= paz['sensitivity']
         else:
@@ -557,7 +567,7 @@ class PPSD():
                         paz_simulate=None, simulate_sensitivity=False)
 
         # go to acceleration, do nothing for rotational data:
-        if self.is_rotationrate:
+        if self.is_rotational_data:
             pass
         else:
             tr.data = np.gradient(tr.data, self.delta)
