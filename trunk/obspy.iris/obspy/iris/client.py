@@ -593,6 +593,32 @@ class Client(object):
         except:
             kwargs['endtime'] = endtime
         kwargs['output'] = str(output)
+        # sanity checking geographical bounding areas
+        rectangular = (minlat, minlon, maxlat, maxlon)
+        circular = (lon, lat, minradius, maxradius)
+        # not both can be specified at the same time
+        if any(rectangular) and any(circular):
+            msg = "Rectangular and circular bounding areas can not be combined"
+            raise ValueError(msg)
+        # check and setup rectangular box criteria
+        if any(rectangular):
+            if not all(rectangular):
+                msg = "Missing constraints for rectangular bounding box"
+                raise ValueError(msg)
+            kwargs['minlat'] = str(minlat)
+            kwargs['minlon'] = str(minlon)
+            kwargs['maxlat'] = str(maxlat)
+            kwargs['maxlon'] = str(maxlon)
+        # check and setup circular box criteria
+        if any(circular):
+            if not all(circular):
+                msg = "Missing constraints for circular bounding area"
+                raise ValueError(msg)
+            kwargs['lat'] = str(lat)
+            kwargs['lon'] = str(lon)
+            kwargs['minradius'] = str(minradius)
+            kwargs['maxradius'] = str(maxradius)
+        # checking output options
         if not kwargs['output'] in ("bulk", "xml"):
             msg = "kwarg output must be either 'bulk' or 'xml'."
             raise ValueError(msg)
@@ -603,6 +629,81 @@ class Client(object):
               starttime=UTCDateTime() - (60 * 60 * 24 * 7),
               endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
               output="sacpz"):
+        """
+        Interface for `sacpz`-webservice of IRIS
+        (http://www.iris.edu/ws/sacpz/).
+
+        Example
+        -------
+        
+        >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client()
+           
+        >>> t1 = UTCDateTime("2005-01-01")
+        >>> t2 = UTCDateTime("2008-01-01")
+        >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",
+        ...                      channel="BHZ", starttime=t1, endtime=t2)
+        >>> print sacpz # doctest: +ELLIPSIS
+        **************************************************
+        * NETWORK   IU
+        * STATION   ANMO
+        * CHANNEL   BHZ
+        * LOCATION  00
+        * CREATED   2011/05/05 09:56:08.639
+        * START     2002/11/19 00:00:00.000
+        * END       2008/06/30 00:00:00.000
+        * DESCRIPTION   Albuquerque, New Mexico, USA
+        * LATITUDE  34.94598
+        * LONGITUDE -106.45713
+        * ELEVATION 1671.0
+        * DEPTH     145.0
+        * DIP       0.0
+        * AZIMUTH   0.0
+        * SAMPLE RATE   20.0
+        * INPUT UNIT    M
+        * OUTPUT UNIT   COUNTS
+        * INSTTYPE  Geotech KS-54000 Borehole Seismometer
+        * INSTGAIN  2.204000e+03
+        * SENSITIVITY   9.244000e+08
+        * A0        8.608300e+04
+        * ****
+        ZEROS   3
+            +0.000000e+00   +0.000000e+00   
+            +0.000000e+00   +0.000000e+00   
+            +0.000000e+00   +0.000000e+00   
+        POLES   5
+            -5.943130e+01   +0.000000e+00   
+            -2.271210e+01   +2.710650e+01   
+            -2.271210e+01   -2.710650e+01   
+            -4.800400e-03   +0.000000e+00   
+            -7.319900e-02   +0.000000e+00   
+        CONSTANT    7.957513e+13
+        <BLANKLINE>
+        <BLANKLINE>
+        <BLANKLINE>
+
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'IU', wildcards allowed.
+        station : string
+            Station code, e.g. 'ANMO', wildcards allowed.
+        location : string
+            Location code, e.g. '00', wildcards allowed.
+        channel : string
+            Channel code, e.g. 'BHZ', wildcards allowed.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        output : string
+            Currently only "sacpz".
+
+        Returns
+        -------
+            String with SAC poles and zeros information.
+        """
         url = '/sacpz/query'
         kwargs = {}
         kwargs['network'] = str(network)
