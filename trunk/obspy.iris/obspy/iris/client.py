@@ -487,6 +487,8 @@ class Client(object):
     def availability(self, network="*", station="*", location="*",
                      channel="*", starttime=UTCDateTime() - (60 * 60 * 24 * 7),
                      endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
+                     lat=None, lon=None, minradius=None, maxradius=None,
+                     minlat=None, maxlat=None, minlon=None, maxlon=None,
                      output="bulk"):
         """
         Interface for `availability`-webservice of IRIS
@@ -544,8 +546,30 @@ class Client(object):
             Start date and time.
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
+        lat : float or int (or string)
+            Latitude of center point for circular bounding area.
+        lon : float or int (or string)
+            Longitude of center point for circular bounding area.
+        minradius : float or int (or string)
+            Minimum radius for circular bounding area.
+        maxradius : float or int (or string)
+            Maximum radius for circular bounding area.
+        minlat : float or int (or string)
+            Minimum latitude for rectangular bounding box.
+        minlon : float or int (or string)
+            Minimum longitude for rectangular bounding box.
+        maxlat : float or int (or string)
+            Maximum latitude for rectangular bounding box.
+        maxlon : float or int (or string)
+            Maximum longitude for rectangular bounding box.
         output : string
             Either "bulk" or "xml".
+
+        :note: Restricting returned data by geographical coordinates either
+               *all* of `minlat`, `maxlat`, `minlon` and `maxlon` have to be
+               specified (for a rectangular bounding box) _or_ *all* of `lat`,
+               `lon`, `minradius` and `maxradius` have to be specified (for a
+               circular bounding area)
 
         Returns
         -------
@@ -575,6 +599,32 @@ class Client(object):
         data = self._fetch(url, **kwargs)
         return data
 
+    def sacpz(self, network="*", station="*", location="*", channel="*",
+              starttime=UTCDateTime() - (60 * 60 * 24 * 7),
+              endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
+              output="sacpz"):
+        url = '/sacpz/query'
+        kwargs = {}
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        kwargs['location'] = str(location)
+        kwargs['channel'] = str(channel)
+        try:
+            kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
+        except:
+            kwargs['starttime'] = starttime
+        try:
+            kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+        except:
+            kwargs['endtime'] = endtime
+        data = self._fetch(url, **kwargs)
+        # check output options
+        kwargs['output'] = str(output)
+        if kwargs['output'] == "sacpz":
+            return data
+        else:
+            msg = "unsupported output option: %s" % kwargs['output']
+            raise ValueError(msg)
 
 if __name__ == '__main__':
     import doctest
