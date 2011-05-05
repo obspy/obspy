@@ -284,6 +284,32 @@ class Client(object):
         Interface for `station`-webservice of IRIS
         (http://www.iris.edu/ws/station/).
 
+        Example
+        -------
+
+        >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client()
+
+        >>> t1 = UTCDateTime("2006-03-01")
+        >>> t2 = UTCDateTime("2006-09-01")
+        >>> station_xml = client.station(network="IU", station="ANMO",
+        ...                              location="00", channel="BHZ",
+        ...                              starttime=t1, endtime=t2, level="net")
+        >>> print station_xml # doctest: +ELLIPSIS
+        <BLANKLINE>
+        <StaMessage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.data.scec.org/xml/station/" xsi:schemaLocation="http://www.data.scec.org/xml/station/ http://www.data.scec.org/xml/station/station.xsd">
+         <Source>IRIS-DMC</Source>
+         <Sender>IRIS-DMC</Sender>
+         <Module>IRIS WEB SERVICE: http://www.iris.edu/ws/station Networks: [IU] Stations: [ANMO] Channels: [BHZ] Locations: [00] Time Window: [2006-03-01T00:00:00.000Z-2006-09-01T00:00:00.000Z] level:[net]</Module>
+         <SentDate>...</SentDate>
+         <Network net_code="IU">
+          <StartDate>1988-01-01T00:00:00</StartDate>
+          <EndDate>2500-12-12T23:59:59</EndDate>
+          <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+         </Network>
+        </StaMessage>
+
         Parameters
         ----------
         network : string
@@ -295,9 +321,9 @@ class Client(object):
         channel : string
             Channel code, e.g. 'BHZ', wildcards allowed.
         starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
+            Start date. Hours, minutes and seconds are ignored.
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
+            End date. Hours, minutes and seconds are ignored.
         level : 'net', 'sta', 'chan', or 'resp', optional
             Specify whether to include channel/response metadata or not.
 
@@ -309,11 +335,11 @@ class Client(object):
         try:
             starttime = UTCDateTime(kwargs['starttime']).date
         except KeyError:
-            pass
+            starttime = UTCDateTime(1900, 1, 1)
         try:
             endtime = UTCDateTime(kwargs['endtime']).date
         except KeyError:
-            pass
+            endtime = UTCDateTime(2501, 1, 1)
         kwargs.pop('starttime')
         kwargs.pop('endtime')
         kwargs['timewindow'] = '%s,%s' % (starttime, endtime)
@@ -644,13 +670,13 @@ class Client(object):
         >>> t2 = UTCDateTime("2008-01-01")
         >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",
         ...                      channel="BHZ", starttime=t1, endtime=t2)
-        >>> print sacpz # doctest: +ELLIPSIS
+        >>> print sacpz # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         **************************************************
         * NETWORK   IU
         * STATION   ANMO
         * CHANNEL   BHZ
         * LOCATION  00
-        * CREATED   2011/05/05 09:56:08.639
+        * CREATED   ...
         * START     2002/11/19 00:00:00.000
         * END       2008/06/30 00:00:00.000
         * DESCRIPTION   Albuquerque, New Mexico, USA
