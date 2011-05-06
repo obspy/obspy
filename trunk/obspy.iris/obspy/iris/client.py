@@ -10,12 +10,18 @@ IRIS web service client for ObsPy.
 """
 
 from obspy.core import UTCDateTime, read, Stream
-from obspy.core.util import NamedTemporaryFile, BAND_CODE
+from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString
 from urllib2 import HTTPError
 import os
+import platform
 import sys
 import urllib
 import urllib2
+
+
+VERSION = _getVersionString("obspy.iris")
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
+                                                   platform.python_version())
 
 
 class Client(object):
@@ -36,10 +42,12 @@ class Client(object):
     IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:30:20.019538Z | 20.0 Hz, 401 samples
     """
     def __init__(self, base_url="http://www.iris.edu/ws",
-                 user="", password="", timeout=10, debug=False):
+                 user="", password="", timeout=10, debug=False,
+                 user_agent=DEFAULT_USER_AGENT):
         self.base_url = base_url
         self.timeout = timeout
         self.debug = debug
+        self.user_agent = user_agent
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -48,20 +56,7 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
-    def _fetch(self, url, **params):
-        # replace special characters 
-        remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
-        if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            response = urllib2.urlopen(remoteaddr)
-        else:
-            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
-        doc = response.read()
-        return doc
-
-    def _HTTP_request(self, url, data, headers={}):
+    def _fetch(self, url, data=None, headers={}, **params):
         """
         Send a HTTP request via urllib2.
 
@@ -72,17 +67,21 @@ class Client(object):
         :type headers: dict
         :param headers: Additional header information for request
         """
-        headers['User-Agent'] = "ObsPy"
+        headers['User-Agent'] = self.user_agent
         # replace special characters 
         remoteaddr = self.base_url + url
+        if params:
+            remoteaddr += '?' + urllib.urlencode(params)
+        if self.debug:
+            print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             response = urllib2.urlopen(req)
         else:
             response = urllib2.urlopen(req, timeout=self.timeout)
-        data = response.read()
-        return data
+        doc = response.read()
+        return doc
 
     def getWaveform(self, network, station, location, channel, starttime,
                      endtime, quality='B'):
@@ -490,7 +489,7 @@ class Client(object):
             bulk = "quality %s\n" % quality.upper() + bulk
         # build up query
         try:
-            data = self._HTTP_request(url, data=bulk)
+            data = self._fetch(url, data=bulk)
         except HTTPError:
             raise Exception("No waveform data available")
         # create temporary file for writing data
