@@ -327,10 +327,8 @@ class MomentTensor:
         """
         Decomposition according Aki & Richards and Jost & Herrmann into
         
-        - isotropic
-        - deviatoric
-        - DC
-        - CLVD
+        isotropic + deviatoric 
+        = isotropic + DC + CLVD
 
         parts of the input moment tensor.
 
@@ -368,14 +366,11 @@ class MomentTensor:
         M0_devi          = max(abs(eigenw_devi))
 
         #named according to Jost & Herrmann:
-        a1 = eigenv[:,0]#/N.linalg.norm(eigenv[:,0])
-        a2 = eigenv[:,1]#/N.linalg.norm(eigenv[:,1])
-        a3 = eigenv[:,2]#/N.linalg.norm(eigenv[:,2])
-
-        
+        a1 = eigenv[:,0]
+        a2 = eigenv[:,1]
+        a3 = eigenv[:,2]
 
         F           = -eigenw_devi[0]/eigenw_devi[2]
-        
 
         M_DC        = eigenw[2]*(1-2*F)*( N.outer(a3,a3) - N.outer(a2,a2) )
         M_CLVD      = eigenw[2]*F*( 2*N.outer(a3,a3) - N.outer(a2,a2) - N.outer(a1,a1))
@@ -385,21 +380,16 @@ class MomentTensor:
         except ValueError:
             # this should only occure in the pure isotropic case
             M_DC_percentage = N.NaN
-        #  print ' EW', eigenw_devi
-        #         print eigenw_devi
-        #print M_DC_percentage
-        # exit()
         
-        self._DC            =  M_DC
-        self._CLVD          =  M_CLVD
-        self._DC_percentage =  M_DC_percentage  
-
         #according to Bowers & Hudson:
         M0          = M0_iso + M0_devi
 
         M_iso_percentage     = int(round(M0_iso/M0 *100,6))
         self._iso_percentage = M_iso_percentage
-        
+
+        self._DC            =  M_DC
+        self._CLVD          =  M_CLVD
+        self._DC_percentage =  int(round((100 - M_iso_percentage) *  M_DC_percentage / 100.))
 
         #self._seismic_moment   = N.sqrt(1./2*N.sum(eigenw**2) ) 
         self._seismic_moment   = M0
@@ -410,9 +400,8 @@ class MomentTensor:
         """
         Decomposition according Aki & Richards and Jost & Herrmann into
         
-        - isotropic
-        - deviatoric
-        - 2 DC
+        isotropic + deviatoric
+        = isotropic + DC + DC2
 
         parts of the input moment tensor.
 
@@ -436,7 +425,6 @@ class MomentTensor:
         #eigenvalues and -vectors of the deviatoric part
         eigenw1,eigenv1  = N.linalg.eig(M_devi)
 
-
         #eigenvalues in ascending order of their absolute values:
         eigenw           = N.real( N.take( eigenw1,N.argsort(abs(eigenw1)) ) )    
         eigenv           = N.real( N.take( eigenv1,N.argsort(abs(eigenw1)) ,1 ) )
@@ -448,23 +436,23 @@ class MomentTensor:
         a2 = eigenv[:,1]
         a3 = eigenv[:,2]
         
-
         M_DC        = eigenw[2]*( N.outer(a3,a3) - N.outer(a2,a2) )
         M_DC2       = eigenw[0]*( N.outer(a1,a1) - N.outer(a2,a2) )
 
-        M_DC_percentage = abs(eigenw[2]/(abs(eigenw[2])+abs(eigenw[0]) )     )
-
-        self._DC            =  M_DC
-        self._DC2           =  M_DC2
-        self._DC_percentage =  M_DC_percentage  
+        M_DC_percentage = int(round(abs(eigenw[2]/(abs(eigenw[2])+abs(eigenw[0]))) * 100.))
 
         #according to Bowers & Hudson:
         M0          = M0_iso + M0_devi
 
-        M_iso_percentage     = int(M0_iso/M0 *100)
+        M_iso_percentage     = int(round(M0_iso / M0 * 100))
         self._iso_percentage = M_iso_percentage
         
-
+        self._DC            =  M_DC
+        self._DC2           =  M_DC2
+        #self._DC_percentage =  M_DC_percentage  
+        self._DC_percentage =  int(round((100 - M_iso_percentage) *  M_DC_percentage / 100.))
+        # and M_DC2_percentage?
+        
         #self._seismic_moment   = N.sqrt(1./2*N.sum(eigenw**2) ) 
         self._seismic_moment   = M0
         self._moment_magnitude = N.log10(self._seismic_moment*1.0e7)/1.5 - 10.7
@@ -1397,7 +1385,7 @@ class MomentTensor:
             if style == 'f':
                 print ' not available in this decomposition type '
             return ''
-        return int(100 - self._DC_percentage)
+        return int(100 - self._DC_percentage - self._iso_percentage)
     #---------------------------------------------------------------
     def get_DC2_percentage(self,system='NED', style='n'):
         """
