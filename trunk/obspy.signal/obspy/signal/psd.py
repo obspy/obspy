@@ -209,7 +209,7 @@ class PPSD():
         Bulletin of the Seismological Society of America,
         (August 2004), 94(4):1517-1527
 
-    For information on high/low noise models see::
+    For information on New High/Low Noise Model see::
 
         Jon Peterson
         Observations and modeling of seismic background noise
@@ -393,6 +393,9 @@ class PPSD():
         self.per_octaves = np.array(per_octaves)
 
         self.period_bins = per_octaves
+        # mid-points of all the period bins
+        self.period_bin_centers = np.mean((self.period_bins[:-1],
+                                           self.period_bins[1:]), axis=0)
         # set up the binning for the db scale
         self.spec_bins = np.linspace(-200, -50, 301, endpoint=True)
 
@@ -628,6 +631,53 @@ class PPSD():
             self.hist_stack = hist
         return True
 
+    def get_percentile(self, percentile=50, hist_cum=None):
+        """
+        Returns periods and approximate psd values for given percentile value.
+
+        :type percentile: int
+        :param percentile: percentile for which to return approximate psd
+                value. (e.g. a value of 50 is equal to the median.)
+        :type hist_cum: `numpy.ndarray` (optional)
+        :param hist_cum: if it was already computed beforehand, the normalized
+                cumulative histogram can be provided here (to avoid computing
+                it again), otherwise it is computed from the currently stored
+                histogram.
+        :returns: (periods, percentile_values)
+        """
+        if hist_cum is None:
+            hist_cum = self.__get_normalized_cumulative_histogram()
+        # go to percent
+        percentile = percentile / 100.0
+        if percentile == 0:
+            # only for this special case we have to search from the other side
+            # (otherwise we always get index 0 in .searchsorted())
+            side = "right"
+        else:
+            side = "left"
+        percentile_values = [col.searchsorted(percentile, side=side) \
+                             for col in hist_cum]
+        # map to power db values
+        percentile_values = self.spec_bins[percentile_values]
+        return (self.period_bin_centers, percentile_values)
+        
+    def __get_normalized_cumulative_histogram(self):
+        """
+        Returns the current histogram in a cumulative version normalized per
+        period column, i.e. going from 0 to 1 from low to high psd values for
+        every period column.
+        """
+        # sum up the columns to cumulative entries
+        hist_cum = self.hist_stack.cumsum(axis=1)
+        # normalize every column with its overall number of entries
+        # (can vary from the number of self.times because of values outside
+        #  the histogram db ranges)
+        norm = hist_cum[:, -1].copy()
+        # avoid zero division
+        norm[norm == 0] = 1
+        hist_cum = (hist_cum.T / norm).T
+        return hist_cum
+
     def save(self, filename):
         """
         Saves PPSD instance as a pickled file that can be loaded again using
@@ -682,39 +732,18 @@ class PPSD():
             cb.set_clim(*color_limits)
 
         if show_percentiles:
-            # XXX powers = np.mean((self.spec_bins[:-1], self.spec_bins[1:]),
-            # XXX                  axis=0)
-            periods = np.mean((self.period_bins[:-1], self.period_bins[1:]),
-                              axis=0)
-            # sum up the columns to cumulative entries
-            hist = self.hist_stack.cumsum(axis=1)
-            # normalize every column with its overall number of entries
-            # (can vary from the number of self.times because of values outside
-            #  the histogram db ranges)
-            norm = hist[:, -1].copy()
-            # avoid zero division
-            norm[norm == 0] = 1
-            hist = (hist.T / norm).T
+            hist_cum = self.__get_normalized_cumulative_histogram()
             # for every period look up the approximate place of the percentiles
             for percentile in percentiles:
-                # go to percent
-                percentile = percentile / 100.0
-                if percentile == 0:
-                    side = "right"
-                else:
-                    side = "left"
-                percentile_values = [col.searchsorted(percentile, side=side) \
-                                     for col in hist]
-                # map to power db values
-                percentile_values = self.spec_bins[percentile_values]
+                periods, percentile_values = \
+                        self.get_percentile(percentile=percentile,
+                                            hist_cum=hist_cum)
                 ax.plot(periods, percentile_values, color="black")
 
         if show_noise_models:
-            data = np.load(NOISE_MODEL_FILE)
-            model_periods = data['model_periods']
-            high_noise = data['high_noise']
-            low_noise = data['low_noise']
+            model_periods, high_noise = get_NHNM()
             ax.plot(model_periods, high_noise, '0.4', linewidth=2)
+            model_periods, low_noise = get_NLNM()
             ax.plot(model_periods, low_noise, '0.4', linewidth=2)
 
         ax.semilogx()
@@ -795,6 +824,36 @@ class PPSD():
         
         ax.autoscale_view()
 
+
+def get_NLNM():
+    """
+    Returns periods and psd values for the New Low Noise Model.
+    For information on New High/Low Noise Model see::
+
+        Jon Peterson
+        Observations and modeling of seismic background noise
+        USGS Open File Report 93-322
+        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+    """
+    data = np.load(NOISE_MODEL_FILE)
+    periods = data['model_periods']
+    nlnm = data['low_noise']
+    return (periods, nlnm)
+
+def get_NHNM():
+    """
+    Returns periods and psd values for the New High Noise Model.
+    For information on New High/Low Noise Model see::
+
+        Jon Peterson
+        Observations and modeling of seismic background noise
+        USGS Open File Report 93-322
+        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+    """
+    data = np.load(NOISE_MODEL_FILE)
+    periods = data['model_periods']
+    nlnm = data['high_noise']
+    return (periods, nlnm)
 
 if __name__ == '__main__':
     import doctest
