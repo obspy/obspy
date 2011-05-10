@@ -274,8 +274,10 @@ class Client(object):
         url = '/resp/query'
         try:
             data = self._fetch(url, **kwargs)
-        except HTTPError:
-            raise Exception("No response data available")
+        except HTTPError, e:
+            msg = "No response data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e.message)
+            raise Exception(msg)
         return data
 
     def station(self, **kwargs):
@@ -346,8 +348,10 @@ class Client(object):
         url = '/station/query'
         try:
             data = self._fetch(url, **kwargs)
-        except HTTPError:
-            raise Exception("No response data available")
+        except HTTPError, e:
+            msg = "No response data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e.message)
+            raise Exception(msg)
         return data
 
     def dataselect(self, **kwargs):
@@ -411,8 +415,10 @@ class Client(object):
         url = '/dataselect/query'
         try:
             data = self._fetch(url, **kwargs)
-        except HTTPError:
-            raise Exception("No waveform data available")
+        except HTTPError, e:
+            msg = "No waveform data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e.message)
+            raise Exception(msg)
         # create temporary file for writing data
         tf = NamedTemporaryFile()
         tf.write(data)
@@ -490,8 +496,10 @@ class Client(object):
         # build up query
         try:
             data = self._fetch(url, data=bulk)
-        except HTTPError:
-            raise Exception("No waveform data available")
+        except HTTPError, e:
+            msg = "No waveform data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e.message)
+            raise Exception(msg)
         # create temporary file for writing data
         tf = NamedTemporaryFile()
         tf.write(data)
