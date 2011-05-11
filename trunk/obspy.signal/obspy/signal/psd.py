@@ -711,6 +711,8 @@ class PPSD():
                 selected.
         :type show_noise_models: bool (optional)
         :param show_noise_models: Enable/disable plotting of noise models.
+        :type grid: bool (optional)
+        :param grid: Enable/disable grid in histogram plot.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
