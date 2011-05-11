@@ -691,7 +691,7 @@ class PPSD():
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
-             show_noise_models=True):
+             show_noise_models=True, grid=True):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -730,6 +730,9 @@ class PPSD():
             color_limits = (0, 30)
             ppsd.set_clim(*color_limits)
             cb.set_clim(*color_limits)
+            if grid:
+                ax.grid(b=grid, which="major")
+                ax.grid(b=grid, which="minor")
 
         if show_percentiles:
             hist_cum = self.__get_normalized_cumulative_histogram()
