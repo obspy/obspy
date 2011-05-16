@@ -446,7 +446,9 @@ class Trace(object):
             Fill value for gaps (default is None). Traces will be converted to
             NumPy masked arrays if no value is given and gaps are present.
             If the keyword 'latest' is provided it will use the latest value
-            before the gap.
+            before the gap. If keyword 'interpolate' is provided, missing
+            values are linearly interpolated (not changing the data type e.g.
+            of integer valued traces).
         interpolation_samples : int, optional
             Used only for method 1. It specifies the number of samples which
             are used to interpolate between overlapping traces (default is 0).
@@ -603,7 +605,17 @@ class Trace(object):
             data = [lt.data, rt.data]
         else:
             # gap
-            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+            if fill_value == 'interpolate':
+                # linear interpolation, not changing dtype
+                ls = lt.data[-1]
+                rs = rt.data[0]
+                # include left and right sample (delta + 2)
+                interpolation = np.linspace(ls, rs, delta + 2)
+                # cut ls and rs and ensure correct data type
+                gap = np.require(interpolation[1:-1], lt.data.dtype)
+            else:
+                # use fixed value
+                gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on numpy array type
         if True in [np.ma.is_masked(_i) for _i in data]:

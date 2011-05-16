@@ -659,6 +659,66 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.sampling_rate, 200)
         self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
 
+    def test_mergeGaps2(self):
+        """
+        Test the merge method of the Stream object on two traces with a gap in
+        between.
+        """
+        tr1 = Trace(data=np.ones(4, dtype=np.int32) * 1)
+        tr2 = Trace(data=np.ones(3, dtype=np.int32) * 5)
+        tr2.stats.starttime = tr1.stats.starttime + 9
+        stream = Stream([tr1, tr2])
+        #1 - masked array
+        # Trace 1: 1111
+        # Trace 2:          555
+        # 1 + 2  : 1111-----555
+        st = stream.copy()
+        st.merge()
+        self.assertEqual(len(st), 1)
+        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        self.assertEqual(st[0].data.tolist(),
+                         [1, 1, 1, 1, None, None, None, None, None, 5, 5, 5])
+        #2 - fill in zeros
+        # Trace 1: 1111
+        # Trace 2:          555
+        # 1 + 2  : 111100000555
+        st = stream.copy()
+        st.merge(fill_value=0)
+        self.assertEqual(len(st), 1)
+        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        self.assertEqual(st[0].data.tolist(),
+                         [1, 1, 1, 1, 0, 0, 0, 0, 0, 5, 5, 5])
+        #2b - fill in some other user-defined value
+        # Trace 1: 1111
+        # Trace 2:          555
+        # 1 + 2  : 111199999555
+        st = stream.copy()
+        st.merge(fill_value=9)
+        self.assertEqual(len(st), 1)
+        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        self.assertEqual(st[0].data.tolist(),
+                         [1, 1, 1, 1, 9, 9, 9, 9, 9, 5, 5, 5])
+        #3 - use last value of first trace
+        # Trace 1: 1111
+        # Trace 2:          555
+        # 1 + 2  : 111111111555
+        st = stream.copy()
+        st.merge(fill_value='latest')
+        self.assertEqual(len(st), 1)
+        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        self.assertEqual(st[0].data.tolist(),
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5])
+        #4 - interpolate
+        # Trace 1: 1111
+        # Trace 2:          555
+        # 1 + 2  : 111112334555
+        st = stream.copy()
+        st.merge(fill_value='interpolate')
+        self.assertEqual(len(st), 1)
+        self.assertTrue(isinstance(st[0].data, np.ndarray))
+        self.assertEqual(st[0].data.tolist(),
+                         [1, 1, 1, 1, 1, 2, 3, 3, 4, 5, 5, 5])
+
     def test_mergeOverlapsDefaultMethod(self):
         """
         Test the merge method of the Stream object.
