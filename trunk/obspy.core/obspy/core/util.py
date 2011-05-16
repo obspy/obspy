@@ -313,6 +313,16 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     """
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+    elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
+            and len(fill_value) == 2:
+        # if two values are supplied use these as samples bordering to our data
+        # and interpolate between:
+        ls = fill_value[0]
+        rs = fill_value[1]
+        # include left and right sample (delta + 2)
+        interpolation = np.linspace(ls, rs, delta + 2)
+        # cut ls and rs and ensure correct data type
+        temp = np.require(interpolation[1:-1], dtype=np.dtype(dtype))
     else:
         temp = np.ones(delta, dtype=np.dtype(dtype))
         temp *= fill_value

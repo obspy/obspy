@@ -500,7 +500,7 @@ class Trace(object):
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAABCDEFFFF
                 
-                Any contained traces with different data will be discarted::
+                Any contained traces with different data will be discarded::
                 
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
@@ -523,6 +523,12 @@ class Trace(object):
                     Trace 1: ABCD        
                     Trace 2:         FFFF
                     1 + 2  : ABCDDDDDFFFF
+
+                Traces with gaps and given ``fill_value='interpolate'``::
+                
+                    Trace 1: AAAA        
+                    Trace 2:         FFFF
+                    1 + 2  : AAAABCDEFFFF
         ======  ===============================================================
         """
         if sanity_checks:
@@ -550,6 +556,8 @@ class Trace(object):
         # check whether to use the latest value to fill a gap
         if fill_value == "latest":
             fill_value = lt.data[-1]
+        elif fill_value == "interpolate":
+            fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
         delta = int(math.floor(round((rt.stats.starttime - \
                                       lt.stats.endtime) * sr, 7))) - 1
@@ -605,17 +613,8 @@ class Trace(object):
             data = [lt.data, rt.data]
         else:
             # gap
-            if fill_value == 'interpolate':
-                # linear interpolation, not changing dtype
-                ls = lt.data[-1]
-                rs = rt.data[0]
-                # include left and right sample (delta + 2)
-                interpolation = np.linspace(ls, rs, delta + 2)
-                # cut ls and rs and ensure correct data type
-                gap = np.require(interpolation[1:-1], lt.data.dtype)
-            else:
-                # use fixed value
-                gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+            # use fixed value or interpolate in between
+            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on numpy array type
         if True in [np.ma.is_masked(_i) for _i in data]:
