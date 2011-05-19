@@ -126,16 +126,16 @@ class Client(object):
         max_latitude : int or float, optional
             Maximum latitude for search.
         min_longitude : int or float, optional
-            Minumum ("left-side") longitude for search.
+            Minimum ("left-side") longitude for search.
             Format: +/- 180 decimal degrees.
         max_longitude : int or float, optional
             Maximum ("right-side") longitude for search.
         min_depth : int or float, optional
-            Minumum event depth. Format: in km, negative down.
+            Minimum event depth. Format: in km, negative down.
         max_depth : int or float, optional
             Maximum event depth.
         min_magnitude : int or float, optional
-            Minimum event magintude.
+            Minimum event magnitude.
         max_magnitude : int or float, optional
             Maximum event magnitude.
         magnitude_type : str, optional
@@ -154,7 +154,7 @@ class Client(object):
 
         Returns
         -------
-            List of event dictionaries or quakeml string.
+            List of event dictionaries or QuakeML string.
         """
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
@@ -224,7 +224,7 @@ class Client(object):
 
         Returns
         -------
-            QuakeML or JSON string.
+            List of origin dictionaries or QuakeML string.
         """
         # parse parameters
         kwargs = {}
