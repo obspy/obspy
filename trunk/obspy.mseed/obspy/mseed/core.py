@@ -286,6 +286,7 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
                           'dtype of the data.\nA suitable encoding will ' + \
                           'be chosen.'
                     warnings.warn(msg, UserWarning)
+                    enc = None
             # automatically detect encoding if no encoding is given.
             if enc is None:
                 if trace.data.dtype.type == np.dtype("int32"):
