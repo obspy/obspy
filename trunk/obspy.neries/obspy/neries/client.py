@@ -11,6 +11,8 @@ See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core.util import _getVersionString
+import platform
 import sys
 import urllib
 import urllib2
@@ -38,15 +40,22 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
+VERSION = _getVersionString("obspy.neries")
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
+                                                   platform.python_version())
+
 
 class Client(object):
     """
     NERIES web service request client.
     """
-    def __init__(self, base_url="http://www.seismicportal.eu",
-                 user="", password="", timeout=10):
+    def __init__(self, base_url="http://www.seismicportal.eu", user="",
+                 password="", timeout=10, debug=False,
+                 user_agent=DEFAULT_USER_AGENT):
         self.base_url = base_url
         self.timeout = timeout
+        self.debug = debug
+        self.user_agent = user_agent
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -55,9 +64,20 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
-    def _fetch(self, url, **params):
+    def _fetch(self, url, headers={}, **params):
+        """
+        Send a HTTP request via urllib2.
+
+        :type url: String
+        :param url: Complete URL of resource
+        :type headers: dict
+        :param headers: Additional header information for request
+        """
+        headers['User-Agent'] = self.user_agent
         # replace special characters 
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
+        if self.debug:
+            print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             response = urllib2.urlopen(remoteaddr)
@@ -130,7 +150,7 @@ class Client(object):
         sort_direction : str
             Sort direction. Format: "ASC" or "DESC".
         format : str
-            format of returned results. Either "list" or "xml"
+            format of returned results. Either "list" or "xml" (default).
 
         Returns
         -------
@@ -149,11 +169,10 @@ class Client(object):
             kwargs['depthMin'] = -kwargs['depthMin']
         if kwargs.get("depthMax"):
             kwargs['depthMax'] = -kwargs['depthMax']
-
         # fetch data
         url = "/services/event/search"
         results = self._fetch(url, **kwargs)
-
+        # format output
         if format == "list":
             results = json.loads(results)
             events = []
@@ -167,9 +186,77 @@ class Client(object):
                 # convention in ObsPy: all depths negative down
                 event['depth'] = -event['depth']
                 events.append(event)
-        elif format == "xml":
+        else:
             events = results
+        return events
 
+    def getEventDetail(self, uri, format="xml"):
+        """
+        Gets event detail information.
+
+        Also see: http://www.seismicportal.eu/services/event/detail/info
+
+        Example
+        -------
+        >>> from obspy.neries import Client
+        >>> client = Client()
+        >>> result = client.getEventDetail("19990817_0000001", 'list')
+
+        Number of calculated origins for the requested event
+        >>> print len(result)
+        12
+
+        Details about first calculated origin of the requested event
+        >>> print result[0] #doctest: +NORMALIZE_WHITESPACE 
+        {'author': u'EMSC', 'event_id': u'19990817_0000001',
+         'origin_id': 1465935, 'longitude': 29.972,
+         'datetime': u'1999-08-17T00:01:35Z', 'depth': -10.0, 'magnitude': 6.7,
+         'magnitude_type': u'mw', 'latitude': 40.749}
+
+        Parameters
+        ----------
+        uri : str
+            event identifier as either a EMSC event unique identifier, e.g. 
+            "19990817_0000001" or a QuakeML-formatted event URI, e.g.
+            "quakeml:eu.emsc/event#19990817_0000001"
+        format : str, optional
+            format of returned results. Either "list" or "xml" (default).
+
+        Returns
+        -------
+            QuakeML or JSON string.
+        """
+        # parse parameters
+        kwargs = {}
+        if format == 'list':
+            kwargs['format'] = 'json'
+        else:
+            kwargs['format'] = 'xml'
+        if str(uri).startswith('quakeml:'):
+            # QuakeML-formatted event URI
+            kwargs['uri'] = str(uri)
+        else:
+            # EMSC event unique identifier 
+            kwargs['unid'] = str(uri)
+        # fetch data
+        url = "/services/event/detail"
+        results = self._fetch(url, **kwargs)
+        # format output
+        if format == "list":
+            results = json.loads(results)
+            events = []
+            float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
+            for result in results['unids']:
+                event = dict([(MAP_INVERSE[k], v)
+                              for k, v in result.iteritems()])
+                for k in float_keys:
+                    event[k] = float(event[k])
+                event['magnitude_type'] = event['magnitude_type'].lower()
+                # convention in ObsPy: all depths negative down
+                event['depth'] = -event['depth']
+                events.append(event)
+        else:
+            events = results
         return events
 
 
