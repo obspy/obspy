@@ -87,13 +87,12 @@ class Client(object):
         >>> print len(events)
         1
         >>> print events #doctest: +NORMALIZE_WHITESPACE 
-        [{'author': 'CSEM', 'event_id': '20041226_0000148',
-          'origin_id': 127773, 'longitude': 95.724000000000004,
-          'datetime': '2004-12-26T00:58:50Z', 'depth': -10.0,
-          'magnitude': 9.3000000000000007, 'magnitude_type': 'mw',
-          'latitude': 3.4980000000000002,
-          'flynn_region': 'OFF W COAST OF NORTHERN SUMATRA'}]
-        
+        [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
+          'origin_id': 127773, 'longitude': 95.724, 
+          'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0, 'magnitude': 9.3,
+          'magnitude_type': u'mw', 'latitude': 3.498,
+          'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
+
         Parameters
         ----------
         min_datetime : str, optional
@@ -150,15 +149,10 @@ class Client(object):
             kwargs['depthMin'] = -kwargs['depthMin']
         if kwargs.get("depthMax"):
             kwargs['depthMax'] = -kwargs['depthMax']
-        # build full request url
+
+        # fetch data
         url = "/services/event/search"
-        remoteaddr = self.base_url + url + '?' + urllib.urlencode(kwargs)
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            response = urllib2.urlopen(remoteaddr)
-        else:
-            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
-        results = response.read()
+        results = self._fetch(url, **kwargs)
 
         if format == "list":
             results = json.loads(results)
@@ -173,8 +167,7 @@ class Client(object):
                 # convention in ObsPy: all depths negative down
                 event['depth'] = -event['depth']
                 events.append(event)
-
-        if format == "xml":
+        elif format == "xml":
             events = results
 
         return events
