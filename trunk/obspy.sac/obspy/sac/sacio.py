@@ -1456,12 +1456,15 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     >>> attach_resp(tr,respfile,torad=True,todisp=False)
     >>> print tr.stats.paz.keys()
     ['digitizer_gain', 'seismometer_gain', 'zeros', 'gain', 't_shift', 'poles']
-    >>> print tr.stats.paz.poles
-    [(-0.15931644664884559+0.15931644664884559j), (-0.15931644664884559-0.15931644664884559j), (-314.15926535897933+202.31856689118268j), (-314.15926535897933-202.31856689118268j)]
+    >>> print tr.stats.paz.poles  # doctest: +SKIP
+    [(-0.15931644664884559+0.15931644664884559j),
+     (-0.15931644664884559-0.15931644664884559j),
+     (-314.15926535897933+202.31856689118268j),
+     (-314.15926535897933-202.31856689118268j)]
     """
     if isinstance(resp_file, str):
         resp_file = open(resp_file, 'r')
-        
+
     zeros_pat = r'B053F10-13'
     poles_pat = r'B053F15-18'
     a0_pat = r'B053F07'
@@ -1479,13 +1482,13 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
             sens = float(line.split(':')[1])
         if line.startswith(poles_pat):
             tmp = line.split()
-            poles.append(complex(float(tmp[2]),float(tmp[3])))
+            poles.append(complex(float(tmp[2]), float(tmp[3])))
         if line.startswith(zeros_pat):
             tmp = line.split()
-            zeros.append(complex(float(tmp[2]),float(tmp[3])))
+            zeros.append(complex(float(tmp[2]), float(tmp[3])))
         if line.startswith(t_shift_pat):
             t_shift += float(line.split(':')[1])
-    constant = a0*sens
+    constant = a0 * sens
 
     if torad:
         tmp = [z * 2. * np.pi for z in zeros]
