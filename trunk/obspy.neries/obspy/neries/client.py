@@ -11,6 +11,7 @@ See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core import UTCDateTime
 from obspy.core.util import _getVersionString
 import platform
 import sys
@@ -86,6 +87,25 @@ class Client(object):
         doc = response.read()
         return doc
 
+    def _json2list(self, data):
+        """
+        Converts a JSON formated string into a event/origin list.
+        """
+        results = json.loads(data)
+        events = []
+        float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
+        for result in results['unids']:
+            event = dict([(MAP_INVERSE[k], v)
+                          for k, v in result.iteritems()])
+            for k in float_keys:
+                event[k] = float(event[k])
+            event['magnitude_type'] = event['magnitude_type'].lower()
+            event['datetime'] = UTCDateTime(event['datetime'])
+            # convention in ObsPy: all depths negative down
+            event['depth'] = -event['depth']
+            events.append(event)
+        return events
+
     def getEvents(self, min_datetime=None, max_datetime=None,
                   min_longitude=None, max_longitude=None, min_latitude=None,
                   max_latitude=None, min_depth=None, max_depth=None,
@@ -109,8 +129,8 @@ class Client(object):
         >>> print events #doctest: +NORMALIZE_WHITESPACE 
         [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
           'origin_id': 127773, 'longitude': 95.724, 
-          'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0, 'magnitude': 9.3,
-          'magnitude_type': u'mw', 'latitude': 3.498,
+          'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50), 'depth': -10.0,
+          'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
           'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
 
         Parameters
@@ -149,8 +169,12 @@ class Client(object):
             "depth". Only available if format="list".
         sort_direction : str
             Sort direction. Format: "ASC" or "DESC".
-        format : str
-            format of returned results. Either "list" or "xml" (default).
+        format : ['list' | 'xml'], optional
+            Format of returned results. Defaults to 'xml'.
+            .. note::
+                The JSON-formatted queries only look at preferred origin
+                parameters, whereas QuakeML queries search all associated
+                origins.
 
         Returns
         -------
@@ -170,25 +194,63 @@ class Client(object):
         if kwargs.get("depthMax"):
             kwargs['depthMax'] = -kwargs['depthMax']
         # fetch data
-        url = "/services/event/search"
-        results = self._fetch(url, **kwargs)
+        data = self._fetch("/services/event/search", **kwargs)
         # format output
         if format == "list":
-            results = json.loads(results)
-            events = []
-            float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
-            for result in results['unids']:
-                event = dict([(MAP_INVERSE[k], v)
-                              for k, v in result.iteritems()])
-                for k in float_keys:
-                    event[k] = float(event[k])
-                event['magnitude_type'] = event['magnitude_type'].lower()
-                # convention in ObsPy: all depths negative down
-                event['depth'] = -event['depth']
-                events.append(event)
+            return self._json2list(data)
         else:
-            events = results
-        return events
+            return data
+
+    def getLatestEvents(self, num=10, format="xml"):
+        """
+        Gets a list of recent events.
+
+        Also see: http://www.seismicportal.eu/services/event/latest/info
+
+        Example
+        -------
+        >>> from obspy.neries import Client
+        >>> client = Client()
+        >>> events = client.getLatestEvents(num=5, format='list')
+        >>> print len(events)
+        5
+        >>> print events[0] #doctest: +SKIP 
+        [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
+          'origin_id': 127773, 'longitude': 95.724, 
+          'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0, 'magnitude': 9.3,
+          'magnitude_type': u'mw', 'latitude': 3.498,
+          'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
+
+        Parameters
+        ----------
+        num : int, optional
+            Number of events to return, defaults to 10.
+            .. note::
+                Absolute maximum is 2500 events.
+        format : ['list' | 'xml'], optional
+            Format of returned results. Defaults to 'xml'.
+
+        Returns
+        -------
+            List of event dictionaries or QuakeML string.
+        """
+        # parse parameters
+        kwargs = {}
+        try:
+            kwargs['num'] = int(num)
+        except:
+            kwargs['num'] = 10
+        if format == 'list':
+            kwargs['format'] = 'json'
+        else:
+            kwargs['format'] = 'xml'
+        # fetch data
+        data = self._fetch("/services/event/latest", **kwargs)
+        # format output
+        if format == "list":
+            return self._json2list(data)
+        else:
+            return data
 
     def getEventDetail(self, uri, format="xml"):
         """
@@ -210,8 +272,8 @@ class Client(object):
         >>> print result[0] #doctest: +NORMALIZE_WHITESPACE 
         {'author': u'EMSC', 'event_id': u'19990817_0000001',
          'origin_id': 1465935, 'longitude': 29.972,
-         'datetime': u'1999-08-17T00:01:35Z', 'depth': -10.0, 'magnitude': 6.7,
-         'magnitude_type': u'mw', 'latitude': 40.749}
+         'datetime': UTCDateTime(1999, 8, 17, 0, 1, 35), 'depth': -10.0,
+         'magnitude': 6.7, 'magnitude_type': u'mw', 'latitude': 40.749}
 
         Parameters
         ----------
@@ -219,8 +281,8 @@ class Client(object):
             event identifier as either a EMSC event unique identifier, e.g. 
             "19990817_0000001" or a QuakeML-formatted event URI, e.g.
             "quakeml:eu.emsc/event#19990817_0000001"
-        format : str, optional
-            format of returned results. Either "list" or "xml" (default).
+        format : ['list' | 'xml'], optional
+            Format of returned results. Defaults to 'xml'.
 
         Returns
         -------
@@ -239,25 +301,12 @@ class Client(object):
             # EMSC event unique identifier 
             kwargs['unid'] = str(uri)
         # fetch data
-        url = "/services/event/detail"
-        results = self._fetch(url, **kwargs)
+        data = self._fetch("/services/event/detail", **kwargs)
         # format output
         if format == "list":
-            results = json.loads(results)
-            events = []
-            float_keys = ('depth', 'latitude', 'longitude', 'magnitude')
-            for result in results['unids']:
-                event = dict([(MAP_INVERSE[k], v)
-                              for k, v in result.iteritems()])
-                for k in float_keys:
-                    event[k] = float(event[k])
-                event['magnitude_type'] = event['magnitude_type'].lower()
-                # convention in ObsPy: all depths negative down
-                event['depth'] = -event['depth']
-                events.append(event)
+            return self._json2list(data)
         else:
-            events = results
-        return events
+            return data
 
 
 if __name__ == '__main__':
