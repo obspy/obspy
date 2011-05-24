@@ -12,7 +12,6 @@ numpy and obspy.core.
 Reading
 -------
 Similiar to reading any other waveform data format using obspy.core:
-(Lines 2&3 are just to get the path to our test data)
 
 >>> from obspy.core import read
 >>> st = read('/path/to/test.sac')
