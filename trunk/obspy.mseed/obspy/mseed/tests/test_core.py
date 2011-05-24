@@ -9,9 +9,20 @@ from obspy.mseed.headers import ENCODINGS
 from obspy.mseed.libmseed import _MSStruct
 import numpy as np
 import os
-import platform
 import unittest
 import warnings
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf
+
+
+# some Python version don't support negative timestamps
+NO_NEGATIVE_TIMESTAMPS = False
+try:
+    UTCDateTime(-50000)
+except:
+    NO_NEGATIVE_TIMESTAMPS = True
 
 
 class CoreTestCase(unittest.TestCase):
@@ -112,6 +123,7 @@ class CoreTestCase(unittest.TestCase):
         stream.verify()
         self.assertEquals(stream[0].data.tolist(), data.tolist())
 
+    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
@@ -119,9 +131,6 @@ class CoreTestCase(unittest.TestCase):
         This test depends on the platform specific localtime()/gmtime()
         function. 
         """
-        # XXX: skip Windows systems
-        if platform.system() == 'Windows':
-            return
         # create trace
         tr = Trace(data=np.empty(1000))
         tr.stats.starttime = UTCDateTime("1969-01-01T00:00:00")
@@ -449,35 +458,35 @@ class CoreTestCase(unittest.TestCase):
         os.remove(tempfile)
 
     def test_writeWrongEncodingViaMseedStats(self):
-       """
-       Test to write a floating point mseed file with encoding STEIM1 with the
-       encoding set in stats.mseed.encoding.  This will just raise a warning.
-
-       Tests issue 256.
-       """
-       file = os.path.join(self.path, "data", "steim2.mseed")
-       tempfile = NamedTemporaryFile().name
-       # Read the data and convert them to float
-       st = read(file)
-       st[0].data = st[0].data.astype('float64') + .5
-       # Type is not consistent float64 cannot be compressed with STEIM2,
-       # therefore a warning should be raised.
-       self.assertEqual(st[0].stats.mseed.encoding, 'STEIM2')
-       # Test the warning.
-       warnings.simplefilter('error', UserWarning)
-       # The execution will actually stop once the warning has reached because
-       # it now is an exception.
-       self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
-       warnings.filters.pop(0)
-       # Actually write the file.
-       warnings.simplefilter('ignore', UserWarning)
-       st.write(tempfile, format="MSEED")
-       warnings.filters.pop(0)
-       # Read again and make some sanity checks.
-       st2 = read(tempfile)
-       os.remove(tempfile)
-       self.assertEqual(st2[0].stats.mseed.encoding, 'FLOAT64')
-       np.testing.assert_array_equal(st[0].data, st2[0].data)
+        """
+        Test to write a floating point mseed file with encoding STEIM1 with the
+        encoding set in stats.mseed.encoding.  This will just raise a warning.
+        
+        Tests issue 256.
+        """
+        file = os.path.join(self.path, "data", "steim2.mseed")
+        tempfile = NamedTemporaryFile().name
+        # Read the data and convert them to float
+        st = read(file)
+        st[0].data = st[0].data.astype('float64') + .5
+        # Type is not consistent float64 cannot be compressed with STEIM2,
+        # therefore a warning should be raised.
+        self.assertEqual(st[0].stats.mseed.encoding, 'STEIM2')
+        # Test the warning.
+        warnings.simplefilter('error', UserWarning)
+        # The execution will actually stop once the warning has reached because
+        # it now is an exception.
+        self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
+        warnings.filters.pop(0)
+        # Actually write the file.
+        warnings.simplefilter('ignore', UserWarning)
+        st.write(tempfile, format="MSEED")
+        warnings.filters.pop(0)
+        # Read again and make some sanity checks.
+        st2 = read(tempfile)
+        os.remove(tempfile)
+        self.assertEqual(st2[0].stats.mseed.encoding, 'FLOAT64')
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
 
     def test_enforceSteim2WithSteim1asEncoding(self):
         """
