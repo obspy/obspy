@@ -24,7 +24,7 @@ class LibGSE2TestCase(unittest.TestCase):
     def test_read(self):
         """
         Compares waveform data read by libgse2 with an ASCII dump.
-        
+
         Checks the first 13 datasamples when reading loc_RJOB20050831023349.z.
         The values are assumed to be correct. The values were created using
         getevents. Only checks relative values.
@@ -86,7 +86,7 @@ class LibGSE2TestCase(unittest.TestCase):
     def test_readHeaderInfo(self):
         """
         Reads and compares header info from the first record.
-        
+
         The values can be read from the filename.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
@@ -145,7 +145,7 @@ class LibGSE2TestCase(unittest.TestCase):
 
     def test_arrayNotNumpy(self):
         """
-        Test if exception is raised when data are not of type int32 numpy array
+        Test if exception is raised when data are not of type int32 NumPy array
         """
         testfile = NamedTemporaryFile().name
         data = [2, 26, 1]

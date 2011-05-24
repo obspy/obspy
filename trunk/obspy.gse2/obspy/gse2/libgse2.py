@@ -201,7 +201,7 @@ def writeHeader(f, head):
             head.vang))
 
 
-def uncompress_CM6(f, n_samps, verify_chksum=True):
+def uncompress_CM6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
 
@@ -209,8 +209,6 @@ def uncompress_CM6(f, n_samps, verify_chksum=True):
     :param f: File Pointer
     :type n_samps: Int
     :param n_samps: Number of samples
-    :type verify_chksum: Bool
-    :param verify_chksum: If True verify Checksum and raise Exception if it
     """
     # transform to a C file pointer
     fp = C.pythonapi.PyFile_AsFile(f)
@@ -219,22 +217,36 @@ def uncompress_CM6(f, n_samps, verify_chksum=True):
     if n != n_samps:
         raise GSEUtiError("Mismatching length in lib.decomp_6b")
     clibgse2.rem_2nd_diff(data, n_samps)
-    # test checksum only if enabled
-    if verify_chksum:
-        # calculate checksum from data, as in gse_driver.c line 60
-        chksum_data = abs(clibgse2.check_sum(data, n_samps, C.c_int32()))
-        # find checksum within file
-        buf = f.readline()
-        chksum_file = -1
-        while buf:
-            if buf.startswith('CHK2'):
-                chksum_file = int(buf.strip().split()[1])
-                break
-            buf = f.readline()
-        if chksum_data != chksum_file:
-            msg = "Mismatching checksums, CHK %d != CHK %d"
-            raise ChksumError(msg % (chksum_data, chksum_file))
     return data
+
+
+def verifyChecksum(fh, data, version=2):
+    """
+    Calculate checksum from data, as in gse_driver.c line 60
+    
+    :type fh: File Pointer
+    :param fh: File Pointer
+    :type version: Int
+    :param version: GSE version, either 1 or 2, defaults to 2.
+    """
+    # XXX: GSE1 seems to have always negative values but the same numeric value
+    # as GSE2
+    chksum_data = clibgse2.check_sum(data, len(data), C.c_int32())
+    if version == 2:
+        chksum_data = abs(chksum_data)
+    # find checksum within file
+    buf = fh.readline()
+    chksum_file = -1
+    CHK_LINE = 'CHK%d' % version
+    while buf:
+        if buf.startswith(CHK_LINE):
+            chksum_file = int(buf.strip().split()[1])
+            break
+        buf = fh.readline()
+    if chksum_data != chksum_file:
+        msg = "Mismatching checksums, CHK %d != CHK %d"
+        raise ChksumError(msg % (chksum_data, chksum_file))
+    return
 
 
 def read(f, verify_chksum=True):
@@ -260,7 +272,10 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
-    data = uncompress_CM6(f, head.n_samps, verify_chksum)
+    data = uncompress_CM6(f, head.n_samps)
+    # test checksum only if enabled
+    if verify_chksum:
+        verifyChecksum(f, data, version=2)
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])

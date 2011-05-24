@@ -203,10 +203,18 @@ class CoreTestCase(unittest.TestCase):
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should not fail
         _st = read(gse2file, verify_chksum=False)
-        # add wrong starttime flag of mseed, should also not fail
-        _st = read(gse2file, verify_chksum=False, starttime=None)
         # should fail
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
+
+    def test_readWithWrongParameters(self):
+        """
+        Test if additional kwargs can be given
+        """
+        # read original file
+        gse2file = os.path.join(self.path, 'data',
+                                'loc_RJOB20050831023349.z.wrong_chksum')
+        # add wrong starttime flag of mseed, should also not fail
+        _st = read(gse2file, verify_chksum=False, starttime=None)
 
     def test_readGSE1ViaObsPy(self):
         """
@@ -215,7 +223,7 @@ class CoreTestCase(unittest.TestCase):
         gse1file = os.path.join(self.path, 'data', 'loc_STAU20031119011659.z')
         testdata = [-818, -814, -798, -844, -806, -818, -800, -790, -818, -780]
         # read
-        st = read(gse1file, verify_checksum=False)
+        st = read(gse1file, verify_checksum=True)
         st.verify()
         tr = st[0]
         self.assertEqual(tr.stats['station'], 'LE0083')
@@ -242,6 +250,46 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr.stats.get('calib'), 16.0000001)
         self.assertEqual(str(tr.stats.starttime),
                          '2003-11-19T01:16:59.990000Z')
+
+    def test_readINTVGSE1ViaObsPy(self):
+        """
+        Read file via L{obspy.Trace}
+        """
+        gse1file = os.path.join(self.path, 'data',
+                                'GRF_031102_0225.GSE.wrong_chksum')
+        data1 = [-334, -302, -291, -286, -266, -252, -240, -214]
+        data2 = [-468, -480, -458, -481, -481, -435, -432, -389]
+
+        # verify checksum fails
+        self.assertRaises(ChksumError, read, gse1file, verify_chksum=True)
+        # reading header only
+        st = read(gse1file, headonly=True)
+        self.assertEquals(len(st), 2)
+        # reading without checksum verification
+        st = read(gse1file, verify_chksum=False)
+        st.verify()
+        # first trace
+        self.assertEquals(len(st), 2)
+        self.assertEqual(st[0].stats['station'], 'GRA1')
+        self.assertEqual(st[0].stats.npts, 6000)
+        self.assertAlmostEqual(st[0].stats['sampling_rate'], 19.9999997)
+        self.assertEqual(st[0].stats.get('channel'), ' BZ')
+        self.assertAlmostEqual(st[0].stats.get('calib'), 0.9900001)
+        self.assertEqual(st[0].stats.starttime,
+                         UTCDateTime('2003-11-02T02:25:00.000000Z'))
+        # second trace
+        self.assertEquals(len(st), 2)
+        self.assertEqual(st[1].stats['station'], 'GRA1')
+        self.assertEqual(st[1].stats.npts, 6000)
+        self.assertAlmostEqual(st[1].stats['sampling_rate'], 19.9999997)
+        self.assertEqual(st[1].stats.get('channel'), ' BN')
+        self.assertAlmostEqual(st[1].stats.get('calib'), 0.9200001)
+        self.assertEqual(st[1].stats.starttime,
+                         UTCDateTime('2003-11-02T02:25:00.000000Z'))
+        # check first 8 samples
+        self.assertEqual(st[0].data[0:8].tolist(), data1)
+        # check last 8 samples
+        self.assertEqual(st[1].data[-8:].tolist(), data2)
 
 
 def suite():

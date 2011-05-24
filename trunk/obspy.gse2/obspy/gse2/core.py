@@ -20,11 +20,11 @@ def isGSE2(filename):
     # Open file.
     try:
         f = open(filename)
-        data = f.read(4)
+        data = f.readline()
     except:
         return False
     f.close()
-    if data == 'WID2':
+    if data.startswith('WID2'):
         return True
     return False
 
@@ -179,11 +179,11 @@ def isGSE1(filename):
     # Open file.
     try:
         f = open(filename)
-        data = f.read(4)
+        data = f.readline()
     except:
         return False
     f.close()
-    if data == 'WID1':
+    if data.startswith('WID1') or data.startswith('XW01'):
         return True
     return False
 
@@ -201,7 +201,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True, **kwargs):
     filename : string
         GSE2 file to be read.
     headonly : boolean, optional
-        If True read only head of GSE2 file.
+        If True read only header of GSE1 file.
     verify_chksum : boolean, optional
         If True verify Checksum and raise Exception if it is not correct.
 
@@ -216,22 +216,17 @@ def readGSE1(filename, headonly=False, verify_chksum=True, **kwargs):
     >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
     """
     traces = []
-    # read GSE2 file
-    f = open(filename, 'rb')
-    for _k in xrange(10000): # avoid endless loop
-        pos = f.tell()
-        widi = f.readline()[0:4]
-        if widi == '': # end of file
-            break
-        elif widi != 'WID1':
-            continue
-        else: # valid gse1 part
-            f.seek(pos)
+    # read GSE1 file
+    fh = open(filename, 'rb')
+    while True: # avoid endless loop
+        try:
             if headonly:
-                header = libgse1.readHead(f)
+                header = libgse1.readHeader(fh)
                 traces.append(Trace(header=header))
             else:
-                header, data = libgse1.read(f, verify_chksum=verify_chksum)
+                header, data = libgse1.read(fh, verify_chksum=verify_chksum)
                 traces.append(Trace(header=header, data=data))
-    f.close()
+        except EOFError:
+            break
+    fh.close()
     return Stream(traces=traces)
