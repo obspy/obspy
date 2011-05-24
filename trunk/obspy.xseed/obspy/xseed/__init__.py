@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.xseed: Dataless SEED, RESP and XML-SEED read and write support for ObsPy
-==============================================================================
+obspy.xseed - Dataless SEED, RESP and XML-SEED read and write support for ObsPy
+===============================================================================
 XML-SEED was introduced by Tsuboi, Tromp and Komatitsch (2004), it is a XML
 representation of Dataless SEED. This module contains converters from Dataless
 SEED to XML-SEED and vice versa as well as a converter from Dataless SEED to
@@ -47,7 +47,6 @@ A response file can be written in a similar manner, just replace writeXSEED
 by writeRESP:
 
 >>> sp.writeRESP(folder="BW_FURT", zipped=False) #doctest: +SKIP
-
 
 
 xseed.Parser Object

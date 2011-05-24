@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.arclink: ArcLink/WebDC request client for of ObsPy
-========================================================
+obspy.arclink - ArcLink/WebDC request client for of ObsPy
+=========================================================
 
 ArcLink is a distributed data request protocol usable to access archived
 waveform data in the MiniSEED or SEED format and associated meta information as
