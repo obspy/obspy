@@ -229,7 +229,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True, **kwargs):
             f.seek(pos)
             if headonly:
                 header = libgse1.readHead(f)
-                traces.append(Trace(header=new_header))
+                traces.append(Trace(header=header))
             else:
                 header, data = libgse1.read(f, verify_chksum=verify_chksum)
                 traces.append(Trace(header=header, data=data))
