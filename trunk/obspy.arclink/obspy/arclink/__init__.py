@@ -114,10 +114,10 @@ example above.
 
 Further Resources
 -----------------
-* ArcLink protocol specifications
-  * http://www.seiscomp3.org/wiki/doc/applications/arclink
-  * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
-  * https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
+* ArcLink protocol specifications:
+    - http://www.seiscomp3.org/wiki/doc/applications/arclink
+    - http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
+    - https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
 * Short introduction_ to the ArcLink protocol
 * Latest `ArcLink server`_ package
 * SeismoLink_: a SOAP Web Service on top of the ArcLink network
