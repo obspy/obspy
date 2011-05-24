@@ -171,7 +171,8 @@ class Client(object):
             Sort direction. Format: "ASC" or "DESC".
         format : ['list' | 'xml'], optional
             Format of returned results. Defaults to 'xml'.
-            .. note::
+
+            .. note:: 
                 The JSON-formatted queries only look at preferred origin
                 parameters, whereas QuakeML queries search all associated
                 origins.
@@ -225,6 +226,7 @@ class Client(object):
         ----------
         num : int, optional
             Number of events to return, defaults to 10.
+
             .. note::
                 Absolute maximum is 2500 events.
         format : ['list' | 'xml'], optional
@@ -264,11 +266,13 @@ class Client(object):
         >>> client = Client()
         >>> result = client.getEventDetail("19990817_0000001", 'list')
 
-        Number of calculated origins for the requested event
+        Number of calculated origins for the requested event:
+
         >>> print len(result)
         12
 
-        Details about first calculated origin of the requested event
+        Details about first calculated origin of the requested event:
+
         >>> print result[0] #doctest: +NORMALIZE_WHITESPACE 
         {'author': u'EMSC', 'event_id': u'19990817_0000001',
          'origin_id': 1465935, 'longitude': 29.972,

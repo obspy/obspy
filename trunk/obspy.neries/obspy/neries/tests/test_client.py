@@ -74,6 +74,31 @@ class ClientTestCase(unittest.TestCase):
                      'latitude': 36.284}]
         self.assertEquals(results, expected)
 
+    def test_getEventsWithUTCDateTimes(self):
+        """
+        Testing event request method with UTCDateTimes as input parameters.
+        """
+        client = Client()
+        #1
+        results = client.getEvents(format="list", min_depth= -700,
+                                   max_datetime=UTCDateTime("2005-01-01"))
+        expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
+                     'origin_id': 1347097, 'longitude': 57.143,
+                     'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
+                     'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
+                     'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
+        self.assertEquals(results, expected)
+        #2
+        results = client.getEvents(format="list", min_depth= -700,
+                                   min_datetime=UTCDateTime("2004-01-01"),
+                                   max_datetime=UTCDateTime("2005-01-01"))
+        expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
+                     'origin_id': 1347097, 'longitude': 57.143,
+                     'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
+                     'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
+                     'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
+        self.assertEquals(results, expected)
+
     def test_getEventDetail(self):
         """
         Testing event detail request method.
