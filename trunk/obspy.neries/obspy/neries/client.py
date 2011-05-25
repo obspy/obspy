@@ -53,6 +53,31 @@ class Client(object):
     def __init__(self, base_url="http://www.seismicportal.eu", user="",
                  password="", timeout=10, debug=False,
                  user_agent=DEFAULT_USER_AGENT):
+        """
+        Initializes the NERIES web service client.
+
+        Parameters
+        ----------
+        base_url : string, optional
+            Base URL of the NERIES web service (default is
+            'http://www.seismicportal.eu').
+        user : string, optional
+            The user name used for authentication with the web service (default
+            an empty string).
+        password : string, optional
+            A password used for authentication with the web service (default is
+            an empty string).
+        timeout : int, optional
+            Seconds before a connection timeout is raised (default is 10
+            seconds). This works only for Python >= 2.6.x.
+        debug : boolean, optional
+            Enables verbose output (default is False).
+        user_agent : string, optional
+            Sets an client identification string which may be used on server
+            side for statistical analysis (default contains the current module
+            version and basic information about the used operation system, e.g.
+            'ObsPy 0.4.7.dev-r2432 (Windows-7-6.1.7601-SP1, Python 2.7.1)'.
+        """
         self.base_url = base_url
         self.timeout = timeout
         self.debug = debug

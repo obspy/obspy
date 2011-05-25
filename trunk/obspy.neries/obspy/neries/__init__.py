@@ -18,7 +18,7 @@ Basic Usage
 -----------
 (1) The following example illustrates how to request all earthquakes of a
     magnitude of >=9 in the year 2004 using the
-    :meth:`~obspy.neries.client.Client.getEvent()` method:
+    :meth:`~obspy.neries.client.Client.getEvents()` method:
 
     >>> from obspy.neries import Client
     >>> client = Client()
