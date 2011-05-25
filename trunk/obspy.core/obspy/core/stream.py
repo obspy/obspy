@@ -956,9 +956,9 @@ class Stream(object):
         filename : string
             The name of the file to write.
         format : string
-            The format to write must be specified. Depending on you obspy
-            installation one of "MSEED", "GSE2", "SAC", "SEIAN", "WAV",
-            "Q", "SH_ASC"
+            The format to write must be specified. Depending on your ObsPy
+            installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q", "SH_ASC",
+            "SEGY", "SU", "WAV"
 
         Notes
         -----
@@ -972,19 +972,15 @@ class Stream(object):
         =======  ===================  ====================================
         Format   Required Module      Linked Function Call
         =======  ===================  ====================================
-        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
-        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
-        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE2`
-        SEISAN   :mod:`obspy.seisan`  :func:`obspy.seisan.core.readSEISAN`
-        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.readSACXY`
-        GSE1     :mod:`obspy.gse2`    :func:`obspy.gse2.core.readGSE1`
-        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.readQ`
-        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.readASC`
-        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.readSLIST`
-        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
-        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
-        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
-        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
+        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
+        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
+        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
+        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
+        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
+        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
+        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
+        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
+        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.
