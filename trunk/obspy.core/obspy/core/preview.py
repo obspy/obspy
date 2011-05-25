@@ -8,7 +8,6 @@ Tools for creating and merging previews.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from copy import copy
 import numpy as np
 from numpy.ma import is_masked
@@ -166,7 +165,7 @@ def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
-    Attributes
+    Parameters
     ----------
     trace : :class:`~obspy.core.Trace`
         Trace object to be resampled.

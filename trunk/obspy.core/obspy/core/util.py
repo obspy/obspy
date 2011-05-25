@@ -132,7 +132,7 @@ class AttribDict(dict, object):
     def copy(self):
         return self.__class__(self.__dict__.copy())
 
-    def __deepcopy__(self, *args, **kwargs):
+    def __deepcopy__(self, *args, **kwargs): #@UnusedVariable
         st = self.__class__()
         st.update(self)
         return st
@@ -547,7 +547,7 @@ def skip(reason):
     def decorator(test_item):
         if not (isinstance(test_item, type) and issubclass(test_item, unittest.TestCase)):
             @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):
+            def skip_wrapper(*args, **kwargs): #@UnusedVariable
                 return
             test_item = skip_wrapper
 

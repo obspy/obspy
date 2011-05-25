@@ -8,13 +8,11 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk, deprecated, \
-                            interceptDict
-import numpy as np
+from obspy.core.util import AttribDict, createEmptyDataChunk, interceptDict
 import math
+import numpy as np
 import warnings
 
 
@@ -211,7 +209,7 @@ class Stats(AttribDict):
         endtime = self.starttime + delta
         self.__dict__['endtime'] = endtime
 
-    def setEndtime(self, value):
+    def setEndtime(self, value): #@UnusedVariable
         msg = "Attribute \"endtime\" in Stats object is read only!"
         raise AttributeError(msg)
 
@@ -730,14 +728,6 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
-    @deprecated
-    def ltrim(self, *args, **kwargs):
-        """
-        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
-        This method will be removed in the next major release.
-        """
-        self._ltrim(*args, **kwargs)
-
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts current trace to given start time. For more info see
@@ -795,14 +785,6 @@ class Trace(object):
             return
         elif delta > 0:
             self.data = self.data[delta:]
-
-    @deprecated
-    def rtrim(self, *args, **kwargs):
-        """
-        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
-        This method will be removed in the next major release.
-        """
-        self._rtrim(*args, **kwargs)
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
@@ -896,17 +878,6 @@ class Trace(object):
             self._ltrim(starttime, pad, nearest_sample=nearest_sample)
         if endtime:
             self._rtrim(endtime, pad, nearest_sample=nearest_sample)
-
-    @deprecated
-    def cut(self, *args, **kwargs):
-        """
-        DEPRECATED. Please use :meth:`~obspy.core.trace.Trace.trim` instead.
-        This method will be removed in the next major release.
-        """
-        self.trim(*args, **kwargs)
-
-    lcut = ltrim
-    rcut = rtrim
 
     def slice(self, starttime, endtime):
         """

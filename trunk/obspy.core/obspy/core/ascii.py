@@ -67,7 +67,6 @@ Example TSPAIR format::
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
 from obspy.core.util import AttribDict

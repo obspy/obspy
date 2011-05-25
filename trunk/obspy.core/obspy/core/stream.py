@@ -8,11 +8,10 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _getPlugins, deprecated, \
+from obspy.core.util import NamedTemporaryFile, _getPlugins, \
     interceptDict, getExampleFile, getEntryPoints
 from pkg_resources import load_entry_point
 import copy
@@ -1033,14 +1032,6 @@ class Stream(object):
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    @deprecated
-    def ltrim(self, *args, **kwargs):
-        """
-        DEPRECATED. Please use :meth:`~obspy.core.stream.Stream.trim` instead.
-        This method will be removed in the next major release.
-        """
-        self._ltrim(*args, **kwargs)
-
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
@@ -1051,14 +1042,6 @@ class Stream(object):
                        nearest_sample=nearest_sample)
         # remove empty traces after trimming 
         self.traces = [tr for tr in self.traces if tr.stats.npts]
-
-    @deprecated
-    def rtrim(self, *args, **kwargs):
-        """
-        DEPRECATED. Please use :meth:`~obspy.core.stream.Stream.trim` instead.
-        This method will be removed in the next major release.
-        """
-        self._rtrim(*args, **kwargs)
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
@@ -1743,7 +1726,8 @@ class Stream(object):
                         self.traces.append(cur_trace)
                         cur_trace = trace
                 # traces are perfectly adjacent: add them together
-                elif trace.stats.starttime == cur_trace.stats.endtime + cur_trace.stats.delta:
+                elif trace.stats.starttime == cur_trace.stats.endtime + \
+                     cur_trace.stats.delta:
                     cur_trace += trace
                 # no common parts (gap):
                 # leave traces alone and add current to list
