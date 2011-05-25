@@ -139,8 +139,8 @@ def readSLIST(filename, headonly=False):
 
     Example
     -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("slist.ascii") # doctest: +SKIP
+    >>> from obspy.core import read
+    >>> st = read('/path/to/slist.ascii')
     """
     fh = open(filename, 'rt')
     # read file and split text into channels
@@ -215,8 +215,8 @@ def readTSPAIR(filename, headonly=False):
 
     Example
     -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("tspair.ascii") # doctest: +SKIP
+    >>> from obspy.core import read
+    >>> st = read('/path/to/tspair.ascii')
     """
     fh = open(filename, 'rt')
     # read file and split text into channels
@@ -267,3 +267,8 @@ def readTSPAIR(filename, headonly=False):
                 raise NotImplementedError
             stream.append(Trace(data=data, header=stats))
     return stream
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
