@@ -92,7 +92,7 @@ def _getVersion(data):
     # check size of data chunk
     if len(data) < 12 * 80:
         return False
-    if data[0:2] == 'KP'and data[82] == 'P':
+    if data[0:2] == 'KP' and data[82] == 'P':
         return ("<", 32, 6)
     elif data[0:8] == '\x00\x00\x00\x00\x00\x00\x00P' and \
         data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
@@ -107,7 +107,7 @@ def _getVersion(data):
     return None
 
 
-def readSEISAN(filename, headonly=False, **kwargs):
+def readSEISAN(filename, headonly=False, **kwargs): #@UnusedVariable
     """
     Reads a SEISAN file and returns an ObsPy Stream object.
 
