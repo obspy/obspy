@@ -863,5 +863,5 @@ def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     unittest.main(defaultTest='suite')

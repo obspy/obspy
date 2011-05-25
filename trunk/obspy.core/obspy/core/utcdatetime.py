@@ -10,7 +10,6 @@ Module containing a UTC-based datetime class.
 """
 from calendar import timegm
 import datetime
-import warnings
 
 
 class UTCDateTime(datetime.datetime):
@@ -175,7 +174,6 @@ class UTCDateTime(datetime.datetime):
                     except:
                         if 'iso8601' in kwargs:
                             raise
-                        pass
                 # try to apply some standard patterns
                 value = value.replace('T', ' ')
                 value = value.replace('-', ' ')
@@ -298,7 +296,7 @@ class UTCDateTime(datetime.datetime):
             # we got a calendar date: YYYYMMDD
             date_pattern = "%Y%m%d"
         else:
-            raise Exception("Wrong or incomplete ISO8601:2004 date format")
+            raise ValueError("Wrong or incomplete ISO8601:2004 date format")
         # check for time zone information
         # note that the zone designator is the actual offset from UTC and
         # does not include any information on daylight saving time
@@ -325,7 +323,7 @@ class UTCDateTime(datetime.datetime):
         elif length_time == 0:
             time_pattern = ""
         else:
-            raise Exception("Wrong or incomplete ISO8601:2004 time format")
+            raise ValueError("Wrong or incomplete ISO8601:2004 time format")
         # parse patterns
         dt = datetime.datetime.strptime(date + 'T' + time,
                                         date_pattern + 'T' + time_pattern)
@@ -413,7 +411,7 @@ class UTCDateTime(datetime.datetime):
 
     julday = property(getJulday)
 
-    def __add__(self, *args, **kwargs):
+    def __add__(self, value):
         """
         Adds seconds and microseconds to current UTCDateTime object.
 
@@ -424,39 +422,26 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 1, 0, 0)
         >>> a + 1.123456
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
-        >>> UTCDateTime(0.5) + UTCDateTime(10.5)
-        11.0
 
         :return: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        if len(args) == 1:
-            arg = args[0]
-            try:
-                frac = arg % 1.0
-            except:
-                if isinstance(arg, UTCDateTime):
-                    msg = "Adding UTCDateTime to UTCDateTime will be " + \
-                          "removed in the future"
-                    warnings.warn(msg, DeprecationWarning)
-                    return round(self.timestamp + arg.timestamp, 6)
-                else:
-                    dt = datetime.datetime.__add__(self, arg)
-                    return self.__class__(dt)
-            if frac == 0.0:
-                td = datetime.timedelta(seconds=int(arg))
-                dt = datetime.datetime.__add__(self, td)
-                return self.__class__(dt)
-            else:
-                sec = int(arg)
-                msec = int(round((arg - sec) * 1000000))
-                td = datetime.timedelta(seconds=sec, microseconds=msec)
-                dt = datetime.datetime.__add__(self, td)
-                return self.__class__(dt)
+        try:
+            frac = value % 1.0
+        except:
+            dt = datetime.datetime.__add__(self, value)
+            return self.__class__(dt)
+        if frac == 0.0:
+            td = datetime.timedelta(seconds=int(value))
+            dt = datetime.datetime.__add__(self, td)
+            return self.__class__(dt)
         else:
-            dt = datetime.datetime.__add__(self, *args, **kwargs)
+            sec = int(value)
+            msec = int(round((value - sec) * 1000000))
+            td = datetime.timedelta(seconds=sec, microseconds=msec)
+            dt = datetime.datetime.__add__(self, td)
             return self.__class__(dt)
 
-    def __sub__(self, *args, **kwargs):
+    def __sub__(self, value):
         """
         Subtracts seconds and microseconds from current UTCDateTime object.
 
@@ -472,30 +457,23 @@ class UTCDateTime(datetime.datetime):
         UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
         >>> a - 60 * 60 * 24 * 31
         UTCDateTime(1970, 1, 1, 0, 0)
-        >>> UTCDateTime(10.0) - UTCDateTime(9.5)
-        0.5
 
         :return: :class:`~obspy.core.utcdatetime.UTCDateTime` or float
         """
-        if len(args) == 1:
-            arg = args[0]
-            if isinstance(arg, int):
-                td = datetime.timedelta(seconds=arg)
-                dt = datetime.datetime.__sub__(self, td)
-                return self.__class__(dt)
-            elif isinstance(arg, float):
-                sec = int(arg)
-                msec = int(round((arg - sec) * 1000000))
-                td = datetime.timedelta(seconds=sec, microseconds=msec)
-                dt = datetime.datetime.__sub__(self, td)
-                return self.__class__(dt)
-            elif isinstance(arg, UTCDateTime):
-                return round(self.timestamp - arg.timestamp, 6)
-            else:
-                dt = datetime.datetime.__sub__(self, arg)
-                return self.__class__(dt)
+        if isinstance(value, int):
+            td = datetime.timedelta(seconds=value)
+            dt = datetime.datetime.__sub__(self, td)
+            return self.__class__(dt)
+        elif isinstance(value, float):
+            sec = int(value)
+            msec = int(round((value - sec) * 1000000))
+            td = datetime.timedelta(seconds=sec, microseconds=msec)
+            dt = datetime.datetime.__sub__(self, td)
+            return self.__class__(dt)
+        elif isinstance(value, UTCDateTime):
+            return round(self.timestamp - value.timestamp, 6)
         else:
-            dt = datetime.datetime.__sub__(self, *args, **kwargs)
+            dt = datetime.datetime.__sub__(self, value)
             return self.__class__(dt)
 
     def __str__(self):
@@ -593,6 +571,6 @@ class UTCDateTime(datetime.datetime):
                  self.second, self.microsecond // 1000)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)

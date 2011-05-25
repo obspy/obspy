@@ -77,6 +77,6 @@ from obspy.core.scripts.runtests import runTests
 __version__ = _getVersionString("obspy.core")
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)

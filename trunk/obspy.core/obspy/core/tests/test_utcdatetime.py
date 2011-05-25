@@ -5,17 +5,17 @@ import datetime
 import copy
 import unittest
 import numpy as np
-try:
+try: # pragma: no cover
     from unittest import skipIf
-except ImportError:
+except ImportError: # pragma: no cover
     from obspy.core.util import skipIf
 
 
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
-try:
+try: # pragma: no cover
     UTCDateTime(-1)
-except:
+except: # pragma: no cover
     NO_NEGATIVE_TIMESTAMPS = True
 
 
@@ -156,6 +156,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12, 23))
         dt = UTCDateTime("2009-001T12")
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12))
+        dt = UTCDateTime("2009-355")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 21))
         # enforce ISO8601 - no chance to detect that format 
         dt = UTCDateTime("2009-001", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 1, 1))
@@ -168,6 +170,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12, 23))
         dt = UTCDateTime("2009001T12")
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12))
+        dt = UTCDateTime("2009355")
+        self.assertEquals(dt, UTCDateTime(2009, 12, 21))
         # enforce ISO8601 - no chance to detect that format 
         dt = UTCDateTime("2009001", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 1, 1))
@@ -274,7 +278,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
                           UTCDateTime(1970, 2, 1, 0, 0, 0, 100000))
         self.assertEquals(a + -0.5,
                           UTCDateTime(1969, 12, 31, 23, 59, 59, 500000))
-        self.assertEquals(UTCDateTime(0.5) + UTCDateTime(10.5), 11.0)
         td = datetime.timedelta(seconds=1)
         self.assertEquals(a + td, UTCDateTime(1970, 1, 1, 0, 0, 1))
 
@@ -324,6 +327,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(str(dt), "2008-01-01T00:00:00.000000Z")
         dt = UTCDateTime(year=2008, julday=1, hour=12, microsecond=5000)
         self.assertEquals(str(dt), "2008-01-01T12:00:00.005000Z")
+        # without parameters returns current date time
+        dt = UTCDateTime()
 
     def test_toPythonDateTimeObjects(self):
         """
@@ -377,6 +382,23 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # month.
         self.assertRaises(ValueError, UTCDateTime, 2010, 9, 31)
         self.assertRaises(ValueError, UTCDateTime, '2010-09-31')
+        # invalid julday
+        self.assertRaises(TypeError, UTCDateTime, year=2010, julday=999)
+        # testing some strange patterns
+        self.assertRaises(TypeError, UTCDateTime, "ABC")
+        self.assertRaises(TypeError, UTCDateTime, "12X3T")
+
+    def test_invalidTimes(self):
+        """
+        Tests invalid times.
+        """
+        # wrong time information
+        self.assertRaises(ValueError, UTCDateTime, "2010-02-13T99999",
+                          iso8601=True)
+        self.assertRaises(ValueError, UTCDateTime, "2010-02-13 99999",
+                          iso8601=True)
+        self.assertRaises(ValueError, UTCDateTime, "2010-02-13T99999")
+        self.assertRaises(TypeError, UTCDateTime, "2010-02-13T02:09:09.XXXXX")
 
     def test_issue168(self):
         """
@@ -392,10 +414,37 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("1899-12-31T23:59:59.999999Z")
         self.assertEquals(dt.julday, 365)
 
+    def test_formatSEED(self):
+        """
+        Tests formatSEED method
+        """
+        #1
+        dt = UTCDateTime("2010-01-01")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001")
+        #2
+        dt = UTCDateTime("2010-01-01T00:00:00.000000")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001")
+        #3
+        dt = UTCDateTime("2010-01-01T12:00:00")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001,12")
+        #4
+        dt = UTCDateTime("2010-01-01T12:34:00")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001,12:34")
+        #5
+        dt = UTCDateTime("2010-01-01T12:34:56")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001,12:34:56")
+        #6
+        dt = UTCDateTime("2010-01-01T12:34:56.123456")
+        self.assertEquals(dt.formatSEED(compact=True), "2010,001,12:34:56.1234")
+        #7 - explicit disabling compact flag still results into compact date if
+        # no time information is given
+        dt = UTCDateTime("2010-01-01")
+        self.assertEquals(dt.formatSEED(compact=False), "2010,001")
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     unittest.main(defaultTest='suite')
