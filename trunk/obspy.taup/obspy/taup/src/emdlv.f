@@ -15,6 +15,16 @@ C    interpolation to get the vp and vs for the desired r.  R0=6371.0 is
 C    assumed.  Limit is 200 layers and a maximum of 30 discontinuities.
 C
 C  Arthur Snoke  VTSO  5 April 1991.  Modified some by Brian Kennett ANU
+C
+C
+C
+C
+C     May 2011: Modified so that it can be accessed from the outside by
+C     the obspy dev team: devs@obspy.org
+C
+C
+C
+C
 C-
       save
       parameter (max=200, npmax=30)

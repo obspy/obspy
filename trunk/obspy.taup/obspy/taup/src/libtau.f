@@ -2,6 +2,16 @@ C+
 C	libtau.f is from Buland's 1996 Feb. libtau.src.
 C	Added references to my lenc routine for calculating lengths
 C	  of character strings up to first blank or null (jas/vt)
+C
+C
+C
+C
+C     May 2011: Modified so that it can be accessed from the outside by
+C     the obspy dev team: devs@obspy.org
+C
+C
+C
+C
 C-
       subroutine tabin(in,modnam)
       include 'ttlim.inc'
@@ -1847,12 +1857,13 @@ c   See if we are in query mode.
 c
 c   In query mode, get the tokens interactively into local storage.
 c
- 22   print *,'Enter desired branch control list at the prompts:'
+C 22   print *,'Enter desired branch control list at the prompts:'
       no=0
  21   call query(' ',fnd)
       if(no.ge.jseg) go to 1
       no=no+1
-      read 100,phlst(no)
+C      read 100,phlst(no)
+      phlst(no) = 'all'
  100  format(a)
 c   Terminate the list of tokens with a blank entry.
       if(phlst(no).ne.' ') go to 21
@@ -1865,12 +1876,13 @@ c   If the first token is blank, help the user out.
       print 101,cmdcd
  101  format(11x,a)
       print *,'          or any generic phase name'
-      go to 22
+C      go to 22
 c
 c   An 'all' keyword is easy as this is already the default.
  1    all=.false.
       if(no.eq.1.and.(phlst(1).eq.'all'.or.phlst(1).eq.'ALL'))
      1 all=.true.
+      all=.true.
       if(all.and..not.prflg(3)) return
 c
 c   Make one or two generic branch names for each segment.  For example,
@@ -1970,14 +1982,18 @@ c   If selected, find the associated generic branch names.
       j2=kseg+1
 c   Print the result.
  20   j2=j2-1
-      if(.not.fnd) print *,'Brnset:  the following phases have '//
-     1 'been selected -'
-      fnd=.true.
-      print 102,i,(segcd(j),j=j1,j2)
+C     if(.not.fnd) print *,'Brnset:  the following phases have '//
+C    1 'been selected -'
+C     fnd=.true.
+C     print 102,i,(segcd(j),j=j1,j2)
  102  format(10x,i5,5(2x,a))
  16   continue
       return
       end
+
+
+
+
       logical function oneray(phnm,dtdd,xcor,tcor)
 c
 c   Given a phase code, phnm, oneray returns the distance, xcor, in 
@@ -2071,7 +2087,7 @@ c   on the same line).  Programmed on 17 September 1980 by
 c   R. Buland.
 c
       character*(*) ia
-      write(*,100)ia(1:n)
+C      write(*,100)ia(1:n)
  100  format(a,$)
       return
       end

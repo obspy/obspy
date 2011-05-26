@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Travel time calculation tool
-
+Travel time calculation tool 
 This module contains Python wrappers for iaspei-tau - a travel time library
 of Arthur Snoke (http://www.iris.edu/software/downloads/processing/).
 The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
@@ -21,6 +20,8 @@ For more information visit http://www.obspy.org.
 :license:
     Unknown
 """
+from distutils.ccompiler import get_default_compiler, CCompiler
+from distutils.errors import DistutilsExecError, CompileError
 
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
@@ -44,6 +45,30 @@ KEYWORDS = ['ObsPy', 'seismology', 'taup']
 INSTALL_REQUIRES = ['obspy.core']
 ENTRY_POINTS = {}
 
+# Monkey patch CCompiler for Unix, Linux and Windows
+# We pretend that .f90 is a C extension and overwrite
+# the corresponding compilation calls
+CCompiler.language_map['.f'] = "c"
+
+from distutils.unixccompiler import UnixCCompiler, _darwin_compiler_fixup
+# Monkey patch UnixCCompiler for Unix, Linux and darwin
+UnixCCompiler.src_extensions.append(".f")
+def _compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts):
+        compiler_so = self.compiler_so
+        if sys.platform == 'darwin':
+            compiler_so = _darwin_compiler_fixup(compiler_so, cc_args + extra_postargs)
+        if ext == ".f":
+            if sys.platform == 'darwin' or sys.platform == 'linux2':
+                compiler_so = ["gfortran"]
+                cc_args = ['-c']
+        try:
+            self.spawn(compiler_so + [src, '-o', obj] + cc_args +
+                       \
+                       extra_postargs)
+        except DistutilsExecError, msg:
+            raise CompileError, msg
+UnixCCompiler._compile = _compile
+
 
 def setupLibTauP():
     """
@@ -59,7 +84,7 @@ def setupLibTauP():
             Extension.__init__(self, *args, **kwargs)
             self.export_symbols = finallist(self.export_symbols)
     macros = []
-    src = os.path.join('obspy', 'taup', 'src') + os.sep
+    src = os.path.abspath(os.path.join('obspy', 'taup', 'src')) + os.sep
     symbols = [s.strip() for s in open(src + 'libtaup.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
@@ -75,8 +100,9 @@ def setupLibTauP():
         lib_name = 'libtaup'
     # setup C extension
     lib = MyExtension(lib_name,
+                      libraries=['gfortran'],
                       define_macros=macros,
-                      sources=[src + 'emdlv.f', src + 'libtau.f',
+                      sources=[src + 'emdlv.f' ,  src + 'libtau.f',
                                src + 'ttimes_subrout.f'],
                       export_symbols=symbols)
     return lib
