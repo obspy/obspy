@@ -716,7 +716,8 @@ class Trace(object):
             Name of the output file.
         format : string
             Name of the output format.
-            See :func:`~obspy.core.stream.write` for all possible formats.
+            See :meth:`~obspy.core.stream.Stream.write` method for all possible
+            formats.
 
         Basic Usage
         -----------

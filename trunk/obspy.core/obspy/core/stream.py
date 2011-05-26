@@ -962,7 +962,7 @@ class Stream(object):
         Notes
         -----
         Additional ObsPy modules extend the parameters of the
-        :func:`~obspy.core.stream.Stream.write` function. The following
+        :meth:`~obspy.core.stream.Stream.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
         Please refer to the linked function call of each module for any extra
