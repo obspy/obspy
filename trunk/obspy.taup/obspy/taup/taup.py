@@ -27,8 +27,6 @@ def getTravelTimes(distance, depth, model='iasp91'):
     model_path = os.path.join(__path__[0], 'tables', model)
     if not os.path.exists(model_path + os.path.extsep + 'hed') or \
        not os.path.exists(model_path + os.path.extsep + 'tbl'):
-        print model_path + os.path.extsep + 'hed'
-        print model_path + os.path.extsep + 'tbl'
         msg = 'Model %s not found' % model
         raise ValueError(msg)
 
@@ -42,7 +40,7 @@ def getTravelTimes(distance, depth, model='iasp91'):
 
     phase_names = (C.c_char * 8 * max)()
 
-    modnam = (C.c_char * 200)()
+    modnam = (C.c_char * 500)()
     modnam.value = os.path.join(__path__[0], 'tables', model)
 
     flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
@@ -118,5 +116,3 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         plt.xlim(min_degree, 180)
     plt.legend()
     plt.show()
-
-travelTimePlot()

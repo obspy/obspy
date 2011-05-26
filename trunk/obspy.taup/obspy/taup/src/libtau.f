@@ -16,7 +16,7 @@ C-
       subroutine tabin(in,modnam)
       include 'ttlim.inc'
       character*(*) modnam
-      character*80 filename
+      character*500 filename
 c     logical log
       character*8 phcd,phdif(9)
       double precision pm,zm,us,pt,tau,xlim,xbrn,dbrn,zs,pk,pu,pux,tauu,
@@ -33,6 +33,7 @@ c
      5 jidx(jbrn),kk(jseg)
       common/pcdc/phcd(jbrn)
       data tauc,xc/jtsm*0d0,jxsm*0d0/
+
 c
       nin=in
       phdif(1)='P'
@@ -1440,7 +1441,7 @@ c
       save
       logical log
       character*(*) ia,ib
-      character*80 filename
+      character*500 filename
 c
       if(iargcX(i).lt.n) go to 1
       call getarg(n,ib)

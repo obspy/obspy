@@ -18,9 +18,9 @@ c-
 C
 C       changed modnam to 80 max
 c
-      character*200 modnam
+      character*500 modnam
       dimension tt(max),toang(max),dtdd(max),dtdh(max),dddp(max)
-        CHARACTER*80 getstring
+        CHARACTER*500 getstring
 clocal  character*40 arcdatdir,arcdat*40/'ARCDAT'/
       dimension usrc(2)
 c      data in/1/,modnam/'iasp91'/,phlst(1)/'query'/,prnt(3)/.true./
