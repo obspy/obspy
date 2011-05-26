@@ -255,9 +255,8 @@ class Trace(object):
         # make sure Trace gets initialized with ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data
         if not isinstance(data, np.ndarray):
-            data = np.array(data)
-            msg = "Trace.data should be a NumPy array."
-            warnings.warn(msg, category=DeprecationWarning)
+            msg = "Trace.data must be a NumPy array."
+            raise ValueError(msg)
         # set some defaults if not set yet
         if header == None:
             # Default values: For detail see
@@ -408,9 +407,8 @@ class Trace(object):
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
             if not isinstance(value, np.ndarray):
-                value = np.array(value)
-                msg = "Trace.data should be a NumPy array."
-                warnings.warn(msg, category=DeprecationWarning)
+                msg = "Trace.data must be a NumPy array."
+                ValueError(msg)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
