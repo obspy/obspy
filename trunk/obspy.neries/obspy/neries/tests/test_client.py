@@ -141,6 +141,19 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(data, basestring))
         self.assertTrue(data.startswith('<?xml'))
 
+    def test_getTravelTimes(self):
+        """
+        Testing request method for calculating travel times.
+        """
+        client = Client()
+        #1
+        result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'test', 'ak135')
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0]['event_id'], 'test')
+        self.assertEquals(result[0]['arrival_times'],
+                          [('P', 356988.24732429383),
+                           ('S', 645775.5623471631)])
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
