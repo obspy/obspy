@@ -15,8 +15,8 @@ Overview
 --------
 Travel time calculation tool.
 
-This module contains Python wrappers for iaspei-tau - a travel time library of
-Arthur Snoke (http://www.iris.edu/software/downloads/processing/).
+The obspy.taup package contains Python wrappers for iaspei-tau - a travel time
+library by Arthur Snoke (http://www.iris.edu/software/downloads/processing/).
 The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

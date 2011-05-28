@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import ctypes as C
 import os
 import platform
+
 
 # Import shared libtaup depending on the platform.
 # create library names
@@ -28,4 +31,3 @@ for lib_name in lib_names:
 if not flibtaup:
     msg = 'Could not load shared library for obspy.taup.\n\n %s' % (e)
     raise ImportError(msg)
-

@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
+from obspy.taup import __path__
+from util import flibtaup as lib
 import ctypes as C
 import numpy as np
 import os
-from obspy.taup import __path__
 
-from util import flibtaup as lib
 
 AVAILABLE_PHASES = ['P', "P'P'ab", "P'P'bc", "P'P'df", 'PKKPab', 'PKKPbc',
                     'PKKPdf', 'PKKSab', 'PKKSbc', 'PKKSdf', 'PKPab', 'PKPbc',
