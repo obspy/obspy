@@ -99,6 +99,17 @@ class ClientTestCase(unittest.TestCase):
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEquals(results, expected)
 
+    def test_getEventsAsQuakeML(self):
+        """
+        Testing event request with QuakeML as output format.
+        """
+        client = Client()
+        results = client.getEvents(format="xml", min_depth= -700,
+                                   max_datetime=UTCDateTime("2005-01-01"))
+        self.assertTrue(isinstance(results, basestring))
+        # check for event id
+        self.assertTrue('1347097' in results)
+
     def test_getEventDetail(self):
         """
         Testing event detail request method.
@@ -140,6 +151,12 @@ class ClientTestCase(unittest.TestCase):
         data = client.getLatestEvents(5, format='xml')
         self.assertTrue(isinstance(data, basestring))
         self.assertTrue(data.startswith('<?xml'))
+        # no given number of events should default to 10 
+        data = client.getLatestEvents(format='list')
+        self.assertEquals(len(data), 10)
+        # invalid number of events should default to 10 
+        data = client.getLatestEvents(num='blah', format='list')
+        self.assertEquals(len(data), 10)
 
     def test_getTravelTimes(self):
         """
@@ -147,17 +164,23 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         #1
-        result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'test', 'ak135')
+        result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'ak135')
         self.assertEquals(len(result), 1)
-        self.assertEquals(result[0]['event_id'], 'test')
-        self.assertEquals(result[0]['arrival_times'],
-                          [('P', 356988.24732429383),
-                           ('S', 645775.5623471631)])
+        self.assertAlmostEquals(result[0]['P'], 356988.24732429383)
+        self.assertAlmostEquals(result[0]['S'], 645775.5623471631)
+        #2
+        result = client.getTravelTimes(0, 0, 10, [(120, 0), (150, 0), (180, 0)])
+        self.assertEquals(len(result), 3)
+        self.assertAlmostEquals(result[0]['P'], 605519.0321213702)
+        self.assertAlmostEquals(result[0]['S'], 1097834.6352750373)
+        self.assertAlmostEquals(result[1]['P'], 367256.0587305712)
+        self.assertAlmostEquals(result[1]['S'], 665027.0583152708)
+        self.assertEquals(result[2], {})
 
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     unittest.main(defaultTest='suite')

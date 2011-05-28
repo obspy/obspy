@@ -27,7 +27,7 @@ Basic Usage
     ...                           min_magnitude=9)
     >>> print len(events)
     1
-    >>> print events #doctest: +NORMALIZE_WHITESPACE 
+    >>> print events #doctest: +SKIP
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
       'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
@@ -62,13 +62,26 @@ Basic Usage
 
     Details about first calculated origin of the requested event:
 
-    >>> print result[0] #doctest: +NORMALIZE_WHITESPACE 
+    >>> print result[0] #doctest: +SKIP
     {'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
      'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
      'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
      'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}
-"""
 
+(4) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a Taup
+    web service, an utility to compute arrival times using a few default
+    velocity models such as iasp91, ak135 or qdt.
+
+    >>> client = Client()
+    >>> locations = [(48.0, 12.0), (48.1, 12.0)]
+    >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0, \
+                                       depth=10.0, locations=locations, \
+                                       model='iasp91')
+    >>> len(result)
+    2
+    >>> result[0] # doctest: +SKIP
+    {'P': 356981.13561726053, 'S': 646841.5619481194}
+"""
 from obspy.core.util import _getVersionString
 from client import Client
 
@@ -76,6 +89,6 @@ from client import Client
 __version__ = _getVersionString("obspy.neries")
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)

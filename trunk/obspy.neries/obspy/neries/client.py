@@ -10,18 +10,17 @@ See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from obspy.core import UTCDateTime
 from obspy.core.util import _getVersionString
 import platform
 import sys
 import urllib
 import urllib2
-try:
+try: # pragma: no cover
     import json
     if not getattr(json, "loads", None):
-        json.loads = json.read
-except ImportError:
+        json.loads = json.read #@UndefinedVariable
+except ImportError: # pragma: no cover
     import simplejson as json
 
 
@@ -102,12 +101,12 @@ class Client(object):
         headers['User-Agent'] = self.user_agent
         # replace special characters 
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
-        if self.debug:
+        if self.debug: # pragma: no cover
             print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
+        if sys.hexversion < 0x02060000: # pragma: no cover
             response = urllib2.urlopen(remoteaddr)
-        else:
+        else: # pragma: no cover
             response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -151,7 +150,7 @@ class Client(object):
         ...                           min_magnitude=9)
         >>> print len(events)
         1
-        >>> print events #doctest: +NORMALIZE_WHITESPACE +SKIP
+        >>> print events #doctest: +SKIP
         [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
           'origin_id': 127773, 'longitude': 95.724, 
           'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50), 'depth': -10.0,
@@ -298,7 +297,7 @@ class Client(object):
 
         Details about first calculated origin of the requested event:
 
-        >>> print result[0] #doctest: +NORMALIZE_WHITESPACE +SKIP
+        >>> print result[0] #doctest: +SKIP
         {'author': u'EMSC', 'event_id': u'19990817_0000001',
          'origin_id': 1465935, 'longitude': 29.972,
          'datetime': UTCDateTime(1999, 8, 17, 0, 1, 35), 'depth': -10.0,
@@ -338,21 +337,24 @@ class Client(object):
             return data
 
     def getTravelTimes(self, latitude, longitude, depth, locations=[],
-                       event_id='', model='iasp91'):
+                       model='iasp91'):
         """
         Returns travel times for specified station-event geometry using
-        standard velocity models such as iasp91, ak135 or qdt..
+        standard velocity models such as iasp91, ak135 or qdt.
 
         Also see: http://www.orfeus-eu.org/wsdl/taup/taup.wsdl
 
         Example
         -------
         >>> client = Client()
-        >>> result = client.getTravelTimes(20.0, 20.0, 10.0, [(48.0, 12.0)])
+        >>> locations = [(48.0, 12.0), (48.1, 12.0)]
+        >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0, \
+                                           depth=10.0, locations=locations, \
+                                           model='iasp91')
         >>> len(result)
-        1
-        >>> result[0]['arrival_times']
-        [('P', 356981.13561726053), ('S', 646841.56194811943)]
+        2
+        >>> result[0] # doctest: +SKIP
+        {'P': 356981.13561726053, 'S': 646841.5619481194}
 
         Parameters
         ----------
@@ -364,14 +366,12 @@ class Client(object):
             Event depth in km.
         locations : list of tuples
             Each tuple contains a pair of (latitude, longitude) of a station.
-        event_id : string, optional
-            String identifying the given event.
         model : ['iasp91' | 'ak135' | 'qdt'], optional
             Velocity model, defaults to 'iasp91'.
 
         Returns
         -------
-            List of dict
+            List of dict containing phase name and arrival times in ms.
         """
         from suds.client import Client as SudsClient
         client = SudsClient('http://www.orfeus-eu.org/wsdl/taup/taup.wsdl')
@@ -380,7 +380,6 @@ class Client(object):
             req = {'event-depth': float(depth),
                    'event-lat': float(latitude),
                    'event-lon': float(longitude),
-                   'id': str(event_id),
                    'model': str(model),
                    'point-lat': float(location[0]),
                    'point-lon': float(location[1])}
@@ -388,13 +387,14 @@ class Client(object):
         data = client.service.getArrivalTimes(request)
         result = []
         for item in data:
-            times = []
-            for time in item['arrival-time']:
-                times.append((str(time._phase), time['_time-ms']))
-            result.append({'event_id': str(item._id), 'arrival_times': times})
+            times = {}
+            if hasattr(item, 'arrival-time'):
+                for time in item['arrival-time']:
+                    times[str(time._phase)] = float(time['_time-ms'])
+            result.append(times)
         return result
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)
