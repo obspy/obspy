@@ -24,7 +24,7 @@ mkdir -p $DEBDIR
 
 
 MODULES="\
-obspy.events \
+obspy.taup \
 obspy.segy \
 obspy.neries \
 obspy.iris \
