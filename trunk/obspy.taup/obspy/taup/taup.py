@@ -21,7 +21,7 @@ AVAILABLE_PHASES = ['P', "P'P'ab", "P'P'bc", "P'P'df", 'PKKPab', 'PKKPbc',
                     'sSKSac', 'sSKSdf', 'sSdiff', 'sSn']
 
 
-def getTravelTimes(distance, depth, model='iasp91'):
+def getTravelTimes(delta, depth, model='iasp91'):
     """
     Returns the travel times calculated by the iaspei-tau traveltime table
     package
@@ -33,7 +33,7 @@ def getTravelTimes(distance, depth, model='iasp91'):
         raise ValueError(msg)
 
     # Distance in degree
-    delta = C.c_float(distance)
+    delta = C.c_float(delta)
     # Depth in kilometer.
     depth = C.c_float(depth)
 
@@ -63,8 +63,7 @@ def getTravelTimes(distance, depth, model='iasp91'):
               dtdh.ctypes.data_as(C.POINTER(C.c_float)),
               dddp.ctypes.data_as(C.POINTER(C.c_float)))
 
-    phases = {}
-
+    phases = []
     for _i in xrange(max):
         phase_name = phase_names[_i].value.strip()
         if not phase_name:
@@ -76,12 +75,12 @@ def getTravelTimes(distance, depth, model='iasp91'):
             'dtdd': dtdd[_i],
             'dtdh': dtdh[_i],
             'dddp': dddp[_i]}
-        phases[phase_name] = time_dict
+        phases.append(time_dict)
     return phases
 
 
 def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
-                   phases=AVAILABLE_PHASES):
+                   phases=AVAILABLE_PHASES, depth=100, model='iasp91'):
     """
     Travel time plot.
     """
@@ -95,14 +94,15 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
     x_values = []
     # Loop over all degrees.
     for degree in degrees:
-        tt = getTravelTimes(degree, 100)
+        tt = getTravelTimes(degree, depth, model)
         # Mirror if necessary.
         if degree > 180:
             degree = 180 - (degree - 180)
         x_values.append(degree)
-        for phase in phases:
+        for item in tt:
+            phase = item['phase_name']
             try:
-                data[phase].append(tt[phase]['tt'] / 60.0)
+                data[phase].append(item['tt'] / 60.0)
             except:
                 data[phase].append(np.NaN)
 
@@ -118,3 +118,8 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         plt.xlim(min_degree, 180)
     plt.legend()
     plt.show()
+
+
+if __name__ == '__main__': # pragma: no cover
+    import doctest
+    doctest.testmod(exclude_empty=True)

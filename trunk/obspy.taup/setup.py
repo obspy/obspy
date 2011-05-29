@@ -69,16 +69,24 @@ if platform.system() != "Windows":
                 raise CompileError, msg
     UnixCCompiler._compile = _compile
 else:
-    # Monkey patch MSVCCompiler for Windows (should be default)
+    # Monkey patch MSVCCompiler & Mingw32CCompiler for Windows
+    # using MinGW64 (http://mingw-w64.sourceforge.net/)
     from distutils.msvccompiler import MSVCCompiler
+    from distutils.cygwinccompiler import Mingw32CCompiler
     MSVCCompiler._c_extensions.append(".f")
 
-    def compile(self, sources, output_dir=None, **kwargs): #@UnusedVariable
+    def compile(self, sources, output_dir=None, **_kwargs):
         if output_dir:
             try:
                 os.makedirs(output_dir)
             except OSError:
                 pass
+        if '32' in platform.architecture()[0]:
+            # 32 bit gfortran compiler
+            self.compiler_so = ["mingw32-gfortran.exe"]
+        else:
+            # 64 bit gfortran compiler
+            self.compiler_so = ["x86_64-w64-mingw32-gfortran.exe"]
         objects = []
         for src in sources:
             file = os.path.splitext(src)[0]
@@ -86,21 +94,25 @@ else:
                 obj = os.path.join(output_dir, os.path.basename(file) + ".o")
             else:
                 obj = file + ".o"
-            self.compiler_so = ["gfortran"]
             try:
-                self.spawn(self.compiler_so + [src, '-o', obj])
+                self.spawn(self.compiler_so + ["-c"] + [src, '-o', obj])
             except DistutilsExecError, msg:
                 raise CompileError, msg
             objects.append(obj)
         return objects
 
-    def link(self, target_desc, objects, output_filename, *args, **kwargs):
-        os.mkdir(os.path.dirname(output_filename))
+    def link(self, _target_desc, objects, output_filename, *_args, **_kwargs):
+        try:
+            os.makedirs(os.path.dirname(output_filename))
+        except OSError:
+            pass
         self.spawn(self.compiler_so + ["-shared"] + objects +
                    ["-o", output_filename])
 
     MSVCCompiler.compile = compile
     MSVCCompiler.link = link
+    Mingw32CCompiler.compile = compile
+    Mingw32CCompiler.link = link
 
 
 def setupLibTauP():
@@ -116,7 +128,7 @@ def setupLibTauP():
         def __init__(self, *args, **kwargs):
             Extension.__init__(self, *args, **kwargs)
             self.export_symbols = finallist(self.export_symbols)
-    src = os.path.abspath(os.path.join('obspy', 'taup', 'src')) + os.sep
+
     # create library name
     if 'develop' in sys.argv:
         lib_name = 'libtaup-%s-%s-py%s' % (
@@ -125,6 +137,7 @@ def setupLibTauP():
     else:
         lib_name = 'libtaup'
     # setup Fortran extension
+    src = os.path.join('obspy', 'taup', 'src') + os.sep
     lib = MyExtension(lib_name,
                       libraries=['gfortran'],
                       sources=[src + 'emdlv.f' , src + 'libtau.f',

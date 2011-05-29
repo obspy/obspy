@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from obspy.core.util import add_doctests, add_unittests
+from obspy.core.util import add_unittests
 
 
 MODULE_NAME = "obspy.taup"
@@ -9,7 +9,6 @@ MODULE_NAME = "obspy.taup"
 
 def suite():
     suite = unittest.TestSuite()
-    add_doctests(suite, MODULE_NAME)
     add_unittests(suite, MODULE_NAME)
     return suite
 
