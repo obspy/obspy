@@ -55,13 +55,13 @@ def getTravelTimes(delta, depth, model='iasp91'):
 
     flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
 
-    lib.ttimes_(C.byref(delta), C.byref(depth), modnam,
-              phase_names,
-              tt.ctypes.data_as(C.POINTER(C.c_float)),
-              toang.ctypes.data_as(C.POINTER(C.c_float)),
-              dtdd.ctypes.data_as(C.POINTER(C.c_float)),
-              dtdh.ctypes.data_as(C.POINTER(C.c_float)),
-              dddp.ctypes.data_as(C.POINTER(C.c_float)))
+    lib.ttimes(C.byref(delta), C.byref(depth), modnam,
+               phase_names,
+               tt.ctypes.data_as(C.POINTER(C.c_float)),
+               toang.ctypes.data_as(C.POINTER(C.c_float)),
+               dtdd.ctypes.data_as(C.POINTER(C.c_float)),
+               dtdh.ctypes.data_as(C.POINTER(C.c_float)),
+               dddp.ctypes.data_as(C.POINTER(C.c_float)))
 
     phases = []
     for _i in xrange(max):

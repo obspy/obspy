@@ -48,23 +48,18 @@ ENTRY_POINTS = {}
 
 if platform.system() != "Windows":
     # Monkey patch CCompiler for Unix, Linux and Windows
-    # Pretend that .f is a C extension and change the corresponding compilation call
+    # Pretend that .f is a C extension and change corresponding compilation call
     CCompiler.language_map['.f'] = "c"
     # Monkey patch UnixCCompiler for Unix, Linux and MacOS
     UnixCCompiler.src_extensions.append(".f")
-    def _compile(self, obj, src, ext, cc_args, extra_postargs,
-                 pp_opts): #@UnusedVariable
-            compiler_so = self.compiler_so
+    def _compile(self, obj, src, **kwargs): #@UnusedVariable
+            self.compiler_so = ["gfortran"]
+            cc_args = ['-c', '-fno-underscoring']
             if sys.platform == 'darwin':
-                compiler_so = _darwin_compiler_fixup(compiler_so,
-                                                     cc_args + extra_postargs)
-            if ext == ".f":
-                if sys.platform == 'darwin' or sys.platform == 'linux2':
-                    compiler_so = ["gfortran"]
-                    cc_args = ['-c']
+                self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
+                                                          cc_args)
             try:
-                self.spawn(compiler_so + [src, '-o', obj] + cc_args + \
-                           extra_postargs)
+                self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
             except DistutilsExecError, msg:
                 raise CompileError, msg
     UnixCCompiler._compile = _compile
@@ -75,7 +70,7 @@ else:
     from distutils.cygwinccompiler import Mingw32CCompiler
     MSVCCompiler._c_extensions.append(".f")
 
-    def compile(self, sources, output_dir=None, **_kwargs):
+    def compile(self, sources, output_dir=None, **kwargs): #@UnusedVariable
         if output_dir:
             try:
                 os.makedirs(output_dir)
@@ -95,19 +90,22 @@ else:
             else:
                 obj = file + ".o"
             try:
-                self.spawn(self.compiler_so + ["-c"] + [src, '-o', obj])
+                self.spawn(self.compiler_so + ["-fno-underscoring", "-c"] + \
+                           [src, '-o', obj])
             except DistutilsExecError, msg:
                 raise CompileError, msg
             objects.append(obj)
         return objects
 
-    def link(self, _target_desc, objects, output_filename, *_args, **_kwargs):
+    def link(self, _target_desc, objects, output_filename,
+             *args, **kwargs): #@UnusedVariable
         try:
             os.makedirs(os.path.dirname(output_filename))
         except OSError:
             pass
-        self.spawn(self.compiler_so + ["-shared"] + objects +
-                   ["-o", output_filename])
+        self.spawn(self.compiler_so + \
+                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
+                   objects + ["-o", output_filename])
 
     MSVCCompiler.compile = compile
     MSVCCompiler.link = link
@@ -139,7 +137,7 @@ def setupLibTauP():
     # setup Fortran extension
     src = os.path.join('obspy', 'taup', 'src') + os.sep
     lib = MyExtension(lib_name,
-                      libraries=['gfortran'],
+                      #libraries=['gfortran'],
                       sources=[src + 'emdlv.f' , src + 'libtau.f',
                                src + 'ttimes_subrout.f'])
     return lib
