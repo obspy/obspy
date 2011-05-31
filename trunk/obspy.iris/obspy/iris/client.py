@@ -249,7 +249,6 @@ class Client(object):
         else:
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)[0:3]
-        print filename
         kwargs['filename'] = str(filename)
         # try to be intelligent in starttime/endtime extension for fetching
         # data
