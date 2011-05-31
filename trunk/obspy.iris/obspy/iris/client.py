@@ -444,7 +444,7 @@ class Client(object):
             raise Exception(msg)
         return data
 
-    def dataselect(self, **kwargs):
+    def dataselect(self, filename=None, **kwargs):
         """
         Interface for `dataselect`-webservice of IRIS
         (http://www.iris.edu/ws/dataselect/).
@@ -485,10 +485,13 @@ class Client(object):
             MiniSEED data quality indicator. M and B (default) are treated the
             same and indicate best available. If M or B are selected, the
             output data records will be stamped with a M.
+        filename : string, optional
+            Name of a output file. If this parameter is given nothing will be
+            returned. Default is None.
 
         Returns
         -------
-            :class:`~obspy.core.stream.Stream`
+            :class:`~obspy.core.stream.Stream` if no `filename` is given.
         """
         # convert UTCDateTime to string for query
         try:
@@ -510,12 +513,15 @@ class Client(object):
             msg = msg % (e.__class__.__name__, e.message)
             raise Exception(msg)
         # if filename is given, create fh, write to file and return
-        if kwargs.has_key('filename'):
-            filename = kwargs['filename']
+        if filename:
             if isinstance(filename, basestring):
                 fh = open(filename, "wb")
-            else:
+            elif isinstance(filename, file):
                 fh = filename
+            else:
+                msg = "Parameter filename must be either string or file " + \
+                    "handler."
+                raise TypeError(msg)
             fh.write(data)
             fh.close()
             return
@@ -859,6 +865,7 @@ class Client(object):
         else:
             msg = "unsupported output option: %s" % kwargs['output']
             raise ValueError(msg)
+
 
 if __name__ == '__main__':
     import doctest

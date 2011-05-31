@@ -43,13 +43,15 @@ class ClientTestCase(unittest.TestCase):
         """
         Testing simple waveform file save method.
         """
-        #1 - file identical to file retrieved via webinterface
+        #1 - file identical to file retrieved via web interface
         client = Client()
         start = UTCDateTime("2010-02-27T06:30:00")
-        end = UTCDateTime("2010-02-27T10:30:00")
+        end = UTCDateTime("2010-02-27T06:31:00")
         origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
         tempfile = NamedTemporaryFile().name
+        #print tempfile
         client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
+        #import pdb;pdb.set_trace()
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
         #2 - no data raises an exception
@@ -70,9 +72,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
         #2 - RESP, multiple channels
-        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._._')
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._.BH_')
         tempfile = NamedTemporaryFile().name
-        client.saveResponse(tempfile, "IU", "ANMO", "*", "*", start, end)
+        client.saveResponse(tempfile, "IU", "ANMO", "*", "BH?", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
         #3 - StationXML, single channel
@@ -90,7 +92,7 @@ class ClientTestCase(unittest.TestCase):
         included in resulting text.
         """
         client = Client()
-        
+
         t1 = UTCDateTime("2005-01-01")
         t2 = UTCDateTime("2008-01-01")
         got = client.sacpz(network="IU", station="ANMO", location="00",
@@ -137,6 +139,7 @@ class ClientTestCase(unittest.TestCase):
         got.pop(5)
         expected.pop(5)
         self.assertEquals(got, expected)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
