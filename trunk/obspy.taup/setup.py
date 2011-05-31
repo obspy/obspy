@@ -52,7 +52,7 @@ if platform.system() != "Windows":
     CCompiler.language_map['.f'] = "c"
     # Monkey patch UnixCCompiler for Unix, Linux and MacOS
     UnixCCompiler.src_extensions.append(".f")
-    def _compile(self, obj, src, **kwargs): #@UnusedVariable
+    def _compile(self, obj, src, *args, **kwargs): #@UnusedVariable
             self.compiler_so = ["gfortran"]
             cc_args = ['-c', '-fno-underscoring']
             if sys.platform == 'darwin':
