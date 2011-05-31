@@ -203,7 +203,7 @@ class Client(object):
         Writes a retrieved waveform directly into a file.
 
         This method ensures the storage of the unmodified waveform data
-        delivered by the Iris server, e.g. preserving the record based
+        delivered by the IRIS server, e.g. preserving the record based
         quality flags of MiniSEED files which would be neglected reading it
         with obspy.mseed.
 
@@ -214,10 +214,10 @@ class Client(object):
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-           
-        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
-        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', "IU", "ANMO", "00", "BHZ", t1, t2)
+        >>> t1 = UTCDateTime('2010-02-27T06:30:00.000')
+        >>> t2 = UTCDateTime('2010-02-27T10:30:00.000')
+        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO', \
+                                '00', 'BHZ', t1, t2) # doctest: +SKIP
 
 
         Parameters
