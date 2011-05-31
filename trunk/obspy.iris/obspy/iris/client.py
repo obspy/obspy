@@ -222,6 +222,8 @@ class Client(object):
 
         Parameters
         ----------
+        filename : string
+            Name of the output file.
         network : string
             Network code, e.g. 'IU'.
         station : string
