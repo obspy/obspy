@@ -408,8 +408,12 @@ class Client(Telnet):
         # create file handler if a file name is given
         if isinstance(filename, basestring):
             fh = open(filename, "wb")
-        else:
+        elif isinstance(filename, file):
             fh = filename
+        else:
+            msg = "Parameter filename must be either string or file " + \
+                "handler."
+            raise TypeError(msg)
         fh.write(data)
         if isinstance(filename, basestring):
             fh.close()
