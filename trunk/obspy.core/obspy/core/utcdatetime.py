@@ -562,11 +562,11 @@ class UTCDateTime(datetime.datetime):
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
         >>> dt.formatIRISWebService()
-        '2008.05.27T12.30.35.045'
+        '2008-05-27T12:30:35.045'
 
         :return: string
         """
-        return "%04d.%02d.%02dT%02d.%02d.%02d.%03d" % \
+        return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
                 (self.year, self.month, self.day, self.hour, self.minute,
                  self.second, self.microsecond // 1000)
 
