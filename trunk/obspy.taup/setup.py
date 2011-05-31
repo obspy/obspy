@@ -58,6 +58,8 @@ if platform.system() != "Windows":
             if sys.platform == 'darwin':
                 self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
                                                           cc_args)
+            else:
+                cc_args.append('-fPIC')
             try:
                 self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
             except DistutilsExecError, msg:
@@ -137,7 +139,7 @@ def setupLibTauP():
     # setup Fortran extension
     src = os.path.join('obspy', 'taup', 'src') + os.sep
     lib = MyExtension(lib_name,
-                      #libraries=['gfortran'],
+                      libraries=['gfortran'],
                       sources=[src + 'emdlv.f' , src + 'libtau.f',
                                src + 'ttimes_subrout.f'])
     return lib
