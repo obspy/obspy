@@ -39,6 +39,23 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.getWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
 
+    def test_saveWaveform(self):
+        """
+        Testing simple waveform file save method.
+        """
+        #1 - file identical to file retrieved via webinterface
+        client = Client()
+        start = UTCDateTime("2010-02-27T06:30:00")
+        end = UTCDateTime("2010-02-27T10:30:00")
+        origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
+        tempfile = NamedTemporaryFile().name
+        client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
+        self.assertTrue(filecmp.cmp(origfile, tempfile))
+        os.remove(tempfile)
+        #2 - no data raises an exception
+        self.assertRaises(Exception, client.saveWaveform, "YY", "XXXX", "00",
+                          "BHZ", start, end)
+
     def test_saveResponse(self):
         """
         Fetches and stores response information as SEED RESP file.

@@ -197,6 +197,71 @@ class Client(object):
         st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
         return st
 
+    def saveWaveform(self, filename, network, station, location, channel, starttime,
+                     endtime, quality='B'):
+        """
+        Writes a retrieved waveform directly into a file.
+
+        This method ensures the storage of the unmodified waveform data
+        delivered by the Iris server, e.g. preserving the record based
+        quality flags of MiniSEED files which would be neglected reading it
+        with obspy.mseed.
+
+
+        Example
+        -------
+
+        >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client()
+           
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', "IU", "ANMO", "00", "BHZ", t1, t2)
+
+
+        Parameters
+        ----------
+        network : string
+            Network code, e.g. 'IU'.
+        station : string
+            Station code, e.g. 'ANMO'.
+        location : string
+            Location code, e.g. '00'.
+        channel : string
+            Channel code, e.g. 'BHZ'.
+        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Start date and time.
+        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
+            End date and time.
+        quality : 'D', 'R', 'Q', 'M' or 'B', optional
+            MiniSEED data quality indicator. M and B (default) are treated the
+            same and indicate best available. If M or B are selected, the
+            output data records will be stamped with a M.
+        """
+        kwargs = {}
+        kwargs['network'] = str(network)[0:2]
+        kwargs['station'] = str(station)[0:5]
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)[0:3]
+        print filename
+        kwargs['filename'] = str(filename)
+        # try to be intelligent in starttime/endtime extension for fetching
+        # data
+        try:
+            t_extension = 2.0 / BAND_CODE[kwargs['channel'][0]]
+        except:
+            # use 1 second extension if no proper bandcode info
+            t_extension = 1.0
+        kwargs['starttime'] = UTCDateTime(starttime) - t_extension
+        kwargs['endtime'] = UTCDateTime(endtime) + t_extension
+        if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
+            kwargs['quality'] = str(quality).upper()
+        self.dataselect(**kwargs)
+
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='RESP'):
         """
@@ -443,6 +508,16 @@ class Client(object):
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e.message)
             raise Exception(msg)
+        # if filename is given, create fh, write to file and return
+        if kwargs.has_key('filename'):
+            filename = kwargs['filename']
+            if isinstance(filename, basestring):
+                fh = open(filename, "wb")
+            else:
+                fh = filename
+            fh.write(data)
+            fh.close()
+            return
         # create temporary file for writing data
         tf = NamedTemporaryFile()
         tf.write(data)
