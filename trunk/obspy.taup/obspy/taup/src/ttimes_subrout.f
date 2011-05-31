@@ -38,7 +38,7 @@ C     modnam = '/Users/lion/temp/iaspei-tau/tables/iasp91'
 
 c
         rd = 45.0/atan(1.0)
-      call assign(2,2,'ttimes.lst')
+c     call assign(2,2,'ttimes.lst')
       prnt(1) = .false.
       prnt(2) = .false.
       log = .true.
