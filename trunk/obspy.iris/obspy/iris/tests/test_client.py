@@ -49,9 +49,7 @@ class ClientTestCase(unittest.TestCase):
         end = UTCDateTime("2010-02-27T06:31:00")
         origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
         tempfile = NamedTemporaryFile().name
-        #print tempfile
         client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
-        #import pdb;pdb.set_trace()
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
         #2 - no data raises an exception
@@ -145,5 +143,5 @@ def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     unittest.main(defaultTest='suite')

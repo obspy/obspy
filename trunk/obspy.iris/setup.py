@@ -37,7 +37,7 @@ AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'IRIS', 'Waveform']
-INSTALL_REQUIRES = ['obspy.core', 'obspy.mseed', 'lxml']
+INSTALL_REQUIRES = ['obspy.core', 'obspy.mseed']
 ENTRY_POINTS = {}
 
 
@@ -49,7 +49,7 @@ def convert2to3():
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
     # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):
+    def ignored_files(adir, filenames): #@UnusedVariable
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]

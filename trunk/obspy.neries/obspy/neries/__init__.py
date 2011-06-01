@@ -25,9 +25,9 @@ Basic Usage
     >>> events = client.getEvents(min_datetime="2004-01-01",
     ...                           max_datetime="2005-01-01",
     ...                           min_magnitude=9)
-    >>> print len(events)
+    >>> print(len(events))
     1
-    >>> print events #doctest: +SKIP
+    >>> print(events) #doctest: +SKIP
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
       'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
@@ -39,9 +39,9 @@ Basic Usage
     >>> from obspy.neries import Client
     >>> client = Client()
     >>> events = client.getLatestEvents(num=5, format='list')
-    >>> print len(events)
+    >>> print(len(events))
     5
-    >>> print events[0] #doctest: +SKIP 
+    >>> print(events[0]) #doctest: +SKIP 
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0,
       'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498, 
@@ -57,12 +57,12 @@ Basic Usage
 
     Number of calculated origins for the requested event:
 
-    >>> print len(result)
+    >>> print(len(result))
     11
 
     Details about first calculated origin of the requested event:
 
-    >>> print result[0] #doctest: +SKIP
+    >>> print(result[0]) #doctest: +SKIP
     {'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
      'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
      'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',

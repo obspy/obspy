@@ -16,6 +16,12 @@ import platform
 import sys
 import urllib
 import urllib2
+try: # pragma: no cover
+    import json
+    if not getattr(json, "loads", None):
+        json.loads = json.read #@UndefinedVariable
+except ImportError: # pragma: no cover
+    import simplejson as json
 
 
 VERSION = _getVersionString("obspy.iris")
@@ -29,7 +35,6 @@ class Client(object):
 
     Examples
     --------
-
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
     >>> client = Client()
@@ -99,9 +104,9 @@ class Client(object):
             print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
+        if sys.hexversion < 0x02060000: # pragma: no cover
             response = urllib2.urlopen(req)
-        else:
+        else: # pragma: no cover
             response = urllib2.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -113,29 +118,30 @@ class Client(object):
         Wildcards are allowed for `network`, `station`, `location` and
         `channel`.
 
-        Example
-        -------
+        Examples
+        --------
+        (1) Requesting waveform of a single channel.
 
-        >>> from obspy.iris import Client
-        >>> from obspy.core import UTCDateTime
-        >>> client = Client()
-           
-        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
-        >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t1, t2)
-        >>> print st
-        1 Trace(s) in Stream:
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:30:00.019538Z | 20.0 Hz, 288001 samples
+            >>> from obspy.iris import Client
+            >>> from obspy.core import UTCDateTime
+            >>> client = Client()
+            >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+            >>> t2 = UTCDateTime("2010-02-27T07:00:00.000")
+            >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t1, t2)
+            >>> print(st)
+            1 Trace(s) in Stream:
+            IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T07:00:00.019538Z | 20.0 Hz, 36001 samples
 
-        >>> t1 = UTCDateTime("2010-084T00:00:00")
-        >>> t2 = UTCDateTime("2010-084T00:30:00")
-        >>> st = client.getWaveform("TA", "A25A", "", "BH*", t1, t2)
-        >>> print st
-        3 Trace(s) in Stream:
-        TA.A25A..BHE | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
-        TA.A25A..BHN | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
-        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
+        (2) Requesting waveforms of multiple channels using wildcard characters.
 
+            >>> t1 = UTCDateTime("2010-084T00:00:00")
+            >>> t2 = UTCDateTime("2010-084T00:30:00")
+            >>> st = client.getWaveform("TA", "A25A", "", "BH*", t1, t2)
+            >>> print(st)
+            3 Trace(s) in Stream:
+            TA.A25A..BHE | 2010-03-25T00:00:00.000001Z - 2010-03-25T00:30:00.000001Z | 40.0 Hz, 72001 samples
+            TA.A25A..BHN | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
+            TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:30:00.000000Z | 40.0 Hz, 72001 samples
 
         Parameters
         ----------
@@ -192,12 +198,11 @@ class Client(object):
             quality = kwargs.pop("quality", "")
             bulk = self.availability(**kwargs)
             st = self.bulkdataselect(bulk, quality)
-
         st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
         return st
 
-    def saveWaveform(self, filename, network, station, location, channel, starttime,
-                     endtime, quality='B'):
+    def saveWaveform(self, filename, network, station, location, channel,
+                     starttime, endtime, quality='B'):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -206,18 +211,15 @@ class Client(object):
         quality flags of MiniSEED files which would be neglected reading it
         with obspy.mseed.
 
-
         Example
         -------
-
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
         >>> t1 = UTCDateTime('2010-02-27T06:30:00.000')
         >>> t2 = UTCDateTime('2010-02-27T10:30:00.000')
-        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO', \
-                                '00', 'BHZ', t1, t2) # doctest: +SKIP
-
+        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO',
+        ...                     '00', 'BHZ', t1, t2) # doctest: +SKIP
 
         Parameters
         ----------
@@ -265,7 +267,9 @@ class Client(object):
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='RESP'):
         """
-        Writes a response information into a file.
+        Writes a response information into a file. Possible output formats are
+        RESP (http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F) 
+        or StationXML (http://www.data.scec.org/xml/station/).
 
         Parameters
         ----------
@@ -308,18 +312,21 @@ class Client(object):
         """
         Interface for `resp` Web service of IRIS (http://www.iris.edu/ws/resp/).
 
+        This method provides access to channel response information in the SEED
+        RESP (http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F) format
+        (as used by evalresp). Users can query for channel response by network,
+        station, channel, location and time. 
+
         Example
         -------
-
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-           
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
         >>> data = client.resp(network="IU", station="ANMO", location="00",
         ...                    channel="BHZ", starttime=t1, endtime=t2)
-        >>> print data   # doctest: +ELLIPSIS
+        >>> print(data)  # doctest: +ELLIPSIS
         #
         ###################################################################################
         #
@@ -347,6 +354,9 @@ class Client(object):
         Returns
         -------
             SEED RESP file as string.
+            
+        .. _GEOFON:
+            http://geofon.gfz-potsdam.de
         """
         # convert UTCDateTime to string for query
         try:
@@ -374,19 +384,24 @@ class Client(object):
         Interface for `station` Web service of IRIS
         (http://www.iris.edu/ws/station/).
 
+        This method provides access to station metadata in the IRIS DMC
+        database. The results are returned in XML format using the StationXML
+        schema (http://www.data.scec.org/xml/station/). Users can query for
+        station metadata by network, station, channel, location, time and other
+        search criteria and request results at multiple levels (station,
+        channel, response, etc.).
+
         Example
         -------
-
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-
         >>> t1 = UTCDateTime("2006-03-01")
         >>> t2 = UTCDateTime("2006-09-01")
         >>> station_xml = client.station(network="IU", station="ANMO",
         ...                              location="00", channel="BHZ",
         ...                              starttime=t1, endtime=t2, level="net")
-        >>> print station_xml # doctest: +ELLIPSIS
+        >>> print(station_xml) # doctest: +ELLIPSIS
         <BLANKLINE>
         <StaMessage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.data.scec.org/xml/station/" xsi:schemaLocation="http://www.data.scec.org/xml/station/ http://www.data.scec.org/xml/station/station.xsd">
          <Source>IRIS-DMC</Source>
@@ -447,24 +462,25 @@ class Client(object):
         """
         Interface for `dataselect` Web service of IRIS
         (http://www.iris.edu/ws/dataselect/).
-        Single channel request, no wildcards allowed.
-        This Web service can be used via
-        :meth:`~obspy.iris.client.Client.getWaveform`.
+
+        This method returns a single channel of time series data (no wildcards
+        are allowed). With this service you specify network, station, location,
+        channel and a time range and the service returns either as an ObsPy
+        :class:`~obspy.core.stream.Stream` object or saves the data directly
+        as MiniSEED file.
 
         Example
         -------
-
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        >>> t2 = UTCDateTime("2010-02-27T07:00:00.000")
         >>> st = client.dataselect(network="IU", station="ANMO", location="00",
         ...                        channel="BHZ", starttime=t1, endtime=t2)
-        >>> print st
+        >>> print(st)
         1 Trace(s) in Stream:
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T10:29:59.969538Z | 20.0 Hz, 288000 samples
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:59:59.969538Z | 20.0 Hz, 36000 samples
 
         Parameters
         ----------
@@ -546,6 +562,12 @@ class Client(object):
         Interface for `bulkdataselect` Web service of IRIS
         (http://www.iris.edu/ws/bulkdataselect/).
 
+        This method returns multiple channels of time series data for specified
+        time ranges. With this service you specify a list of selections composed
+        of network, station, location, channel, starttime and endtime and the
+        service streams back the selected raw waveform data as an ObsPy
+        :class:`~obspy.core.stream.Stream` object.
+
         Simple requests with wildcards can be performed via
         :meth:`~obspy.iris.client.Client.getWaveform`. The list with channels
         can also be generated using
@@ -553,28 +575,26 @@ class Client(object):
 
         Example
         -------
-        
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-
         >>> requests = []
         >>> requests.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")
         >>> requests.append("TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00")
         >>> requests.append("TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00")
         >>> requests = "\\n".join(requests) # use only a single backslash!
-        >>> print requests
+        >>> print(requests)
         TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00
         TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00
         TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00
 
         >>> st = client.bulkdataselect(requests)
-        >>> print st
+        >>> print(st)
         3 Trace(s) in Stream:
-        TA.A25A..BHE | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
+        TA.A25A..BHE | 2010-03-25T00:00:00.000001Z - 2010-03-25T00:10:00.000001Z | 40.0 Hz, 24001 samples
         TA.A25A..BHN | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
-        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:10:00.000000Z | 40.0 Hz, 24001 samples
-        
+        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z - 2010-03-25T00:09:59.975000Z | 40.0 Hz, 24000 samples
+
         Parameters
         ----------
         bulk : string
@@ -631,8 +651,17 @@ class Client(object):
         """
         Interface for `availability` Web service of IRIS
         (http://www.iris.edu/ws/availability/).
-        Returns list of available channels that can be requested using the
-        `bulkdataselect` Web service.
+
+        This method returns information about what time series data is available
+        at the IRIS-DMC. Users can query for station metadata by network,
+        station, channel, location, time and other search criteria. Results are
+        may be formated in two formats: 'bulk' or 'xml'.
+
+        The 'bulk' formatted information can be passed directly to the
+        :meth:`~obspy.iris.client.Client.bulkdataselect()` method.
+
+        The XML format contains station locations as well as channel time range
+        for :meth:`~obspy.iris.client.Client.availability()`.
 
         Example
         -------
@@ -643,7 +672,7 @@ class Client(object):
         >>> t2 = UTCDateTime("2010-02-27T06:40:00")
         >>> response = client.availability(network="IU", station="B*",
         ...         channel="BH*", starttime=t1, endtime=t2)
-        >>> print response
+        >>> print(response)
         IU BBSR 00 BH1 2010-02-27T06:30:00 2010-02-27T06:40:00
         IU BBSR 00 BH2 2010-02-27T06:30:00 2010-02-27T06:40:00
         IU BBSR 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
@@ -656,7 +685,7 @@ class Client(object):
         <BLANKLINE>
 
         >>> st = client.bulkdataselect(response)
-        >>> print st
+        >>> print(st)
         9 Trace(s) in Stream:
         IU.BBSR.00.BH1 | 2010-02-27T06:30:00.019536Z - 2010-02-27T06:39:59.994536Z | 40.0 Hz, 24000 samples
         IU.BBSR.00.BH2 | 2010-02-27T06:30:00.019538Z - 2010-02-27T06:39:59.994538Z | 40.0 Hz, 24000 samples
@@ -769,6 +798,11 @@ class Client(object):
         Interface for `sacpz` Web service of IRIS
         (http://www.iris.edu/ws/sacpz/).
 
+        This method provides access to instrument response information
+        (per-channel) as poles and zeros in the ASCII format used by SAC and
+        other programs. Users can query for channel response by network,
+        station, channel, location and time.
+
         Example
         -------
         >>> from obspy.iris import Client
@@ -778,7 +812,7 @@ class Client(object):
         >>> t2 = UTCDateTime("2008-01-01")
         >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",
         ...                      channel="BHZ", starttime=t1, endtime=t2)
-        >>> print sacpz # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(sacpz) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         **************************************************
         * NETWORK   IU
         * STATION   ANMO
@@ -861,7 +895,59 @@ class Client(object):
             msg = "unsupported output option: %s" % kwargs['output']
             raise ValueError(msg)
 
+    def distaz(self, **kwargs):
+        """
+        Interface for `distaz` Web service of IRIS
+        (http://www.iris.edu/ws/distaz/).
 
-if __name__ == '__main__':
+        This method will calculate the distance and azimuth between two points
+        on a sphere. Azimuths start at north and go clockwise, i.e.
+        0/360 = north, 90 = east, 180 = south, 270 = west. The azimuth is from
+        the station to the event, the backazimuth is from the event to the
+        station.
+
+        Example
+        -------
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, 
+        ...                        evtlon=1.4)
+        >>> print(result)
+        {'distance': 2.09554, 'backazimuth': 5.46946, 'azimuth': 185.47692}
+
+        Parameters
+        ----------
+        stalat : float
+            Station latitude.
+        stalon : float
+            Station longitude.
+        evtlat : float
+            Event latitude.
+        evtlon : float
+            Event longitude.
+
+        Returns
+        -------
+            Dictionary containing values for azimuth, backazimuth and distance.
+        """
+        # set JSON as expected content type
+        headers = {'Accept': 'application/json'}
+        # build up query
+        url = '/distaz/query'
+        try:
+            data = self._fetch(url, headers=headers, **kwargs)
+        except HTTPError, e:
+            msg = "No response data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e.message)
+            raise Exception(msg)
+        data = json.loads(data)
+        results = {}
+        results['distance'] = data['DistanceAzimuth']['distance']
+        results['backazimuth'] = data['DistanceAzimuth']['backAzimuth']
+        results['azimuth'] = data['DistanceAzimuth']['azimuth']
+        return results
+
+
+if __name__ == '__main__': # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)

@@ -32,4 +32,4 @@ Dependencies
 ------------
 * obspy.core
 * obspy.mseed
-* lxml
+* simplejson (for Python < 2.6)
