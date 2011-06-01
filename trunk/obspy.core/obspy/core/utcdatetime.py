@@ -558,7 +558,7 @@ class UTCDateTime(datetime.datetime):
 
     def formatIRISWebService(self):
         """
-        Returns string representation usable for the IRIS web services.
+        Returns string representation usable for the IRIS Web services.
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
         >>> dt.formatIRISWebService()

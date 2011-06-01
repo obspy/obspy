@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-obspy.neries - NERIES web service client for ObsPy
+obspy.neries - NERIES Web service client for ObsPy
 ==================================================
 The obspy.neries package contains a client for the Seismic Data Portal
 (http://www.seismicportal.eu) which was developed under the European
@@ -69,7 +69,7 @@ Basic Usage
      'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}
 
 (4) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a Taup
-    web service, an utility to compute arrival times using a few default
+    Web service, an utility to compute arrival times using a few default
     velocity models such as iasp91, ak135 or qdt.
 
     >>> client = Client()

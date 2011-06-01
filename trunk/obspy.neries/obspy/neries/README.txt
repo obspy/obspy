@@ -13,7 +13,7 @@ Copyright (c) 2010-2011 by:
 
 Overview
 --------
-NERIES web service client for ObsPy.
+NERIES Web service client for ObsPy.
 
 The obspy.neries package contains a client for the Seismic Data Portal
 (http://www.seismicportal.eu) which was developed under the European

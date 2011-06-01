@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-obspy.iris - IRIS web service client for ObsPy
+obspy.iris - IRIS Web service client for ObsPy
 ==============================================
-The obspy.iris package contains a client for the DMC Web Services provided by
+The obspy.iris package contains a client for the DMC Web services provided by
 IRIS (http://www.iris.edu/ws/). 
 
 :copyright:

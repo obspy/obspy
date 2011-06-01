@@ -13,9 +13,9 @@ Copyright (c) 2010-2011 by:
 
 Overview
 --------
-IRIS web service client for ObsPy.
+IRIS Web service client for ObsPy.
 
-The obspy.iris package contains a client for the DMC Web Services provided by
+The obspy.iris package contains a client for the DMC Web services provided by
 IRIS (http://www.iris.edu/ws/). 
 
 ObsPy is an open-source project dedicated to provide a Python framework for

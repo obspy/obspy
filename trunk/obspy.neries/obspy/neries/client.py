@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-NERIES web service client for ObsPy.
+NERIES Web service client for ObsPy.
 
 See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
 
@@ -47,24 +47,24 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
 
 class Client(object):
     """
-    NERIES web service request client.
+    NERIES Web service request client.
     """
     def __init__(self, base_url="http://www.seismicportal.eu", user="",
                  password="", timeout=10, debug=False,
                  user_agent=DEFAULT_USER_AGENT):
         """
-        Initializes the NERIES web service client.
+        Initializes the NERIES Web service client.
 
         Parameters
         ----------
         base_url : string, optional
-            Base URL of the NERIES web service (default is
+            Base URL of the NERIES Web service (default is
             'http://www.seismicportal.eu').
         user : string, optional
-            The user name used for authentication with the web service (default
+            The user name used for authentication with the Web service (default
             an empty string).
         password : string, optional
-            A password used for authentication with the web service (default is
+            A password used for authentication with the Web service (default is
             an empty string).
         timeout : int, optional
             Seconds before a connection timeout is raised (default is 10

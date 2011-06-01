@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-IRIS web service client for ObsPy.
+IRIS Web service client for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -8,7 +8,6 @@ IRIS web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from obspy.core import UTCDateTime, read, Stream
 from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString
 from urllib2 import HTTPError
@@ -26,7 +25,7 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
 
 class Client(object):
     """
-    IRIS web service request client.
+    IRIS Web service request client.
 
     Examples
     --------
@@ -44,18 +43,18 @@ class Client(object):
                  user="", password="", timeout=10, debug=False,
                  user_agent=DEFAULT_USER_AGENT):
         """
-        Initializes the IRIS web service client.
+        Initializes the IRIS Web service client.
 
         Parameters
         ----------
         base_url : string, optional
-            Base URL of the IRIS web service (default is
+            Base URL of the IRIS Web service (default is
             'http://www.iris.edu/ws').
         user : string, optional
-            The user name used for authentication with the web service (default
+            The user name used for authentication with the Web service (default
             an empty string).
         password : string, optional
-            A password used for authentication with the web service (default is
+            A password used for authentication with the Web service (default is
             an empty string).
         timeout : int, optional
             Seconds before a connection timeout is raised (default is 10
@@ -87,7 +86,7 @@ class Client(object):
         :type url: String
         :param url: Complete URL of resource
         :type data: String
-        :param data: Channel list as returned by `availability`-webservice
+        :param data: Channel list as returned by `availability` Web service
         :type headers: dict
         :param headers: Additional header information for request
         """
@@ -181,14 +180,14 @@ class Client(object):
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
             kwargs['quality'] = str(quality).upper()
 
-        # single channel request, go via `dataselect`-webservice
+        # single channel request, go via `dataselect` Web service
         if all([val.isalnum() for val in (kwargs['network'],
                                           kwargs['station'],
                                           kwargs['location'],
                                           kwargs['channel'])]):
             st = self.dataselect(**kwargs)
         # wildcarded channel request, go via `availability` and
-        # `bulkdataselect`-webservices
+        # `bulkdataselect` Web services
         else:
             quality = kwargs.pop("quality", "")
             bulk = self.availability(**kwargs)
@@ -307,7 +306,7 @@ class Client(object):
 
     def resp(self, **kwargs):
         """
-        Interface for `resp`-webservice of IRIS (http://www.iris.edu/ws/resp/).
+        Interface for `resp` Web service of IRIS (http://www.iris.edu/ws/resp/).
 
         Example
         -------
@@ -372,7 +371,7 @@ class Client(object):
 
     def station(self, **kwargs):
         """
-        Interface for `station`-webservice of IRIS
+        Interface for `station` Web service of IRIS
         (http://www.iris.edu/ws/station/).
 
         Example
@@ -446,10 +445,10 @@ class Client(object):
 
     def dataselect(self, filename=None, **kwargs):
         """
-        Interface for `dataselect`-webservice of IRIS
+        Interface for `dataselect` Web service of IRIS
         (http://www.iris.edu/ws/dataselect/).
         Single channel request, no wildcards allowed.
-        This webservice can be used via
+        This Web service can be used via
         :meth:`~obspy.iris.client.Client.getWaveform`.
 
         Example
@@ -544,7 +543,7 @@ class Client(object):
 
     def bulkdataselect(self, bulk, quality=""):
         """
-        Interface for `bulkdataselect`-webservice of IRIS
+        Interface for `bulkdataselect` Web service of IRIS
         (http://www.iris.edu/ws/bulkdataselect/).
 
         Simple requests with wildcards can be performed via
@@ -630,18 +629,16 @@ class Client(object):
                      minlat=None, maxlat=None, minlon=None, maxlon=None,
                      output="bulk"):
         """
-        Interface for `availability`-webservice of IRIS
+        Interface for `availability` Web service of IRIS
         (http://www.iris.edu/ws/availability/).
         Returns list of available channels that can be requested using the
-        `bulkdataselect`-webservice.
+        `bulkdataselect` Web service.
 
         Example
         -------
-        
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-           
         >>> t1 = UTCDateTime("2010-02-27T06:30:00")
         >>> t2 = UTCDateTime("2010-02-27T06:40:00")
         >>> response = client.availability(network="IU", station="B*",
@@ -769,16 +766,14 @@ class Client(object):
               endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
               output="sacpz"):
         """
-        Interface for `sacpz`-webservice of IRIS
+        Interface for `sacpz` Web service of IRIS
         (http://www.iris.edu/ws/sacpz/).
 
         Example
         -------
-        
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-           
         >>> t1 = UTCDateTime("2005-01-01")
         >>> t2 = UTCDateTime("2008-01-01")
         >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",

@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-NERIES web service client for ObsPy.
+NERIES Web service client for ObsPy.
 
 The obspy.neries package contains a client for the Seismic Data Portal
 (http://www.seismicportal.eu) which was developed under the European

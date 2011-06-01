@@ -120,7 +120,7 @@ Further Resources
     - https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
 * Short introduction_ to the ArcLink protocol
 * Latest `ArcLink server`_ package
-* SeismoLink_: a SOAP Web Service on top of the ArcLink network
+* SeismoLink_: a SOAP Web service on top of the ArcLink network
 
 .. _GEOFON:
         http://geofon.gfz-potsdam.de
