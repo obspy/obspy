@@ -74,9 +74,9 @@ Basic Usage
 
     >>> client = Client()
     >>> locations = [(48.0, 12.0), (48.1, 12.0)]
-    >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0, \
-                                       depth=10.0, locations=locations, \
-                                       model='iasp91')
+    >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0,
+    ...                                depth=10.0, locations=locations,
+    ...                                model='iasp91')
     >>> len(result)
     2
     >>> result[0] # doctest: +SKIP
