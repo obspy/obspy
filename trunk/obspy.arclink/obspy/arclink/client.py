@@ -670,7 +670,7 @@ class Client(Telnet):
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='SEED'):
         """
-        Writes a response information into a file.
+        Writes response information into a file.
 
         Parameters
         ----------
@@ -689,10 +689,7 @@ class Client(Telnet):
         endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
             End date and time.
         format : ['SEED'], optional
-            Output format.
-            .. note::
-                Format 'XSEED' is documented, but not yet implemented in
-                ArcLink.
+            Output format. Currently only Dataless SEED is supported.
         """
         # request type
         rtype = 'REQUEST RESPONSE format=%s' % format
