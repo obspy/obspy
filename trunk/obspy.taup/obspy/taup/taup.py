@@ -3,6 +3,7 @@
 from obspy.taup import __path__
 from util import flibtaup as lib
 import ctypes as C
+import math
 import numpy as np
 import os
 
@@ -70,25 +71,79 @@ def getTravelTimes(delta, depth, model='iasp91'):
             break
         time_dict = {
             'phase_name': phase_name,
-            'tt': tt[_i],
-            'toang': toang[_i],
-            'dtdd': dtdd[_i],
-            'dtdh': dtdh[_i],
-            'dddp': dddp[_i]}
+            'time': tt[_i],
+            'take-off angle': toang[_i],
+            'dT/dD': dtdd[_i],
+            'dT/dh': dtdh[_i],
+            'd2T/dD2': dddp[_i]}
         phases.append(time_dict)
     return phases
+
+
+def kilometer2degrees(kilometer, radius=6371):
+    """
+    Convenience function to convert kilometers to degrees assuming a perfectly
+    spherical Earth.
+
+    :param kilometer: float
+        Distance in kilometers
+    :param radius: int, optional
+        Radius of the Earth used for the calculation.
+    :return: Distance in degrees as a floating point number.
+    """
+    return kilometer / (2.0 * radius * math.pi / 360.0)
+
+
+def locations2degrees(lat1, long1, lat2, long2, radius=6371):
+    """
+    Convenience function to calculate the great distance between two points on
+    a spherical Earth.
+
+    For more accurate values use the geodetic distance caluclations of geopy:
+        http://code.google.com/p/geopy/
+    This method uses the Vincenty formula in the special case of a spherical
+    Earth.
+
+    :param lat1: float
+        Latitude of point 1 in degrees
+    :param long1: float
+        Longitude of point 1 in degrees
+    :param lat2: float
+        Latitude of point 2 in degrees
+    :param long2: float
+        Longitude of point 2 in degrees
+    :param radius: int, optional
+        Radius of the Earth used for the calculation.
+    :return: Distance in degrees as a floating point number.
+    """
+    # Convert to radians.
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    long1 = math.radians(long1)
+    long2 = math.radians(long2)
+    long_diff = long2 - long1
+    return math.degrees(math.atan2(math.sqrt((math.cos(lat2) * \
+                                math.sin(long_diff)) ** 2 \
+                                + (math.cos(lat1) * math.sin(lat2) - \
+                                math.sin(lat1) * math.cos(lat2) * \
+                                math.cos(long_diff)) ** 2),
+                                math.sin(lat1) * math.sin(lat2) + \
+                                math.cos(lat1) * math.cos(lat2) * \
+                                math.cos(long_diff)))
 
 
 def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
                    phases=AVAILABLE_PHASES, depth=100, model='iasp91'):
     """
-    Travel time plot.
+    Travel time plot to test the travel times. The artefacts are due to some
+    phases showing up multiple times for certain distances and would be hard to
+    correct.
     """
     import matplotlib.pylab as plt
 
     data = {}
     for phase in phases:
-        data[phase] = []
+        data[phase] = [[], []]
 
     degrees = np.linspace(min_degree, max_degree, npoints)
     x_values = []
@@ -98,17 +153,18 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         # Mirror if necessary.
         if degree > 180:
             degree = 180 - (degree - 180)
-        x_values.append(degree)
         for item in tt:
             phase = item['phase_name']
             try:
-                data[phase].append(item['tt'] / 60.0)
+                data[phase][1].append(item['time'] / 60.0)
+                data[phase][0].append(degree)
             except:
-                data[phase].append(np.NaN)
+                data[phase][1].append(np.NaN)
+                data[phase][0].append(degree)
 
     # Plot and some formatting.
     for key, value in data.iteritems():
-        plt.plot(x_values, value, label=key)
+        plt.plot(value[0], value[1], label=key)
     plt.grid()
     plt.xlabel('Distance (degrees)')
     plt.ylabel('Time (minutes)')
@@ -120,6 +176,6 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
     plt.show()
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     import doctest
     doctest.testmod(exclude_empty=True)
