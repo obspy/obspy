@@ -24,8 +24,21 @@ AVAILABLE_PHASES = ['P', "P'P'ab", "P'P'bc", "P'P'df", 'PKKPab', 'PKKPbc',
 
 def getTravelTimes(delta, depth, model='iasp91'):
     """
-    Returns the travel times calculated by the iaspei-tau traveltime table
-    package
+    Returns the travel times calculated by the iaspei-tau travel time table
+    package.
+
+    :param delta: float
+        Distance in degrees.
+    :param depth: float
+        Depth in kilometer.
+    :param model: string, optional
+        Either 'iasp91' or 'ak135' velocity model. Defaults to 'iasp91'.
+    :return:
+        A list of phase arrivals given in time order. Each phase is represented
+        by a dictionary containing phase name, travel time in seconds, take-off
+        angle, and various derivatives (travel time with respect to distance,
+        travel time with respect to depth and the second derivative of travel
+        time with respect to distance).
     """
     model_path = os.path.join(__path__[0], 'tables', model)
     if not os.path.exists(model_path + os.path.extsep + 'hed') or \
@@ -89,20 +102,20 @@ def kilometer2degrees(kilometer, radius=6371):
         Distance in kilometers
     :param radius: int, optional
         Radius of the Earth used for the calculation.
-    :return: Distance in degrees as a floating point number.
+    :return:
+        Distance in degrees as a floating point number.
     """
     return kilometer / (2.0 * radius * math.pi / 360.0)
 
 
-def locations2degrees(lat1, long1, lat2, long2, radius=6371):
+def locations2degrees(lat1, long1, lat2, long2):
     """
     Convenience function to calculate the great distance between two points on
     a spherical Earth.
 
-    For more accurate values use the geodetic distance caluclations of geopy:
-        http://code.google.com/p/geopy/
     This method uses the Vincenty formula in the special case of a spherical
-    Earth.
+    Earth. For more accurate values use the geodesic distance calculations of
+    geopy (http://code.google.com/p/geopy/).
 
     :param lat1: float
         Latitude of point 1 in degrees
@@ -112,9 +125,8 @@ def locations2degrees(lat1, long1, lat2, long2, radius=6371):
         Latitude of point 2 in degrees
     :param long2: float
         Longitude of point 2 in degrees
-    :param radius: int, optional
-        Radius of the Earth used for the calculation.
-    :return: Distance in degrees as a floating point number.
+    :return:
+        Distance in degrees as a floating point number.
     """
     # Convert to radians.
     lat1 = math.radians(lat1)
@@ -135,9 +147,21 @@ def locations2degrees(lat1, long1, lat2, long2, radius=6371):
 def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
                    phases=AVAILABLE_PHASES, depth=100, model='iasp91'):
     """
-    Travel time plot to test the travel times. The artefacts are due to some
-    phases showing up multiple times for certain distances and would be hard to
-    correct.
+    Basic travel time plotting function.
+
+    :param min_degree: float, optional
+        Minimum distance in degree used in plot. Defaults to 0.
+    :param max_degree: float, optional
+        Maximum distance in degree used in plot. Defaults to 360.
+    :param npoints: int, optional
+        Number of points to plot. Defaults to 1000.
+    :param phases: list of strings, optional
+        List of phase names which should be used within the plot. Defaults to
+        all phases if not explicit set.
+    :param depth: float, optional
+        Depth in kilometer. Defaults to 100.
+    :param model: string, optional
+        Either 'iasp91' or 'ak135' velocity model. Defaults to 'iasp91'.
     """
     import matplotlib.pylab as plt
 
@@ -146,7 +170,6 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         data[phase] = [[], []]
 
     degrees = np.linspace(min_degree, max_degree, npoints)
-    x_values = []
     # Loop over all degrees.
     for degree in degrees:
         tt = getTravelTimes(degree, depth, model)
@@ -164,7 +187,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
 
     # Plot and some formatting.
     for key, value in data.iteritems():
-        plt.plot(value[0], value[1], label=key)
+        plt.plot(value[0], value[1], '.', label=key)
     plt.grid()
     plt.xlabel('Distance (degrees)')
     plt.ylabel('Time (minutes)')
