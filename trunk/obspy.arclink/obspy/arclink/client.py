@@ -741,9 +741,10 @@ class Client(Telnet):
             Maximum longitude
         permanent : boolean, optional
             Requesting only permanent or temporary networks respectively.
+            Default is None, therefore requesting all data.
         restricted : boolean, optional
             Requesting only networks/stations/streams that have restricted or
-            open data respectively.
+            open data respectively. Default is None.
 
         Returns
         -------
