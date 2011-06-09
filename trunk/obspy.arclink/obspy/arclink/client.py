@@ -312,9 +312,9 @@ class Client(Telnet):
             :class:`~obspy.core.stream.Stream`
         """
         tf = NamedTemporaryFile()
-        self.saveWaveform(tf, network, station, location, channel, starttime,
-                          endtime, format=format, compressed=compressed,
-                          route=route)
+        self.saveWaveform(tf.name, network, station, location, channel,
+                          starttime, endtime, format=format,
+                          compressed=compressed, route=route)
         # read stream using obspy.mseed
         tf.seek(0)
         try:
@@ -998,3 +998,8 @@ class Client(Telnet):
                     if key.startswith(network + '.') \
                     and "code" in value]
         return stations
+
+
+if __name__ == '__main__': # pragma: no cover
+    import doctest
+    doctest.testmod(exclude_empty=True)
