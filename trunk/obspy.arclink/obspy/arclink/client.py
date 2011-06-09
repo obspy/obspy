@@ -312,7 +312,7 @@ class Client(Telnet):
             :class:`~obspy.core.stream.Stream`
         """
         tf = NamedTemporaryFile()
-        self.saveWaveform(tf.name, network, station, location, channel,
+        self.saveWaveform(tf._fileobj, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
         # read stream using obspy.mseed
