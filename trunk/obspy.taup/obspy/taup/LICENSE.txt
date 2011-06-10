@@ -1,0 +1,16 @@
+Reply from Arthur Snoke regarding the question under what license "iapsei-tau"
+(http://www.iris.edu/pub/programs/iaspei-tau/) is available:
+
+I am far from expert on licensing details.
+
+Beginning in 1992 the software was accessible without qualification from USGS
+Web sites (Buland and Engdahl were USGS), and I think that it is still available
+from Brian Kennett's ANU Web site.  The only changes I have made were inspired
+and/or cleared by the original authors.
+
+It has been used in many packages, and I do not recall licensing even being
+mentioned.
+
+I hope this helps.
+
+Arthur
