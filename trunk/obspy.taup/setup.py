@@ -41,7 +41,7 @@ NAME = 'obspy.taup'
 AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
-KEYWORDS = ['ObsPy', 'seismology', 'taup']
+KEYWORDS = ['ObsPy', 'seismology', 'taup', 'travel time', 'iapsei-tau']
 INSTALL_REQUIRES = ['obspy.core']
 ENTRY_POINTS = {}
 
