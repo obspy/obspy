@@ -65,7 +65,8 @@ import warnings
 import numpy as np
 
 
-DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy']
+DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy',
+                'sqlalchemy', 'suds']
 
 
 #XXX: start of ugly monkey patch for Python 2.7 
@@ -200,7 +201,12 @@ def _createReport(ttrs, timetaken, log, server):
                 child = etree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                etree.SubElement(doc, key).text = unicode(value, 'UTF-8')
+                if isinstance(value, unicode):
+                    etree.SubElement(doc, key).text = value
+                elif isinstance(value, basestring):
+                    etree.SubElement(doc, key).text = unicode(value, 'UTF-8')
+                else:
+                    etree.SubElement(doc, key).text = str(value)
             else:
                 etree.SubElement(doc, key)
     root = etree.Element("report")
