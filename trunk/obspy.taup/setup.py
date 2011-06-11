@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Travel time calculation tool.
+Travel time calculation tool for ObsPy.
 
 The obspy.taup package contains Python wrappers for iaspei-tau - a travel time
 library by Arthur Snoke (http://www.iris.edu/software/downloads/processing/).
