@@ -200,7 +200,7 @@ def _createReport(ttrs, timetaken, log, server):
                 child = etree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
-                etree.SubElement(doc, key).text = str(value)
+                etree.SubElement(doc, key).text = unicode(value)
             else:
                 etree.SubElement(doc, key)
     root = etree.Element("report")
