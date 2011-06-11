@@ -56,13 +56,12 @@ Examples
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
 from optparse import OptionParser
-from xml.etree import ElementTree as etree
+import numpy as np
 import os
 import sys
 import time
 import unittest
 import warnings
-import numpy as np
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy',
@@ -130,12 +129,15 @@ def _createReport(ttrs, timetaken, log, server):
     from urlparse import urlparse
     import platform
     from xml.sax.saxutils import escape
+    import codecs
+    from xml.etree import ElementTree as etree
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
     result['timetaken'] = timetaken
     if log:
         try:
-            result['install_log'] = escape(open(log, 'r').read())
+            data = codecs.open(log, 'r', encoding='UTF-8').read()
+            result['install_log'] = escape(data)
         except:
             print("Cannot open log file %s" % log)
     # get ObsPy module versions
@@ -203,15 +205,15 @@ def _createReport(ttrs, timetaken, log, server):
             elif value is not None:
                 if isinstance(value, unicode):
                     etree.SubElement(doc, key).text = value
-                elif isinstance(value, basestring):
-                    etree.SubElement(doc, key).text = unicode(value, 'UTF-8')
+                elif isinstance(value, str):
+                    etree.SubElement(doc, key).text = unicode(value, 'utf-8')
                 else:
                     etree.SubElement(doc, key).text = str(value)
             else:
                 etree.SubElement(doc, key)
     root = etree.Element("report")
     _dict2xml(root, result)
-    xml_doc = etree.tostring(root, "UTF-8")
+    xml_doc = etree.tostring(root)
     print
     # send result to report server
     params = urllib.urlencode({
