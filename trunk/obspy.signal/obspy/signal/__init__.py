@@ -203,6 +203,7 @@ from freqattributes import cfrequency, bwith, domperiod, logcep
 from hoctavbands import sonogram
 from polarization import eigval
 from psd import psd, PPSD
+from konnoohmachismoothing import konnoOhmachiSmoothing
 
 
 __version__ = _getVersionString("obspy.signal")
