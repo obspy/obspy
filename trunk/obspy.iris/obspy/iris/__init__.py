@@ -43,7 +43,8 @@ Basic Usage
     >>> client = Client()
     >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
     >>> t2 = UTCDateTime("2010-02-27T07:30:00.000")
-    >>> client.saveWaveform("IU", "ANMO", "00", "BHZ", t1, t2) #doctest: +SKIP
+    >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO',
+    ...                     '00', 'BHZ', t1, t2) # doctest: +SKIP
 
 (3) The :meth:`~obspy.iris.client.Client.saveResponse()` method writes the
     response information into a file. You may choose one of the format
@@ -71,6 +72,8 @@ IRIS (http://www.iris.edu/ws/):
   * :meth:`~obspy.iris.client.Client.sacpz()` - provides access to instrument
     response information (per-channel) as poles and zeros in the ASCII format
     used by SAC and other programs
+  * :meth:`~obspy.iris.client.Client.distaz()` -  calculate the distance and
+    azimuth between two points on a sphere.
 
 Please see the documentation for each method for further information and
 examples to retrieve various data from the IRIS DMC.
