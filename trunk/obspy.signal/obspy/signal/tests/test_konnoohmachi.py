@@ -27,6 +27,9 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         """
         Tests the creation of the smoothing window.
         """
+        # Disable div by zero erros.
+        temp = np.geterr()
+        np.seterr(all='ignore')
         # Frequency of zero results in a delta peak at zero (there usually
         # should be just one zero in the frequency array.
         window = konnoOhmachiSmoothingWindow(np.array([0, 1, 0, 3],
@@ -60,11 +63,15 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         self.assertEqual(np.any(np.isinf(window)), False)
         self.assertTrue(np.all(window <= 1.0))
         self.assertTrue(np.all(window >= 0.0))
+        np.seterr(**temp)
 
     def test_smoothingMatrix(self):
         """
         Tests some aspects of the matrix.
         """
+        # Disable div by zero erros.
+        temp = np.geterr()
+        np.seterr(all='ignore')
         frequencies = np.array([0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],
             dtype='float32')
         matrix = calculateSmoothingMatrix(frequencies, 20.0)
@@ -93,6 +100,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
             self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
+        np.seterr(**temp)
 
     def test_konnoOhmachiSmoothing(self):
         """

@@ -42,6 +42,16 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     reasons and therefore any negative parameters might have unexpected
     results.
 
+    This function might raise some numpy warnings due to divisions by zero and
+    logarithms of zero. This is intentional and faster than prefiltering the
+    special cases. You can disable numpy warnings (they usually do not show up
+    anyways) with:
+
+    temp = np.geterr()
+    np.seterr(all='ignore')
+    ...code that raises numpy warning due to division by zero...
+    np.seterr(**temp)
+
     :param frequencies: numpy.ndarray (float32 or float64)
         All frequencies for which the smoothing window will be returned.
     :param center_frequency: float >= 0.0
@@ -177,8 +187,13 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
     # spectrum is to be smoothed.
     if enforce_no_matrix is False and (len(spectra.shape) > 1 or count > 1) \
        and approx_mem_usage < max_memory_usage:
+        # Disable numpy warnings due to possible divisions by zero/logarithms
+        # of zero.
+        temp = np.geterr()
+        np.seterr(all='ignore')
         smoothing_matrix = calculateSmoothingMatrix(frequencies, bandwidth,
                                              normalize=normalize)
+        np.seterr(**temp)
         new_spec = np.dot(spectra, smoothing_matrix)
         # Eventually apply more than once.
         for _i in xrange(count - 1):
@@ -189,17 +204,27 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         new_spec = np.empty(spectra.shape, spectra.dtype)
         # Separate case for just one spectrum.
         if len(new_spec.shape) == 1:
+            # Disable numpy warnings due to possible divisions by zero/logarithms
+            # of zero.
+            temp = np.geterr()
+            np.seterr(all='ignore')
             for _i in xrange(len(frequencies)):
                 window = konnoOhmachiSmoothingWindow(frequencies,
                         frequencies[_i], bandwidth, normalize=normalize)
                 new_spec[_i] = (window * spectra).sum()
+            np.seterr(**temp)
         # Reuse smoothing window if more than one spectrum.
         else:
+            # Disable numpy warnings due to possible divisions by zero/logarithms
+            # of zero.
+            temp = np.geterr()
+            np.seterr(all='ignore')
             for _i in xrange(len(frequencies)):
                 window = konnoOhmachiSmoothingWindow(frequencies,
                         frequencies[_i], bandwidth, normalize=normalize)
                 for _j, spec in enumerate(spectra):
                     new_spec[_j, _i] = (window * spectra[_j]).sum()
+            np.seterr(**temp)
         # Eventually apply more than once.
         while count > 1:
             new_spec = konnoOhmachiSmoothing(new_spec, frequencies, bandwidth,
