@@ -49,7 +49,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     # Distance in degree
     delta = C.c_float(delta)
     # Depth in kilometer.
-    depth = C.c_float(depth)
+    depth = abs(C.c_float(depth))
 
     # Max number of phases. Hard coded in the Fortran code. Do not change!
     max = 60
