@@ -114,7 +114,7 @@ class Client(object):
         else:
             raise Exception("Unexpected request status code: %s" % code)
 
-    def _fetch(self, url, *args, **kwargs):
+    def _fetch(self, url, *args, **kwargs): #@UnusedVariable
         params = {}
         # map keywords
         for key, value in KEYWORDS.iteritems():
@@ -769,7 +769,7 @@ class _EventMapperClient(_BaseRESTClient):
     package = 'seismology'
     resourcetype = 'event'
 
-    def getList(self, limit=None, offset=None, localisation_method=None,
+    def getList(self, limit=50, offset=None, localisation_method=None,
                 account=None, user=None, min_datetime=None, max_datetime=None,
                 first_pick=None, last_pick=None, min_latitude=None,
                 max_latitude=None, min_longitude=None, max_longitude=None,
@@ -778,12 +778,21 @@ class _EventMapperClient(_BaseRESTClient):
                 used_s=None, min_used_s=None, max_used_s=None,
                 document_id=None, **kwargs):
         """
-        Gets a list of event information. 
+        Gets a list of event information.
+
+        The number of resulting events is by default limited to 50 entries from
+        a SeisHub server. You may raise this by setting the ``limit`` option to
+        a maximal value of 2500. Numbers above 2500 will result into an
+        exception.
 
         Returns
         -------
             List of dictionaries containing event information.
         """
+        # check limit
+        if limit > 2500:
+            msg = "Maximal allowed limit is 2500 entries."
+            raise ValueError(msg)
         # NOTHING goes ABOVE this line!
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
