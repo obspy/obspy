@@ -1,0 +1,295 @@
+Please read ChangeLog for modifications of evalresp above v3.2.38
+Please refer to evalresp man pages (evalresp.1) for general information
+about evalresp and it's usage.
+
+This directory contains the distribution of evalresp v3.2.38
+The historical release notes follow the info on installation.
+
+Since the code is written as ANSI standard C, the standard
+BSD 'cc' compiler will not compile it.  I have compiled the code
+with the gcc compiler standard SunPro 'cc' compiler (v3.0.1)
+under both SunOS and Solaris.  The code is also known to compile
+on the following machines:
+
+Intel machines (under both LINUX and FreeBSD Unix)
+HP-UX workstations
+SGI workstations
+
+As of v3.2.20, the code will compile under Microsoft Windows 95/98/NT
+using Borland C++ 5.02 or Microsoft Visual C++ 6.0.
+
+Any ANSI standard C compiler should work with the code.
+
+This distribution is fairly self contained.  Because of the variety
+of machines that the code is distrubuted on now, an executable is
+no longer included with the distribution.
+
+To build the executable on a Unix-based machine, type the following
+commands from the 'evalresp' directory:
+
+./configure
+make
+
+The configure script should set up a Makefile that is appropriate
+for your available resources.  Once that Makefile is built, simply
+typing "make" will build the "libevresp.a" library and build an
+executable called "evalresp".
+
+To build the executable on a Microsoft Windows-based machine, use
+one of the following make files:
+makefile.bor  -  for Borland C++
+makefile.ms   -  for Microsoft Visual C++
+The file "evalresp.ide" is a project file for use with the Borland
+C++ v5.02 graphical IDE.
+
+The "evresp" C function can be called from within your own C code
+to calculate responses from RESP files, or the "evresp_" function
+can be called from a FORTRAN program.  A simple example of calling
+"evresp_" from a FORTRAN program is available in the "evtest.f" file.
+
+
+tjm@iris.washington.edu
+14 March, 1997
+Modified
+i.dricker@isti.com
+17 July, 2001
+Modified (MS Windows port) 
+e.thomas@isti.com
+28 August, 2001
+
+------------------ Release Notes (old) ------------------------
+[See the "ChangeLog" file for more recent release notes]
+version 3.2.24 ( Apr 5, 2004) - IGD
+Added two configuration option:
+ --enable-delay Use estimated delay in phase computation
+ --enable-phase-unwrap Unwrap phase
+
+In order to enable those options evalresp should be configured like:
+./configure --enable-delay --enable-phase-unwrap
+
+version 3.2.23 ( Mar 19, 2004) - SBH
+Added support for SHAPE compatible RESP files. When parsing lines that are valid
+RESP format, but unexpected, evalresp now skips to the next line.
+Added support for blank lines within and at the end of a RESP file.
+
+version 2.3.22 (21-Oct-2003)
+FIXED: evaluation of the response for an IIR filter. Versions before 
+2.3.20 computed IIR PZ incorrectly. Versions 3.2.20-21 computed amplitude
+of the filter properly, while PHASE was improperly multiplied by (-1),
+mirrored aross y = 0. This release fixes the problem.
+
+ADDED: Interpolation of blockette 55 (to enable this feature, the program
+should be compiled with -DB55_INTRPL compilation flag, which is not set
+by default). This feature is experimaental and not recommended for the 
+general use. 
+
+version 2.3.21 (21-May-2002)
+Added a partial support for generic response blockette. Partial means that
+if such blockette is found, evalresp ignores the blockette, prints a warning
+and continues execution. Previous versions considered the generic response 
+blockette to be offensive and terminated the processing of the response
+
+version 3.2.20 (28-August-2001)
+Code ported to work with Microsoft Windows-based compilers.  Functionality
+should be unchanged.
+
+version 3.2.19 (30-July-2001)
+1) A bug which forced evalresp to compute incorrect group delays has been fixed.
+2) A computation of decimation is removed from evalresp.
+To compute decimation evalresp relies upon the fields 7 and 8 of SEED blockette 57.
+However, the use of these fields are inconsistant among digitizers and
+SEED builders.
+3) A mechinism of selecting files for processing from the working directory for some
+Solaris computers was shown to be unrelible in at least a single case in all versions
+below 3.2.19. This mechanism was modified. As a trade-off the orcessing of a single RESP
+file in versions 3.2.19 and above is slower by about one second than in the previous
+versions.
+
+Version 3.2.18
+Presure data support is included
+
+version 3.2.17 Notes:
+
+Modifications from version 3.2.16 to version 3.2.17 are conduced
+by  Instrumental Software Technologies, Inc. (www.isti.com)
+Modifications have been requested by IRIS DMC.
+
+These modifications include:
+
+(1)    Version  3.2.17  supports  IIR digital filters in coeffi­
+       cients format with a non-zero phase  shift.   IIR  coeffi­
+       cients  for a single stage must fit in a single blockette.
+       The algorithm was adopted from the FORTRAN code provided by
+       B. Hutt (hutt@asl.cr.usgs.gov).
+
+(2)     Version 3.2.17 and above supports generic response block­
+       ette  (SEED blockettes 55).  Generic response blockette is
+       a list of phases and amplitudes computed  for  the  prese­
+       lected  set  of frequencies. This filter type is supported
+       only if the response input file contains  blockette(s)  55
+       as a stage 1 and possibly channel sensitivity blockette as
+       a stage 0.  If generic response blockette is recognized in
+       the  input,  evalresp  ignores  the user-defined frequency
+       sampling from the command line. The ouput, therefore, con­
+       tains responses for only those frequencies which have been 			
+       defined in the generic response blockette.
+
+(3)    The source code is cleaned; all unused variables are removed
+
+(4)    The man pages are modified to reflect the current version of 
+       the evalresp. 
+	 
+version 3.0 to version 3.2:
+
+(1) Error handling improved.  In version 3.0, if the end of the file was
+    encountered while searching for the next response, an extraneous error
+    message was often printed to the effect of
+
+    EVRESP ERROR: get_line (parsing blockette [050]); unexpected fld number
+                    fld_xpt=F16, fld_found=F03, skipping to next response now
+
+    when, in fact, a message should have appeared that this sta-chan-net tuple
+    was not found.  In version 3.1 so that the message that now appears is
+
+    WARNING: no response found for STA=ANMO,CHAN=SHZ,DATE=1994,122,00:00:00
+
+(2) Error messages improved.  In version 3.0, when an error was printed, there
+    was no information in the error input as to where in the process the error
+    occurred.  While this may have been apparent if only a few files were being
+    processed, it was not at all obvious where the error occurred if a large
+    number of sta-cha-net files were being processed.  To improve this,
+
+    (a) The name of the file that is being parsed has been added to all error
+        messages.  For example, if an error occurred while parsing the file
+        response information for the ANMO LHZ channel as reported by the SRO
+        network because the line containing the network code was missing,
+        evalresp v3.0 would have reported
+
+        EVRESP ERROR: get_line; blkt and fld numbers do not match expected values
+                blkt_xpt=B050, blkt_found=B052; fld_xpt=F16, fld_found=F04, skipping
+                to next response now
+
+        whereas evalresp v3.1 reports (for the same parsing error)
+
+        EVRESP ERROR (RESP.SR.ANMO.LHZ): get_line; blkt and fld numbers do not match
+            expected values blkt_xpt=B050, blkt_found=B052; fld_xpt=F16, fld_found=F04,
+            skipping to next response now
+
+(3) Changes were made to make the code more portable.  Although the code was 'test compiled'
+    on a DEC ALPHA and on SUNs running SUNOS 4.1.3, problems were encountered when porting
+    the code to the HPUX OS.  To make the code more portable, the following changes were made.
+
+    (a) The buffer length for the output of the child process that lists the directory
+        to find matching files has been set to zero using 'setbuf' rather than 'setlinebuf'.
+        Again, this change was made so that the code would be 'ANSI standard'.
+
+    (b) The calls to 'getwd()' have been replaced with calls to 'getcwd()', which seems to
+        be more 'standard' than 'getwd()', as it exists as part of the SUN OS, the DEC OS,
+        and the HPUX OS
+
+    (c) Finally, the 're_comp()' and 're_exec()' routines, which are not part of the ANSI
+        standard C standard library, do not seem to be supported under the HPUX OS (although
+        both the DEC Unix OS and SUN OS do support them).  As a result, code is included in this
+        distribution for a set of routines taken from Henry Spencer's 'regexp' utility that
+        implement 'regular expression' pattern matching in the style of the UNIX utility
+        'egrep'.  The new files are:  'regexp.c', 'regsub.c', 'regerror.c', 'regexp.h', and
+        'regmagic.h'.  The 'main' routines of this package (which are used in place of
+        're_comp()' and 're_exec()') are called 'regcomp()' and 'regexec()', respectively.
+        The inclusion of these files should result in a more portable distribution, since the
+        only function calls made in this package are to ANSI standard library functions.
+
+        This package was obtained via anonymous ftp from the University of Toronto, and minimal
+        changes have been made to make it more compatible with 'evalresp'.  Specifically, a few
+        '#include' directives were removed that were not needed for the routines to be used as
+        a 'stand-alone' package and several redeclarations of the 'strchr()' standard library
+        function in the file 'regexp.c' were replaced with an '#include <string.h>' statement
+        at the beginning of that code.  The following statements are taken from the 'README'
+        file for this package and are included to give credit where credit is due:
+
+                 This is a nearly-public-domain reimplementation of the V8 regexp(3) package.
+                 It gives C programs the ability to use egrep-style regular expressions, and
+                 does it in a much cleaner fashion than the analogous routines in SysV.
+
+                      Copyright (c) 1986 by University of Toronto.
+                      Written by Henry Spencer.  Not derived from licensed software.
+
+                 Permission is granted to anyone to use this software for any
+                 purpose on any computer system, and to redistribute it freely,
+                 subject to the following restrictions:
+
+                  1. The author is not responsible for the consequences of use of
+                         this software, no matter how awful, even if they arise
+                         from defects in it.
+
+                  2. The origin of this software must not be misrepresented, either
+                         by explicit claim or by omission.
+
+                  3. Altered versions must be plainly marked as such, and must not
+                             be misrepresented as being the original software.
+
+
+                 This implementation is *NOT* AT&T/Bell code, and is not derived from licensed
+                 software.  Even though U of T is a V8 licensee.  This software is based on
+                 a V8 manual page sent to me by Dennis Ritchie (the manual page enclosed
+                 here is a complete rewrite and hence is not covered by AT&T copyright).
+                 The software was nearly complete at the time of arrival of our V8 tape.
+                 I haven't even looked at V8 yet, although a friend elsewhere at U of T has
+                 been kind enough to run a few test programs using the V8 regexp(3) to resolve
+                 a few fine points.  I admit to some familiarity with regular-expression
+                 implementations of the past, but the only one that this code traces any
+                 ancestry to is the one published in Kernighan & Plauger (from which this
+                 one draws ideas but not code).
+
+(4) Bug fixed for handling of FIR filters.  If a FIR filter was renormalized in version 3.0,
+    the normalization constant for that filter was not changed to compensate.  As a result the
+    response of channels with FIR filter stages that were renormalized to a constant frequency
+    are not correct in evalresp v3.0.
+
+(5) A fourth option was added to the 'output units'.  If this option is chosen, then
+    the response that is returned to the user will be in terms of the input units per output
+    units, regardless of the unit themselves.  This was done to allow responses to be calculated
+    for magnetometers, strain meters, and pressure, or temperature sensors, where it really
+    doesn't make sense to talk about the 'units' in terms of displacement, velocity, or
+    acceleration, but the user would still like to see the frequency response of the instrument.
+    If the flag '-u def' is chosen, then evalresp will calculate the response spectra for these
+    types of instruments, if any other units are specified, these types of instruments will
+    be skipped as having 'unrecognized' types of units (i.e. units that cannot be converted
+    into the type of units that the user requested).
+
+(6) many bugs that were reported by users in the way that evalresp went about
+    evaluation of responses have been fixed.  Some of these problems were due
+    to the fact that evalresp expected the blockettes to appear in a certain
+    order (when, in fact, the SEED format did not), while others had to do with
+    legal SEED constructs that had not been seen yet (and, as a result, where not
+    tested before the release of version 3.0).  In some cases, the response values
+    calculated by evalresp were found to be in error by several percent, while in
+    other cases evalresp failed to correctly parse legal filter sequences.  In each
+    case, the bug reports were traced and fixes were made.  Thanks to the beta
+    test group for all of the work that they put in on this.
+
+(7) a "-stdio" command line flag has been added that allows evalresp to be
+    placed into a "pipeline".  In fact, this functionality is already in use
+    here at the DMC in calculation of responses from a set of "stage response
+    files".  When the "-stdio" command line flag is set, the program takes input
+    (which is assumed to be from a RESP file or a series of RESP files) from stdin
+    and returns the calculated responses to stdout.  The format is slightly
+    different than the format used to output the calculated responses when the
+    output is to a file, since there are multiple station-channel-netword tuple's
+    responses being returned to stdout.  Basically, the program adds a short
+    header to the stdout stream so that the responses can be separated later by
+    whatever application program will be receiving the output from evalresp.
+    As always, the verbose output and error output both appear on stderr, so they
+    will not appear mixed in with the calculated responses.
+
+(8) a new command line option was defined to allow users to evaluate the response
+    for a subset of the overall response for a channel.  This option allows users
+    to specify the stage (or range of stages) that they wish to evaluate the
+    response for.  If response stages are skipped in this process, then evalresp
+    will not compare the calculated overall sensitivity with the reported
+    overall sensitivity in the RESP file, since the calculated response leaves
+    out parts of the response file.  This option is useful for looking at the
+    effect of individual response stages on the overall response (and for checking
+    for problems with a stage that is under construction).
+
+tjm@iris.washington.edu
+14 March, 1997

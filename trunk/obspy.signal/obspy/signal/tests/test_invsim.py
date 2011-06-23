@@ -4,10 +4,11 @@
 The InvSim test suite.
 """
 
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core import Stream, Trace, UTCDateTime, read
 from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
-from obspy.sac import attach_paz
+from obspy.sac import attach_paz, attach_resp
 from obspy.core.util import NamedTemporaryFile
+from obspy.signal.cross_correlation import xcorr
 import gzip
 import numpy as np
 import os
@@ -277,8 +278,41 @@ class InvSimTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((tr.data - tr2.data) ** 2) / \
                       np.sum(tr2.data ** 2))
         self.assertTrue(rms<0.0421)
-        
 
+    def test_evalrespsac_vs_obspy(self):
+        """
+        Compare results from removing instrument response using
+        evalresp in SAC and ObsPy. Visual inspection shows that the traces are pretty
+        much identical but differences remain (rms ~ 0.042). Haven't
+        found the cause for those, yet. 
+        """
+        evalrespf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC_resp.asc.gz')
+        rawf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC.asc.gz')
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+
+        data = np.loadtxt(rawf)
+        test_data = np.loadtxt(evalrespf)
+        stats = {'network': 'NZ', 'delta': 0.01,
+                 'station': 'CRLZ', 'location': '10',
+                 'starttime': UTCDateTime(2010, 9, 4, 4, 52, 58, 997000),
+                 'npts': 49000, 'calib': 1.0,
+                 'sampling_rate': 100.0, 'channel': 'HHZ'}
+        tr = Trace(data, stats)
+        trtest = Trace(test_data,stats)
+        fl1=0.00588
+        fl2=0.00625
+        fl3=30.
+        fl4=35.
+        date=UTCDateTime(2003,11,1,0,0,0)
+        seedresp = {'filename':respf,'date':date,'units':'VEL'}
+        tr.data = seisSim(tr.data,tr.stats.sampling_rate,paz_remove=None,
+                          remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4),
+                          seedresp=seedresp)
+        tr.data *= 1e9
+        rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
+                      np.sum(trtest.data ** 2))
+        self.assertTrue(rms < 0.0041)
+        
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')
 

@@ -24,7 +24,8 @@ import numpy as np
 import scipy.signal
 import util
 import warnings
-
+from obspy.signal.util import clibevresp
+import ctypes as C
 
 # Sensitivity is 2080 according to:
 # P. Bormann: New Manual of Seismological Observatory Practice
@@ -32,7 +33,6 @@ import warnings
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
-
 
 def cosTaper(npts, p=0.1):
     """
@@ -67,6 +67,101 @@ def cosTaper(npts, p=0.1):
         0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))
         ), axis=0)
 
+def evalresp(t_samp,nfft,filename,date,station='*',channel='*',
+             network='*',locid='*',units="VEL",freq=False):
+    """
+    Use the evalresp library to extract instrument response
+    information from a SEED RESP-file.
+
+    :type t_samp: Float
+    :param t_samp: Sampling interval in seconds
+    :type nfft: Integer
+    :param nfft: Number of FFT points of signal which needs correction
+    :type filename: String
+    :param filename: SEED RESP-filename
+    :type date: UTCDateTime
+    :param date: Date of interest
+    :type station: String
+    :param station: Station id
+    :type channel: String
+    :param channel: Channel id
+    :type network: String
+    :param network: Network id
+    :type locid: String
+    :param locid: Location id
+    :type units: String
+    :param units: Units to return response in. Can be either DIS, VEL or ACC
+    :rtype: numpy.ndarray complex128
+    :return: Frequency response from SEED RESP-file  of length nfft 
+    """
+   
+    STALEN = 64
+    NETLEN = 64
+    CHALEN = 64
+    LOCIDLEN = 64
+
+    class c_complex(C.Structure):
+        _fields_ = [("real",C.c_double),
+                    ("imag",C.c_double)
+                    ]
+        
+    class response(C.Structure):
+        pass
+    
+    response._fields_ = [("station",C.c_char*STALEN),
+                         ("network",C.c_char*NETLEN),
+                         ("locid",C.c_char*LOCIDLEN),
+                         ("channel",C.c_char*CHALEN),
+                         ("rvec",C.POINTER(c_complex)),
+                         ("nfreqs",C.c_int),
+                         ("freqs",C.POINTER(C.c_double)),
+                         ("next",C.POINTER(response))
+                         ]
+
+    n = nfft // 2
+    fy = 1 / (t_samp * 2.0)
+    # start at zero to get zero for offset/ DC of fft
+    freqs = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
+    start_stage = C.c_int(-1)
+    stop_stage = C.c_int(0)
+    stdio_flag = C.c_int(0)
+    sta = C.c_char_p(station)
+    cha = C.c_char_p(channel)
+    net = C.c_char_p(network)
+    locid = C.c_char_p(locid)
+    unts = C.c_char_p(units)
+    vbs = C.c_char_p("") # change to -v to get more verbose output
+    rtyp = C.c_char_p("CS")
+    datime = C.c_char_p("%d,%3d"%(date.year,date.getJulday()))
+    fn = C.c_char_p(filename)
+    nfreqs = C.c_int(freqs.size)
+    clibevresp.evresp.restype = C.POINTER(response)
+    clibevresp.evresp.argtypes = [C.c_char_p,
+                          C.c_char_p,
+                          C.c_char_p,
+                          C.c_char_p,
+                          C.c_char_p,
+                          C.c_char_p,
+                          C.c_char_p,
+                          np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
+                          C.c_int,
+                          C.c_char_p,
+                          C.c_char_p,
+                          C.c_int,
+                          C.c_int,
+                          C.c_int,
+                          C.c_int
+                          ]
+    res = clibevresp.evresp(sta,cha,net,locid,datime,unts,fn,
+                    freqs,nfreqs,rtyp,vbs,start_stage,
+                    stop_stage,stdio_flag,C.c_int(0))
+    h = np.array([complex(res[0].rvec[i].real,res[0].rvec[i].imag) for i in xrange(res[0].nfreqs)])
+    f = np.array([res[0].freqs[i] for i in xrange(res[0].nfreqs)])
+    h = np.conj(h)
+    h[-1] = h[-1].real + 0.0j
+    if freq:
+        return h, f
+    return h
 
 def detrend(trace):
     """
@@ -179,7 +274,7 @@ def specInv(spec, wlev):
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=False, simulate_sensitivity=False,
             water_level=600.0, zero_mean=True, taper=True,
-            taper_fraction=0.05, pre_filt=None, **kwargs):
+            taper_fraction=0.05, pre_filt=None, seedresp=None, **kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -262,7 +357,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     ###########################################################################
 
     # Checking the types
-    if not paz_remove and not paz_simulate:
+    if not paz_remove and not paz_simulate and not seedresp:
         msg = "Neither inverse nor forward instrument simulation specified."
         raise TypeError(msg)
 
@@ -296,6 +391,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if paz_remove:
         freq_response, freqs = pazToFreqResp(paz_remove['poles'], paz_remove['zeros'],
                                             paz_remove['gain'], delta, nfft, freq=True)
+    if seedresp:
+        freq_response, freqs = evalresp(delta, nfft, seedresp['filename'], seedresp['date'],
+                                        units=seedresp['units'], freq=True)
+    if paz_remove or seedresp:    
         if pre_filt:
             #### make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
@@ -309,6 +408,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             cos_win[idx2] = 0.5 * \
                     (1 + np.cos((np.pi * (fl3 - freqs[idx2])) / (fl4-fl3)))
             data *= cos_win
+        #if paz_remove.has_key('t_shift'):
+        #    data *= np.exp(-1j*2*np.pi*freqs*paz_remove['t_shift'])
         specInv(freq_response, water_level)
         data *= np.conj(freq_response)
         del freq_response
@@ -433,3 +534,5 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
+
+

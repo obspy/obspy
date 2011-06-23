@@ -1,0 +1,182 @@
+# evalresp makefile for use with Borland C++ 5.02, 8/28/2001 -- [ET]
+#  10/20/2005 -- [ET]  Added "evr_spline.c".
+
+#
+# Borland C++ IDE generated makefile
+# Generated 8/28/2001 at 10:00:51 PM 
+#
+.AUTODEPEND
+
+
+#
+# Borland C++ tools
+#
+IMPLIB  = Implib
+BCC32   = Bcc32 +BccW32.cfg 
+BCC32I  = Bcc32i +BccW32.cfg 
+TLINK32 = TLink32
+ILINK32 = Ilink32
+TLIB    = TLib
+BRC32   = Brc32
+TASM32  = Tasm32
+#
+# IDE macros
+#
+
+
+#
+# Options
+#
+IDE_LinkFLAGS32 =  -LC:\BC5\LIB
+LinkerLocalOptsAtC32_evalrespdexe =  -Tpe -ap -c
+ResLocalOptsAtC32_evalrespdexe = 
+BLocalOptsAtC32_evalrespdexe = 
+CompInheritOptsAt_evalrespdexe = -IC:\BC5\INCLUDE -DWIN32 
+LinkerInheritOptsAt_evalrespdexe = -x
+LinkerOptsAt_evalrespdexe = $(LinkerLocalOptsAtC32_evalrespdexe)
+ResOptsAt_evalrespdexe = $(ResLocalOptsAtC32_evalrespdexe)
+BOptsAt_evalrespdexe = $(BLocalOptsAtC32_evalrespdexe)
+
+#
+# Dependency List
+#
+Dep_evalresp = \
+   evalresp.exe
+
+evalresp : BccW32.cfg $(Dep_evalresp)
+  echo MakeNode
+
+Dep_evalrespdexe = \
+   OBJ_BC\file_ops.obj\
+   OBJ_BC\evresp.obj\
+   OBJ_BC\alloc_fctns.obj\
+   OBJ_BC\resp_fctns.obj\
+   OBJ_BC\regsub.obj\
+   OBJ_BC\regexp.obj\
+   OBJ_BC\regerror.obj\
+   OBJ_BC\print_fctns.obj\
+   OBJ_BC\parse_fctns.obj\
+   OBJ_BC\evalresp.obj\
+   OBJ_BC\error_fctns.obj\
+   OBJ_BC\calc_fctns.obj\
+   OBJ_BC\string_fctns.obj\
+   OBJ_BC\evr_spline.obj
+
+evalresp.exe : $(Dep_evalrespdexe)
+  $(ILINK32) @&&|
+ /v $(IDE_LinkFLAGS32) $(LinkerOptsAt_evalrespdexe) $(LinkerInheritOptsAt_evalrespdexe) +
+C:\BC5\LIB\c0x32.obj+
+OBJ_BC\file_ops.obj+
+OBJ_BC\evresp.obj+
+OBJ_BC\alloc_fctns.obj+
+OBJ_BC\resp_fctns.obj+
+OBJ_BC\regsub.obj+
+OBJ_BC\regexp.obj+
+OBJ_BC\regerror.obj+
+OBJ_BC\print_fctns.obj+
+OBJ_BC\parse_fctns.obj+
+OBJ_BC\evalresp.obj+
+OBJ_BC\error_fctns.obj+
+OBJ_BC\calc_fctns.obj+
+OBJ_BC\string_fctns.obj+
+OBJ_BC\evr_spline.obj
+$<,$*
+C:\BC5\LIB\import32.lib+
+C:\BC5\LIB\cw32mt.lib
+
+
+
+|
+OBJ_BC\file_ops.obj :  file_ops.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ file_ops.c
+|
+
+OBJ_BC\evresp.obj :  evresp.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ evresp.c
+|
+
+OBJ_BC\alloc_fctns.obj :  alloc_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ alloc_fctns.c
+|
+
+OBJ_BC\resp_fctns.obj :  resp_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ resp_fctns.c
+|
+
+OBJ_BC\regsub.obj :  regsub.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ regsub.c
+|
+
+OBJ_BC\regexp.obj :  regexp.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ regexp.c
+|
+
+OBJ_BC\regerror.obj :  regerror.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ regerror.c
+|
+
+OBJ_BC\print_fctns.obj :  print_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ print_fctns.c
+|
+
+OBJ_BC\parse_fctns.obj :  parse_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ parse_fctns.c
+|
+
+OBJ_BC\evalresp.obj :  evalresp.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ evalresp.c
+|
+
+OBJ_BC\error_fctns.obj :  error_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ error_fctns.c
+|
+
+OBJ_BC\calc_fctns.obj :  calc_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ calc_fctns.c
+|
+
+OBJ_BC\string_fctns.obj :  string_fctns.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ string_fctns.c
+|
+
+OBJ_BC\evr_spline.obj :  evr_spline.c
+  $(BCC32) -P- -c @&&|
+ $(CompOptsAt_evalrespdexe) $(CompInheritOptsAt_evalrespdexe) -o$@ evr_spline.c
+|
+
+# Compiler configuration file
+BccW32.cfg :
+   Copy &&|
+-w
+-R
+-v
+-WM-
+-vi
+-H
+-H=evalresp.csm
+-WM
+-WC
+-g255
+-N
+-wpin
+-wdef
+-wnod
+-wamb
+-w-aus
+-w-par
+| $@
+
+

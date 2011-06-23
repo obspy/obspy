@@ -1,0 +1,145 @@
+Version 3.3.3 
+	27-Apr-2010 Ilya Dricker (i.dricker@isti.com)
+	* FIXED: bug which prevented using evalresp with -stdio flag 
+	* MIDFIED: Unwrapping now starts casual: first phase value is within (0:360) degree
+Version 3.3.2
+	12-Feb-2010 Ilya Dricker (i.dricker@isti.com)
+	* MODIFIED: get_names() to properly parse file names: did not work under Mac OSX: done by Chad
+	* MOVED: evalresp.man to evalresp.1
+	* MOVED: What's New section of evalresp.1 to ChangeLog file
+	* MODIFIED: printing a warning when using a negative delay
+	* MODIFIED: evalresp man pages
+	* REMOVED: evresp_adjust_phase() for 'fap' and 'ap' cases
+	* RENAMED: parse_line() to ev_parse_line() to avoid naming conflict
+	* MODIFIED: searching for RESP files now uses system glob().
+Version 3.3.1
+	29-Jan-2010 Ilya Dricker (i.dricker@isti.com)
+	* NEW: Added a 'fap' response type with the -r option (in addition to the 'ap' and 'cs' types) to write out frequency-amplitude-phase triplets. 
+	  The resulting file names are in the    form : "FAP.Net.Sta.Loc.Chan". The phase is always unwrapped in this output. 
+	  Essential this is just a re-packaging of the amplitude-phase output into a single, three-column file with unwrapped phase.
+	* NEW: Added run-time option (-unwrap) to unwrap the output phase in addition to the previous compile-time option.
+	* NEW: Added option (-ts ?) to use the stage 0 total sensitivity instead of product of the stage gains.  
+	   The idea is that this can be used in combination with the -stage option to provide a full scale response, i.e. just stage 1 (the sensor) 
+	   with a correct system gain (which is exact what SAC Poles and Zeros do). 
+	* NEW: Included checks for likely incorrect (negative) delay values; in case such delays are found evalresp prints a warning.
+	* FIXED: Cleaned improper checks for IIR_PZ blockette types in calc_fctns.c and resp_fctns.c.
+	* FXIED: Fixed search for matching RESP files, name search did not seem to use location ID.
+	* FIXED: Documented the SEED requirements regarding the order of the FIR coefficients and the sign of the delay (see section below).
+Version 3.3.0
+	18-May-2009 Ilya Dricker (i.dricker@isti.com)
+	* MODIFIED: This version modifies the way evalresp deals with the delays in FIR stages.
+	  Note that -use-delay option becomes obsolete in this version
+	  Now the following rules are applied for adding delays to the FIR stages: 
+	    1: Calculation  of the response for a symmetrical FIR filter ignores the delay value in the RESP; 
+	    2: Calculation of the response for an asymmetrical FIR filter uses the "correction applied"
+	      field of the RESP by default and "estimated delay" field on user request (a user should use an
+	      option -use-estimated-delay to switch this option on). This version has been tested to work on 64-bit processors.
+Version 3.2.41
+	29-Apr-2009 Ilya Dricker (i.dricker@isti.com)
+	* MODIFIED: processing of delays in FIR stages.
+	      Now the following rules are applied for adding delays to the FIR
+	      stages:
+	      1) Calculation of the response for a symmetrical FIR filter ignores
+	      the delay value in the RESP;
+	      2) Calculation of the response for an asymmetrical FIR filter
+		uses the "correction applied" field of the RESP by default and
+		"estimated delay" field on user request (a user should use an
+		option -use-estimated-delay to switch this option on).
+Version 3.2.40
+	20-Jun-2008 Ilya Dricker (i.dricker@isti.com)
+	* FIXED: bug in computation time limits
+	25-Sep-2007 Ilya Dricker (i.dricker@isti.com)
+	* REMOVED: 2 return statements in eversp which break LIB_MODE logic
+Version 3.2.39
+	12-Jul-2007 Ilya Dricker (i.dricker@isti.com)
+	*REMOVED: -g -Wall hardcoded flags from configure.in. Made then configurable 
+	   options;
+Version 3.2.38
+	04-Mar-2007 Ilya Dricker (i.dricker@isti.com)
+	* ADDED: new configure option --enable-log-label
+	  When evalresp is configured with this option, most of log messages
+	  are being prepended by a label. A label consists of [Net.Sta.Loc.Chan].
+	27-Feb-2007 Ilya Dricker (i.dricker@isti.com)
+	* ADDED: Return (#ifdef LIB_MODE) if input file is not found
+	01-Feb-2007 Ilya Dricker (i.dricker@isti.com)
+	* FIXED: Bug pointed by <alessia@sismo.u-strasbg.fr> : use 
+	  else if(!strcmp(argv[i], "-u")) instead of just if in evalresp.c:141
+	08-Nov-2006 Ilya Dricker (i.dricker@isti.com)
+	* NEW: Libtoolized evresp library: using libtool instead of ranlib.
+	  Now a builder can create dynamic library, not only static
+Version 3.2.37
+	16-Oct-2006 Eric Thomas (e.thomas@isti.com)
+	* ADDED:  two more 'free()' calls to "evresp.c" to fix memory leaks
+	  when program functions are used in external applications.
+Version 3.2.36
+	21-Aug-2006 Ilya Dricker (i.dricker@isti.com)
+	* Modified to support Tesla ("T") units.
+Version 3.2.35
+	4-Apr-2006 Eric Thomas (e.thomas@isti.com)
+	* MODIFIED:  to support channel-IDs with location codes equal
+	   to an empty string.
+Version 3.2.34
+	28-Mar-2006 Eric Thomas (e.thomas@isti.com)
+	* ADDED: 'free()' calls to "evresp.c" to fix memory leaks when
+	  program functions used in external applications.
+Version 3.2.33
+	27-Mar-2006 Ilya Dricker (i.dricker@isti.com)
+	* Added include_HEADERS target "evr_spline.h" to "Makefile.am".
+	* UPGRADED: missing script.
+Version 3.2.32
+	13-Feb-2006 Eric Thomas (e.thomas@isti.com)
+	* MOVED: 'use_delay()' function from 'evalresp.c' to 'evresp.c'.
+	* MODIFIED: to close input file when a single response file is
+	   specified.
+Version 3.2.31
+	19-Jan-2006 Eric Thomas (e.thomas@isti.com)
+	* RENAMED: 'regexp' functions to prevent name clashes with other
+	  libraries.
+	  * RESTORED: 'depcomp' script in distribution.
+Version 3.2.30
+	3-Nov-2005 Eric Thomas (e.thomas@isti.com)
+	* MODIFIED: to unwrap phase values before interpolation and re-wrap
+	  after (if needed).
+	* MODIFIED: to detect when all requested interpolated frequencies
+	  are out of range.
+Version 3.2.29
+	21-Oct-2005 Eric Thomas (e.thomas@isti.com)
+	* IMPLEMENTED: interpolation of amplitude/phase values from
+	  responses containing List blockettes (55).
+	* MODIFIED: message shown when List blockette encountered.
+	* MODIFIED: so as not to require characters after 'units'
+	  specifiers like "M" and "COUNTS".
+	* MODIFIED: to handle case where file contains "B052F03 Location"
+	  and nothing after it on line.
+	* ADDED: warnings for unrecognized parameters.
+	* FIXED: issue where program would crash under Linux/UNIX
+	  "segmentation fault" if input response file contained
+	  Windows-style "CR/LF" line ends.
+Version 3.2.28
+	2-Aug-2005 Eric Thomas (e.thomas@isti.com)
+	* MODIFIED: to allow command-line parameters for frequency
+	  values to be missing (default values used).
+Version 3.2.27
+	1-Mar-2005 Ilya Dricker(i.dricker@isti.com)
+	* ADDED: -add-delay command line option
+Version 3.2.26
+	20-Oct-2004 Ilya Dricker (i.dricker@isti.com)
+	* NEW: Now evalresp runs on Mac OS X
+Version 3.2.25
+	20-Jul-2005 Ilya Dricker (i.dricker@isti.com)
+	* Finally, we started ChangeLog
+	* FIXED: Processing of B55 + GAIN stage is now allowed
+	* ADDED: config.h to the source code and AM_CONFIG_HEADER to
+	  configure.in
+Version 3.2.24
+	??? Ilya Dricker (i.dricker@isti.com)
+	* ADDED: two confuration options (--enable-delay Use estimated delay in phase computation) and (--enable-phase-unwrap Unwrap phase). 
+Version 3.2.23
+	??? Ilya Dricker (i.dricker@isti.com)
+	* ADDED: support for SHAPE compatible RESP files. When parsing lines that are valid
+	  RESP format, but unexpected, evalresp now skips to the next line. Added support for blank lines within 
+	  and at the end of a RESP file.
+Version 3.2.21
+	??? Ilya Dricker (i.dricker@isti.com)
+	* NEW: Allows a user to compile and run evalresp on WIN32 platform.
+	* FIXED: A bug in pole-zero representations for digital stages has been fixed.

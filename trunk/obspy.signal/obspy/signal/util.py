@@ -44,6 +44,35 @@ if not clibsignal:
     msg = 'Could not load shared library for obspy.signal.\n\n %s' % (e)
     raise ImportError(msg)
 
+# Import shared libevresp depending on the platform.
+# create library names
+erlib_names = [
+    # platform specific library name
+    'libevresp-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
+     # fallback for pre-packaged libraries
+    'libevresp']
+# add correct file extension
+if  platform.system() == 'Windows':
+    lib_extension = '.pyd'
+else:
+    lib_extension = '.so'
+# initialize library
+clibevresp = None
+for erlib_name in erlib_names:
+    try:
+        clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
+                                         erlib_name + lib_extension))
+    except Exception, e:
+        pass
+    else:
+        break
+if not clibevresp:
+    msg = 'Could not load shared library for obspy.signal.invsim.evalresp\n\n %s' % (e)
+    raise ImportError(msg)
+
+
+
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
     """

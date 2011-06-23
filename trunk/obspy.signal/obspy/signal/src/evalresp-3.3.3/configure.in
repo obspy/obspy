@@ -1,0 +1,78 @@
+AC_INIT(Makefile.am)
+
+dnl without this order in this file, automake will be confused!
+dnl
+AM_CONFIG_HEADER(config.h)
+
+AM_INIT_AUTOMAKE(evalresp,3.3.3)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+dnl create only shared libtool-libraries
+AC_ENABLE_SHARED(no)
+ 
+dnl set the following to yes, if you want to create static
+dnl libtool-libraries
+AC_ENABLE_STATIC(yes)
+
+AC_PROG_LIBTOOL
+dnl AC_PROG_RANLIB
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lm:
+AC_CHECK_LIB(m, fabs)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(sys/time.h unistd.h malloc.h stdlib.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+dnl Checks for library functions.
+AC_FUNC_VFORK
+AC_CHECK_FUNCS(getcwd regcomp strcspn strstr)
+
+#CFLAGS= 
+
+AC_ARG_ENABLE(phase_unwrap,
+ [  --enable-phase-unwrap     Unwrap phase],
+ [ CFLAGS="$CFLAGS -DUNWRAP_PHASE"
+  echo ==== BEWARE: EVALRESP WILL UNWRAP PHASE  ======],
+ []) 
+
+AC_ARG_ENABLE(lib-mode,
+ [  --enable-lib-mode         Functions of evalresp return, not exit],
+ [ CFLAGS="$CFLAGS -DLIB_MODE"
+  echo ==== evalresp will be compiled in library mode  ======],
+ [])
+
+AC_ARG_ENABLE(log-label,
+ [  --enable-log-label        Add NSLC as a label to log messages],
+ [ CFLAGS="$CFLAGS -DLOG_LABEL"
+  echo ==== enabling log-label mode  ======],
+ [])
+
+AC_ARG_ENABLE(debug,
+ [  --enable-debug            Enable debug],
+  [enable_debug=yes
+                CFLAGS="$CFLAGS -g"
+  echo ==== Enabling DEBUG options ======],
+  [enable_debug=no])
+
+AC_ARG_ENABLE(optimization,
+ [  --enable-optimization     Enable optimization],
+  [enable_optimization=yes
+                CFLAGS="$CFLAGS -02"
+  echo ==== Enabling -O2 option ======],
+  [enable_optimization=no])
+
+AC_ARG_ENABLE(strict,
+ [  --enable-strict           Enable strict mode],
+  [enable_strict=yes
+                CFLAGS="$CFLAGS -Wall"
+  echo ==== Enabling -Wall option ======],
+  [enable_strict=no])
+
+
+AC_OUTPUT(Makefile)

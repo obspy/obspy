@@ -30,7 +30,7 @@ import os
 import platform
 import shutil
 import sys
-
+import glob
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
@@ -89,6 +89,41 @@ def setupLibSignal():
                                src + 'bbfk.c', src_fft + 'fftpack.c',
                                src_fft + 'fftpack_litemodule.c'],
                       export_symbols=symbols)
+    return lib
+
+def setupLibEvalResp():
+    """
+    Prepare building of evalresp extension library.
+    """
+    # hack to prevent build_ext to append __init__ to the export symbols
+    class finallist(list):
+        def append(self, object):
+            return
+
+    class MyExtension(Extension):
+        def __init__(self, *args, **kwargs):
+            Extension.__init__(self, *args, **kwargs)
+            self.export_symbols = finallist(self.export_symbols)
+    macros = []
+    src_evr = os.path.join('obspy', 'signal', 'src', 'evalresp-3.3.3') + os.sep
+    evresp_include_dir = src_evr
+
+    # system specific settings
+    if platform.system() == "Windows":
+        # disable some warnings for MSVC
+        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
+    # create library name
+    if 'develop' in sys.argv:
+        lib_name = 'libevresp-%s-%s-py%s' % (
+            platform.system(), platform.architecture()[0],
+            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
+    else:
+        lib_name = 'libevresp'
+    # setup C extension
+    lib = MyExtension(lib_name,
+                      define_macros=macros,
+                      include_dirs=[evresp_include_dir],
+                      sources=glob.glob(os.path.join(src_evr,'*.c')))
     return lib
 
 
@@ -155,7 +190,7 @@ def setupPackage():
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,
         ext_package='obspy.signal.lib',
-        ext_modules=[setupLibSignal()],
+        ext_modules=[setupLibSignal(),setupLibEvalResp()],
         use_2to3=True,
     )
     # cleanup after using lib2to3 for Python 3.x

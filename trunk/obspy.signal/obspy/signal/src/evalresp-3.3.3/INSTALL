@@ -1,0 +1,56 @@
+to compile (install) evalresp from this distribution, follow
+these steps:
+
+1. Uncompress and untar the distribution file.  
+ 
+        zcat evalresp-[version].tar.gz | tar -xvf - 
+
+   This will create a directory "evalresp" that contains the full
+   evalresp distribution.
+
+2. Run './configure' to construct a 'Makefile' appropriate for your
+   site ('./configure' uses the 'Makefile.in' file to construct the
+   'Makefile' for your site).  Use the following procedure
+
+   Go into the "evalresp" directory 
+ 
+        cd evalresp
+ 
+   and run the auto-configuration script "./configure"
+ 
+        ./configure 
+ 
+   * If you want to use acc (or any other compiler), simply set
+     the CC environment variable as follows:
+ 
+        setenv CC acc
+        ./configure
+
+     type './configure --help' for help with other options that can
+     be set on the command line when running the './configure' script
+
+  * The following ./configure options can be used during this stage:
+    
+     --enable-phase-unwrap     Unwrap phase
+     --enable-lib-mode         Functions of evalresp return, not exit
+     --enable-log-label        Add NSLC as a label to log messages
+     --enable-debug            Enable debug
+     --enable-optimization     Enable optimization
+     --enable-strict           Enable strict mode
+
+3. Compile the program "evalresp".
+ 
+        make 
+
+   this will also construct a library (libevresp.a) that can be linked
+   into other external programs in order to allow them to evaluate responses
+   the same way that evalresp does.  To add the 'evresp' function to your own
+   program, just add the call to evresp in your code and link with the
+   'libevresp.a' library when compiling and linking your executable.
+
+   an example of this process is the compile statement for the 'evtest.f'
+   FORTRAN program, which is included in this distribution as an example
+   of how to call evresp from your own code.  Although the 'evtest' program
+   is not compiled by default, it can be compiled using the following command:
+
+        f77 evtest.f -L. -levresp -o evtest
