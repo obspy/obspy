@@ -727,7 +727,8 @@ class Trace(object):
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
 
-    def _ltrim(self, starttime, pad=False, nearest_sample=True):
+    def _ltrim(self, starttime, pad=False, nearest_sample=True,
+               fill_value=None):
         """
         Cuts current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -771,7 +772,8 @@ class Trace(object):
             return
         elif delta < 0 and pad:
             try:
-                gap = createEmptyDataChunk(abs(delta), self.data.dtype)
+                gap = createEmptyDataChunk(abs(delta), self.data.dtype,
+                                           fill_value)
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of pointes, e.g. 189336539799
@@ -785,7 +787,7 @@ class Trace(object):
         elif delta > 0:
             self.data = self.data[delta:]
 
-    def _rtrim(self, endtime, pad=False, nearest_sample=True):
+    def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
         """
         Cuts current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
@@ -819,7 +821,7 @@ class Trace(object):
             return
         if delta > 0 and pad:
             try:
-                gap = createEmptyDataChunk(delta, self.data.dtype)
+                gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of pointes, e.g. 189336539799
@@ -847,7 +849,7 @@ class Trace(object):
             self.data = self.data[:total]
 
     def trim(self, starttime=None, endtime=None, pad=False,
-             nearest_sample=True):
+             nearest_sample=True, fill_value=None):
         """
         Cuts current trace to given start and end time. If nearest_sample is
         True, the closest sample is selected, if nearest_sample is False, the
@@ -859,6 +861,10 @@ class Trace(object):
 
         nearest_sample=True will select the second sample point,
         nearest_sample=False will select the first sample point .
+
+        pad=True gives the possibility to trim at time points outside the
+        time frame of the original trace, filling the trace with fill_value
+        (the default fill_value=None will mask the corresponding values).
 
         Basic Usage
         -----------
@@ -874,9 +880,11 @@ class Trace(object):
             raise ValueError("startime is larger than endtime")
         # cut it
         if starttime:
-            self._ltrim(starttime, pad, nearest_sample=nearest_sample)
+            self._ltrim(starttime, pad, nearest_sample=nearest_sample,
+                        fill_value=fill_value)
         if endtime:
-            self._rtrim(endtime, pad, nearest_sample=nearest_sample)
+            self._rtrim(endtime, pad, nearest_sample=nearest_sample,
+                        fill_value=fill_value)
 
     def slice(self, starttime, endtime):
         """
