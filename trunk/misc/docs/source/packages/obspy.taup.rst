@@ -6,7 +6,7 @@
     Classes & functions
     -------------------
     .. autosummary::
-      :toctree: auto
+      :toctree: .
       :nosignatures:
 
         taup.getTravelTimes
@@ -17,7 +17,7 @@
     Modules
     -------
     .. autosummary::
-      :toctree: auto
+      :toctree: .
       :nosignatures:
 
         taup
