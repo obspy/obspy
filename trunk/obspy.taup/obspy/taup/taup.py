@@ -178,12 +178,14 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
             degree = 180 - (degree - 180)
         for item in tt:
             phase = item['phase_name']
-            try:
-                data[phase][1].append(item['time'] / 60.0)
-                data[phase][0].append(degree)
-            except:
-                data[phase][1].append(np.NaN)
-                data[phase][0].append(degree)
+            # Check if this phase should be plotted.
+            if data.has_key(phase):
+                try:
+                    data[phase][1].append(item['time'] / 60.0)
+                    data[phase][0].append(degree)
+                except:
+                    data[phase][1].append(np.NaN)
+                    data[phase][0].append(degree)
 
     # Plot and some formatting.
     for key, value in data.iteritems():
