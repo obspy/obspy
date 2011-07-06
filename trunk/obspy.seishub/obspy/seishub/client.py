@@ -799,8 +799,14 @@ class _EventMapperClient(_BaseRESTClient):
                 kwargs[key] = value
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
-        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
-                for node in root.getchildren()]
+        results = [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+                   for node in root.getchildren()]
+        if limit == len(results) or \
+           limit == None and len(results) == 50 or \
+           len(results) == 2500:
+            msg = "List of results might be incomplete due to option 'limit'."
+            warnings.warn(msg)
+        return results
 
     @deprecated
     def getKml(self, nolabels=False, **kwargs):
