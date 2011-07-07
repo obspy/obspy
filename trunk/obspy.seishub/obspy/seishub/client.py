@@ -503,6 +503,7 @@ class _WaveformMapperClient(object):
                     raise Exception(msg)
             for tr in stream:
                 tr.stats['coordinates'] = coords.copy()
+        stream._cleanup()
         return stream
 
     @deprecated_keywords(DEPRECATED_KEYWORDS)

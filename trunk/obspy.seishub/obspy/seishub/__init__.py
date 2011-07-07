@@ -32,11 +32,11 @@ Advanced Examples
 >>> client.waveform.getNetworkIds()     #doctest: +ELLIPSIS
 ['KT', 'BW', 'NZ', 'GR', ...]
 
->>> sta_ids = client.waveform.getStationIds(network_id='BW')
+>>> sta_ids = client.waveform.getStationIds(network='BW')
 >>> sorted(sta_ids)     #doctest: +ELLIPSIS
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
->>> cha_ids = client.waveform.getChannelIds(network_id='BW', station_id='MANZ')
+>>> cha_ids = client.waveform.getChannelIds(network='BW', station_id='MANZ')
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
 
