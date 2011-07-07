@@ -15,22 +15,24 @@ class CalibrationTestCase(unittest.TestCase):
     """
     Calibration test case
     """
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+
     def test_relcal_sts2_vs_unknown(self):
         """
         Test relative calibration of unknow instrument vs STS2 in the same time
         range. Window length is set to 20 s, smoothing rate to 10.
         """
-
-        cwd = os.getcwd()
-        st1 = read('%s/data/ref_STS2' % (cwd))
-        st2 = read('%s/data/ref_unknown' % (cwd))
-        calfile = "%s/data/STS2_simp.cal" % (cwd)
+        st1 = read(os.path.join(self.path, 'ref_STS2'))
+        st2 = read(os.path.join(self.path, 'ref_unknown'))
+        calfile = os.path.join(self.path, 'STS2_simp.cal')
 
         freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10)
 
         # read in the reference responses
-        un_resp = np.loadtxt("data/unknown.resp")
-        kn_resp = np.loadtxt("data/STS2.refResp")
+        un_resp = np.loadtxt(os.path.join(self.path, 'ref_unknown'))
+        kn_resp = np.loadtxt(os.path.join(self.path, '/STS2.refResp'))
 
         # test if freq, amp and phase match the reference values
         np.testing.assert_array_almost_equal(freq, un_resp[:, 0],
