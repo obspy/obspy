@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The relcal test suite.
+The calibration test suite.
 """
 
 import os
@@ -10,9 +10,9 @@ import numpy as np
 from obspy.core import read
 from obspy.signal.calibration import relcalstack
 
-class RelcalTestCase(unittest.TestCase):
+class CalibrationTestCase(unittest.TestCase):
     """
-    Relcal test case
+    Calibration test case
     """
     def test_relcal_sts2_vs_unknown(self):
         """
