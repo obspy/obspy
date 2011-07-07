@@ -558,7 +558,12 @@ def writeSU(stream, filename, byteorder=None):
     for trace in stream:
         new_trace = SEGYTrace()
         new_trace.data = trace.data
-        this_trace_header = trace.stats.su.trace_header
+        # Use header saved in stats if one exists.
+        if hasattr(trace.stats, 'su') and \
+           hasattr(trace.stats.su, 'trace_header'):
+            this_trace_header = trace.stats.su.trace_header
+        else:
+            this_trace_header = AttribDict()
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
         # them. Ignore all additional attributes.
@@ -567,6 +572,10 @@ def writeSU(stream, filename, byteorder=None):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
         starttime = trace.stats.starttime
+        # Set some special attributes, e.g. the sample count and other stuff.
+        new_trace_header.number_of_samples_in_this_trace = trace.stats.npts
+        new_trace_header.sample_interval_in_ms_for_this_trace = \
+                int(round((trace.stats.delta * 1E6)))
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
             new_trace.header.year_data_recorded = 0

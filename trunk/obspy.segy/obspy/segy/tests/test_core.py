@@ -5,7 +5,7 @@ The obspy.segy core test suite.
 
 from __future__ import with_statement
 import numpy as np
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
 from obspy.segy.core import SEGYSampleIntervalError
@@ -418,6 +418,39 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Slightly larger should raise.
         su[0].stats.delta = 0.065536
         self.assertRaises(SEGYSampleIntervalError, writeSU, su, outfile)
+
+    def test_writingSUFileWithNoHeader(self):
+        """
+        If the trace has no trace.su attribute, one should still be able to
+        write a SeismicUnix file.
+
+        This is not recommended because most Trace.stats attributes will be
+        lost while writing SU.
+        """
+        st = read()
+        del st[1:]
+        st[0].data = np.require(st[0].data, 'float32')
+        outfile = NamedTemporaryFile().name
+        st.write(outfile, format='SU')
+        st2 = read(outfile)
+        os.remove(outfile)
+        # Compare new and old stream objects. All the other header attributes
+        # will not be set.
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
+        self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
+        self.assertEqual(st[0].stats.endtime, st2[0].stats.endtime)
+        self.assertEqual(st[0].stats.sampling_rate, st2[0].stats.sampling_rate)
+        # Writing and reading this new stream object should not change
+        # anything.
+        st2.write(outfile, format='SU')
+        st3 = read(outfile)
+        os.remove(outfile)
+        np.testing.assert_array_equal(st2[0].data, st3[0].data)
+        # Remove the su attributes because they will not be equal due to lazy
+        # header attributes.
+        del st2[0].stats.su
+        del st3[0].stats.su
+        self.assertEqual(st2[0].stats, st3[0].stats)
 
     def test_writingModifiedDate(self):
         """

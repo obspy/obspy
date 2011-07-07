@@ -550,10 +550,15 @@ class SEGYTraceHeader(object):
                 file.write(pack(format, getattr(self, name)))
             # Just the one unassigned field.
             elif length == 8:
-                file.write(getattr(self, name))
+                field = getattr(self, name)
+                # An empty field will have a zero.
+                if field == 0:
+                    field = 2 * pack('%sI' % endian, 0)
+                file.write(field)
             # Should not happen.
             else:
                 raise Exception
+
 
     def __getattr__(self, name):
         """
@@ -592,8 +597,9 @@ class SEGYTraceHeader(object):
 
     def _createEmptyTraceHeader(self):
         """
-        Sets all trace header values to 0.
+        Init the trace header with zeros.
         """
+        # First set all fields to zero.
         for field in TRACE_HEADER_FORMAT:
             setattr(self, field[1], 0)
 
@@ -693,6 +699,10 @@ class SUFile(object):
         Tries to automatically determine the endianness of the file at hand.
         """
         self.endian = autodetectEndianAndSanityCheckSU(self.file)
+        if self.endian is False:
+            msg = 'Autodetection of Endianness failed. Please specify it ' + \
+                  'by hand or contact the developers.'
+            raise Exception(msg)
 
     def _createEmptySUFileObject(self):
         """
@@ -796,7 +806,7 @@ def _readSU(file, endian=None, unpack_headers=False):
 
 def autodetectEndianAndSanityCheckSU(file):
     """
-    Takes an open file and tries to determine the endianness of and Seismic
+    Takes an open file and tries to determine the endianness of a Seismic
     Unix data file by doing some sanity checks with the unpacked header values.
 
     Returns False if the sanity checks failed and the endianness otherwise.
@@ -816,8 +826,6 @@ def autodetectEndianAndSanityCheckSU(file):
     # and every data value 4 byte long.
     elif (size % 4) != 0:
         return False
-    _trace_seq_in_line = file.read(4)
-    _trace_seq_in_segy = file.read(4)
     # Jump to the number of samples field in the trace header.
     file.seek(114, 0)
     sample_count = file.read(2)
