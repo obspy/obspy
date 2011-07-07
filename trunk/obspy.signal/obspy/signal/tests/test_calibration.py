@@ -10,6 +10,7 @@ import numpy as np
 from obspy.core import read
 from obspy.signal.calibration import relcalstack
 
+
 class CalibrationTestCase(unittest.TestCase):
     """
     Calibration test case
@@ -21,10 +22,10 @@ class CalibrationTestCase(unittest.TestCase):
         """
 
         cwd = os.getcwd()
-        st1 = read('%s/data/ref_STS2'%(cwd))
-        st2 = read('%s/data/ref_unknown'%(cwd))
-        calfile = "%s/data/STS2_simp.cal"%(cwd)
-        
+        st1 = read('%s/data/ref_STS2' % (cwd))
+        st2 = read('%s/data/ref_unknown' % (cwd))
+        calfile = "%s/data/STS2_simp.cal" % (cwd)
+
         freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10)
 
         # read in the reference responses
@@ -32,20 +33,22 @@ class CalibrationTestCase(unittest.TestCase):
         kn_resp = np.loadtxt("data/STS2.refResp")
 
         # test if freq, amp and phase match the reference values
-        np.testing.assert_array_almost_equal(freq, un_resp[:,0],
+        np.testing.assert_array_almost_equal(freq, un_resp[:, 0],
                                              decimal=4)
-        np.testing.assert_array_almost_equal(freq, kn_resp[:,0],
+        np.testing.assert_array_almost_equal(freq, kn_resp[:, 0],
                                              decimal=4)
-        np.testing.assert_array_almost_equal(amp, un_resp[:,1],
+        np.testing.assert_array_almost_equal(amp, un_resp[:, 1],
                                              decimal=4)
-        np.testing.assert_array_almost_equal(phase, un_resp[:,2],
+        np.testing.assert_array_almost_equal(phase, un_resp[:, 2],
                                              decimal=4)
 
         os.remove("0438.20.resp")
         os.remove("STS2.refResp")
 
+
 def suite():
-    return unittest.makeSuite(RelcalTestCase, 'test')
+    return unittest.makeSuite(CalibrationTestCase, 'test')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
