@@ -39,7 +39,8 @@ try:
     from matplotlib.ticker import FormatStrFormatter
     from matplotlib.colors import LinearSegmentedColormap
     from matplotlib.mlab import detrend_none, window_hanning
-    MATPLOTLIB_VERSION = map(int, matplotlib.__version__.split("."))
+    MATPLOTLIB_VERSION = matplotlib.__version__.replace('svn', '')
+    MATPLOTLIB_VERSION = map(int, MATPLOTLIB_VERSION.split("."))
 except ImportError:
     # if matplotlib is not present be silent about it and only raise the
     # ImportError if matplotlib actually is used (currently in psd() and
