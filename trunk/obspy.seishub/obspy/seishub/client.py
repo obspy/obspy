@@ -19,6 +19,7 @@ import os
 import pickle
 import sys
 import time
+import httplib
 import urllib
 import urllib2
 import warnings
@@ -153,6 +154,12 @@ class Client(object):
                     response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
             else:
                 raise
+        except httplib.BadStatusLine:
+            # XXX same request again
+            if sys.hexversion < 0x02060000:
+                response = urllib2.urlopen(remoteaddr)
+            else:
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
 
         return doc
