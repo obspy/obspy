@@ -19,6 +19,7 @@ import os
 import pickle
 import sys
 import time
+import httplib
 import urllib
 import urllib2
 import warnings
@@ -136,10 +137,29 @@ class Client(object):
         # replace special characters 
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            response = urllib2.urlopen(remoteaddr)
-        else:
-            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        try:
+            if sys.hexversion < 0x02060000:
+                response = urllib2.urlopen(remoteaddr)
+            else:
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        # XXX currently there are random problems with SeisHub's internal sql
+        # XXX database access ("cannot operate on a closed database").
+        # XXX this can be circumvented by issuing the same request again..
+        except urllib2.HTTPError, e:
+            if e.code == 500 and e.msg == "Internal Server Error":
+                # XXX same request again
+                if sys.hexversion < 0x02060000:
+                    response = urllib2.urlopen(remoteaddr)
+                else:
+                    response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+            else:
+                raise
+        except httplib.BadStatusLine:
+            # XXX same request again
+            if sys.hexversion < 0x02060000:
+                response = urllib2.urlopen(remoteaddr)
+            else:
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
 
         return doc
