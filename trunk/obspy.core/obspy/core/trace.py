@@ -580,13 +580,20 @@ class Trace(object):
                     interpolation_samples = delta
                 elif interpolation_samples > delta:
                     interpolation_samples = delta
-                rs = rt.data[interpolation_samples]
-                # include left and right sample (delta + 2)
-                interpolation = np.linspace(ls, rs, interpolation_samples + 2)
-                # cut ls and rs and ensure correct data type
-                interpolation = np.require(interpolation[1:-1], lt.data.dtype)
-                data = [lt.data[:-delta], interpolation,
-                        rt.data[interpolation_samples:]]
+                try:
+                    rs = rt.data[interpolation_samples]
+                except IndexError:
+                    # contained trace
+                    data = [lt.data]
+                else:
+                    # include left and right sample (delta + 2)
+                    interpolation = np.linspace(ls, rs,
+                                                interpolation_samples + 2)
+                    # cut ls and rs and ensure correct data type
+                    interpolation = np.require(interpolation[1:-1],
+                                               lt.data.dtype)
+                    data = [lt.data[:-delta], interpolation,
+                            rt.data[interpolation_samples:]]
             else:
                 raise NotImplementedError
         elif delta < 0 and delta_endtime >= 0:
