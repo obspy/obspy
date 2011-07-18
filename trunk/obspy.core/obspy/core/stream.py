@@ -154,7 +154,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     if not pathname_or_url:
         return _readExample()
     # if pathname starts with /path/to/ try to search in examples
-    if pathname_or_url.startswith('/path/to/'):
+    if isinstance(pathname_or_url, basestring) and pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
         except:
@@ -200,9 +200,16 @@ def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a single file into a ObsPy Stream object.
     """
-    if not os.path.exists(filename):
+    if isinstance(filename, basestring) and not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
+    # Hack to make StringIO reading work.
+    # XXX: Needs to be unified for all modules, e.g. maybe a module property
+    # whether nor not it can read memory files.
+    elif hasattr(filename, 'read') and hasattr(filename, 'tell') and \
+         hasattr(filename, 'seek') and (format.upper() == 'MSEED' or \
+         format is None):
+        format = 'MSEED'
     format_ep = None
     if not format:
         eps = ENTRY_POINTS
