@@ -8,7 +8,6 @@ import os
 import unittest
 import numpy as np
 from obspy.core import read
-from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.signal.calibration import relcalstack
 
 
@@ -25,19 +24,16 @@ class CalibrationTestCase(unittest.TestCase):
         Test relative calibration of unknow instrument vs STS2 in the same time
         range. Window length is set to 20 s, smoothing rate to 10.
         """
-        # relcalstack needs matplotlib.mlab._spectral_helper (see #270)
-        if MATPLOTLIB_VERSION < [0, 98, 4]:
-            return
-
         st1 = read(os.path.join(self.path, 'ref_STS2'))
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
 
-        freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10)
+        freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10,
+                                       save_data=False)
 
         # read in the reference responses
-        un_resp = np.loadtxt(os.path.join(self.path, 'ref_unknown'))
-        kn_resp = np.loadtxt(os.path.join(self.path, '/STS2.refResp'))
+        un_resp = np.loadtxt(os.path.join(self.path, 'unknown.resp'))
+        kn_resp = np.loadtxt(os.path.join(self.path, 'STS2.refResp'))
 
         # test if freq, amp and phase match the reference values
         np.testing.assert_array_almost_equal(freq, un_resp[:, 0],
@@ -48,9 +44,6 @@ class CalibrationTestCase(unittest.TestCase):
                                              decimal=4)
         np.testing.assert_array_almost_equal(phase, un_resp[:, 2],
                                              decimal=4)
-
-        os.remove("0438.20.resp")
-        os.remove("STS2.refResp")
 
 
 def suite():
