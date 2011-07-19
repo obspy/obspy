@@ -25,27 +25,14 @@ import math
 import bisect
 import numpy as np
 from obspy.core import Trace, Stream
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
 
-try:
-    # Import matplotlib routines. These are no official dependency of
-    # obspy.signal so an import error should really only be raised if any
-    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
-    import matplotlib
-    from matplotlib import mlab
-    import matplotlib.pyplot as plt
-    from matplotlib.dates import date2num
-    from matplotlib.ticker import FormatStrFormatter
-    from matplotlib.colors import LinearSegmentedColormap
-    from matplotlib.mlab import detrend_none, window_hanning
-    MATPLOTLIB_VERSION = matplotlib.__version__.replace('svn', '')
-    MATPLOTLIB_VERSION = map(int, MATPLOTLIB_VERSION.split("."))
-except ImportError:
+if MATPLOTLIB_VERSION == None:
     # if matplotlib is not present be silent about it and only raise the
     # ImportError if matplotlib actually is used (currently in psd() and
     # PPSD())
-    MATPLOTLIB_VERSION = None
     msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
             "is no dependency of obspy.signal it is however necessary for a " \
             "few routines. Please install matplotlib in order to be able " \
@@ -56,6 +43,16 @@ except ImportError:
     # therefore not usable
     def detrend_none(): pass
     def window_hanning(): pass
+else:
+    # Import matplotlib routines. These are no official dependency of
+    # obspy.signal so an import error should really only be raised if any
+    # routine is used which relies on matplotlib (at the moment: psd, PPSD).
+    from matplotlib import mlab
+    import matplotlib.pyplot as plt
+    from matplotlib.dates import date2num
+    from matplotlib.ticker import FormatStrFormatter
+    from matplotlib.colors import LinearSegmentedColormap
+    from matplotlib.mlab import detrend_none, window_hanning
 
 
 # build colormap as done in paper by mcnamara

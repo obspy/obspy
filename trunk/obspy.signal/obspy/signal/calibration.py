@@ -18,9 +18,24 @@ Functions for relative calibration
 """
 
 import numpy as np
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.signal.util import nextpow2
 from obspy.signal import konnoOhmachiSmoothing
-from matplotlib.mlab import _spectral_helper as spectral_helper
+
+# minimum version for _spectral_helper according to:
+# https://github.com/matplotlib/matplotlib/blame/master/lib/matplotlib/mlab.py
+# and http://matplotlib.sourceforge.net/_static/CHANGELOG
+if MATPLOTLIB_VERSION < [0, 98, 4]:
+    # if matplotlib is not present be silent about it and only raise the
+    # ImportError if matplotlib actually is used.
+    msg_matplotlib_ImportError = "Failed to import matplotlib >= 0.98.4. " \
+            "While this is no dependency of obspy.signal it is however " \
+            "necessary for a few routines."
+else:
+    # Import matplotlib routines. These are no official dependency of
+    # obspy.signal so an import error should really only be raised if any
+    # routine is used which relies on matplotlib.
+    from matplotlib.mlab import _spectral_helper as spectral_helper
 
 
 def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0):
@@ -46,6 +61,10 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0):
 
     implemented after relcalstack.c by M.Ohrnberger and J.Wassermann.
     """
+    # check if matplotlib is available, no official dependency for obspy.signal
+    if MATPLOTLIB_VERSION < [0, 98, 4]:
+        raise ImportError(msg_matplotlib_ImportError)
+
     # check Konno-Ohmachi
     if smooth < 0:
         smooth = 0

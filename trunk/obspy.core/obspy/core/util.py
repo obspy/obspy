@@ -600,5 +600,23 @@ def getEntryPoints():
     return new_entries
 
 
+def get_matplotlib_version():
+    """
+    Get matplotlib version information.
+
+    :returns: Matplotlib version as a list of three integers or None if
+            matplotlib import fails.
+    """
+    try:
+        import matplotlib
+        version = matplotlib.__version__.replace('svn', '')
+        version = map(int, version.split("."))
+    except ImportError:
+        version = None
+    return version
+
+MATPLOTLIB_VERSION = get_matplotlib_version()
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

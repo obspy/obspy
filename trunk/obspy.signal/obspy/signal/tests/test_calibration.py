@@ -8,6 +8,7 @@ import os
 import unittest
 import numpy as np
 from obspy.core import read
+from obspy.core.util import MATPLOTLIB_VERSION
 from obspy.signal.calibration import relcalstack
 
 
@@ -24,6 +25,10 @@ class CalibrationTestCase(unittest.TestCase):
         Test relative calibration of unknow instrument vs STS2 in the same time
         range. Window length is set to 20 s, smoothing rate to 10.
         """
+        # relcalstack needs matplotlib.mlab._spectral_helper (see #270)
+        if MATPLOTLIB_VERSION < [0, 98, 4]:
+            return
+
         st1 = read(os.path.join(self.path, 'ref_STS2'))
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
@@ -54,4 +59,3 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
-
