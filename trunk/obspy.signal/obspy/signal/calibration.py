@@ -23,7 +23,7 @@ from obspy.signal import konnoOhmachiSmoothing
 
 
 def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
-                save_data=False):
+                save_data=True):
     """
     Method for relative calibration of sensors using a sensor with known
     transfer function
