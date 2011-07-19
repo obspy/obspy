@@ -71,9 +71,6 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
     ndat = int(window_len * sampfreq)
     nfft = nextpow2(ndat)
 
-    # initialize array for response function
-    res = np.zeros(nfft / 2 + 1, dtype='complex128')
-
     # read calib file and calculate response function
     gg, _freq = calcresp(calib_file, nfft, sampfreq)
 
@@ -87,10 +84,13 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
         spectral_helper(tr1, tr2, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
 
     # 180 Grad Phasenverschiebung
-    cross.imag = -cross.imag
+    cross.imag *= -1.0
 
-    for i in range(nwin):
-        res += (cross[:, i] / auto[:, i]) * gg
+    # Replaces the following in compact form:
+    # res = np.zeros(nfft / 2 + 1, dtype='complex128')
+    # for i in range(nwin):
+    #     res += (cross[:, i] / auto[:, i]) * gg
+    res = (cross/auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
     res = res[1:]
@@ -100,15 +100,12 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
     res /= nwin
     # apply Konno-Ohmachi smoothing taper if chosen
     if smooth > 0:
-
         # Write in one matrix for performance reasons.
         spectra = np.empty((2, len(res.real)))
         spectra[0] = res.real
         spectra[1] = res.imag
-
         new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
                 count=1, max_memory_usage=1024, normalize=True)
-
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
