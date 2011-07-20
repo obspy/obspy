@@ -30,10 +30,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     Method for relative calibration of sensors using a sensor with known
     transfer function
 
-    :param st1: Stream or Trace object, (known) the trace.stats dict like class
-        must contain the parameters "sampling_rate", "npts" and "station"
-    :param st2: Stream or Trace object, (unknown) the trace.stats dict like
-        class must contain the parameters "sampling_rate", "npts" and "station"
+    :param st1: Stream or Trace object, (known)
+    :param st2: Stream or Trace object, (unknown)
     :type calib_file: String
     :param calib_file: file name of calibration file containing the PAZ of the
         known instrument in GSE2 standard.
