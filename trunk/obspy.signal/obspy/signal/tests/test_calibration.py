@@ -45,6 +45,23 @@ class CalibrationTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(phase, un_resp[:, 2],
                                              decimal=4)
 
+    def test_relcalUsingTraces(self):
+        """
+        Tests using traces instead of stream objects as input parameters.
+        """
+        st1 = read(os.path.join(self.path, 'ref_STS2'))
+        st2 = read(os.path.join(self.path, 'ref_unknown'))
+        calfile = os.path.join(self.path, 'STS2_simp.cal')
+        # stream
+        freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10,
+                                       save_data=False)
+        # traces
+        freq2, amp2, phase2 = relcalstack(st1[0], st2[0], calfile, 20,
+                                          smooth=10, save_data=False)
+        np.testing.assert_array_almost_equal(freq, freq2, decimal=4)
+        np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
+        np.testing.assert_array_almost_equal(phase, phase2, decimal=4)
+
 
 def suite():
     return unittest.makeSuite(CalibrationTestCase, 'test')

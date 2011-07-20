@@ -8,7 +8,7 @@
 # Copyright (C) 2011 Felix Bernauer, Simon Kremers
 #---------------------------------------------------------------------
 """
-Functions for relative calibration
+Functions for relative calibration.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -17,28 +17,30 @@ Functions for relative calibration
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import numpy as np
-from obspy.signal.util import nextpow2
+from obspy.core.stream import Stream
+from obspy.core.trace import Trace
 from obspy.signal import konnoOhmachiSmoothing
+from obspy.signal.util import nextpow2
+import numpy as np
 
 
-def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
+def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
                 save_data=True):
     """
     Method for relative calibration of sensors using a sensor with known
     transfer function
 
-    :param st1: Stream object, (known) the trace.stats dict like class must
-        contain the parameters "sampling_rate", "npts" and "station"
-    :param st2: Stream object, (unknown) the trace.stats dict like class must
-        contain the parameters "sampling_rate", "npts" and "station"
+    :param st1: Stream or Trace object, (known) the trace.stats dict like class
+        must contain the parameters "sampling_rate", "npts" and "station"
+    :param st2: Stream or Trace object, (unknown) the trace.stats dict like
+        class must contain the parameters "sampling_rate", "npts" and "station"
     :type calib_file: String
-    :param calib_file: name of calib file containing the known PAZ of known
-        instrument in GSE2 standard.
+    :param calib_file: file name of calibration file containing the PAZ of the
+        known instrument in GSE2 standard.
     :type window_len: Float
     :param window_len: length of sliding window in seconds
-    :type OverlapFrac: float
-    :param OverlapFrac: fraction of overlap, defaults to fifty percent (0.5)
+    :type overlap_frac: float
+    :param overlap_frac: fraction of overlap, defaults to fifty percent (0.5)
     :type smooth: Float
     :param smooth: variable that defines if the Konno-Ohmachi taper is used or
         not. default = 0 -> no taper generally used in geopsy: smooth = 40
@@ -52,12 +54,17 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
 
     implemented after relcalstack.c by M.Ohrnberger and J.Wassermann.
     """
+    # transform given trace objects to streams
+    if isinstance(st1, Trace):
+        st1 = Stream(st1)
+    if isinstance(st2, Trace):
+        st2 = Stream(st2)
     # check if sampling rate and trace length is the same
     if st1[0].stats.npts != st2[0].stats.npts:
-        msg = 'Traces dont have the same length!'
+        msg = "Traces don't have the same length!"
         raise ValueError(msg)
     elif st1[0].stats.sampling_rate != st2[0].stats.sampling_rate:
-        msg = 'Traces dont have the same sampling rate!'
+        msg = "Traces don't have the same sampling rate!"
         raise ValueError(msg)
     else:
         ndat1 = st1[0].stats.npts
@@ -76,7 +83,7 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
 
     # calculate number of windows and overlap
     nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
-    noverlap = nfft * OverlapFrac
+    noverlap = nfft * overlap_frac
 
     auto, _freq, _t = \
         spectral_helper(tr1, tr1, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
@@ -90,7 +97,7 @@ def relcalstack(st1, st2, calib_file, window_len, OverlapFrac=0.5, smooth=0,
     # res = np.zeros(nfft / 2 + 1, dtype='complex128')
     # for i in range(nwin):
     #     res += (cross[:, i] / auto[:, i]) * gg
-    res = (cross/auto).sum(axis=1) * gg
+    res = (cross / auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
     res = res[1:]
@@ -239,12 +246,12 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         y = np.asarray(y)
 
     # zero pad x and y up to NFFT if they are shorter than NFFT
-    if len(x)<NFFT:
+    if len(x) < NFFT:
         n = len(x)
         x = np.resize(x, (NFFT,))
         x[n:] = 0
 
-    if not same_data and len(y)<NFFT:
+    if not same_data and len(y) < NFFT:
         n = len(y)
         y = np.resize(y, (NFFT,))
         y[n:] = 0
@@ -260,7 +267,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         numFreqs = pad_to
         scaling_factor = 1.
     elif sides in ('default', 'onesided'):
-        numFreqs = pad_to//2 + 1
+        numFreqs = pad_to // 2 + 1
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
@@ -277,33 +284,35 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
     step = NFFT - noverlap
     ind = np.arange(0, len(x) - NFFT + 1, step)
     n = len(ind)
-    Pxy = np.zeros((numFreqs,n), np.complex_)
+    Pxy = np.zeros((numFreqs, n), np.complex_)
 
     # do the ffts of the slices
     for i in range(n):
-        thisX = x[ind[i]:ind[i]+NFFT]
+        thisX = x[ind[i]:ind[i] + NFFT]
         thisX = windowVals * thisX
         fx = np.fft.fft(thisX, n=pad_to)
 
         if same_data:
             fy = fx
         else:
-            thisY = y[ind[i]:ind[i]+NFFT]
+            thisY = y[ind[i]:ind[i] + NFFT]
             thisY = windowVals * thisY
             fy = np.fft.fft(thisY, n=pad_to)
-        Pxy[:,i] = np.conjugate(fx[:numFreqs]) * fy[:numFreqs]
+        Pxy[:, i] = np.conjugate(fx[:numFreqs]) * fy[:numFreqs]
 
     # Scale the spectrum by the norm of the window to compensate for
     # windowing loss; see Bendat & Piersol Sec 11.5.2.  Also include
     # scaling factors for one-sided densities and dividing by the sampling
     # frequency, if desired.
-    Pxy *= scaling_factor / (np.abs(windowVals)**2).sum()
-    t = 1./Fs * (ind + NFFT / 2.)
+    Pxy *= scaling_factor / (np.abs(windowVals) ** 2).sum()
+    t = 1. / Fs * (ind + NFFT / 2.)
     freqs = float(Fs) / pad_to * np.arange(numFreqs)
 
     if (np.iscomplexobj(x) and sides == 'default') or sides == 'twosided':
         # center the frequency range at zero
-        freqs = np.concatenate((freqs[numFreqs//2:] - Fs, freqs[:numFreqs//2]))
-        Pxy = np.concatenate((Pxy[numFreqs//2:, :], Pxy[:numFreqs//2, :]), 0)
+        freqs = np.concatenate((freqs[numFreqs // 2:] - Fs,
+                                freqs[:numFreqs // 2]))
+        Pxy = np.concatenate((Pxy[numFreqs // 2:, :],
+                              Pxy[:numFreqs // 2, :]), 0)
 
     return Pxy, freqs, t
