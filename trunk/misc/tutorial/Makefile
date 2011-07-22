@@ -42,8 +42,8 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
-	mkdir $(BUILDDIR)
-	mkdir $(BUILDDIR)/html
+	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
+	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
