@@ -1,5 +1,9 @@
 /* gallery */
 #gallery div.figure {
-  padding: 5px;
-  display: inline;
+  display : inline;
+}
+
+#gallery div.figure img {
+  padding : 5px;
+  vertical-align: middle;
 }

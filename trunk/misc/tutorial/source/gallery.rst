@@ -15,3 +15,13 @@ Gallery
     :width: 300 px
     :target: tutorial/filtering_seismograms.html
     :alt: Filtering Seismograms
+
+.. plot:: source/tutorial/downsampling_seismograms.py
+    :width: 300 px
+    :target: tutorial/downsampling_seismograms.html
+    :alt: Downsampling Seismograms
+
+.. plot:: source/tutorial/seismogram_envelopes.py
+    :width: 300 px
+    :target: tutorial/seismogram_envelopes.html
+    :alt: Seismogram Envelopes
