@@ -146,10 +146,14 @@ class UTCDateTime(datetime.datetime):
         """
         Creates a new UTCDateTime object.
         """
+        # iso8601 flag
+        iso8601 = 'iso8601' in kwargs
+        if iso8601:
+            kwargs.pop('iso8601')
         if len(args) == 0 and len(kwargs) == 0:
             dt = datetime.datetime.utcnow()
             return UTCDateTime._new(cls, dt)
-        elif len(args) == 1:
+        elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             # check types
             if type(value) in [int, long, float]:
@@ -167,12 +171,12 @@ class UTCDateTime(datetime.datetime):
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
-                if value.count("T") == 1 or 'iso8601' in kwargs:
+                if value.count("T") == 1 or iso8601:
                     try:
                         dt = UTCDateTime._parseISO8601(value)
                         return UTCDateTime._new(cls, dt)
                     except:
-                        if 'iso8601' in kwargs:
+                        if iso8601:
                             raise
                 # try to apply some standard patterns
                 value = value.replace('T', ' ')
@@ -224,9 +228,15 @@ class UTCDateTime(datetime.datetime):
                 dt = UTCDateTime(dt) + ms
                 return UTCDateTime._new(cls, dt)
         # check for ordinal/julian date kwargs
-        if 'julday' in kwargs and 'year' in kwargs:
+        if 'julday' in kwargs:
+            if 'year' in kwargs:
+                # year given as kwargs
+                year = kwargs['year']
+            elif len(args) == 1:
+                # year is first (and only) argument
+                year = args[0]
             try:
-                temp = "%4d%03d" % (int(kwargs['year']),
+                temp = "%4d%03d" % (int(year),
                                     int(kwargs['julday']))
                 dt = datetime.datetime.strptime(temp, '%Y%j')
             except:
@@ -235,6 +245,7 @@ class UTCDateTime(datetime.datetime):
                 kwargs['month'] = dt.month
                 kwargs['day'] = dt.day
                 kwargs.pop('julday')
+
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
             kwargs['microsecond'] = int(args[5] % 1 * 1000000)

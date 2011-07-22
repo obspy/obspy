@@ -330,6 +330,31 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # without parameters returns current date time
         dt = UTCDateTime()
 
+    def test_initUTCDateTimeMixingKeywordsWithArguments(self):
+        # times
+        dt = UTCDateTime(2008, 1, 1, hour=12)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12))
+        dt = UTCDateTime(2008, 1, 1, 12, minute=59)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12, 59))
+        dt = UTCDateTime(2008, 1, 1, 12, 59, second=59)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12, 59, 59))
+        dt = UTCDateTime(2008, 1, 1, 12, 59, 59, microsecond=123456)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12, 59, 59, 123456))
+        dt = UTCDateTime(2008, 1, 1, hour=12, minute=59, second=59,
+                         microsecond=123456)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12, 59, 59, 123456))
+        # dates
+        dt = UTCDateTime(2008, month=1, day=1)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1))
+        dt = UTCDateTime(2008, 1, day=1)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1))
+        dt = UTCDateTime(2008, julday=1)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1))
+        # combined
+        dt = UTCDateTime(2008, julday=1, hour=12, minute=59, second=59,
+                         microsecond=123456)
+        self.assertEquals(dt, UTCDateTime(2008, 1, 1, 12, 59, 59, 123456))
+
     def test_toPythonDateTimeObjects(self):
         """
         Tests getDate, getTime, getTimestamp and getDateTime methods.
@@ -387,6 +412,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # testing some strange patterns
         self.assertRaises(TypeError, UTCDateTime, "ABC")
         self.assertRaises(TypeError, UTCDateTime, "12X3T")
+        self.assertRaises(ValueError, UTCDateTime, 2010, 9, 31)
 
     def test_invalidTimes(self):
         """
