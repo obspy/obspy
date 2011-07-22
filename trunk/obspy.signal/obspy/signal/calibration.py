@@ -54,9 +54,9 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     """
     # transform given trace objects to streams
     if isinstance(st1, Trace):
-        st1 = Stream(st1)
+        st1 = Stream([st1])
     if isinstance(st2, Trace):
-        st2 = Stream(st2)
+        st2 = Stream([st2])
     # check if sampling rate and trace length is the same
     if st1[0].stats.npts != st2[0].stats.npts:
         msg = "Traces don't have the same length!"
