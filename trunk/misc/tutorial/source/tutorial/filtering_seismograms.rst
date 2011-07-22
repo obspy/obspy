@@ -1,10 +1,6 @@
-.. _filtering-seismograms:
-
 =====================
 Filtering Seismograms
 =====================
-
-.. default-domain:: http://docs.obspy.org
 
 The following script shows how to filter a seismogram. The example uses a
 zero-phase-shift low-pass filter with a corner frequency of 1 Hz using 2
@@ -18,5 +14,7 @@ The available filters are:
 * "lowpass"
 * "highpass" 
 
+.. include:: filtering_seismograms.py
+   :literal:
+
 .. plot:: source/tutorial/filtering_seismograms.py
-   :include-source:

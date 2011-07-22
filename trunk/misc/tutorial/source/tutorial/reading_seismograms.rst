@@ -1,10 +1,6 @@
-.. _reading-seismograms:
-
 ===================
 Reading Seismograms
 ===================
-
-.. default-domain:: http://docs.obspy.org
 
 Seismograms of the formats SAC, MiniSEED, GSE2, SEISAN, Q, etc. can be imported
 into a :py:class:`~obspy.core.stream.Stream` object using the 

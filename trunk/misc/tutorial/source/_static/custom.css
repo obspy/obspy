@@ -1,0 +1,5 @@
+/* gallery */
+#gallery div.figure {
+  padding: 5px;
+  display: inline;
+}
