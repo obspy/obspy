@@ -110,6 +110,8 @@ def setupLibEvalResp():
 
     # system specific settings
     if platform.system() == "Windows":
+        # needed by evalresp evresp.h
+        macros.append(('WIN32', '1'))
         # disable some warnings for MSVC
         macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # create library name
@@ -123,7 +125,7 @@ def setupLibEvalResp():
     lib = MyExtension(lib_name,
                       define_macros=macros,
                       include_dirs=[evresp_include_dir],
-                      sources=glob.glob(os.path.join(src_evr,'*.c')))
+                      sources=glob.glob(os.path.join(src_evr, '*.c')))
     return lib
 
 
@@ -190,7 +192,7 @@ def setupPackage():
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,
         ext_package='obspy.signal.lib',
-        ext_modules=[setupLibSignal(),setupLibEvalResp()],
+        ext_modules=[setupLibSignal(), setupLibEvalResp()],
         use_2to3=True,
     )
     # cleanup after using lib2to3 for Python 3.x
