@@ -222,10 +222,14 @@ def run_code(plot_path, function_name, plot_code, context=False):
         sys.path.insert(0, os.path.abspath(path))
         stdout = sys.stdout
         sys.stdout = cStringIO.StringIO()
-        os.chdir(path)
+        try:
+            os.chdir(path)
+        except OSError:
+            os.mkdir(path)
+            os.chdir(path)
         fd = None
         try:
-            fd = open(fname)
+            fd = open(fname, "w")
             module = imp.load_module(
                 "__plot__", fd, fname, ('py', 'r', imp.PY_SOURCE))
         finally:
@@ -266,7 +270,7 @@ def run_savefig(plot_path, basename, tmpdir, destdir, formats):
 
 def clear_state():
     plt.close('all')
-    matplotlib.rc_file_defaults()
+    matplotlib.rcdefaults()
 
 def render_figures(plot_path, function_name, plot_code, tmpdir, destdir,
                    formats, context=False):
