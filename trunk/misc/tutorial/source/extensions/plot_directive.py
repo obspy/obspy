@@ -229,7 +229,7 @@ def run_code(plot_path, function_name, plot_code, context=False):
             os.chdir(path)
         fd = None
         try:
-            fd = open(fname, "w")
+            fd = open(fname)
             module = imp.load_module(
                 "__plot__", fd, fname, ('py', 'r', imp.PY_SOURCE))
         finally:
@@ -549,7 +549,7 @@ def setup(app):
     app.add_directive('plot', plot_directive, True, (0, 2, 0), **options)
     app.add_config_value(
         'plot_formats',
-        [('png', 80), ('hires.png', 200), ('pdf', 50)],
+        [('png', 100), ('hires.png', 200), ('pdf', 50)],
         True)
 
     app.connect('doctree-read', mark_plot_labels)
