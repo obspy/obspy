@@ -2,10 +2,10 @@
 #-------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
-#   Author: Moritz Beyreuther
+#   Author: Moritz Beyreuther, Yannik Behr
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Moritz Beyreuther
+# Copyright (C) 2008-2011 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
 """ 
 Python Module for Instrument Correction (Seismology), PAZ

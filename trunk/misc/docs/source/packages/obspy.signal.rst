@@ -20,6 +20,7 @@
         ~trigger.delayedStaLta
         ~filter.envelope
         ~invsim.estimateMagnitude
+        ~invsim.evalresp
         ~rotate.gps2DistAzimuth
         ~filter.highpass
         ~filter.lowpass
