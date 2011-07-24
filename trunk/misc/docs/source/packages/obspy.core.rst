@@ -26,7 +26,7 @@
         ~trace.Stats
         ~stream.Stream
         ~utcdatetime.UTCDateTime
-        ~util.path
+        util.getExampleFile
 
     .. comment to end block
 
