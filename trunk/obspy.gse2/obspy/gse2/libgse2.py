@@ -422,6 +422,68 @@ def attach_faked_paz(*args, **kwargs):
     return attach_paz(*args, **kwargs)
 
 
+def read_paz(paz_file):
+    '''
+    Read GSE PAZ / Calibration file format and returns poles, zeros and the
+    seismometer_gain.
+
+    Do not use this function in connection with the obspy the instrument
+    simulation the A0_normalization_factor might be set wrongly, use
+    :func:`~obspy.gse2.libgse2.attach_paz` instead.
+
+    >>> import StringIO
+    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    ... 2
+    ... -4.39823 4.48709
+    ... -4.39823 -4.48709
+    ... 3
+    ... 0.0 0.0
+    ... 0.0 0.0
+    ... 0.0 0.0
+    ... 0.4""")
+    >>> p,z,k = read_paz(f)
+    >>> ['%.4f' % i for i in (p[0].real, z[0].real, k)]
+    ['-4.3982', '0.0000', '0.4000']
+    '''
+    poles = []
+    zeros = []
+
+    if isinstance(paz_file, str):
+        paz_file = open(paz_file, 'r')
+
+    PAZ = paz_file.readlines()
+    if PAZ[0][0:4] != 'CAL1':
+        raise NameError("Unknown GSE PAZ format %s" % PAZ[0][0:4])
+    if PAZ[0][31:34] != 'PAZ':
+        raise NameError("%s type is not known" % PAZ[0][31:34])
+
+    ind = 1
+    npoles = int(PAZ[ind])
+    for i in xrange(npoles):
+        try:
+            poles.append(complex(*[float(n)
+                                   for n in PAZ[i + 1 + ind].split()]))
+        except ValueError:
+            poles.append(complex(float(PAZ[i + 1 + ind][:8]),
+                                 float(PAZ[i + 1 + ind][8:])))
+
+    ind += i + 2
+    nzeros = int(PAZ[ind])
+    for i in xrange(nzeros):
+        try:
+            zeros.append(complex(*[float(n)
+                                   for n in PAZ[i + 1 + ind].split()]))
+        except ValueError:
+            zeros.append(complex(float(PAZ[i + 1 + ind][:8]),
+                                 float(PAZ[i + 1 + ind][8:])))
+
+    ind += i + 2
+    # in the observatory this is the seismometer gain [muVolt/nm/s]
+    # the A0_normalization_factor is hardcoded to 1.0
+    seismometer_gain = float(PAZ[ind])
+    return poles, zeros, seismometer_gain
+
+
 def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     '''
     Attach tr.stats.paz AttribDict to trace from GSE2 paz_file
@@ -456,41 +518,8 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     >>> print(round(tr.stats.paz.sensitivity, -4))
     671140000.0
     '''
-    poles = []
-    zeros = []
+    poles, zeros, seismometer_gain = read_paz(paz_file)
     found_zero = False
-
-    if isinstance(paz_file, str):
-        paz_file = open(paz_file, 'r')
-
-    PAZ = paz_file.readlines()
-    if PAZ[0][0:4] != 'CAL1':
-        raise Exception("Unknown GSE PAZ file")
-
-    ind = 1
-    npoles = int(PAZ[ind])
-    for i in xrange(npoles):
-        try:
-            poles.append(complex(*[float(n)
-                                   for n in PAZ[i + 1 + ind].split()]))
-        except ValueError:
-            poles.append(complex(float(PAZ[i + 1 + ind][:8]),
-                                 float(PAZ[i + 1 + ind][8:])))
-
-    ind += i + 2
-    nzeros = int(PAZ[ind])
-    for i in xrange(nzeros):
-        try:
-            zeros.append(complex(*[float(n)
-                                   for n in PAZ[i + 1 + ind].split()]))
-        except ValueError:
-            zeros.append(complex(float(PAZ[i + 1 + ind][:8]),
-                                 float(PAZ[i + 1 + ind][8:])))
-
-    ind += i + 2
-    # in the observatory this is the seismometer gain [muVolt/nm/s]
-    # the A0_normalization_factor is hardcoded to 1.0
-    seismometer_gain = float(PAZ[ind])
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
