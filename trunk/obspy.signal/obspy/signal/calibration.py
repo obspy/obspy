@@ -19,7 +19,7 @@ Functions for relative calibration.
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
-from obspy.signal import konnoOhmachiSmoothing
+from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
 import numpy as np
 
@@ -180,40 +180,9 @@ def calcresp(calfile, nfft, sampfreq):
         file.close
 
         # calculate transfer function
-        delta_f = sampfreq / nfft
-        F = np.empty(nfft / 2 + 1)
-        for i in xrange(nfft / 2 + 1):
-            fr = i * delta_f
-            F[i] = fr
-            om = 2 * np.pi * fr
-            num = 1. + 0.j
-
-            for ii in xrange(nzeros):
-                s = 0. + om * 1.j
-                dif = s - zeros[ii]
-                num = dif * num
-
-            denom = 1. + 0.j
-            for ii in xrange(npoles):
-                s = 0. + om * 1.j
-                dif = s - poles[ii]
-                denom = dif * denom
-
-            t_om = 1. + 0.j
-            if denom.real != 0. or denom.imag != 0.:
-                t_om = num / denom
-
-            t_om *= scale_fac
-
-            if i < nfft / 2 and i > 0:
-                buffer[i] = t_om
-
-            if i == 0:
-                buffer[i] = t_om + 0.j
-
-            if i == nfft / 2:
-                buffer[i] = t_om + 0.j
-
+        buffer, F = pazToFreqResp(poles, zeros, scale_fac, 
+                                  1.0/sampfreq, nfft, freq=True)
+        buffer = buffer.conj() # numpy not PITSA style
         return buffer, F
 
     else:
