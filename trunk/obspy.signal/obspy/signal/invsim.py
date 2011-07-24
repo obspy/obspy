@@ -189,7 +189,8 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles':poles, 'zeros':[0j, 0j], 'gain':1, 'sensitivity': 1.0}
 
 
-def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
+def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
+                  pitsa=True):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
@@ -215,6 +216,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     :param t_samp: Sampling interval in seconds
     :type nfft: Integer
     :param nfft: Number of FFT points of signal which needs correction
+    :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
     :return: Frequency response of PAZ of length nfft 
     """
@@ -224,7 +226,8 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     # start at zero to get zero for offset/ DC of fft
     f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
     _w, h = scipy.signal.freqs(a, b, f * 2 * np.pi)
-    h = np.conj(h) # like in PITSA paz2Freq (insdeconv.c) last line
+    if pitsa: # like in PITSA paz2Freq (insdeconv.c) last line
+        h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
     if freq:
         return h, f

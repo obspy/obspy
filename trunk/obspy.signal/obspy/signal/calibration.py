@@ -180,10 +180,9 @@ def calcresp(calfile, nfft, sampfreq):
         file.close
 
         # calculate transfer function
-        buffer, F = pazToFreqResp(poles, zeros, scale_fac, 
-                                  1.0/sampfreq, nfft, freq=True)
-        buffer = buffer.conj() # numpy not PITSA style
-        return buffer, F
+        h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0/sampfreq,
+                             nfft, freq=True, pitsa=False)
+        return h, f
 
     else:
         msg = '%s type not known!' % (cal)
