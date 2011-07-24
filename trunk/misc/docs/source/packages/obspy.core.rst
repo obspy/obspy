@@ -11,6 +11,7 @@
       :nosignatures:
 
         scripts.runtests
+        scripts.reftekrescue
 
     .. comment to end block
 
