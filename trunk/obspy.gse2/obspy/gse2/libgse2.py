@@ -422,7 +422,7 @@ def attach_faked_paz(*args, **kwargs):
     return attach_paz(*args, **kwargs)
 
 
-def read_paz(paz_file):
+def readPaz(paz_file):
     '''
     Read GSE PAZ / Calibration file format and returns poles, zeros and the
     seismometer_gain.
@@ -441,7 +441,7 @@ def read_paz(paz_file):
     ... 0.0 0.0
     ... 0.0 0.0
     ... 0.4""")
-    >>> p,z,k = read_paz(f)
+    >>> p,z,k = readPaz(f)
     >>> ['%.4f' % i for i in (p[0].real, z[0].real, k)]
     ['-4.3982', '0.0000', '0.4000']
     '''
@@ -518,7 +518,7 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     >>> print(round(tr.stats.paz.sensitivity, -4))
     671140000.0
     '''
-    poles, zeros, seismometer_gain = read_paz(paz_file)
+    poles, zeros, seismometer_gain = readPaz(paz_file)
     found_zero = False
 
     # remove zero at 0,0j to undo integration in GSE PAZ

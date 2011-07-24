@@ -23,6 +23,7 @@ from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
 import numpy as np
 
+libgse2 = False
 
 def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
                 save_data=True):
@@ -77,7 +78,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     nfft = nextpow2(ndat)
 
     # read calib file and calculate response function
-    gg, _freq = calcresp(calib_file, nfft, sampfreq)
+    gg, _freq = _calcresp(calib_file, nfft, sampfreq)
 
     # calculate number of windows and overlap
     nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
@@ -135,58 +136,28 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     return freq, amp, phase
 
 
-def calcresp(calfile, nfft, sampfreq):
+def _calcresp(calfile, nfft, sampfreq):
     """
-    calculate transfer function of known system
+    Calculate transfer function of known system.
 
     :type calfile: String
     :param calfile: file containing poles, zeros and scale factor for known
         system
     :returns: complex transfer function, array of frequencies
     """
-    buffer = np.empty(nfft / 2 + 1, dtype='complex128')
-    poles = []
-    zeros = []
-    file = open(str(calfile), 'r')
-
-    text = ' '
-    while text != 'CAL1':
-        textln = file.readline()
-        text = textln.split(' ')[0]
-    if not text == 'CAL1':
-        msg = 'could not find calibration section!'
-        raise NameError(msg)
-    else:
-        cal = textln[31:34]
-    if cal == 'PAZ':
-        # read poles
-        npoles = int(file.readline())
-        for i in xrange(npoles):
-            pole = file.readline()
-            pole_r = float(pole.split(" ")[0])
-            pole_i = float(pole.split(" ")[1])
-            pole_c = pole_r + pole_i * 1.j
-            poles.append(pole_c)
-        # read zeros
-        nzeros = int(file.readline())
-        for i in xrange(nzeros):
-            zero = file.readline()
-            zero_r = float(zero.split(" ")[0])
-            zero_i = float(zero.split(" ")[1])
-            zero_c = zero_r + zero_i * 1.j
-            zeros.append(zero_c)
-        # read scale factor
-        scale_fac = float(file.readline())
-        file.close
-
-        # calculate transfer function
-        h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0/sampfreq,
-                             nfft, freq=True, pitsa=False)
-        return h, f
-
-    else:
-        msg = '%s type not known!' % (cal)
-        raise NameError(msg)
+    # avoid top level dependency on gse2
+    global libgse2
+    if not libgse2:
+        try:
+            import obspy.gse2.libgse2 as libgse2
+        except ImportError:
+            msg = "obspy.gse2 is needed for this fct and not installed"
+            raise ImportError(msg)
+    # calculate transfer function
+    poles, zeros, scale_fac = libgse2.readPaz(calfile)
+    h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0/sampfreq,
+                         nfft, freq=True, pitsa=False)
+    return h, f
 
 
 # A modified copy of the Matplotlib 0.99.1.1 method spectral_helper found in
