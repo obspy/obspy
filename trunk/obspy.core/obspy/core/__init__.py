@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------
+#------------------------------------------------------------------------------
 #  Purpose: Core classes of ObsPy: Python for Seismological Observatories
 #   Author: Robert Barsch
 #           Moritz Beyreuther
 #           Lion Krischer
+#           Tobias Megies
 #    Email: barsch@lmu.de
 #
-# Copyright (C) 2008-2011 Robert Barsch, Moritz Beyreuther, Lion Krischer
-#---------------------------------------------------------------------
+# Copyright (C) 2008-2011 Robert Barsch, Moritz Beyreuther, Lion Krischer,
+#                         Tobias Megies
+#------------------------------------------------------------------------------
 """
 obspy.core - Core classes of ObsPy
 ==================================

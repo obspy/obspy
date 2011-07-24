@@ -43,6 +43,7 @@ INSTALL_REQUIRES = ['numpy>1.0.0']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
+        'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
     ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.core.ascii',
