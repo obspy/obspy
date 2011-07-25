@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core import UTCDateTime, Stream, Trace, read
 import numpy as np
 import pickle
 import unittest
@@ -110,6 +110,20 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(other_stream[0], stream[-1])
         self.assertEqual(other_stream[0].stats, stream[-1].stats)
         np.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
+
+    def test_addTraceToStream(self):
+        """
+        Tests using a Trace on __add__ and __iadd__ methods of the Stream.
+        """
+        st0 = read()
+        st1 = st0[0:2]
+        tr = st0[2]
+        # __add__
+        self.assertEqual(st1.__add__(tr), st0)
+        self.assertEqual(st1 + tr, st0)
+        # __iadd__
+        st1 += tr
+        self.assertEqual(st1, st0)
 
     def test_append(self):
         """

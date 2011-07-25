@@ -348,6 +348,8 @@ class Stream(object):
         This method will create a new Stream object containing references to
         the traces of the original streams.
         """
+        if isinstance(other, Trace):
+            other = Stream([other])
         if not isinstance(other, Stream):
             raise TypeError
         traces = self.traces + other.traces
@@ -361,6 +363,8 @@ class Stream(object):
         Stream. Traces will not be copied but references to the original traces
         will be appended.
         """
+        if isinstance(other, Trace):
+            other = Stream([other])
         if not isinstance(other, Stream):
             raise TypeError
         self.extend(other.traces)
