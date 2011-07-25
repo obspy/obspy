@@ -71,7 +71,7 @@ def cosTaper(npts, p=0.1):
 
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
-             network='*', locid='*', units="VEL", freq=False):
+             network='*', locid='*', units="VEL", freq=False, debug=False):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
@@ -94,8 +94,10 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param locid: Location id
     :type units: String
     :param units: Units to return response in. Can be either DIS, VEL or ACC
+    :type debug: Boolean
+    :param debug: Verbose output to stdout. Disabled by default.
     :rtype: numpy.ndarray complex128
-    :return: Frequency response from SEED RESP-file  of length nfft 
+    :return: Frequency response from SEED RESP-file of length nfft 
     """
 
     STALEN = 64
@@ -133,7 +135,10 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     net = C.c_char_p(network)
     locid = C.c_char_p(locid)
     unts = C.c_char_p(units)
-    vbs = C.c_char_p("") # change to -v to get more verbose output
+    if debug:
+        vbs = C.c_char_p("-v")
+    else:
+        vbs = C.c_char_p("")
     rtyp = C.c_char_p("CS")
     datime = C.c_char_p("%d,%3d" % (date.year, date.getJulday()))
     fn = C.c_char_p(filename)
