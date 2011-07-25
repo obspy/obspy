@@ -27,12 +27,14 @@ import warnings
 from obspy.signal.util import clibevresp
 import ctypes as C
 
+
 # Sensitivity is 2080 according to:
 # P. Bormann: New Manual of Seismological Observatory Practice
 # IASPEI Chapter 3, page 24
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
+
 
 def cosTaper(npts, p=0.1):
     """
@@ -52,7 +54,7 @@ def cosTaper(npts, p=0.1):
     :param npts: Number of points of cosine taper.
     :type p: Float
     :param p: Percent of cosine taper. Default is 10% which tapers 5% from
-              the beginning and 5% form the end
+        the beginning and 5% form the end
     :rtype: float NumPy ndarray
     :return: Cosine taper array/vector of length npts.
     """
@@ -67,8 +69,9 @@ def cosTaper(npts, p=0.1):
         0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))
         ), axis=0)
 
-def evalresp(t_samp,nfft,filename,date,station='*',channel='*',
-             network='*',locid='*',units="VEL",freq=False):
+
+def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
+             network='*', locid='*', units="VEL", freq=False):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
@@ -94,29 +97,29 @@ def evalresp(t_samp,nfft,filename,date,station='*',channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file  of length nfft 
     """
-   
+
     STALEN = 64
     NETLEN = 64
     CHALEN = 64
     LOCIDLEN = 64
 
     class c_complex(C.Structure):
-        _fields_ = [("real",C.c_double),
-                    ("imag",C.c_double)
+        _fields_ = [("real", C.c_double),
+                    ("imag", C.c_double)
                     ]
-        
+
     class response(C.Structure):
         pass
-    
-    response._fields_ = [("station",C.c_char*STALEN),
-                         ("network",C.c_char*NETLEN),
-                         ("locid",C.c_char*LOCIDLEN),
-                         ("channel",C.c_char*CHALEN),
-                         ("rvec",C.POINTER(c_complex)),
-                         ("nfreqs",C.c_int),
-                         ("freqs",C.POINTER(C.c_double)),
-                         ("next",C.POINTER(response))
-                         ]
+
+    response._fields_ = [("station", C.c_char * STALEN),
+                         ("network", C.c_char * NETLEN),
+                         ("locid", C.c_char * LOCIDLEN),
+                         ("channel", C.c_char * CHALEN),
+                         ("rvec", C.POINTER(c_complex)),
+                         ("nfreqs", C.c_int),
+                         ("freqs", C.POINTER(C.c_double)),
+                         ("next", C.POINTER(response))
+                        ]
 
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
@@ -132,36 +135,41 @@ def evalresp(t_samp,nfft,filename,date,station='*',channel='*',
     unts = C.c_char_p(units)
     vbs = C.c_char_p("") # change to -v to get more verbose output
     rtyp = C.c_char_p("CS")
-    datime = C.c_char_p("%d,%3d"%(date.year,date.getJulday()))
+    datime = C.c_char_p("%d,%3d" % (date.year, date.getJulday()))
     fn = C.c_char_p(filename)
     nfreqs = C.c_int(freqs.size)
     clibevresp.evresp.restype = C.POINTER(response)
-    clibevresp.evresp.argtypes = [C.c_char_p,
-                          C.c_char_p,
-                          C.c_char_p,
-                          C.c_char_p,
-                          C.c_char_p,
-                          C.c_char_p,
-                          C.c_char_p,
-                          np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-                          C.c_int,
-                          C.c_char_p,
-                          C.c_char_p,
-                          C.c_int,
-                          C.c_int,
-                          C.c_int,
-                          C.c_int
-                          ]
-    res = clibevresp.evresp(sta,cha,net,locid,datime,unts,fn,
-                    freqs,nfreqs,rtyp,vbs,start_stage,
-                    stop_stage,stdio_flag,C.c_int(0))
-    h = np.array([complex(res[0].rvec[i].real,res[0].rvec[i].imag) for i in xrange(res[0].nfreqs)])
+    clibevresp.evresp.argtypes = [
+        C.c_char_p,
+        C.c_char_p,
+        C.c_char_p,
+        C.c_char_p,
+        C.c_char_p,
+        C.c_char_p,
+        C.c_char_p,
+        np.ctypeslib.ndpointer(dtype='float64',
+                               ndim=1,
+                               flags='C_CONTIGUOUS'),
+        C.c_int,
+        C.c_char_p,
+        C.c_char_p,
+        C.c_int,
+        C.c_int,
+        C.c_int,
+        C.c_int
+    ]
+    res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
+                            freqs, nfreqs, rtyp, vbs, start_stage,
+                            stop_stage, stdio_flag, C.c_int(0))
+    h = np.array([complex(res[0].rvec[i].real, res[0].rvec[i].imag)
+                  for i in xrange(res[0].nfreqs)])
     f = np.array([res[0].freqs[i] for i in xrange(res[0].nfreqs)])
     h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
     if freq:
         return h, f
     return h
+
 
 def detrend(trace):
     """
@@ -288,9 +296,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
     taken before simulation. The data must be detrended (e.g.) zero mean
     beforehand. If paz_simulate=None only the instrument correction is done.
-    In the latter case, a broadband filter can be applied to the data trace using
-    pre_filt. This restricts the signal to the valid frequency band and thereby
-    avoids artefacts due to amplification of frequencies outside of the
+    In the latter case, a broadband filter can be applied to the data trace
+    using pre_filt. This restricts the signal to the valid frequency band and
+    thereby avoids artefacts due to amplification of frequencies outside of the
     instrument's passband (for a detailed discussion see
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers). 
 
@@ -299,26 +307,24 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type samp_rate: Float
     :param samp_rate: Sample Rate of Seismogram
     :type paz_remove: Dictionary, None
-    :param paz_remove: Dictionary containing keys 'poles', 'zeros',
-                'gain' (A0 normalization factor). poles and zeros must be a
-                list of complex floating point numbers, gain must be of
-                type float. Poles and Zeros are assumed to correct to m/s,
-                SEED convention. Use None for no inverse filtering.
+    :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
+        (A0 normalization factor). poles and zeros must be a list of complex
+        floating point numbers, gain must be of type float. Poles and Zeros are
+        assumed to correct to m/s, SEED convention. Use None for no inverse
+        filtering.
     :type paz_simulate: Dictionary, None
-    :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
-                     'gain'. Poles and zeros must be a list of complex
-                     floating point numbers, gain must be of type float. Or
-                     None for no simulation.
+    :param paz_simulate: Dictionary containing keys 'poles', 'zeros', 'gain'.
+        Poles and zeros must be a list of complex floating point numbers, gain
+        must be of type float. Or None for no simulation.
     :type remove_sensitivity: Boolean
     :param remove_sensitivity: Determines if data is divided by
-            `paz_remove['sensitivity']` to correct for overall sensitivity of
-            recording instrument (seismometer/digitizer) during instrument
-            correction.
+        `paz_remove['sensitivity']` to correct for overall sensitivity of
+        recording instrument (seismometer/digitizer) during instrument
+        correction.
     :type simulate_sensitivity: Boolean
     :param simulate_sensitivity: Determines if data is multiplied with
-            `paz_simulate['sensitivity']` to simulate overall sensitivity of
-            new instrument (seismometer/digitizer) during instrument
-            simulation.
+        `paz_simulate['sensitivity']` to simulate overall sensitivity of
+        new instrument (seismometer/digitizer) during instrument simulation.
     :type water_level: Float
     :param water_level: Water_Level for spectrum to simulate
     :type zero_mean: Boolean
@@ -328,12 +334,13 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type taper_fraction: Float
     :param taper_fraction: Typer fraction of cosine taper to use
     :type pre_filt: List or tuple of floats
-    :param pre_filt: Apply a bandpass filter to the data trace before deconvolution.
-    The list or tuple defines the four corner frequencies (f1,f2,f3,f4) of a cosine
-    taper which is one between f2 and f3 and tapers to zero for f1 < f < f2 and f3 < f < f4. 
+    :param pre_filt: Apply a bandpass filter to the data trace before
+        deconvolution. The list or tuple defines the four corner frequencies
+        (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
+        tapers to zero for f1 < f < f2 and f3 < f < f4. 
     :return: The corrected data are returned as numpy.ndarray float64
-            array. float64 is chosen to avoid numerical instabilities.
-    
+        array. float64 is chosen to avoid numerical instabilities.
+
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
@@ -392,24 +399,27 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
-        freq_response, freqs = pazToFreqResp(paz_remove['poles'], paz_remove['zeros'],
-                                            paz_remove['gain'], delta, nfft, freq=True)
+        freq_response, freqs = pazToFreqResp(paz_remove['poles'],
+                                             paz_remove['zeros'],
+                                             paz_remove['gain'], delta, nfft,
+                                             freq=True)
     if seedresp:
-        freq_response, freqs = evalresp(delta, nfft, seedresp['filename'], seedresp['date'],
+        freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
+                                        seedresp['date'],
                                         units=seedresp['units'], freq=True)
-    if paz_remove or seedresp:    
+    if paz_remove or seedresp:
         if pre_filt:
             #### make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             idx0 = np.where((freqs >= fl1) & (freqs < fl2))
             idx1 = np.where((freqs >= fl2) & (freqs <= fl3))
-            idx2 = np.where((freqs > fl3)  & (freqs <= fl4))
+            idx2 = np.where((freqs > fl3) & (freqs <= fl4))
             cos_win = np.zeros(freqs.size)
             cos_win[idx0] = 0.5 * \
-                    (1 - np.cos((np.pi * (fl1 - freqs[idx0])) / (fl2-fl1)))
+                    (1 - np.cos((np.pi * (fl1 - freqs[idx0])) / (fl2 - fl1)))
             cos_win[idx1] = 1.0
             cos_win[idx2] = 0.5 * \
-                    (1 + np.cos((np.pi * (fl3 - freqs[idx2])) / (fl4-fl3)))
+                    (1 + np.cos((np.pi * (fl3 - freqs[idx2])) / (fl4 - fl3)))
             data *= cos_win
         #if paz_remove.has_key('t_shift'):
         #    data *= np.exp(-1j*2*np.pi*freqs*paz_remove['t_shift'])
@@ -513,8 +523,8 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
 
 def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     """
-    Convert amplitude in counts measured of instrument with given Poles and Zeros
-    information for use in :func:`estimateMagnitude`.
+    Convert amplitude in counts measured of instrument with given Poles and
+    Zeros information for use in :func:`estimateMagnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
     difference of the two readings.
 
@@ -522,7 +532,7 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     :param amplitude: Peak to peak amplitude [counts] or list of the same
     :param timespan: Timespan of peak to peak amplitude [s] or list of the same
     :returns: Simulated zero to peak displacement amplitude on Wood Anderson
-            seismometer [mm] for use in local magnitude estimation.
+        seismometer [mm] for use in local magnitude estimation.
     """
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     freq = 1.0 / (2 * timespan)
@@ -537,5 +547,3 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-
-
