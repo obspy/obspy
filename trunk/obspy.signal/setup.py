@@ -105,9 +105,11 @@ def setupLibEvalResp():
             Extension.__init__(self, *args, **kwargs)
             self.export_symbols = finallist(self.export_symbols)
     macros = []
-    src_evr = os.path.join('obspy', 'signal', 'src', 'evalresp-3.3.3') + os.sep
-    evresp_include_dir = src_evr
-
+    src = os.path.join('obspy', 'signal', 'src') + os.sep
+    src_evresp = os.path.join('obspy', 'signal', 'src', 'evalresp') + os.sep
+    evresp_include_dir = src_evresp
+    symbols = [s.strip() for s in open(src + 'libevresp.def').readlines()[2:]
+               if s.strip() != '']
     # system specific settings
     if platform.system() == "Windows":
         # needed by evalresp evresp.h
@@ -125,7 +127,8 @@ def setupLibEvalResp():
     lib = MyExtension(lib_name,
                       define_macros=macros,
                       include_dirs=[evresp_include_dir],
-                      sources=glob.glob(os.path.join(src_evr, '*.c')))
+                      sources=glob.glob(os.path.join(src_evresp, '*.c')),
+                      export_symbols=symbols)
     return lib
 
 

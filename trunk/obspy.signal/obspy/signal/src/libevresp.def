@@ -1,0 +1,3 @@
+LIBRARY libevresp.dll
+EXPORTS
+    evresp
