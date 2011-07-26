@@ -100,7 +100,9 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     if nfft > npts:
         nfft = int(nearestPow2(npts / 8.0))
 
-    mult = int(nearestPow2(mult))
+    if mult != None:
+        mult = int(nearestPow2(mult))
+        mult = mult * nfft
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
@@ -112,7 +114,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     if matplotlib.__version__ >= '0.99.0':
         spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
-                                              pad_to=mult * nfft, noverlap=nlap)
+                                              pad_to=mult, noverlap=nlap)
     else:
         spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                                 NFFT=nfft, noverlap=nlap)
