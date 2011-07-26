@@ -11,6 +11,21 @@ Gallery
     :target: tutorial/reading_seismograms.html
     :alt: Reading Seismograms
 
+.. plot:: source/tutorial/waveform_plotting_tutorial_1.py
+    :width: 300 px
+    :target: tutorial/waveform_plotting_tutorial.html
+    :alt: Waveform Plotting Tutorial 1
+
+.. plot:: source/tutorial/waveform_plotting_tutorial_2.py
+    :width: 300 px
+    :target: tutorial/waveform_plotting_tutorial.html
+    :alt: Waveform Plotting Tutorial 2
+
+.. plot:: source/tutorial/waveform_plotting_tutorial_3.py
+    :width: 300 px
+    :target: tutorial/waveform_plotting_tutorial.html
+    :alt: Waveform Plotting Tutorial 3
+
 .. plot:: source/tutorial/filtering_seismograms.py
     :width: 300 px
     :target: tutorial/filtering_seismograms.html
@@ -25,3 +40,8 @@ Gallery
     :width: 300 px
     :target: tutorial/seismogram_envelopes.html
     :alt: Seismogram Envelopes
+
+.. plot:: source/tutorial/plotting_spectrograms.py
+    :width: 300 px
+    :target: tutorial/plotting_spectrograms.html
+    :alt: Plotting Spectrograms

@@ -1,3 +1,5 @@
+.. _reading-seismogramms:
+
 ===================
 Reading Seismograms
 ===================
@@ -29,8 +31,12 @@ only one :py:class:`~obspy.core.trace.Trace` in the given seismogram:
    1 Trace(s) in Stream:
    .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples
 
-Seismogram meta data are accessed via the ``stats`` keyword on each
-:py:class:`~obspy.core.trace.Trace`:
+-------------------
+Accessing Meta Data
+-------------------
+
+Seismogram meta data, data describing the actual waveform data, are accessed
+via the ``stats`` keyword on each :py:class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
@@ -52,6 +58,10 @@ Seismogram meta data are accessed via the ``stats`` keyword on each
     >>> st[0].stats.gse2.datatype
     'CM6'
 
+-----------------------
+Accessing Waveform Data
+-----------------------
+
 The actual waveform data may be retrieved via the ``data`` keyword on each
 :py:class:`~obspy.core.trace.Trace`:
 
@@ -64,10 +74,12 @@ The actual waveform data may be retrieved via the ``data`` keyword on each
     >>> len(st[0])
     36000
 
-:py:class:`~obspy.core.stream.Stream` objects offer a plotting method for fast
-preview of the waveform (requires the obspy.imaging module):
+------------
+Data Preview
+------------
 
-.. doctest::
+:py:class:`~obspy.core.stream.Stream` objects offer a plotting method for fast
+preview of the waveform (requires the :py:mod:`obspy.imaging` module):
 
     >>> st.plot(color='k')
 
