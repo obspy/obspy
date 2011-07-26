@@ -702,14 +702,17 @@ class Trace(object):
             tr.spectrogram(sphinx=True)
         """
         try:
-            from obspy.imaging.spectrogram import spectrogram as spec
+            from obspy.imaging.spectrogram import spectrogram as _spectogram
         except ImportError:
             msg = "Please install module obspy.imaging to be able to " + \
                   "use the spectrogram plotting routine."
             raise ImportError(msg)
-        spec = spec(data=self.data, samp_rate=self.stats.sampling_rate,
-                    title=str(self), **kwargs)
-        return spec
+        # set some default values
+        if 'samp_rate' not in kwargs:
+            kwargs['samp_rate'] = self.stats.sampling_rate
+        if 'title' not in kwargs:
+            kwargs['title'] = str(self)
+        return _spectogram(data=self.data, **kwargs)
 
     def write(self, filename, format, **kwargs):
         """
