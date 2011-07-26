@@ -616,7 +616,7 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
-    :param unpack_header: Bool. Determines whether or not all headers will be
+    :param unpack_headers: Bool. Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
@@ -647,7 +647,7 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
-    :param unpack_header: Bool. Determines whether or not all headers will be
+    :param unpack_headers: Bool. Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
