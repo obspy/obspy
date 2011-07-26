@@ -141,9 +141,10 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         # center bin
         time -= halfbin_time
         freq -= halfbin_freq
-        X, Y = np.meshgrid(time, freq)
-        ax.pcolor(X, Y, spectrogram, cmap=cmap, zorder=zorder)
-        ax.semilogy()
+        # Log scaling for frequency values (y-axis)
+        ax.set_yscale('log')
+        # Plot times
+        ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder)
     else:
         # this method is much much faster!
         spectrogram = np.flipud(spectrogram)
