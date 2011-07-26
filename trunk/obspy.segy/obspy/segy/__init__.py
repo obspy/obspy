@@ -51,12 +51,27 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 array([ -2.84501867e-11,  -5.32782846e-11,  -1.13144355e-10, ...,
         -4.55348870e-10,  -8.47760084e-10,  -7.45420170e-10], dtype=float32)
 
+SEG Y files contain a large amount of additional meta data which are not
+unpacked by default. However you may access those values by just calling the
+header key directly or you may just use the ``unpack_trace_headers`` keyword on
+the ``read()`` method to unpack all related meta data.
 
-The above way of reading a file will become very slow and memory intensive for
-a large number of traces due to the huge number of objects created.
+>>> st1 = read("/path/to/00001034.sgy_first_trace")
+>>> len(st1[0].stats.segy.trace_header)
+6
+>>> st1[0].stats.segy.trace_header.data_use # unpacking a value on the fly
+1
+>>> len(st1[0].stats.segy.trace_header)
+7
+>>> st2 = read("/path/to/00001034.sgy_first_trace", unpack_trace_headers=True)
+>>> len(st2[0].stats.segy.trace_header)
+92
 
-Use the internal reading method which is much faster and yields a structure
-similar to the standard ObsPy Stream/Trace structure:
+Reading SEG Y files with ``unpack_trace_headers=True`` will become very slow
+and memory intensive for a large number of traces due to the huge number of
+objects created.
+
+A slightly faster way to read data is the internal reading method:
 
 >>> from obspy.segy import readSEGY #doctest: +SKIP
 >>> segy = readSEGY("/path/to/00001034.sgy_first_trace") #doctest: +SKIP
