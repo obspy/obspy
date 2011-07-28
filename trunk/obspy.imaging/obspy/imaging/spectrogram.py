@@ -143,10 +143,13 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         # center bin
         time -= halfbin_time
         freq -= halfbin_freq
-        # not sure from which matplotlib version upwards the new method works
-        # just a guess that it works with the same version that saw these
-        # mlab.specgram changes a bit up in the code
-        if MATPLOTLIB_VERSION >= [0, 99, 0]:
+        # pcolormesh issue was fixed in matplotlib r5716 (2008-07-07)
+        # inbetween tags 0.98.2 and 0.98.3
+        # see:
+        #  - http://matplotlib.svn.sourceforge.net/viewvc/...
+        #    matplotlib?revision=5716&view=revision
+        #  - http://matplotlib.sourceforge.net/_static/CHANGELOG
+        if MATPLOTLIB_VERSION >= [0, 98, 3]:
             # Log scaling for frequency values (y-axis)
             ax.set_yscale('log')
             # Plot times
