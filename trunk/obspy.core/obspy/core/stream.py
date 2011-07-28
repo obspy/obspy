@@ -152,7 +152,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     """
     # if no pathname or URL specified, make example stream
     if not pathname_or_url:
-        return _readExample()
+        return _readExample(headonly=headonly)
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and pathname_or_url.startswith('/path/to/'):
         try:
@@ -256,7 +256,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
     return stream
 
 
-def _readExample():
+def _readExample(headonly=False):
     """
     Create an example stream.
 
@@ -270,9 +270,10 @@ def _readExample():
            'sensitivity': 2516778400.0,
            'zeros': [0j, 0j]}}
     """
-    path = os.path.dirname(__file__)
-    path = os.path.join(path, "tests", "data", "example.npz")
-    data = np.load(path)
+    if not headonly:
+        path = os.path.dirname(__file__)
+        path = os.path.join(path, "tests", "data", "example.npz")
+        data = np.load(path)
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
         header = {'network': "BW",
@@ -283,7 +284,10 @@ def _readExample():
                   'sampling_rate': 100.0,
                   'calib': 1.0}
         header['channel'] = channel
-        st.append(Trace(data=data[channel], header=header))
+        if not headonly:
+            st.append(Trace(data=data[channel], header=header))
+        else:
+            st.append(Trace(header=header))
     return st
 
 
