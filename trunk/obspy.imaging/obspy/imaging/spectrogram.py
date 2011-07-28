@@ -34,7 +34,7 @@ from matplotlib import mlab
 import matplotlib.pyplot as plt
 import math as M
 import numpy as np
-from obspy.core.util import deprecated_keywords
+from obspy.core.util import deprecated_keywords, MATPLOTLIB_VERSION
 
 
 def nearestPow2(x):
@@ -112,7 +112,7 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    if matplotlib.__version__ >= '0.99.0':
+    if MATPLOTLIB_VERSION >= [0, 99, 0]:
         spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
                                               pad_to=mult, noverlap=nlap)
     else:
@@ -143,10 +143,18 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         # center bin
         time -= halfbin_time
         freq -= halfbin_freq
-        # Log scaling for frequency values (y-axis)
-        ax.set_yscale('log')
-        # Plot times
-        ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder)
+        # not sure from which matplotlib version upwards the new method works
+        # just a guess that it works with the same version that saw these
+        # mlab.specgram changes a bit up in the code
+        if MATPLOTLIB_VERSION >= [0, 99, 0]:
+            # Log scaling for frequency values (y-axis)
+            ax.set_yscale('log')
+            # Plot times
+            ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder)
+        else:
+            X, Y = np.meshgrid(time, freq)
+            ax.pcolor(X, Y, spectrogram, cmap=cmap, zorder=zorder)
+            ax.semilogy()
     else:
         # this method is much much faster!
         spectrogram = np.flipud(spectrogram)
