@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 import matplotlib
 from matplotlib import mlab
 import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 import math as M
 import numpy as np
 from obspy.core.util import deprecated_keywords, MATPLOTLIB_VERSION
@@ -59,32 +60,55 @@ def nearestPow2(x):
         return b
 
 @deprecated_keywords({'axis':'axes'})
-def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
+def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, format=None, axes=None, dbscale=False,
                 mult=8.0, cmap=None, zorder=None, title=None, show=True,
-                sphinx=False):
+                sphinx=False, clip=[0.0, 1.0]):
     """
     Computes and plots logarithmic spectrogram of the input data.
     
     :param data: Input data
-    :param sample_rate: Samplerate in Hz
-    :param log: True logarithmic frequency axis, False linear frequency axis
-    :param per_lap: Percent of overlap
+    :type samp_rate: float
+    :param samp_rate: Samplerate in Hz
+    :type per_lap: float
+    :param per_lap: Percentage of overlap of sliding window. (Ranging from 0 to 1)
+            High overlaps take a long time to compute.
+    :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
                  small, the calculation will take forever.
+    :type log: bool
+    :param log: Logarithmic frequency axis if True, linear frequency axis
+            otherwise
+    :type outfile: String
     :param outfile: String for the filename of output file, if None
                     interactive plotting is activated.
+    :type format: String
     :param format: Format of image to save
+    :type axes: :class:`matplotlib.axes.Axes`
     :param axes: Plot into given axes, this deactivates the format and
                  outfile option
+    :type dbscale: bool
     :param dbscale: If True 10 * log10 of color values is taken, if False
                     the sqrt is taken
+    :type mult: float
     :param mult: Pad zeros to lengh mult * wlen. This will make the
                  spectrogram smoother. Available for matplotlib > 0.99.0
+    :type cmap: :class:`matplotlib.colors.Colormap`
+    :param cmap: Specify a custom colormap instance
+    :type zorder: float
+    :param zorder: Specify the zorder of the plot. Only of importance if other
+            plots in the same axes are executed.
+    :type title: String
+    :param title: Set the plot title
     :type show: bool
     :param show: Do not call `plt.show()` at end of routine. That way,
             further modifications can be done to the figure before showing it.
+    :type sphinx: bool
     :param sphinx: Internal flag used for API doc generation, default False
+    :type clip: [float, float]
+    :param clip: adjust colormap to clip at lower and/or upper end. The given
+            percentages of the amplitude range (linear or logarithmic depending
+            on option `dbscale`) are clipped.
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
@@ -125,6 +149,14 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
         spectrogram = np.sqrt(spectrogram[1:, :])
     freq = freq[1:]
 
+    vmin, vmax = clip
+    if vmin < 0 or vmax > 1 or vmin >= vmax:
+        msg = "Invalid parameters for clip option."
+        raise ValueError(msg)
+    range = float(spectrogram.max() - spectrogram.min())
+    vmin = spectrogram.min() + vmin * range
+    vmax = spectrogram.min() + vmax * range
+    norm = Normalize(vmin, vmax, clip=True)
 
     if not axes:
         fig = plt.figure()
@@ -153,10 +185,11 @@ def spectrogram(data, samp_rate, per_lap=.9, wlen=None, log=False,
             # Log scaling for frequency values (y-axis)
             ax.set_yscale('log')
             # Plot times
-            ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder)
+            ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder,
+                          norm=norm)
         else:
             X, Y = np.meshgrid(time, freq)
-            ax.pcolor(X, Y, spectrogram, cmap=cmap, zorder=zorder)
+            ax.pcolor(X, Y, spectrogram, cmap=cmap, zorder=zorder, norm=norm)
             ax.semilogy()
     else:
         # this method is much much faster!
