@@ -276,9 +276,9 @@ def writeSLIST(stream, filename, **kwargs):
         except:
             dataquality = ''
         # sample type
-        if str(trace.data.dtype).startswith('int'):
+        if trace.data.dtype.name.startswith('int'):
             dtype = 'INTEGER'
-        elif str(trace.data.dtype).startswith('float'):
+        elif trace.data.dtype.name.startswith('float'):
             dtype = 'FLOAT'
         else:
             raise NotImplementedError
@@ -377,9 +377,9 @@ def writeTSPAIR(stream, filename, **kwargs):
         except:
             dataquality = ''
         # sample type
-        if str(trace.data.dtype).startswith('int'):
+        if trace.data.dtype.name.startswith('int'):
             dtype = 'INTEGER'
-        elif str(trace.data.dtype).startswith('float'):
+        elif trace.data.dtype.name.startswith('float'):
             dtype = 'FLOAT'
         else:
             raise NotImplementedError

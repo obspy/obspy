@@ -98,6 +98,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         os.remove(outfile)
                     except:
                         pass
+                    # Q files consist of two files - deleting additional file
                     if format == 'Q':
                         os.remove(outfile[:-4] + '.QBN')
                         os.remove(outfile[:-4])
