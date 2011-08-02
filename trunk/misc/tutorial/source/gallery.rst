@@ -18,12 +18,12 @@ Gallery
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_2.py
     :width: 300 px
-    :target: tutorial/waveform_plotting_tutorial.html
+    :target: tutorial/waveform_plotting_tutorial.html#saving-plot-to-file
     :alt: Waveform Plotting Tutorial 2
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_3.py
     :width: 300 px
-    :target: tutorial/waveform_plotting_tutorial.html
+    :target: tutorial/waveform_plotting_tutorial.html#plotting-multiple-channels
     :alt: Waveform Plotting Tutorial 3
 
 .. plot:: source/tutorial/filtering_seismograms.py
@@ -45,3 +45,12 @@ Gallery
     :width: 300 px
     :target: tutorial/plotting_spectrograms.html
     :alt: Plotting Spectrograms
+
+.. plot:: source/tutorial/retrieving_data_via_arclink.py
+    :width: 300 px
+    :target: tutorial/retrieving_data_via_arclink.html
+    :alt: Retrieving Data via ArcLink
+
+.. plot:: source/tutorial/beachball_plot.py
+    :target: tutorial/beachball_plot.html
+    :alt: Beachball Plot
