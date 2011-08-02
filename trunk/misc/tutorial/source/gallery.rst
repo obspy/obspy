@@ -52,5 +52,11 @@ Gallery
     :alt: Retrieving Data via ArcLink
 
 .. plot:: source/tutorial/beachball_plot.py
+    :width: 300 px
     :target: tutorial/beachball_plot.html
     :alt: Beachball Plot
+
+.. plot:: source/tutorial/probabilistic_power_spectral_density.py
+    :width: 300 px
+    :target: tutorial/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
