@@ -52,6 +52,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
         'readFormat = obspy.core.ascii:readTSPAIR',
+        'writeFormat = obspy.core.ascii:writeTSPAIR',
     ],
     'obspy.plugin.waveform.SLIST': [
         'isFormat = obspy.core.ascii:isSLIST',
