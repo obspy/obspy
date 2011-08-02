@@ -76,8 +76,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # check byte order
                     self.assertEquals(st[0].data.dtype.byteorder, '=')
                     # check meta data
-                    # MSEED and WAV do not contain the calibration factor
-                    if format not in ['MSEED', 'WAV']:
+                    # some formats do not contain a calibration factor
+                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
                         self.assertAlmostEquals(st[0].stats.calib, 0.199999, 5)
                     else:
                         self.assertEquals(st[0].stats.calib, 1.0)

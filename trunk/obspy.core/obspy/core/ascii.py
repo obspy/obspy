@@ -14,7 +14,7 @@ from obspy.core.util import AttribDict
 import numpy as np
 
 
-HEADER = "TIMESERIES %s_%s_%s_%s_%c, %d samples, %d sps, %.26s, %s, %s, %s\n"
+HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
 
 
 def isSLIST(filename):
@@ -211,7 +211,7 @@ def readTSPAIR(filename, headonly=False):
     return stream
 
 
-def writeSLIST(stream, filename):
+def writeSLIST(stream, filename, **kwargs):
     """
     Writes a ASCII SLIST file.
 
@@ -276,9 +276,9 @@ def writeSLIST(stream, filename):
         except:
             dataquality = ''
         # sample type
-        if trace.data.dtype == 'int':
+        if str(trace.data.dtype).startswith('int'):
             dtype = 'INTEGER'
-        elif trace.data.dtype == 'float32':
+        elif str(trace.data.dtype).startswith('float'):
             dtype = 'FLOAT'
         else:
             raise NotImplementedError
@@ -307,7 +307,7 @@ def writeSLIST(stream, filename):
     fh.close()
 
 
-def writeTSPAIR(stream, filename):
+def writeTSPAIR(stream, filename, **kwargs):
     """
     Writes a ASCII TSPAIR file.
 
@@ -377,9 +377,9 @@ def writeTSPAIR(stream, filename):
         except:
             dataquality = ''
         # sample type
-        if trace.data.dtype == 'int':
+        if str(trace.data.dtype).startswith('int'):
             dtype = 'INTEGER'
-        elif trace.data.dtype == 'float32':
+        elif str(trace.data.dtype).startswith('float'):
             dtype = 'FLOAT'
         else:
             raise NotImplementedError
