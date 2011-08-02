@@ -993,7 +993,9 @@ class Stream(object):
         Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
         SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
         SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
+        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.writeSLIST`
         SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
+        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
         =======  ===================  ====================================
         """
