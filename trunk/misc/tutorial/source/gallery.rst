@@ -56,6 +56,16 @@ Gallery
     :target: tutorial/beachball_plot.html
     :alt: Beachball Plot
 
+.. plot:: source/tutorial/basemap_plot_with_beachballs.py
+    :width: 300 px
+    :target: tutorial/basemap_plot_with_beachballs.html
+    :alt: Basemap Plot with Beachballs¶
+
+.. plot:: source/tutorial/merging_seismograms.py
+    :height: 300 px
+    :target: tutorial/merging_seismograms.html
+    :alt: Merging Seismograms
+
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
     :width: 300 px
     :target: tutorial/probabilistic_power_spectral_density.html

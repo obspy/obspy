@@ -2,8 +2,11 @@
 #gallery div.figure {
   display : inline;
 }
-
 #gallery div.figure img {
   padding : 5px;
-  vertical-align: middle;
+  vertical-align : middle;
+}
+a.external[href^="http:"] {
+  background : transparent url(extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
 }
