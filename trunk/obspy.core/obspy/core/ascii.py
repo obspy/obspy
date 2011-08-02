@@ -2,44 +2,6 @@
 """
 Simple ASCII time series format
 
-Each contiguous time series segment (no gaps or overlaps) is represented
-with a header line followed by data samples in one of two styles: either
-sample lists or time-sample pairs.  There are no restrictions on how the
-segments are organized into files, a file might contain a single segment
-or many, concatenated segments either for the same channel or many
-different channels.
-
-Header lines have the general form::
-
-    "TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units"
-
-Header field descriptions:
-
-SourceName:  "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
-# samples: Number of samples following header
-# sps:     Sampling rate in samples per second
-Time:      Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
-Format:    'SLIST' (sample list) or 'TSPAIR' (time-sample pair)
-Type:      Sample type 'INTEGER', 'FLOAT' or 'ASCII'
-Units:     Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
-
-Example header (no line wrapping)::
-
-    TIMESERIES NL_HGN_00_BHZ_R, 11947 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
-
-
-Sample value format:
-
-For the SLIST (sample list) format, samples are listed in 6 columns with 
-the time-series incrementing from left to right and wrapping to the next 
-line. The time of the first sample is the time listed in the header.
-
-Example SLIST format::
-
-    TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
-    2787        2776        2774        2780        2783        2782
-    2776        2766        2759        2760        2765        2767
-
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -249,6 +211,102 @@ def readTSPAIR(filename, headonly=False):
     return stream
 
 
+def writeSLIST(stream, filename):
+    """
+    Writes a ASCII SLIST file.
+
+    ..note::
+        This function should NOT be called directly, it registers via the
+        ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+        Stream object, call this instead.
+
+    :type filename: stream : :class:`~obspy.core.stream.Stream`
+    :param filename: The ObsPy Stream object to write.
+    :type filename: string
+    :param filename: Name of file to write.
+
+    SLIST Format Description
+    ------------------------
+    SLIST is a simple ASCII time series format. Each contiguous time series
+    segment (no gaps or overlaps) is represented with a header line followed by
+    a sample lists. There are no restrictions on how the segments are organized
+    into files, a file might contain a single segment or many, concatenated
+    segments either for the same channel or many different channels.
+
+    Header lines have the general form::
+
+        TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units
+
+    Header field descriptions::
+
+      SourceName
+        "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
+      # samples
+        Number of samples following header
+      # sps
+        Sampling rate in samples per second
+      Time
+        Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
+      Format
+        'TSPAIR' (fixed)
+      Type
+        Sample type 'INTEGER', 'FLOAT' or 'ASCII'
+      Units
+        Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
+
+    Sample value format::
+
+    For the SLIST (sample list) format, samples are listed in 6 columns with 
+    the time-series incrementing from left to right and wrapping to the next 
+    line. The time of the first sample is the time listed in the header.
+
+    Example SLIST format (no line wrapping)::
+
+        TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
+        2787        2776        2774        2780        2783        2782
+        2776        2766        2759        2760        2765        2767
+        ...
+    """
+    fh = open(filename, 'wt')
+    for trace in stream:
+        stats = trace.stats
+        # quality code
+        try:
+            dataquality = stats.mseed.dataquality
+        except:
+            dataquality = ''
+        # sample type
+        if trace.data.dtype == 'int':
+            dtype = 'INTEGER'
+        elif trace.data.dtype == 'float32':
+            dtype = 'FLOAT'
+        else:
+            raise NotImplementedError
+        # unit
+        try:
+            unit = stats.ascii.unit
+        except:
+            unit = ''
+        # write trace header
+        header = HEADER % (stats.network, stats.station, stats.location,
+                           stats.channel, dataquality, stats.npts,
+                           stats.sampling_rate, stats.starttime, 'SLIST',
+                           dtype, unit)
+        fh.write(header)
+        # write data
+        rest = stats.npts % 5
+        if rest:
+            data = trace.data[:-rest]
+        else:
+            data = trace.data
+        data = data.reshape((-1, 5))
+        for slice in data:
+            np.savetxt(fh, slice, fmt="%f")
+        if rest:
+            np.savetxt(fh, trace.data[-rest:], fmt="%f")
+    fh.close()
+
+
 def writeTSPAIR(stream, filename):
     """
     Writes a ASCII TSPAIR file.
@@ -263,8 +321,8 @@ def writeTSPAIR(stream, filename):
     :type filename: string
     :param filename: Name of file to write.
 
-    Format Description
-    ------------------
+    TSPAIR Format Description
+    -------------------------
     TSPAIR is a simple ASCII time series format. Each contiguous time series
     segment (no gaps or overlaps) is represented with a header line followed by
     data samples in time-sample pairs. There are no restrictions on how the
@@ -274,7 +332,7 @@ def writeTSPAIR(stream, filename):
 
     Header lines have the general form::
 
-        "TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units"
+        TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units
 
     Header field descriptions::
 
@@ -308,6 +366,7 @@ def writeTSPAIR(stream, filename):
         2003-05-29T02:13:22.268400  2760
         2003-05-29T02:13:22.293400  2765
         2003-05-29T02:13:22.318400  2767
+        ...
     """
     fh = open(filename, 'wt')
     for trace in stream:

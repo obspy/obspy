@@ -57,6 +57,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.SLIST': [
         'isFormat = obspy.core.ascii:isSLIST',
         'readFormat = obspy.core.ascii:readSLIST',
+        'writeFormat = obspy.core.ascii:writeSLIST',
     ],
 }
 
