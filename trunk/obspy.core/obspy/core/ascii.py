@@ -52,7 +52,7 @@ from obspy.core.util import AttribDict
 import numpy as np
 
 
-HEADER = "TIMESERIES %s_%s_%s_%s_%c, %d samples, %d sps, %s, %s, %s, %s\r\n"
+HEADER = "TIMESERIES %s_%s_%s_%s_%c, %d samples, %d sps, %.26s, %s, %s, %s\n"
 
 
 def isSLIST(filename):
@@ -157,6 +157,7 @@ def readSLIST(filename, headonly=False):
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
         stats.mseed = AttribDict({'dataquality' : temp[4]})
+        stats.ascii = AttribDict({'unit' : parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
         if headonly:
@@ -229,6 +230,7 @@ def readTSPAIR(filename, headonly=False):
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
         stats.mseed = AttribDict({'dataquality' : temp[4]})
+        stats.ascii = AttribDict({'unit' : parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
         if headonly:
@@ -307,7 +309,6 @@ def writeTSPAIR(stream, filename):
         2003-05-29T02:13:22.293400  2765
         2003-05-29T02:13:22.318400  2767
     """
-
     fh = open(filename, 'wt')
     for trace in stream:
         stats = trace.stats
@@ -323,18 +324,24 @@ def writeTSPAIR(stream, filename):
             dtype = 'FLOAT'
         else:
             raise NotImplementedError
-
-        # TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPAIR, INTEGER, Counts
+        # unit
+        try:
+            unit = stats.ascii.unit
+        except:
+            unit = ''
+        # write trace header
         header = HEADER % (stats.network, stats.station, stats.location,
                            stats.channel, dataquality, stats.npts,
                            stats.sampling_rate, stats.starttime, 'TSPAIR',
-                           dtype, 'Counts')
+                           dtype, unit)
         fh.write(header)
-        time = stats.starttime
-        delta = stats.delta
-        for data in trace.data:
-            fh.write("%s  %f\r\n" % (str(time)[:-1], data))
-            time += delta
+        # write data
+        times = np.arange(stats.starttime,
+                          stats.endtime + stats.delta,
+                          stats.delta)
+        data = np.vstack((times, trace.data)).T
+        # .26s cuts the Z from the time string
+        np.savetxt(fh, data, fmt="%.26s  %f")
     fh.close()
 
 

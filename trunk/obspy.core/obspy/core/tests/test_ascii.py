@@ -182,12 +182,31 @@ class ASCIITestCase(unittest.TestCase):
         # read
         stream = readTSPAIR(testfile)
         stream.verify()
+        # sort traces to ensure comparable results
+        stream.sort()
+        self.assertEqual(stream[1].stats.network, 'XX')
+        self.assertEqual(stream[1].stats.station, 'TEST')
+        self.assertEqual(stream[1].stats.location, '')
+        self.assertEqual(stream[1].stats.channel, 'BHZ')
+        self.assertEqual(stream[1].stats.sampling_rate, 40.0)
+        self.assertEqual(stream[1].stats.npts, 635)
+        self.assertEqual(stream[1].stats.starttime,
+                         UTCDateTime("2008-01-15T00:00:00.025000"))
+        self.assertEqual(stream[1].stats.calib, 1.0e-00)
+        self.assertEqual(stream[1].stats.mseed.dataquality, 'R')
+        # check first 4 samples
+        data = [185, 181, 185, 189]
+        np.testing.assert_array_almost_equal(stream[1].data[0:4], data)
+        # check last 4 samples
+        data = [761, 755, 748, 746]
+        np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
+        # second trace
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.location, '')
-        self.assertEqual(stream[0].stats.channel, 'BHZ')
+        self.assertEqual(stream[0].stats.channel, 'BHE')
         self.assertEqual(stream[0].stats.sampling_rate, 40.0)
-        self.assertEqual(stream[0].stats.npts, 635)
+        self.assertEqual(stream[0].stats.npts, 630)
         self.assertEqual(stream[0].stats.starttime,
                          UTCDateTime("2008-01-15T00:00:00.025000"))
         self.assertEqual(stream[0].stats.calib, 1.0e-00)
@@ -196,25 +215,8 @@ class ASCIITestCase(unittest.TestCase):
         data = [185, 181, 185, 189]
         np.testing.assert_array_almost_equal(stream[0].data[0:4], data)
         # check last 4 samples
-        data = [761, 755, 748, 746]
-        np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
-        # second trace
-        self.assertEqual(stream[1].stats.network, 'XX')
-        self.assertEqual(stream[1].stats.station, 'TEST')
-        self.assertEqual(stream[1].stats.location, '')
-        self.assertEqual(stream[1].stats.channel, 'BHE')
-        self.assertEqual(stream[1].stats.sampling_rate, 40.0)
-        self.assertEqual(stream[1].stats.npts, 630)
-        self.assertEqual(stream[1].stats.starttime,
-                         UTCDateTime("2008-01-15T00:00:00.025000"))
-        self.assertEqual(stream[1].stats.calib, 1.0e-00)
-        self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
-        # check first 4 samples
-        data = [185, 181, 185, 189]
-        np.testing.assert_array_almost_equal(stream[1].data[0:4], data)
-        # check last 4 samples
         data = [781, 785, 778, 772]
-        np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
+        np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
 
     def test_readTSPAIRHeadOnly(self):
         """
@@ -272,7 +274,6 @@ class ASCIITestCase(unittest.TestCase):
         writeTSPAIR(stream_orig, tmpfile)
         # read again
         stream = readTSPAIR(tmpfile)
-        os.remove(tmpfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
@@ -287,6 +288,12 @@ class ASCIITestCase(unittest.TestCase):
         data = [185.01, 181.02, 185.03, 189.04, 194.05, 205.06,
                 209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
         np.testing.assert_array_almost_equal(stream[0].data, data, decimal=2)
+        # compare raw header
+        lines_orig = open(testfile, 'rt').readlines()
+        lines_new = open(tmpfile, 'rt').readlines()
+        self.assertEqual(lines_orig[0], lines_new[0])
+        # clean up
+        os.remove(tmpfile)
 
     def test_writeTSPAIRFileMultipleTraces(self):
         """
@@ -297,16 +304,22 @@ class ASCIITestCase(unittest.TestCase):
         tmpfile = NamedTemporaryFile().name
         # write
         writeTSPAIR(stream_orig, tmpfile)
-        os.remove(tmpfile)
+        # look at the raw data
+        lines = open(tmpfile, 'rt').readlines()
+        self.assertTrue(lines[0].startswith('TIMESERIES'))
+        self.assertTrue('TSPAIR' in lines[0])
+        self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185.000000\n')
         # read again
-        stream = readTSPAIR(testfile)
+        stream = readTSPAIR(tmpfile)
         stream.verify()
+        # sort traces to ensure comparable results
+        stream.sort()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.location, '')
-        self.assertEqual(stream[0].stats.channel, 'BHZ')
+        self.assertEqual(stream[0].stats.channel, 'BHE')
         self.assertEqual(stream[0].stats.sampling_rate, 40.0)
-        self.assertEqual(stream[0].stats.npts, 635)
+        self.assertEqual(stream[0].stats.npts, 630)
         self.assertEqual(stream[0].stats.starttime,
                          UTCDateTime("2008-01-15T00:00:00.025000"))
         self.assertEqual(stream[0].stats.calib, 1.0e-00)
@@ -315,15 +328,15 @@ class ASCIITestCase(unittest.TestCase):
         data = [185, 181, 185, 189]
         np.testing.assert_array_almost_equal(stream[0].data[0:4], data)
         # check last 4 samples
-        data = [761, 755, 748, 746]
+        data = [781, 785, 778, 772]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
         # second trace
         self.assertEqual(stream[1].stats.network, 'XX')
         self.assertEqual(stream[1].stats.station, 'TEST')
         self.assertEqual(stream[1].stats.location, '')
-        self.assertEqual(stream[1].stats.channel, 'BHE')
+        self.assertEqual(stream[1].stats.channel, 'BHZ')
         self.assertEqual(stream[1].stats.sampling_rate, 40.0)
-        self.assertEqual(stream[1].stats.npts, 630)
+        self.assertEqual(stream[1].stats.npts, 635)
         self.assertEqual(stream[1].stats.starttime,
                          UTCDateTime("2008-01-15T00:00:00.025000"))
         self.assertEqual(stream[1].stats.calib, 1.0e-00)
@@ -332,8 +345,10 @@ class ASCIITestCase(unittest.TestCase):
         data = [185, 181, 185, 189]
         np.testing.assert_array_almost_equal(stream[1].data[0:4], data)
         # check last 4 samples
-        data = [781, 785, 778, 772]
+        data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
+        # clean up
+        os.remove(tmpfile)
 
 
 def suite():
