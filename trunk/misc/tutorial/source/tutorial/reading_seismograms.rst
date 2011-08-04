@@ -5,23 +5,23 @@ Reading Seismograms
 ===================
 
 Seismograms of the formats SAC, MiniSEED, GSE2, SEISAN, Q, etc. can be imported
-into a :py:class:`~obspy.core.stream.Stream` object using the 
-:py:func:`~obspy.core.stream.read` function.
+into a :class:`~obspy.core.stream.Stream` object using the 
+:func:`~obspy.core.stream.read` function.
 
-:py:class:`Streams <obspy.core.stream.Stream>` are list-like objects which
-contain multiple :py:class:`~obspy.core.trace.Trace` objects, i.e.
+:class:`Streams <obspy.core.stream.Stream>` are list-like objects which
+contain multiple :class:`~obspy.core.trace.Trace` objects, i.e.
 gap-less continuous time series and related header/meta information.
 
-Each :py:class:`~obspy.core.trace.Trace` object has a attribute called ``data``
-pointing to a NumPy_ :py:class:`~numpy.ndarray` of
+Each :class:`~obspy.core.trace.Trace` object has a attribute called ``data``
+pointing to a NumPy_ :class:`~numpy.ndarray` of
 the actual time series and the attribute ``stats`` which contains all meta
 information in a dictionary-like Stats object. Both attributes ``starttime``
-and ``endtime`` of the :py:class:`~obspy.core.trace.Stats` object are
-:py:class:`~obspy.core.utcdatetime.UTCDateTime` objects.
+and ``endtime`` of the :class:`~obspy.core.trace.Stats` object are
+:class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 The following example demonstrates how a single GSE2_-formatted seismogram file
-is read into a ObsPy :py:class:`~obspy.core.stream.Stream` object. There exists
-only one :py:class:`~obspy.core.trace.Trace` in the given seismogram:
+is read into a ObsPy :class:`~obspy.core.stream.Stream` object. There exists
+only one :class:`~obspy.core.trace.Trace` in the given seismogram:
 
 .. doctest::
 
@@ -36,7 +36,7 @@ Accessing Meta Data
 -------------------
 
 Seismogram meta data, data describing the actual waveform data, are accessed
-via the ``stats`` keyword on each :py:class:`~obspy.core.trace.Trace`:
+via the ``stats`` keyword on each :class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
@@ -63,7 +63,7 @@ Accessing Waveform Data
 -----------------------
 
 The actual waveform data may be retrieved via the ``data`` keyword on each
-:py:class:`~obspy.core.trace.Trace`:
+:class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
@@ -78,8 +78,8 @@ The actual waveform data may be retrieved via the ``data`` keyword on each
 Data Preview
 ------------
 
-:py:class:`~obspy.core.stream.Stream` objects offer a plotting method for fast
-preview of the waveform (requires the :py:mod:`obspy.imaging` module):
+:class:`~obspy.core.stream.Stream` objects offer a plotting method for fast
+preview of the waveform (requires the :mod:`obspy.imaging` module):
 
     >>> st.plot(color='k')
 

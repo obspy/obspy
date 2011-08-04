@@ -3,9 +3,9 @@ Waveform Plotting Tutorial
 ==========================
 
 Read the files as shown at the :ref:`reading-seismogramms` page. We will use
-two different ObsPy :py:class:`~obspy.core.stream.Stream` objects throughout
+two different ObsPy :class:`~obspy.core.stream.Stream` objects throughout
 this tutorial. The first one, ``singlechannel``, just contains one continuous
-:py:class:`~obspy.core.trace.Trace` and the other one, ``threechannel``,
+:class:`~obspy.core.trace.Trace` and the other one, ``threechannel``,
 contains three channels of a seismograph.
 
 .. doctest::
@@ -31,8 +31,8 @@ contains three channels of a seismograph.
 Basic Plotting
 --------------
 
-Using the :py:meth:`~obspy.core.stream.Stream.plot` method of the
-:py:class:`~obspy.core.stream.Stream` objects will show the plot. The default
+Using the :meth:`~obspy.core.stream.Stream.plot` method of the
+:class:`~obspy.core.stream.Stream` objects will show the plot. The default
 size of the plots is 800x250 pixel. Use the ``size`` attribute to adjust it to
 your needs.
 
@@ -61,8 +61,8 @@ and how to set the start- and endtime of the plot.
 Plotting multiple Channels
 --------------------------
 
-If the :py:class:`~obspy.core.stream.Stream` object contains more than one
-:py:class:`~obspy.core.trace.Trace`, each Trace will be plotted in a subplot.
+If the :class:`~obspy.core.stream.Stream` object contains more than one
+:class:`~obspy.core.trace.Trace`, each Trace will be plotted in a subplot.
 The start- and endtime of each trace will be the same and the range on the
 y-axis will also be identical on each trace. Each additional subplot will add
 250 pixel to the height of the resulting plot. Use the ``size`` attribute to
@@ -126,7 +126,7 @@ Various options are available to change the appearance of the waveform:
 Color Options
 -------------
 
-Colors can be specified as defined in the :py:mod:`matplotlib.colors`
+Colors can be specified as defined in the :mod:`matplotlib.colors`
 documentation.
 
 Short Version: For all color values, you can either use:
