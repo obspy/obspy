@@ -530,6 +530,7 @@ class SacIO(object):
                 self._get_dist_()
             except SacError:
                 pass
+        f.close()
 
     def WriteSacHeader(self, fname):
         """
@@ -645,6 +646,7 @@ class SacIO(object):
                 self._get_dist_()
             except SacError:
                 pass
+        f.close()
 
     def ReadSacXY(self, fname):
         """
@@ -670,43 +672,43 @@ class SacIO(object):
             f = open(fname, 'r')
         except IOError:
             raise SacIOError("No such file:" + fname)
-        else:
+        try:
+            #--------------------------------------------------------------
+            # parse the header
+            #
+            # The sac header has 70 floats, 40 integers, then 192 bytes
+            #    in strings. Store them in array (an convert the char to a
+            #    list). That's a total of 632 bytes.
+            #--------------------------------------------------------------
+            # read in the float values
+            self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
+            # read in the int values
+            self.hi = np.fromfile(f, dtype='<i4', count=40, sep=" ")
+            # reading in the string part is a bit more complicated
+            # because every string field has to be 8 characters long
+            # apart from the second field which is 16 characters long
+            # resulting in a total length of 192 characters
+            for i in xrange(0, 24, 3):
+                self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
+                f.readline() # strip the newline
+            #--------------------------------------------------------------
+            # read in the seismogram points
+            #--------------------------------------------------------------
+            self.seis = np.loadtxt(f, dtype='<f4').ravel()
+        except IOError, e:
+            self.hf = self.hs = self.hi = self.seis = None
+            f.close()
+            raise SacIOError("%s is not a valid SAC file:" % fname, e)
+        try:
+            self._get_date_()
+        except SacError:
+            warnings.warn('Cannot determine date')
+        if self.GetHvalue('lcalda'):
             try:
-                #--------------------------------------------------------------
-                # parse the header
-                #
-                # The sac header has 70 floats, 40 integers, then 192 bytes
-                #    in strings. Store them in array (an convert the char to a
-                #    list). That's a total of 632 bytes.
-                #--------------------------------------------------------------
-                # read in the float values
-                self.hf = np.fromfile(f, dtype='<f4', count=70, sep=" ")
-                # read in the int values
-                self.hi = np.fromfile(f, dtype='<i4', count=40, sep=" ")
-                # reading in the string part is a bit more complicated
-                # because every string field has to be 8 characters long
-                # apart from the second field which is 16 characters long
-                # resulting in a total length of 192 characters
-                for i in xrange(0, 24, 3):
-                    self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                    f.readline() # strip the newline
-                #--------------------------------------------------------------
-                # read in the seismogram points
-                #--------------------------------------------------------------
-                self.seis = np.loadtxt(f, dtype='<f4').ravel()
-            except IOError, e:
-                self.hf = self.hs = self.hi = self.seis = None
-                f.close()
-                raise SacIOError("%s is not a valid SAC file:" % fname, e)
-            try:
-                self._get_date_()
+                self._get_dist_()
             except SacError:
-                warnings.warn('Cannot determine date')
-            if self.GetHvalue('lcalda'):
-                try:
-                    self._get_dist_()
-                except SacError:
-                    pass
+                pass
+        f.close()
 
     def ReadSacXYHeader(self, fname):
         """
@@ -769,6 +771,7 @@ class SacIO(object):
                 self._get_dist_()
             except SacError:
                 pass
+        f.close()
 
     def readTrace(self, trace):
         """

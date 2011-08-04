@@ -8,7 +8,6 @@ SAC bindings to ObsPy core module.
 
 from obspy.core import Trace, Stream
 from obspy.sac.sacio import SacIO
-import numpy as np
 import os
 import string
 import struct

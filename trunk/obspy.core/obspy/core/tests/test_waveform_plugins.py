@@ -93,11 +93,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     elif format not in ['WAV']:
                         self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
                     # remove temporary files
-                    # XXX: temporary SAC file is locked on Windows ?!?
-                    try:
-                        os.remove(outfile)
-                    except:
-                        pass
+                    os.remove(outfile)
                     # Q files consist of two files - deleting additional file
                     if format == 'Q':
                         os.remove(outfile[:-4] + '.QBN')
@@ -212,10 +208,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             # Compare all values which should be identical and clean up files
             #for data in :
             #    np.testing.assert_array_equal(values, original)
-            try:
-                os.remove(outfile)
-            except:
-                pass
+            os.remove(outfile)
             if format == 'Q':
                 os.remove(outfile[:-4] + '.QBN')
                 os.remove(outfile[:-4])
