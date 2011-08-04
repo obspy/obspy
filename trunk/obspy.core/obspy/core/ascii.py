@@ -21,13 +21,11 @@ def isSLIST(filename):
     """
     Checks whether a file is ASCII SLIST format. Returns True or False.
 
-    Parameters
-    ----------
-
-    filename : string
-        Name of the ASCII SLIST file to be checked.
+    :type filename: string
+    :param filename: Name of the ASCII SLIST file to be checked.
+    :rtype: boolean
+    :return: ``True`` if ASCII SLIST file.
     """
-    # first six chars should contain 'TIMESERIES'
     try:
         temp = open(filename, 'rt').readline()
     except:
@@ -43,13 +41,11 @@ def isTSPAIR(filename):
     """
     Checks whether a file is ASCII TSPAIR format. Returns True or False.
 
-    Parameters
-    ----------
-
-    filename : string
-        Name of the ASCII TSPAIR file to be checked.
+    :type filename: string
+    :param filename: Name of the ASCII TSPAIR file to be checked.
+    :rtype: boolean
+    :return: ``True`` if ASCII TSPAIR file.
     """
-    # first six chars should contain 'TIMESERIES'
     try:
         temp = open(filename, 'rt').readline()
     except:
@@ -65,24 +61,18 @@ def readSLIST(filename, headonly=False):
     """
     Reads a ASCII SLIST file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. note::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        ASCII file to be read.
-    headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
+    :type filename: string
+    :param filename: ASCII file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Returns
-    -------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-
-    Example
-    -------
     >>> from obspy.core import read
     >>> st = read('/path/to/slist.ascii')
     """
@@ -142,7 +132,7 @@ def readTSPAIR(filename, headonly=False):
     """
     Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
 
-    ..note::
+    .. note::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
@@ -151,11 +141,9 @@ def readTSPAIR(filename, headonly=False):
     :type headonly: bool, optional
     :param headonly: If set to True, read only the headers. This is most useful
         for scanning available data in huge (temporary) data sets.
-    :rtype: stream : :class:`~obspy.core.stream.Stream`
+    :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
-    Example
-    -------
     >>> from obspy.core import read
     >>> st = read('/path/to/tspair.ascii')
     """
@@ -215,18 +203,18 @@ def writeSLIST(stream, filename, **kwargs):
     """
     Writes a ASCII SLIST file.
 
-    ..note::
+    .. note::
         This function should NOT be called directly, it registers via the
-        ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-        Stream object, call this instead.
+        :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+        :class:`~obspy.core.stream.Stream` object, call this instead.
 
     :type filename: stream : :class:`~obspy.core.stream.Stream`
     :param filename: The ObsPy Stream object to write.
     :type filename: string
     :param filename: Name of file to write.
 
-    SLIST Format Description
-    ------------------------
+    .. rubric:: SLIST Format Description
+
     SLIST is a simple ASCII time series format. Each contiguous time series
     segment (no gaps or overlaps) is represented with a header line followed by
     a sample lists. There are no restrictions on how the segments are organized
@@ -237,30 +225,29 @@ def writeSLIST(stream, filename, **kwargs):
 
         TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units
 
-    Header field descriptions::
+    with
 
-      SourceName
+    ``SourceName``
         "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
-      # samples
+    ``# samples``
         Number of samples following header
-      # sps
+    ``# sps``
         Sampling rate in samples per second
-      Time
+    ``Time``
         Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
-      Format
+    ``Format``
         'TSPAIR' (fixed)
-      Type
+    ``Type``
         Sample type 'INTEGER', 'FLOAT' or 'ASCII'
-      Units
-        Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
+    ``Units``
+        Units of time-series, e.g. Counts, M/S, etc., may not contain
+        spaces
 
-    Sample value format::
+    Samples are listed in 6 columns with the time-series incrementing from left
+    to right and wrapping to the next line. The time of the first sample is the
+    time listed in the header.
 
-    For the SLIST (sample list) format, samples are listed in 6 columns with 
-    the time-series incrementing from left to right and wrapping to the next 
-    line. The time of the first sample is the time listed in the header.
-
-    Example SLIST format (no line wrapping)::
+    *Example SLIST file*::
 
         TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
         2787        2776        2774        2780        2783        2782
@@ -311,18 +298,18 @@ def writeTSPAIR(stream, filename, **kwargs):
     """
     Writes a ASCII TSPAIR file.
 
-    ..note::
+    .. note::
         This function should NOT be called directly, it registers via the
-        ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-        Stream object, call this instead.
+        :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+        :class:`~obspy.core.stream.Stream` object, call this instead.
 
     :type filename: stream : :class:`~obspy.core.stream.Stream`
     :param filename: The ObsPy Stream object to write.
     :type filename: string
     :param filename: Name of file to write.
 
-    TSPAIR Format Description
-    -------------------------
+    .. rubric:: TSPAIR Format Description
+
     TSPAIR is a simple ASCII time series format. Each contiguous time series
     segment (no gaps or overlaps) is represented with a header line followed by
     data samples in time-sample pairs. There are no restrictions on how the
@@ -334,24 +321,25 @@ def writeTSPAIR(stream, filename, **kwargs):
 
         TIMESERIES SourceName, # samples, # sps, Time, Format, Type, Units
 
-    Header field descriptions::
+    with
 
-      SourceName
+    ``SourceName``
         "Net_Sta_Loc_Chan_Qual", no spaces, quality code optional
-      # samples
+    ``# samples``
         Number of samples following header
-      # sps
+    ``# sps``
         Sampling rate in samples per second
-      Time
+    ``Time``
         Time of first sample in ISO YYYY-MM-DDTHH:MM:SS.FFFFFF format
-      Format
+    ``Format``
         'TSPAIR' (fixed)
-      Type
+    ``Type``
         Sample type 'INTEGER', 'FLOAT' or 'ASCII'
-      Units
-        Units of time-series, e.g. Counts, M/S, etc., may not contain spaces
+    ``Units``
+        Units of time-series, e.g. Counts, M/S, etc., may not contain
+        spaces
 
-    Example TSPAIR file (no line wrapping)::
+    *Example TSPAIR file*::
 
         TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPAIR, INTEGER, Counts
         2003-05-29T02:13:22.043400  2787

@@ -21,31 +21,30 @@ class UTCDateTime(datetime.datetime):
     the full `ISO8601:2004`_ specification and some additional string patterns
     during object initialization.
 
-    Parameters
-    ----------
-    *args : int, float, string, :class:`datetime.datetime`, optional
-        The creation of a new `UTCDateTime` object depends from the given input
-        parameters. All possible options are summarized in the examples section
-        underneath.
-    iso8601 : boolean, optional
-        Enforce `ISO8601:2004`_ detection. Works only with a string as first
-        input argument.
+    :type args: int, float, string, :class:`datetime.datetime`, optional
+    :param args: The creation of a new `UTCDateTime` object depends from the
+        given input parameters. All possible options are summarized in the
+        examples section underneath.
+    :type iso8601: boolean, optional
+    :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
+        as first input argument.
 
-    Supported Operations
-    --------------------
+    .. rubric:: Supported Operations
+
     ``UTCDateTime = UTCDateTime + delta``
         Adds/removes ``delta`` seconds (given as int or float) to/from the
         current ``UTCDateTime`` object and returns a new ``UTCDateTime``
         object. 
-        See also: :meth:`UTCDateTime.__add__`.
+        See also: :meth:`~obspy.core.utcdatetime.UTCDateTime.__add__`.
+    
     ``delta = UTCDateTime - UTCDateTime``
         Calculates the time difference in seconds between two ``UTCDateTime``
         objects. The time difference is given as float data type and may also
         contain a negative number. 
-        See also: :meth:`UTCDateTime.__sub__`.
+        See also: :meth:`~obspy.core.utcdatetime.UTCDateTime.__sub__`.
 
-    Examples
-    --------
+    .. rubric:: Examples
+
     (1) Using a timestamp.
 
         >>> UTCDateTime(0)
