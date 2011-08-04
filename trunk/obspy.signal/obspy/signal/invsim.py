@@ -235,6 +235,10 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     """
     n = nfft // 2
     a, b = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
+    # b has to be a list for the scipy.signal.freqs() call later but zpk2tf()
+    # strangely returns it as an integer.
+    if not isinstance(b, np.ndarray) and b == 1.0:
+        b = [1.0]
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
     f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
