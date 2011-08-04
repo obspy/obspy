@@ -234,15 +234,15 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     :return: Frequency response of PAZ of length nfft 
     """
     n = nfft // 2
-    a, b = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
+    b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
     # b has to be a list for the scipy.signal.freqs() call later but zpk2tf()
     # strangely returns it as an integer.
-    if not isinstance(b, np.ndarray) and b == 1.0:
-        b = [1.0]
+    if not isinstance(a, np.ndarray) and a == 1.0:
+        a = [1.0]
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
     f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
-    _w, h = scipy.signal.freqs(a, b, f * 2 * np.pi)
+    _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
     if pitsa: # like in PITSA paz2Freq (insdeconv.c) last line
         h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
