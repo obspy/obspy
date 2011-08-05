@@ -124,7 +124,7 @@ class Client(object):
                 del kwargs[key]
         # check for ranges and empty values
         for key, value in kwargs.iteritems():
-            if value == None:
+            if not value and value != 0:
                 continue
             if isinstance(value, tuple) and len(value) == 2:
                 params['min_' + str(key)] = str(value[0])
