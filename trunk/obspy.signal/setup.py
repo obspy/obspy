@@ -79,6 +79,11 @@ def setupLibSignal():
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
     else:
         lib_name = 'libsignal'
+    fft_deps = []
+    # include fft on windows and mac not on linux, see #282
+    if platform.system() != 'Linux':
+       fft_deps = [src_fft + 'fftpack.c', 
+                   src_fft + 'fftpack_litemodule.c']
     # setup C extension
     lib = MyExtension(lib_name,
                       define_macros=macros,
@@ -86,8 +91,7 @@ def setupLibSignal():
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
                                src + 'coordtrans.c', src + 'pk_mbaer.c',
                                src + 'filt_util.c', src + 'arpicker.c',
-                               src + 'bbfk.c', src_fft + 'fftpack.c',
-                               src_fft + 'fftpack_litemodule.c'],
+                               src + 'bbfk.c'] + fft_deps,
                       export_symbols=symbols)
     return lib
 
