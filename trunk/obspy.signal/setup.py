@@ -79,26 +79,15 @@ def setupLibSignal():
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
     else:
         lib_name = 'libsignal'
-    # compile fftpack on windows and mac
-    # link it dynamically on linux, see #282
-    libraries = []
-    library_dirs = []
-    fft_sources = [src_fft + 'fftpack.c', 
-                   src_fft + 'fftpack_litemodule.c']
-    if platform.system() == 'Linux':
-       fft_sources = []
-       libraries = [':fftpack_lite.so']
-       library_dirs = [os.path.dirname(np.fft.__file__)]
     # setup C extension
     lib = MyExtension(lib_name,
                       define_macros=macros,
                       include_dirs=[numpy_include_dir],
-                      library_dirs=library_dirs,
-                      libraries=libraries,
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
                                src + 'coordtrans.c', src + 'pk_mbaer.c',
                                src + 'filt_util.c', src + 'arpicker.c',
-                               src + 'bbfk.c'] + fft_sources,
+                               src + 'bbfk.c', src_fft + 'fftpack.c',
+                               src_fft + 'fftpack_litemodule.c'],
                       export_symbols=symbols)
     return lib
 
