@@ -350,7 +350,7 @@ class Client(Telnet):
                 metadata = self.getMetadata(network, station, location, cha,
                                             starttime, endtime, getPAZ=getPAZ,
                                             getCoordinates=getCoordinates,
-                                            route=route)
+                                            route=False)
                 tr.stats['paz'] = deepcopy(metadata['paz'])
         if getCoordinates:
             # reuse metadata fetched for PAZ or else fetch it
@@ -359,7 +359,7 @@ class Client(Telnet):
                 metadata = self.getMetadata(network, station, location, cha,
                                             starttime, endtime, getPAZ=getPAZ,
                                             getCoordinates=getCoordinates,
-                                            route=route)
+                                            route=False)
             for tr in stream:
                 tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
