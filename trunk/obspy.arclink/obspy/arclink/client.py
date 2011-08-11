@@ -55,6 +55,10 @@ class Client(Telnet):
         Enables verbose output of the connection handling (default is False).
     command_delay : float, optional
         Delay between each command send to the ArcLink server (default is 0).
+    plain_status_allowed : boolean, optional
+        Certain ArcLink versions do not allow a plain STATUS request. Set this
+        to False if you experience a endless loop during a request. Default is
+        True.
 
     Notes
     -----
@@ -73,7 +77,7 @@ class Client(Telnet):
 
     def __init__(self, host="webdc.eu", port=18002, timeout=20,
                  user="ObsPy client", password="", institution="Anonymous",
-                 debug=False, command_delay=0):
+                 debug=False, command_delay=0, plain_status_allowed=True):
         """
         """
         self.user = user
@@ -82,6 +86,7 @@ class Client(Telnet):
         self.command_delay = command_delay
         self.init_host = host
         self.init_port = port
+        self.plain_status_allowed = plain_status_allowed
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             Telnet.__init__(self, host, port)
@@ -117,6 +122,9 @@ class Client(Telnet):
             self.open(self.host, self.port, self.timeout)
         self._writeln('HELLO')
         self.version = self._readln(')')
+        # certain ArcLink versions do not allow a plain STATUS request
+        if 'ArcLink v1.2 (2010.256)' in self.version:
+            self.plain_status_allowed = False
         self.node = self._readln()
         if self.password:
             self._writeln('USER %s %s' % (self.user, self.password))
@@ -181,7 +189,8 @@ class Client(Telnet):
     def _request(self, request_type, request_data):
         self._hello()
         self._writeln(request_type)
-        self._readln('OK')
+        if not self.plain_status_allowed:
+            self._readln('OK')
         # create request string
         # adding one second to start and end time to ensure right date times
         out = (request_data[0] - 1).formatArcLink() + ' '
@@ -189,6 +198,9 @@ class Client(Telnet):
         out += ' '.join([str(i) for i in request_data[2:]])
         self._writeln(out)
         self._writeln('END')
+        if self.plain_status_allowed:
+            self._readln('OK')
+            self._writeln('STATUS')
         while 1:
             status = self._readln()
             try:
